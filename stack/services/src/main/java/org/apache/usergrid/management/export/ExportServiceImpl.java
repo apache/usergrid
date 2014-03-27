@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
@@ -47,8 +48,6 @@ import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.JobData;
-
-import com.google.common.collect.BiMap;
 
 
 /**
@@ -195,13 +194,13 @@ public class ExportServiceImpl implements ExportService {
                 em.update( export );
                 return;
             }
-           exportApplicationsForOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution );
+           exportApplicationsForOrg( ( UUID ) config.get( "organizationId" ),( UUID )config.get( "ApplicationId") ,config, jobExecution );
 
         }
         else {
             try {
                 //exports all the applications for a single organization
-                exportApplicationForOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution );
+                exportApplicationForOrg( ( UUID ) config.get( "organizationId" ), (UUID) config.get("applicationId") ,config, jobExecution );
             }
             catch ( Exception e ) {
                 //if for any reason the backing up fails, then update the entity with a failed state.
@@ -253,7 +252,7 @@ public class ExportServiceImpl implements ExportService {
      * @param jobExecution
      * @throws Exception
      */
-    private void exportApplicationsForOrg( UUID organizationUUID, final Map<String,Object> config,
+    private void exportApplicationsForOrg( UUID organizationUUID, UUID applicationId ,final Map<String,Object> config,
                                            final JobExecution jobExecution ) throws Exception {
 
         //retrieves export entity
@@ -265,16 +264,15 @@ public class ExportServiceImpl implements ExportService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         // Loop through the applications per organization
-        BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
-        for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
+        //BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
+        //for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
 
-            logger.info( application.getValue() + " : " + application.getKey() );
-
-            String appFileName = prepareOutputFileName( "application", application.getValue() );
+        ApplicationInfo application = managementService.getApplicationInfo( applicationId );
+        String appFileName = prepareOutputFileName( "application", application.getName(), null);
 
             JsonGenerator jg = getJsonGenerator( baos );
 
-            EntityManager em = emf.getEntityManager( application.getKey() );
+            EntityManager em = emf.getEntityManager( applicationId );
 
             jg.writeStartArray();
 
@@ -309,7 +307,7 @@ public class ExportServiceImpl implements ExportService {
                         jg.writeEndObject();
                     }
                 }
-            }
+           // }
 
             // Close writer and file for this application.
             jg.writeEndArray();
@@ -330,7 +328,7 @@ public class ExportServiceImpl implements ExportService {
     }
 
     //might be confusing, but uses the /s/ inclusion or exclusion nomenclature.
-    private void exportApplicationForOrg( UUID organizationUUID, final Map<String,Object> config,
+    private void exportApplicationForOrg( UUID organizationUUID, UUID applicationUUID ,final Map<String,Object> config,
                                            final JobExecution jobExecution ) throws Exception {
 
         //retrieves export entity
@@ -342,16 +340,15 @@ public class ExportServiceImpl implements ExportService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         // Loop through the applications per organization
-        BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
-        for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
+        //BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
+        //for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
 
-            logger.info( application.getValue() + " : " + application.getKey() );
-
-            String appFileName = prepareOutputFileName( "application", application.getValue() );
+           // logger.info( application.getValue() + " : " + application.getKey() );
+            ApplicationInfo application = managementService.getApplicationInfo( applicationUUID );
 
             JsonGenerator jg = getJsonGenerator( baos );
 
-            EntityManager em = emf.getEntityManager( application.getKey() );
+            EntityManager em = emf.getEntityManager( applicationUUID );
 
             jg.writeStartArray();
 
@@ -382,7 +379,7 @@ public class ExportServiceImpl implements ExportService {
                         jg.writeEndObject();
                     }
                 }
-            }
+           // }
 
             // Close writer and file for this application.
             jg.writeEndArray();
@@ -392,7 +389,9 @@ public class ExportServiceImpl implements ExportService {
 
             //sets up the Inputstream for copying the method to s3.
             InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-            try {
+            String appFileName = prepareOutputFileName( "application", application.getName(),collectionName);
+
+                try {
                 s3Export.copyToS3( is, config, appFileName );
             }
             catch ( Exception e ) {
@@ -540,8 +539,8 @@ public class ExportServiceImpl implements ExportService {
     }
 
 
-    protected File createOutputFile( String type, String name ) {
-        return new File( prepareOutputFileName( type, name ) );
+    protected File createOutputFile( String type, String name, String colName ) {
+        return new File( prepareOutputFileName( type, name, colName ) );
     }
 
 
@@ -550,10 +549,14 @@ public class ExportServiceImpl implements ExportService {
      *
      * @return the file name concatenated with the type and the name of the collection
      */
-    protected String prepareOutputFileName( String type, String name ) {
+    protected String prepareOutputFileName( String type, String name, String CollectionName ) {
         StringBuilder str = new StringBuilder();
         str.append( name );
         str.append( "." );
+        if( CollectionName != null) {
+            str.append( CollectionName );
+            str.append( "." );
+        }
         str.append( System.currentTimeMillis() );
         str.append( ".json" );
 
