@@ -1237,7 +1237,7 @@ public class ManagementServiceIT {
     public void testExportOneCollection() throws Exception {
 
         File f = null;
-        int entitiesToCreate = 10000;
+        int entitiesToCreate = 5;
 
         try {
             f = new File( "exportOneCollection.json" );
