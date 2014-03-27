@@ -401,6 +401,10 @@
     e.preventDefault();
     $('#queryLimitHelpModal').modal('show');
   });
+  $("#query-json-help").click(function(e){
+    e.preventDefault();
+    $('#queryJsonHelpModal').modal('show');
+  });
 
 
   //change contexts for REST operations

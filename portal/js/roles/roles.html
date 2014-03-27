@@ -8,6 +8,7 @@
            closelabel="Cancel"
            extrabutton="newRoleDialog"
            extrabuttonlabel="Create"
+           buttonid="roles"
            ng-cloak>
           <fieldset>
             <div class="control-group">
@@ -31,6 +32,7 @@
            title="Delete Role"
            close="hideModal"
            closelabel="Cancel"
+           buttonid="deleteroles"
            extrabutton="deleteRoleDialog"
            extrabuttonlabel="Delete"
            ng-cloak>
@@ -42,8 +44,8 @@
 
       <div class="button-toolbar span12">
         <a title="Select All" class="btn btn-primary select-all toolbar" ng-show="hasRoles" ng-click="selectAllEntities(rolesCollection._list,this,'rolesSelected',true)"> <i class="pictogram">&#8863;</i></a>
-        <button title="Delete" class="btn btn-primary toolbar"  ng-disabled="!hasRoles || !valueSelected(rolesCollection._list)" ng-click="showModal('deleteRole')"><i class="pictogram">&#9749;</i></button>
-        <button title="Add" class="btn btn-primary toolbar" ng-click="showModal('newRole')"><i class="pictogram">&#59136;</i></button>
+        <button id="delete-role-btn" title="Delete" class="btn btn-primary toolbar"  ng-disabled="!hasRoles || !valueSelected(rolesCollection._list)" ng-click="showModal('deleteRole')"><i class="pictogram">&#9749;</i></button>
+        <button id="add-role-btn" title="Add" class="btn btn-primary toolbar" ng-click="showModal('newRole')"><i class="pictogram">&#59136;</i></button>
       </div>
 
       <ul class="user-list">
@@ -53,8 +55,9 @@
               ng-value="role.get('uuid')"
               ng-checked="master"
               ng-model="role.checked"
+              id="role-{{role.get('title')}}-cb"
               >
-          <a >{{role.get('title')}}</a>
+          <a id="role-{{role.get('title')}}-link">{{role.get('title')}}</a>
           <br/>
           <span ng-if="role.get('name')" class="label">Role Name:</span>{{role.get('name')}}
         </li>

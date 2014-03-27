@@ -1,5 +1,20 @@
 var Usergrid = Usergrid || {};
 
+//Google Analytics
+var _gaq = _gaq || [];
+//_gaq.push(['_setAccount', 'yourkey']);
+try{
+    (function(document) {
+        if(!document){
+            return;
+        }
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })(document || null);
+}catch(e){};
+//End Google Analytics
+
 Usergrid.showNotifcations = true;
 
 
@@ -75,6 +90,7 @@ Usergrid.regex = {
   stateRegexDescription: "Sorry only alphabetical characters or spaces are allowed. Must be between 2-100 characters.",
   collectionNameRegexDescription: "Collection name only allows : a-z A-Z 0-9. Must be between 3-25 characters."
 };
+
 try{
   if (typeof module !== 'undefined'){
 

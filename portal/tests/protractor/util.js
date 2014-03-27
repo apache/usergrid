@@ -1,5 +1,6 @@
 'use strict';
-
+var fs=require('fs');
+var path=require('path');
 module.exports = {
   loggedin:false,
   login: function(){
@@ -7,10 +8,10 @@ module.exports = {
       return;
     }
     var self = this;
-    browser.driver.get(browser.baseUrl + '/');
+    browser.driver.get(browser.baseUrl + '');
     browser.wait(function () {
       return browser.driver.getCurrentUrl().then(function (url) {
-        return/login/.test(url) || url.indexOf('accounts/sign_in')>0;
+        return /login/.test(url) || url.indexOf('accounts/sign_in')>0;
       });
     });
     if(browser.params.useSso){
@@ -57,7 +58,7 @@ module.exports = {
   logout:function(){
     if(this.loggedin){
       this.loggedin=false;
-      browser.driver.get(browser.baseUrl+'/#!/logout');
+      browser.driver.get(browser.baseUrl+'#!/logout');
       browser.wait(function () {
         return browser.driver.getCurrentUrl().then(function (url) {
           var test =  /login/.test(url) || url.indexOf('accounts/sign_in')>0;
@@ -68,7 +69,7 @@ module.exports = {
     }
   },
   navigate:function(orgName,appName){
-    browser.driver.get(browser.baseUrl+'/#!/org-overview');
+    browser.driver.get(browser.baseUrl+'#!/org-overview');
     browser.sleep(1000);
     browser.wait(function () {
       return element.all(by.repeater("(k,v) in organizations")).count().then(function(count){
@@ -100,11 +101,79 @@ module.exports = {
       element(by.id('app-'+appName+'-link-id')).click();
       browser.sleep(1000);
     });
-    browser.driver.get(browser.baseUrl+'/#!/app-overview/summary');
+    browser.driver.get(browser.baseUrl+'#!/app-overview/summary');
     browser.wait(function(){
       return element(by.id('app-overview-title')).getText().then(function(text){
         return text===appName.toUpperCase();
       })
+    });
+  },
+  createUser:function(username){
+    this.login();
+    this.navigate(browser.params.orgName,browser.params.appName1);
+    browser.driver.get(browser.baseUrl + '#!/users');
+    browser.wait(function(){
+      return element(by.id("new-user-button")).isDisplayed();
+    });
+    element(by.id("new-user-button")).isDisplayed().then(function(){
+      element(by.id("new-user-button")).click();
+    });
+    browser.wait(function(){
+      return element(by.id("new-user-username")).isDisplayed();
+    });
+    element(by.id('new-user-username')).isDisplayed().then(function () {
+      //fill in data
+      browser.sleep(500);
+      element(by.id('new-user-username')).clear();
+      element(by.id('new-user-username')).sendKeys(username);
+      element(by.id('new-user-fullname')).sendKeys('Test ' + username);
+      element(by.id('new-user-email')).sendKeys('sfeldman+test' + username + '@apigee.com');
+      element(by.id('new-user-password')).sendKeys('P@ssw0rd1');
+      element(by.id('new-user-re-password')).sendKeys('P@ssw0rd1');
+      browser.sleep(1000);
+      element(by.id('dialogButton-users')).submit();
+    });
+
+    browser.wait(function () {
+      return element(by.id('user-' + username + '-checkbox')).isPresent();
+    });
+  },
+  deleteUser:function(username){
+    this.login();
+    this.navigate(browser.params.orgName,browser.params.appName1);
+    browser.driver.get(browser.baseUrl + '#!/users');
+
+    browser.wait(function () {
+      return element(by.id('user-' + username + '-checkbox')).isPresent();
+    });
+    
+    element(by.id('user-' + username + '-checkbox')).isPresent().then(function () {
+      element(by.id('user-' + username + '-checkbox')).click();
+      browser.sleep(1000);
+      element(by.id('delete-user-button')).click();
+      element(by.id('dialogButton-deleteusers')).submit();
+    });
+    //need to wait for the element not to be there.
+    browser.wait(function(){
+      return element(by.id('user-' + username + '-checkbox')).isPresent().then(function (present) {
+        return !present;
+      });
+    });
+  },
+  getCoverage:function(){
+    var dname=path.normalize(__dirname+"/../../reports");
+    var fname=dname+'/coverage.json';
+    var browserCoverageObject="('__coverage__' in window)?__coverage__:null";
+    if(!fs.existsSync(dname)){
+      fs.mkdirSync(dname);
+    }
+    // console.log(__dirname, dname, fname);
+    browser.driver.executeScript("return "+browserCoverageObject+';').then(function(val){
+      if(val){
+        fs.writeFileSync(fname, JSON.stringify(val));
+      }else{
+        console.warn("No coverage object in the browser.")
+      }
     });
   }
 };

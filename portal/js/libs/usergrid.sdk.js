@@ -98,9 +98,9 @@ Usergrid.Client.prototype.request = function (options, callback) {
   if (self.getToken()) {
     qs.access_token = self.getToken();
   }
-  var developerkey=this.get("developerkey");
+  var developerkey=self.get("developerkey");
   if (developerkey) {
-    qs.developer_key = developerkey;
+    qs.key = developerkey;
   }
   //append params to the path
   var encoded_params = encodeParams(qs);
