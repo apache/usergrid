@@ -195,12 +195,18 @@ public class ExportServiceImpl implements ExportService {
                 em.update( export );
                 return;
             }
-            exportApplicationsForOrg( ( UUID ) config.get( "organizationId" ), ( UUID ) config.get( "ApplicationId" ),
+            exportApplicationsForOrg( ( UUID ) config.get( "organizationId" ), ( UUID ) config.get( "applicationId" ),
                     config, jobExecution );
         }
         else {
             try {
                 //exports all the applications for a single organization
+                if ( config.get( "organizationId" ) == null ) {
+                    logger.error( "No organization could be found" );
+                    export.setState( Export.State.FAILED );
+                    em.update( export );
+                    return;
+                }
                 exportApplicationForOrg( ( UUID ) config.get( "organizationId" ),
                         ( UUID ) config.get( "applicationId" ), config, jobExecution );
             }
@@ -262,7 +268,7 @@ public class ExportServiceImpl implements ExportService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         ApplicationInfo application = managementService.getApplicationInfo( applicationId );
-        String appFileName = prepareOutputFileName( "application", application.getName(), null );
+        String appFileName = prepareOutputFileName( "application", application.getName(), "" );
 
         JsonGenerator jg = getJsonGenerator( baos );
 
@@ -302,22 +308,22 @@ public class ExportServiceImpl implements ExportService {
                     jg.writeEndObject();
                 }
             }
+        }
 
-            // Close writer and file for this application.
-            jg.writeEndArray();
-            jg.close();
-            baos.flush();
-            baos.close();
+        // Close writer and file for this application.
+        jg.writeEndArray();
+        jg.close();
+        baos.flush();
+        baos.close();
 
-            //sets up the Inputstream for copying the method to s3.
-            InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-            try {
-                s3Export.copyToS3( is, config, appFileName );
-            }
-            catch ( Exception e ) {
-                export.setState( Export.State.FAILED );
-                return;
-            }
+        //sets up the Inputstream for copying the method to s3.
+        InputStream is = new ByteArrayInputStream( baos.toByteArray() );
+        try {
+            s3Export.copyToS3( is, config, appFileName );
+        }
+        catch ( Exception e ) {
+            export.setState( Export.State.FAILED );
+            return;
         }
     }
 
@@ -344,6 +350,8 @@ public class ExportServiceImpl implements ExportService {
 
         Map<String, Object> metadata = em.getApplicationCollectionMetadata();
         long starting_time = System.currentTimeMillis();
+        String appFileName = prepareOutputFileName( "application", application.getName(),
+                ( String ) config.get( "collectionName" ) );
 
         // Loop through the collections. This is the only way to loop
         // through the entities in the application (former namespace).
@@ -369,24 +377,24 @@ public class ExportServiceImpl implements ExportService {
                     jg.writeEndObject();
                 }
             }
+        }
 
-            // Close writer and file for this application.
-            jg.writeEndArray();
-            jg.close();
-            baos.flush();
-            baos.close();
+        // Close writer and file for this application.
+        jg.writeEndArray();
+        jg.close();
+        baos.flush();
+        baos.close();
 
-            //sets up the Inputstream for copying the method to s3.
-            InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-            String appFileName = prepareOutputFileName( "application", application.getName(), collectionName );
+        //sets up the Inputstream for copying the method to s3.
+        InputStream is = new ByteArrayInputStream( baos.toByteArray() );
 
-            try {
-                s3Export.copyToS3( is, config, appFileName );
-            }
-            catch ( Exception e ) {
-                export.setState( Export.State.FAILED );
-                return;
-            }
+
+        try {
+            s3Export.copyToS3( is, config, appFileName );
+        }
+        catch ( Exception e ) {
+            export.setState( Export.State.FAILED );
+            return;
         }
     }
 
@@ -534,7 +542,7 @@ public class ExportServiceImpl implements ExportService {
         StringBuilder str = new StringBuilder();
         str.append( name );
         str.append( "." );
-        if ( CollectionName != null ) {
+        if ( !CollectionName.equals( "" ) ) {
             str.append( CollectionName );
             str.append( "." );
         }
