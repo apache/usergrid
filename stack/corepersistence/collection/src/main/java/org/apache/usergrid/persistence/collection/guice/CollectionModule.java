@@ -29,16 +29,12 @@ import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSy
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerFig;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
-import org.apache.usergrid.persistence.collection.rx.CassandraThreadScheduler;
-import org.apache.usergrid.persistence.collection.rx.RxFig;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-
-import rx.Scheduler;
 
 
 /**
@@ -52,8 +48,7 @@ public class CollectionModule extends AbstractModule {
     @Override
     protected void configure() {
         //noinspection unchecked
-        install( new GuicyFigModule( 
-                RxFig.class, 
+        install( new GuicyFigModule(
                 MigrationManagerFig.class,
                 CassandraFig.class, 
                 SerializationFig.class ) );
@@ -67,7 +62,6 @@ public class CollectionModule extends AbstractModule {
                 .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
                 .build( EntityCollectionManagerFactory.class ) );
 
-        bind( Scheduler.class ).toProvider( CassandraThreadScheduler.class );
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
     }

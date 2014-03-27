@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.query.Query;
-import org.apache.usergrid.persistence.query.Results;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Results;
 
 
 public class CoreApplication implements Application, TestRule {

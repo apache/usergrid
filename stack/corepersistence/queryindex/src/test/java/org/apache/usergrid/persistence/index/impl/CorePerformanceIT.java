@@ -17,6 +17,9 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.netflix.config.ConfigurationManager;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -24,14 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.commons.lang3.math.NumberUtils;
-
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -46,12 +42,12 @@ import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.query.Query;
-import org.apache.usergrid.persistence.query.Results;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.netflix.config.ConfigurationManager;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Results;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**

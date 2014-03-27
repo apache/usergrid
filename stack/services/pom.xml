@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>0.0.29-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
   </parent>
 
   <!-- Override these properties in your settings.xml in an active profile -->
@@ -156,6 +156,9 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
+              <accessKey>${aws.s3.key}</accessKey>
+              <secretKey>${aws.s3.secret}</secretKey>
+              <bucketName>${aws.s3.bucket}</bucketName>
               <systemPropertyVariables>
                 <storage-config>${basedir}/src/test/conf</storage-config>
                 <target.directory>${project.build.directory}</target.directory>
@@ -445,7 +448,6 @@
          <artifactId>tika-core</artifactId>
      </dependency>
 
-
       <!-- Testing and Logging Dependencies -->
     <dependency>
       <!--
@@ -550,5 +552,7 @@
       <artifactId>jul-to-slf4j</artifactId>
       <scope>test</scope>
     </dependency>
+
+
   </dependencies>
 </project>

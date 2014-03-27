@@ -39,9 +39,9 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
-import rx.Scheduler;
-import rx.util.functions.Func1;
-import rx.util.functions.FuncN;
+import rx.functions.Func1;
+import rx.functions.FuncN;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -54,22 +54,16 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
 
     private final UniqueValueSerializationStrategy uniqueValueStrat;
 
-
-    private final Scheduler scheduler;
-
     protected final SerializationFig serializationFig;
 
 
     @Inject
-    public WriteUniqueVerify( final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy,
-                              final Scheduler scheduler, final SerializationFig serializationFig ) {
+    public WriteUniqueVerify( final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy, final SerializationFig serializationFig ) {
 
         Preconditions.checkNotNull( uniqueValueSerializiationStrategy, "uniqueValueSerializationStrategy is required" );
-        Preconditions.checkNotNull( scheduler, "scheduler is required" );
         Preconditions.checkNotNull( serializationFig, "serializationFig is required" );
 
         this.uniqueValueStrat = uniqueValueSerializiationStrategy;
-        this.scheduler = scheduler;
         this.serializationFig = serializationFig;
     }
 
@@ -101,7 +95,7 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
             //if it's unique, create a function to validate it and add it to the list of concurrent validations
             if ( field.isUnique() ) {
 
-                Observable<FieldUniquenessResult> result =  Observable.from( field ).subscribeOn( scheduler ).map(new Func1<Field,  FieldUniquenessResult>() {
+                Observable<FieldUniquenessResult> result =  Observable.from( field ).subscribeOn( Schedulers.io() ).map(new Func1<Field,  FieldUniquenessResult>() {
                     @Override
                     public FieldUniquenessResult call(Field field ) {
 
@@ -139,7 +133,7 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
 
         //short circuit.  If we zip up nothing, we block forever.
         if(fields.size() == 0){
-            return Observable.from(ioevent ).subscribeOn( scheduler );
+            return Observable.from(ioevent ).subscribeOn( Schedulers.io() );
         }
 
         /**
@@ -166,6 +160,7 @@ public class WriteUniqueVerify implements Func1<CollectionIoEvent<MvccEntity>, O
                 return ioevent;
             }
         };
+
 
 
         return Observable.zip( fields, zipFunction );

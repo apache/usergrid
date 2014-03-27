@@ -16,6 +16,8 @@
 package org.apache.usergrid.persistence.query;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Results;
 import org.apache.usergrid.persistence.index.legacy.CoreApplication;
 import org.junit.Ignore;
 import org.junit.Test;

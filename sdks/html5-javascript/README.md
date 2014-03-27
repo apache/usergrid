@@ -6,9 +6,9 @@ Detailed instructions follow but if you just want a quick example of how to get 
 <html>
 	<head>
 		<!-- Don't forget to include the SDK -->
-		<script src="https://apigee.com/usergrid/sdk/usergrid.0.10.5.js"></script>
-		<!-- If you prefer a local copy, you can find the file at the root the SDK’s github repo
-		     github.com/apigee/usergrid-javascript-sdk -->
+		<script src="/path/to/usergrid.js"></script>
+		<!-- You can find the file in the Usergrid github repo
+			 https://github.com/usergrid/usergrid/blob/master/sdks/html5-javascript/usergrid.js -->
 
 		<script type="text/javascript">
 
@@ -27,16 +27,17 @@ Detailed instructions follow but if you just want a quick example of how to get 
 
 			var books;
 
-			client.createCollection(options, function (err, books) {
-    			if (err) {
-    				alert("Couldn't get the list of books.");
-    			} else {
-    				while(books.hasNextEntity()) {
-    					var book = books.getNextEntity();
-    					alert(book.get("title")); // Output the title of the book
-    				}
-    			}
-    		});
+			client.createCollection(options, function (err, collection) {
+				books = collection;
+				if (err) {
+					alert("Couldn't get the list of books.");
+				} else {
+					while(books.hasNextEntity()) {
+						var book = books.getNextEntity();
+						alert(book.get("title")); // Output the title of the book
+					}
+				}
+			});
 
 			// Uncomment the next 4 lines if you want to write data
 
@@ -52,11 +53,11 @@ Detailed instructions follow but if you just want a quick example of how to get 
 
 ##Version
 
-Current Version: **0.10.7**
+Current Version: **0.10.8**
 
 See change log:
 
-<https://github.com/apigee/usergrid-javascript-sdk/blob/master/changelog.md>
+<https://github.com/usergrid/usergrid/blob/master/sdks/html5-javascript/changelog.md>
 
 ##Comments / questions
 For help using this SDK, reach out on the Usergrid google group:
@@ -68,23 +69,24 @@ Or just open github issues.
 
 
 ##Overview
-This open source SDK simplifies writing JavaScript / HTML5 applications that connect to App Services. The repo is located here:
+This open source SDK simplifies writing JavaScript / HTML5 applications that connect to Usergrid. The repo is located here:
 
-<https://github.com/apigee/usergrid-javascript-sdk>
+<https://github.com/usergrid/usergrid/tree/master/sdks/html5-javascript>
 
 You can download this package here:
 
-* Download as a zip file: <https://github.com/apigee/usergrid-javascript-sdk/archive/master.zip>
-* Download as a tar.gz file: <https://github.com/apigee/usergrid-javascript-sdk/archive/master.tar.gz>
+* Download as a zip file: <https://github.com/usergrid/usergrid/archive/master.zip>
+* Download as a tar.gz file: <https://github.com/usergrid/usergrid/archive/master.tar.gz>
 
+The Javascript SDK is in the sdks/html5-javascript folder.
 
-To find out more about Apigee App Services, see:
+To find out more about Usergrid, see:
 
-<http://developers.apigee.com>
+<http://usergrid.incubator.apache.org>
 
-To view the Apigee App Services documentation, see:
+To view the Usergrid documentation, see:
 
-<http://apigee.com/docs/app_services>
+<http://usergrid.incubator.apache.org/docs/>
 
 
 ##Node.js
@@ -94,19 +96,17 @@ Want to use Node.js? No problem - use the Usergrid Node Module:
 
 or on github:
 
-<https://github.com/apigee/usergrid-node-module>
+<https://github.com/usergrid/usergrid/tree/master/sdks/nodejs>
 
 The syntax for this Javascript SDK and the Usergrid Node module are almost exactly the same so you can easily transition between them.
 
 
 ##About the samples
-This SDK comes with a variety of samples that you can use to learn how to connect your project to App Services (Usergrid). See these examples running live now:
+This SDK comes with a variety of samples that you can use to learn how to connect your project to App Services (Usergrid).
 
-<http://apigee.github.io/usergrid-javascript-sdk>
+**Note:** All the sample code in this file is pulled directly from the "test" example, so you can rest-assured that it will work! You can find it here:
 
-**Note:** All the sample code in this file is pulled directly from the "test" example, so you can rest-assured that it will work! You can run them yourself here:
-
-<http://apigee.github.io/usergrid-javascript-sdk/examples/test/test.html>
+<https://github.com/usergrid/usergrid/blob/master/sdks/html5-javascript/examples/test/test.html>
 
 
 ##Installing
@@ -189,7 +189,7 @@ Once your object is created, you can update properties on it by using the `set` 
 		state:'hungry'
 	}
 
-	// Set is additive, so previously set properties are not overwritten
+	// Set is additive, so previously set properties are not overwritten unless a property with the same name exists in the data object
 	dog.set(data);
 
 	// And save back to the database
@@ -478,7 +478,146 @@ You can also limit the results returned such that only the fields you specify ar
 
 You can find more information on custom queries here:
 
-<http://apigee.com/docs/usergrid/content/queries-and-parameters>
+<http://usergrid.incubator.apache.org/docs/query-language/>
+##Counters
+Counters can be used by an application to create custom statistics, such as how many times an a file has been downloaded or how many instances of an application are in use.
+
+###Create the counter instance
+
+**Note:** The count is not altered upon instantiation
+
+	var counter = new Usergrid.Counter({
+			client: client,
+			data: {
+				category: 'usage',
+				//a timestamp of '0' defaults to the current time
+				timestamp: 0,
+				counters: {
+					running_instances: 0,
+					total_instances: 0
+				}
+			}
+		}, function(err, data) {
+			if (err) { 
+			   // Error - there was a problem creating the counter
+			} else { 
+				// Success - the counter was created properly
+			}
+		});
+
+###Updating counters
+
+When an application starts, we want to increment the 'running_instances' and 'total_instances' counters.
+
+	// add 1 running instance
+	counter.increment({
+			name: 'running_instances',
+			value: 1
+		}, function(err, data) {
+			// ...
+		});
+
+	// add 1 total instance
+	counter.increment({
+			name: 'total_instances',
+			value: 1
+		}, function(err, data) {
+			// ...
+		});
+
+When the application exits, we want to decrement 'running_instances'
+
+	// subtract 1 total instance
+	counter.decrement({
+			name: 'total_instances',
+			value: 1
+		}, function(err, data) {
+			// ...
+		});
+
+Once you have completed your testing, you can reset these values to 0.
+
+	counter.reset({
+			name: 'total_instances'
+		}, function(err, data) {
+			// ...
+		});
+
+##Assets
+Assets are used to model binary resources. This can be used by your application to store images and other file types.
+
+####Creating an asset
+
+An asset is created in the same manner as any Usergrid entity
+
+	var imageName='test_image.jpg';
+	var options = {
+		type:'asset',
+		name:imageName,
+		path: '/uploads/'+imageName,
+		owner:user.get("uuid")
+	};
+	
+	var asset=new Usergrid.Asset(
+		{client:client, data:options},
+		function(err, asset){
+			if (err) { 
+			   // Error - there was a problem creating the asset
+			} else { 
+				// Success - the asset was created properly
+			}
+		});
+##Adding data
+
+You can upload data to your asset from a File input or by retrieving it via another request.
+**Note:** Due to security concerns, you cannot browse and select a file programmatically from the local filesystem via javascript
+
+On your page, you would have an input element:
+
+	<input type="file" id="upload"/>
+
+Once a file is selected, read the data and upload it to the asset.
+
+	var files = document.getElementById('upload').files;
+	if(files.length===0){
+		  //No files have been selected
+	}else{
+		//take the first file off the front of the array
+		var file=files.unshift();
+		asset.upload(file, function(err, asset){
+			if (err) { 
+			  // Error - there was a problem uploading the data
+			} else { 
+			  // Success - the data was uploaded successfully
+			} 
+		})
+	}
+
+To retrieve the data and display it via HTML
+
+	asset.download(function(err, file){
+		if (err) { 
+			// Error - there was a problem retrieving the data
+		} else { 
+			// Success - the entity was found
+			// and retrieved by the Apigee API
+
+			// Create an image tag to hold our downloaded image data
+			var img = document.createElement("img");
+			// Create a FileReader to feed the image
+			// into our newly-created element
+			var reader = new FileReader();
+			reader.onload = (function(aImg) { 
+					return function(e) {
+						aImg.src = e.target.result;
+					}; 
+				})(img);
+			reader.readAsDataURL(file);
+			// Append the img element to our page
+			document.body.appendChild(img);
+		} 
+	})
+
 
 
 ##Modeling users with the entity object
@@ -613,7 +752,7 @@ This creates a one-way connection between marty and einstein, where marty "likes
 
 Complete documentation on the entity relationships API can be found here:
 
-<http://apigee.com/docs/usergrid/content/entity-relationships>
+<http://usergrid.incubator.apache.org/docs/relationships/>
 
 For example, say we have a new dog named einstein:
 
@@ -812,10 +951,11 @@ Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Ja
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed).
 
 ##More information
+For more information on Usergrid, visit <http://usergrid.incubator.apache.org/>.
 For more information on Apigee App Services, visit <http://developers.apigee.com>.
 
 ## Copyright
-Copyright 2013 Apigee Corporation
+Copyright 2014 Apigee Corporation
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

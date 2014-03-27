@@ -7,16 +7,16 @@ import java.util.Collection;
 /**
  * Interface for implementations of a timeout queue.
  */
-public interface TimeoutQueue {
+public interface TimeoutQueue<T> {
 
     /**
      * Queue the event with the timeout provided
      *
      * @param event The event to queue
      * @param timeout The timeout to set on the queue element
-     * @param <T> The type to return
+     * @return The AsynchronousMessage that has been queued
      */
-    public <T> TimeoutEvent<T> queue( T event, long timeout );
+    public AsynchronousMessage<T> queue( T event, long timeout );
 
 
     /**
@@ -24,11 +24,12 @@ public interface TimeoutQueue {
      *
      * This implicitly re-schedules every taken operation at currentTime+timeout
      *
-     * @param <T> The type to return
+     * @param  maxSize The maximum number of elements to take
+     * @param timeout The timeout to set when taking the elements from the Q
      *
      * @return A collection of events.
      */
-    public <T> Collection<TimeoutEvent<T>> take( int maxSize, long currentTime, long timeout );
+    public Collection<AsynchronousMessage<T>> take( int maxSize, long timeout );
 
 
     /**
@@ -36,7 +37,7 @@ public interface TimeoutQueue {
      *
      * @param event The event to remove
      *
-     * @return True if the element was removed
+     * @return True if the element was removed.  False otherwise
      */
-    public <T> boolean remove( TimeoutEvent<T> event );
+    public boolean remove( AsynchronousMessage<T> event );
 }

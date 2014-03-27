@@ -50,4 +50,7 @@ public interface EntityCollectionManager {
      * Load the entity with the given entity Id
      */
     public Observable<Entity> load( Id entityId );
+
+
+    //TODO add partial update
 }

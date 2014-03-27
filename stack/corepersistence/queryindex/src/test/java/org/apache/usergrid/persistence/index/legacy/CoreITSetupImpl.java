@@ -19,7 +19,7 @@ package org.apache.usergrid.persistence.index.legacy;
 
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.persistence.index.utils.JsonUtils;
 
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;

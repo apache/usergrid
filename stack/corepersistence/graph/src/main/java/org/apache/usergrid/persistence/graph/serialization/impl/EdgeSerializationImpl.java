@@ -41,6 +41,7 @@ import org.apache.usergrid.persistence.collection.cassandra.ColumnTypes;
 import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
@@ -59,7 +60,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.AbstractComposite;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.CompositeBuilder;
@@ -84,6 +84,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     //row key with target id type
     private static final RowTypeSerializer ROW_TYPE_SERIALIZER = new RowTypeSerializer();
+
+    private static final EdgeRowKeySerializer EDGE_ROW_KEY_SERIALIZER = new EdgeRowKeySerializer();
 
     //Edge serializers
     private static final EdgeSerializer EDGE_SERIALIZER = new EdgeSerializer();
@@ -124,28 +126,47 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                     new OrganizationScopedRowKeySerializer<RowKeyType>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
 
 
+    /**
+     * Get all graph edge versions
+     */
+    private static final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID> GRAPH_EDGE_VERSIONS =
+            new MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID>( "Graph_Edge_Versions",
+                    new OrganizationScopedRowKeySerializer<EdgeRowKey>( EDGE_ROW_KEY_SERIALIZER ),
+                    UUIDSerializer.get() );
+
+
     protected final Keyspace keyspace;
-    protected final CassandraConfig graphFig;
+    protected final CassandraConfig cassandraConfig;
+    protected final GraphFig graphFig;
 
 
     @Inject
-    public EdgeSerializationImpl( final Keyspace keyspace, final CassandraConfig graphFig ) {
+    public EdgeSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
+                                  final GraphFig graphFig ) {
         this.keyspace = keyspace;
+        this.cassandraConfig = cassandraConfig;
         this.graphFig = graphFig;
     }
 
 
     @Override
     public MutationBatch writeEdge( final OrganizationScope scope, final Edge edge ) {
-        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( graphFig.getWriteCL() );;
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL());
 
 
-        doWrite( scope, edge, new RowOp() {
+        doWrite( scope, edge, new RowOp<RowKey>() {
             @Override
-            public void doWrite( final MultiTennantColumnFamily columnFamily, final Object rowKey,
-                                 final DirectedEdge edge ) {
-
+            public  void doWrite(
+                    final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> columnFamily, final RowKey rowKey,
+                    final DirectedEdge edge ) {
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( edge, false );
+            }
+
+
+            @Override
+            public void doWrite( final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID> columnFamily,
+                                 final EdgeRowKey rowKey, final UUID version ) {
+                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( version, false );
             }
         } );
 
@@ -156,15 +177,22 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public MutationBatch markEdge( final OrganizationScope scope, final Edge edge ) {
-        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( graphFig.getWriteCL() );;
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
 
 
-        doWrite( scope, edge, new RowOp() {
+        doWrite( scope, edge, new RowOp<RowKey>() {
             @Override
-            public void doWrite( final MultiTennantColumnFamily columnFamily, final Object rowKey,
-                                 final DirectedEdge edge ) {
-
+            public void doWrite(
+                    final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> columnFamily, final RowKey rowKey,
+                    final DirectedEdge edge ) {
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( edge, true );
+            }
+
+
+            @Override
+            public void doWrite( final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID> columnFamily,
+                                 final EdgeRowKey rowKey, final UUID version ) {
+                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( version, true );
             }
         } );
 
@@ -175,15 +203,22 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public MutationBatch deleteEdge( final OrganizationScope scope, final Edge edge ) {
-        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( graphFig.getWriteCL());
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
 
 
-        doWrite( scope, edge, new RowOp() {
+        doWrite( scope, edge, new RowOp<RowKey>() {
             @Override
-            public void doWrite( final MultiTennantColumnFamily columnFamily, final Object rowKey,
-                                 final DirectedEdge edge ) {
-
+            public void doWrite(
+                    final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> columnFamily, final RowKey rowKey,
+                    final DirectedEdge edge ) {
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).deleteColumn( edge );
+            }
+
+
+            @Override
+            public void doWrite( final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID> columnFamily,
+                                 final EdgeRowKey rowKey, final UUID version ) {
+                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).deleteColumn( version );
             }
         } );
 
@@ -193,8 +228,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     /**
-     * Write the edges internally
-     * @param scope  The scope to encapsulate
+     * EdgeWrite the edges internally
+     *
+     * @param scope The scope to encapsulate
      * @param edge The edge to write
      * @param op The row operation to invoke
      */
@@ -226,23 +262,35 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final DirectedEdge targetEdge = new DirectedEdge( sourceNodeId, version );
 
 
-        /**
-         * Write edges from target<-source
-         */
+        final EdgeRowKey edgeRowKey = new EdgeRowKey( sourceNodeId, type, targetNodeId );
 
+
+        /**
+         * write edges from source->target
+         */
 
         op.doWrite( GRAPH_SOURCE_NODE_EDGES, sourceRowKey, sourceEdge );
 
         op.doWrite( GRAPH_SOURCE_NODE_TARGET_TYPE, sourceRowKeyType, sourceEdge );
 
+
+        /**
+         * write edges from target<-source
+         */
         op.doWrite( GRAPH_TARGET_NODE_EDGES, targetRowKey, targetEdge );
 
         op.doWrite( GRAPH_TARGET_NODE_SOURCE_TYPE, targetRowKeyType, targetEdge );
+
+
+        /**
+         * Write this in the version log for this edge of source->target
+         */
+        op.doWrite( GRAPH_EDGE_VERSIONS, edgeRowKey, version );
     }
 
 
     @Override
-    public Iterator<MarkedEdge> getEdgeFromSource( final OrganizationScope scope, final SearchByEdge search ) {
+    public Iterator<MarkedEdge> getEdgeVersions( final OrganizationScope scope, final SearchByEdge search ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateSearchByEdge( search );
 
@@ -251,7 +299,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final String type = search.getType();
         final UUID maxVersion = search.getMaxVersion();
 
-        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>( scope, search.last() ) {
+        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>( scope, maxVersion, search.last() ) {
 
 
             @Override
@@ -297,8 +345,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         final Id sourceId = edgeType.getNode();
         final String type = edgeType.getType();
+        final UUID maxVersion = edgeType.getMaxVersion();
 
-        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>( scope, edgeType.last() ) {
+        return getEdges( GRAPH_SOURCE_NODE_EDGES, new EdgeSearcher<RowKey>( scope, maxVersion, edgeType.last() ) {
             @Override
             protected RowKey generateRowKey() {
                 return new RowKey( sourceId, type );
@@ -329,8 +378,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final Id targetId = edgeType.getNode();
         final String type = edgeType.getType();
         final String targetType = edgeType.getIdType();
+        final UUID maxVersion = edgeType.getMaxVersion();
 
-        return getEdges( GRAPH_SOURCE_NODE_TARGET_TYPE, new EdgeSearcher<RowKeyType>( scope, edgeType.last() ) {
+        return getEdges( GRAPH_SOURCE_NODE_TARGET_TYPE, new EdgeSearcher<RowKeyType>( scope, maxVersion, edgeType.last() ) {
             @Override
             protected RowKeyType generateRowKey() {
                 return new RowKeyType( targetId, type, targetType );
@@ -359,54 +409,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         final Id targetId = edgeType.getNode();
         final String type = edgeType.getType();
+        final UUID maxVersion = edgeType.getMaxVersion();
 
-        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>( scope, edgeType.last() ) {
-
-
-            @Override
-            protected RowKey generateRowKey() {
-                return new RowKey( targetId, type );
-            }
-
-
-            @Override
-            protected DirectedEdge getStartColumn( final Edge last ) {
-                return new DirectedEdge( last.getSourceNode(), last.getVersion() );
-            }
-
-
-            @Override
-            protected MarkedEdge createEdge( final DirectedEdge edge, final boolean marked ) {
-                return new SimpleMarkedEdge( edge.id, type, targetId, edge.version, marked );
-            }
-        } );
-    }
-
-
-    @Override
-    public Iterator<MarkedEdge> getEdgeToTarget( final OrganizationScope scope, final SearchByEdge search ) {
-        ValidationUtils.validateOrganizationScope( scope );
-        EdgeUtils.validateSearchByEdge( search );
-
-        final Id sourceId = search.sourceNode();
-        final Id targetId = search.targetNode();
-        final UUID maxVersion = search.getMaxVersion();
-        final String type = search.getType();
-
-        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>( scope, search.last() ) {
-
-
-            @Override
-            public void setRange( final RangeBuilder builder ) {
-                if ( last.isPresent() ) {
-                    super.setRange( builder );
-                    return;
-                }
-
-                //set the last value in the range based on the max version
-                final DirectedEdge colValue = new DirectedEdge( sourceId, maxVersion );
-                builder.setStart( colValue, EDGE_SERIALIZER );
-            }
+        return getEdges( GRAPH_TARGET_NODE_EDGES, new EdgeSearcher<RowKey>( scope, maxVersion, edgeType.last() ) {
 
 
             @Override
@@ -439,8 +444,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final Id targetId = edgeType.getNode();
         final String sourceType = edgeType.getIdType();
         final String type = edgeType.getType();
+        final UUID maxVersion = edgeType.getMaxVersion();
 
-        return getEdges( GRAPH_TARGET_NODE_SOURCE_TYPE, new EdgeSearcher<RowKeyType>( scope, edgeType.last() ) {
+        return getEdges( GRAPH_TARGET_NODE_SOURCE_TYPE, new EdgeSearcher<RowKeyType>( scope, maxVersion, edgeType.last()) {
             @Override
             protected RowKeyType generateRowKey() {
                 return new RowKeyType( targetId, type, sourceType );
@@ -477,7 +483,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
          * If the edge is present, we need to being seeking from this
          */
 
-        final RangeBuilder rangeBuilder = new RangeBuilder().setLimit( graphFig.getScanPageSize() );
+        final RangeBuilder rangeBuilder = new RangeBuilder().setLimit( cassandraConfig.getScanPageSize() );
 
 
         //set the range into the search
@@ -487,24 +493,21 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
         RowQuery<ScopedRowKey<OrganizationScope, R>, DirectedEdge> query =
-                keyspace.prepareQuery( cf ).setConsistencyLevel( graphFig.getReadCL() ).getKey( rowKey ).autoPaginate( true )
-                        .withColumnRange( rangeBuilder.build() );
+                keyspace.prepareQuery( cf ).setConsistencyLevel( cassandraConfig.getReadCL() ).getKey( rowKey )
+                        .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 
 
-        try {
-            return new ColumnNameIterator<DirectedEdge, MarkedEdge>( query.execute().getResult().iterator(), searcher,
-                    searcher.hasPage() );
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
+        return new ColumnNameIterator<DirectedEdge, MarkedEdge>( query, searcher, searcher.hasPage(), graphFig.getReadTimeout() );
     }
 
 
     @Override
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
         return Arrays.asList( graphCf( GRAPH_SOURCE_NODE_EDGES ), graphCf( GRAPH_TARGET_NODE_EDGES ),
-                graphCf( GRAPH_SOURCE_NODE_TARGET_TYPE ), graphCf( GRAPH_TARGET_NODE_SOURCE_TYPE ) );
+                graphCf( GRAPH_SOURCE_NODE_TARGET_TYPE ), graphCf( GRAPH_TARGET_NODE_SOURCE_TYPE ),
+                new MultiTennantColumnFamilyDefinition( GRAPH_EDGE_VERSIONS, BytesType.class.getSimpleName(),
+                        ColumnTypes.UUID_TYPE_REVERSED, BytesType.class.getSimpleName(),
+                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
     }
 
 
@@ -512,8 +515,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
      * Helper to generate an edge definition by the type
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
-        return new MultiTennantColumnFamilyDefinition( cf,
-                BytesType.class.getSimpleName(), ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName() , MultiTennantColumnFamilyDefinition.CacheOption.KEYS);
+        return new MultiTennantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(),
+                ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
+                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
     }
 
 
@@ -559,11 +563,12 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             Preconditions.checkArgument( composite.size() == 3, "Composite should have 3 elements" );
 
 
-            //parse our id
-            final Id id = ID_COL_SERIALIZER.fromComposite( composite, 0 );
-
             //return the version
-            final UUID version = composite.get( 2, UUID_SERIALIZER );
+            final UUID version = composite.get( 0, UUID_SERIALIZER );
+
+
+            //parse our id
+            final Id id = ID_COL_SERIALIZER.fromComposite( composite, 1 );
 
 
             return new DirectedEdge( id, version );
@@ -576,10 +581,12 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         private DynamicComposite createComposite( DirectedEdge edge, AbstractComposite.ComponentEquality equality ) {
             DynamicComposite composite = new DynamicComposite();
 
-            ID_COL_SERIALIZER.toComposite( composite, edge.id );
-
             //add our edge
             composite.addComponent( edge.version, UUID_SERIALIZER, ColumnTypes.UUID_TYPE_REVERSED, equality );
+
+
+            ID_COL_SERIALIZER.toComposite( composite, edge.id );
+
 
             return composite;
         }
@@ -647,16 +654,35 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     /**
+     * Used to store row keys by sourceId, targetId and edgeType
+     */
+    private static class EdgeRowKey {
+        public final Id sourceId;
+        public final Id targetId;
+        public final String edgeType;
+
+
+        private EdgeRowKey( final Id sourceId, final String edgeType, final Id targetId ) {
+            this.sourceId = sourceId;
+            this.targetId = targetId;
+            this.edgeType = edgeType;
+        }
+    }
+
+
+    /**
      * Searcher to be used when performing the search.  Performs I/O transformation as well as parsing for the iterator
      */
     private static abstract class EdgeSearcher<R> implements ColumnParser<DirectedEdge, MarkedEdge> {
 
         protected final Optional<Edge> last;
+        protected final UUID maxVersion;
         protected final OrganizationScope scope;
 
 
-        protected EdgeSearcher( final OrganizationScope scope, final Optional<Edge> last ) {
+        protected EdgeSearcher( final OrganizationScope scope, final UUID maxVersion , final Optional<Edge> last) {
             this.scope = scope;
+            this.maxVersion = maxVersion;
             this.last = last;
         }
 
@@ -672,7 +698,11 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
                 builder.setStart( sourceEdge, EDGE_SERIALIZER );
+            }else{
+
+
             }
+
         }
 
 
@@ -780,11 +810,51 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     /**
+     * Class to perform serialization for row keys from edges
+     */
+    private static class EdgeRowKeySerializer implements CompositeFieldSerializer<EdgeRowKey> {
+
+        private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
+
+
+        @Override
+        public void toComposite( final CompositeBuilder builder, final EdgeRowKey key ) {
+
+            //add the row id to the composite
+            ID_SER.toComposite( builder, key.sourceId );
+            builder.addString( key.edgeType );
+            ID_SER.toComposite( builder, key.targetId );
+        }
+
+
+        @Override
+        public EdgeRowKey fromComposite( final CompositeParser composite ) {
+
+            final Id sourceId = ID_SER.fromComposite( composite );
+            final String edgeType = composite.readString();
+            final Id targetId = ID_SER.fromComposite( composite );
+
+            return new EdgeRowKey( sourceId, edgeType, targetId );
+        }
+    }
+
+
+    /**
      * Simple callback to perform puts and deletes with a common row setup code
      */
     private static interface RowOp<R> {
 
-        void doWrite( final MultiTennantColumnFamily<OrganizationScope, R, DirectedEdge> columnFamily, R rowKey,
-                      DirectedEdge edge );
+        /**
+         * Write the edge with the given data
+         */
+        void doWrite(
+                final MultiTennantColumnFamily<OrganizationScope, R, DirectedEdge> columnFamily, R rowKey,
+                DirectedEdge edge );
+
+        /**
+         * Write the edge into the version cf
+         */
+        void doWrite( final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID> columnFamily,
+                      EdgeRowKey rowKey, UUID version );
     }
 }

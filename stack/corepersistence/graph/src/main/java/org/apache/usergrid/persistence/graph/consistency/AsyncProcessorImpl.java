@@ -2,69 +2,95 @@ package org.apache.usergrid.persistence.graph.consistency;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.EventBus;
+import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.hystrix.HystrixGraphObservable;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 
-import rx.Observer;
-import rx.Scheduler;
+import rx.Observable;
+import rx.Subscriber;
+import rx.functions.FuncN;
+import rx.schedulers.Schedulers;
 
 
 /**
- * The implementation of asynchronous processing
+ * The implementation of asynchronous processing. This is intentionally kept as a 1 processor to 1 event type mapping
+ * This way reflection is not used, event dispatching is easier, and has compile time checking
  */
 @Singleton
-public class AsyncProcessorImpl implements AsyncProcessor {
+public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
-    private static final HystrixCommandGroupKey GRAPH_REPAIR = HystrixCommandGroupKey.Factory.asKey( "Graph_Repair" );
-
-    private final EventBus bus;
-    private final TimeoutQueue queue;
-    private final Scheduler scheduler;
+    /**
+     * TODO, run this with hystrix
+     */
 
     private static final Logger LOG = LoggerFactory.getLogger( AsyncProcessor.class );
 
-    private List<ErrorListener> listeners = new ArrayList<ErrorListener>();
+    protected final TimeoutQueue<T> queue;
+    protected final GraphFig graphFig;
+    protected final List<MessageListener<T, T>> listeners = new ArrayList<MessageListener<T, T>>();
+
+
+    protected List<ErrorListener<T>> errorListeners = new ArrayList<ErrorListener<T>>();
+    protected List<CompleteListener<T>> completeListeners = new ArrayList<CompleteListener<T>>();
 
 
     @Inject
-    public AsyncProcessorImpl( final EventBus bus, final TimeoutQueue queue, final Scheduler scheduler ) {
-        this.bus = bus;
+    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final GraphFig graphFig ) {
         this.queue = queue;
-        this.scheduler = scheduler;
+        this.graphFig = graphFig;
+
+        //we purposefully use a new thread.  We don't want to use one of the I/O threads to run this task
+        //in the event the scheduler is full, we'll end up rejecting the reschedule of this task
+        Schedulers.newThread().schedulePeriodically( new TimeoutTask<T>( this, graphFig ), graphFig.getTaskLoopTime(),
+                graphFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
     }
 
 
     @Override
-    public <T> TimeoutEvent<T> setVerification( final T event, final long timeout ) {
+    public AsynchronousMessage<T> setVerification( final T event, final long timeout ) {
         return queue.queue( event, timeout );
     }
 
 
     @Override
-    public <T> void start( final TimeoutEvent<T> event ) {
+    public void start( final AsynchronousMessage<T> event ) {
+        final T data = event.getEvent();
+        /**
+         * Execute all listeners in parallel
+         */
+        List<Observable<?>> observables = new ArrayList<Observable<?>>( listeners.size() );
 
+        for ( MessageListener<T, T> listener : listeners ) {
+            observables.add( HystrixGraphObservable.async( listener.receive( data ) ) );
+        }
 
-        //run this in a timeout command so it doesn't run forever. If it times out, it will simply resume later
-        new HystrixCommand<Void>( GRAPH_REPAIR ) {
+        LOG.debug( "About to start {} observables for event {}", listeners.size(), event );
 
+        //run everything in parallel and zip it up
+        Observable.zip( observables, new FuncN<AsynchronousMessage<T>>() {
             @Override
-            protected Void run() throws Exception {
-                final T busEvent = event.getEvent();
-                bus.post( busEvent );
-                return null;
+            public AsynchronousMessage<T> call( final Object... args ) {
+                return event;
             }
-        }.toObservable( scheduler ).subscribe( new Observer<Void>() {
+        } ).subscribe( new Subscriber<AsynchronousMessage<T>>() {
+
             @Override
             public void onCompleted() {
+                LOG.debug( "Successfully completed processing for event {}", event );
                 queue.remove( event );
+
+                for ( CompleteListener<T> listener : completeListeners ) {
+                    listener.onComplete( event );
+                }
             }
 
 
@@ -72,48 +98,42 @@ public class AsyncProcessorImpl implements AsyncProcessor {
             public void onError( final Throwable throwable ) {
                 LOG.error( "Unable to process async event", throwable );
 
-                for ( ErrorListener listener : listeners ) {
+                for ( ErrorListener listener : errorListeners ) {
                     listener.onError( event, throwable );
                 }
             }
 
 
             @Override
-            public void onNext( final Void args ) {
-                //nothing to do here
-                System.out.print( "next" );
-                //To change body of implemented methods use File | Settings | File Templates.
+            public void onNext( final AsynchronousMessage<T> tAsynchronousMessage ) {
+                //no op
             }
         } );
-
-        //                new Action1<Void>() {
-        //                                                   @Override
-        //                                                   public void call( final Void timeoutEvent ) {
-        //
-        //                                                   }
-        //                                               }, new Action1<Throwable>() {
-        //                                                   @Override
-        //                                                   public void call( final Throwable throwable ) {
-        //
-        //                                                   }
-        //                                               }
-        //                                             );
     }
 
 
-    /**
-     * Add an error listener
-     */
-    public void addListener( ErrorListener listener ) {
+    @Override
+    public Collection<AsynchronousMessage<T>> getTimeouts( final int maxCount, final long timeout ) {
+        return queue.take( maxCount, timeout );
+    }
+
+
+    @Override
+    public void addListener( final MessageListener<T, T> listener ) {
         this.listeners.add( listener );
     }
 
 
     /**
-     * Internal listener for errors, really only used for testing.  Can be used to hook into error state
+     * Add an error listeners
      */
-    public static interface ErrorListener {
+    public void addErrorListener( ErrorListener<T> listener ) {
+        this.errorListeners.add( listener );
+    }
 
-        public <T> void onError( TimeoutEvent<T> event, Throwable t );
+
+    @Override
+    public void addCompleteListener( final CompleteListener<T> listener ) {
+        this.completeListeners.add( listener );
     }
 }
