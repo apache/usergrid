@@ -43,7 +43,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
-import org.apache.usergrid.persistence.index.utils.EntityBuilder;
+import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
@@ -98,7 +98,7 @@ public class EntityCollectionIndexTest {
             Map<String, Object> item = (Map<String, Object>)o;
 
             Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
-            entity = EntityBuilder.fromMap( scope.getName(), entity, item );
+            entity = EntityMapUtils.fromMap( entity, item );
             EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
 
             entity = entityManager.write( entity ).toBlockingObservable().last();
@@ -133,7 +133,7 @@ public class EntityCollectionIndexTest {
             put("topspeed", 215);
         }};
 
-        Entity entity = EntityBuilder.fromMap( scope.getName(), entityMap );
+        Entity entity = EntityMapUtils.fromMap( entityMap );
         EntityUtils.setId( entity, new SimpleId( "fastcar" ));
         entity = entityManager.write( entity ).toBlockingObservable().last();
         entityIndex.index( entity );
@@ -209,10 +209,10 @@ public class EntityCollectionIndexTest {
             Map<String, Object> map1 = (Map<String, Object>)o;
 
             // convert map to entity
-            Entity entity1 = EntityBuilder.fromMap( "testscope", map1 );
+            Entity entity1 = EntityMapUtils.fromMap( map1 );
 
             // convert entity back to map
-            Map map2 = EsEntityCollectionIndex.entityToMap( entity1 );
+            Map map2 = EntityMapUtils.toMap( entity1 );
 
             // the two maps should be the same except for six new system properties
             Map diff = Maps.difference( map1, map2 ).entriesDiffering();

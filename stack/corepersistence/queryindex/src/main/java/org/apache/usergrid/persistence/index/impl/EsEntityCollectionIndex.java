@@ -22,11 +22,8 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.time.StopWatch;
@@ -40,15 +37,9 @@ import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.field.ArrayField;
-import org.apache.usergrid.persistence.model.field.EntityObjectField;
-import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.field.ListField;
-import org.apache.usergrid.persistence.model.field.LocationField;
-import org.apache.usergrid.persistence.model.field.SetField;
-import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
+import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -203,7 +194,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
             timer.start();
         }
 
-        Map<String, Object> entityAsMap = EsEntityCollectionIndex.entityToMap(entity);
+        Map<String, Object> entityAsMap = EntityMapUtils.toMap(entity);
         entityAsMap.put("created", entity.getId().getUuid().timestamp());
         entityAsMap.put("updated", entity.getVersion().timestamp());
 
@@ -331,85 +322,6 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         return results;
     }
 
-    /**
-     * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each
-     * StringField.
-     */
-    public static Map entityToMap(Entity entity) {
-
-        Map<String, Object> entityMap = new HashMap<String, Object>();
-
-        for (Object f : entity.getFields().toArray()) {
-            Field field = (Field) f;
-
-            if (f instanceof ListField || f instanceof ArrayField) {
-                List list = (List) field.getValue();
-                entityMap.put(field.getName(),
-                        new ArrayList(processCollectionForMap(list)));
-
-            } else if (f instanceof SetField) {
-                Set set = (Set) field.getValue();
-                entityMap.put(field.getName(),
-                        new ArrayList(processCollectionForMap(set)));
-
-            } else if (f instanceof EntityObjectField) {
-                Entity ev = (Entity) field.getValue();
-                entityMap.put(field.getName(), entityToMap(ev)); // recursion
-
-            } else if (f instanceof StringField) {
-                // index in lower case because Usergrid queries are case insensitive
-                entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
-                entityMap.put(field.getName() + ANALYZED_SUFFIX, field.getValue());
-
-            } else if (f instanceof LocationField) {
-                LocationField locField = (LocationField) f;
-                Map<String, Object> locMap = new HashMap<String, Object>();
-
-                // field names lat and lon trigger ElasticSearch geo location 
-                locMap.put("lat", locField.getValue().getLatitude());
-                locMap.put("lon", locField.getValue().getLongtitude());
-                entityMap.put(field.getName() + GEO_SUFFIX, locMap);
-
-            } else {
-                entityMap.put(field.getName(), field.getValue());
-            }
-        }
-
-        return entityMap;
-    }
-
-    private static Collection processCollectionForMap(Collection c) {
-        if (c.isEmpty()) {
-            return c;
-        }
-        List processed = new ArrayList();
-        Object sample = c.iterator().next();
-
-        if (sample instanceof Entity) {
-            for (Object o : c.toArray()) {
-                Entity e = (Entity) o;
-                processed.add(entityToMap(e));
-            }
-
-        } else if (sample instanceof List) {
-            for (Object o : c.toArray()) {
-                List list = (List) o;
-                processed.add(processCollectionForMap(list)); // recursion;
-            }
-
-        } else if (sample instanceof Set) {
-            for (Object o : c.toArray()) {
-                Set set = (Set) o;
-                processed.add(processCollectionForMap(set)); // recursion;
-            }
-
-        } else {
-            for (Object o : c.toArray()) {
-                processed.add(o);
-            }
-        }
-        return processed;
-    }
 
     /**
      * Build mappings for data to be indexed. Setup String fields as not_analyzed and analyzed,

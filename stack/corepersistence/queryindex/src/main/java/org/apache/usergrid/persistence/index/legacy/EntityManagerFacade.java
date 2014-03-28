@@ -17,7 +17,7 @@
  */
 package org.apache.usergrid.persistence.index.legacy;
 
-import org.apache.usergrid.persistence.index.utils.EntityBuilder;
+import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.usergrid.persistence.collection.CollectionScope;
@@ -101,7 +101,7 @@ public class EntityManagerFacade {
         typesByCollectionNames.put( collectionName, type );
 
         Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), type ));
-        entity = EntityBuilder.fromMap( scope.getName(), entity, properties );
+        entity = EntityMapUtils.fromMap( entity, properties );
         entity.setField(new LongField("created", entity.getId().getUuid().timestamp()) );
         entity.setField(new LongField("modified", entity.getId().getUuid().timestamp()) );
         entity = ecm.write( entity ).toBlockingObservable().last();
