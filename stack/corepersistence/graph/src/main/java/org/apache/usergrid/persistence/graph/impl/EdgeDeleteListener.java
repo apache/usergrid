@@ -41,10 +41,14 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
 
 
     @Inject
-    public EdgeDeleteListener( final EdgeSerialization edgeSerialization,
-                               final EdgeMetadataSerialization edgeMetadataSerialization,
-                               final GraphManagerFactory graphManagerFactory, final Keyspace keyspace,
-                               @EdgeDelete final AsyncProcessor edgeDelete, final GraphFig graphFig ) {
+    public EdgeDeleteListener( 
+        final EdgeSerialization edgeSerialization,
+        final EdgeMetadataSerialization edgeMetadataSerialization,
+        final GraphManagerFactory graphManagerFactory, 
+        final Keyspace keyspace,
+        @EdgeDelete final AsyncProcessor<EdgeEvent<Edge>> edgeDelete, 
+        final GraphFig graphFig ) {
+
         this.edgeSerialization = edgeSerialization;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.graphManagerFactory = graphManagerFactory;

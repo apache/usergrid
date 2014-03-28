@@ -54,6 +54,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.model.entity.Entity;
 
 import rx.Observable;
 import rx.functions.Func1;
@@ -82,11 +83,14 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Inject
-    public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
-                            final EdgeSerialization edgeSerialization, final NodeSerialization nodeSerialization,
-                            final GraphFig graphFig,
-                            @EdgeDelete final AsyncProcessor edgeDelete, @NodeDelete final AsyncProcessor nodeDelete,
-                            @Assisted final OrganizationScope scope ) {
+    public GraphManagerImpl( 
+        final EdgeMetadataSerialization edgeMetadataSerialization,
+        final EdgeSerialization edgeSerialization, 
+        final NodeSerialization nodeSerialization,
+        final GraphFig graphFig,
+        @EdgeDelete final AsyncProcessor<Edge> edgeDelete, 
+        @NodeDelete final AsyncProcessor<Id> nodeDelete,
+        @Assisted final OrganizationScope scope ) {
 
         ValidationUtils.validateOrganizationScope( scope );
 
@@ -97,9 +101,7 @@ public class GraphManagerImpl implements GraphManager {
         this.nodeSerialization = nodeSerialization;
         this.graphFig = graphFig;
 
-
         this.edgeDeleteAsyncProcessor = edgeDelete;
-
 
         this.nodeDeleteAsyncProcessor = nodeDelete;
     }
