@@ -38,13 +38,13 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
     exitOnEsc: true,
     nextLabel: 'Next',
     prevLabel: 'Back',
-    skipLabel: 'Got It',
-    doneLabel: 'Got it'
+    skipLabel: 'Exit',
+    doneLabel: 'Done'
   };
 
   $rootScope.$on("$routeChangeSuccess", function(event, current) {      
     //hide the help buttons if not on org-overview page
-    var path = current.$$route.originalPath;
+    var path = current.$$route ? current.$$route.originalPath : null;
     if (path == '/org-overview') {
       
       $rootScope.help.showHelpButtons = true;

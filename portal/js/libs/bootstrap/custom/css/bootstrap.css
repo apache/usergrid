@@ -4538,10 +4538,11 @@ a.thumbnail:focus {
 .tooltip-inner {
   max-width: 200px;
   padding: 8px;
-  color: #ffffff;
-  text-align: center;
+  color: #000000;
+  text-align: left;
   text-decoration: none;
-  background-color: #000000;
+  background-color: #F0F8FC;
+  border: 1px solid #6dbce3;
   -webkit-border-radius: 0;
   -moz-border-radius: 0;
   border-radius: 0;
@@ -4558,28 +4559,28 @@ a.thumbnail:focus {
   left: 50%;
   margin-left: -5px;
   border-width: 5px 5px 0;
-  border-top-color: #000000;
+  border-top-color: #6dbce3;
 }
 .tooltip.right .tooltip-arrow {
   top: 50%;
   left: 0;
   margin-top: -5px;
   border-width: 5px 5px 5px 0;
-  border-right-color: #000000;
+  border-right-color: #6dbce3;
 }
 .tooltip.left .tooltip-arrow {
   top: 50%;
   right: 0;
   margin-top: -5px;
   border-width: 5px 0 5px 5px;
-  border-left-color: #000000;
+  border-left-color: #6dbce3;
 }
 .tooltip.bottom .tooltip-arrow {
   top: 0;
   left: 50%;
   margin-left: -5px;
   border-width: 0 5px 5px;
-  border-bottom-color: #000000;
+  border-bottom-color: #6dbce3;
 }
 .popover {
   position: absolute;

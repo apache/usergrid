@@ -1769,6 +1769,7 @@ li.selected .btn.btn-primary.toolbar {
   border: 1px solid rgba(0,0,0,.1);
   border-radius: 0;
   box-shadow: none;
+  border: 1px solid rgba(0,0,0,.25);
 }
 
 .introjs-helperNumberLayer {
@@ -1859,8 +1860,7 @@ li.selected .btn.btn-primary.toolbar {
 /*  -----   button styles   -----   */
 
 .introjs-button {
-  font-family: "Open Sans", Arial, sans-serif;
-  border: 1px solid #6dbce3;
+  font-family: "Open Sans", Arial, sans-serif;  
   text-shadow: none;
   font: 12px/normal sans-serif;
   color: #1f77a3;
@@ -1869,10 +1869,10 @@ li.selected .btn.btn-primary.toolbar {
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
   border-radius: 2px;
+  border: 1px solid #d4d4d4;
 }
 
 .introjs-button:hover {
-  border-color: #6dbce3;
   font-family: "Open Sans", Arial, sans-serif;
 }
 
@@ -1886,6 +1886,8 @@ li.selected .btn.btn-primary.toolbar {
   color: #1f77a3;
   text-decoration: none; 
   font-family: "Open Sans", Arial, sans-serif;
+  margin-right: 32px;
+  border: 1px solid #6dbce3;
 }
 
 .introjs-nextbutton {
@@ -1893,7 +1895,8 @@ li.selected .btn.btn-primary.toolbar {
   font-family: "Open Sans", Arial, sans-serif;
   text-align: left;
   width: 40px;
-  
+  border-color: #6dbce3;
+  margin-left: 3px;
 }
 
 .introjs-prevbutton {
@@ -1902,26 +1905,7 @@ li.selected .btn.btn-primary.toolbar {
   font-family: "Open Sans", Arial, sans-serif;
   text-align: right;
   width: 40px;
-}
-
-.introjs-nextbutton.introjs-disabled, 
-.introjs-nextbutton.introjs-disabled:active, 
-.introjs-nextbutton.introjs-disabled:hover, 
-.introjs-nextbutton.introjs-disabled:focus {
-  background-image: url("img/introjs_arrow_step_next_disabled.png");
-  background-position: 48px 5px;
-  background-repeat: no-repeat;
-  text-align: left;
-}
-
-.introjs-prevbutton.introjs-disabled, 
-.introjs-prevbutton.introjs-disabled:active, 
-.introjs-prevbutton.introjs-disabled:hover, 
-.introjs-prevbutton.introjs-disabled:focus {
-  background-image: url("img/introjs_arrow_step_prev_disabled.png");
-  background-position: 2px 5px;
-  background-repeat: no-repeat;
-  text-align: right;
+  border-color: #6dbce3;  
 }
 
 .introjs-nextbutton,
@@ -1932,6 +1916,7 @@ li.selected .btn.btn-primary.toolbar {
   background-position: 48px 5px;
   background-repeat: no-repeat;
   text-align: left;
+  border: 1px solid #6dbce3;
 }
 
 .introjs-prevbutton,
@@ -1942,6 +1927,29 @@ li.selected .btn.btn-primary.toolbar {
   background-position: 2px 5px;
   background-repeat: no-repeat;
   text-align: right;
+  border: 1px solid #6dbce3;
+}
+
+.introjs-nextbutton.introjs-disabled, 
+.introjs-nextbutton.introjs-disabled:active, 
+.introjs-nextbutton.introjs-disabled:hover, 
+.introjs-nextbutton.introjs-disabled:focus {
+  background-image: url("img/introjs_arrow_step_next_disabled.png");
+  background-position: 48px 5px;
+  background-repeat: no-repeat;
+  text-align: left;
+  border: 1px solid #d4d4d4;
+}
+
+.introjs-prevbutton.introjs-disabled, 
+.introjs-prevbutton.introjs-disabled:active, 
+.introjs-prevbutton.introjs-disabled:hover, 
+.introjs-prevbutton.introjs-disabled:focus {
+  background-image: url("img/introjs_arrow_step_prev_disabled.png");
+  background-position: 2px 5px;
+  background-repeat: no-repeat;
+  text-align: right;
+  border: 1px solid #d4d4d4;
 }
 
 .introjs-disabled, .introjs-disabled:hover, .introjs-disabled:focus {
