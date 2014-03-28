@@ -1,6 +1,6 @@
 {
-  "name": "usergrid-portal-nomax",
-  "version": "2.0.42",
+  "name": "usergrid-portal",
+  "version": "2.0.1",
   "ignore": [
     ".jshintrc",
     "**/*.txt",
@@ -8,7 +8,7 @@
     "css/",
     "img/",
     "archive/",
-    "dist/archive",
+    "dist/appsvc-ui/archive",
     "bower_components/",
     "scripts/",
     "sdk/",
