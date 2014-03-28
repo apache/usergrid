@@ -1,7 +1,25 @@
 {
-  "name": "usergrid-portal",
-  "version": "2.0.1",
-  "ignore": [],
+  "name": "usergrid-portal-nomax",
+  "version": "2.0.42",
+  "ignore": [
+    ".jshintrc",
+    "**/*.txt",
+    "js/",
+    "css/",
+    "img/",
+    "archive/",
+    "dist/archive",
+    "bower_components/",
+    "scripts/",
+    "sdk/",
+    "tests/",
+    "Gruntfile.js",
+    "*.md",
+    "config.js",
+    "package.json",
+    "LICENSE",
+    ".gitignore"
+  ],
   "dependencies": {
     "angularitics": "~0.8.7",
     "apigee-sdk": "~2.0.8",
@@ -9,6 +27,7 @@
   },
   "devDependencies": {},
   "keywords": [
+    "apigee",
     "usergrid"
   ]
 }
