@@ -137,4 +137,10 @@ public interface Application extends TestRule {
      * @param properties the Map of property key value pairs
      */
     void putAll( Map<String, Object> properties );
+
+    /**
+     * Remove and de-index entity.
+     * @param Entity to be removed.
+     */
+    public void remove( Entity entity ) throws Exception;
 }

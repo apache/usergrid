@@ -56,6 +56,23 @@ public class CollectionIT extends AbstractCoreIT {
 
 
     @Test
+    public void testSimpleCrud() throws Exception {
+
+        app.put( "username", "edanuff" );
+        app.put( "email", "ed@anuff.com" );
+        Entity user = app.create( "user" );
+        assertNotNull( user ); 
+
+        user = app.get( user.getUuid() );
+        assertNotNull( user );
+
+        app.remove( user );
+        user = app.get( user.getUuid() );
+        //assertNull( user );
+    }
+
+
+    @Test
     public void testCollection() throws Exception {
         app.put( "username", "edanuff" );
         app.put( "email", "ed@anuff.com" );
