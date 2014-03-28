@@ -25,10 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.AsyncBlobStore;
+import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
@@ -75,7 +74,6 @@ import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Module;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
@@ -1221,7 +1219,7 @@ public class ManagementServiceIT {
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
-        //assertEquals( 3 , a.size() );
+        assertEquals( 3 , a.size() );
         for ( int i = 0; i < a.size(); i++ ) {
             org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
             org.json.simple.JSONObject entityData = ( JSONObject ) data.get( "Metadata" );
@@ -1490,11 +1488,9 @@ public class ManagementServiceIT {
     }
 
 
-    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+ //   @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    @Test
     public void testIntegration100EntitiesOn() throws Exception {
-
-        //s3client.putObject(new PutObjectRequest(bucketName, keyName, file));
-
 
         S3Export s3Export = new S3ExportImpl();
         ExportService exportService = setup.getExportService();
@@ -1509,12 +1505,24 @@ public class ManagementServiceIT {
         Entity[] entity;
         entity = new Entity[100];
         //creates entities
-        for ( int i = 0; i < 100; i++ ) {
-            userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "bojangles" + i );
-            userProperties.put( "email", "bojangles" + i + "@anuff.com" );
 
-            entity[i] = em.create( "user", userProperties );
+        ApplicationInfo appMade = null;
+        for(int i = 0; i < 100; i++) {
+            appMade = setup.getMgmtSvc().createApplication( organization.getUuid(), "superapp"+i);
+
+            EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
+            customMaker.createApplicationCollection( "superappCol"+i );
+            //intialize user object to be posted
+            Map<String, Object> entityLevelProperties = null;
+            Entity[] entNotCopied;
+            entNotCopied = new Entity[20];
+            //creates entities
+            for ( int index = 0; index < 20; index++ ) {
+                entityLevelProperties = new LinkedHashMap<String, Object>();
+                entityLevelProperties.put( "username", "bobso" + index );
+                entityLevelProperties.put( "email", "derp" + index + "@anuff.com" );
+                entNotCopied[index] = customMaker.create( "superappCol", entityLevelProperties );
+            }
         }
 
         UUID exportUUID = exportService.schedule( payload );
@@ -1541,6 +1549,7 @@ public class ManagementServiceIT {
         overrides.setProperty( "s3" + ".credential", secretKey );
 
         Blob bo = null;
+        BlobStore blobStore = null;
 
         try {
             final Iterable<? extends Module> MODULES = ImmutableSet
@@ -1552,17 +1561,126 @@ public class ManagementServiceIT {
                                   .overrides( overrides ).buildView( BlobStoreContext.class );
 
 
-            AsyncBlobStore blobStore = context.getAsyncBlobStore();
-            ListenableFuture<Blob> futureETag = blobStore.getBlob( bucketName,s3Export.getFilename() );
-            bo = futureETag.get( 3, TimeUnit.SECONDS );
+            blobStore = context.getBlobStore();
+            if(!blobStore.blobExists( bucketName,s3Export.getFilename()  )){
+                blobStore.deleteContainer( bucketName );
+                assert(false);
+            }
+            Long numOfFiles = blobStore.countBlobs( bucketName );
+            Long numWeWant = Long.valueOf( 1 );
+            assertEquals( numOfFiles, numWeWant );
+
+            bo = blobStore.getBlob( bucketName,s3Export.getFilename()   );
+
         }catch(Exception e) {
             assert(false);
         }
 
         assertNotNull( bo );
+        blobStore.deleteContainer( bucketName );
     }
 
-    @Ignore
+    @Test
+    public void testIntegration100EntitiesForAllApps() throws Exception {
+
+        S3Export s3Export = new S3ExportImpl();
+        ExportService exportService = setup.getExportService();
+        HashMap<String, Object> payload = payloadBuilder();
+
+        OrganizationInfo orgMade = null;
+        ApplicationInfo appMade = null;
+        for(int i = 0; i < 100; i++) {
+            orgMade =setup.getMgmtSvc().createOrganization( "minorboss"+i,adminUser,true );
+            appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp"+i);
+
+            EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
+            customMaker.createApplicationCollection( "superappCol"+i );
+            //intialize user object to be posted
+            Map<String, Object> entityLevelProperties = null;
+            Entity[] entNotCopied;
+            entNotCopied = new Entity[20];
+            //creates entities
+            for ( int index = 0; index < 20; index++ ) {
+                entityLevelProperties = new LinkedHashMap<String, Object>();
+                entityLevelProperties.put( "username", "bobso" + index );
+                entityLevelProperties.put( "email", "derp" + index + "@anuff.com" );
+                entNotCopied[index] = customMaker.create( "superappCol", entityLevelProperties );
+            }
+        }
+
+        payload.put("organizationId",orgMade.getUuid());
+
+        EntityManager em = setup.getEmf().getEntityManager( appMade.getId() );
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+        Entity[] entity;
+        entity = new Entity[100];
+        //creates entities
+        for ( int i = 0; i < 100; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "bido" + i );
+            userProperties.put( "email", "bido" + i + "@anuff.com" );
+
+            entity[i] = em.create( "user", userProperties );
+        }
+
+        UUID exportUUID = exportService.schedule( payload );
+        assertNotNull( exportUUID );
+        exportService.setS3Export( s3Export );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", payload );
+        jobData.setProperty( "exportId", exportUUID );
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( jobExecution );
+        while (!exportService.getState( appMade.getId(),exportUUID ).equals("FINISHED"));
+
+        String bucketName = System.getProperty( "bucketName" );
+        String accessId = System.getProperty( "accessKey" );
+        String secretKey =  System.getProperty("secretKey");
+
+        Properties overrides = new Properties();
+        overrides.setProperty( "s3" + ".identity", accessId );
+        overrides.setProperty( "s3" + ".credential", secretKey );
+
+        Blob bo = null;
+        BlobStore blobStore = null;
+
+        try {
+            final Iterable<? extends Module> MODULES = ImmutableSet
+                    .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(), new NettyPayloadModule
+                            () );
+
+            BlobStoreContext context =
+                    ContextBuilder.newBuilder( "s3" ).credentials( accessId, secretKey ).modules( MODULES )
+                                  .overrides( overrides ).buildView( BlobStoreContext.class );
+
+
+            blobStore = context.getBlobStore();
+            if(!blobStore.blobExists( bucketName,s3Export.getFilename()  )){
+                blobStore.deleteContainer( bucketName );
+                assert(false);
+            }
+            Long numOfFiles = blobStore.countBlobs( bucketName );
+            Long numWeWant = Long.valueOf( 100 );
+            assertEquals( numOfFiles, numWeWant );
+
+            bo = blobStore.getBlob( bucketName,s3Export.getFilename()   );
+
+        }catch(Exception e) {
+            assert(false);
+        }
+
+        assertNotNull( bo );
+        blobStore.deleteContainer( bucketName );
+    }
+
+    @Test
     public void testIntegration100EntitiesOnOneOrg() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -1629,7 +1747,9 @@ public class ManagementServiceIT {
         Properties overrides = new Properties();
         overrides.setProperty( "s3" + ".identity", accessId );
         overrides.setProperty( "s3" + ".credential", secretKey );
+
         Blob bo = null;
+        BlobStore blobStore = null;
 
         try {
             final Iterable<? extends Module> MODULES = ImmutableSet
@@ -1641,14 +1761,22 @@ public class ManagementServiceIT {
                                   .overrides( overrides ).buildView( BlobStoreContext.class );
 
 
-            AsyncBlobStore blobStore = context.getAsyncBlobStore();
-            ListenableFuture<Blob> futureETag = blobStore.getBlob( bucketName,s3Export.getFilename() );
-            bo = futureETag.get( 3, TimeUnit.SECONDS );
+            blobStore = context.getBlobStore();
+            if(!blobStore.blobExists( bucketName,s3Export.getFilename()  )){
+                assert(false);
+            }
+            Long numOfFiles = blobStore.countBlobs( bucketName );
+            Long numWeWant = Long.valueOf( 1 );
+            assertEquals( numOfFiles, numWeWant );
+
+            bo = blobStore.getBlob( bucketName,s3Export.getFilename()   );
+
         }catch(Exception e) {
             assert(false);
         }
 
         assertNotNull( bo );
+        blobStore.deleteContainer( bucketName );
     }
 
     /*Creates fake payload for testing purposes.*/
