@@ -603,6 +603,16 @@
                 "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
             }
         },
+        "RestSecurityGroupPort9160" : {
+                 "Type" : "AWS::EC2::SecurityGroupIngress",
+                 "Properties" : {
+                     "GroupName" : { "Ref" : "CassSecurityGroup" },
+                     "IpProtocol": "tcp",
+                    "FromPort": "9160",
+                    "ToPort": "9160",
+                    "SourceSecurityGroupName": {"Ref": "RestSecurityGroup"}
+                 }
+             },
         "CassSecurityGroupPort9200": {
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
