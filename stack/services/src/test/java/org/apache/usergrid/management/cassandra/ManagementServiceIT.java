@@ -87,14 +87,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-//import com.amazonaws.auth.AWSCredentials;
-//import com.amazonaws.auth.BasicAWSCredentials;
-//import com.amazonaws.services.s3.AmazonS3;
-//import com.amazonaws.services.s3.AmazonS3Client;
-//import com.amazonaws.services.s3.model.GetObjectRequest;
-//import com.amazonaws.services.s3.model.S3Object;
-
-
 /**
  * @author zznate
  */
