@@ -27,9 +27,8 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       this.client().set(prop,value);
 
     },
-    getUrls: function(){
+    getUrls: function(qs){
       var host = $location.host();
-      var qs = $location.search();
       var BASE_URL = '';
       var DATA_URL = '';
       var use_sso = false;
