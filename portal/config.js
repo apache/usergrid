@@ -2,7 +2,7 @@ var Usergrid = Usergrid || {};
 
 //Google Analytics
 var _gaq = _gaq || [];
-//_gaq.push(['_setAccount', 'yourkey']);
+_gaq.push(['_setAccount', 'UA-4084158-4']);
 try{
     (function(document) {
         if(!document){
@@ -27,39 +27,7 @@ Usergrid.options = {
    // apiKey:'123456'
   },
   showAutoRefresh:true,
-  autoUpdateTimer:61,//seconds
-  cssRefs:[],
-  "scriptReferences":{
-    "dev":[],
-    "main": []
-  },
-  menuItems:[
-    {path:'#!/org-overview', active:true,pic:'&#128362;',title:'Org Administration'},
-    {path:'#!/getting-started/setup',pic:'&#128640;',title:'Getting Started'},
-    {path:'#!/app-overview/summary',pic:'&#59214;',title:'App Overview',
-      items:[
-        {path:'#!/app-overview/summary',pic:'&#128241;',title:'Summary'}
-      ]
-    },
-    {
-      path:'#!/users',pic:'&#128100;',title:'Users',
-      items:[
-        {path:'#!/users',pic:'&#128100;',title:'Users'},
-        {path:'#!/groups',pic:'&#128101;',title:'Groups'},
-        {path:'#!/roles',pic:'&#59170;',title:'Roles'}
-      ]
-    },
-    {
-      path:'#!/data',pic:'&#128248;',title:'Data',
-      items:[
-        {path:'#!/data',pic:'&#128254;',title:'Collections'}
-      ]
-    },
-    {
-      path:'#!/activities',pic:'&#59194;',title:'Activities'
-    },
-    {path:'#!/shell',pic:'&#9000;',title:'Shell'}
-  ]
+  autoUpdateTimer:61//seconds
 };
 
 Usergrid.regex = {
@@ -90,12 +58,3 @@ Usergrid.regex = {
   stateRegexDescription: "Sorry only alphabetical characters or spaces are allowed. Must be between 2-100 characters.",
   collectionNameRegexDescription: "Collection name only allows : a-z A-Z 0-9. Must be between 3-25 characters."
 };
-
-try{
-  if (typeof module !== 'undefined'){
-
-    if(module && module.exports){
-      module.exports = Usergrid;
-  }
-  }
-}catch(e){}

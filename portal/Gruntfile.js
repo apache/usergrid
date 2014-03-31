@@ -1,50 +1,20 @@
 var packageJson = require('./package.json');
-var userGrid = require('./config.js');
-var  versionPath = packageJson.version;
-var menu = '<ul class="nav nav-list" menu="sideMenu">';
-userGrid.options.menuItems.forEach(function(menuItem){
-  menu += '<li class="option '+ (menuItem.active ? 'active' : '') + '" ng-cloak>';
-  menu += '<a data-ng-href="'+menuItem.path+'"><i class="pictogram">'+menuItem.pic+'</i>'+menuItem.title+'</a>';
-  menuItem.items && menuItem.items.forEach(function(subItem){
-    menu += '<ul class="nav nav-list">';
-    menu += '<li>';
-    menu += '<a data-ng-href="'+subItem.path+'"><i class="pictogram sub">'+subItem.pic+'</i>'+subItem.title+'</a>'
-    menu += '</li>';
-    menu += '</ul>';
-  });
-  menu += '</li>';
-});
-menu += '</ul>';
-
-var mainRefs = "",
-    devRefs = ""
-    ;
-userGrid.options.scriptReferences.main.forEach(function (current) {
-  mainRefs += "<script src='" + versionPath+'/'+ current + "'></script>";
-});
-userGrid.options.scriptReferences.dev.forEach(function (current) {
-  devRefs += "<script src='" + versionPath+'/'+ current + "'></script>";
-});
-
-var cssRefs = "";
-userGrid.options.cssRefs.forEach(function(css){
-  cssRefs += '<link href="'+versionPath+'/'+css.src+'" rel="stylesheet" id="'+css.id+'"/>';
-});
-
+var versionPath = packageJson.version;
+var distPath = 'dist/'+packageJson.packageName,
+  coveragePath = 'dist-cov/'+packageJson.packageName,
+  libsFile = 'js/libs/usergrid-libs.min.js',
+  devFile = 'js/usergrid-dev.min.js',
+  devFileIncludes= ['js/**/*.js','!js/libs/**/*.js', '!js/**/*.min.js'],
+  coverageDir = 'test/coverage/instrument/',
+  coverageFile = 'test/coverage/instrument/js/usergrid-coverage.min.js',
+  mainFile = 'js/usergrid.min.js',
+  templateFile = 'js/templates.js',
+  distName = packageJson.packageName
+  ;
 console.warn('to run e2e tests you need to have a running instance of webdriver, 1) npm install protractor -g -> 2) webdriver-manager start --standalone');
 module.exports = function (grunt) {
 
-  var distPath = 'dist/'+packageJson.packageName,
-      coveragePath = 'dist-cov/'+packageJson.packageName,
-      libsFile = 'js/libs/usergrid-libs.min.js',
-      devFile = 'js/usergrid-dev.min.js',
-      devFileIncludes= ['js/**/*.js','!js/libs/**/*.js', '!js/**/*.min.js'],
-      coverageDir = 'test/coverage/instrument/',
-      coverageFile = 'test/coverage/instrument/js/usergrid-coverage.min.js',
-      mainFile = 'js/usergrid.min.js',
-      templateFile = 'js/templates.js',
-      distName = packageJson.packageName
-      ;
+
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -337,7 +307,6 @@ module.exports = function (grunt) {
     dom_munger: {
       main: {
         options: {
-          append:{selector:'body',html:mainRefs},
           update: {selector:'#main-script',attribute:'src',value:versionPath+'/'+mainFile}
 
         },
@@ -347,7 +316,6 @@ module.exports = function (grunt) {
       },
       dev: {
         options: {
-          append:{selector:'body',html:devRefs},
           update: {selector:'#main-script',attribute:'src',value:versionPath+'/'+devFile}
         },
         src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
@@ -355,7 +323,6 @@ module.exports = function (grunt) {
       },
       coverage: {
         options: {
-          append:{selector:'body',html:devRefs},
           update: {selector:'#main-script',attribute:'src',value:'js/usergrid-coverage.min.js'}
         },
         src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
@@ -364,8 +331,6 @@ module.exports = function (grunt) {
       menu: {
         options: {
           callback:function($){
-            $('#sideMenu').append(menu);
-            $('head').append(cssRefs);
             var libs = $('#libScript');
             for(var key in libs){
               var elem = libs[key];
