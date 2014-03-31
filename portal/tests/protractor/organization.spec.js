@@ -9,7 +9,7 @@ describe('Test Org Dropdown', function () {
   describe('Test Org Switching',function(){
     var appName = browser.params.orgName;
     it('should navigate to sandbox.',function(){
-      browser.driver.get(browser.baseUrl+'/#!/org-overview');
+      browser.driver.get(browser.baseUrl+'#!/org-overview');
       browser.wait(function () {
         return element.all(by.repeater("(k,v) in organizations")).count().then(function(count){
           var appCount =  count >0;

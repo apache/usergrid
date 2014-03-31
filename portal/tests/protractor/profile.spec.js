@@ -12,7 +12,7 @@ describe('Test User Profile', function () {
       return;
     }
     it('should set email to some random value',function(){
-      browser.driver.get(browser.baseUrl+'/#!/profile');
+      browser.driver.get(browser.baseUrl+'#!/profile');
       element(by.id('account-link')).click();
       element(by.model('user.email')).isPresent().then(function() {
         element(by.id('account-link')).click();
@@ -66,8 +66,8 @@ describe('Test User Profile', function () {
         //this will not work with sso since its an enterprise config.
         return;
       }
-      browser.driver.get(browser.baseUrl+'/#!/org-overview');
-      browser.driver.get(browser.baseUrl+'/#!/profile');
+      browser.driver.get(browser.baseUrl+'#!/org-overview');
+      browser.driver.get(browser.baseUrl+'#!/profile');
       var email = element(by.model('user.email'));
       email.isPresent().then(function() {
         expect(email.getAttribute('value')).toEqual(browser.params.login.user);

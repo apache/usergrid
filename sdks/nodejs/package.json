@@ -4,7 +4,8 @@
   "description": "A Node.js module for making API calls to App Services (Usergrid) from within Node.js",
   "main": "./lib/usergrid.js",
   "dependencies": {
-    "request": "2.12.x"
+    "request": "2.12.x",
+    "inflection": "1.3.x"
   },
   "devDependencies": {
     "mocha": "1.7.x",

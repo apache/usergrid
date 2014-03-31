@@ -9,7 +9,7 @@ describe('Test Data', function () {
 
   describe('Add and delete', function () {
     it('should add and then delete', function () {
-      browser.driver.get(browser.baseUrl + '/#!/data');
+      browser.driver.get(browser.baseUrl + '#!/data');
 
       var entityName = 'test_e2e';
       var dateString = Date.now().toString();

@@ -13,7 +13,7 @@
   <div class="login-holder">
   <form name="loginForm" id="login-form"  ng-submit="login()" class="form-horizontal" novalidate>
     <h1 class="title">Enter your credentials</h1>
-    <div class="alert-error" ng-if="loginMessage">{{loginMessage}}</div>
+    <div class="alert-error" id="loginError" ng-if="loginMessage">{{loginMessage}}</div>
     <div class="control-group">
       <label class="control-label" for="login-username">Email or Username:</label>
       <div class="controls">
@@ -51,4 +51,5 @@
     <a ng-click="showModal('sendActivationLink')"  name="button-resend-activation" id="button-resend-activation"
        value="" class="btn btn-primary pull-left">Resend Activation Link</a>
   </div>
+  <div id="gtm" style="width: 450px;margin-top: 4em;" />
 </div>

@@ -14,7 +14,8 @@ Icon
 .Trashes
 /portal/performance/
 /portal/node_modules/
-/portal/dist
+/portal/dist/appsvc-ui.*.zip
+/portal/dist-cov/
 /portal/bower_components
 /portal/.idea
 /stack/corepersistence/priamcluster/aws.properties
