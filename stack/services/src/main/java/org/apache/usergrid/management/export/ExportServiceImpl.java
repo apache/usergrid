@@ -71,7 +71,7 @@ public class ExportServiceImpl implements ExportService {
     private ManagementService managementService;
 
     //Maximum amount of entities retrieved in a single go.
-    public static final int MAX_ENTITY_FETCH = 100000;
+    public static final int MAX_ENTITY_FETCH = 1000;
 
     //Amount of time that has passed before sending another heart beat in millis
     public static final int TIMESTAMP_DELTA = 5000;
@@ -314,7 +314,13 @@ public class ExportServiceImpl implements ExportService {
                 if ( ( config.get( "collectionName" ) == null ) || collectionName
                         .equals( config.get( "collectionName" ) ) ) {
                     //Query entity manager for the entities in a collection
-                    Query query = new Query();
+                    Query query;
+                    if(config.get( "query" ) == null) {
+                        query = new Query(  );
+                    }
+                    else {
+                        query = Query.fromQL( ( String ) config.get( "query" ) );
+                    }
                     query.setLimit( MAX_ENTITY_FETCH );
                     query.setResultsLevel( Results.Level.ALL_PROPERTIES );
                     Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
@@ -394,9 +400,19 @@ public class ExportServiceImpl implements ExportService {
             if ( ( config.get( "collectionName" ) == null ) || collectionName
                     .equals( config.get( "collectionName" ) ) ) {
                 //Query entity manager for the entities in a collection
-                Query query = new Query();
+                Query query;
+                if(config.get( "query" ) == null) {
+                    query = new Query(  );
+                }
+                else {
+                    query = Query.fromQL( ( String ) config.get( "query" ) );
+                }
+               // Query query = Query.fromQL( ( String ) config.get( "query" ) ); //new Query();
                 query.setLimit( MAX_ENTITY_FETCH );
                 query.setResultsLevel( Results.Level.ALL_PROPERTIES );
+                query.setCollection( collectionName );
+                //query.setQl( ( String ) config.get( "query" ) );
+
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
                 //pages through the query and backs up all results.
@@ -467,7 +483,13 @@ public class ExportServiceImpl implements ExportService {
             //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
             if ( collectionName.equals( ( String ) config.get( "collectionName" ) ) ) {
                 //Query entity manager for the entities in a collection
-                Query query = new Query();
+                Query query;
+                if(config.get( "query" ) == null) {
+                    query = new Query(  );
+                }
+                else {
+                    query = Query.fromQL( ( String ) config.get( "query" ) );
+                }
                 query.setLimit( MAX_ENTITY_FETCH );
                 query.setResultsLevel( Results.Level.ALL_PROPERTIES );
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );

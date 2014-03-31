@@ -1112,6 +1112,8 @@ public class ManagementServiceIT {
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
         }
+        f.deleteOnExit();
+
 
         UUID appId = setup.getEmf().createApplication( orgName, appName );
 
@@ -1161,27 +1163,25 @@ public class ManagementServiceIT {
             String entityName = ( String ) entityData.get( "name" );
             assertFalse( "junkRealName".equals( entityName ) );
         }
-        f.deleteOnExit();
     }
-//
+
     @Test
-    public void testExportOneAppOnApplicationEndpoint() throws Exception {
+    public void testExportOneAppOnApplicationEndpointWQuery() throws Exception {
 
         File f = null;
-        String orgName = "ed-organization";
-        String appName = "testAppNotExported";
 
         try {
-            f = new File( "exportOneApp.json" );
+            f = new File( "exportOneAppWQuery.json" );
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
         }
 
-        UUID appId = setup.getEmf().createApplication( orgName, appName );
+        f.deleteOnExit();
 
 
-        EntityManager em = setup.getEmf().getEntityManager( appId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
@@ -1189,15 +1189,18 @@ public class ManagementServiceIT {
         //creates entities
         for ( int i = 0; i < 1; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put("name","me");
             userProperties.put( "username", "junkRealName");
-            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
+            userProperties.put( "email", "burp" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
             entity[i] = em.create( "users", userProperties );
         }
 
         S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "exportOneApp.json" );
+        s3Export.setFilename( "exportOneAppWQuery.json" );
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
+
+        payload.put( "query","select * where username = 'junkRealName'" );
 
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId);
@@ -1219,17 +1222,15 @@ public class ManagementServiceIT {
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
 
-        assertEquals( 3 , a.size() );
+        assertEquals( 1 , a.size() );
         for ( int i = 0; i < a.size(); i++ ) {
             org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
             org.json.simple.JSONObject entityData = ( JSONObject ) data.get( "Metadata" );
             String entityName = ( String ) entityData.get( "name" );
             assertFalse( "junkRealName".equals( entityName ) );
         }
-
-        f.deleteOnExit();
-
     }
+
 //
     @Test
     public void testExportOneCollection() throws Exception {
@@ -1245,7 +1246,7 @@ public class ManagementServiceIT {
         }
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId);
-        em.createApplicationCollection( "baconators" );
+        em.createApplicationCollection( "qt" );
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
@@ -1255,7 +1256,7 @@ public class ManagementServiceIT {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
             userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
-            entity[i] = em.create( "baconators", userProperties );
+            entity[i] = em.create( "qts", userProperties );
         }
 
         S3Export s3Export = new MockS3ExportImpl();
@@ -1265,7 +1266,7 @@ public class ManagementServiceIT {
 
         payload.put( "organizationId",organization.getUuid() );
         payload.put( "applicationId",applicationId);
-        payload.put( "collectionName","baconators");
+        payload.put( "collectionName","qts");
 
         UUID exportUUID = exportService.schedule( payload );
         exportService.setS3Export( s3Export );
@@ -1288,6 +1289,70 @@ public class ManagementServiceIT {
         f.deleteOnExit();
 
     }
+
+    @Test
+    public void testExportOneCollectionWQuery() throws Exception {
+
+        File f = null;
+        int entitiesToCreate = 5;
+
+        try {
+            f = new File( "exportOneCollectionWQuery.json" );
+        }
+        catch ( Exception e ) {
+            //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
+        }
+        f.deleteOnExit();
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId);
+        em.createApplicationCollection( "baconators" );
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+        Entity[] entity;
+        entity = new Entity[entitiesToCreate];
+        //creates entities
+        for ( int i = 0; i < entitiesToCreate; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "billybob" + i );
+            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
+            entity[i] = em.create( "baconators", userProperties );
+        }
+
+        S3Export s3Export = new MockS3ExportImpl();
+        s3Export.setFilename( "exportOneCollectionWQuery.json" );
+        ExportService exportService = setup.getExportService();
+        HashMap<String, Object> payload = payloadBuilder();
+        payload.put( "query","select * where username contains 'billybob0'" );
+
+        payload.put( "organizationId",organization.getUuid() );
+        payload.put( "applicationId",applicationId);
+        payload.put( "collectionName","baconators");
+
+        UUID exportUUID = exportService.schedule( payload );
+        exportService.setS3Export( s3Export );
+
+        JobData jobData = new JobData();
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", payload );
+        jobData.setProperty( "exportId", exportUUID );
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( jobExecution );
+
+        JSONParser parser = new JSONParser();
+
+        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
+
+        //only one entity should match the query.
+        assertEquals( 1 , a.size() );
+
+    }
+
+
+
+
 
     //@Ignore("file created won't be deleted when running tests")
     @Test
@@ -1503,11 +1568,11 @@ public class ManagementServiceIT {
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
-        entity = new Entity[100];
+        entity = new Entity[5];
         //creates entities
 
         ApplicationInfo appMade = null;
-        for(int i = 0; i < 100; i++) {
+        for(int i = 0; i < 5; i++) {
             appMade = setup.getMgmtSvc().createApplication( organization.getUuid(), "superapp"+i);
 
             EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
@@ -1515,9 +1580,9 @@ public class ManagementServiceIT {
             //intialize user object to be posted
             Map<String, Object> entityLevelProperties = null;
             Entity[] entNotCopied;
-            entNotCopied = new Entity[20];
+            entNotCopied = new Entity[5];
             //creates entities
-            for ( int index = 0; index < 20; index++ ) {
+            for ( int index = 0; index < 5; index++ ) {
                 entityLevelProperties = new LinkedHashMap<String, Object>();
                 entityLevelProperties.put( "username", "bobso" + index );
                 entityLevelProperties.put( "email", "derp" + index + "@anuff.com" );
@@ -1710,7 +1775,7 @@ public class ManagementServiceIT {
         OrganizationInfo orgMade = null;
         ApplicationInfo appMade = null;
         for(int i = 0; i < 100; i++) {
-            orgMade =setup.getMgmtSvc().createOrganization( "minorboss"+i,adminUser,true );
+            orgMade =setup.getMgmtSvc().createOrganization( "largerboss"+i,adminUser,true );
             appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp"+i);
 
             EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
