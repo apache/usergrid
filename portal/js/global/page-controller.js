@@ -66,7 +66,8 @@ AppServices.Controllers.controller('PageCtrl', [
     initScopeVariables();
 
     $rootScope.urls = function() {
-      var urls = ug.getUrls()
+
+      var urls = ug.getUrls( $scope.queryString )
       $scope.apiUrl = urls.apiUrl;
       $scope.use_sso = urls.use_sso;
       return urls;
