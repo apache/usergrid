@@ -771,7 +771,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         uuid = uuid.replaceAll( "\"", "" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + uuid )
+            node = resource().path( "/management/orgs/test-organization/apps/exporters/export/" + uuid )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
                              .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }

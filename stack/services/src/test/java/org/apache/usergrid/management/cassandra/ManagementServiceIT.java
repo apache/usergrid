@@ -1589,40 +1589,43 @@ public class ManagementServiceIT {
 
         OrganizationInfo orgMade = null;
         ApplicationInfo appMade = null;
-        for(int i = 0; i < 100; i++) {
-            orgMade =setup.getMgmtSvc().createOrganization( "minorboss"+i,adminUser,true );
-            appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp"+i);
+        for ( int i = 0; i < 5; i++ ) {
+            orgMade = setup.getMgmtSvc().createOrganization( "minorboss" + i, adminUser, true );
+            for ( int j = 0; j < 5; j++ ) {
+                appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp" + j );
 
-            EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
-            customMaker.createApplicationCollection( "superappCol"+i );
-            //intialize user object to be posted
-            Map<String, Object> entityLevelProperties = null;
-            Entity[] entNotCopied;
-            entNotCopied = new Entity[20];
-            //creates entities
-            for ( int index = 0; index < 20; index++ ) {
-                entityLevelProperties = new LinkedHashMap<String, Object>();
-                entityLevelProperties.put( "username", "bobso" + index );
-                entityLevelProperties.put( "email", "derp" + index + "@anuff.com" );
-                entNotCopied[index] = customMaker.create( "superappCol", entityLevelProperties );
+                EntityManager customMaker = setup.getEmf().getEntityManager( appMade.getId() );
+                customMaker.createApplicationCollection( "superappCol" + j );
+                //intialize user object to be posted
+                Map<String, Object> entityLevelProperties = null;
+                Entity[] entNotCopied;
+                entNotCopied = new Entity[1];
+                //creates entities
+                for ( int index = 0; index < 1; index++ ) {
+                    entityLevelProperties = new LinkedHashMap<String, Object>();
+                    entityLevelProperties.put( "derp","bacon" );
+//                    entityLevelProperties.put( "username", "bobso" + index );
+//                    entityLevelProperties.put( "email", "derp" + index + "@anuff.com" );
+                    entNotCopied[index] = customMaker.create( "superappCol"+j, entityLevelProperties );
+                }
             }
         }
 
         payload.put("organizationId",orgMade.getUuid());
 
-        EntityManager em = setup.getEmf().getEntityManager( appMade.getId() );
+        //EntityManager em = setup.getEmf().getEntityManager( appMade.getId() );
         //intialize user object to be posted
-        Map<String, Object> userProperties = null;
-        Entity[] entity;
-        entity = new Entity[100];
-        //creates entities
-        for ( int i = 0; i < 100; i++ ) {
-            userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "bido" + i );
-            userProperties.put( "email", "bido" + i + "@anuff.com" );
-
-            entity[i] = em.create( "user", userProperties );
-        }
+//        Map<String, Object> userProperties = null;
+//        Entity[] entity;
+//        entity = new Entity[100];
+//        //creates entities
+//        for ( int i = 0; i < 100; i++ ) {
+//            userProperties = new LinkedHashMap<String, Object>();
+//            userProperties.put( "username", "bido" + i );
+//            userProperties.put( "email", "bido" + i + "@anuff.com" );
+//
+//            entity[i] = em.create( "user", userProperties );
+//        }
 
         UUID exportUUID = exportService.schedule( payload );
         assertNotNull( exportUUID );
@@ -1637,8 +1640,15 @@ public class ManagementServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+        //the exporters app is never returned, and I'm not even sure if that is the way we want to go
+        // I feel like there should be a better way than having to store data for the user.
         exportService.doExport( jobExecution );
-        while (!exportService.getState( appMade.getId(),exportUUID ).equals("FINISHED"));
+        //BiMap<UUID,String> mapper = setup.getMgmtSvc().getApplicationsForOrganization(orgMade.getUuid());
+        //mapper.get( "" )
+//        while (!exportService.getState( ,exportUUID )
+//                             .equals("FINISHED"));
+
+        Thread.sleep( 3000 );
 
         String bucketName = System.getProperty( "bucketName" );
         String accessId = System.getProperty( "accessKey" );
@@ -1662,17 +1672,24 @@ public class ManagementServiceIT {
 
 
             blobStore = context.getBlobStore();
-            if(!blobStore.blobExists( bucketName,s3Export.getFilename()  )){
-                blobStore.deleteContainer( bucketName );
-                assert(false);
-            }
+//            if(!blobStore.blobExists( bucketName,s3Export.getFilename()  )){
+//                blobStore.deleteContainer( bucketName );
+//                assert(false);
+//            }
+            //Grab Number of files
             Long numOfFiles = blobStore.countBlobs( bucketName );
-            Long numWeWant = Long.valueOf( 100 );
-            assertEquals( numOfFiles, numWeWant );
-
+            //delete container containing said files
             bo = blobStore.getBlob( bucketName,s3Export.getFilename()   );
+            blobStore.deleteContainer( bucketName );
+            Long numWeWant = Long.valueOf( 5 );
+            //asserts that the correct number of files was transferred over
+            assertEquals( numWeWant, numOfFiles);
+
+
 
         }catch(Exception e) {
+            blobStore.deleteContainer( bucketName );
+            e.printStackTrace();
             assert(false);
         }
 
