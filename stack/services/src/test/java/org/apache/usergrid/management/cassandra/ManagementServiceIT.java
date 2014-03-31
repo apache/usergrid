@@ -1559,8 +1559,8 @@ public class ManagementServiceIT {
     }
 
 
-    //   @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
-    @Test
+    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    //@Test
     public void testIntegration100EntitiesOn() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -1653,8 +1653,8 @@ public class ManagementServiceIT {
         blobStore.deleteContainer( bucketName );
     }
 
-
-    @Test
+    @Ignore
+    //@Test
     public void testIntegration100EntitiesForAllApps() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
