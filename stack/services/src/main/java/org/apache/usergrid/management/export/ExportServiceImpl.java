@@ -93,8 +93,8 @@ public class ExportServiceImpl implements ExportService {
         }
 
         if ( config.get( "applicationId" ) == null ) {
-            defaultExportApp =
-                    managementService.createApplication( ( UUID ) config.get( "organizationId" ), defaultAppExportname );
+            defaultExportApp = managementService
+                    .createApplication( ( UUID ) config.get( "organizationId" ), defaultAppExportname );
             config.put( "applicationId", defaultExportApp.getId() );
             //logger.error( "application information from export info could not be found" );
             //return null;
@@ -278,17 +278,15 @@ public class ExportServiceImpl implements ExportService {
         Export export = exportManager.get( exportId, Export.class );
         String appFileName = null;
 
-        //sets up a output stream for s3 backup.
-//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        JsonGenerator jg = getJsonGenerator( baos );
-
         BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
 
         for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
+
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             JsonGenerator jg = getJsonGenerator( baos );
-            if(application.getValue().equals(
-                    managementService.getOrganizationByUuid( organizationUUID ).getName() + "/exporters" )){
+
+            if ( application.getValue().equals(
+                    managementService.getOrganizationByUuid( organizationUUID ).getName() + "/exporters" ) ) {
                 continue;
             }
 
@@ -315,8 +313,8 @@ public class ExportServiceImpl implements ExportService {
                         .equals( config.get( "collectionName" ) ) ) {
                     //Query entity manager for the entities in a collection
                     Query query;
-                    if(config.get( "query" ) == null) {
-                        query = new Query(  );
+                    if ( config.get( "query" ) == null ) {
+                        query = new Query();
                     }
                     else {
                         query = Query.fromQL( ( String ) config.get( "query" ) );
@@ -336,28 +334,26 @@ public class ExportServiceImpl implements ExportService {
                         saveCollectionMembers( jg, em, ( String ) config.get( "collectionName" ), entity );
                         jg.writeEndObject();
                     }
-                 }
+                }
             }
-        //}
+            //}
 
 
+            // Close writer and file for this application.
+            jg.writeEndArray();
+            jg.close();
+            baos.flush();
+            baos.close();
 
-        // Close writer and file for this application.
-        jg.writeEndArray();
-
-        jg.close();
-        baos.flush();
-        baos.close();
-
-        //sets up the Inputstream for copying the method to s3.
-        InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-        try {
-            s3Export.copyToS3( is, config, appFileName );
-        }
-        catch ( Exception e ) {
-            export.setState( Export.State.FAILED );
-            return;
-        }
+            //sets up the Inputstream for copying the method to s3.
+            InputStream is = new ByteArrayInputStream( baos.toByteArray() );
+            try {
+                s3Export.copyToS3( is, config, appFileName );
+            }
+            catch ( Exception e ) {
+                export.setState( Export.State.FAILED );
+                return;
+            }
         }
     }
 
@@ -401,13 +397,13 @@ public class ExportServiceImpl implements ExportService {
                     .equals( config.get( "collectionName" ) ) ) {
                 //Query entity manager for the entities in a collection
                 Query query;
-                if(config.get( "query" ) == null) {
-                    query = new Query(  );
+                if ( config.get( "query" ) == null ) {
+                    query = new Query();
                 }
                 else {
                     query = Query.fromQL( ( String ) config.get( "query" ) );
                 }
-               // Query query = Query.fromQL( ( String ) config.get( "query" ) ); //new Query();
+                // Query query = Query.fromQL( ( String ) config.get( "query" ) ); //new Query();
                 query.setLimit( MAX_ENTITY_FETCH );
                 query.setResultsLevel( Results.Level.ALL_PROPERTIES );
                 query.setCollection( collectionName );
@@ -484,8 +480,8 @@ public class ExportServiceImpl implements ExportService {
             if ( collectionName.equals( ( String ) config.get( "collectionName" ) ) ) {
                 //Query entity manager for the entities in a collection
                 Query query;
-                if(config.get( "query" ) == null) {
-                    query = new Query(  );
+                if ( config.get( "query" ) == null ) {
+                    query = new Query();
                 }
                 else {
                     query = Query.fromQL( ( String ) config.get( "query" ) );
