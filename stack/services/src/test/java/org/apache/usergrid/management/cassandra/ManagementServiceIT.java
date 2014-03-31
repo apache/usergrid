@@ -1392,9 +1392,6 @@ public class ManagementServiceIT {
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
-        //        payload.put( "organizationId",organization.getUuid() );
-        //        payload.put( "applicationId",applicationId);
-
         //creates 100s of organizations with some entities in each one to make sure we don't actually apply it
         OrganizationInfo orgMade = null;
         ApplicationInfo appMade = null;

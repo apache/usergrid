@@ -172,6 +172,32 @@ public class ExportServiceImpl implements ExportService {
         return export.getState().toString();
     }
 
+    @Override
+    public String getErrorMessage( final UUID appId, final UUID uuid ) throws Exception {
+
+        //get application entity manager
+        if ( appId == null ) {
+            logger.error( "Application context cannot be found." );
+            return "Application context cannot be found.";
+        }
+
+        if ( uuid == null ) {
+            logger.error( "UUID passed in cannot be null." );
+            return "UUID passed in cannot be null";
+        }
+
+        EntityManager rootEm = emf.getEntityManager( appId );
+
+        //retrieve the export entity.
+        Export export = rootEm.get( uuid, Export.class );
+
+        if ( export == null ) {
+            logger.error( "no entity with that uuid was found" );
+            return "No Such Element found";
+        }
+        return export.getErrorMessage();
+    }
+
 
     @Override
     public void doExport( final JobExecution jobExecution ) throws Exception {
@@ -197,7 +223,14 @@ public class ExportServiceImpl implements ExportService {
         em.update( export );
 
         if ( em.getApplication().getApplicationName().equals( "exporters" ) ) {
-            exportApplicationsFromOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution );
+            try {
+                exportApplicationsFromOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution );
+            }
+            catch ( Exception e ) {
+                export.setErrorMessage( e.getMessage() );
+                export.setState( Export.State.FAILED );
+                em.update( export );
+            }
         }
         else if ( config.get( "collectionName" ) == null ) {
             //exports all the applications for a given organization.
@@ -208,8 +241,15 @@ public class ExportServiceImpl implements ExportService {
                 em.update( export );
                 return;
             }
-            exportApplicationFromOrg( ( UUID ) config.get( "organizationId" ), ( UUID ) config.get( "applicationId" ),
-                    config, jobExecution );
+            try {
+                exportApplicationFromOrg( ( UUID ) config.get( "organizationId" ),
+                        ( UUID ) config.get( "applicationId" ), config, jobExecution );
+            }
+            catch ( Exception e ) {
+                export.setErrorMessage( e.getMessage() );
+                export.setState( Export.State.FAILED );
+                em.update( export );
+            }
         }
         else {
             try {
@@ -220,11 +260,19 @@ public class ExportServiceImpl implements ExportService {
                     em.update( export );
                     return;
                 }
-                exportCollectionFromOrgApp( ( UUID ) config.get( "organizationId" ),
-                        ( UUID ) config.get( "applicationId" ), config, jobExecution );
+                try {
+                    exportCollectionFromOrgApp( ( UUID ) config.get( "organizationId" ),
+                            ( UUID ) config.get( "applicationId" ), config, jobExecution );
+                }
+                catch ( Exception e ) {
+                    export.setErrorMessage( e.getMessage() );
+                    export.setState( Export.State.FAILED );
+                    em.update( export );
+                }
             }
             catch ( Exception e ) {
                 //if for any reason the backing up fails, then update the entity with a failed state.
+                export.setErrorMessage( e.getMessage() );
                 export.setState( Export.State.FAILED );
                 em.update( export );
                 return;
@@ -396,18 +444,21 @@ public class ExportServiceImpl implements ExportService {
             if ( ( config.get( "collectionName" ) == null ) || collectionName
                     .equals( config.get( "collectionName" ) ) ) {
                 //Query entity manager for the entities in a collection
-                Query query;
+                Query query = null;
                 if ( config.get( "query" ) == null ) {
                     query = new Query();
                 }
                 else {
-                    query = Query.fromQL( ( String ) config.get( "query" ) );
+                    try {
+                        query = Query.fromQL( ( String ) config.get( "query" ) );
+                    }
+                    catch ( Exception e ) {
+                        export.setErrorMessage( e.getMessage() );
+                    }
                 }
-                // Query query = Query.fromQL( ( String ) config.get( "query" ) ); //new Query();
                 query.setLimit( MAX_ENTITY_FETCH );
                 query.setResultsLevel( Results.Level.ALL_PROPERTIES );
                 query.setCollection( collectionName );
-                //query.setQl( ( String ) config.get( "query" ) );
 
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
@@ -518,6 +569,7 @@ public class ExportServiceImpl implements ExportService {
             s3Export.copyToS3( is, config, appFileName );
         }
         catch ( Exception e ) {
+            export.setErrorMessage( e.getMessage() );
             export.setState( Export.State.FAILED );
             return;
         }

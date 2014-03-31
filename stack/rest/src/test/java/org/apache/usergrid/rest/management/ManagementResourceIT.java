@@ -781,7 +781,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
         assertEquals( Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.asText() );//TODO: do tests for other states in service tier
+        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
     }
 
 
@@ -810,7 +810,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
         assertEquals( Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.asText() );//TODO: do tests for other states in service tier
+        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
     }
 
 
@@ -838,7 +838,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
         assertEquals( Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.asText() );//TODO: do tests for other states in service tier
+        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
     }
 
 

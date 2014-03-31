@@ -365,7 +365,7 @@ public class ApplicationResource extends AbstractContextResource {
             return Response.status( SC_BAD_REQUEST ).build();
         }
 
-        return Response.status( SC_OK ).entity( entity.getState() ).build();
+        return Response.status( SC_OK ).entity( entity).build();
     }
 
 
