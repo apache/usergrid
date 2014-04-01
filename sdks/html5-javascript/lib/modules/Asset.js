@@ -109,18 +109,30 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
 		return;
 	}
 	var self = this;
+	var args=arguments;
+	var attempts=self.get("attempts");
+	if(isNaN(attempts)){
+		attempts=3;
+	}
+	self.set('content-type', data.type);
+	self.set('size', data.size);
 	var endpoint = [this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), 'data'].join('/'); //self._client.buildAssetURL(self.get("uuid"));
 
 	var xhr = new XMLHttpRequest();
 	xhr.open("POST", endpoint, true);
 	xhr.onerror = function(err) {
 		//callback(true, err);
-		doCallback(callback, [true, new UsergridError('The File APIs are not fully supported by your browser.')], self);
+		doCallback(callback, [new UsergridError('The File APIs are not fully supported by your browser.')], xhr, self);
 	};
 	xhr.onload = function(ev) {
-		if (xhr.status >= 300) {
-			doCallback(callback, [new UsergridError(JSON.parse(xhr.responseText)), null, self], self);
+		if(xhr.status >= 500 && attempts>0){
+			self.set('attempts', --attempts);
+			setTimeout(function(){self.upload.apply(self, args);}, 100);
+		}else if (xhr.status >= 300) {
+			self.set('attempts')
+			doCallback(callback, [new UsergridError(JSON.parse(xhr.responseText)), xhr, self], self);
 		} else {
+			self.set('attempts')
 			doCallback(callback, [null, xhr, self], self);
 		}
 	};
@@ -128,9 +140,7 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
 	fr.onload = function() {
 		var binary = fr.result;
 		xhr.overrideMimeType('application/octet-stream');
-		setTimeout(function() {
-			xhr.sendAsBinary(binary);
-		}, 1000);
+		xhr.sendAsBinary(binary);
 	};
 	fr.readAsBinaryString(data);
 };
@@ -146,17 +156,17 @@ Usergrid.Asset.prototype.download = function(callback) {
 	var self = this;
 	var endpoint = [this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), 'data'].join('/');
 	var xhr = new XMLHttpRequest();
+
 	xhr.open("GET", endpoint, true);
 	xhr.responseType = "blob";
 	xhr.onload = function(ev) {
 		var blob = xhr.response;
-		//callback(null, blob);
-		doCallback(callback, [null, blob, self], self);
+		doCallback(callback, [null, xhr, self], self);
 	};
 	xhr.onerror = function(err) {
 		callback(true, err);
-		doCallback(callback, [new UsergridError(err), err, self], self);
+		doCallback(callback, [new UsergridError(err), xhr, self], self);
 	};
-
+	xhr.overrideMimeType(self.get('content-type'));
 	xhr.send();
 };
