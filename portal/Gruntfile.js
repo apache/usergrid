@@ -1,13 +1,14 @@
-var packageJson = require('./package.json');
-var distPath = 'dist/'+packageJson.packageName,
-  coveragePath = 'dist-cov/'+packageJson.packageName,
+var bower = require('./bower.json');
+
+var distPath = 'dist/'+bower.name,
+  coveragePath = 'dist-cov/'+bower.name,
   libsFile = 'js/libs/usergrid-libs.min.js',
   devFile = 'js/usergrid-dev.min.js',
   coverageDir = 'test/coverage/instrument/',
   coverageFile = 'test/coverage/instrument/js/usergrid-coverage.min.js',
   mainFile = 'js/usergrid.min.js',
   templateFile = 'js/templates.js',
-  distName = packageJson.packageName
+  distName = bower.name
   ;
 console.warn('to run e2e tests you need to have a running instance of webdriver, 1) npm install protractor -g -> 2) webdriver-manager start --standalone');
 module.exports = function (grunt) {
@@ -286,12 +287,12 @@ module.exports = function (grunt) {
     compress: {
       main: {
         options: {
-          archive: 'dist/'+distName+'.'+packageJson.version+'.zip'
+          archive: 'dist/'+distName+'.'+bower.version+'.zip'
         },
         expand: true,
         cwd: distPath+'/',
         src: ['**/*'],
-        dest: distName+'.'+packageJson.version
+        dest: distName+'.'+bower.version
       }
     },
     clean: {
@@ -352,8 +353,8 @@ module.exports = function (grunt) {
         // Files to be uploaded.
         upload: [
           {
-            src: 'dist/appsvc-ui.'+packageJson.version+'.zip',
-            dest: '/production-releases/dist/appsvc-ui.'+packageJson.version+'.zip'
+            src: 'dist/'+bower.name+'.'+bower.version+'.zip',
+            dest: '/production-releases/dist/'+bower.name+'.'+bower.version+'.zip'
           }
         ]
       }
