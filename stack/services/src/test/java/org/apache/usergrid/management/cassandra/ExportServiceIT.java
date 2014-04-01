@@ -87,8 +87,7 @@ public class ExportServiceIT {
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "ed-application" ).getId();
     }
 
-    //
-    //
+
     //Tests to make sure we can call the job with mock data and it runs.
     @Ignore //Connections won't save when run with maven, but on local builds it will.
     public void testConnectionsOnCollectionExport() throws Exception {
@@ -103,7 +102,7 @@ public class ExportServiceIT {
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
         }
-
+        f.deleteOnExit();
 
         S3Export s3Export = new MockS3ExportImpl();
         s3Export.setFilename( "testFileConnections.json" );
@@ -169,7 +168,7 @@ public class ExportServiceIT {
 
         assertNotNull( objVibrations );
 
-        f.deleteOnExit();
+
     }
 
 
@@ -480,14 +479,12 @@ public class ExportServiceIT {
     public void testExportOneAppOnApplicationEndpointWQuery() throws Exception {
 
         File f = null;
-
         try {
             f = new File( "exportOneAppWQuery.json" );
         }
         catch ( Exception e ) {
             //consumed because this checks to see if the file exists. If it doesn't, don't do anything and carry on.
         }
-
         f.deleteOnExit();
 
 
@@ -511,7 +508,6 @@ public class ExportServiceIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         payload.put( "query", "select * where username = 'junkRealName'" );
-
         payload.put( "organizationId", organization.getUuid() );
         payload.put( "applicationId", applicationId );
 
@@ -874,10 +870,6 @@ public class ExportServiceIT {
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         //intialize user object to be posted
-        Map<String, Object> userProperties = null;
-        Entity[] entity;
-        entity = new Entity[5];
-        //creates entities
 
         ApplicationInfo appMade = null;
         for ( int i = 0; i < 5; i++ ) {
@@ -1000,13 +992,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        //the exporters app is never returned, and I'm not even sure if that is the way we want to go
-        // I feel like there should be a better way than having to store data for the user.
         exportService.doExport( jobExecution );
-        //BiMap<UUID,String> mapper = setup.getMgmtSvc().getApplicationsForOrganization(orgMade.getUuid());
-        //mapper.get( "" )
-        //        while (!exportService.getState( ,exportUUID )
-        //                             .equals("FINISHED"));
 
         Thread.sleep( 3000 );
 
@@ -1032,10 +1018,7 @@ public class ExportServiceIT {
 
 
             blobStore = context.getBlobStore();
-            //            if(!blobStore.blobExists( bucketName,s3Export.getFilename()  )){
-            //                blobStore.deleteContainer( bucketName );
-            //                assert(false);
-            //            }
+
             //Grab Number of files
             Long numOfFiles = blobStore.countBlobs( bucketName );
             //delete container containing said files
