@@ -1040,19 +1040,19 @@ function doCallback(callback, params, context) {
                 grant_type: "password"
             }
         };
-        self.request(options, function(err, data) {
+        self.request(options, function(err, response) {
             var user = {};
             if (err) {
                 if (self.logging) console.log("error trying to log user in");
             } else {
                 var options = {
                     client: self,
-                    data: data.user
+                    data: response.user
                 };
                 user = new Usergrid.Entity(options);
-                self.setToken(data.access_token);
+                self.setToken(response.access_token);
             }
-            doCallback(callback, [ err, data, user ]);
+            doCallback(callback, [ err, response, user ]);
         });
     };
     Usergrid.Client.prototype.reAuthenticateLite = function(callback) {
@@ -1171,27 +1171,28 @@ function doCallback(callback, params, context) {
    *  @return {callback} callback(err, data)
    */
     Usergrid.Client.prototype.getLoggedInUser = function(callback) {
+        var self = this;
         if (!this.getToken()) {
-            callback(true, null, null);
+            doCallback(callback, [ new UsergridError("Access Token not set"), null, self ], self);
         } else {
-            var self = this;
             var options = {
                 method: "GET",
                 endpoint: "users/me"
             };
-            this.request(options, function(err, data) {
+            this.request(options, function(err, response) {
                 if (err) {
                     if (self.logging) {
                         console.log("error trying to log user in");
                     }
-                    doCallback(callback, [ err, data, null ], self);
+                    console.error(err, response);
+                    doCallback(callback, [ err, response, self ], self);
                 } else {
                     var options = {
                         client: self,
-                        data: data.entities[0]
+                        data: response.getEntity()
                     };
                     var user = new Usergrid.Entity(options);
-                    doCallback(callback, [ null, data, user ], self);
+                    doCallback(callback, [ null, response, user ], self);
                 }
             });
         }
@@ -1671,15 +1672,13 @@ Usergrid.Entity.prototype.addOrRemoveConnection = function(method, connection, e
  *
  */
 Usergrid.Entity.prototype.getEntityId = function(entity) {
-    var id = false;
+    var id;
     if (isUUID(entity.get("uuid"))) {
         id = entity.get("uuid");
+    } else if (this.get("type") === "users") {
+        id = entity.get("username");
     } else {
-        if (this.get("type") === "users") {
-            id = entity.get("username");
-        } else if (entity.get("name")) {
-            id = entity.get("name");
-        }
+        id = entity.get("name");
     }
     return id;
 };
@@ -3006,7 +3005,6 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
     fr.onload = function() {
         var binary = fr.result;
         xhr.overrideMimeType("application/octet-stream");
-        // setTimeout(function() {
         xhr.sendAsBinary(binary);
     };
     fr.readAsBinaryString(data);

@@ -44,11 +44,11 @@ $(document).ready(function () {
 
   var dogs;
 
-  client.createCollection(options, function (err, dogs) {
+  client.createCollection(options, function (err, response, collection) {
     if (err) {
       $('#mydoglist').html('could not load dogs');
     } else {
-
+      dogs=collection;
       //bind the next button to the proper method in the collection object
       $('#next-button').bind('click', function() {
         $('#message').html('');

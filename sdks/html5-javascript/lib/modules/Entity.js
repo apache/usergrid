@@ -351,17 +351,15 @@ Usergrid.Entity.prototype.addOrRemoveConnection = function(method, connection, e
  *
  */
 Usergrid.Entity.prototype.getEntityId = function(entity) {
-  var id = false;
-  if (isUUID(entity.get('uuid'))) {
-    id = entity.get('uuid');
-  } else {
-    if (this.get("type") === 'users') {
-      id = entity.get('username');
-    } else if (entity.get('name')) {
-      id = entity.get('name');
+    var id;
+    if (isUUID(entity.get("uuid"))) {
+        id = entity.get("uuid");
+    } else if (this.get("type") === "users") {
+        id = entity.get("username");
+    } else  {
+        id = entity.get("name");
     }
-  }
-  return id;
+    return id;
 };
 
 /*
