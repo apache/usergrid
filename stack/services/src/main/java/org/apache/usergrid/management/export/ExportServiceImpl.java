@@ -93,8 +93,16 @@ public class ExportServiceImpl implements ExportService {
         }
 
         if ( config.get( "applicationId" ) == null ) {
-            defaultExportApp = managementService
+
+            ApplicationInfo appExists = managementService.getApplicationInfo("exporters");
+
+            if(appExists == null) {
+                defaultExportApp = managementService
                     .createApplication( ( UUID ) config.get( "organizationId" ), defaultAppExportname );
+            }
+            else
+                defaultExportApp = appExists;
+
             config.put( "applicationId", defaultExportApp.getId() );
             //logger.error( "application information from export info could not be found" );
             //return null;
