@@ -163,5 +163,21 @@
 <!--<script type="text/javascript" src="js/libs/angular-ui-ng-grid/ng-grid-2.0.2.debug.js"></script>-->
 <script src="config.js"></script>
 <script id="main-script" src="js/usergrid-dev.min.js"></script>
+<script type="text/javascript">
+    //Google Analytics
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'yours']);
+    try{
+        (function(document) {
+            if(!document){
+                return;
+            }
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })(document || null);
+    }catch(e){};
+    //End Google Analytics
+</script>
 </body>
 </html>
