@@ -50,6 +50,8 @@ import org.apache.usergrid.persistence.entities.JobData;
 
 import com.google.common.collect.BiMap;
 
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+
 
 /**
  * Need to refactor out the mutliple orgs being take , need to factor out the multiple apps it will just be the one app
@@ -92,25 +94,15 @@ public class ExportServiceImpl implements ExportService {
             return null;
         }
 
-        if ( config.get( "applicationId" ) == null ) {
-
-            ApplicationInfo appExists = managementService.getApplicationInfo("exporters");
-
-            if(appExists == null) {
-                defaultExportApp = managementService
-                    .createApplication( ( UUID ) config.get( "organizationId" ), defaultAppExportname );
-            }
-            else
-                defaultExportApp = appExists;
-
-            config.put( "applicationId", defaultExportApp.getId() );
-            //logger.error( "application information from export info could not be found" );
-            //return null;
-        }
-
         EntityManager em = null;
         try {
-            em = emf.getEntityManager( ( UUID ) config.get( "applicationId" ) );
+            //em = emf.getEntityManager( ( UUID ) config.get( "applicationId" ) );
+            em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+            Set<String> collections =  em.getApplicationCollections();
+            if(!collections.contains( "exports" )){
+                em.createApplicationCollection( "exports" );
+            }
+
         }
         catch ( Exception e ) {
             logger.error( "application doesn't exist within the current context" );
@@ -223,14 +215,21 @@ public class ExportServiceImpl implements ExportService {
             logger.error( "Export Information application uuid is null" );
             return;
         }
-        EntityManager em = emf.getEntityManager( scopedAppId );
+        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
         Export export = em.get( exportId, Export.class );
 
         //update the entity state to show that the job has officially started.
         export.setState( Export.State.STARTED );
         em.update( export );
 
-        if ( em.getApplication().getApplicationName().equals( "exporters" ) ) {
+        if ( config.get( "organizationId" ) == null ) {
+            logger.error( "No organization could be found" );
+            export.setState( Export.State.FAILED );
+            em.update( export );
+            return;
+        }
+        else if ( config.get( "applicationId" ) == null ) {
+            //exports All the applications from an organization
             try {
                 exportApplicationsFromOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution );
             }
@@ -238,17 +237,13 @@ public class ExportServiceImpl implements ExportService {
                 export.setErrorMessage( e.getMessage() );
                 export.setState( Export.State.FAILED );
                 em.update( export );
+                return;
             }
         }
         else if ( config.get( "collectionName" ) == null ) {
             //exports all the applications for a given organization.
 
-            if ( config.get( "organizationId" ) == null ) {
-                logger.error( "No organization could be found" );
-                export.setState( Export.State.FAILED );
-                em.update( export );
-                return;
-            }
+            //exports an Application from a single organization
             try {
                 exportApplicationFromOrg( ( UUID ) config.get( "organizationId" ),
                         ( UUID ) config.get( "applicationId" ), config, jobExecution );
@@ -257,17 +252,12 @@ public class ExportServiceImpl implements ExportService {
                 export.setErrorMessage( e.getMessage() );
                 export.setState( Export.State.FAILED );
                 em.update( export );
+                return;
             }
         }
         else {
             try {
-                //exports all the applications for a single organization
-                if ( config.get( "organizationId" ) == null ) {
-                    logger.error( "No organization could be found" );
-                    export.setState( Export.State.FAILED );
-                    em.update( export );
-                    return;
-                }
+                //exports a single collection from an app org combo
                 try {
                     exportCollectionFromOrgApp( ( UUID ) config.get( "organizationId" ),
                             ( UUID ) config.get( "applicationId" ), config, jobExecution );
@@ -276,6 +266,7 @@ public class ExportServiceImpl implements ExportService {
                     export.setErrorMessage( e.getMessage() );
                     export.setState( Export.State.FAILED );
                     em.update( export );
+                    return;
                 }
             }
             catch ( Exception e ) {

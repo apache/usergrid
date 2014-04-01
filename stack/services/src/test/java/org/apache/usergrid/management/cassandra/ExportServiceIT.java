@@ -49,6 +49,7 @@ import org.apache.usergrid.persistence.entities.JobData;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -773,7 +774,7 @@ public class ExportServiceIT {
     public void testExportDoExportOnApplicationEndpoint() throws Exception {
 
         EntityManagerFactory emf = setup.getEmf();
-        EntityManager em = emf.getEntityManager( applicationId );
+        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
         HashMap<String, Object> payload = payloadBuilder();
         ExportService eS = setup.getExportService();
 

@@ -27,6 +27,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -46,6 +47,8 @@ import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
@@ -64,6 +67,7 @@ import com.sun.jersey.api.view.Viewable;
 import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 
@@ -332,5 +336,28 @@ public class OrganizationResource extends AbstractContextResource {
                            .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
         }
         return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
+    }
+
+    @GET
+    @RequireOrganizationAccess
+    @Path("export/{exportEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    public Response exportGetJson( @Context UriInfo ui, @PathParam("exportEntity") UUID exportEntityUUIDStr,
+                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
+
+        Export entity;
+        try {
+            entity = smf.getServiceManager( CassandraService.MANAGEMENT_APPLICATION_ID ).getEntityManager()
+                        .get( exportEntityUUIDStr, Export.class );
+        }
+        catch ( Exception e ) { //this might not be a bad request and needs better error checking
+            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+        }
+
+        if ( entity == null ) {
+            return Response.status( SC_BAD_REQUEST ).build();
+        }
+
+        return Response.status( SC_OK ).entity( entity).build();
     }
 }
