@@ -43,7 +43,7 @@ def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
-def selectResult = sdbClient.select(new SelectRequest((String)"select * from ${domain}"))
+def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}`"))
 def seeds = ""
 def sep = ""
 for (item in selectResult.getItems()) {
