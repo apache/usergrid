@@ -8,12 +8,9 @@
             this.result = null;
             this.callbacks = [];
         }
-        Promise.prototype.create = function() {
-            return new Promise()
-        };
         Promise.prototype.then = function(callback, context) {
             var f = function() {
-                return callback.apply(context, arguments)
+                return callback.apply(context, arguments);
             };
             if (this.complete) {
                 f(this.error, this.result);

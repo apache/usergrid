@@ -1,4 +1,3 @@
-
 /*
  *  The Collection class models Usergrid Collections.  It essentially
  *  acts as a container for holding Entity objects, while providing
@@ -6,10 +5,9 @@
  *
  *  @constructor
  *  @param {string} options - configuration object
- *  @param {function} callback
- *  @return {callback} callback(err, data)
+ *  @return {Collection} collection
  */
-Usergrid.Collection = function(options, callback) {
+Usergrid.Collection = function(options) {
 
   if (options) {
     this._client = options.client;
@@ -28,17 +26,17 @@ Usergrid.Collection = function(options, callback) {
     //restore entities if available
     if (options.list) {
       var count = options.list.length;
-      for(var i=0;i<count;i++){
+      for (var i = 0; i < count; i++) {
         //make new entity with
         var entity = this._client.restoreEntity(options.list[i]);
         this._list[i] = entity;
       }
     }
   }
-  if (callback) {
+  /*if (callback) {
     //populate the collection
     this.fetch(callback);
-  }
+  }*/
 
 };
 
@@ -51,9 +49,9 @@ Usergrid.Collection = function(options, callback) {
  *  @params {any} obj - any variable
  *  @return {boolean} Returns true or false
  */
-Usergrid.isCollection = function(obj){
+Usergrid.isCollection = function(obj) {
   return (obj && obj instanceof Usergrid.Collection);
-}
+};
 
 
 /*
@@ -62,10 +60,10 @@ Usergrid.isCollection = function(obj){
  *  @method serialize
  *  @return {object} data
  */
-Usergrid.Collection.prototype.serialize = function () {
+Usergrid.Collection.prototype.serialize = function() {
 
   //pull out the state from this object and return it
-  var data = {}
+  var data = {};
   data.type = this._type;
   data.qs = this.qs;
   data.iterator = this._iterator;
@@ -74,9 +72,9 @@ Usergrid.Collection.prototype.serialize = function () {
   data.cursor = this._cursor;
 
   this.resetEntityPointer();
-  var i=0;
+  var i = 0;
   data.list = [];
-  while(this.hasNextEntity()) {
+  while (this.hasNextEntity()) {
     var entity = this.getNextEntity();
     data.list[i] = entity.serialize();
     i++;
@@ -85,8 +83,8 @@ Usergrid.Collection.prototype.serialize = function () {
   data = JSON.stringify(data);
   return data;
 };
-
-Usergrid.Collection.prototype.addCollection = function (collectionName, options, callback) {
+//addCollection is deprecated?
+/*Usergrid.Collection.prototype.addCollection = function (collectionName, options, callback) {
   self = this;
   options.client = this._client;
   var collection = new Usergrid.Collection(options, function(err, data) {
@@ -104,7 +102,7 @@ Usergrid.Collection.prototype.addCollection = function (collectionName, options,
       doCallback(callback, [err, collection], self);
     }
   });
-};
+};*/
 
 /*
  *  Populates the collection from the server
@@ -113,7 +111,7 @@ Usergrid.Collection.prototype.addCollection = function (collectionName, options,
  *  @param {function} callback
  *  @return {callback} callback(err, data)
  */
-Usergrid.Collection.prototype.fetch = function (callback) {
+Usergrid.Collection.prototype.fetch = function(callback) {
   var self = this;
   var qs = this.qs;
 
@@ -124,44 +122,33 @@ Usergrid.Collection.prototype.fetch = function (callback) {
     delete qs.cursor;
   }
   var options = {
-    method:'GET',
-    endpoint:this._type,
-    qs:this.qs
+    method: 'GET',
+    endpoint: this._type,
+    qs: this.qs
   };
-  this._client.request(options, function (err, data) {
-    if(err && self._client.logging) {
+  this._client.request(options, function(err, response) {
+    if (err && self._client.logging) {
       console.log('error getting collection');
     } else {
       //save the cursor if there is one
-      var cursor = data.cursor || null;
-      self.saveCursor(cursor);
-      if (data.entities) {
-        self.resetEntityPointer();
-        var count = data.entities.length;
-        //save entities locally
-        self._list = []; //clear the local list first
-        for (var i=0;i<count;i++) {
-          var uuid = data.entities[i].uuid;
-          if (uuid) {
-            var entityData = data.entities[i] || {};
-            self._baseType = data.entities[i].type; //store the base type in the collection
-            entityData.type = self._type;//make sure entities are same type (have same path) as parent collection.
-            var entityOptions = {
-              type:self._type,
-              client:self._client,
-              uuid:uuid,
-              data:entityData
-            };
-
-            var ent = new Usergrid.Entity(entityOptions);
-            ent._json = JSON.stringify(entityData, null, 2);
-            var ct = self._list.length;
-            self._list[ct] = ent;
-          }
-        }
-      }
+      self.saveCursor(response.cursor || null);
+      self.resetEntityPointer();
+      //save entities locally
+      self._list = response.getEntities()
+        .filter(function(entity) {
+          return isUUID(entity.uuid);
+        })
+        .map(function(entity) {
+          var ent = new Usergrid.Entity({
+            client: self._client
+          });
+          ent.set(entity);
+          ent.type = self._type;
+          //ent._json = JSON.stringify(entity, null, 2);
+          return ent;
+        });
     }
-    doCallback(callback, [err, data], self);
+    doCallback(callback, [err, response, self], self);
   });
 };
 
@@ -173,22 +160,21 @@ Usergrid.Collection.prototype.fetch = function (callback) {
  *  @param {function} callback
  *  @return {callback} callback(err, data, entity)
  */
-Usergrid.Collection.prototype.addEntity = function (options, callback) {
+Usergrid.Collection.prototype.addEntity = function(entityObject, callback) {
   var self = this;
-  options.type = this._type;
+  entityObject.type = this._type;
 
   //create the new entity
-  this._client.createEntity(options, function (err, entity) {
+  this._client.createEntity(entityObject, function(err, response, entity) {
     if (!err) {
       //then add the entity to the list
-      var count = self._list.length;
-      self._list[count] = entity;
+      self.addExistingEntity(entity);
     }
-    doCallback(callback, [err, entity], self);    
+    doCallback(callback, [err, response, self], self);
   });
 };
 
-Usergrid.Collection.prototype.addExistingEntity = function (entity) {
+Usergrid.Collection.prototype.addExistingEntity = function(entity) {
   //entity should already exist in the db, so just add it to the list
   var count = this._list.length;
   this._list[count] = entity;
@@ -202,33 +188,58 @@ Usergrid.Collection.prototype.addExistingEntity = function (entity) {
  *  @param {function} callback
  *  @return {callback} callback(err, data)
  */
-Usergrid.Collection.prototype.destroyEntity = function (entity, callback) {
+Usergrid.Collection.prototype.destroyEntity = function(entity, callback) {
   var self = this;
-  entity.destroy(function(err, data) {
+  entity.destroy(function(err, response) {
     if (err) {
       if (self._client.logging) {
         console.log('could not destroy entity');
       }
-      doCallback(callback, [err, data], self);
+      doCallback(callback, [err, response, self], self);
     } else {
-        //destroy was good, so repopulate the collection
-        self.fetch(callback);
+      //destroy was good, so repopulate the collection
+      self.fetch(callback);
     }
-  });
     //remove entity from the local store
-    this.removeEntity(entity);
+    self.removeEntity(entity);
+  });
 };
 
-
-Usergrid.Collection.prototype.removeEntity = function (entity) {
-  var uuid = entity.get('uuid');
-  for (var key in this._list) {
-    var listItem = this._list[key];
-    if (listItem.get('uuid') === uuid) {
-      return this._list.splice(key, 1);
-    }
-  }
-  return false;
+/*
+ * Filters the list of entities based on the supplied criteria function
+ * works like Array.prototype.filter
+ *
+ *  @method getEntitiesByCriteria
+ *  @param {function} criteria  A function that takes each entity as an argument and returns true or false
+ *  @return {Entity[]} returns a list of entities that caused the criteria function to return true
+ */
+Usergrid.Collection.prototype.getEntitiesByCriteria = function(criteria) {
+  return this._list.filter(criteria);
+};
+/*
+ * Returns the first entity from the list of entities based on the supplied criteria function
+ * works like Array.prototype.filter
+ *
+ *  @method getEntitiesByCriteria
+ *  @param {function} criteria  A function that takes each entity as an argument and returns true or false
+ *  @return {Entity[]} returns a list of entities that caused the criteria function to return true
+ */
+Usergrid.Collection.prototype.getEntityByCriteria = function(criteria) {
+  return this.getEntitiesByCriteria(criteria).shift();
+};
+/*
+ * Removed an entity from the collection without destroying it on the server
+ *
+ *  @method removeEntity
+ *  @param {object} entity
+ *  @return {Entity} returns the removed entity or undefined if it was not found
+ */
+Usergrid.Collection.prototype.removeEntity = function(entity) {
+  var removedEntity = this.getEntityByCriteria(function(item) {
+    return entity.uuid === item.get('uuid');
+  });
+  delete this._list[this._list.indexOf(removedEntity)];
+  return removedEntity;
 };
 
 /*
@@ -239,25 +250,24 @@ Usergrid.Collection.prototype.removeEntity = function (entity) {
  *  @param {function} callback
  *  @return {callback} callback(err, data, entity)
  */
-Usergrid.Collection.prototype.getEntityByUUID = function (uuid, callback) {
-
-  for (var key in this._list) {
-    var listItem = this._list[key];
-    if (listItem.get('uuid') === uuid) {
-        return callback(null, listItem);
-    }
+Usergrid.Collection.prototype.getEntityByUUID = function(uuid, callback) {
+  var entity = this.getEntityByCriteria(function(item) {
+    return item.get('uuid') === uuid;
+  });
+  if (entity) {
+    doCallback(callback, [null, entity, entity], this);
+  } else {
+    //get the entity from the database
+    var options = {
+      data: {
+        type: this._type,
+        uuid: uuid
+      },
+      client: this._client
+    };
+    entity = new Usergrid.Entity(options);
+    entity.fetch(callback);
   }
-
-  //get the entity from the database
-  var options = {
-    data: {
-      type: this._type,
-      uuid:uuid
-    },
-    client: this._client
-  }
-  var entity = new Usergrid.Entity(options);
-  entity.fetch(callback);
 };
 
 /*
@@ -266,7 +276,7 @@ Usergrid.Collection.prototype.getEntityByUUID = function (uuid, callback) {
  *  @method getFirstEntity
  *  @return {object} returns an entity object
  */
-Usergrid.Collection.prototype.getFirstEntity = function () {
+Usergrid.Collection.prototype.getFirstEntity = function() {
   var count = this._list.length;
   if (count > 0) {
     return this._list[0];
@@ -280,10 +290,10 @@ Usergrid.Collection.prototype.getFirstEntity = function () {
  *  @method getLastEntity
  *  @return {object} returns an entity object
  */
-Usergrid.Collection.prototype.getLastEntity = function () {
+Usergrid.Collection.prototype.getLastEntity = function() {
   var count = this._list.length;
   if (count > 0) {
-    return this._list[count-1];
+    return this._list[count - 1];
   }
   return null;
 };
@@ -297,10 +307,10 @@ Usergrid.Collection.prototype.getLastEntity = function () {
  *  @method hasNextEntity
  *  @return {boolean} true if there is a next entity, false if not
  */
-Usergrid.Collection.prototype.hasNextEntity = function () {
+Usergrid.Collection.prototype.hasNextEntity = function() {
   var next = this._iterator + 1;
-  var hasNextElement = (next >=0 && next < this._list.length);
-  if(hasNextElement) {
+  var hasNextElement = (next >= 0 && next < this._list.length);
+  if (hasNextElement) {
     return true;
   }
   return false;
@@ -315,10 +325,10 @@ Usergrid.Collection.prototype.hasNextEntity = function () {
  *  @method hasNextEntity
  *  @return {object} entity
  */
-Usergrid.Collection.prototype.getNextEntity = function () {
+Usergrid.Collection.prototype.getNextEntity = function() {
   this._iterator++;
   var hasNextElement = (this._iterator >= 0 && this._iterator <= this._list.length);
-  if(hasNextElement) {
+  if (hasNextElement) {
     return this._list[this._iterator];
   }
   return false;
@@ -331,10 +341,10 @@ Usergrid.Collection.prototype.getNextEntity = function () {
  *  @method hasPrevEntity
  *  @return {boolean} true if there is a previous entity, false if not
  */
-Usergrid.Collection.prototype.hasPrevEntity = function () {
+Usergrid.Collection.prototype.hasPrevEntity = function() {
   var previous = this._iterator - 1;
-  var hasPreviousElement = (previous >=0 && previous < this._list.length);
-  if(hasPreviousElement) {
+  var hasPreviousElement = (previous >= 0 && previous < this._list.length);
+  if (hasPreviousElement) {
     return true;
   }
   return false;
@@ -346,10 +356,10 @@ Usergrid.Collection.prototype.hasPrevEntity = function () {
  *  @method getPrevEntity
  *  @return {object} entity
  */
-Usergrid.Collection.prototype.getPrevEntity = function () {
+Usergrid.Collection.prototype.getPrevEntity = function() {
   this._iterator--;
   var hasPreviousElement = (this._iterator >= 0 && this._iterator <= this._list.length);
-  if(hasPreviousElement) {
+  if (hasPreviousElement) {
     return this._list[this._iterator];
   }
   return false;
@@ -362,8 +372,8 @@ Usergrid.Collection.prototype.getPrevEntity = function () {
  *  @method resetEntityPointer
  *  @return none
  */
-Usergrid.Collection.prototype.resetEntityPointer = function () {
-  this._iterator  = -1;
+Usergrid.Collection.prototype.resetEntityPointer = function() {
+  this._iterator = -1;
 };
 
 /*
@@ -399,7 +409,7 @@ Usergrid.Collection.prototype.resetPaging = function() {
  *  @method hasNextPage
  *  @return {boolean} returns true if there is a next page of data, false otherwise
  */
-Usergrid.Collection.prototype.hasNextPage = function () {
+Usergrid.Collection.prototype.hasNextPage = function() {
   return (this._next);
 };
 
@@ -412,7 +422,7 @@ Usergrid.Collection.prototype.hasNextPage = function () {
  *  @param {function} callback
  *  @return {callback} callback(err, data)
  */
-Usergrid.Collection.prototype.getNextPage = function (callback) {
+Usergrid.Collection.prototype.getNextPage = function(callback) {
   if (this.hasNextPage()) {
     //set the cursor to the next page of data
     this._previous.push(this._cursor);
@@ -421,7 +431,7 @@ Usergrid.Collection.prototype.getNextPage = function (callback) {
     this._list = [];
     this.fetch(callback);
   }
-}
+};
 
 /*
  *  Paging -  checks to see if there is a previous page od data
@@ -429,7 +439,7 @@ Usergrid.Collection.prototype.getNextPage = function (callback) {
  *  @method hasPreviousPage
  *  @return {boolean} returns true if there is a previous page of data, false otherwise
  */
-Usergrid.Collection.prototype.hasPreviousPage = function () {
+Usergrid.Collection.prototype.hasPreviousPage = function() {
   return (this._previous.length > 0);
 };
 
@@ -442,9 +452,9 @@ Usergrid.Collection.prototype.hasPreviousPage = function () {
  *  @param {function} callback
  *  @return {callback} callback(err, data)
  */
-Usergrid.Collection.prototype.getPreviousPage = function (callback) {
+Usergrid.Collection.prototype.getPreviousPage = function(callback) {
   if (this.hasPreviousPage()) {
-    this._next=null; //clear out next so the comparison will find the next item
+    this._next = null; //clear out next so the comparison will find the next item
     this._cursor = this._previous.pop();
     //empty the list
     this._list = [];

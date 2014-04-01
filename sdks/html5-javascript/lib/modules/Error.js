@@ -3,7 +3,7 @@
 /**
  * Created by ryan bridges on 2014-02-05.
  */
-(function (global) {
+(function(global) {
     //noinspection JSUnusedAssignment
     var name = 'UsergridError',
         short,
@@ -27,14 +27,14 @@
      *  UsergridError(message);
      */
 
-    function UsergridError(message, name, timestamp, duration, exception){
-        this.message=message;
-        this.name=name;
-        this.timestamp=timestamp||Date.now();
-        this.duration=duration||0;
-        this.exception=exception;
+    function UsergridError(message, name, timestamp, duration, exception) {
+        this.message = message;
+        this.name = name;
+        this.timestamp = timestamp || Date.now();
+        this.duration = duration || 0;
+        this.exception = exception;
     }
-    UsergridError.prototype=new Error();
+    UsergridError.prototype = new Error();
     UsergridError.prototype.constructor = UsergridError;
     /*
      *  Creates a UsergridError from the JSON response returned from the backend
@@ -53,65 +53,78 @@
      *  "error_description":"Could not find application for yourorgname/sandboxxxxx from URI: yourorgname/sandboxxxxx"
      *  }
      */
-    UsergridError.fromResponse=function(response){
-        if(response && "undefined"!==typeof response){
+    UsergridError.fromResponse = function(response) {
+        if (response && "undefined" !== typeof response) {
             return new UsergridError(response.error_description, response.error, response.timestamp, response.duration, response.exception);
-        }else{
+        } else {
             return new UsergridError();
         }
     };
-    UsergridError.createSubClass=function(name){
-        if(name in global && global[name])return global[name]
-        global[name]=function(){};
-        global[name].name=name;
-        global[name].prototype=new UsergridError();
+    UsergridError.createSubClass = function(name) {
+        if (name in global && global[name]) return global[name];
+        global[name] = function() {};
+        global[name].name = name;
+        global[name].prototype = new UsergridError();
         return global[name];
     };
 
-    function UsergridHTTPResponseError(message, name, timestamp, duration, exception){
-        this.message=message;
-        this.name=name;
-        this.timestamp=timestamp||Date.now();
-        this.duration=duration||0;
-        this.exception=exception;
+    function UsergridHTTPResponseError(message, name, timestamp, duration, exception) {
+        this.message = message;
+        this.name = name;
+        this.timestamp = timestamp || Date.now();
+        this.duration = duration || 0;
+        this.exception = exception;
     }
-    UsergridHTTPResponseError.prototype=new UsergridError();
-    function UsergridInvalidHTTPMethodError(message, name, timestamp, duration, exception){
-        this.message=message;
-        this.name=name;
-        this.timestamp=timestamp||Date.now();
-        this.duration=duration||0;
-        this.exception=exception;
-    }
-    UsergridInvalidHTTPMethodError.prototype=new UsergridError();
-    function UsergridInvalidURIError(message, name, timestamp, duration, exception){
-        this.message=message;
-        this.name=name;
-        this.timestamp=timestamp||Date.now();
-        this.duration=duration||0;
-        this.exception=exception;
-    }
-    UsergridInvalidURIError.prototype=new UsergridError();
-    function UsergridKeystoreDatabaseUpgradeNeededError(message, name, timestamp, duration, exception){
-        this.message=message;
-        this.name=name;
-        this.timestamp=timestamp||Date.now();
-        this.duration=duration||0;
-        this.exception=exception;
-    }
-    UsergridKeystoreDatabaseUpgradeNeededError.prototype=new UsergridError();
+    UsergridHTTPResponseError.prototype = new UsergridError();
 
-    global['UsergridHTTPResponseError'] = UsergridHTTPResponseError;
-    global['UsergridInvalidHTTPMethodError'] = UsergridInvalidHTTPMethodError;
-    global['UsergridInvalidURIError'] = UsergridInvalidURIError;
-    global['UsergridKeystoreDatabaseUpgradeNeededError'] = UsergridKeystoreDatabaseUpgradeNeededError;
+    function UsergridInvalidHTTPMethodError(message, name, timestamp, duration, exception) {
+        this.message = message;
+        this.name = name || 'invalid_http_method';
+        this.timestamp = timestamp || Date.now();
+        this.duration = duration || 0;
+        this.exception = exception;
+    }
+    UsergridInvalidHTTPMethodError.prototype = new UsergridError();
+
+    function UsergridInvalidURIError(message, name, timestamp, duration, exception) {
+        this.message = message;
+        this.name = name || 'invalid_uri';
+        this.timestamp = timestamp || Date.now();
+        this.duration = duration || 0;
+        this.exception = exception;
+    }
+    UsergridInvalidURIError.prototype = new UsergridError();
+
+    function UsergridInvalidArgumentError(message, name, timestamp, duration, exception) {
+        this.message = message;
+        this.name = name || 'invalid_argument';
+        this.timestamp = timestamp || Date.now();
+        this.duration = duration || 0;
+        this.exception = exception;
+    }
+    UsergridInvalidArgumentError.prototype = new UsergridError();
+
+    function UsergridKeystoreDatabaseUpgradeNeededError(message, name, timestamp, duration, exception) {
+        this.message = message;
+        this.name = name;
+        this.timestamp = timestamp || Date.now();
+        this.duration = duration || 0;
+        this.exception = exception;
+    }
+    UsergridKeystoreDatabaseUpgradeNeededError.prototype = new UsergridError();
+
+    global.UsergridHTTPResponseError = UsergridHTTPResponseError;
+    global.UsergridInvalidHTTPMethodError = UsergridInvalidHTTPMethodError;
+    global.UsergridInvalidURIError = UsergridInvalidURIError;
+    global.UsergridInvalidArgumentError = UsergridInvalidArgumentError;
+    global.UsergridKeystoreDatabaseUpgradeNeededError = UsergridKeystoreDatabaseUpgradeNeededError;
 
     global[name] = UsergridError;
     if (short !== undefined) {
         //noinspection JSUnusedAssignment
         global[short] = UsergridError;
     }
-    global[name].noConflict = function () {
+    global[name].noConflict = function() {
         if (_name) {
             global[name] = _name;
         }
@@ -122,4 +135,3 @@
     };
     return global[name];
 }(this));
-
