@@ -858,8 +858,8 @@ public class ExportServiceIT {
     }
 
 
-    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
-    //@Test
+   // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    @Test
     public void testIntegration100EntitiesOn() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -934,11 +934,14 @@ public class ExportServiceIT {
                 blobStore.deleteContainer( bucketName );
                 assert ( false );
             }
+            bo = blobStore.getBlob( bucketName, s3Export.getFilename() );
+
             Long numOfFiles = blobStore.countBlobs( bucketName );
             Long numWeWant = Long.valueOf( 1 );
+            blobStore.deleteContainer( bucketName );
             assertEquals( numOfFiles, numWeWant );
 
-            bo = blobStore.getBlob( bucketName, s3Export.getFilename() );
+
         }
         catch ( Exception e ) {
             assert ( false );
@@ -948,8 +951,8 @@ public class ExportServiceIT {
         blobStore.deleteContainer( bucketName );
     }
 
-    @Ignore
-    //@Test
+    //@Ignore
+    @Test
     public void testIntegration100EntitiesForAllApps() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -1024,8 +1027,8 @@ public class ExportServiceIT {
             Long numOfFiles = blobStore.countBlobs( bucketName );
             //delete container containing said files
             bo = blobStore.getBlob( bucketName, s3Export.getFilename() );
-            blobStore.deleteContainer( bucketName );
             Long numWeWant = Long.valueOf( 5 );
+            blobStore.deleteContainer( bucketName );
             //asserts that the correct number of files was transferred over
             assertEquals( numWeWant, numOfFiles );
         }
@@ -1036,11 +1039,11 @@ public class ExportServiceIT {
         }
 
         assertNotNull( bo );
-        blobStore.deleteContainer( bucketName );
     }
 
 
-    @Ignore
+    //@Ignore
+    @Test
     public void testIntegration100EntitiesOnOneOrg() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();

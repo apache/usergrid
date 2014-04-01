@@ -197,7 +197,7 @@ public class ExportServiceImpl implements ExportService {
     public void doExport( final JobExecution jobExecution ) throws Exception {
         Map<String, Object> config = ( Map<String, Object> ) jobExecution.getJobData().getProperty( "exportInfo" );
 
-        UUID scopedAppId = ( UUID ) config.get( "applicationId" );
+//        UUID scopedAppId = ( UUID ) config.get( "applicationId" );
 
         if ( config == null ) {
             logger.error( "Export Information passed through is null" );
@@ -205,10 +205,10 @@ public class ExportServiceImpl implements ExportService {
         }
         //get the entity manager for the application, and the entity that this Export corresponds to.
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        if ( scopedAppId == null ) {
-            logger.error( "Export Information application uuid is null" );
-            return;
-        }
+//        if ( scopedAppId == null ) {
+//            logger.error( "Export Information application uuid is null" );
+//            return;
+//        }
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
         Export export = em.get( exportId, Export.class );
 
@@ -315,7 +315,7 @@ public class ExportServiceImpl implements ExportService {
 
         //retrieves export entity
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        EntityManager exportManager = emf.getEntityManager( ( UUID ) config.get( "applicationId" ) );
+        EntityManager exportManager = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
         Export export = exportManager.get( exportId, Export.class );
         String appFileName = null;
 
@@ -407,7 +407,7 @@ public class ExportServiceImpl implements ExportService {
 
         //retrieves export entity
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        EntityManager exportManager = emf.getEntityManager( ( UUID ) config.get( "applicationId" ) );
+        EntityManager exportManager = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
         Export export = exportManager.get( exportId, Export.class );
 
         //sets up a output stream for s3 backup.
@@ -497,7 +497,7 @@ public class ExportServiceImpl implements ExportService {
 
         //retrieves export entity
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        EntityManager exportManager = emf.getEntityManager( ( UUID ) config.get( "applicationId" ) );
+        EntityManager exportManager = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
         Export export = exportManager.get( exportId, Export.class );
 
         //sets up a output stream for s3 backup.
