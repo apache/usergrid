@@ -147,20 +147,14 @@ public class ExportServiceImpl implements ExportService {
      * @return String
      */
     @Override
-    public String getState( final UUID appId, final UUID uuid ) throws Exception {
-
-        //get application entity manager
-        if ( appId == null ) {
-            logger.error( "Application context cannot be found." );
-            return "Application context cannot be found.";
-        }
+    public String getState( final UUID uuid ) throws Exception {
 
         if ( uuid == null ) {
             logger.error( "UUID passed in cannot be null." );
             return "UUID passed in cannot be null";
         }
 
-        EntityManager rootEm = emf.getEntityManager( appId );
+        EntityManager rootEm = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
         //retrieve the export entity.
         Export export = rootEm.get( uuid, Export.class );

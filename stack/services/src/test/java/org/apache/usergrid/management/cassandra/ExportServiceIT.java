@@ -904,7 +904,7 @@ public class ExportServiceIT {
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         exportService.doExport( jobExecution );
-        while ( !exportService.getState( applicationId, exportUUID ).equals( "FINISHED" ) ) {
+        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
             ;
         }
 
@@ -1098,7 +1098,7 @@ public class ExportServiceIT {
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         exportService.doExport( jobExecution );
-        while ( !exportService.getState( applicationId, exportUUID ).equals( "FINISHED" ) ) {
+        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
             ;
         }
 
