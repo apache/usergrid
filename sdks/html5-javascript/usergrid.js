@@ -747,6 +747,55 @@ function doCallback(callback, params, context) {
         return entity;
     };
     /*
+   *  Main function for creating new counters - should be called directly.
+   *
+   *  options object: options {timestamp:0, category:'value', counters:{name : value}}
+   *
+   *  @method createCounter
+   *  @public
+   *  @params {object} options
+   *  @param {function} callback
+   *  @return {callback} callback(err, response, counter)
+   */
+    Usergrid.Client.prototype.createCounter = function(options, callback) {
+        var counter = new Usergrid.Counter({
+            client: this,
+            data: options
+        });
+        counter.save(callback);
+    };
+    /*
+   *  Main function for creating new assets - should be called directly.
+   *
+   *  options object: options {name:"photo.jpg", path:"/user/uploads", "content-type":"image/jpeg", owner:"F01DE600-0000-0000-0000-000000000000", file: FileOrBlobObject }
+   *
+   *  @method createCounter
+   *  @public
+   *  @params {object} options
+   *  @param {function} callback
+   *  @return {callback} callback(err, response, counter)
+   */
+    Usergrid.Client.prototype.createAsset = function(options, callback) {
+        var file = options.file;
+        if (file) {
+            options.name = options.name || file.name;
+            options["content-type"] = options["content-type"] || file.type;
+            options.path = options.path || "/";
+            delete options.file;
+        }
+        var asset = new Usergrid.Asset({
+            client: this,
+            data: options
+        });
+        asset.save(function(err, response, asset) {
+            if (file && !err) {
+                asset.upload(file, callback);
+            } else {
+                doCallback(callback, [ err, response, asset ], asset);
+            }
+        });
+    };
+    /*
    *  Main function for creating new collections - should be called directly.
    *
    *  options object: options {client:client, type: type, qs:qs}
@@ -2487,7 +2536,7 @@ Usergrid.Group.prototype.createGroupActivity = function(options, callback) {
  *  @param {object} options {timestamp:0, category:'value', counters:{name : value}}
  *  @returns {callback} callback(err, event)
  */
-Usergrid.Counter = function(options, callback) {
+Usergrid.Counter = function(options) {
     // var self=this;
     this._client = options.client;
     this._data = options.data || {};
@@ -2495,7 +2544,6 @@ Usergrid.Counter = function(options, callback) {
     this._data.timestamp = options.timestamp || 0;
     this._data.type = "events";
     this._data.counters = options.counters || {};
-    doCallback(callback, [ false, this ], this);
 };
 
 var COUNTER_RESOLUTIONS = [ "all", "minute", "five_minutes", "half_hour", "hour", "six_day", "day", "week", "month" ];
@@ -2925,18 +2973,32 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
         return;
     }
     var self = this;
+    var args = arguments;
+    var attempts = self.get("attempts");
+    if (isNaN(attempts)) {
+        attempts = 3;
+    }
+    self.set("content-type", data.type);
+    self.set("size", data.size);
     var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");
     //self._client.buildAssetURL(self.get("uuid"));
     var xhr = new XMLHttpRequest();
     xhr.open("POST", endpoint, true);
     xhr.onerror = function(err) {
         //callback(true, err);
-        doCallback(callback, [ true, new UsergridError("The File APIs are not fully supported by your browser.") ], self);
+        doCallback(callback, [ new UsergridError("The File APIs are not fully supported by your browser.") ], xhr, self);
     };
     xhr.onload = function(ev) {
-        if (xhr.status >= 300) {
-            doCallback(callback, [ new UsergridError(JSON.parse(xhr.responseText)), null, self ], self);
+        if (xhr.status >= 500 && attempts > 0) {
+            self.set("attempts", --attempts);
+            setTimeout(function() {
+                self.upload.apply(self, args);
+            }, 100);
+        } else if (xhr.status >= 300) {
+            self.set("attempts");
+            doCallback(callback, [ new UsergridError(JSON.parse(xhr.responseText)), xhr, self ], self);
         } else {
+            self.set("attempts");
             doCallback(callback, [ null, xhr, self ], self);
         }
     };
@@ -2944,9 +3006,8 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
     fr.onload = function() {
         var binary = fr.result;
         xhr.overrideMimeType("application/octet-stream");
-        setTimeout(function() {
-            xhr.sendAsBinary(binary);
-        }, 1e3);
+        // setTimeout(function() {
+        xhr.sendAsBinary(binary);
     };
     fr.readAsBinaryString(data);
 };
@@ -2966,13 +3027,13 @@ Usergrid.Asset.prototype.download = function(callback) {
     xhr.responseType = "blob";
     xhr.onload = function(ev) {
         var blob = xhr.response;
-        //callback(null, blob);
-        doCallback(callback, [ null, blob, self ], self);
+        doCallback(callback, [ null, xhr, self ], self);
     };
     xhr.onerror = function(err) {
         callback(true, err);
-        doCallback(callback, [ new UsergridError(err), err, self ], self);
+        doCallback(callback, [ new UsergridError(err), xhr, self ], self);
     };
+    xhr.overrideMimeType(self.get("content-type"));
     xhr.send();
 };
 

@@ -800,11 +800,9 @@ describe('Usergrid', function(){
                         test_counter: 0
                     }
                 }
-            }, function(err, data) {
-                assert(!err, data.error_description);
-                console.log(data);
-                done();
             });
+            assert(counter, "Counter not created");
+            done();
         });
         it('should save a counter', function(done) {
             counter.save(function(err, data) {
@@ -902,7 +900,6 @@ describe('Usergrid', function(){
             req.onload = function() {
                 test_image = req.response;
                 image_type = req.getResponseHeader('Content-Type');
-                console.log(test_image, image_type);
                 done();
             }
             req.onerror = function(err) {
@@ -1011,24 +1008,33 @@ describe('Usergrid', function(){
                 done();
             });
         });
+        it('should RETRIEVE an asset', function(done) {
+            asset.fetch(function(err, response, entity){
+                if(err){
+                    assert(false, err);
+                }else{
+                    asset=entity;
+                }
+                done();
+            })
+        });
         it('should upload asset data', function(done) {
-            this.timeout(15000);
-            setTimeout(function() {
-                asset.upload(test_image, function(err, response, asset) {
-                    if(err){
-                        assert(false, err.error_description);
-                    }
-                    done();
-                });
-            }, 10000);
+            this.timeout(5000);
+            asset.upload(test_image, function(err, response, asset) {
+                if(err){
+                    assert(false, err.error_description);
+                }
+                done();
+            });
         });
         it('should retrieve asset data', function(done) {
+            this.timeout(5000);
             asset.download(function(err, response, asset) {
                 if(err){
                     assert(false, err.error_description);
                 }
-                assert(asset.type == test_image.type, "MIME types don't match");
-                assert(asset.size == test_image.size, "sizes don't match");
+                assert(asset.get('content-type') == test_image.type, "MIME types don't match");
+                assert(asset.get('size') == test_image.size, "sizes don't match");
                 done();
             });
         });
@@ -1063,7 +1069,7 @@ describe('Usergrid', function(){
                 done();
             })
         });
-        it('should DELETE the asset', function(done) {
+        after(function(done) {
             asset.destroy(function(err, data) {
                 if(err){
                     assert(false, err.error_description);
@@ -1072,7 +1078,7 @@ describe('Usergrid', function(){
                 done();
             })
         });
-        it('should DELETE the folder', function(done) {
+        after(function(done) {
             folder.destroy(function(err, data) {
                 if(err){
                     assert(false, err.error_description);

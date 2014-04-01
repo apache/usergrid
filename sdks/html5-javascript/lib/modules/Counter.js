@@ -5,7 +5,7 @@
  *  @param {object} options {timestamp:0, category:'value', counters:{name : value}}
  *  @returns {callback} callback(err, event)
  */
-Usergrid.Counter = function(options, callback) {
+Usergrid.Counter = function(options) {
   // var self=this;
   this._client = options.client;
   this._data = options.data || {};
@@ -13,7 +13,7 @@ Usergrid.Counter = function(options, callback) {
   this._data.timestamp = options.timestamp || 0;
   this._data.type = "events";
   this._data.counters = options.counters || {};
-  doCallback(callback, [false, this], this);
+  // doCallback(callback, [false, this], this);
   //this.save(callback);
 };
 var COUNTER_RESOLUTIONS = [

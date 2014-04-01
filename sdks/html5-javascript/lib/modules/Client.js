@@ -207,6 +207,55 @@
     var entity = new Usergrid.Entity(options);
     return entity;
   };
+  /*
+   *  Main function for creating new counters - should be called directly.
+   *
+   *  options object: options {timestamp:0, category:'value', counters:{name : value}}
+   *
+   *  @method createCounter
+   *  @public
+   *  @params {object} options
+   *  @param {function} callback
+   *  @return {callback} callback(err, response, counter)
+   */
+  Usergrid.Client.prototype.createCounter = function(options, callback) {
+    var counter = new Usergrid.Counter({
+      client: this,
+      data: options
+    });
+    counter.save(callback);
+  };
+  /*
+   *  Main function for creating new assets - should be called directly.
+   *
+   *  options object: options {name:"photo.jpg", path:"/user/uploads", "content-type":"image/jpeg", owner:"F01DE600-0000-0000-0000-000000000000", file: FileOrBlobObject }
+   *
+   *  @method createCounter
+   *  @public
+   *  @params {object} options
+   *  @param {function} callback
+   *  @return {callback} callback(err, response, counter)
+   */
+  Usergrid.Client.prototype.createAsset = function(options, callback) {
+    var file=options.file;
+    if(file){
+      options.name=options.name||file.name;
+      options['content-type']=options['content-type']||file.type;
+      options.path=options.path||'/';
+      delete options.file;
+    }
+    var asset = new Usergrid.Asset({
+      client: this,
+      data: options
+    });
+    asset.save(function(err, response, asset){
+      if(file && !err){
+        asset.upload(file, callback);
+      }else{
+        doCallback(callback, [err, response, asset], asset);
+      }
+    });
+  };
 
   /*
    *  Main function for creating new collections - should be called directly.
