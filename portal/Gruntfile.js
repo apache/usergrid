@@ -1,15 +1,14 @@
-var packageJson = require('./package.json');
-var versionPath = packageJson.version;
-var distPath = 'dist/'+packageJson.packageName,
-  coveragePath = 'dist-cov/'+packageJson.packageName,
+var bower = require('./bower.json');
+
+var distPath = 'dist/'+bower.name,
+  coveragePath = 'dist-cov/'+bower.name,
   libsFile = 'js/libs/usergrid-libs.min.js',
   devFile = 'js/usergrid-dev.min.js',
-  devFileIncludes= ['js/**/*.js','!js/libs/**/*.js', '!js/**/*.min.js'],
   coverageDir = 'test/coverage/instrument/',
   coverageFile = 'test/coverage/instrument/js/usergrid-coverage.min.js',
   mainFile = 'js/usergrid.min.js',
   templateFile = 'js/templates.js',
-  distName = packageJson.packageName
+  distName = bower.name
   ;
 console.warn('to run e2e tests you need to have a running instance of webdriver, 1) npm install protractor -g -> 2) webdriver-manager start --standalone');
 module.exports = function (grunt) {
@@ -260,15 +259,10 @@ module.exports = function (grunt) {
       }
     },
     copy:{
-      versioned:{
-        files:[
-          {src:['js/*.min.js','js/libs/**','css/**','img/**','bower_components/**'],dest:versionPath,expand:true}
-        ]
-      },
       coverage:{
         files:[
           {
-            src:[versionPath+'/**','sdk/**','archive/**','js/charts/*.json','css/**','img/**','js/libs/**','config.js','bower_components/**'],
+            src:['js/*.min.js','js/libs/**','sdk/**','archive/**','js/charts/*.json','css/**','img/**','js/libs/**','config.js','bower_components/**'],
             dest:coveragePath,
             expand:true
           },
@@ -284,7 +278,8 @@ module.exports = function (grunt) {
         files:[
           // includes files within path
           {expand: true, src: ['*.html','config.js', '*.ico'], dest: distPath, filter: 'isFile'},
-          {expand: true, src: [versionPath+'/**','sdk/**','css/**','img/**' ,'archive/**','js/charts/*.json'], dest: distPath}
+          {expand: true, src: ['sdk/**','css/**','img/**' ,'archive/**','js/charts/*.json'], dest: distPath},
+          {expand: true, src: ['js/*.min.js','js/libs/**','css/**','img/**','bower_components/**'], dest: distPath}
 
         ]
       }
@@ -292,22 +287,22 @@ module.exports = function (grunt) {
     compress: {
       main: {
         options: {
-          archive: 'dist/'+distName+'.'+packageJson.version+'.zip'
+          archive: 'dist/'+distName+'.'+bower.version+'.zip'
         },
         expand: true,
         cwd: distPath+'/',
         src: ['**/*'],
-        dest: distName+'.'+packageJson.version
+        dest: distName+'.'+bower.version
       }
     },
     clean: {
-        build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile,versionPath+'/'],//'bower_components/',
+        build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile],
         coverage: ['reports/']
     },
     dom_munger: {
       main: {
         options: {
-          update: {selector:'#main-script',attribute:'src',value:versionPath+'/'+mainFile}
+          update: {selector:'#main-script',attribute:'src',value:mainFile}
 
         },
         src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
@@ -316,7 +311,7 @@ module.exports = function (grunt) {
       },
       dev: {
         options: {
-          update: {selector:'#main-script',attribute:'src',value:versionPath+'/'+devFile}
+          update: {selector:'#main-script',attribute:'src',value:devFile}
         },
         src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
         dest: 'index-debug.html'  //update the dist/index.html (the src index.html is copied there)
@@ -327,27 +322,7 @@ module.exports = function (grunt) {
         },
         src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
         dest: coveragePath+'/index.html'  //update the dist/index.html (the src index.html is copied there)
-      },
-      menu: {
-        options: {
-          callback:function($){
-            var libs = $('#libScript');
-            for(var key in libs){
-              var elem = libs[key];
-              if(elem.attribs){
-                if (elem.attribs.src) {
-                  elem.attribs.src = versionPath + '/' + elem.attribs.src;
-                }
-                if (elem.attribs.href) {
-                  elem.attribs.href = versionPath + '/' + elem.attribs.href;
-                }
-              }
-            };
-          }
-        },
-        src: ['index.html','index-debug.html',coverageDir+'index.html']  //update the dist/index.html (the src index.html is copied there)
       }
-
     },
     bower: {
       install: {
@@ -378,8 +353,8 @@ module.exports = function (grunt) {
         // Files to be uploaded.
         upload: [
           {
-            src: 'dist/appsvc-ui.'+packageJson.version+'.zip',
-            dest: '/production-releases/dist/appsvc-ui.'+packageJson.version+'.zip'
+            src: 'dist/'+bower.name+'.'+bower.version+'.zip',
+            dest: '/production-releases/dist/'+bower.name+'.'+bower.version+'.zip'
           }
         ]
       }
@@ -423,7 +398,9 @@ module.exports = function (grunt) {
   grunt.registerTask('validate', ['jshint', 'complexity']);
   grunt.registerTask('report', ['build', 'coverage']);
 
-  grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','copy:versioned','karma:unit']);
+  grunt.registerTask('build-release', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy','compress']);
+  grunt.registerTask('build', ['bower:install','ngtemplates', 'uglify','cssmin','dom_munger','karma:unit']);
+  grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','karma:unit']);
   grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
 
   grunt.registerTask('default', ['build','karma:unit']);
@@ -439,5 +416,4 @@ module.exports = function (grunt) {
 
   grunt.registerTask('no-monitoring', ['build','clean:perf','karma:unit','compress']);
 
-  grunt.registerTask('build', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy','compress']);
 };

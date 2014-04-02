@@ -1,0 +1,99 @@
+<div class="console-section">
+  <div class="well thingy">
+    <span class="title">${name}</span>
+    <div class="bar">
+      <a class="btn" data-toggle="modal" href="#" onclick="Usergrid.console.deleteRolesFromGroup(''); return false;"> Remove </a>
+      <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-add-role-to-group"> Add role </a>
+    </div>
+  </div>
+  <div class="console-section-contents">
+    <div class="user-panel-section">
+      <div class="user-roles-title">Roles </div>
+      {{if roles}}
+      {{if roles.length > 0}}
+      <table class="table table-bordered groups-permissions-response-table">
+        <tbody>
+          <tr class="zebraRows users-row">
+            <td class="checkboxo">
+              <input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);" />
+            </td>
+            <td class="user-details bold-header">
+              Group Name
+            </td>
+          </tr>
+          {{each roles}}
+          <tr class="zebraRows users-row">
+            <td class="checkboxo"><input type="checkbox" name="${name}" class="listItem" value="${name}" /></td>
+            <td class="details">
+              {{if path}}<a href="" onclick="Usergrid.console.pageOpenRole('${name}'); return false;">{{/if}}
+                ${title}
+                (${name})
+              {{if path}}</a>{{/if}}
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{else}}
+      <div class="panel-section-message">No Roles</div>
+      {{/if}}
+      {{/if}}
+      <div id="group-panel-roles-curl-container" class="curl-container">
+    </div>
+      <br/>
+      <div class="user-roles-title">Permissions </div>
+      <h4>Add Permission Rule</h4>
+      <form id="role-permissions-form" action="" onsubmit="Usergrid.console.addGroupPermission('${name}'); return false;" class="well form-inline" autocomplete="off">
+        Path: <input id="group-permission-path-entry-input" type="text" name="path" value="/" />
+        <label class="checkbox">
+          <input id="group-permission-op-get-checkbox" type="checkbox" name="get" value="get"/>
+          get </label>
+        <label class="checkbox">
+          <input id="group-permission-op-post-checkbox" type="checkbox" name="post" value="post"/>
+          post </label>
+        <label class="checkbox">
+          <input id="group-permission-op-put-checkbox" type="checkbox" name="put" value="put"/>
+          put </label>
+        <label class="checkbox">
+          <input id="group-permission-op-delete-checkbox" type="checkbox" name="delete" value="delete"/>
+          delete </label>
+        <button type="submit" class="btn btn-primary"><i class="icon-plus-sign icon-white"></i> Add</button >
+      </form>
+      <br/>
+      <h4>Permission Rules</h4>
+      {{if permissions}}
+      <table id="role-permissions-table" data-permission="${$index}" class="table table-striped table-bordered table-condensed">
+        <thead>
+          <tr>
+            <th>Path</th>
+            <th class="role-permission-op">Get</th>
+            <th class="role-permission-op">Post</th>
+            <th class="role-permission-op">Put</th>
+            <th class="role-permission-op">Delete</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{each permissions}}
+          <tr>
+            <td class="role-permission-path">${$value.path}</td>
+            <td class="role-permission-op">{{if $value.ops.get}}<i class="icon-ok"></i>{{/if}}</td>
+            <td class="role-permission-op">{{if $value.ops.post}}<i class="icon-ok"></i>{{/if}}</td>
+            <td class="role-permission-op">{{if $value.ops.put}}<i class="icon-ok"></i>{{/if}}</td>
+            <td class="role-permission-op">{{if $value.ops.delete}}<i class="icon-ok"></i>{{/if}}</td>
+            <td class="role-permission-delete">
+              <a onclick="Usergrid.console.deleteGroupPermission('${name}', '${$value.perm}'); return false;" href="#" class="btn btn-danger"><i class="icon-trash icon-white"></i> Remove</a>
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{else}}
+      <div class="alert">No Permissions</div>
+      {{/if}}
+      <div id="group-panel-permissions-curl-container" class="curl-container">
+    </div>
+    </div>
+  </div>
+</div>
+<input type="hidden" name="role-form-groupname" id="role-form-groupname" value="${name}"/>

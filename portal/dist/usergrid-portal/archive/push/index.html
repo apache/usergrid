@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<meta charset="utf-8" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html"
+      xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>Apigee App Services Admin Portal </title>
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript">
+    localStorage.setItem('getStarted', 'yes');
+
+    var path = window.location.pathname;
+    path = path.replace(/^\/|\/$/g, '');
+    var pathArr = path.split('/');
+    var length = pathArr.length;
+    if (pathArr[length-1] === 'push') {
+      pathArr.pop(length-1);
+    }
+    path = pathArr.join("");
+    var protocol = window.location.protocol;
+    var host = window.location.host;
+    path = protocol+'//'+host+'/'+path;
+    var queryString = location.search.substring(1);
+    if (queryString) {
+      path = path + "?" + queryString;
+    }
+    window.location = path;
+
+  </script>
+</head>
+<body>
+  Loading...
+</body>
+</html>
