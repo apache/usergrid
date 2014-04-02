@@ -35,7 +35,7 @@ String domain    = stackName
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
 
-def selectResult = sdbClient.select(new SelectRequest((String)"select * from ${domain}"))
+def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}`"))
 
 for (item in selectResult.getItems()) {
     def att = item.getAttributes().get(0)

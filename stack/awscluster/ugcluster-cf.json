@@ -95,7 +95,7 @@
         },
         "TwoAZs": {
             "ap-southeast-2": {"AZ1": "ap-southeast-2a", "AZ2": "ap-southeast-2b"},
-            "us-east-1": {"AZ1": "us-east-1a", "AZ2": "us-east-1b"},
+            "us-east-1": {"AZ1": "us-east-1b", "AZ2": "us-east-1c"},
             "us-west-2": {"AZ1": "us-west-2a", "AZ2": "us-west-2b"}
         }
     },
@@ -603,6 +603,16 @@
                 "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
             }
         },
+        "RestSecurityGroupPort9160" : {
+                 "Type" : "AWS::EC2::SecurityGroupIngress",
+                 "Properties" : {
+                     "GroupName" : { "Ref" : "CassSecurityGroup" },
+                     "IpProtocol": "tcp",
+                    "FromPort": "9160",
+                    "ToPort": "9160",
+                    "SourceSecurityGroupName": {"Ref": "RestSecurityGroup"}
+                 }
+             },
         "CassSecurityGroupPort9200": {
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
