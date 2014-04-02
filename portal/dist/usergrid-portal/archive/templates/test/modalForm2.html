@@ -1,0 +1,32 @@
+Modal-link
+<a class="" data-toggle="modal" href="#dialog-form-new-admin"><i class="icon-plus"></i> New Administrator</a>
+
+Modal-form
+<form id="dialog-form-new-admin" class="modal hide fade">
+    <div class="modal-header">
+        <a class="close" data-dismiss="modal">x</a>
+        <h4>Create new administrator</h4>
+    </div>
+    <div class="modal-body">
+        <p class="validateTips"></p>
+
+        <fieldset>
+            <div class="control-group">
+                <label for="new-admin-email">Email</label>
+                <div class="controls">
+                    <input type="text" name="email" id="new-admin-email" value="" class="input-xlarge"/>
+                    <p class="help-block hide"></p>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <p class="help-block hide"></p>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+    <div class="modal-footer">
+        <input type="submit" class="btn btn-usergrid" value="Create"/>
+        <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+    </div>
+</form>

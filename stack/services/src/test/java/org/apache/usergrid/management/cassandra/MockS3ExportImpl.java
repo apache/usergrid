@@ -42,7 +42,6 @@ public class MockS3ExportImpl implements S3Export {
         int read = 0;
         byte[] bytes = new byte[1024];
         OutputStream outputStream = null;
-        //FileInputStream fis = new PrintWriter( inputStream );
 
         try {
             outputStream = new FileOutputStream( new File( getFilename() ) );

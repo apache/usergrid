@@ -1768,6 +1768,7 @@
 
                     <exclude>**/README.md</exclude>
                     <exclude>**/CHANGES.txt</exclude>
+                    <exclude>**/*.json</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>

@@ -1,6 +1,6 @@
 'use strict'
 
-AppServices.Controllers.controller('OrgOverviewCtrl', ['ug', '$scope','$rootScope', '$routeParams', '$location', function (ug, $scope, $rootScope, $routeParams, $location) {
+AppServices.Controllers.controller('OrgOverviewCtrl', ['ug', 'help', '$scope','$rootScope', '$routeParams', '$location', function (ug, help, $scope, $rootScope, $routeParams, $location) {
 
   var init = function(oldOrg){
     //deal with double firing initialization logic

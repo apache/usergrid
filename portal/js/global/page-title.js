@@ -1,15 +1,10 @@
 'use strict';
-
-AppServices.Directives.directive('pageTitle', ["$rootScope","data", function ($rootScope,data) {
+AppServices.Directives.directive('pageTitle', ['$rootScope','ug', function ($rootScope,ug) {
   return{
-    restrict: 'ECA',
-    scope: {
-
-    },
+    restrict: 'E',
     transclude: true,
-    templateUrl: 'global/page-title.html',
-    replace: true,
-    link: function linkFn(scope, lElement, attrs, parentCtrl) {
+    templateUrl:'global/page-title.html',
+    link: function linkFn(scope, lElement, attrs) {
       scope.title = attrs.title;
       scope.icon = attrs.icon;
       scope.showHelp = function () {

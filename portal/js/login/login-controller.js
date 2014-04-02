@@ -6,6 +6,9 @@ AppServices.Controllers.controller('LoginCtrl', ['ug', '$scope', '$rootScope', '
   $scope.login = {};
   $scope.activation = {};
   $scope.requiresDeveloperKey=$scope.options.client.requiresDeveloperKey||false;
+  if(!$scope.requiresDeveloperKey && $scope.options.client.apiKey){
+    ug.setClientProperty('developerkey', $scope.options.client.apiKey);    
+  }
   $rootScope.gotoForgotPasswordPage = function(){
     $location.path("/forgot-password");
   };
@@ -20,6 +23,9 @@ AppServices.Controllers.controller('LoginCtrl', ['ug', '$scope', '$rootScope', '
     var password = $scope.login.password;
     $scope.loginMessage = "";
     $scope.loading = true;
+    if($scope.requiresDeveloperKey){
+      ug.setClientProperty('developerkey', $scope.login.developerkey);
+    }
 
     ug.orgLogin(username, password);
 
@@ -27,6 +33,7 @@ AppServices.Controllers.controller('LoginCtrl', ['ug', '$scope', '$rootScope', '
   $scope.$on('loginFailed',function(){
     $scope.loading = false;
     //let the user know the login was not valid
+    ug.setClientProperty('developerkey', null);
     $scope.loginMessage = "Error: the username / password combination was not valid";
     $scope.applyScope();
   });
@@ -53,9 +60,6 @@ AppServices.Controllers.controller('LoginCtrl', ['ug', '$scope', '$rootScope', '
 
   $scope.$on('loginSuccesful', function(event, user, organizations, applications) {
     $scope.loading = false;
-    if($scope.requiresDeveloperKey){
-      ug.setClientProperty('developerkey', $scope.login.developerkey);
-    }
     $scope.login = {};
 
     //if on login page, send to org overview page.  if on a different page, let them stay there

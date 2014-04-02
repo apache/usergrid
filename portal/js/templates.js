@@ -1584,7 +1584,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "    <h1 class=\"title\">Enter your credentials</h1>\r" +
     "\n" +
-    "    <div class=\"alert-error\" ng-if=\"loginMessage\">{{loginMessage}}</div>\r" +
+    "    <div class=\"alert-error\" id=\"loginError\" ng-if=\"loginMessage\">{{loginMessage}}</div>\r" +
     "\n" +
     "    <div class=\"control-group\">\r" +
     "\n" +
@@ -1659,6 +1659,8 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "       value=\"\" class=\"btn btn-primary pull-left\">Resend Activation Link</a>\r" +
     "\n" +
     "  </div>\r" +
+    "\n" +
+    "  <div id=\"gtm\" style=\"width: 450px;margin-top: 4em;\" />\r" +
     "\n" +
     "</div>\r" +
     "\n"
@@ -1823,14 +1825,24 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "  <section class=\"row-fluid\">\n" +
     "\n" +
     "  <div class=\"span6\">\n" +
-    "\n" +
-    "    <h2 class=\"title\">Current Organization </h2>\n" +
-    "    <table class=\"table table-striped\">\n" +
-    "      <tr>\n" +
-    "        <td id=\"org-overview-name\">{{currentOrganization.name}}</td>\n" +
-    "        <td style=\"text-align: right\">{{currentOrganization.uuid}}</td>\n" +
-    "      </tr>\n" +
-    "    </table>\n" +
+    "  \t<bsmodal id=\"introjs\"\n" +
+    "             title=\"Welcome to the API BaaS Admin Portal\"\n" +
+    "             close=\"hideModal\"\n" +
+    "             closelabel=\"Skip\"\n" +
+    "             extrabutton=\"startFirstTimeUser\"\n" +
+    "             extrabuttonlabel=\"Take the tour\"\n" +
+    "             ng-cloak>\n" +
+    "      <p>To get started, click 'Take the tour' for a full walkthrough of the admin portal, or click 'Skip' to start working right away.</p>\n" +
+    "    </bsmodal>\n" +
+    "\t\t<div id=\"intro-4-current-org\">\t\n" +
+    "\t    <h2 class=\"title\">Current Organization <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('current org')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_current_org}}\" tooltip-placement=\"right\">(?)</a></h2>\n" +
+    "\t    <table class=\"table table-striped\">\n" +
+    "\t      <tr>\n" +
+    "\t        <td id=\"org-overview-name\">{{currentOrganization.name}}</td>\n" +
+    "\t        <td style=\"text-align: right\">{{currentOrganization.uuid}}</td>\n" +
+    "\t      </tr>\n" +
+    "\t    </table>\n" +
+    "\t\t</div>\n" +
     "\n" +
     "    <bsmodal id=\"newApplication\"\n" +
     "             title=\"Create New Application\"\n" +
@@ -1841,22 +1853,22 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "             ng-cloak>\n" +
     "      <p>New application name: <input ng-model=\"$parent.newApp.name\"  ug-validate required type=\"text\" ng-pattern=\"appNameRegex\" ng-attr-title=\"{{appNameRegexDescription}}\" /></p>\n" +
     "    </bsmodal>\n" +
-    "\n" +
-    "    <h2 class=\"title\" > Applications\n" +
-    "      <div class=\"header-button btn-group pull-right\">\n" +
-    "        <a class=\"btn filter-selector\" style=\"{{applicationsSize === 10 ? 'width:290px':''}}\"  ng-click=\"showModal('newApplication')\">\n" +
-    "          <span class=\"filter-label\">Add New App</span>\n" +
-    "        </a>\n" +
-    "      </div>\n" +
-    "    </h2>\n" +
-    "\n" +
-    "    <table class=\"table table-striped\">\n" +
-    "      <tr ng-repeat=\"application in applications\">\n" +
-    "        <td>{{application.name}}</td>\n" +
-    "        <td style=\"text-align: right\">{{application.uuid}}</td>\n" +
-    "      </tr>\n" +
-    "    </table>\n" +
-    "\n" +
+    "\t\t<div id=\"intro-5-applications\">\t\t\n" +
+    "\t    <h2 class=\"title\" > Applications <a class=\"help_tooltip\" ng-show=\"help.helpTooltipsEnabled\" ng-mouseover=\"help.sendTooltipGA('applications')\" href=\"#\" ng-attr-tooltip=\"{{tooltip_applications}}\" tooltip-placement=\"right\">(?)</a>\n" +
+    "\t      <div class=\"header-button btn-group pull-right\">\n" +
+    "\t        <a class=\"btn filter-selector\" style=\"{{applicationsSize === 10 ? 'width:290px':''}}\"  ng-click=\"showModal('newApplication')\">\n" +
+    "\t          <span class=\"filter-label\">Add New App</span>\n" +
+    "\t        </a>\n" +
+    "\t      </div>\n" +
+    "\t    </h2>\n" +
+    "\t\t\n" +
+    "\t    <table class=\"table table-striped\">\n" +
+    "\t      <tr ng-repeat=\"application in applications\">\n" +
+    "\t        <td>{{application.name}}</td>\n" +
+    "\t        <td style=\"text-align: right\">{{application.uuid}}</td>\n" +
+    "\t      </tr>\n" +
+    "\t    </table>\n" +
+    "\t\t</div>\n" +
     "    <bsmodal id=\"regenerateCredentials\"\n" +
     "             title=\"Confirmation\"\n" +
     "             close=\"hideModal\"\n" +
@@ -1866,26 +1878,26 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "             ng-cloak>\n" +
     "      Are you sure you want to regenerate the credentials?\n" +
     "    </bsmodal>\n" +
-    "\n" +
-    "    <h2 class=\"title\" >Organization API Credentials\n" +
-    "      <div class=\"header-button btn-group pull-right\">\n" +
-    "        <a class=\"btn filter-selector\" ng-click=\"showModal('regenerateCredentials')\">\n" +
-    "          <span class=\"filter-label\">Regenerate Org Credentials</span>\n" +
-    "        </a>\n" +
-    "      </div>\n" +
-    "    </h2>\n" +
-    "\n" +
-    "    <table class=\"table table-striped\">\n" +
-    "      <tr>\n" +
-    "        <td >Client ID</td>\n" +
-    "        <td style=\"text-align: right\" >{{orgAPICredentials.client_id}}</td>\n" +
-    "      </tr>\n" +
-    "      <tr>\n" +
-    "        <td>Client Secret</td>\n" +
-    "        <td style=\"text-align: right\">{{orgAPICredentials.client_secret}}</td>\n" +
-    "      </tr>\n" +
-    "    </table>\n" +
-    "\n" +
+    "\t\t<div id=\"intro-6-org-api-creds\">\n" +
+    "\t    <h2 class=\"title\" >Organization API Credentials <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('api org credentials')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_org_api_creds}}\" tooltip-placement=\"right\">(?)</a>\n" +
+    "\t      <div class=\"header-button btn-group pull-right\">\n" +
+    "\t        <a class=\"btn filter-selector\" ng-click=\"showModal('regenerateCredentials')\">\n" +
+    "\t          <span class=\"filter-label\">Regenerate Org Credentials</span>\n" +
+    "\t        </a>\n" +
+    "\t      </div>\n" +
+    "\t    </h2>\n" +
+    "\t\n" +
+    "\t    <table class=\"table table-striped\">\n" +
+    "\t      <tr>\n" +
+    "\t        <td >Client ID</td>\n" +
+    "\t        <td style=\"text-align: right\" >{{orgAPICredentials.client_id}}</td>\n" +
+    "\t      </tr>\n" +
+    "\t      <tr>\n" +
+    "\t        <td>Client Secret</td>\n" +
+    "\t        <td style=\"text-align: right\">{{orgAPICredentials.client_secret}}</td>\n" +
+    "\t      </tr>\n" +
+    "\t    </table>\n" +
+    "\t\t</div>\n" +
     "    <bsmodal id=\"newAdministrator\"\n" +
     "             title=\"Create New Administrator\"\n" +
     "             close=\"hideModal\"\n" +
@@ -1895,35 +1907,34 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "             ng-cloak>\n" +
     "      <p>New administrator email: <input id=\"newAdminInput\" ug-validate ng-model=\"$parent.admin.email\" pattern=\"emailRegex\" ng-attr-title=\"{{emailRegexDescription}}\" required type=\"email\" /></p>\n" +
     "    </bsmodal>\n" +
-    "\n" +
-    "    <h2 class=\"title\" >Organization Administrators\n" +
-    "      <div class=\"header-button btn-group pull-right\">\n" +
-    "        <a class=\"btn filter-selector\" ng-click=\"showModal('newAdministrator')\">\n" +
-    "          <span class=\"filter-label\">Add New Administrator</span>\n" +
-    "        </a>\n" +
-    "      </div>\n" +
-    "    </h2>\n" +
-    "\n" +
-    "    <table class=\"table table-striped\">\n" +
-    "      <tr ng-repeat=\"administrator in orgAdministrators\">\n" +
-    "        <td><img style=\"width:30px;height:30px;\" ng-src=\"{{administrator.image}}\"> {{administrator.name}}</td>\n" +
-    "        <td style=\"text-align: right\">{{administrator.email}}</td>\n" +
-    "      </tr>\n" +
-    "    </table>\n" +
-    "\n" +
-    "\n" +
+    "\t\t<div id=\"intro-7-org-admins\">\n" +
+    "\t    <h2 class=\"title\" >Organization Administrators <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('org admins')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_org_admins}}\" tooltip-placement=\"right\">(?)</a>\n" +
+    "\t      <div class=\"header-button btn-group pull-right\">\n" +
+    "\t        <a class=\"btn filter-selector\" ng-click=\"showModal('newAdministrator')\">\n" +
+    "\t          <span class=\"filter-label\">Add New Administrator</span>\n" +
+    "\t        </a>\n" +
+    "\t      </div>\n" +
+    "\t    </h2>\n" +
+    "\t\n" +
+    "\t    <table class=\"table table-striped\">\n" +
+    "\t      <tr ng-repeat=\"administrator in orgAdministrators\">\n" +
+    "\t        <td><img style=\"width:30px;height:30px;\" ng-src=\"{{administrator.image}}\"> {{administrator.name}}</td>\n" +
+    "\t        <td style=\"text-align: right\">{{administrator.email}}</td>\n" +
+    "\t      </tr>\n" +
+    "\t    </table>\n" +
+    "\t\t\t</div>\n" +
     "  </div>\n" +
     "\n" +
     "  <div class=\"span6\">\n" +
-    "\n" +
-    "    <h2 class=\"title\">Activities </h2>\n" +
-    "    <table class=\"table table-striped\">\n" +
-    "      <tr ng-repeat=\"activity in activities\">\n" +
-    "        <td>{{activity.title}}</td>\n" +
-    "        <td style=\"text-align: right\">{{activity.date}}</td>\n" +
-    "      </tr>\n" +
-    "    </table>\n" +
-    "\n" +
+    "  \t<div id=\"intro-8-activities\">\n" +
+    "\t    <h2 class=\"title\">Activities <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('activities')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_activities}}\" tooltip-placement=\"right\">(?)</a></h2>\n" +
+    "\t    <table class=\"table table-striped\">\n" +
+    "\t      <tr ng-repeat=\"activity in activities\">\n" +
+    "\t        <td>{{activity.title}}</td>\n" +
+    "\t        <td style=\"text-align: right\">{{activity.date}}</td>\n" +
+    "\t      </tr>\n" +
+    "\t    </table>\n" +
+    "\t</div>\n" +
     "  </div>\n" +
     "\n" +
     "\n" +
@@ -2352,6 +2363,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "           closelabel=\"Cancel\"\n" +
     "           extrabutton=\"newRoleDialog\"\n" +
     "           extrabuttonlabel=\"Create\"\n" +
+    "           buttonid=\"roles\"\n" +
     "           ng-cloak>\n" +
     "          <fieldset>\n" +
     "            <div class=\"control-group\">\n" +
@@ -2375,6 +2387,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "           title=\"Delete Role\"\n" +
     "           close=\"hideModal\"\n" +
     "           closelabel=\"Cancel\"\n" +
+    "           buttonid=\"deleteroles\"\n" +
     "           extrabutton=\"deleteRoleDialog\"\n" +
     "           extrabuttonlabel=\"Delete\"\n" +
     "           ng-cloak>\n" +
@@ -2386,8 +2399,8 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "      <div class=\"button-toolbar span12\">\n" +
     "        <a title=\"Select All\" class=\"btn btn-primary select-all toolbar\" ng-show=\"hasRoles\" ng-click=\"selectAllEntities(rolesCollection._list,this,'rolesSelected',true)\"> <i class=\"pictogram\">&#8863;</i></a>\n" +
-    "        <button title=\"Delete\" class=\"btn btn-primary toolbar\"  ng-disabled=\"!hasRoles || !valueSelected(rolesCollection._list)\" ng-click=\"showModal('deleteRole')\"><i class=\"pictogram\">&#9749;</i></button>\n" +
-    "        <button title=\"Add\" class=\"btn btn-primary toolbar\" ng-click=\"showModal('newRole')\"><i class=\"pictogram\">&#59136;</i></button>\n" +
+    "        <button id=\"delete-role-btn\" title=\"Delete\" class=\"btn btn-primary toolbar\"  ng-disabled=\"!hasRoles || !valueSelected(rolesCollection._list)\" ng-click=\"showModal('deleteRole')\"><i class=\"pictogram\">&#9749;</i></button>\n" +
+    "        <button id=\"add-role-btn\" title=\"Add\" class=\"btn btn-primary toolbar\" ng-click=\"showModal('newRole')\"><i class=\"pictogram\">&#59136;</i></button>\n" +
     "      </div>\n" +
     "\n" +
     "      <ul class=\"user-list\">\n" +
@@ -2397,8 +2410,9 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "              ng-value=\"role.get('uuid')\"\n" +
     "              ng-checked=\"master\"\n" +
     "              ng-model=\"role.checked\"\n" +
+    "              id=\"role-{{role.get('title')}}-cb\"\n" +
     "              >\n" +
-    "          <a >{{role.get('title')}}</a>\n" +
+    "          <a id=\"role-{{role.get('title')}}-link\">{{role.get('title')}}</a>\n" +
     "          <br/>\n" +
     "          <span ng-if=\"role.get('name')\" class=\"label\">Role Name:</span>{{role.get('name')}}\n" +
     "        </li>\n" +
@@ -2447,6 +2461,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "    <pre id=\"shell-output\" class=\"prettyprint lang-js\" style=\"overflow-x: auto; height: 400px;\" ng-bind-html=\"shell.output\">\n" +
     "\n" +
     "    </pre>\n" +
+    "    <div id=\"lastshelloutput\" ng-bind-html=\"shell.outputhidden\" style=\"visibility:hidden\"></div>\n" +
     "  </div>\n" +
     "</section>\n"
   );
