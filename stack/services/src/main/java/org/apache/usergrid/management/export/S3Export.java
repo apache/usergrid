@@ -30,6 +30,4 @@ public interface S3Export {
 
     String getFilename ();
 
-    void setFilename (String givenName);
-
 }

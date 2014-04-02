@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.usergrid.management.cassandra;
 
 
@@ -42,14 +59,11 @@ import org.apache.usergrid.management.export.S3Export;
 import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.JobData;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -83,9 +97,9 @@ public class ExportServiceIT {
     @BeforeClass
     public static void setup() throws Exception {
         LOG.info( "in setup" );
-        adminUser = setup.getMgmtSvc().createAdminUser( "edanuff", "Ed Anuff", "ed@anuff.com", "test", false, false );
-        organization = setup.getMgmtSvc().createOrganization( "ed-organization", adminUser, true );
-        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "ed-application" ).getId();
+        adminUser = setup.getMgmtSvc().createAdminUser( "grey", "George Reyes", "george@reyes.com", "test", false, false );
+        organization = setup.getMgmtSvc().createOrganization( "george-organization", adminUser, true );
+        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "george-application" ).getId();
     }
 
 
@@ -105,8 +119,7 @@ public class ExportServiceIT {
         }
         f.deleteOnExit();
 
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "testFileConnections.json" );
+        S3Export s3Export = new MockS3ExportImpl("testFileConnections.json" );
 
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
@@ -133,13 +146,9 @@ public class ExportServiceIT {
         em.createConnection( em.getRef( entity[1].getUuid() ), "Vibrations", em.getRef( entity[0].getUuid() ) );
 
         UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
 
         //create and initialize jobData returned in JobExecution.
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator( payload,exportUUID,s3Export );
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -186,8 +195,7 @@ public class ExportServiceIT {
         }
 
 
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "testConnectionsOnApplicationEndpoint.json" );
+        S3Export s3Export = new MockS3ExportImpl( "testConnectionsOnApplicationEndpoint.json" );
 
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
@@ -213,13 +221,9 @@ public class ExportServiceIT {
         em.createConnection( em.getRef( entity[1].getUuid() ), "Vibrations", em.getRef( entity[0].getUuid() ) );
 
         UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
 
         //create and initialize jobData returned in JobExecution.
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator(payload,exportUUID,s3Export);
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -256,103 +260,6 @@ public class ExportServiceIT {
         f.deleteOnExit();
     }
 
-    //
-    ////need to add tests for the other endpoint as well.
-    @Test
-    public void testValidityOfCollectionExport() throws Exception {
-
-        File f = null;
-
-        try {
-            f = new File( "fileValidity.json" );
-        }
-        catch ( Exception e ) {
-            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
-        }
-
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "fileValidity.json" );
-        ExportService exportService = setup.getExportService();
-        HashMap<String, Object> payload = payloadBuilder();
-
-        payload.put( "organizationId", organization.getUuid() );
-        payload.put( "applicationId", applicationId );
-        payload.put( "collectionName", "users" );
-
-        UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
-
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
-
-        JobExecution jobExecution = mock( JobExecution.class );
-        when( jobExecution.getJobData() ).thenReturn( jobData );
-
-        exportService.doExport( jobExecution );
-
-        JSONParser parser = new JSONParser();
-
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-
-        for ( int i = 0; i < a.size(); i++ ) {
-            org.json.simple.JSONObject entity = ( org.json.simple.JSONObject ) a.get( i );
-            org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
-            assertNotNull( entityData );
-        }
-        f.deleteOnExit();
-    }
-
-
-    //
-    @Test
-    public void testValidityOfApplicationExport() throws Exception {
-
-        File f = null;
-
-        try {
-            f = new File( "testValidityOfApplicationExport.json" );
-        }
-        catch ( Exception e ) {
-            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
-        }
-
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "testValidityOfApplicationExport.json" );
-        ExportService exportService = setup.getExportService();
-        HashMap<String, Object> payload = payloadBuilder();
-
-        payload.put( "organizationId", organization.getUuid() );
-        payload.put( "applicationId", applicationId );
-
-        UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
-
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
-
-        JobExecution jobExecution = mock( JobExecution.class );
-        when( jobExecution.getJobData() ).thenReturn( jobData );
-
-        exportService.doExport( jobExecution );
-
-        JSONParser parser = new JSONParser();
-
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-
-        for ( int i = 0; i < a.size(); i++ ) {
-            org.json.simple.JSONObject entity = ( org.json.simple.JSONObject ) a.get( i );
-            org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
-            assertNotNull( entityData );
-        }
-        f.deleteOnExit();
-    }
-
-
-    //
     @Test
     public void testExportOneOrgCollectionEndpoint() throws Exception {
 
@@ -369,8 +276,8 @@ public class ExportServiceIT {
              .createOwnerAndOrganization( "noExport", "junkUserName", "junkRealName", "ugExport@usergrid.com",
                      "123456789" );
 
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "exportOneOrg.json" );
+        S3Export s3Export = new MockS3ExportImpl("exportOneOrg.json");
+      //  s3Export.setFilename( "exportOneOrg.json" );
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
@@ -379,12 +286,10 @@ public class ExportServiceIT {
         payload.put( "collectionName", "roles" );
 
         UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
+        //exportService.setS3Export( s3Export );
 
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator(payload,exportUUID,s3Export);
+
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -413,7 +318,7 @@ public class ExportServiceIT {
     public void testExportOneAppOnCollectionEndpoint() throws Exception {
 
         File f = null;
-        String orgName = "ed-organization";
+        String orgName = "george-organization";
         String appName = "testAppCollectionTestNotExported";
 
         try {
@@ -437,12 +342,12 @@ public class ExportServiceIT {
         for ( int i = 0; i < 1; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "junkRealName" );
-            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
+            userProperties.put( "email", "test" + i + "@anuff.com" );
             entity[i] = em.create( "user", userProperties );
         }
 
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "exportOneApp.json" );
+        S3Export s3Export = new MockS3ExportImpl("exportOneApp.json");
+        //s3Export.setFilename( "exportOneApp.json" );
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
@@ -450,12 +355,8 @@ public class ExportServiceIT {
         payload.put( "applicationId", applicationId );
 
         UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
 
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator(payload,exportUUID,s3Export);
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -474,8 +375,8 @@ public class ExportServiceIT {
             assertFalse( "junkRealName".equals( entityName ) );
         }
     }
-
-
+//
+//
     @Test
     public void testExportOneAppOnApplicationEndpointWQuery() throws Exception {
 
@@ -503,8 +404,7 @@ public class ExportServiceIT {
             entity[i] = em.create( "users", userProperties );
         }
 
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "exportOneAppWQuery.json" );
+        S3Export s3Export = new MockS3ExportImpl("exportOneAppWQuery.json" );
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
@@ -513,12 +413,8 @@ public class ExportServiceIT {
         payload.put( "applicationId", applicationId );
 
         UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
 
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator(payload,exportUUID,s3Export);
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -569,8 +465,7 @@ public class ExportServiceIT {
             entity[i] = em.create( "qts", userProperties );
         }
 
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "exportOneCollection.json" );
+        S3Export s3Export = new MockS3ExportImpl("exportOneCollection.json" );
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
@@ -579,12 +474,8 @@ public class ExportServiceIT {
         payload.put( "collectionName", "qts" );
 
         UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
 
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator(payload,exportUUID,s3Export);
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -627,8 +518,7 @@ public class ExportServiceIT {
             entity[i] = em.create( "baconators", userProperties );
         }
 
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "exportOneCollectionWQuery.json" );
+        S3Export s3Export = new MockS3ExportImpl("exportOneCollectionWQuery.json");
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
         payload.put( "query", "select * where username contains 'billybob0'" );
@@ -638,12 +528,8 @@ public class ExportServiceIT {
         payload.put( "collectionName", "baconators" );
 
         UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
 
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator(payload,exportUUID,s3Export);
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -689,8 +575,8 @@ public class ExportServiceIT {
             entity[i] = em.create( "newOrg", userProperties );
         }
 
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "exportOneOrganization.json" );
+        S3Export s3Export = new MockS3ExportImpl("exportOneOrganization.json" );
+
         ExportService exportService = setup.getExportService();
         HashMap<String, Object> payload = payloadBuilder();
 
@@ -719,12 +605,8 @@ public class ExportServiceIT {
         payload.put( "applicationId", appMade.getId() );
 
         UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
 
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator(payload,exportUUID,s3Export);
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -769,48 +651,6 @@ public class ExportServiceIT {
         assert ( true );
     }
 
-
-    @Test
-    public void testExportDoExportOnApplicationEndpoint() throws Exception {
-
-        EntityManagerFactory emf = setup.getEmf();
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-        HashMap<String, Object> payload = payloadBuilder();
-        ExportService eS = setup.getExportService();
-
-        JobExecution jobExecution = mock( JobExecution.class );
-
-        payload.put( "organizationId", organization.getUuid() );
-        payload.put( "applicationId", applicationId );
-
-        UUID entityExportUUID = eS.schedule( payload );
-
-
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", entityExportUUID );
-
-        when( jobExecution.getJobData() ).thenReturn( jobData );
-
-        //Exportem.get(entityExport);
-        Export exportEntity = ( Export ) em.get( entityExportUUID );
-        assertNotNull( exportEntity );
-        String derp = exportEntity.getState().name();
-        assertEquals( "SCHEDULED", exportEntity.getState().name() );
-        try {
-            eS.doExport( jobExecution );
-        }
-        catch ( Exception e ) {
-            //throw e;
-            assert ( false );
-        }
-        exportEntity = ( Export ) em.get( entityExportUUID );
-        assertNotNull( exportEntity );
-        assertEquals( "FINISHED", exportEntity.getState().name() );
-    }
-
-
     //tests that with empty job data, the export still runs.
     @Test
     public void testExportEmptyJobData() throws Exception {
@@ -823,7 +663,7 @@ public class ExportServiceIT {
 
         ExportJob job = new ExportJob();
         S3Export s3Export = mock( S3Export.class );
-        setup.getExportService().setS3Export( s3Export );
+        //setup.getExportService().setS3Export( s3Export );
         job.setExportService( setup.getExportService() );
         try {
             job.doJob( jobExecution );
@@ -846,7 +686,7 @@ public class ExportServiceIT {
 
         ExportJob job = new ExportJob();
         S3Export s3Export = mock( S3Export.class );
-        setup.getExportService().setS3Export( s3Export );
+       // setup.getExportService().setS3Export( s3Export );
         job.setExportService( setup.getExportService() );
         try {
             job.doJob( jobExecution );
@@ -858,8 +698,8 @@ public class ExportServiceIT {
     }
 
 
-   // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
-    @Test
+    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+   // @Test
     public void testIntegration100EntitiesOn() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -892,13 +732,9 @@ public class ExportServiceIT {
         }
 
         UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
 
         //create and initialize jobData returned in JobExecution.
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator( payload,exportUUID,s3Export );
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -951,8 +787,8 @@ public class ExportServiceIT {
         blobStore.deleteContainer( bucketName );
     }
 
-    //@Ignore
-    @Test
+    @Ignore
+    //@Test
     public void testIntegration100EntitiesForAllApps() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -985,13 +821,9 @@ public class ExportServiceIT {
 
         UUID exportUUID = exportService.schedule( payload );
         assertNotNull( exportUUID );
-        exportService.setS3Export( s3Export );
 
         //create and initialize jobData returned in JobExecution.
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator( payload,exportUUID,s3Export );
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -1042,8 +874,8 @@ public class ExportServiceIT {
     }
 
 
-    //@Ignore
-    @Test
+    @Ignore
+   // @Test
     public void testIntegration100EntitiesOnOneOrg() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -1089,13 +921,11 @@ public class ExportServiceIT {
         }
 
         UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
+       // exportService.setS3Export( s3Export );
 
         //create and initialize jobData returned in JobExecution.
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
+        JobData jobData = jobDataCreator( payload,exportUUID,s3Export );
+
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
@@ -1144,6 +974,16 @@ public class ExportServiceIT {
         blobStore.deleteContainer( bucketName );
     }
 
+    public JobData jobDataCreator(HashMap<String, Object> payload,UUID exportUUID,S3Export s3Export) {
+        JobData jobData = new JobData();
+
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", payload );
+        jobData.setProperty( "exportId", exportUUID );
+        jobData.setProperty( "s3Export", s3Export );
+
+        return jobData;
+    }
 
     /*Creates fake payload for testing purposes.*/
     public HashMap<String, Object> payloadBuilder() {

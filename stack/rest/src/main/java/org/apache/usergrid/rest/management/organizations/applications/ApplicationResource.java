@@ -342,29 +342,4 @@ public class ApplicationResource extends AbstractContextResource {
 
         return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
     }
-
-
-//    @GET
-//    @RequireOrganizationAccess
-//    @Path("export/{exportEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-//    public Response exportGetJson( @Context UriInfo ui, @PathParam("exportEntity") UUID exportEntityUUIDStr,
-//                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
-//
-//        Export entity;
-//        try {
-//            entity = smf.getServiceManager( applicationId ).getEntityManager().get( exportEntityUUIDStr, Export.class );
-//        }
-//        catch ( Exception e ) { //this might not be a bad request and needs better error checking
-//            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-//                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-//        }
-//
-//        if ( entity == null ) {
-//            return Response.status( SC_BAD_REQUEST ).build();
-//        }
-//
-//        return Response.status( SC_OK ).entity( entity).build();
-//    }
-
-
 }

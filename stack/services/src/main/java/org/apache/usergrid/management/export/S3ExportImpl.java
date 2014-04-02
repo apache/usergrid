@@ -108,6 +108,4 @@ public class S3ExportImpl implements S3Export {
     @Override
     public String getFilename () {return fn;}
 
-    @Override
-    public void setFilename(String givenName) {fn = givenName;}
 }

@@ -32,7 +32,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
@@ -80,7 +79,7 @@ public class ExportServiceImpl implements ExportService {
 
     private JsonFactory jsonFactory = new JsonFactory();
 
-    private S3Export s3Export;
+    //private S3Export s3Export;
 
     private String defaultAppExportname = "exporters";
 
@@ -88,6 +87,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public UUID schedule( final Map<String, Object> config ) throws Exception {
         ApplicationInfo defaultExportApp = null;
+        S3Export exportTransfer = new S3ExportImpl();
 
         if ( config == null ) {
             logger.error( "export information cannot be null" );
@@ -127,6 +127,7 @@ public class ExportServiceImpl implements ExportService {
         JobData jobData = new JobData();
         jobData.setProperty( "exportInfo", config );
         jobData.setProperty( EXPORT_ID, export.getUuid() );
+        jobData.setProperty( "s3Export", exportTransfer);
 
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
@@ -196,6 +197,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public void doExport( final JobExecution jobExecution ) throws Exception {
         Map<String, Object> config = ( Map<String, Object> ) jobExecution.getJobData().getProperty( "exportInfo" );
+        S3Export s3Export = ( S3Export )jobExecution.getJobData().getProperty( "s3Export" );
 
 //        UUID scopedAppId = ( UUID ) config.get( "applicationId" );
 
@@ -222,7 +224,7 @@ public class ExportServiceImpl implements ExportService {
         else if ( config.get( "applicationId" ) == null ) {
             //exports All the applications from an organization
             try {
-                exportApplicationsFromOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution );
+                exportApplicationsFromOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution,s3Export );
             }
             catch ( Exception e ) {
                 export.setErrorMessage( e.getMessage() );
@@ -235,7 +237,7 @@ public class ExportServiceImpl implements ExportService {
             //exports an Application from a single organization
             try {
                 exportApplicationFromOrg( ( UUID ) config.get( "organizationId" ),
-                        ( UUID ) config.get( "applicationId" ), config, jobExecution );
+                        ( UUID ) config.get( "applicationId" ), config, jobExecution, s3Export );
             }
             catch ( Exception e ) {
                 export.setErrorMessage( e.getMessage() );
@@ -249,7 +251,7 @@ public class ExportServiceImpl implements ExportService {
                 //exports a single collection from an app org combo
                 try {
                     exportCollectionFromOrgApp( ( UUID ) config.get( "organizationId" ),
-                            ( UUID ) config.get( "applicationId" ), config, jobExecution );
+                            ( UUID ) config.get( "applicationId" ), config, jobExecution,s3Export );
                 }
                 catch ( Exception e ) {
                     export.setErrorMessage( e.getMessage() );
@@ -313,7 +315,7 @@ public class ExportServiceImpl implements ExportService {
      * Exports All Applications from an Organization
      */
     private void exportApplicationsFromOrg( UUID organizationUUID, final Map<String, Object> config,
-                                            final JobExecution jobExecution ) throws Exception {
+                                            final JobExecution jobExecution, S3Export s3Export ) throws Exception {
 
         //TODO: move extranous code out of these methods and make each one more distinct.
         //retrieves export entity
@@ -333,7 +335,7 @@ public class ExportServiceImpl implements ExportService {
 
             ByteArrayOutputStream baos = collectionExportAndQuery(application.getKey(),config,export,jobExecution);
 
-            fileTransfer( export,appFileName,baos,config );
+            fileTransfer( export,appFileName,baos,config, s3Export );
 
 //            InputStream is = new ByteArrayInputStream( baos.toByteArray() );
 //            try {
@@ -346,7 +348,7 @@ public class ExportServiceImpl implements ExportService {
         }
     }
 
-    public void fileTransfer(Export export,String appFileName,ByteArrayOutputStream baos,Map<String,Object> config) {
+    public void fileTransfer(Export export,String appFileName,ByteArrayOutputStream baos,Map<String,Object> config, S3Export s3Export) {
         InputStream is = new ByteArrayInputStream( baos.toByteArray() );
         try {
             s3Export.copyToS3( is, config, appFileName );
@@ -364,7 +366,7 @@ public class ExportServiceImpl implements ExportService {
      * Exports a specific applications from an organization
      */
     private void exportApplicationFromOrg( UUID organizationUUID, UUID applicationId, final Map<String, Object> config,
-                                           final JobExecution jobExecution ) throws Exception {
+                                           final JobExecution jobExecution, S3Export s3Export ) throws Exception {
 
         //retrieves export entity
         Export export = getExportEntity(jobExecution);
@@ -374,7 +376,7 @@ public class ExportServiceImpl implements ExportService {
 
         ByteArrayOutputStream baos = collectionExportAndQuery(applicationId,config,export,jobExecution);
 
-        fileTransfer( export,appFileName,baos,config );
+        fileTransfer( export,appFileName,baos,config, s3Export );
         //sets up the Inputstream for copying the method to s3.
 //        InputStream is = new ByteArrayInputStream( baos.toByteArray() );
 //        try {
@@ -392,7 +394,7 @@ public class ExportServiceImpl implements ExportService {
      */
     //might be confusing, but uses the /s/ inclusion or exclusion nomenclature.
     private void exportCollectionFromOrgApp( UUID organizationUUID, UUID applicationUUID,
-                                             final Map<String, Object> config, final JobExecution jobExecution )
+                                             final Map<String, Object> config, final JobExecution jobExecution, S3Export s3Export )
             throws Exception {
 
         //retrieves export entity
@@ -408,7 +410,7 @@ public class ExportServiceImpl implements ExportService {
         //sets up the Inputstream for copying the method to s3.
         InputStream is = new ByteArrayInputStream( baos.toByteArray() );
 
-        fileTransfer( export,appFileName,baos,config );
+        fileTransfer( export,appFileName,baos,config, s3Export );
 //        try {
 //            s3Export.copyToS3( is, config, appFileName );
 //        }
@@ -644,7 +646,7 @@ public class ExportServiceImpl implements ExportService {
     }
 
 
-    @Autowired
-    @Override
-    public void setS3Export( S3Export s3Export ) { this.s3Export = s3Export; }
+//    @Autowired
+//    @Override
+//    public void setS3Export( S3Export s3Export ) { this.s3Export = s3Export; }
 }

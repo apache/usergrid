@@ -46,5 +46,4 @@ public interface ExportService {
 
     String getErrorMessage( UUID appId, UUID state ) throws Exception;
 
-    void setS3Export( S3Export s3Export );
 }
