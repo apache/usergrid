@@ -19,17 +19,19 @@ Use the admin portal for administrative operations, including:
 
 ##Deploying or Developing
 
-If you are just deploying:
+If you are just running the portal:
 
 1. Install Node.js from http://nodejs.org/download/.
-2. From the root directory, run `./build.sh`.
-3. This will create a directory in the root called dist. In dist is a zip file called appsvc-ui.zip. Unzip and deploy to your favorite web server or if you run "./build.sh dev" you can then navigate to http://localhost:3000/ .
+2. From the root directory, run `./build.sh dev`.
+3. This will build and run a lightweight server. Naviate to http://localhost:3000
+4. If that doesn't work, in dist is a built copy and a file called rel-usergrid-portal.zip. Unzip and deploy to your favorite web server.
 
 If you are developing:
 
 1. From the root directory, run `./build.sh dev`.
 2. To debug in the browser go to http://localhost:3000/index-debug.html; http://localhost:3000/ will point to the compressed files.
-3. If the libraries get out of sync, run `./build.sh` again and this will run grunt build in the background.
+3. If the libraries get out of sync, run `./build.sh` again and this will run "grunt build" in the background.
+4. If you then want to update bower and create a distributable copy, run "grunt build-release", check in all the built files to distribute via bower
 
 If you want to run the e2e tests:
 
