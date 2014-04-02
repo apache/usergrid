@@ -36,3 +36,4 @@ stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/q
 /stack/corepersistence/perftest1/nbactions.xml
 /stack/corepersistence/perftest1/src/main/resources/usergrid.properties
 /stack/corepersistence/perftest2/src/main/resources/usergrid.properties
+aws.properties
