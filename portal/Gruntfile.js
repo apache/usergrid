@@ -398,7 +398,9 @@ module.exports = function (grunt) {
   grunt.registerTask('validate', ['jshint', 'complexity']);
   grunt.registerTask('report', ['build', 'coverage']);
 
-  grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','copy:versioned','karma:unit']);
+  grunt.registerTask('build-release', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy','compress']);
+  grunt.registerTask('build', ['bower:install','ngtemplates', 'uglify','cssmin','dom_munger','karma:unit']);
+  grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','karma:unit']);
   grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
 
   grunt.registerTask('default', ['build','karma:unit']);
@@ -414,5 +416,4 @@ module.exports = function (grunt) {
 
   grunt.registerTask('no-monitoring', ['build','clean:perf','karma:unit','compress']);
 
-  grunt.registerTask('build', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy','compress']);
 };
