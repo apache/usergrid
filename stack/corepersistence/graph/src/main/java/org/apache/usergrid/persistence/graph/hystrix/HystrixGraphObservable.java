@@ -34,12 +34,12 @@ public class HystrixGraphObservable {
     /**
      * Command group used for realtime user commands
      */
-    private static final HystrixCommandGroupKey USER_GROUP = HystrixCommandGroupKey.Factory.asKey( "Graph-User" );
+    private static final HystrixCommandGroupKey USER_GROUP = HystrixCommandGroupKey.Factory.asKey( "graph_user" );
 
     /**
      * Command group for asynchronous operations
      */
-    private static final HystrixCommandGroupKey ASYNC_GROUP = HystrixCommandGroupKey.Factory.asKey( "Graph-Async" );
+    private static final HystrixCommandGroupKey ASYNC_GROUP = HystrixCommandGroupKey.Factory.asKey( "graph_async" );
 
 
     /**
