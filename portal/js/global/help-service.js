@@ -122,7 +122,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
 
 
   var getHelpJson = function(path) {
-    return $http.jsonp('https://sdk.apigee.com/portal_help' + path + '/helpJson.json?callback=JSON_CALLBACK');
+    return $http.jsonp('https://s3.amazonaws.com/sdk.apigee.com/portal_help' + path + '/helpJson.json?callback=JSON_CALLBACK');
   };
 
   var getHelpStatus = function(helpType) {
