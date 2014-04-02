@@ -259,6 +259,11 @@ public class GraphManagerLoadTest {
          */
         public Edge newEdge();
 
+        /**
+         * Perform the search returning an observable edge
+         * @param manager
+         * @return
+         */
         public Observable<Edge> doSearch( final GraphManager manager );
     }
 }
