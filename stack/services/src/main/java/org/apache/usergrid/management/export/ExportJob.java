@@ -54,11 +54,6 @@ public class ExportJob extends OnlyOnceJob {
             return;
         }
 
-        if(jobData.getProperty( "s3Export" ) == null) {
-            logger.error( "S3 interface not correctly set");
-            return;
-        }
-
         jobExecution.heartbeat();
         try {
             exportService.doExport( jobExecution );

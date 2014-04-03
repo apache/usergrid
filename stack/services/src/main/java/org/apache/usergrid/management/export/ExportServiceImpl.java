@@ -82,7 +82,6 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public UUID schedule( final Map<String, Object> config ) throws Exception {
         ApplicationInfo defaultExportApp = null;
-        S3Export exportTransfer = new S3ExportImpl();
 
         if ( config == null ) {
             logger.error( "export information cannot be null" );
@@ -121,7 +120,6 @@ public class ExportServiceImpl implements ExportService {
         JobData jobData = new JobData();
         jobData.setProperty( "exportInfo", config );
         jobData.setProperty( EXPORT_ID, export.getUuid() );
-        jobData.setProperty( "s3Export", exportTransfer);
 
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
@@ -191,6 +189,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public void doExport( final JobExecution jobExecution ) throws Exception {
         Map<String, Object> config = ( Map<String, Object> ) jobExecution.getJobData().getProperty( "exportInfo" );
+        Object s3PlaceHolder = jobExecution.getJobData().getProperty( "s3Export" ) ;
         S3Export s3Export = null;
 
 
@@ -208,16 +207,20 @@ public class ExportServiceImpl implements ExportService {
         //update the entity state to show that the job has officially started.
         export.setState( Export.State.STARTED );
         em.update( export );
-
         try {
-            s3Export = ( S3Export )jobExecution.getJobData().getProperty( "s3Export" );
+            if(s3PlaceHolder != null) {
+                s3Export = ( S3Export ) s3PlaceHolder;
+            }
+            else
+                s3Export = new S3ExportImpl();
         }catch (Exception e){
             logger.error( "S3Export doesn't exist" );
+            export.setErrorMessage( e.getMessage() );
             export.setState( Export.State.FAILED );
             em.update( export );
             return;
         }
-        
+
         if ( config.get( "organizationId" ) == null ) {
             logger.error( "No organization could be found" );
             export.setState( Export.State.FAILED );
