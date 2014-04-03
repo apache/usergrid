@@ -192,8 +192,6 @@ public class ExportServiceImpl implements ExportService {
         Object s3PlaceHolder = jobExecution.getJobData().getProperty( "s3Export" ) ;
         S3Export s3Export = null;
 
-
-//        UUID scopedAppId = ( UUID ) config.get( "applicationId" );
         if ( config == null ) {
             logger.error( "Export Information passed through is null" );
             return;
@@ -342,15 +340,6 @@ public class ExportServiceImpl implements ExportService {
             ByteArrayOutputStream baos = collectionExportAndQuery(application.getKey(),config,export,jobExecution);
 
             fileTransfer( export,appFileName,baos,config, s3Export );
-
-//            InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-//            try {
-//                s3Export.copyToS3( is, config, appFileName );
-//            }
-//            catch ( Exception e ) {
-//                export.setState( Export.State.FAILED );
-//                return;
-//            }
         }
     }
 
@@ -383,15 +372,7 @@ public class ExportServiceImpl implements ExportService {
         ByteArrayOutputStream baos = collectionExportAndQuery(applicationId,config,export,jobExecution);
 
         fileTransfer( export,appFileName,baos,config, s3Export );
-        //sets up the Inputstream for copying the method to s3.
-//        InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-//        try {
-//            s3Export.copyToS3( is, config, appFileName );
-//        }
-//        catch ( Exception e ) {
-//            export.setState( Export.State.FAILED );
-//            return;
-//        }
+
     }
 
 
@@ -417,14 +398,7 @@ public class ExportServiceImpl implements ExportService {
         InputStream is = new ByteArrayInputStream( baos.toByteArray() );
 
         fileTransfer( export,appFileName,baos,config, s3Export );
-//        try {
-//            s3Export.copyToS3( is, config, appFileName );
-//        }
-//        catch ( Exception e ) {
-//            export.setErrorMessage( e.getMessage() );
-//            export.setState( Export.State.FAILED );
-//            return;
-//        }
+
     }
 
 
