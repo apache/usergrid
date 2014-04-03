@@ -49,6 +49,10 @@ public interface GraphFig extends GuicyFig {
 
     public static final String READ_TIMEOUT = "usergrid.graph.read.timeout";
 
+    public static final String CACHE_TIMEOUT = "usergrid.graph.cache.timeout";
+
+    public static final String CACHE_SIZE = "usergrid.graph.cache.size";
+
     @Default( "1000" )
     @Key(SCAN_PAGE_SIZE)
     int getScanPageSize();
@@ -87,5 +91,14 @@ public interface GraphFig extends GuicyFig {
     @Default("10000")
     @Key(REPAIR_TIMEOUT)
     int getRepairTimeout();
+
+
+    @Default( "10000" )
+    @Key( CACHE_SIZE )
+    int getCacheSize();
+
+    @Default( "30000" )
+    @Key( CACHE_TIMEOUT )
+    long getCacheTimeout();
 }
 

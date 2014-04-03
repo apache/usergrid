@@ -16,14 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl;
+package org.apache.usergrid.persistence.graph.impl.cache;
+
+
+import java.util.UUID;
+
+import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- *
+ *  Cache implementation for returning versions based on the slice.
  *
  */
-public interface EdgeMetaCache {
+public interface NodeShardCache {
 
 
+    /**
+     * Get the time meta data for the given node
+     * @param nodeId
+     * @param time The time to select the slice for.
+     * @param edgeType
+     */
+    public UUID getSlice(final OrganizationScope scope, final Id nodeId, final UUID time, final String... edgeType);
 }
