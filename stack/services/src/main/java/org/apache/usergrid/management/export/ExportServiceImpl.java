@@ -79,11 +79,6 @@ public class ExportServiceImpl implements ExportService {
 
     private JsonFactory jsonFactory = new JsonFactory();
 
-    //private S3Export s3Export;
-
-    private String defaultAppExportname = "exporters";
-
-
     @Override
     public UUID schedule( final Map<String, Object> config ) throws Exception {
         ApplicationInfo defaultExportApp = null;
@@ -96,7 +91,6 @@ public class ExportServiceImpl implements ExportService {
 
         EntityManager em = null;
         try {
-            //em = emf.getEntityManager( ( UUID ) config.get( "applicationId" ) );
             em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
             Set<String> collections =  em.getApplicationCollections();
             if(!collections.contains( "exports" )){
@@ -197,10 +191,10 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public void doExport( final JobExecution jobExecution ) throws Exception {
         Map<String, Object> config = ( Map<String, Object> ) jobExecution.getJobData().getProperty( "exportInfo" );
-        S3Export s3Export = ( S3Export )jobExecution.getJobData().getProperty( "s3Export" );
+        S3Export s3Export = null;
+
 
 //        UUID scopedAppId = ( UUID ) config.get( "applicationId" );
-
         if ( config == null ) {
             logger.error( "Export Information passed through is null" );
             return;
@@ -215,6 +209,15 @@ public class ExportServiceImpl implements ExportService {
         export.setState( Export.State.STARTED );
         em.update( export );
 
+        try {
+            s3Export = ( S3Export )jobExecution.getJobData().getProperty( "s3Export" );
+        }catch (Exception e){
+            logger.error( "S3Export doesn't exist" );
+            export.setState( Export.State.FAILED );
+            em.update( export );
+            return;
+        }
+        
         if ( config.get( "organizationId" ) == null ) {
             logger.error( "No organization could be found" );
             export.setState( Export.State.FAILED );
@@ -547,7 +550,6 @@ public class ExportServiceImpl implements ExportService {
 
     protected JsonGenerator getJsonGenerator( ByteArrayOutputStream out ) throws IOException {
         //TODO:shouldn't the below be UTF-16?
-        //PrintWriter out = new PrintWriter( outFile, "UTF-8" );
 
         JsonGenerator jg = jsonFactory.createJsonGenerator( out );
         jg.setPrettyPrinter( new DefaultPrettyPrinter() );
@@ -645,8 +647,4 @@ public class ExportServiceImpl implements ExportService {
         return baos;
     }
 
-
-//    @Autowired
-//    @Override
-//    public void setS3Export( S3Export s3Export ) { this.s3Export = s3Export; }
 }

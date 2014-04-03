@@ -787,8 +787,8 @@ public class ExportServiceIT {
         blobStore.deleteContainer( bucketName );
     }
 
-    @Ignore
-    //@Test
+    //@Ignore
+    @Test
     public void testIntegration100EntitiesForAllApps() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
