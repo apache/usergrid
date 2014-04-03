@@ -57,15 +57,15 @@ public class HystrixGraphObservable {
 
 
     /**
-      * Wrap the observable in the timeout for asynchronous operations.  This is for compaction and cleanup processing.
-      */
-     public static <T> Observable<T> async( final Observable<T> observable ) {
-         return new HystrixObservableCommand<T>( ASYNC_GROUP ) {
+     * Wrap the observable in the timeout for asynchronous operations.  This is for compaction and cleanup processing.
+     */
+    public static <T> Observable<T> async( final Observable<T> observable ) {
+        return new HystrixObservableCommand<T>( ASYNC_GROUP ) {
 
-             @Override
-             protected Observable<T> run() {
-                 return observable;
-             }
-         }.observe();
-     }
+            @Override
+            protected Observable<T> run() {
+                return observable;
+            }
+        }.observe();
+    }
 }

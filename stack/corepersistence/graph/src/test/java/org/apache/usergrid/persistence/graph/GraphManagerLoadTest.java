@@ -221,7 +221,7 @@ public class GraphManagerLoadTest {
             final CountDownLatch latch = new CountDownLatch( 1 );
 
 
-            generator.doSearch( manager ).take( readCount ).subscribe( new Subscriber<Edge>() {
+            generator.doSearch( manager ).take( readCount ).buffer( 1000 ).subscribe( new Subscriber<List<Edge>>() {
                 @Override
                 public void onCompleted() {
                     timer.stop();
@@ -236,8 +236,8 @@ public class GraphManagerLoadTest {
 
 
                 @Override
-                public void onNext( final Edge edge ) {
-
+                public void onNext( final List<Edge> edges ) {
+                    log.info("Read {} edges", edges.size());
                 }
             } );
 

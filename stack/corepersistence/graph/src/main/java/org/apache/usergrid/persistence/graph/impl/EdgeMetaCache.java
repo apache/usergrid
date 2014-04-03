@@ -16,27 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.consistency;
-
-
-import org.apache.usergrid.persistence.collection.OrganizationScope;
-
-import rx.Observable;
+package org.apache.usergrid.persistence.graph.impl;
 
 
 /**
  *
  *
  */
-public interface MessageListener<T, R> {
+public interface EdgeMetaCache {
 
-
-    /**
-     * The handler to receive the event.  Any exception that is thrown is considered
-     * a failure, and the event will be re-fired.
-     * @param event  The input event
-     * @return The observable that performs the operations
-     */
-    Observable<R> receive(final T event);
 
 }
