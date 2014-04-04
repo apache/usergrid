@@ -27,19 +27,23 @@ import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
-
+/**
+ * Interface used to create and retrieve shards
+ */
 public interface NodeShardAllocation {
 
-    public static final UUID MIN_UUID =  new UUID( 0, 1 );
+
 
     /**
      * Get all shards for the given info.  If none exist, a default shard should be allocated
      * @param scope
      * @param nodeId
+     * @param maxShardId The max value to start seeking from.  Values <= this will be returned
+     * @param count The count of elements to return
      * @param edgeTypes
      * @return A list of all shards <= the current shard.  This will always return MIN_UUID if no shards are allocated
      */
-    public List<UUID> getShards(final OrganizationScope scope, final Id nodeId, final String... edgeTypes);
+    public List<UUID> getShards(final OrganizationScope scope, final Id nodeId, UUID maxShardId, int count,  final String... edgeTypes);
 
 
     /**
@@ -52,30 +56,16 @@ public interface NodeShardAllocation {
      */
     public boolean auditMaxShard(final OrganizationScope scope, final Id nodeId, final String... edgeType);
 
-    /**
-        * The minimum uuid we allocate
-        */
-//       private static final UUID MIN_UUID =  new UUID( 0, 1 );
-//
 
     /**
-     *
-              * There are no shards allocated, allocate the minimum shard
-              */
-    /**
-     *
-     *
-             if(shards == null || shards.size() == 0){
+     * Increment the shard Id the specified amount
+     * @param scope The scope
+     * @param nodeId The node id
+     * @param shardId The shard id
+     * @param count The count
+     * @param edgeType The edge type
+     */
+    public void increment(final OrganizationScope scope, final Id nodeId, final UUID shardId, int count, final String... edgeType);
 
-                 try {
-                     edgeSeriesSerialization.writeEdgeMeta( scope, nodeId, MIN_UUID, edgeType ).execute();
-                 }
-                 catch ( ConnectionException e ) {
-                     throw new RuntimeException("Unable to write edge meta data", e);
-                 }
 
-                 return MIN_UUID;
-              }
-
-     (**/
 }

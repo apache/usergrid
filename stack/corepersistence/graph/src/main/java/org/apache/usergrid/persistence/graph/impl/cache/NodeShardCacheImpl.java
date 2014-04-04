@@ -18,6 +18,7 @@
  */
 package org.apache.usergrid.persistence.graph.impl.cache;
 
+import static org.apache.usergrid.persistence.graph.impl.Constants.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -48,6 +49,10 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
  * cache, it will need to be searched via cassandra.
  */
 public class NodeShardCacheImpl implements NodeShardCache {
+
+
+
+    private static final int MAX_SHARD_COUNT = 10000;
 
 
 
@@ -128,12 +133,14 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
                                       @Override
                                       public CacheEntry load( final CacheKey key ) throws Exception {
+                                          //doing this with a static size could result in lost "old" shards, this needs to be an
+                                          //iterating cache that can refresh if we have a full size
                                           final List<UUID> edges = nodeShardAllocation.getShards( key.scope,
-                                                  key.id, key.types );
+                                                  key.id, MAX_UUID, MAX_SHARD_COUNT, key.types );
 
 
                                           /**
-                                           * Perform an async audit
+                                           * Perform an async audit in case we need to allocate a new shard
                                            */
                                           nodeShardAllocation.auditMaxShard( key.scope, key.id, key.types );
 

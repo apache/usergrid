@@ -16,28 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl.cache;
+
+package org.apache.usergrid.persistence.graph.impl;
 
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
-
 
 /**
- *  Cache implementation for returning versions based on the slice.  This cache may be latent.  As a result
- *  the allocation of new shards should be 2*cache timeout in the future.
- *
+ * Simple stat class for re-used constants
  */
-public interface NodeShardCache {
-
+public class Constants {
 
     /**
-     * Get the time meta data for the given node
-     * @param nodeId
-     * @param time The time to select the slice for.
-     * @param edgeType
+     * The min time uuid type
      */
-    public UUID getSlice(final OrganizationScope scope, final Id nodeId, final UUID time, final String... edgeType);
+    public static final UUID MIN_UUID =  new UUID( 0, 1 );
+
+    /**
+     * The max time uuid type
+     */
+    public static final UUID MAX_UUID = UUID.fromString( "ffffffff-ffff-1fff-bfff-ffffffffffff" );
+
+
+
 }

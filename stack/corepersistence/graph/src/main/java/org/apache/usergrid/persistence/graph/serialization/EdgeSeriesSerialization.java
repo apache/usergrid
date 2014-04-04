@@ -30,6 +30,9 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.netflix.astyanax.MutationBatch;
 
 
+/**
+ * The interface for creating and retrieving time series row keys
+ */
 public interface EdgeSeriesSerialization {
 
     /**
@@ -45,10 +48,12 @@ public interface EdgeSeriesSerialization {
      * Get an iterator of all meta data and types
      * @param scope The organization scope
      * @param nodeId The id of the node
+     * @param start The uuid to start seeking from.  Values <= this value will be returned.
+     * @param count The maximum size to return
      * @param types The types to use
      * @return
      */
-    public List<UUID> getEdgeMetaData(OrganizationScope scope, Id nodeId, String... types);
+    public List<UUID> getEdgeMetaData(OrganizationScope scope, Id nodeId, UUID start, int count, String... types);
 
     /**
      * Remove the slice from the edge meta data from the types.

@@ -29,6 +29,25 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.netflix.astyanax.MutationBatch;
 
 
+/**
+ * The interface to define counter operations.  Note that the implementation may not be immediately consistent.
+ *
+ * TODO: Ivestigate this further with HyperLogLog.  Since our cardinality needs to be "good enough", we may be able
+ * to offer much better performance than the Cassandra counters by using hyperloglog on each node, and persisting it's map
+ * in memory with period flush into a standard CF.  On query, we can read a unioned column.
+ * On flush, we can flush, then read+union and set the timestamp on the column so that only 1 union will be the max.
+ *
+ * http://blog.aggregateknowledge.com/2012/10/25/sketch-of-the-day-hyperloglog-cornerstone-of-a-big-data-infrastructure/
+ *
+ * See also
+ *
+ * http://blog.aggregateknowledge.com/2012/10/25/sketch-of-the-day-hyperloglog-cornerstone-of-a-big-data-infrastructure/
+ *
+ * See also
+ *
+ * https://github.com/addthis/stream-lib/blob/master/src/main/java/com/clearspring/analytics/stream/cardinality/HyperLogLog.java
+ *
+ */
 public interface EdgeSeriesCounterSerialization {
 
     /**
@@ -40,18 +59,17 @@ public interface EdgeSeriesCounterSerialization {
      */
     public MutationBatch incrementMetadataCount( OrganizationScope scope, Id nodeId, UUID slice, int count,  String... types );
 
-//    /**
-//     * Get an iterator of all meta data and types
-//     * @param scope The organization scope
-//     * @param nodeId The id of the node
-//     * @param types The types to use
-//     * @return
-//     */
-//    public List<UUID> getEdgeMetadataCount( OrganizationScope scope, Id nodeId, String... types );
+    /**
+     * Get an iterator of all meta data and types
+     * @param scope The organization scope
+     * @param nodeId The id of the node
+     * @param types The types to use
+     * @return The current count
+     */
+    public long getEdgeMetadataCount( OrganizationScope scope, Id nodeId, String... types );
 
     /**
      * Remove the slice from the edge meta data from the types.
-
      * @param scope
      * @param nodeId
      * @param slice
