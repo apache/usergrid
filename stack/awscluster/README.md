@@ -44,6 +44,7 @@ First you need to build the Usergrid components: the Java SDK, the Stack and the
 
 For example, here's how you would do that on a UNIX system (assuming that all Stack and Portal build pre-requistes are in place:
 
+
 `
 	cd usergrid/sdks/java
 	mvn clean install
