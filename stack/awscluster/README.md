@@ -3,8 +3,8 @@ AWS Cluster
 
 *UNDER CONSTRUCTION* 
 
-This project provides a AWS Cloud Formation template that launches a complete Usergrid installation
-on Amazon EC2. Currently it launches a set of instances running Cassanrda Elastic Search.
+This project provides a AWS Cloud Formation template that launches and configures a complete Usergrid installation
+on Amazon EC2 including Tomcat intances, Cassandra instances, Security Groups, a Load Balancer and DNS records.
 
 Two parts:
 
