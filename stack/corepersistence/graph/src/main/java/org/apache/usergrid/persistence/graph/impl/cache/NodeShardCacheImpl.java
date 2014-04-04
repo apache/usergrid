@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSeriesSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.cache.CacheBuilder;
@@ -48,12 +49,9 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
  */
 public class NodeShardCacheImpl implements NodeShardCache {
 
-    /**
-     * The minimum uuid we allocate
-     */
-    private static final UUID MIN_UUID =  new UUID( 0, 1 );
 
-    private final EdgeSeriesSerialization edgeSeriesSerialization;
+
+    private final NodeShardAllocation nodeShardAllocation;
     private final GraphFig graphFig;
 
     private LoadingCache<CacheKey, CacheEntry> graphs;
@@ -61,12 +59,12 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
     /**
      *
-     * @param edgeSeriesSerialization
+     * @param nodeShardAllocation
      * @param graphFig
      */
     @Inject
-    public NodeShardCacheImpl( final EdgeSeriesSerialization edgeSeriesSerialization, final GraphFig graphFig ) {
-        this.edgeSeriesSerialization = edgeSeriesSerialization;
+    public NodeShardCacheImpl( final  NodeShardAllocation nodeShardAllocation, final GraphFig graphFig ) {
+        this.nodeShardAllocation = nodeShardAllocation;
         this.graphFig = graphFig;
 
         /**
@@ -104,27 +102,13 @@ public class NodeShardCacheImpl implements NodeShardCache {
             throw new RuntimeException( "Unable to load cache key for graph", e );
         }
 
-        List<UUID> shards = entry.getShardId(time, 1 );
-
-        if(shards == null || shards.size() == 0){
-
-            try {
-                edgeSeriesSerialization.writeEdgeMeta( scope, nodeId, MIN_UUID, edgeType ).execute();
-            }
-            catch ( ConnectionException e ) {
-                throw new RuntimeException("Unable to write edge meta data", e);
-            }
-
-            return MIN_UUID;
-         }
-
-        final UUID shardId = entry.getShardId(time, 1).get( 0 );
+        final UUID shardId = entry.getShardId(time);
 
         if(shardId != null){
             return shardId;
         }
 
-        //if we get here, something went wrong, our cache should always have a min time UUID.
+        //if we get here, something went wrong, our cache should always have a time UUID to return to us
         throw new RuntimeException( "No time UUID shard was found and could not allocate one" );
 
     }
@@ -144,8 +128,14 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
                                       @Override
                                       public CacheEntry load( final CacheKey key ) throws Exception {
-                                          final List<UUID> edges = edgeSeriesSerialization
-                                                  .getEdgeMetaData( key.scope, key.id, key.types );
+                                          final List<UUID> edges = nodeShardAllocation.getShards( key.scope,
+                                                  key.id, key.types );
+
+
+                                          /**
+                                           * Perform an async audit
+                                           */
+                                          nodeShardAllocation.auditMaxShard( key.scope, key.id, key.types );
 
                                           return new CacheEntry( edges );
                                       }
@@ -218,43 +208,33 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
         /**
          * Get the shard's UUID for the uuid we're attempting to seek from
+         *
          * @param seek
          * @return
          */
-        public List<UUID> getShardId( final UUID seek, final int size) {
+        public UUID getShardId( final UUID seek) {
             int index = Collections.binarySearch( this.shards, seek, MetaComparator.INSTANCE );
 
             /**
              * We have an exact match, return it
              */
             if(index > -1){
-               return getShards(index, size);
+               return shards.get( index );
             }
 
 
             //update the index to represent the index we should insert to and read it.  This will be <= the UUID we were passed
-            index = index*-1+1;
+            //we subtract 2 to get the index < this one
+            index = (index*-1) -2;
 
 
             if(index < shards.size()){
-                return getShards( index, size );
+                return shards.get( index );
             }
 
 
             return null;
         }
-
-        /**
-          * Get the ordered list of shards from high to low
-          * @param index
-          * @param size
-          * @return
-          */
-         private List<UUID> getShards(final int index, final int size){
-             int toIndex = Math.min( shards.size(), index+size );
-             return shards.subList(index,  toIndex );
-         }
-
 
     }
 
