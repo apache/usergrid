@@ -26,13 +26,13 @@ import com.amazonaws.auth.*
 import com.amazonaws.services.simpledb.*
 import com.amazonaws.services.simpledb.model.*
 
-String domain = "UGCloudFormation"
 
 String accessKey = (String)System.getenv().get("AWS_ACCESS_KEY")
 String secretKey = (String)System.getenv().get("AWS_SECRET_KEY")
 
 def baseUrl      = "http://${System.getenv().get("DNS_NAME")}.${System.getenv().get("DNS_DOMAIN")}"
 String stackName = (String)System.getenv().get("STACK_NAME")
+String domain    = stackName
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
 def replFactor   = System.getenv().get("CASSANDRA_REPLICATION_FACTOR")
 def clusterName  = System.getenv().get("CASSANDRA_CLUSTER_NAME")
@@ -81,9 +81,11 @@ mail.smtps.port=465
 mail.smtps.auth=true
 mail.smtps.quitwait=false
 
+# TODO: make all usernames and passwords configurable via Cloud Formation parameters.
+
 # CAUTION: THERE IS A PASSWORD HERE!
 mail.smtps.username=usergridtest@gmail.com
-mail.smtps.password=shy-rtol
+mail.smtps.password=pw123
 
 ######################################################
 # Admin and test user setup
