@@ -44,24 +44,19 @@ First you need to build the Usergrid components: the Java SDK, the Stack and the
 
 For example, here's how you would do that on a UNIX system (assuming that all Stack and Portal build pre-requistes are in place:
 
-
-`
-	cd usergrid/sdks/java
-	mvn clean install
+	$ cd usergrid/sdks/java
+	$ mvn clean install
 	
-	cd ../../stack
-	mvn -DskipTests=true clean install
+	$ cd ../../stack
+	$ mvn -DskipTests=true clean install
 	
-	cd ../portal
-	./build.sh
-`
+	$ cd ../portal
+	$ ./build.sh
 
 Next, cd to the awscluster directory and run Maven deploy:
 
-`
-	cd usergrid/stack/awscluster
-	mvn deploy
-`
+	$ cd usergrid/stack/awscluster
+	$ mvn deploy
 
 Maven will create the installation tarball and will copy it to your S3 bucket uf-cloudformation. You can find a copy of the tarball in the target directory: `awscluster-1.0-SNAPSHOT.tgz`.
 
