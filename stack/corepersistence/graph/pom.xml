@@ -39,6 +39,14 @@
       <version>${project.version}</version>
     </dependency>
 
+
+    <!-- utilized for hyperloglog cardinality terms -->
+    <dependency>
+        <groupId>com.clearspring.analytics</groupId>
+        <artifactId>stream</artifactId>
+        <version>2.6.0</version>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>collection</artifactId>
@@ -53,6 +61,7 @@
       <version>${jukito.version}</version>
       <scope>test</scope>
     </dependency>
+
 
   </dependencies>
 

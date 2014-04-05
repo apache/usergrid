@@ -16,44 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl.cache;
+package org.apache.usergrid.persistence.graph.impl.shard;
 
-import static org.apache.usergrid.persistence.graph.impl.Constants.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
+import java.util.Iterator;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.serialization.EdgeSeriesSerialization;
+import org.apache.usergrid.persistence.graph.serialization.util.IterableUtil;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+
+import static org.apache.usergrid.persistence.graph.impl.Constants.MAX_UUID;
 
 
 /**
- * Simple implementation of the cache.  Uses a local Guava cache with a timeout.  If a value is not present in the
- * cache, it will need to be searched via cassandra.
+ * Simple implementation of the shard.  Uses a local Guava shard with a timeout.  If a value is not present in the
+ * shard, it will need to be searched via cassandra.
  */
 public class NodeShardCacheImpl implements NodeShardCache {
 
 
-
-    private static final int MAX_SHARD_COUNT = 10000;
-
+    private static final int SHARD_PAGE_SIZE = 1000;
 
 
     private final NodeShardAllocation nodeShardAllocation;
@@ -68,12 +65,12 @@ public class NodeShardCacheImpl implements NodeShardCache {
      * @param graphFig
      */
     @Inject
-    public NodeShardCacheImpl( final  NodeShardAllocation nodeShardAllocation, final GraphFig graphFig ) {
+    public NodeShardCacheImpl( final NodeShardAllocation nodeShardAllocation, final GraphFig graphFig ) {
         this.nodeShardAllocation = nodeShardAllocation;
         this.graphFig = graphFig;
 
         /**
-         * Add our listener to reconstruct the cache
+         * Add our listener to reconstruct the shard
          */
         this.graphFig.addPropertyChangeListener( new PropertyChangeListener() {
             @Override
@@ -87,7 +84,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
         } );
 
         /**
-         * Initialize the cache
+         * Initialize the shard
          */
         updateCache();
     }
@@ -97,31 +94,29 @@ public class NodeShardCacheImpl implements NodeShardCache {
     public UUID getSlice( final OrganizationScope scope, final Id nodeId, final UUID time, final String... edgeType ) {
 
 
-        final CacheKey key = new CacheKey(scope, nodeId, edgeType  );
+        final CacheKey key = new CacheKey( scope, nodeId, edgeType );
         CacheEntry entry;
 
         try {
             entry = this.graphs.get( key );
         }
         catch ( ExecutionException e ) {
-            throw new RuntimeException( "Unable to load cache key for graph", e );
+            throw new RuntimeException( "Unable to load shard key for graph", e );
         }
 
-        final UUID shardId = entry.getShardId(time);
+        final UUID shardId = entry.getShardId( time );
 
-        if(shardId != null){
+        if ( shardId != null ) {
             return shardId;
         }
 
-        //if we get here, something went wrong, our cache should always have a time UUID to return to us
+        //if we get here, something went wrong, our shard should always have a time UUID to return to us
         throw new RuntimeException( "No time UUID shard was found and could not allocate one" );
-
     }
 
 
-
     /**
-     * This is a race condition.  We could re-init the cache while another thread is reading it.  This is fine, the read
+     * This is a race condition.  We could re-init the shard while another thread is reading it.  This is fine, the read
      * doesn't have to be precise.  The algorithm accounts for stale data.
      */
     private void updateCache() {
@@ -133,10 +128,11 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
                                       @Override
                                       public CacheEntry load( final CacheKey key ) throws Exception {
-                                          //doing this with a static size could result in lost "old" shards, this needs to be an
-                                          //iterating cache that can refresh if we have a full size
-                                          final List<UUID> edges = nodeShardAllocation.getShards( key.scope,
-                                                  key.id, MAX_UUID, MAX_SHARD_COUNT, key.types );
+
+                                          //TODO, we need to put some sort of upper bounds on this, it could possibly
+                                          //get too large
+                                          final Iterator<UUID> edges = nodeShardAllocation
+                                                  .getShards( key.scope, key.id, MAX_UUID, SHARD_PAGE_SIZE, key.types );
 
 
                                           /**
@@ -150,9 +146,8 @@ public class NodeShardCacheImpl implements NodeShardCache {
     }
 
 
-
     /**
-     * Cache key for looking up items in the cache
+     * Cache key for looking up items in the shard
      */
     private static class CacheKey {
         private final OrganizationScope scope;
@@ -199,53 +194,31 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
     /**
-     * An entry for the cache.
+     * An entry for the shard.
      */
     private static class CacheEntry {
         /**
          * Get the list of all segments
          */
-        private List<UUID> shards;
+        private TreeSet<UUID> shards;
 
 
-        private CacheEntry( final List<UUID> shards ) {
-            this.shards = shards;
+        private CacheEntry( final Iterator<UUID> shards ) {
+            this.shards = new TreeSet<>( MetaComparator.INSTANCE );
+
+            for ( UUID shard : IterableUtil.wrap( shards ) ) {
+                this.shards.add( shard );
+            }
         }
 
 
         /**
          * Get the shard's UUID for the uuid we're attempting to seek from
-         *
-         * @param seek
-         * @return
          */
-        public UUID getShardId( final UUID seek) {
-            int index = Collections.binarySearch( this.shards, seek, MetaComparator.INSTANCE );
-
-            /**
-             * We have an exact match, return it
-             */
-            if(index > -1){
-               return shards.get( index );
-            }
-
-
-            //update the index to represent the index we should insert to and read it.  This will be <= the UUID we were passed
-            //we subtract 2 to get the index < this one
-            index = (index*-1) -2;
-
-
-            if(index < shards.size()){
-                return shards.get( index );
-            }
-
-
-            return null;
+        public UUID getShardId( final UUID seek ) {
+            return this.shards.floor( seek );
         }
-
     }
-
-
 
 
     /**

@@ -16,7 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl.cache;
+
+package org.apache.usergrid.persistence.graph.impl.shard;
 
 
 import java.util.UUID;
@@ -26,18 +27,25 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- *  Cache implementation for returning versions based on the slice.  This cache may be latent.  As a result
- *  the allocation of new shards should be 2*cache timeout in the future.
- *
+ * Interface for creating approximate estimates of shards
  */
-public interface NodeShardCache {
+public interface TimeShardApproximation {
 
 
     /**
-     * Get the time meta data for the given node
-     * @param nodeId
-     * @param time The time to select the slice for.
-     * @param edgeType
+       * Increment the shard Id the specified amount
+       * @param scope The scope
+       * @param nodeId The node id
+       * @param shardId The shard id
+       * @param edgeType The edge type
+       */
+      public void increment(final OrganizationScope scope, final Id nodeId, final UUID shardId, final String... edgeType);
+
+
+    /**
+     * Get the approximation of the number of unique items
+     * @return
      */
-    public UUID getSlice(final OrganizationScope scope, final Id nodeId, final UUID time, final String... edgeType);
+    public long getCount(final OrganizationScope scope, final Id nodeId, final UUID shardId, final String... edgeType);
+
 }

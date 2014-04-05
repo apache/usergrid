@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl.cache;
+package org.apache.usergrid.persistence.graph.impl.shard;
 
 
 import java.util.Arrays;
@@ -28,14 +28,15 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.impl.Constants;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -43,7 +44,7 @@ import static org.mockito.Mockito.when;
 
 
 /**
- * Test for the cache that mocks responses from the serialization
+ * Test for the shard that mocks responses from the serialization
  */
 public class NodeShardCacheTest {
 
@@ -87,15 +88,15 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning no shards at all.
          */
-        when( allocation.getShards( same( scope ), same( id ), same( edgeType ), same( otherIdType ) ) )
-                .thenReturn( Collections.singletonList( NodeShardAllocation.MIN_UUID ) );
+        when( allocation.getShards( same( scope ), same( id ), same(Constants.MAX_UUID), any( Integer.class ), same( edgeType ), same( otherIdType ) ) )
+                .thenReturn( Collections.singletonList( Constants.MIN_UUID ).iterator() );
 
 
         UUID slice = cache.getSlice( scope, id, newTime, edgeType, otherIdType );
 
 
         //we return the min UUID possible, all edges should start by writing to this edge
-        assertEquals( NodeShardAllocation.MIN_UUID, slice );
+        assertEquals( Constants.MIN_UUID, slice );
 
 
         /**
@@ -131,8 +132,8 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning single shard
          */
-        when( allocation.getShards( same( scope ), same( id ), same( edgeType ), same( otherIdType ) ) )
-                .thenReturn( Collections.singletonList( min ) );
+        when( allocation.getShards( same( scope ), same( id ), same(Constants.MAX_UUID), any( Integer.class ),  same( edgeType ), same( otherIdType ) ) )
+                .thenReturn( Collections.singletonList( min ).iterator() );
 
 
         UUID slice = cache.getSlice( scope, id, newTime, edgeType, otherIdType );
@@ -180,8 +181,8 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning all shards
          */
-        when( allocation.getShards( same( scope ), same( id ), same( edgeType ), same( otherIdType ) ) )
-                .thenReturn( Arrays.asList( min, mid, max ) );
+        when( allocation.getShards( same( scope ), same( id ),  same(Constants.MAX_UUID), any( Integer.class ), same( edgeType ), same( otherIdType ) ) )
+                .thenReturn( Arrays.asList( min, mid, max ).iterator() );
 
 
         //check getting equal to our min, mid and max

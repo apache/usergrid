@@ -17,14 +17,15 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.impl.cache;
+package org.apache.usergrid.persistence.graph.impl.shard;
 
 
-import java.util.List;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.consistency.TimeService;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSeriesCounterSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSeriesSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -46,23 +47,25 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
     private final EdgeSeriesSerialization edgeSeriesSerialization;
     private final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization;
+    private final TimeService timeService;
     private final GraphFig graphFig;
 
 
     @Inject
     public NodeShardAllocationImpl( final EdgeSeriesSerialization edgeSeriesSerialization,
                                     final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization,
-                                    final GraphFig graphFig ) {
+                                    final TimeService timeService, final GraphFig graphFig ) {
         this.edgeSeriesSerialization = edgeSeriesSerialization;
         this.edgeSeriesCounterSerialization = edgeSeriesCounterSerialization;
+        this.timeService = timeService;
         this.graphFig = graphFig;
     }
 
 
     @Override
-    public List<UUID> getShards( final OrganizationScope scope, final Id nodeId, final UUID maxShardId, final int count,
-                                 final String... edgeTypes ) {
-        return edgeSeriesSerialization.getEdgeMetaData( scope, nodeId, maxShardId, count, edgeTypes );
+    public Iterator<UUID> getShards( final OrganizationScope scope, final Id nodeId, final UUID maxShardId,
+                                     final int pageSize, final String... edgeTypes ) {
+        return edgeSeriesSerialization.getEdgeMetaData( scope, nodeId, maxShardId, pageSize, edgeTypes );
     }
 
 
@@ -71,18 +74,21 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         final UUID now = UUIDGenerator.newTimeUUID();
 
-        List<UUID> maxShards = getShards( scope, nodeId, MAX_UUID, 1, edgeType );
+        Iterator<UUID> maxShards = getShards( scope, nodeId, MAX_UUID, 1, edgeType );
 
         //if the first shard has already been allocated, do nothing.
 
         //now is already > than the max, don't do anything
-        if ( maxShards.size() > 0 && UUIDComparator.staticCompare( now, maxShards.get( 0 ) ) < 0 ) {
+        if ( maxShards.hasNext() && UUIDComparator.staticCompare( now, maxShards.next() ) < 0 ) {
             return false;
         }
 
-        //allocate a new shard
-        //TODO T.N. modify the time uuid utils to allow future generation, this is incorrect, but a place holder
-        final UUID futureUUID = UUIDGenerator.newTimeUUID();
+        final long newShardTime = timeService.getCurrentTime() + graphFig.getCacheTimeout()*2;
+
+        //allocate a new shard at least now+ 2x our shard timeout.  We want to be sure that all replicas pick up on the new
+        //shard
+
+        final UUID futureUUID = UUIDGenerator.newTimeUUID(newShardTime);
 
         try {
             this.edgeSeriesSerialization.writeEdgeMeta( scope, nodeId, futureUUID, edgeType ).execute();
@@ -95,35 +101,33 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         MutationBatch rollup = null;
-        boolean completed = false;
 
-        //TODO, change this into an iterator
-        while ( !completed ) {
+        Iterator<UUID> shards = getShards( scope, nodeId, MAX_UUID, 1000, edgeType );
 
-            List<UUID> shards = getShards( scope, nodeId, MAX_UUID, 100, edgeType );
+        while ( shards.hasNext() ) {
 
-            for ( UUID shardId : shards ) {
-                if ( UUIDComparator.staticCompare( shardId, max ) >= 0 ) {
-                    completed = true;
-                    break;
-                }
+            final UUID shardId = shards.next();
+
+            if ( UUIDComparator.staticCompare( shardId, max ) >= 0 ) {
+                break;
+            }
 
 
-                final MutationBatch batch = edgeSeriesSerialization.removeEdgeMeta( scope, nodeId, shardId, edgeType );
+            //remove the edge that is too large from the node shard allocation
+            final MutationBatch batch = edgeSeriesSerialization.removeEdgeMeta( scope, nodeId, shardId, edgeType );
 
-                if ( rollup == null ) {
-                    rollup = batch;
-                }
-                else {
-                    rollup.mergeShallow( batch );
-                }
+            if ( rollup == null ) {
+                rollup = batch;
+            }
+            else {
+                rollup.mergeShallow( batch );
             }
 
 
             //while our max value is > than the value we just created, delete it
         }
 
-        if(rollup != null){
+        if ( rollup != null ) {
             try {
                 rollup.execute();
             }

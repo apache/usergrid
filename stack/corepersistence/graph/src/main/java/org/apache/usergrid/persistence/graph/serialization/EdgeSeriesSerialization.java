@@ -53,7 +53,7 @@ public interface EdgeSeriesSerialization {
      * @param types The types to use
      * @return
      */
-    public List<UUID> getEdgeMetaData(OrganizationScope scope, Id nodeId, UUID start, int count, String... types);
+    public Iterator<UUID> getEdgeMetaData(OrganizationScope scope, Id nodeId, UUID start, int count, String... types);
 
     /**
      * Remove the slice from the edge meta data from the types.

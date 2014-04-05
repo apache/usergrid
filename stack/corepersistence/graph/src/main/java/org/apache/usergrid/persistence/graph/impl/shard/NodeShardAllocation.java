@@ -17,10 +17,10 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.impl.cache;
+package org.apache.usergrid.persistence.graph.impl.shard;
 
 
-import java.util.List;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
@@ -36,14 +36,16 @@ public interface NodeShardAllocation {
 
     /**
      * Get all shards for the given info.  If none exist, a default shard should be allocated
+     *
      * @param scope
      * @param nodeId
      * @param maxShardId The max value to start seeking from.  Values <= this will be returned
-     * @param count The count of elements to return
+     * @param pageSize The page size to use in the fetch
      * @param edgeTypes
      * @return A list of all shards <= the current shard.  This will always return MIN_UUID if no shards are allocated
      */
-    public List<UUID> getShards(final OrganizationScope scope, final Id nodeId, UUID maxShardId, int count,  final String... edgeTypes);
+    public Iterator<UUID> getShards( final OrganizationScope scope, final Id nodeId, UUID maxShardId, int pageSize,
+                                     final String... edgeTypes );
 
 
     /**
