@@ -90,7 +90,7 @@ public class S3ExportImpl implements S3Export {
         try {
             AsyncBlobStore blobStore = context.getAsyncBlobStore();
             BlobBuilder blobBuilder =
-                    blobStore.blobBuilder( fn ).payload( ephemeral ).calculateMD5().contentType( "text/plain" );
+                    blobStore.blobBuilder( fn ).payload( ephemeral ).calculateMD5().contentType( "application/json" );
 
 
             Blob blob = blobBuilder.build();
