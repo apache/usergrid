@@ -274,6 +274,73 @@ public class MvccEntitySerializationStrategyImplTest {
         assertNull( returned );
     }
 
+    @Test
+    public void writeLoadDeleteMinimalFields() throws ConnectionException {
+
+        final Id organizationId = new SimpleId( "organization" );
+        final Id applicationId = new SimpleId( "application" );
+        final String name = "test";
+
+        CollectionScope context = new CollectionScopeImpl( organizationId,  applicationId, name );
+
+
+        final UUID entityId = UUIDGenerator.newTimeUUID();
+        final UUID version = UUIDGenerator.newTimeUUID();
+        final String type = "test";
+
+        final Id id = new SimpleId( entityId, type );
+
+        Entity entity = new Entity( id );
+
+        EntityUtils.setVersion( entity, version );
+
+        BooleanField boolField = new BooleanField( "boolean", false );
+
+        entity.setField( boolField );
+
+        MvccEntity saved = new MvccEntityImpl( id, version, MvccEntity.Status.COMPLETE, Optional.of( entity ) );
+
+
+        //persist the entity
+        serializationStrategy.write( context, saved ).execute();
+
+        //now load it back
+
+        MvccEntity returned = serializationStrategy.load( context, id, version );
+
+        assertEquals( "Mvcc entities are the same", saved, returned );
+
+
+        assertEquals( id, entity.getId() );
+
+        //TODO: TN-> shouldn't this be testing the returned value to make sure we were able to load it correctly?
+        //YES THIS SHOULD BE DOING WHA TI THOUGHT< BUT ITSN:T
+        Field<Boolean> boolFieldReturned = returned.getEntity().get().getField( boolField.getName() );
+
+        assertEquals( boolField, boolFieldReturned );
+
+        Set<Field> results = new HashSet<Field>();
+        results.addAll( entity.getFields() );
+
+
+        assertTrue( results.contains( boolField ) );
+
+
+        assertEquals( 1, results.size() );
+
+        assertEquals( id, entity.getId() );
+        assertEquals( version, entity.getVersion() );
+
+
+        //now delete it
+        serializationStrategy.delete( context, id, version ).execute();
+
+        //now get it, should be gone
+
+        returned = serializationStrategy.load( context, id, version );
+
+        assertNull( returned );
+    }
 
     @Test
     public void writeX2ClearDelete() throws ConnectionException {
