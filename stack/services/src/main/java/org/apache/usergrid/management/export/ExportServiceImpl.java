@@ -17,15 +17,14 @@
 package org.apache.usergrid.management.export;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -79,6 +78,7 @@ public class ExportServiceImpl implements ExportService {
 
     private JsonFactory jsonFactory = new JsonFactory();
 
+
     @Override
     public UUID schedule( final Map<String, Object> config ) throws Exception {
         ApplicationInfo defaultExportApp = null;
@@ -91,11 +91,10 @@ public class ExportServiceImpl implements ExportService {
         EntityManager em = null;
         try {
             em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-            Set<String> collections =  em.getApplicationCollections();
-            if(!collections.contains( "exports" )){
+            Set<String> collections = em.getApplicationCollections();
+            if ( !collections.contains( "exports" ) ) {
                 em.createApplicationCollection( "exports" );
             }
-
         }
         catch ( Exception e ) {
             logger.error( "application doesn't exist within the current context" );
@@ -159,6 +158,7 @@ public class ExportServiceImpl implements ExportService {
         return export.getState().toString();
     }
 
+
     @Override
     public String getErrorMessage( final UUID appId, final UUID uuid ) throws Exception {
 
@@ -189,7 +189,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public void doExport( final JobExecution jobExecution ) throws Exception {
         Map<String, Object> config = ( Map<String, Object> ) jobExecution.getJobData().getProperty( "exportInfo" );
-        Object s3PlaceHolder = jobExecution.getJobData().getProperty( "s3Export" ) ;
+        Object s3PlaceHolder = jobExecution.getJobData().getProperty( "s3Export" );
         S3Export s3Export = null;
 
         if ( config == null ) {
@@ -206,12 +206,14 @@ public class ExportServiceImpl implements ExportService {
         export.setState( Export.State.STARTED );
         em.update( export );
         try {
-            if(s3PlaceHolder != null) {
+            if ( s3PlaceHolder != null ) {
                 s3Export = ( S3Export ) s3PlaceHolder;
             }
-            else
+            else {
                 s3Export = new S3ExportImpl();
-        }catch (Exception e){
+            }
+        }
+        catch ( Exception e ) {
             logger.error( "S3Export doesn't exist" );
             export.setErrorMessage( e.getMessage() );
             export.setState( Export.State.FAILED );
@@ -228,7 +230,7 @@ public class ExportServiceImpl implements ExportService {
         else if ( config.get( "applicationId" ) == null ) {
             //exports All the applications from an organization
             try {
-                exportApplicationsFromOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution,s3Export );
+                exportApplicationsFromOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution, s3Export );
             }
             catch ( Exception e ) {
                 export.setErrorMessage( e.getMessage() );
@@ -254,8 +256,8 @@ public class ExportServiceImpl implements ExportService {
             try {
                 //exports a single collection from an app org combo
                 try {
-                    exportCollectionFromOrgApp( ( UUID ) config.get( "organizationId" ),
-                            ( UUID ) config.get( "applicationId" ), config, jobExecution,s3Export );
+                    exportCollectionFromOrgApp( ( UUID ) config.get( "applicationId" ), config, jobExecution,
+                            s3Export );
                 }
                 catch ( Exception e ) {
                     export.setErrorMessage( e.getMessage() );
@@ -307,13 +309,15 @@ public class ExportServiceImpl implements ExportService {
         this.managementService = managementService;
     }
 
-    public Export getExportEntity ( final JobExecution jobExecution) throws Exception{
+
+    public Export getExportEntity( final JobExecution jobExecution ) throws Exception {
 
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
         EntityManager exportManager = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
         return exportManager.get( exportId, Export.class );
     }
+
 
     /**
      * Exports All Applications from an Organization
@@ -323,7 +327,7 @@ public class ExportServiceImpl implements ExportService {
 
         //TODO: move extranous code out of these methods and make each one more distinct.
         //retrieves export entity
-        Export export = getExportEntity(jobExecution);
+        Export export = getExportEntity( jobExecution );
         String appFileName = null;
 
         BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
@@ -337,24 +341,26 @@ public class ExportServiceImpl implements ExportService {
 
             appFileName = prepareOutputFileName( "application", application.getValue(), null );
 
-            ByteArrayOutputStream baos = collectionExportAndQuery(application.getKey(),config,export,jobExecution);
+            File ephemeral = collectionExportAndQuery( application.getKey(), config, export, jobExecution );
 
-            fileTransfer( export,appFileName,baos,config, s3Export );
+            fileTransfer( export, appFileName, ephemeral, config, s3Export );
         }
     }
 
-    public void fileTransfer(Export export,String appFileName,ByteArrayOutputStream baos,Map<String,Object> config, S3Export s3Export) {
-        InputStream is = new ByteArrayInputStream( baos.toByteArray() );
+
+    public void fileTransfer( Export export, String appFileName, File ephemeral, Map<String, Object> config,
+                              S3Export s3Export ) {
         try {
-            s3Export.copyToS3( is, config, appFileName );
+            s3Export.copyToS3( ephemeral, config, appFileName );
+            if(ephemeral.exists())
+                ephemeral.delete();
         }
         catch ( Exception e ) {
+            export.setErrorMessage( e.getMessage() );
             export.setState( Export.State.FAILED );
             return;
         }
     }
-
-
 
 
     /**
@@ -364,15 +370,14 @@ public class ExportServiceImpl implements ExportService {
                                            final JobExecution jobExecution, S3Export s3Export ) throws Exception {
 
         //retrieves export entity
-        Export export = getExportEntity(jobExecution);
+        Export export = getExportEntity( jobExecution );
 
         ApplicationInfo application = managementService.getApplicationInfo( applicationId );
         String appFileName = prepareOutputFileName( "application", application.getName(), null );
 
-        ByteArrayOutputStream baos = collectionExportAndQuery(applicationId,config,export,jobExecution);
+        File ephemeral = collectionExportAndQuery( applicationId, config, export, jobExecution );
 
-        fileTransfer( export,appFileName,baos,config, s3Export );
-
+        fileTransfer( export, appFileName, ephemeral, config, s3Export );
     }
 
 
@@ -380,25 +385,20 @@ public class ExportServiceImpl implements ExportService {
      * Exports a specific collection from an org-app combo.
      */
     //might be confusing, but uses the /s/ inclusion or exclusion nomenclature.
-    private void exportCollectionFromOrgApp( UUID organizationUUID, UUID applicationUUID,
-                                             final Map<String, Object> config, final JobExecution jobExecution, S3Export s3Export )
-            throws Exception {
+    private void exportCollectionFromOrgApp( UUID applicationUUID, final Map<String, Object> config,
+                                             final JobExecution jobExecution, S3Export s3Export ) throws Exception {
 
         //retrieves export entity
-        Export export = getExportEntity(jobExecution);
+        Export export = getExportEntity( jobExecution );
         ApplicationInfo application = managementService.getApplicationInfo( applicationUUID );
 
         String appFileName = prepareOutputFileName( "application", application.getName(),
                 ( String ) config.get( "collectionName" ) );
 
 
-        ByteArrayOutputStream baos = collectionExportAndQuery(applicationUUID,config,export,jobExecution);
+        File ephemeral = collectionExportAndQuery( applicationUUID, config, export, jobExecution );
 
-        //sets up the Inputstream for copying the method to s3.
-        InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-
-        fileTransfer( export,appFileName,baos,config, s3Export );
-
+        fileTransfer( export, appFileName, ephemeral, config, s3Export );
     }
 
 
@@ -525,10 +525,10 @@ public class ExportServiceImpl implements ExportService {
     }
 
 
-    protected JsonGenerator getJsonGenerator( ByteArrayOutputStream out ) throws IOException {
+    protected JsonGenerator getJsonGenerator( File ephermal ) throws IOException {
         //TODO:shouldn't the below be UTF-16?
 
-        JsonGenerator jg = jsonFactory.createJsonGenerator( out );
+        JsonGenerator jg = jsonFactory.createJsonGenerator( ephermal, JsonEncoding.UTF8 );
         jg.setPrettyPrinter( new DefaultPrettyPrinter() );
         jg.setCodec( new ObjectMapper() );
         return jg;
@@ -556,23 +556,21 @@ public class ExportServiceImpl implements ExportService {
         return outputFileName;
     }
 
+
     /**
      * handles the query and export of collections
-     * @param applicationUUID
-     * @param config
-     * @param export
-     * @param jobExecution
-     * @throws Exception
      */
     //TODO:Needs further refactoring.
-    protected ByteArrayOutputStream collectionExportAndQuery(UUID applicationUUID,final Map<String,Object> config,Export export,final JobExecution jobExecution) throws Exception{
+    protected File collectionExportAndQuery( UUID applicationUUID, final Map<String, Object> config, Export export,
+                                             final JobExecution jobExecution ) throws Exception {
 
         EntityManager em = emf.getEntityManager( applicationUUID );
         Map<String, Object> metadata = em.getApplicationCollectionMetadata();
         long starting_time = System.currentTimeMillis();
+        File ephemeral = new File( "tempExport" + starting_time );
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        JsonGenerator jg = getJsonGenerator( baos );
+
+        JsonGenerator jg = getJsonGenerator( ephemeral );
 
         jg.writeStartArray();
 
@@ -618,10 +616,7 @@ public class ExportServiceImpl implements ExportService {
         }
         jg.writeEndArray();
         jg.close();
-        baos.flush();
-        baos.close();
 
-        return baos;
+        return ephemeral;
     }
-
 }

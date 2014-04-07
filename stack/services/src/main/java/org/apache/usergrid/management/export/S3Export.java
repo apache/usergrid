@@ -17,7 +17,7 @@
 package org.apache.usergrid.management.export;
 
 
-import java.io.InputStream;
+import java.io.File;
 import java.util.Map;
 
 
@@ -26,7 +26,7 @@ import java.util.Map;
  *
  */
 public interface S3Export {
-    void copyToS3( InputStream inputStream, Map<String,Object> exportInfo, String filename );
+    void copyToS3( File ephemeral,Map<String,Object> exportInfo, String filename );
 
     String getFilename ();
 
