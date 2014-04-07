@@ -325,7 +325,6 @@ public class ExportServiceImpl implements ExportService {
     private void exportApplicationsFromOrg( UUID organizationUUID, final Map<String, Object> config,
                                             final JobExecution jobExecution, S3Export s3Export ) throws Exception {
 
-        //TODO: move extranous code out of these methods and make each one more distinct.
         //retrieves export entity
         Export export = getExportEntity( jobExecution );
         String appFileName = null;
@@ -352,8 +351,7 @@ public class ExportServiceImpl implements ExportService {
                               S3Export s3Export ) {
         try {
             s3Export.copyToS3( ephemeral, config, appFileName );
-            if(ephemeral.exists())
-                ephemeral.delete();
+
         }
         catch ( Exception e ) {
             export.setErrorMessage( e.getMessage() );
@@ -567,7 +565,7 @@ public class ExportServiceImpl implements ExportService {
         EntityManager em = emf.getEntityManager( applicationUUID );
         Map<String, Object> metadata = em.getApplicationCollectionMetadata();
         long starting_time = System.currentTimeMillis();
-        File ephemeral = new File( "tempExport" + starting_time );
+        File ephemeral = new File( "tempExport" + UUID.randomUUID() );
 
 
         JsonGenerator jg = getJsonGenerator( ephemeral );
@@ -611,10 +609,12 @@ public class ExportServiceImpl implements ExportService {
                     jg.writeObject( entity );
                     saveCollectionMembers( jg, em, ( String ) config.get( "collectionName" ), entity );
                     jg.writeEndObject();
+                    jg.flush();
                 }
             }
         }
         jg.writeEndArray();
+        jg.flush();
         jg.close();
 
         return ephemeral;
