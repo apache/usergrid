@@ -47,29 +47,6 @@ public class MockS3ExportImpl implements S3Export {
         catch ( IOException e ) {
             e.printStackTrace();
         }
-
-
-        //        Logger logger = LoggerFactory.getLogger( MockS3ExportImpl.class );
-//        int read = 0;
-//        byte[] bytes = new byte[1024];
-//        OutputStream outputStream = null;
-//
-//        try {
-//            outputStream = new FileOutputStream( new File( this.filename ) );
-//        }
-//        catch ( FileNotFoundException e ) {
-//            e.printStackTrace();
-//        }
-//
-//
-//        try {
-//            while ( ( read = ( inputStream.read( bytes ) ) ) != -1 ) {
-//                outputStream.write( bytes, 0, read );
-//            }
-//        }
-//        catch ( IOException e ) {
-//            e.printStackTrace();
-//        }
     }
 
     @Override
