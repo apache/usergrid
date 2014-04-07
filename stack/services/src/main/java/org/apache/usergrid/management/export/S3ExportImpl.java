@@ -99,7 +99,6 @@ public class S3ExportImpl implements S3Export {
 
 
             logger.info( "Uploaded file etag=" + futureETag.get() );
-            ephemeral.delete();
         }
         catch ( Exception e ) {
             logger.error( "Error uploading to blob store", e );

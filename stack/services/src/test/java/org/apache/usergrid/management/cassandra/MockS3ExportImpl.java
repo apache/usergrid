@@ -42,7 +42,6 @@ public class MockS3ExportImpl implements S3Export {
         File verfiedData = new File( this.filename );
         try {
             FileUtils.copyFile(ephemeral,verfiedData);
-            ephemeral.delete();
         }
         catch ( IOException e ) {
             e.printStackTrace();

@@ -566,6 +566,7 @@ public class ExportServiceImpl implements ExportService {
         Map<String, Object> metadata = em.getApplicationCollectionMetadata();
         long starting_time = System.currentTimeMillis();
         File ephemeral = new File( "tempExport" + UUID.randomUUID() );
+        ephemeral.deleteOnExit();
 
 
         JsonGenerator jg = getJsonGenerator( ephemeral );
