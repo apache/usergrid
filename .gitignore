@@ -35,5 +35,4 @@ stack/corepersistence/queryindex/nbactions.xml
 stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
 stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
 
-sdks/android/usergrid-android-client.iml
-sdks/java/usergrid-java-client.iml
+/portal/nbproject/private/
