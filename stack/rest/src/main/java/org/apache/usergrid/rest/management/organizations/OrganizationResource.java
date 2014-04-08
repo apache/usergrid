@@ -17,7 +17,9 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -25,30 +27,48 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import org.apache.amber.oauth2.common.exception.OAuthSystemException;
+import org.apache.amber.oauth2.common.message.OAuthResponse;
+
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.export.ExportService;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.management.organizations.applications.ApplicationsResource;
 import org.apache.usergrid.rest.management.organizations.users.UsersResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.apache.usergrid.rest.utils.JSONPUtils;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.ServiceResults;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
+
+import static javax.servlet.http.HttpServletResponse.SC_ACCEPTED;
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.OrganizationResource")
@@ -60,6 +80,9 @@ import com.sun.jersey.api.view.Viewable;
 public class OrganizationResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( OrganizationsResource.class );
+
+    @Autowired
+    protected ExportService exportService;
 
     OrganizationInfo organization;
 
@@ -251,5 +274,90 @@ public class OrganizationResource extends AbstractContextResource {
         management.updateOrganization( organization );
 
         return new JSONWithPadding( response, callback );
+    }
+
+    @POST
+    @Path("export")
+    @Consumes(APPLICATION_JSON)
+    @RequireOrganizationAccess
+    public Response exportPostJson( @Context UriInfo ui,Map<String, Object> json,
+                                    @QueryParam("callback") @DefaultValue("") String callback )
+            throws OAuthSystemException {
+
+
+        OAuthResponse response = null;
+        UUID jobUUID = null;
+        Map<String, String> uuidRet = new HashMap<String, String>();
+
+        Map<String,Object> properties;
+        Map<String, Object> storage_info;
+
+        try {
+            if((properties = ( Map<String, Object> )  json.get( "properties" )) == null){
+                throw new NullPointerException("Could not find 'properties'");
+            }
+            storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
+            String storage_provider = ( String ) properties.get( "storage_provider" );
+            if(storage_provider == null) {
+                throw new NullPointerException( "Could not find field 'storage_provider'" );
+            }
+            if(storage_info == null) {
+                throw new NullPointerException( "Could not find field 'storage_info'" );
+            }
+
+
+            String bucketName = ( String ) storage_info.get( "bucket_location" );
+            String accessId = ( String ) storage_info.get( "s3_access_id" );
+            String secretKey = ( String ) storage_info.get( "s3_key" );
+
+            if(bucketName == null) {
+                throw new NullPointerException( "Could not find field 'bucketName'" );
+            }
+            if(accessId == null) {
+                throw new NullPointerException( "Could not find field 's3_access_id'" );
+            }
+            if(secretKey == null) {
+                throw new NullPointerException( "Could not find field 's3_key'" );
+            }
+
+            json.put( "organizationId",organization.getUuid());
+
+            jobUUID = exportService.schedule( json );
+            uuidRet.put( "Export Entity", jobUUID.toString() );
+        }
+        catch ( NullPointerException e ) {
+            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+        }
+        catch ( Exception e ) {
+            //TODO:throw descriptive error message and or include on in the response
+            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
+            return Response.status( SC_INTERNAL_SERVER_ERROR ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+        }
+        return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
+    }
+
+    @GET
+    @RequireOrganizationAccess
+    @Path("export/{exportEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    public Response exportGetJson( @Context UriInfo ui, @PathParam("exportEntity") UUID exportEntityUUIDStr,
+                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
+
+        Export entity;
+        try {
+            entity = smf.getServiceManager( CassandraService.MANAGEMENT_APPLICATION_ID ).getEntityManager()
+                        .get( exportEntityUUIDStr, Export.class );
+        }
+        catch ( Exception e ) { //this might not be a bad request and needs better error checking
+            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+        }
+
+        if ( entity == null ) {
+            return Response.status( SC_BAD_REQUEST ).build();
+        }
+
+        return Response.status( SC_OK ).entity( entity).build();
     }
 }

@@ -27,7 +27,6 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.commons.lang.StringUtils;
@@ -49,7 +48,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 @Concurrent()
 public class ManagementResourceIT extends AbstractRestIT {
 
@@ -58,7 +59,9 @@ public class ManagementResourceIT extends AbstractRestIT {
     }
 
 
-    /** Test if we can reset our password as an admin */
+    /**
+     * Test if we can reset our password as an admin
+     */
     @Test
     public void setSelfAdminPasswordAsAdmin() {
 
@@ -70,7 +73,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // change the password as admin. The old password isn't required
         JsonNode node = resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
+                                  .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
 
         assertNull( getError( node ) );
 
@@ -80,8 +83,8 @@ public class ManagementResourceIT extends AbstractRestIT {
         data.put( "newpassword", "test" );
 
         node = resource().path( "/management/users/test/password" ).queryParam( "access_token", adminAccessToken )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, data );
+                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                         .post( JsonNode.class, data );
 
         assertNull( getError( node ) );
     }
@@ -104,7 +107,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         try {
             resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
+                      .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -128,8 +131,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // change the password as admin. The old password isn't required
         JsonNode node = resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, data );
+                                  .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                  .post( JsonNode.class, data );
 
         assertNull( getError( node ) );
 
@@ -142,14 +145,16 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // now change the password back
         node = resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, data );
+                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                         .post( JsonNode.class, data );
 
         assertNull( getError( node ) );
     }
 
 
-    /** Test that admins can't view organizations they're not authorized to view. */
+    /**
+     * Test that admins can't view organizations they're not authorized to view.
+     */
     @Test
     public void crossOrgsNotViewable() throws Exception {
 
@@ -162,8 +167,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         try {
             resource().path( String.format( "/management/orgs/%s", orgInfo.getOrganization().getName() ) )
-                    .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
+                      .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -176,8 +181,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         try {
             resource().path( String.format( "/management/orgs/%s", orgInfo.getOrganization().getUuid() ) )
-                    .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
+                      .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -190,7 +195,8 @@ public class ManagementResourceIT extends AbstractRestIT {
         status = null;
         try {
             resource().path( "/management/orgs/test-organization" ).queryParam( "access_token", adminAccessToken )
-                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                      .get( JsonNode.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -203,8 +209,8 @@ public class ManagementResourceIT extends AbstractRestIT {
         status = null;
         try {
             resource().path( String.format( "/management/orgs/%s", org.getUuid() ) )
-                    .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
+                      .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -217,100 +223,102 @@ public class ManagementResourceIT extends AbstractRestIT {
     @Test
     public void mgmtUserFeed() throws Exception {
         JsonNode userdata = resource().path( "/management/users/test@usergrid.com/feed" )
-                .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                .get( JsonNode.class );
+                                      .queryParam( "access_token", adminAccessToken )
+                                      .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
         assertTrue( StringUtils.contains( this.getEntity( userdata, 0 ).get( "title" ).asText(),
                 "<a href=\"mailto:test@usergrid.com\">" ) );
     }
 
-    /** Test that we can support over 10 items in feed. */
+
+    /**
+     * Test that we can support over 10 items in feed.
+     */
     @Test
     public void mgmtFollowsUserFeed() throws Exception {
         List<String> users1 = new ArrayList<String>();
         int i;
         //try with 10 users
-        for(i = 0; i<10;i++){
-            users1.add("follower" + Integer.toString(i));
+        for ( i = 0; i < 10; i++ ) {
+            users1.add( "follower" + Integer.toString( i ) );
         }
-        checkFeed("leader1",users1);
+        checkFeed( "leader1", users1 );
         //try with 11
         List<String> users2 = new ArrayList<String>();
-        for(i =20; i<31;i++){
-            users2.add("follower" + Integer.toString(i));
+        for ( i = 20; i < 31; i++ ) {
+            users2.add( "follower" + Integer.toString( i ) );
         }
-        checkFeed("leader2",users2);
+        checkFeed( "leader2", users2 );
     }
 
-    private void checkFeed(String leader, List<String> followers){
+
+    private void checkFeed( String leader, List<String> followers ) {
         JsonNode userFeed;
         //create user
-        createUser(leader);
-        String preFollowContent = leader+": pre-something to look for " + UUID.randomUUID().toString();
-        addActivity(leader, leader + " " + leader + "son", preFollowContent);
-        String lastUser = followers.get(followers.size()-1);
+        createUser( leader );
+        String preFollowContent = leader + ": pre-something to look for " + UUID.randomUUID().toString();
+        addActivity( leader, leader + " " + leader + "son", preFollowContent );
+        String lastUser = followers.get( followers.size() - 1 );
         int i = 0;
-        for(String user : followers){
-            createUser(user);
-            follow(user,leader);
+        for ( String user : followers ) {
+            createUser( user );
+            follow( user, leader );
         }
-        userFeed = getUserFeed(lastUser);
-        assertTrue(userFeed.size()==1);
+        userFeed = getUserFeed( lastUser );
+        assertTrue( userFeed.size() == 1 );
 
         //retrieve feed
-        userFeed = getUserFeed(lastUser);
-        assertTrue(userFeed.size()==1);
-        String postFollowContent = leader+": something to look for " + UUID.randomUUID().toString();
-        addActivity(leader,leader+" "+leader+"son",postFollowContent);
+        userFeed = getUserFeed( lastUser );
+        assertTrue( userFeed.size() == 1 );
+        String postFollowContent = leader + ": something to look for " + UUID.randomUUID().toString();
+        addActivity( leader, leader + " " + leader + "son", postFollowContent );
         //check feed
-        userFeed = getUserFeed(lastUser);
-        assertNotNull(userFeed);
-        assertTrue(userFeed.size()>1);
+        userFeed = getUserFeed( lastUser );
+        assertNotNull( userFeed );
+        assertTrue( userFeed.size() > 1 );
         String serialized = userFeed.toString();
-        assertTrue(serialized.indexOf(postFollowContent)>0);
-        assertTrue(serialized.indexOf(preFollowContent)>0);
+        assertTrue( serialized.indexOf( postFollowContent ) > 0 );
+        assertTrue( serialized.indexOf( preFollowContent ) > 0 );
     }
 
-    private void createUser(String username){
+
+    private void createUser( String username ) {
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put( "username", username );
-        resource().path( "/test-organization/test-app/users" )
-                .queryParam("access_token", access_token)
-                .accept( MediaType.APPLICATION_JSON )
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, payload);
-
-    }
-    private JsonNode getUserFeed(String username){
-        JsonNode userFeed = resource().path( "/test-organization/test-app/users/"+username+"/feed" )
-                .queryParam( "access_token", access_token )
-                .accept(MediaType.APPLICATION_JSON)
-                .get( JsonNode.class );
-        return userFeed.get("entities");
+        resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
+                  .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                  .post( JsonNode.class, payload );
     }
 
-    private void follow(String user, String followUser){
+
+    private JsonNode getUserFeed( String username ) {
+        JsonNode userFeed = resource().path( "/test-organization/test-app/users/" + username + "/feed" )
+                                      .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                                      .get( JsonNode.class );
+        return userFeed.get( "entities" );
+    }
+
+
+    private void follow( String user, String followUser ) {
         //post follow
-        resource().path( "/test-organization/test-app/users/"+user+"/following/users/"+followUser )
-                .queryParam("access_token", access_token)
-                .accept( MediaType.APPLICATION_JSON )
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, new HashMap<String, String>());
+        resource().path( "/test-organization/test-app/users/" + user + "/following/users/" + followUser )
+                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                  .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, new HashMap<String, String>() );
     }
 
-    private void addActivity(String user,String name, String content){
-        Map<String,Object> activityPayload = new HashMap<String, Object>();
-        activityPayload.put("content",content);
-        activityPayload.put("verb","post");
-        Map<String,String> actorMap = new HashMap<String, String>();
-        actorMap.put("displayName",name);
-        actorMap.put("username",user);
-        activityPayload.put("actor",actorMap);
-        resource().path("/test-organization/test-app/users/"+user+"/activities")
-                .queryParam("access_token", access_token)
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(JsonNode.class, activityPayload);
+
+    private void addActivity( String user, String name, String content ) {
+        Map<String, Object> activityPayload = new HashMap<String, Object>();
+        activityPayload.put( "content", content );
+        activityPayload.put( "verb", "post" );
+        Map<String, String> actorMap = new HashMap<String, String>();
+        actorMap.put( "displayName", name );
+        actorMap.put( "username", user );
+        activityPayload.put( "actor", actorMap );
+        resource().path( "/test-organization/test-app/users/" + user + "/activities" )
+                  .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                  .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, activityPayload );
     }
+
 
     @Test
     public void mgmtCreateAndGetApplication() throws Exception {
@@ -321,8 +329,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // POST /applications
         JsonNode appdata = resource().path( "/management/orgs/" + orgInfo.getUuid() + "/applications" )
-                .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
+                                     .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
+                                     .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
         logNode( appdata );
         appdata = getEntity( appdata, 0 );
 
@@ -332,8 +340,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // GET /applications/mgmt-org-app
         appdata = resource().path( "/management/orgs/" + orgInfo.getUuid() + "/applications/mgmt-org-app" )
-                .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                            .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
+                            .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         logNode( appdata );
 
         assertEquals( "test-organization", appdata.get( "organization" ).asText() );
@@ -353,8 +361,9 @@ public class ManagementResourceIT extends AbstractRestIT {
         long ttl = 2000;
 
         JsonNode node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
-                .queryParam( "ttl", String.valueOf( ttl ) ).accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                                  .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
+                                  .queryParam( "ttl", String.valueOf( ttl ) ).accept( MediaType.APPLICATION_JSON )
+                                  .get( JsonNode.class );
 
         long startTime = System.currentTimeMillis();
 
@@ -363,7 +372,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertNotNull( token );
 
         JsonNode userdata = resource().path( "/management/users/test@usergrid.com" ).queryParam( "access_token", token )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                                      .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
 
         assertEquals( "test@usergrid.com", userdata.get( "data" ).get( "email" ).asText() );
 
@@ -373,7 +382,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         Status responseStatus = null;
         try {
             userdata = resource().path( "/management/users/test@usergrid.com" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                                 .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -386,8 +395,8 @@ public class ManagementResourceIT extends AbstractRestIT {
     @Test
     public void token() throws Exception {
         JsonNode node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                                  .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
+                                  .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
 
         logNode( node );
         String token = node.get( "access_token" ).getTextValue();
@@ -399,12 +408,12 @@ public class ManagementResourceIT extends AbstractRestIT {
         properties.put( "securityLevel", 5 );
         payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
         node = resource().path( "/management/organizations/test-organization" )
-                .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
+                         .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
 
         // ensure the organization property is included
         node = resource().path( "/management/token" ).queryParam( "access_token", token )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
         logNode( node );
 
         JsonNode securityLevel = node.findValue( "securityLevel" );
@@ -416,15 +425,15 @@ public class ManagementResourceIT extends AbstractRestIT {
     @Test
     public void meToken() throws Exception {
         JsonNode node = resource().path( "/management/me" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                                  .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "test" )
+                                  .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
 
         logNode( node );
         String token = node.get( "access_token" ).getTextValue();
         assertNotNull( token );
 
         node = resource().path( "/management/me" ).queryParam( "access_token", token )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
         logNode( node );
 
         assertNotNull( node.get( "passwordChanged" ) );
@@ -452,7 +461,7 @@ public class ManagementResourceIT extends AbstractRestIT {
                 hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" );
 
         JsonNode node = resource().path( "/management/me" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                                  .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
 
         logNode( node );
         String token = node.get( "access_token" ).getTextValue();
@@ -460,7 +469,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertNotNull( token );
 
         node = resource().path( "/management/me" ).queryParam( "access_token", token )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
         logNode( node );
     }
 
@@ -471,12 +480,11 @@ public class ManagementResourceIT extends AbstractRestIT {
         Form form = new Form();
         form.add( "grant_type", "password" );
         form.add( "username", "test@usergrid.com" );
-        form.add( "password", "test");
+        form.add( "password", "test" );
 
-        JsonNode node = resource().path( "/management/me" )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-                .entity( form, MediaType.APPLICATION_FORM_URLENCODED_TYPE )
-                .post( JsonNode.class );
+        JsonNode node = resource().path( "/management/me" ).accept( MediaType.APPLICATION_JSON )
+                                  .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
+                                  .entity( form, MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( JsonNode.class );
 
         logNode( node );
         String token = node.get( "access_token" ).getTextValue();
@@ -484,7 +492,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertNotNull( token );
 
         node = resource().path( "/management/me" ).queryParam( "access_token", token )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                         .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
         logNode( node );
     }
 
@@ -494,12 +502,12 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         Map<String, String> payload =
                 hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
-                        .map( "ttl", "derp" );
+                                                   .map( "ttl", "derp" );
 
         Status responseStatus = null;
         try {
             resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                      .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -514,13 +522,13 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         Map<String, String> payload =
                 hashMap( "grant_type", "password" ).map( "username", "test@usergrid.com" ).map( "password", "test" )
-                        .map( "ttl", Long.MAX_VALUE + "" );
+                                                   .map( "ttl", Long.MAX_VALUE + "" );
 
         Status responseStatus = null;
 
         try {
             resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                      .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -536,20 +544,22 @@ public class ManagementResourceIT extends AbstractRestIT {
         String token2 = super.adminToken();
 
         JsonNode response = resource().path( "/management/users/test" ).queryParam( "access_token", token1 )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                      .get( JsonNode.class );
 
         assertEquals( "test@usergrid.com", response.get( "data" ).get( "email" ).asText() );
 
         response = resource().path( "/management/users/test" ).queryParam( "access_token", token2 )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                             .get( JsonNode.class );
 
         assertEquals( "test@usergrid.com", response.get( "data" ).get( "email" ).asText() );
 
         // now revoke the tokens
         response =
                 resource().path( "/management/users/test/revoketokens" ).queryParam( "access_token", superAdminToken() )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( JsonNode.class );
+                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                          .post( JsonNode.class );
 
         // the tokens shouldn't work
 
@@ -557,7 +567,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         try {
             response = resource().path( "/management/users/test" ).queryParam( "access_token", token1 )
-                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                 .get( JsonNode.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -569,7 +580,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         try {
             response = resource().path( "/management/users/test" ).queryParam( "access_token", token2 )
-                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                 .get( JsonNode.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -581,19 +593,21 @@ public class ManagementResourceIT extends AbstractRestIT {
         String token4 = super.adminToken();
 
         response = resource().path( "/management/users/test" ).queryParam( "access_token", token3 )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                             .get( JsonNode.class );
 
         assertEquals( "test@usergrid.com", response.get( "data" ).get( "email" ).asText() );
 
         response = resource().path( "/management/users/test" ).queryParam( "access_token", token4 )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                             .get( JsonNode.class );
 
         assertEquals( "test@usergrid.com", response.get( "data" ).get( "email" ).asText() );
 
         // now revoke the token3
         response = resource().path( "/management/users/test/revoketoken" ).queryParam( "access_token", token3 )
-                .queryParam( "token", token3 ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                             .queryParam( "token", token3 ).accept( MediaType.APPLICATION_JSON )
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
 
         // the token3 shouldn't work
 
@@ -601,7 +615,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         try {
             response = resource().path( "/management/users/test" ).queryParam( "access_token", token3 )
-                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                 .get( JsonNode.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -613,7 +628,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         try {
             response = resource().path( "/management/users/test" ).queryParam( "access_token", token4 )
-                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                 .get( JsonNode.class );
 
             status = Status.OK;
         }
@@ -624,484 +640,4 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertEquals( Status.OK, status );
     }
 
-
-    @Test
-    public void exportCallSuccessful() throws Exception {
-        Status responseStatus = Status.OK;
-        JsonNode node = null;
-
-        HashMap<String, Object> payload = payloadBuilder();
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertEquals( Status.OK, responseStatus );
-    }
-
-//is this test still valid knowing that the sch. won't run in intelliJ?
-    @Ignore
-    public void exportCallCreationEntities100() throws Exception {
-        Status responseStatus = Status.OK;
-        JsonNode node = null;
-
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        //TODO: make sure to put a valid admin token here.
-        //TODO: always put dummy values here and ignore this test.
-
-
-        properties.put( "storage_provider", "s3" );
-        properties.put( "storage_info", storage_info );
-
-        payload.put( "properties", properties );
-
-        for ( int i = 0; i < 100; i++ ) {
-            Map<String, String> userCreation = hashMap( "type", "app_user" ).map( "name", "fred" + i );
-
-            node = resource().path( "/test-organization/test-app/app_users" ).queryParam( "access_token", access_token )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .post( JsonNode.class, userCreation );
-        }
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" ).queryParam(
-                    "access_token", adminToken() )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .post( JsonNode.class, payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertEquals( Status.OK, responseStatus );
-    }
-
-    @Test
-    public void exportApplicationUUIDRetTest() throws Exception {
-        Status responseStatus = Status.ACCEPTED;
-        String uuid;
-        UUID jobUUID = null;
-        JsonNode node = null;
-
-
-        HashMap<String, Object> payload = payloadBuilder();
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertEquals( Status.ACCEPTED, responseStatus );
-        assertNotNull( node.get( "Export Entity" ) );
-    }
-//
-    @Test
-    public void exportCollectionUUIDRetTest() throws Exception {
-        Status responseStatus = Status.ACCEPTED;
-        String uuid;
-        UUID jobUUID = null;
-        JsonNode node = null;
-
-
-        HashMap<String, Object> payload = payloadBuilder();
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertEquals( Status.ACCEPTED, responseStatus );
-        assertNotNull( node.get( "Export Entity" ) );
-    }
-
-
-    /*Make a test with an invalid uuid and a wrong uuid.*/
-    //all tests should be moved to OrganizationResourceIT ( *not* Organizations there is a difference)
-    @Test
-    public void exportGetApplicationJobStatTest() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-
-        HashMap<String, Object> payload = payloadBuilder();
-
-        node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                         .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-        String uuid = String.valueOf( node.get( "Export Entity" ) );
-        uuid = uuid.replaceAll( "\"", "" );
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export/" + uuid )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-
-        assertEquals( Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.asText() );//TODO: do tests for other states in service tier
-    }
-
-    @Test
-    public void exportGetCollectionJobStatTest() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-
-        HashMap<String, Object> payload = payloadBuilder();
-
-        node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                         .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
-        String uuid = String.valueOf( node.get( "Export Entity" ) );
-        uuid = uuid.replaceAll( "\"", "" );
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export/" + uuid )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-
-
-        assertEquals( Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.asText() );//TODO: do tests for other states in service tier
-    }
-
-
-//    //do an unauthorized test for both post and get
-    @Test
-    public void exportGetWrongUUID() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-        UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export/" + fake )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-    }
-//
-    @Test
-    public void exportPostApplicationNullPointerProperties() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "bucket_location", "insert bucket name here" );
-
-
-        properties.put( "storage_provider", "s3" );
-        properties.put( "storage_info", storage_info );
-
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-    }
-//
-    @Test
-    public void exportPostCollectionNullPointer() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "bucket_location", "insert bucket name here" );
-
-
-        properties.put( "storage_provider", "s3" );
-        properties.put( "storage_info", storage_info );
-
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-    }
-//
-//
-    @Test
-    public void exportGetCollectionUnauthorized() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-        UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export/" + fake )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.UNAUTHORIZED, responseStatus );
-    }
-//
-    @Test
-    public void exportGetApplicationUnauthorized() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-        UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export/" + fake )
-                             .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.UNAUTHORIZED, responseStatus );
-    }
-
-    @Test
-    public void exportPostApplicationNullPointerStorageInfo() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-
-        HashMap<String, Object> payload = payloadBuilder();
-        HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get("properties");
-        //remove storage_info field
-        properties.remove( "storage_info" );
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-    }
-
-    @Test
-    public void exportPostCollectionNullPointerStorageInfo() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-
-        HashMap<String, Object> payload = payloadBuilder();
-        HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get("properties");
-        //remove storage_info field
-        properties.remove( "storage_info" );
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-    }
-
-    @Test
-    public void exportPostApplicationNullPointerStorageProvider() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-
-        HashMap<String, Object> payload = payloadBuilder();
-        HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get("properties");
-        //remove storage_info field
-        properties.remove( "storage_provider" );
-
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-    }
-
-    @Test
-    public void exportPostCollectionNullPointerStorageProvider() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-
-        HashMap<String, Object> payload = payloadBuilder();
-        HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get("properties");
-        //remove storage_info field
-        properties.remove( "storage_provider" );
-
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-    }
-
-    @Test
-    public void exportPostApplicationNullPointerStorageVerification() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-
-        HashMap<String, Object> payload = payloadBuilder();
-        HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get("properties");
-        HashMap<String, Object> storage_info = ( HashMap<String, Object> ) properties.get("storage_info");
-        //remove storage_key field
-        storage_info.remove( "s3_key" );
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-
-        payload = payloadBuilder();
-        properties = ( HashMap<String, Object> ) payload.get("properties");
-        storage_info = ( HashMap<String, Object> ) properties.get("storage_info");
-        //remove storage_key field
-        storage_info.remove( "s3_access_id" );
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-
-        payload = payloadBuilder();
-        properties = ( HashMap<String, Object> ) payload.get("properties");
-        storage_info = ( HashMap<String, Object> ) properties.get("storage_info");
-        //remove storage_key field
-        storage_info.remove( "bucket_location" );
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-
-    }
-
-    @Test
-    public void exportPostCollectionNullPointerStorageVerification() throws Exception {
-        JsonNode node = null;
-        Status responseStatus = Status.OK;
-
-        HashMap<String, Object> payload = payloadBuilder();
-        HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get("properties");
-        HashMap<String, Object> storage_info = ( HashMap<String, Object> ) properties.get("storage_info");
-        //remove storage_key field
-        storage_info.remove( "s3_key" );
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-
-        payload = payloadBuilder();
-        properties = ( HashMap<String, Object> ) payload.get("properties");
-        storage_info = ( HashMap<String, Object> ) properties.get("storage_info");
-        //remove storage_key field
-        storage_info.remove( "s3_access_id" );
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-
-        payload = payloadBuilder();
-        properties = ( HashMap<String, Object> ) payload.get("properties");
-        storage_info = ( HashMap<String, Object> ) properties.get("storage_info");
-        storage_info.remove( "bucket_location" );
-
-        try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
-                             .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class,payload );
-        }
-        catch ( UniformInterfaceException uie ) {
-            responseStatus = uie.getResponse().getClientResponseStatus();
-        }
-        assertEquals( Status.BAD_REQUEST, responseStatus );
-
-    }
-
-
-    /*Creates fake payload for testing purposes.*/
-    public HashMap<String, Object> payloadBuilder() {
-        HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "s3_key", "insert key here" );
-        storage_info.put( "s3_access_id", "insert access id here" );
-        storage_info.put( "bucket_location", "insert bucket name here" );
-        properties.put( "storage_provider", "s3" );
-        properties.put( "storage_info", storage_info );
-        payload.put( "properties", properties );
-        return payload;
-    }
 }
