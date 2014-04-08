@@ -45,8 +45,8 @@ module.exports = function (grunt) {
             'js/libs/ui-bootstrap/ui-bootstrap-custom-tpls-0.3.0.min.js',
             'js/libs/jqueryui/jquery-ui-1.8.18.min.js',
             'js/libs/jqueryui/date.min.js',
-            'bower_components/angular-intro.js/angular-intro.js',
-            'bower_components/intro.js/minified/intro.min.js'
+            'bower_components/intro.js/minified/intro.min.js',
+            'bower_components/angular-intro.js/src/angular-intro.js',
           ]
         }
       },
@@ -403,7 +403,7 @@ module.exports = function (grunt) {
   grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','karma:unit']);
   grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
 
-  grunt.registerTask('default', ['build','karma:unit']);
+  grunt.registerTask('default', ['build']);
 
   grunt.registerTask('e2e', ['connect:e2e-phantom','protractor:phantom']);
   grunt.registerTask('e2e-chrome', ['connect:e2e-chrome','protractor:chrome']);
