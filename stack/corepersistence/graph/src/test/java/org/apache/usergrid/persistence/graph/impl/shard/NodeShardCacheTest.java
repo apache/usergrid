@@ -250,7 +250,7 @@ public class NodeShardCacheTest {
 
     private GraphFig getFigMock() {
         final GraphFig graphFig = mock( GraphFig.class );
-        when( graphFig.getCacheSize() ).thenReturn( 1000 );
+        when( graphFig.getShardCacheSize() ).thenReturn( 1000 );
         when( graphFig.getCacheTimeout() ).thenReturn( 30000l );
 
         return graphFig;

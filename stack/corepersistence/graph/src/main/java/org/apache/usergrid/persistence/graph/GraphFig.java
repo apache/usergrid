@@ -53,7 +53,9 @@ public interface GraphFig extends GuicyFig {
 
     public static final String CACHE_SIZE = "usergrid.graph.shard.size";
 
-    public static final String COUNTER_PRECISION_LOSS = "usergrid.graph.counter.precision.loss";
+    public static final String SHARD_CACHE_TIMEOUT = "usergrid.graph.shard.cache.timeout";
+
+    public static final String COUNTER_PRECISION_LOSS = "usergrid.graph.shard.counter.precision.loss";
 
     @Default( "1000" )
     @Key(SCAN_PAGE_SIZE)
@@ -97,7 +99,7 @@ public interface GraphFig extends GuicyFig {
 
     @Default( "10000" )
     @Key( CACHE_SIZE )
-    int getCacheSize();
+    int getShardCacheSize();
 
     @Default( "30000" )
     @Key( CACHE_TIMEOUT )
@@ -105,6 +107,13 @@ public interface GraphFig extends GuicyFig {
 
     @Default(".02")
     @Key(COUNTER_PRECISION_LOSS)
-    double getCounterPrecisionLoss();
+    double getShardCounterPrecisionLoss();
+
+
+    @Default( "10000" )
+    @Key(SHARD_CACHE_TIMEOUT)
+    long getShardCacheTimeout();
+
+
 }
 

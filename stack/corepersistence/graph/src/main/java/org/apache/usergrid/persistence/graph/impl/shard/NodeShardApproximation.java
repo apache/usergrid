@@ -29,7 +29,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 /**
  * Interface for creating approximate estimates of shards
  */
-public interface TimeShardApproximation {
+public interface NodeShardApproximation {
 
 
     /**

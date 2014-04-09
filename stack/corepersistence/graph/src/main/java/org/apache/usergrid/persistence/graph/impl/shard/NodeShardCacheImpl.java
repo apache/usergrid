@@ -121,7 +121,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
      */
     private void updateCache() {
 
-        this.graphs = CacheBuilder.newBuilder().maximumSize( graphFig.getCacheSize() )
+        this.graphs = CacheBuilder.newBuilder().maximumSize( graphFig.getShardCacheSize() )
                                   .expireAfterWrite( graphFig.getCacheTimeout(), TimeUnit.MILLISECONDS )
                                   .build( new CacheLoader<CacheKey, CacheEntry>() {
 

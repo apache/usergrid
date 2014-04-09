@@ -26,6 +26,8 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.clearspring.analytics.stream.cardinality.HyperLogLog;
+import com.google.common.base.Optional;
 import com.netflix.astyanax.MutationBatch;
 
 
@@ -54,28 +56,52 @@ public interface EdgeSeriesCounterSerialization {
      * Write a new time shard for the meta data
      * @param scope The scope to write
      * @param nodeId The id in the edge
-     * @param slice The next time to write
+     * @param shardId The shard Id to use
      * @param types The types to write to.  Can be edge type, or edgeType+id type
      */
-    public MutationBatch incrementMetadataCount( OrganizationScope scope, Id nodeId, UUID slice, int count,  String... types );
+    public MutationBatch writeMetaDataLog( OrganizationScope scope, Id nodeId, UUID shardId, HyperLogLog log, UUID workerId, String... types );
 
     /**
-     * Get an iterator of all meta data and types
-     * @param scope The organization scope
-     * @param nodeId The id of the node
-     * @param types The types to use
-     * @return The current count
+     * return all persistent instance of the hyperlog log
+     * @param scope
+     * @param nodeId
+     * @param shardId
+     * @param types
+     * @return
      */
-    public long getEdgeMetadataCount( OrganizationScope scope, Id nodeId, String... types );
+
+    public List<HyperLogLog> getMetadataLog( OrganizationScope scope, Id nodeId, UUID shardId, String... types );
+
+    /**
+     * Get the most recent rollup of all of the given summations.  If one is not present the optional will be empty
+     * @param scope
+     * @param nodeId
+     * @param shardId
+     * @param types
+     * @return
+     */
+    public Optional<HyperLogLog> getSummationLog(OrganizationScope scope, Id nodeId, UUID shardId, String... types);
+
+    /**
+     * Write the summation log.  Uses the timestamp passed in the column
+     * @param scope The scope to write
+     * @param nodeId The id in the edge
+     * @param shardId The shard Id to use
+     * @param log The log to write
+     * @param creatorId The identifier of this writer
+     * @param types The types to write to.  Can be edge type, or edgeType+id type
+     */
+    public MutationBatch writeSummationLog( OrganizationScope scope, Id nodeId, UUID shardId, HyperLogLog log, UUID workerId,  String... types );
+
 
     /**
      * Remove the slice from the edge meta data from the types.
      * @param scope
      * @param nodeId
-     * @param slice
+     * @param shardId
      * @param types
      * @return
      */
-    public MutationBatch removeEdgeMetadataCount( OrganizationScope scope, Id nodeId, UUID slice, String... types );
+    public MutationBatch removeEdgeMetadataCount( OrganizationScope scope, Id nodeId, UUID shardId, String... types );
 
 }

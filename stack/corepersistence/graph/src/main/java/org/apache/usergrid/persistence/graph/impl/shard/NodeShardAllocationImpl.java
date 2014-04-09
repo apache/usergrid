@@ -144,6 +144,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     public void increment( final OrganizationScope scope, final Id nodeId, final UUID shardId, final int count,
                            final String... edgeType ) {
         //delegate
-        edgeSeriesCounterSerialization.incrementMetadataCount( scope, nodeId, shardId, count, edgeType );
+//        edgeSeriesCounterSerialization.incrementMetadataCount( scope, nodeId, shardId, count, edgeType );
     }
 }
