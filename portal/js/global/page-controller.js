@@ -1,31 +1,20 @@
 'use strict'
 
-AppServices.Controllers.controller('PageCtrl', [
-  'ug',
-  'help',
-  'utility',
-  '$scope',
-  '$rootScope',
-  '$location',
-  '$routeParams',
-  '$q',
-  '$route',
-  '$log',
-  '$analytics',
-  function(
-    ug,
-    help,
-    utility,
-    $scope,
-    $rootScope,
-    $location,
-    $routeParams,
-    $q,
-    $route,
-    $log,
-    $analytics) {
+AppServices.Controllers.controller('PageCtrl',
+  ['ug', 'help', 'utility', '$scope',  '$rootScope', '$location', '$routeParams', '$q', '$route', '$log', '$analytics', '$sce',
+   function(ug, help, utility, $scope, $rootScope, $location, $routeParams, $q, $route, $log, $analytics, $sce) {
 
     var initScopeVariables = function() {
+      var menuItems = Usergrid.options.menuItems;
+      for(var i=0;i<menuItems.length;i++){
+        menuItems[i].pic = $sce.trustAsHtml( menuItems[i].pic);
+        if(menuItems[i].items) {
+          for (var j = 0; j < menuItems[i].items.length; j++) {
+            menuItems[i].items[j].pic = $sce.trustAsHtml( menuItems[i].items[j].pic);
+          }
+        }
+      }
+      $scope.menuItems = Usergrid.options.menuItems;
       //$rootScope.urls()... will determine which URL should be used for a given environment
       $scope.loadingText = 'Loading...';
       $scope.use_sso = false;
