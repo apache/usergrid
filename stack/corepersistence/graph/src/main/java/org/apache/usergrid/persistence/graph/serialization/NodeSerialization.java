@@ -50,7 +50,7 @@ public interface NodeSerialization {
 
 
     /**
-     * Delete the mark entry, signaling a delete is complete
+     * EdgeDelete the mark entry, signaling a delete is complete
      * @param scope
      * @param node
      * @return

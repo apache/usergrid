@@ -33,7 +33,8 @@ describe('PageCtrl', function(){
         '$routeParams':{},
         '$q':{},
         '$route':{},
-        '$log':{}
+        '$log':{},
+        '$analytics':{}
       });
     });
   });

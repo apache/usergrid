@@ -24,8 +24,8 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessObserver;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.EdgeManager;
-import org.apache.usergrid.persistence.graph.EdgeManagerFactory;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -38,13 +38,13 @@ import com.google.inject.Singleton;
 @Singleton
 public class CollectionIndexObserver implements PostProcessObserver {
 
-    private final EdgeManagerFactory edgeManagerFactory;
+    private final GraphManagerFactory graphManagerFactory;
 
 
     @Inject
-    public CollectionIndexObserver( final EdgeManagerFactory edgeManagerFactory ) {
-        Preconditions.checkNotNull( edgeManagerFactory, "edgeManagerFactory cannot be null" );
-        this.edgeManagerFactory = edgeManagerFactory;
+    public CollectionIndexObserver( final GraphManagerFactory graphManagerFactory ) {
+        Preconditions.checkNotNull( graphManagerFactory, "graphManagerFactory cannot be null" );
+        this.graphManagerFactory = graphManagerFactory;
     }
 
 
@@ -53,7 +53,7 @@ public class CollectionIndexObserver implements PostProcessObserver {
     public void postCommit( final CollectionScope scope, final MvccEntity entity ) {
 
         //get the edge manager for the org scope
-        EdgeManager em = edgeManagerFactory.createEdgeManager( scope );
+        GraphManager em = graphManagerFactory.createEdgeManager( scope );
 
         /**
          * create an edge from owner->entity of the type name in the scope.

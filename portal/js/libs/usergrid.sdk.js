@@ -98,6 +98,10 @@ Usergrid.Client.prototype.request = function (options, callback) {
   if (self.getToken()) {
     qs.access_token = self.getToken();
   }
+  var developerkey=this.get("developerkey");
+  if (developerkey) {
+    qs.developer_key = developerkey;
+  }
   //append params to the path
   var encoded_params = encodeParams(qs);
   if (encoded_params) {
@@ -1010,6 +1014,7 @@ Usergrid.Client.prototype.logout = function () {
   this.set('orgName', null);
   this.set('appName', null);
   this.set('email', null);
+  this.set("developerkey", null);
 }
 
 /*

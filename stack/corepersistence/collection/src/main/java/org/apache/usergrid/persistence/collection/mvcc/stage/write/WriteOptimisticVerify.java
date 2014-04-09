@@ -8,7 +8,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import rx.util.functions.Func1;
+import rx.functions.Func1;
 
 
 /**

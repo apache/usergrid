@@ -2,11 +2,13 @@ var Usergrid = Usergrid || {};
 
 Usergrid.showNotifcations = true;
 
+
 // used only if hostname does not match a real server name
 Usergrid.overrideUrl = 'https://api.usergrid.com/';
 
 Usergrid.options = {
   client:{
+    requiresDeveloperKey:false
    // apiKey:'123456'
   },
   showAutoRefresh:true,
@@ -74,7 +76,10 @@ Usergrid.regex = {
   collectionNameRegexDescription: "Collection name only allows : a-z A-Z 0-9. Must be between 3-25 characters."
 };
 try{
-  if(module && module.exports){
-    module.exports = Usergrid;
+  if (typeof module !== 'undefined'){
+
+    if(module && module.exports){
+      module.exports = Usergrid;
+  }
   }
 }catch(e){}

@@ -28,19 +28,16 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.hystrix.CommandUtils;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.netflix.config.ConfigurationManager;
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.concurrency.Schedulers;
-import rx.util.functions.Func1;
-import rx.util.functions.FuncN;
+import rx.functions.Func1;
+import rx.functions.FuncN;
+import rx.schedulers.Schedulers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -53,13 +50,13 @@ public class ParallelTest {
 
     private static final Logger logger = LoggerFactory.getLogger( ParallelTest.class );
 
-
-    private static final HystrixCommandGroupKey GROUP_KEY = HystrixCommandGroupKey.Factory.asKey( "TEST_KEY" );
-
-
-    public static final String THREAD_POOL_SIZE = CommandUtils.getThreadPoolCoreSize( GROUP_KEY.name() );
-
-    public static final String THREAD_POOL_QUEUE = CommandUtils.getThreadPoolMaxQueueSize( GROUP_KEY.name() );
+//
+//    private static final HystrixCommandGroupKey GROUP_KEY = HystrixCommandGroupKey.Factory.asKey( "TEST_KEY" );
+//
+//
+//    public static final String THREAD_POOL_SIZE = CommandUtils.getThreadPoolCoreSize( GROUP_KEY.name() );
+//
+//    public static final String THREAD_POOL_QUEUE = CommandUtils.getThreadPoolMaxQueueSize( GROUP_KEY.name() );
 
 
     /**
@@ -82,14 +79,14 @@ public class ParallelTest {
         //        final Scheduler scheduler = Schedulers.threadPoolForComputation();
 
         //use the I/O scheduler to allow enough thread, otherwise our pool will be the same size as the # of cores
-        final Scheduler scheduler = Schedulers.threadPoolForIO();
+
 
         //set our size equal
-        ConfigurationManager.getConfigInstance().setProperty( THREAD_POOL_SIZE, size );
+//        ConfigurationManager.getConfigInstance().setProperty( THREAD_POOL_SIZE, size );
         //        ConfigurationManager.getConfigInstance().setProperty( THREAD_POOL_SIZE, 10 );
 
         //reject requests we have to queue
-        ConfigurationManager.getConfigInstance().setProperty( THREAD_POOL_QUEUE, -1 );
+//        ConfigurationManager.getConfigInstance().setProperty( THREAD_POOL_QUEUE, -1 );
 
         //latch used to make each thread block to prove correctness
         final CountDownLatch latch = new CountDownLatch( size );
@@ -105,7 +102,7 @@ public class ParallelTest {
          *  non blocking?
          */
 
-        final Observable<String> observable = Observable.from( input ).observeOn( scheduler );
+        final Observable<String> observable = Observable.from( input ).observeOn( Schedulers.io() );
 
 
         Observable<Integer> thing = observable.mapMany( new Func1<String, Observable<Integer>>() {
@@ -127,7 +124,7 @@ public class ParallelTest {
                     /**
                      * QUESTION: Should this again be the process thread, not the I/O
                      */
-                    Observable<String> newObservable = Observable.from( input ).subscribeOn( scheduler );
+                    Observable<String> newObservable = Observable.from( input ).subscribeOn( Schedulers.io() );
 
                     Observable<Integer> transformed = newObservable.map( new Func1<String, Integer>() {
 
@@ -138,20 +135,20 @@ public class ParallelTest {
 
                             logger.info( "Invoking parallel task in thread {}", threadName );
 
-                            /**
-                             * Simulate a Hystrix command making a call to an external resource.  Invokes
-                             * the Hystrix command immediately as the function is invoked.  This is currently
-                             * how we have to call Cassandra.
-                             *
-                             * TODO This needs to be re-written and evaluated once this PR is released https://github.com/Netflix/Hystrix/pull/209
-                             */
-                            return new HystrixCommand<Integer>( GROUP_KEY ) {
-                                @Override
-                                protected Integer run() throws Exception {
-
-                                    final String threadName = Thread.currentThread().getName();
-
-                                    logger.info( "Invoking hystrix task in thread {}", threadName );
+//                            /**
+//                             * Simulate a Hystrix command making a call to an external resource.  Invokes
+//                             * the Hystrix command immediately as the function is invoked.  This is currently
+//                             * how we have to call Cassandra.
+//                             *
+//                             * TODO This needs to be re-written and evaluated once this PR is released https://github.com/Netflix/Hystrix/pull/209
+//                             */
+//                            return new HystrixCommand<Integer>( GROUP_KEY ) {
+//                                @Override
+//                                protected Integer run() throws Exception {
+//
+//                                    final String threadName = Thread.currentThread().getName();
+//
+//                                    logger.info( "Invoking hystrix task in thread {}", threadName );
 
 
                                     set.add( threadName );
@@ -165,11 +162,13 @@ public class ParallelTest {
                                         throw new RuntimeException( "Interrupted", e );
                                     }
 
-                                    assertTrue( isExecutedInThread() );
+//                                    assertTrue( isExecutedInThread() );
+//
+//                                    return index;
+//                                }
+//                            }.execute();
 
-                                    return index;
-                                }
-                            }.execute();
+                            return index;
                         }
                     } );
 

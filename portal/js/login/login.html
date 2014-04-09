@@ -26,6 +26,12 @@
         <input type="password" ng-model="login.password"  required id="login-password" class="" ng-value="login.password" size="20" ug-validate>
       </div>
     </div>
+    <div class="control-group" ng-show="requiresDeveloperKey">
+      <label class="control-label" for="login-developerkey">Developer Key:</label>
+      <div class="controls">
+        <input type="text" ng-model="login.developerkey" id="login-developerkey" class="" ng-value="login.developerkey" size="20" ug-validate>
+      </div>
+    </div>
     <div class="form-actions">
       <div class="submit">
         <input type="submit" name="button-login" id="button-login" ng-disabled="!loginForm.$valid || loading" value="{{loading ? loadingText : 'Log In'}}" class="btn btn-primary pull-right">

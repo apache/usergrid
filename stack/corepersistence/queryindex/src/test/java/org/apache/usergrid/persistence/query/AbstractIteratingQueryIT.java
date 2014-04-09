@@ -16,6 +16,8 @@
 package org.apache.usergrid.persistence.query;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Results;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Comparator;

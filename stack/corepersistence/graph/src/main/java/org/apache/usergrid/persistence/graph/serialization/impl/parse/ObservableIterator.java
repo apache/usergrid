@@ -3,10 +3,11 @@ package org.apache.usergrid.persistence.graph.serialization.impl.parse;
 
 import java.util.Iterator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import rx.Observable;
-import rx.Observer;
-import rx.Subscription;
-import rx.subscriptions.Subscriptions;
+import rx.Subscriber;
 
 
 /**
@@ -14,11 +15,21 @@ import rx.subscriptions.Subscriptions;
  * This is used in favor of "Observable.just" when the initial fetch of the iterator will require I/O.  This allows
  * us to wrap the iterator in a deferred invocation to avoid the blocking on construction.
  */
-public abstract class ObservableIterator<T> implements Observable.OnSubscribeFunc<T> {
+public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T> {
+
+    private static final Logger log = LoggerFactory.getLogger( ObservableIterator.class );
+
+    private final String name;
+
+
+    /**
+     * @param name  The simple name of the iterator, used for debugging
+     */
+    protected ObservableIterator( final String name ) {this.name = name;}
 
 
     @Override
-    public Subscription onSubscribe( final Observer<? super T> observer ) {
+    public void call( final Subscriber<? super T> subscriber ) {
 
 
         try {
@@ -26,23 +37,28 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribeFun
             Iterator<T> itr = getIterator();
 
 
-            //TODO T.N. when > 0.17 comes out, we need to implement the check with each loop as described here https://github.com/Netflix/RxJava/issues/802
-            while ( itr.hasNext()) {
-                observer.onNext( itr.next() );
+            //while we have items to emit and our subscriber is subscribed, we want to keep emitting items
+            while ( itr.hasNext() && !subscriber.isUnsubscribed()) {
+                final T next = itr.next();
+
+                log.trace( "Iterator '{}' emitting item '{}'",  name, next );
+
+                assert next != null;
+
+                subscriber.onNext( next );
             }
 
-            observer.onCompleted();
+
+
+            subscriber.onCompleted();
         }
 
         //if any error occurs, we need to notify the observer so it can perform it's own error handling
         catch ( Throwable t ) {
-            observer.onError( t );
+            subscriber.onError( t );
         }
 
-        return Subscriptions.empty();
     }
-
-
 
 
     /**

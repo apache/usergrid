@@ -26,8 +26,8 @@
 
     <h2 class="title" > Applications
       <div class="header-button btn-group pull-right">
-        <a class="btn filter-selector" style="{{applicationsSize === 10 ? 'width:290px':''}}"  ng-disabled="!addApplications" ng-click="(addApplications ? showModal('newApplication') : '')">
-          <span class="filter-label">{{!addApplications ? 'You have met your 10 app limit' : 'Add New App'}}</span>
+        <a class="btn filter-selector" style="{{applicationsSize === 10 ? 'width:290px':''}}"  ng-click="showModal('newApplication')">
+          <span class="filter-label">Add New App</span>
         </a>
       </div>
     </h2>

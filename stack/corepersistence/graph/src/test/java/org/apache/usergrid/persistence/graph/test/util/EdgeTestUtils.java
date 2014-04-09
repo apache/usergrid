@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.graph.test.util;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
@@ -53,7 +54,7 @@ public class EdgeTestUtils {
      *
      * @return an Edge for testing
      */
-    public static Edge createEdge( final String sourceType, final String edgeType, final String targetType ) {
+    public static MarkedEdge createEdge( final String sourceType, final String edgeType, final String targetType ) {
         return createEdge( createId( sourceType ), edgeType, createId( targetType ), UUIDGenerator.newTimeUUID() );
     }
 
@@ -61,7 +62,7 @@ public class EdgeTestUtils {
     /**
      * Create an edge for testing
      */
-    public static Edge createEdge( final Id sourceId, final String edgeType, final Id targetId ) {
+    public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId ) {
         return createEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID() );
     }
 
@@ -69,7 +70,7 @@ public class EdgeTestUtils {
     /**
      * Create an edge with the specified params
      */
-    public static Edge createEdge( final Id sourceId, final String edgeType, final Id targetId, final UUID version ) {
+    public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId, final UUID version ) {
         return new SimpleMarkedEdge( sourceId, edgeType, targetId, version, false );
     }
 

@@ -40,7 +40,18 @@ function extend(subClass, superClass) {
     }
     return subClass;
 }
-
+function propCopy(from, to){
+    for(var prop in from){
+        if(from.hasOwnProperty(prop)){
+            if("object"===typeof from[prop] && "object"===typeof to[prop]){
+                to[prop]=propCopy(from[prop], to[prop]);
+            }else{
+                to[prop]=from[prop];
+            }
+        }
+    }
+    return to;
+}
 function NOOP(){}
 
 //Usergrid namespace encapsulates this SDK

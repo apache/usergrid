@@ -1,7 +1,9 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 import org.jukito.JukitoRunner;
@@ -11,11 +13,14 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
@@ -24,6 +29,8 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
@@ -42,9 +49,11 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith(JukitoRunner.class)
-@UseModules({ TestGraphModule.class })
+@RunWith( JukitoRunner.class )
+@UseModules( { TestGraphModule.class } )
 public class EdgeSerializationTest {
+
+    private static final Logger log = LoggerFactory.getLogger( EdgeSerializationTest.class );
 
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
@@ -57,6 +66,12 @@ public class EdgeSerializationTest {
 
     @Inject
     protected EdgeSerialization serialization;
+
+    @Inject
+    protected GraphFig graphFig;
+
+    @Inject
+    protected Keyspace keyspace;
 
     protected OrganizationScope scope;
 
@@ -196,43 +211,10 @@ public class EdgeSerializationTest {
 
         SearchByEdge search = createGetByEdge( sourceId, "edge1", targetId, now, null );
 
-        Iterator<MarkedEdge> results = serialization.getEdgeFromSource( scope, search );
+        Iterator<MarkedEdge> results = serialization.getEdgeVersions( scope, search );
 
         assertEquals( edgev2, results.next() );
         assertEquals( edgev1, results.next() );
-        assertFalse( "No results should be returned", results.hasNext() );
-
-
-        results = serialization.getEdgeToTarget( scope, search );
-
-        assertEquals( edgev2, results.next() );
-        assertEquals( edgev1, results.next() );
-        assertFalse( "No results should be returned", results.hasNext() );
-
-        //test paging
-        search = createGetByEdge( sourceId, "edge1", targetId, now, edgev2 );
-
-        results = serialization.getEdgeFromSource( scope, search );
-
-        assertEquals( edgev1, results.next() );
-        assertFalse( "No results should be returned", results.hasNext() );
-
-
-        results = serialization.getEdgeToTarget( scope, search );
-
-        assertEquals( edgev1, results.next() );
-        assertFalse( "No results should be returned", results.hasNext() );
-
-        //test paging
-        search = createGetByEdge( sourceId, "edge1", targetId, now, edgev1 );
-
-        results = serialization.getEdgeFromSource( scope, search );
-
-        assertFalse( "No results should be returned", results.hasNext() );
-
-
-        results = serialization.getEdgeToTarget( scope, search );
-
         assertFalse( "No results should be returned", results.hasNext() );
 
         //max version test
@@ -240,15 +222,7 @@ public class EdgeSerializationTest {
         //test max version
         search = createGetByEdge( sourceId, "edge1", targetId, edgev1.getVersion(), null );
 
-        results = serialization.getEdgeFromSource( scope, search );
-
-        assertEquals( edgev1, results.next() );
-        assertFalse( "Max version was honored", results.hasNext() );
-
-
-        search = createGetByEdge( sourceId, "edge1", targetId, edgev1.getVersion(), null );
-
-        results = serialization.getEdgeToTarget( scope, search );
+        results = serialization.getEdgeVersions( scope, search );
 
         assertEquals( edgev1, results.next() );
         assertFalse( "Max version was honored", results.hasNext() );
@@ -333,31 +307,32 @@ public class EdgeSerializationTest {
         Iterator<MarkedEdge> results = serialization.getEdgesFromSourceByTargetType( scope,
                 createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), null ) );
 
-        assertEquals( edge1, results.next() );
         assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
+
         assertFalse( results.hasNext() );
 
         //test getting the next edge
         results = serialization.getEdgesFromSourceByTargetType( scope,
-                createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), edge1 ) );
+                createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), edge2 ) );
 
-        assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
 
         results = serialization.getEdgesFromSourceByTargetType( scope,
-                createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), edge2 ) );
+                createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), edge1 ) );
 
         assertFalse( results.hasNext() );
 
         //test getting source edges from the target
 
         results = serialization.getEdgesToTargetBySourceType( scope,
-                createSearchByEdgeAndId( targetId1, "edge", now, sourceId.getType(), edge1 ) );
+                createSearchByEdgeAndId( targetId1, "edge", now, sourceId.getType(), edge2 ) );
         assertFalse( results.hasNext() );
 
 
         results = serialization.getEdgesToTargetBySourceType( scope,
-                createSearchByEdgeAndId( targetId2, "edge", now, sourceId.getType(), edge2 ) );
+                createSearchByEdgeAndId( targetId2, "edge", now, sourceId.getType(), edge1 ) );
         assertFalse( results.hasNext() );
     }
 
@@ -387,15 +362,15 @@ public class EdgeSerializationTest {
         Iterator<MarkedEdge> results = serialization.getEdgesFromSourceByTargetType( scope,
                 createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), null ) );
 
-        assertEquals( edge1, results.next() );
         assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
 
         //get them out by type
         results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, null ) );
 
-        assertEquals( edge1, results.next() );
         assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
 
 
@@ -492,15 +467,15 @@ public class EdgeSerializationTest {
         Iterator<MarkedEdge> results = serialization.getEdgesFromSourceByTargetType( scope,
                 createSearchByEdgeAndId( sourceId, "edge", now, targetId1.getType(), null ) );
 
-        assertEquals( edge1, results.next() );
         assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
 
         //get them out by type
         results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, null ) );
 
-        assertEquals( edge1, results.next() );
         assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
 
 
@@ -542,13 +517,13 @@ public class EdgeSerializationTest {
 
         MarkedEdge edge = results.next();
 
-        assertEquals( edge1, edge );
+        assertEquals( edge2, edge );
         assertTrue( edge.isDeleted() );
 
 
         edge = results.next();
 
-        assertEquals( edge2, edge );
+        assertEquals( edge1, edge );
         assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
@@ -558,12 +533,12 @@ public class EdgeSerializationTest {
 
         edge = results.next();
 
-        assertEquals( edge1, edge );
+        assertEquals( edge2, edge );
         assertTrue( edge.isDeleted() );
 
         edge = results.next();
 
-        assertEquals( edge2, edge );
+        assertEquals( edge1, edge );
         assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
@@ -614,4 +589,134 @@ public class EdgeSerializationTest {
         //now we've validated everything exists
     }
 
+
+    /**
+     * Test paging by resuming the search from the edge
+     */
+    @Test
+    public void pageIteration() throws ConnectionException {
+
+        int size = graphFig.getScanPageSize() * 2;
+
+        final Id sourceId = createId( "source" );
+        final String type = "edge";
+
+        Set<Edge> edges = new HashSet<Edge>( size );
+
+
+        for ( int i = 0; i < size; i++ ) {
+            final Edge edge = createEdge( sourceId, type, createId( "target" ) );
+
+            serialization.writeEdge( scope, edge ).execute();
+            edges.add( edge );
+        }
+
+
+        UUID now = UUIDGenerator.newTimeUUID();
+
+        //get our edges out by name
+        Iterator<MarkedEdge> results =
+                serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, type, now, null ) );
+
+        for ( MarkedEdge edge : new IterableWrapper<MarkedEdge>( results ) ) {
+            assertTrue( "Removed edge from write set", edges.remove( edge ) );
+        }
+
+        assertEquals( "All edges were returned", 0, edges.size() );
+    }
+
+
+    /**
+     * Tests mixing 2 edge types between 2 nodes.  We should get results for the same source->destination with the 2
+     * edge types
+     */
+    @Test
+    public void testIteratorPaging() throws ConnectionException {
+
+
+        final Id sourceId = createId( "source" );
+        final String edgeType = "edge";
+        final Id targetId = createId( "target" );
+
+
+        int writeCount = graphFig.getScanPageSize() * 3;
+
+
+        final MutationBatch batch = keyspace.prepareMutationBatch();
+
+        UUID lastMax = null;
+
+        for ( int i = 0; i < writeCount; i++ ) {
+
+            final Edge edge = createEdge( sourceId, edgeType, targetId );
+
+            lastMax = edge.getVersion();
+
+            batch.mergeShallow( serialization.writeEdge( scope, edge ) );
+        }
+
+        log.info( "Flushing edges" );
+        batch.execute();
+
+
+        Iterator<MarkedEdge> results =
+                serialization.getEdgeVersions( scope, createGetByEdge( sourceId, edgeType, targetId, lastMax, null ) );
+
+        verify( results, writeCount );
+
+
+
+        //get them all from source
+        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, edgeType, lastMax, null ) );
+
+        verify( results, writeCount );
+
+
+
+        results = serialization.getEdgesFromSourceByTargetType( scope,
+                createSearchByEdgeAndId( sourceId, edgeType, lastMax, targetId.getType(), null ) );
+
+        verify( results, writeCount );
+
+
+
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, edgeType, lastMax, null ) );
+
+        verify( results, writeCount );
+
+
+
+        results = serialization.getEdgesToTargetBySourceType( scope,
+                createSearchByEdgeAndId( targetId, edgeType, lastMax, sourceId.getType(), null ) );
+
+        verify( results, writeCount );
+    }
+
+
+    private void verify( Iterator<MarkedEdge> results, int expectedCount ) {
+        int count = 0;
+
+        while ( results.hasNext() ) {
+            count++;
+            results.next();
+        }
+
+
+        assertEquals( "All versions returned", expectedCount, count );
+    }
+
+
+    private class IterableWrapper<T> implements Iterable<T> {
+
+        private final Iterator<T> source;
+
+
+        private IterableWrapper( final Iterator<T> source ) {this.source = source;}
+
+
+        @Override
+        public Iterator<T> iterator() {
+            return source;
+        }
+    }
 }

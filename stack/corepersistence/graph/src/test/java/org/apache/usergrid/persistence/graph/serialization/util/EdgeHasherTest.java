@@ -288,7 +288,8 @@ public class EdgeHasherTest {
         for ( Character.UnicodeBlock unicodeBlock : blocks ) {
             if ( count++ < limit ) {
                 testCollisions( unicodeBlock );
-            } else {
+            }
+            else {
                 break;
             }
         }
@@ -338,9 +339,8 @@ public class EdgeHasherTest {
                 if ( hashed.contains( edgeHash ) ) {
 
                     fail( String.format(
-                            "Expected hash of '%s' to be unique, but hash of '%s' already exists in unicode block " +
-                                    "'%s'.",
-                            sourceString, edgeHash, unicodeBlock ) );
+                            "Expected hash of '%s' to be unique, but hash of '%s' already exists in unicode block "
+                                    + "'%s'.", sourceString, edgeHash, unicodeBlock ) );
                 }
 
                 hashed.add( edgeHash );
@@ -367,9 +367,9 @@ public class EdgeHasherTest {
 
 
     /**
-     * Taken from the character source.  Note this purposefully eliminates Surrogate sets from the blocks
-     * since there are invalid, and do cause hash conflicts due to multiple characters mapping
-     * to a single byte value by the JVM in both UTF-8 and UTF-16
+     * Taken from the character source.  Note this purposefully eliminates Surrogate sets from the blocks since there
+     * are invalid, and do cause hash conflicts due to multiple characters mapping to a single byte value by the JVM in
+     * both UTF-8 and UTF-16
      */
     public static Character.UnicodeBlock[] blocks = {
             BASIC_LATIN, LATIN_1_SUPPLEMENT, LATIN_EXTENDED_A, LATIN_EXTENDED_B, IPA_EXTENSIONS,

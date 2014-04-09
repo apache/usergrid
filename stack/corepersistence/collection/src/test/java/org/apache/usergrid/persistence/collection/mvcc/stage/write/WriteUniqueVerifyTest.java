@@ -81,8 +81,6 @@ public class WriteUniqueVerifyTest {
     public MigrationManagerRule migrationManagerRule;
 
 
-    @Inject
-    private Scheduler scheduler;
 
     @Inject
     private SerializationFig fig;
@@ -103,7 +101,7 @@ public class WriteUniqueVerifyTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         // run the stage
-        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, scheduler, fig );
+        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, fig );
 
         CollectionIoEvent<MvccEntity> result = newStage.call( 
             new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) )
@@ -134,7 +132,7 @@ public class WriteUniqueVerifyTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         // run the stage
-        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, scheduler, fig );
+        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, fig );
 
         CollectionIoEvent<MvccEntity> result = newStage.call( 
             new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) )
