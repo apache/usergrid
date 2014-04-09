@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>UsersAndGroups</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+        <!-- CSS files needed for jQuery Mobile. -->
+        <link href="css/codiqa.ext.min.css" rel="stylesheet" />
+        <link href="css/jquery.mobile-1.3.1.min.css" rel="stylesheet" />
+
+        <!-- JS files needed for jQuery Mobile. -->
+        <script src="js/jquery-1.9.1.min.js"></script>
+        <script src="js/jquery.mobile-1.3.1.min.js"></script>
+        <script src="js/codiqa.ext.min.js"></script>
+
+        <!-- Be sure you're including apigee.js or apigee.min.js here. -->
+        <script src="../../apigee.js"></script>
+        <script src="js/index.js"></script>
+    </head>
+
+    <body>
+
+        <!-- Markup here for the app's home page. -->
+        <div data-role="page" data-control-title="Users and Groups" id="page_home">
+            <div data-theme="b" data-role="header">
+                <h3> Users and Groups </h3>
+            </div>
+            <div data-role="content">
+                <a id="btn_view_user_list" data-role="button" href="#page_view_users_list"> View
+                    User List </a>
+                <a id="btn_display_add_user" data-role="button" data-rel="dialog"
+                    href="#page_add_user"> Add User </a>
+                <a id="btn_view_group_list" data-role="button" href="#page_view_group_list"> View
+                    Group List </a>
+                <a id="btn_display_add_group" data-role="button" data-rel="dialog"
+                    href="#page_add_group"> Add Group </a>
+                <form action="" id="frm_display_add_user_to_group">
+                    <div data-role="fieldcontain" data-controltype="textinput">
+                        <input name="" id="fld_home_username" placeholder="Enter username"
+                            type="text" />
+                    </div>
+                    <div id="messageText">
+                        <p></p>
+                    </div>
+                    <a id="link_display_add_user_to_group" data-rel="dialog"
+                        href="#page_add_user_to_group"></a>
+                    <a id="btn_display_add_user_to_group" data-role="button" data-rel="dialog">Add
+                        User to Group</a>
+                </form>
+            </div>
+            
+            <div data-role="popup" id="messagePopup">
+                <p></p>
+            </div>
+        </div>
+
+        <!-- Markup here for the app's Add User page. -->
+        <div data-role="page" data-control-title="AddUserView" id="page_add_user">
+            <div data-theme="b" data-role="header">
+                <h3> Add User </h3>
+            </div>
+            <div data-role="content">
+                <form action="" id="frm_add_user">
+                    <div data-role="fieldcontain" data-controltype="textinput">
+                        <label for="fld_user_name"> Username </label>
+                        <input name="" id="fld_user_name" placeholder="" value="" type="text" />
+                    </div>
+                    <div data-role="fieldcontain" data-controltype="textinput">
+                        <label for="fld_name"> Name </label>
+                        <input name="" id="fld_name" placeholder="" value="" type="text" />
+                    </div>
+                    <div data-role="fieldcontain" data-controltype="textinput">
+                        <label for="fld_email"> Email </label>
+                        <input name="" id="fld_email" placeholder="" value="" type="text" />
+                    </div>
+                    <div data-role="fieldcontain" data-controltype="textinput">
+                        <label for="fld_password"> Password </label>
+                        <input name="" id="fld_password" placeholder="" value="" type="password" />
+                    </div>
+                    <a data-role="button" href="#page_view_users_list" id="btn_add_user"> Add User</a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Markup here for the app's Group List page. -->
+        <div data-role="page" data-control-title="GroupsListView" id="page_view_group_list">
+            <div data-theme="b" data-role="header">
+                <a id="btn_home_add_user" data-role="button" href="#page_home" data-icon="arrow-l"
+                    data-iconpos="left" data-mini="true" class="ui-btn-left"> Home </a>
+                <h3> Groups </h3>
+            </div>
+            <div data-role="content">
+                <ul data-role="listview" data-divider-theme="b" data-inset="false" id="groups_list">
+                    <li data-theme="c"> </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Markup here for the app's User List page. -->
+        <div data-role="page" data-control-title="UsersListView" id="page_view_users_list">
+            <div data-theme="b" data-role="header">
+                <a id="btn_home_add_user" data-role="button" href="#page_home" data-icon="arrow-l"
+                    data-iconpos="left" data-mini="true" class="ui-btn-left"> Home </a>
+                <h3> Users </h3>
+            </div>
+            <div data-role="content">
+                <ul data-role="listview" data-divider-theme="b" data-inset="false" id="users_list">
+                    <li data-theme="c"> </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Markup here for the app's Add Group page. -->
+        <div data-role="page" data-control-title="AddGroupView" id="page_add_group">
+            <div data-theme="b" data-role="header">
+                <h3> Add Group </h3>
+            </div>
+            <div data-role="content">
+                <form id="frm_add_group" action="">
+                    <div data-role="fieldcontain" data-controltype="textinput">
+                        <label for="fld_display_name"> Display Name </label>
+                        <input name="" id="fld_display_name" placeholder="" value="" type="text" />
+                    </div>
+                    <div data-role="fieldcontain" data-controltype="textinput">
+                        <label for="fld_group_path"> Group Path </label>
+                        <input name="" id="fld_group_path" placeholder="" value="" type="text" />
+                    </div>
+                    <a id="btn_add_group" data-role="button" href="#page_view_group_list"> Add Group
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Markup here for the app's Add User to Group page. -->
+        <div data-role="page" data-control-title="AddUserToGroupView" id="page_add_user_to_group">
+            <div data-theme="b" data-role="header">
+                <h3> Add User to Group </h3>
+            </div>
+            <div data-role="content">
+                <form action="" id="frm_add_user_to_group">
+                    <label for="select_groups" class="select">Add User to this Group:</label>
+                    <select name="select_groups" id="select_groups" data-mini="true">
+                        <option value="no_groups">No groups to list.</option>
+                    </select>
+                    <a id="btn_add_user_to_group" data-role="button" href="#page_add_user_to_group">
+                        Add User to Group </a>
+                </form>
+                <p> Groups with this User:</p>
+                <ul id="list_groups_with_this_user" data-role="listview" data-divider-theme="b"
+                    data-inset="true">
+                    <li data-theme="c"></li>
+                </ul>
+            </div>
+        </div>
+    </body>
+</html>

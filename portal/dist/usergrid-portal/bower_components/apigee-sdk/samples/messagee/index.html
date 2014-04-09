@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />
+    <style type="text/css">.error{ background-color: #ffaaaa; } </style>
+    <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.js"></script>
+    <script src="js/apigee.min.js" type="text/javascript"></script>
+    <script src="usergrid.validation.js" type="text/javascript"></script>
+        <script>
+            (function() {
+              var global = global||this,
+                APIGEE_ORGNAME="Your Org Name",
+                APIGEE_APPNAME="Your App Name";
+                if("undefined"===typeof APIGEE_ORGNAME || "Your Org Name" === APIGEE_ORGNAME){
+                    APIGEE_ORGNAME=prompt("What is the Organization Name you registered at http://apigee.com/usergrid ?\n(you can set this permanently on line 15)", "ORG NAME");
+                }
+                if("undefined"===typeof APIGEE_APPNAME || "Your App Name" === APIGEE_APPNAME){
+                    APIGEE_APPNAME=prompt("What is the App Name you created at http://apigee.com/usergrid ?\n(you can set this permanently in on line 16)", "sandbox");
+                }
+                global.APIGEE_ORGNAME=APIGEE_ORGNAME;
+                global.APIGEE_APPNAME=APIGEE_APPNAME;
+            })();
+        </script>
+    <script src="app.js" type="text/javascript"></script>
+  </head>
+  <body>
+
+        <div data-role="page" data-theme="b" id="page-login">
+          <div data-role="header" data-theme="b">
+            <h1>Messagee</h1>
+          </div>
+          <div data-role="content">
+            <h3>Messagee is a sample messaging app, like Twitter</h3>
+            <p>
+              <h4>Log in using your Messagee account.</h4>
+              Don&apos;t have an account? use our test account (username: myuser / password: mypass), or create a new one!
+            </p>
+            <span id="login-section-error"></span>
+            <form name="form-login" id="form-login">
+              <label for="username">Username</label>
+              <input type="text" name="username" id="username" class="span4" />
+              <label for="password">Password</label>
+              <input type="password" name="password" id="password" class="span4" />
+            </form>
+            <div style="width: 50%; float: left">
+              <a href="#login" id="btn-login" data-role="button">Login</a>
+            </div>
+            <div style="width: 50%; float: right">
+              <a href="#page-new-account" id="btn-show-create-new-account" data-role="button" data-rel="dialog" data-transition="pop">New Account</a>
+            </div>
+          </div>
+          <div data-role="footer" data-position="fixed">
+            <h1>&copy; Apigee</h1>
+          </div>
+        </div>
+
+        <div data-role="page" data-theme="b" id="page-new-account">
+          <div data-role="header" data-theme="b">
+            <h1>Messagee</h1>
+          </div>
+          <div data-role="content">
+            <p>Account Info</p>
+            <form name="form-create-new-account" id="form-create-new-account">
+              <label for="new-name">Name</label>
+              <input type="text" name="new-name" id="new-name" class="span4" />
+              <label for="new-email">Email</label>
+              <input type="text" name="new-email" id="new-email" class="span4" />
+              <label for="new-username">Username</label>
+              <input type="text" name="new-username" id="new-username" class="span4" />
+              <label for="new-password">Password</label>
+              <input type="password" name="new-password" id="new-password" class="span4" />
+            </form>
+            <div style="width: 50%; float: left">
+              <button id="btn-create-new-account">Go!</button>
+            </div>
+            <div style="width: 50%; float: right">
+              <a href="#login" id="btn-close-update-account-page" data-role="button">Close</a>
+            </div>
+          </div>
+        </div>
+
+
+        <div data-role="page" data-theme="b" id="page-update-account">
+          <div data-role="header" data-theme="b">
+            <h1>Messagee</h1>
+          </div>
+          <div data-role="content">
+            <div id="user-message-update-account"></div>
+            <p>Account Info</p>
+            <form name="form-update-new-account" id="form-update-new-account">
+              <label for="update-name">Name</label>
+              <input type="text" name="update-name" id="update-name" class="span4" />
+              <label for="update-email">Email</label>
+              <input type="text" name="update-email" id="update-email" class="span4" />
+              <label for="update-username">Username</label>
+              <input type="text" name="update-username" id="update-username" class="span4" />
+              <label for="update-oldpassword">Current Password</label>
+              <input type="password" name="update-oldpassword" id="update-oldpassword" class="span4" />
+              <label for="update-newpassword">New Password</label>
+              <input type="password" name="update-newpassword" id="update-newpassword" class="span4" />
+            </form>
+            <div style="width: 50%; float: left">
+              <button id="btn-update-account">Update</button>
+            </div>
+            <div style="width: 50%; float: right">
+              <a href="#page-messages-list" id="btn-close" data-role="button">Close</a>
+            </div>
+          </div>
+        </div>
+
+
+        <div data-role="page" data-theme="b" id="page-messages-list">
+          <div data-role="header" data-theme="b">
+            <h1>Messagee</h1>
+            <a href="#login" id="btn-logout" data-role="button">Logout</a>
+            <a href="#page-update-account" id="btn-show-page-update-account" data-role="button" data-icon="gear" data-rel="dialog" data-transition="fade">Settings</a>
+          </div>
+          <a href="#page-new-message" id="btn-show-create-message" data-role="button" data-rel="dialog" data-transition="fade">Compose Message</a>
+          <div style="width: 50%; float: left">
+              <a href="#" data-role="button" data-icon="home" id="btn-show-my-feed">My Stream</a>
+          </div>
+          <div style="width: 50%; float: right">
+            <a href="#" data-role="button" data-icon="grid" id="btn-show-full-feed" class="ui-btn-up-c">All Posts</a>
+          </div>
+          <div id="messages-list"  data-role="content">
+              No messages yet!
+          </div>
+          <div id="feed-btn-container"  data-role="content">
+            <div style="width: 50%; float: left" id="previous-btn-container">
+              <button id="btn-previous" data-role="button" data-icon="arrow-l">Previous</button>
+            </div>
+            <div style="width: 50%; float: right" id="next-btn-container">
+              <button id="btn-next" data-role="button" data-icon="arrow-r" data-iconpos="right">Next</button>
+            </div>
+          </div>
+          <div data-role="footer" data-position="fixed">
+            <h1>&copy; Apigee</h1>
+          </div>
+        </div>
+
+
+        <div data-role="page" data-theme="b" id="page-new-message">
+          <div data-role="header" data-theme="b">
+            <h1>Create a new message</h1>
+          </div>
+          <div data-role="content">
+            <form name="login" id="login-form">
+              <label for="content">Message (150 Chars max)</label>
+              <textarea id="content" class="input-xlarge" rows="3" style="margin: 0px; width: 100%; height: 125px; "></textarea>
+            </form>
+            <div style="width: 50%; float: left">
+              <button id="post-message">Post</button>
+            </div>
+            <div style="width: 50%; float: right">
+              <a href="#page-messages-list" id="btn-close-new-message" data-role="button">Cancel</a>
+            </div>
+          </div>
+        </div>
+
+
+        <div data-role="page" data-theme="b" id="page-now-following">
+          <div data-role="header" data-theme="b">
+            <h1>Congratulations!</h1>
+          </div>
+          <div data-role="content">
+            <div id="now-following-text" style="height: 75px;"></div>
+            <a href="#" data-rel="back" data-role="button" data-icon="delete">OK</a>
+          </div>
+        </div>
+
+
+    </body>
+</html>
