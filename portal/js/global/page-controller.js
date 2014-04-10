@@ -1,31 +1,38 @@
-'use strict'
+/**
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
 
-AppServices.Controllers.controller('PageCtrl', [
-  'ug',
-  'help',
-  'utility',
-  '$scope',
-  '$rootScope',
-  '$location',
-  '$routeParams',
-  '$q',
-  '$route',
-  '$log',
-  '$analytics',
-  function(
-    ug,
-    help,
-    utility,
-    $scope,
-    $rootScope,
-    $location,
-    $routeParams,
-    $q,
-    $route,
-    $log,
-    $analytics) {
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ */
+'use strict';
+
+AppServices.Controllers.controller('PageCtrl',
+  ['ug', 'help', 'utility', '$scope',  '$rootScope', '$location', '$routeParams', '$q', '$route', '$log', '$analytics', '$sce',
+   function(ug, help, utility, $scope, $rootScope, $location, $routeParams, $q, $route, $log, $analytics, $sce) {
 
     var initScopeVariables = function() {
+      var menuItems = Usergrid.options.menuItems;
+      for(var i=0;i<menuItems.length;i++){
+        menuItems[i].pic = $sce.trustAsHtml( menuItems[i].pic);
+        if(menuItems[i].items) {
+          for (var j = 0; j < menuItems[i].items.length; j++) {
+            menuItems[i].items[j].pic = $sce.trustAsHtml( menuItems[i].items[j].pic);
+          }
+        }
+      }
+      $scope.menuItems = Usergrid.options.menuItems;
       //$rootScope.urls()... will determine which URL should be used for a given environment
       $scope.loadingText = 'Loading...';
       $scope.use_sso = false;

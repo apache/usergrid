@@ -1052,26 +1052,6 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
   );
 
 
-  $templateCache.put('data/shell.html',
-    "<div class=\"content-page\">\n" +
-    "  <div class=\"well\">\n" +
-    "    <h2>Interactive Shell</h2>\n" +
-    "    <div style=\"float:right\"><a target=\"_blank\" href=\"http://apigee.com/docs/usergrid/content/usergrid-admin-portal\" class=\"notifications-links\">Learn more in our docs</a></div>\n" +
-    "  </div>\n" +
-    "\n" +
-    "  <div class=\"console-section-contents\">\n" +
-    "    <div id=\"shell-input-div\">\n" +
-    "      <p>   Type \"help\" to view a list of the available commands.</p><hr>\n" +
-    "      <span>&nbsp;&gt;&gt; </span>\n" +
-    "      <!--textarea id=\"shell-input\" rows=\"2\" autofocus=\"autofocus\"></textarea-->\n" +
-    "    </div>\n" +
-    "    <pre id=\"shell-output\" class=\"prettyprint lang-js\" style=\"overflow-x: auto; height: 400px;\"><span class=\"pln\">                      </span><p><span class=\"pln\">  </span><span class=\"typ\">Response</span><span class=\"pun\">:</span></p><hr><span class=\"pln\">\n" +
-    "    </span></pre>\n" +
-    "  </div>\n" +
-    "</div>"
-  );
-
-
   $templateCache.put('dialogs/modal.html',
     "    <div class=\"modal show fade\" tabindex=\"-1\" role=\"dialog\" aria-hidden=\"true\">\n" +
     "        <form ng-submit=\"extraDelegate(extrabutton)\" name=\"dialogForm\" novalidate>\n" +

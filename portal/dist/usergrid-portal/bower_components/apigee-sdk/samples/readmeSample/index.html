@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Don't forget to download and include the SDK. -->
+        <!-- It’s available at the root of github.com/apigee/usergrid-javascript-sdk -->
+        <script src="../../apigee.js"></script>
+        <script>
+            (function() {
+              var global = global||this,
+                APIGEE_ORGNAME="Your Org Name",
+                APIGEE_APPNAME="Your App Name";
+                if("undefined"===typeof APIGEE_ORGNAME || "Your Org Name" === APIGEE_ORGNAME){
+                    APIGEE_ORGNAME=prompt("What is the Organization Name you registered at http://apigee.com/usergrid ?\n(you can set this permanently on line 11)", "ORG NAME");
+                }
+                if("undefined"===typeof APIGEE_APPNAME || "Your App Name" === APIGEE_APPNAME){
+                    APIGEE_APPNAME=prompt("What is the App Name you created at http://apigee.com/usergrid ?\n(you can set this permanently in on line 12)", "sandbox");
+                }
+                global.APIGEE_ORGNAME=APIGEE_ORGNAME;
+                global.APIGEE_APPNAME=APIGEE_APPNAME;
+            })();
+
+        </script>
+        <script type="text/javascript">
+            // Initialize the SDK by telling App Services which organization and application
+            // this client app is making requests from.
+            var client = new Apigee.Client({
+                orgName:APIGEE_ORGNAME, // Your organization name. You'll find this in the admin portal.
+                appName:APIGEE_APPNAME, // Your App Services app name. It's in the admin portal.
+				logging: true, //optional - turn on logging, off by default
+				buildCurl: true //optional - log network calls in the console, off by default
+
+            });
+
+            // Read data about books from the App Services application. Start by
+            // creating a local collection object from App Services connection
+            // information (above), as well as the collection type needed.
+            var books = new Apigee.Collection({ "client":client, "type":"books" });
+            books.fetch(
+                // Called if the collection request succeeds. Iterates through 
+                // the collection, displaying an alert message for each book.
+                function() {
+                    while(books.hasNextEntity()) {
+                        var book = books.getNextEntity();
+                        alert(book.get("title")); // Output the book's title.
+                    }
+                // Called if the collection request fails. You'd probably want
+                // a more user-friendly and useful way to respond to this.
+                }, function() {
+                    alert("Read failed.");
+                }
+            );
+
+            // Uncomment the next 4 lines if you want to write data.
+
+            // // Create a new object representing a book entity.
+            // book = { "title": "the old man and the sea" };
+            // // Add the new entity to the books collection.
+            // books.addEntity(book, function (error, response) {
+            //  if (error) { alert("write failed");
+            //  } else { alert("write succeeded"); } });
+        </script>
+    </head>
+    <body></body>
+</html>
