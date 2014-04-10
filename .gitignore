@@ -36,3 +36,4 @@ stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/q
 stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
 
 /portal/nbproject/private/
+/portal/js/templates.js
