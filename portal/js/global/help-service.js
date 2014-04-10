@@ -63,7 +63,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
   $rootScope.$on("$routeChangeSuccess", function(event, current) {      
     //hide the help buttons if not on org-overview page
     var path = current.$$route ? current.$$route.originalPath : null;
-    if (path == '/org-overview') {
+    if (path == '/org-overview' || indexOf('/performance') != -1 || path == 'users') {
       
       $rootScope.help.showHelpButtons = true;
 
