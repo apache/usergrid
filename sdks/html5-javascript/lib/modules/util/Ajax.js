@@ -5,7 +5,7 @@
     function partial(){
         var args = Array.prototype.slice.call(arguments);
         var fn=args.shift();
-        return fn.bind(this, args)
+        return fn.bind(this, args);
     }
     function Ajax() {
         this.logger=new global.Logger(name);
@@ -29,17 +29,21 @@
             self.logger.time(m + ' ' + u);
             (function(xhr) {
                 xhr.onreadystatechange = function() {
-                    this.readyState ^ 4 || (self.logger.timeEnd(m + ' ' + u), clearTimeout(timeout), p.done(null, this));
+                    if(this.readyState === 4){
+                        self.logger.timeEnd(m + ' ' + u);
+                        clearTimeout(timeout);
+                        p.done(null, this);
+                    }
                 };
                 xhr.onerror=function(response){
                     clearTimeout(timeout);
                     p.done(response, null);
-                }
+                };
                 xhr.oncomplete=function(response){
                     clearTimeout(timeout);
                     self.logger.timeEnd(m + ' ' + u);
                     self.info("%s request to %s returned %s", m, u, this.status );
-                }
+                };
                 xhr.open(m, u);
                 if (d) {
                     if("object"===typeof d){
@@ -50,13 +54,13 @@
                 }
                 timeout = setTimeout(function() {
                     xhr.abort();
-                    p.done("API Call timed out.", null)
+                    p.done("API Call timed out.", null);
                 }, 30000);
                 //TODO stick that timeout in a config variable
                 xhr.send(encode(d));
             }(new XMLHttpRequest()));
             return p;
-        };
+        }
         this.request=request;
         this.get = partial(request,'GET');
         this.post = partial(request,'POST');

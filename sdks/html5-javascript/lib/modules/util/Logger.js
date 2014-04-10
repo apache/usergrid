@@ -14,12 +14,12 @@
     Logger.prototype.init=function(name, logEnabled){
         this.name=name||"UNKNOWN";
         this.logEnabled=logEnabled||true;
-        var addMethod=function(method){this[method]=this.createLogMethod(method)}.bind(this);
-        Logger.METHODS.forEach(addMethod)
-    }
+        var addMethod=function(method){this[method]=this.createLogMethod(method);}.bind(this);
+        Logger.METHODS.forEach(addMethod);
+    };
     Logger.prototype.createLogMethod=function(method){
         return Logger.prototype.log.bind(this, method);
-    }
+    };
     Logger.prototype.prefix=function(method, args){
         var prepend='['+method.toUpperCase()+']['+name+"]:\t";
         if(['log', 'error', 'warn', 'info'].indexOf(method)!==-1){
@@ -30,7 +30,7 @@
             }
         }
         return args;
-    }
+    };
     Logger.prototype.log=function(){
         var args=[].slice.call(arguments);
         method=args.shift();
@@ -40,10 +40,10 @@
         if(!(this.logEnabled && console && console[method]))return;
         args=this.prefix(method, args);
         console[method].apply(console, args);
-    }
+    };
     Logger.prototype.setLogEnabled=function(logEnabled){
         this.logEnabled=logEnabled||true;
-    }
+    };
 
     Logger.mixin	= function(destObject){
         destObject.__logger=new Logger(destObject.name||"UNKNOWN");
@@ -55,8 +55,8 @@
             }
             destObject.prototype[method]=destObject.__logger.createLogMethod(method);
         };
-        Logger.METHODS.forEach(addMethod)
-    }
+        Logger.METHODS.forEach(addMethod);
+    };
     global[name] =  Logger;
     global[name].noConflict = function() {
         if(overwrittenName){

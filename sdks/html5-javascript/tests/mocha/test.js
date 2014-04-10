@@ -79,11 +79,10 @@ describe('UsergridError', function() {
 describe('Usergrid', function(){
     describe('SDK Version', function(){
         it('should contain a minimum SDK version',function(){
-            assert(Usergrid.VERSION, "expected minimum version '0.10.08'");
-            var parts=Usergrid.VERSION.split(/\.0?/).map(function(bit){return parseInt(bit)});
-            console.log(parts);
-            assert(parts.length===3, "Version number is not in the ##.##.## format");
-            assert(parts.shift()>=0 && parts.shift() >=10 && parts.shift() >=8, "expected minimum version '0.10.08'");
+            var parts=Usergrid.VERSION.split('.').map(function(i){return i.replace(/^0+/,'')}).map(function(i){return parseInt(i)});
+
+            assert(parts[1]>=10, "expected minor version >=10");
+            assert(parts[1]>10||parts[2]>=8, "expected minimum version >=8");
         });
     });
     describe('Usergrid Request/Response', function() {
@@ -92,6 +91,7 @@ describe('Usergrid', function(){
         var dogURI='https://api.usergrid.com/yourorgname/sandbox/dogs'
         it('should POST to a URI',function(done){
             var req=new Usergrid.Request("POST", dogURI, {}, dogData, function(err, response){
+                console.error(err, response);
                 assert(!err, err);
                 assert(response instanceof Usergrid.Response, "Response is not and instance of Usergrid.Response");
                 done();
@@ -205,7 +205,6 @@ describe('Usergrid', function(){
                     method: 'GET',
                     endpoint: 'users'
                 }, function(err, data) {
-                    //console.log(err, data);
                     assert(data.params.test2[0]==='test2', "the default query parameters were not sent to the backend");
                     assert(data.params.test1[0]==='test1', "the default query parameters were not sent to the backend");
                     done();
@@ -222,7 +221,7 @@ describe('Usergrid', function(){
                 }, function(err, data) {
                     usergridTestHarness(err, data, done, [
                         function(err, data) {
-                            assert(true)
+                            assert(!err)
                         }
                     ]);
                 });
@@ -303,7 +302,8 @@ describe('Usergrid', function(){
         describe('Usergrid convenience methods', function(){
             before(function(){ client.logout();});
             it('createEntity',function(done){
-                client.createEntity({type:'dog',name:'createEntityTestDog'}, function(err, dog){
+                client.createEntity({type:'dog',name:'createEntityTestDog'}, function(err, response, dog){
+                    console.warn(err, response, dog);
                     assert(!err, "createEntity returned an error")
                     assert(dog, "createEntity did not return a dog")
                     assert(dog.get("name")==='createEntityTestDog', "The dog's name is not 'createEntityTestDog'")
@@ -311,7 +311,7 @@ describe('Usergrid', function(){
                 })
             })
             it('createEntity - existing entity',function(done){
-                    client.createEntity({type:'dog',name:'createEntityTestDog'}, function(err, dog){
+                    client.createEntity({type:'dog',name:'createEntityTestDog'}, function(err, response, dog){
                         try{
                             assert(err, "createEntity should return an error")
                         }catch(e){
@@ -323,7 +323,7 @@ describe('Usergrid', function(){
             })
             var testGroup;
             it('createGroup',function(done){
-                client.createGroup({path:'dogLovers'},function(err, group){
+                client.createGroup({path:'dogLovers'},function(err, response, group){
                         try{
                             assert(!err, "createGroup returned an error")
                         }catch(e){
@@ -346,7 +346,7 @@ describe('Usergrid', function(){
             })
             var dogEntity;
             it('getEntity',function(done){
-                client.getEntity({type:'dog',name:'createEntityTestDog'}, function(err, dog){
+                client.getEntity({type:'dog',name:'createEntityTestDog'}, function(err, response, dog){
                     assert(!err, "createEntity returned an error")
                     assert(dog, "createEntity returned a dog")
                     assert(dog.get("uuid")!==null, "The dog's UUID was not returned")
@@ -366,7 +366,7 @@ describe('Usergrid', function(){
             })
             var dogCollection;
             it('createCollection',function(done){
-                client.createCollection({type:'dogs'},function(err, dogs){
+                client.createCollection({type:'dogs'},function(err, response, dogs){
                     assert(!err, "createCollection returned an error");
                     assert(dogs, "createCollection did not return a dogs collection");
                     dogCollection=dogs;
@@ -384,8 +384,10 @@ describe('Usergrid', function(){
             })
             var activityUser;
             before(function(done){
-                activityUser=new Usergrid.Entity({client:client,data:{"type":"user",username:"testActivityUser"}});
+                activityUser=new Usergrid.Entity({client:client,data:{"type":"user",'username':"testActivityUser"}});
+                console.warn(activityUser);
                 activityUser.fetch(function(err, data){
+                    console.warn(err, data, activityUser);
                     if(err){
                         activityUser.save(function(err, data){
                             activityUser.set(data);
@@ -646,7 +648,7 @@ describe('Usergrid', function(){
                 } //limit statement set to 50
             }
 
-            client.createCollection(options, function(err, dogs) {
+            client.createCollection(options, function(err, response, dogs) {
                 if (!err) {
                     assert(!err, "could not retrieve list of dogs: " + dogs.error_description);
                     //we got 50 dogs, now display the Entities:
@@ -655,6 +657,7 @@ describe('Usergrid', function(){
                     while (dogs.hasNextEntity()) {
                         //get a reference to the dog
                         var dog = dogs.getNextEntity();
+                        console.warn(dog);
                         //notice('removing dog ' + dogname + ' from database');
                         if(dog === null) continue;
                         dog.destroy(function(err, data) {
@@ -797,11 +800,9 @@ describe('Usergrid', function(){
                         test_counter: 0
                     }
                 }
-            }, function(err, data) {
-                assert(!err, data.error_description);
-                console.log(data);
-                done();
             });
+            assert(counter, "Counter not created");
+            done();
         });
         it('should save a counter', function(done) {
             counter.save(function(err, data) {
@@ -899,7 +900,6 @@ describe('Usergrid', function(){
             req.onload = function() {
                 test_image = req.response;
                 image_type = req.getResponseHeader('Content-Type');
-                console.log(test_image, image_type);
                 done();
             }
             req.onerror = function(err) {
@@ -987,8 +987,8 @@ describe('Usergrid', function(){
                     owner: user.get("uuid"),
                     path: folderpath
                 }
-            }, function(err, data) {
-                assert(!err, data.error_description);
+            }, function(err, response, folder) {
+                assert(!err, err);
                 done();
             });
         });
@@ -1000,26 +1000,41 @@ describe('Usergrid', function(){
                     owner: user.get("uuid"),
                     path: filepath
                 }
-            }, function(err, data) {
-                assert(!err, data.error_description);
+            }, function(err, response, asset) {
+                if(err){
+                    assert(false, err);
+                }
                 //console.log(data);
                 done();
             });
         });
+        it('should RETRIEVE an asset', function(done) {
+            asset.fetch(function(err, response, entity){
+                if(err){
+                    assert(false, err);
+                }else{
+                    asset=entity;
+                }
+                done();
+            })
+        });
         it('should upload asset data', function(done) {
-            this.timeout(15000);
-            setTimeout(function() {
-                asset.upload(test_image, function(err, data) {
-                    assert(!err, data.error_description);
-                    done();
-                });
-            }, 10000);
+            this.timeout(5000);
+            asset.upload(test_image, function(err, response, asset) {
+                if(err){
+                    assert(false, err.error_description);
+                }
+                done();
+            });
         });
         it('should retrieve asset data', function(done) {
-            asset.download(function(err, data) {
-                assert(!err, data.error_description);
-                assert(data.type == test_image.type, "MIME types don't match");
-                assert(data.size == test_image.size, "sizes don't match");
+            this.timeout(5000);
+            asset.download(function(err, response, asset) {
+                if(err){
+                    assert(false, err.error_description);
+                }
+                assert(asset.get('content-type') == test_image.type, "MIME types don't match");
+                assert(asset.get('size') == test_image.size, "sizes don't match");
                 done();
             });
         });
@@ -1027,14 +1042,18 @@ describe('Usergrid', function(){
             folder.addAsset({
                 asset: asset
             }, function(err, data) {
-                assert(!err, data.error_description);
+                if(err){
+                    assert(false, err.error_description);
+                }
                 //console.log(data['entities']);
                 done();
             })
         });
         it('should list the assets from a folder', function(done) {
             folder.getAssets(function(err, assets) {
-                assert(!err, assets.error_description);
+                if(err){
+                    assert(false, err.error_description);
+                }
                 //console.log(folder['assets']);
                 done();
             })
@@ -1043,21 +1062,27 @@ describe('Usergrid', function(){
             folder.removeAsset({
                 asset: asset
             }, function(err, data) {
-                assert(!err, data.error_description);
+                if(err){
+                    assert(false, err.error_description);
+                }
                 //console.log(data['entities']);
                 done();
             })
         });
-        it('should DELETE the asset', function(done) {
+        after(function(done) {
             asset.destroy(function(err, data) {
-                assert(!err, data.error_description);
+                if(err){
+                    assert(false, err.error_description);
+                }
                 //console.log(data);
                 done();
             })
         });
-        it('should DELETE the folder', function(done) {
+        after(function(done) {
             folder.destroy(function(err, data) {
-                assert(!err, data.error_description);
+                if(err){
+                    assert(false, err.error_description);
+                }
                 //console.log(data);
                 done();
             })
