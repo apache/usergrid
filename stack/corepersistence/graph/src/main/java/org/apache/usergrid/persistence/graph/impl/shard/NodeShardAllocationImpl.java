@@ -20,8 +20,12 @@
 package org.apache.usergrid.persistence.graph.impl.shard;
 
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
+
+import org.apache.commons.collections4.iterators.PushbackIterator;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -33,6 +37,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
+import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
@@ -49,46 +54,129 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     private final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization;
     private final TimeService timeService;
     private final GraphFig graphFig;
+    private final Keyspace keyspace;
 
 
     @Inject
     public NodeShardAllocationImpl( final EdgeSeriesSerialization edgeSeriesSerialization,
                                     final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization,
-                                    final TimeService timeService, final GraphFig graphFig ) {
+                                    final TimeService timeService, final GraphFig graphFig, final Keyspace keyspace ) {
         this.edgeSeriesSerialization = edgeSeriesSerialization;
         this.edgeSeriesCounterSerialization = edgeSeriesCounterSerialization;
         this.timeService = timeService;
         this.graphFig = graphFig;
+        this.keyspace = keyspace;
     }
 
 
     @Override
     public Iterator<UUID> getShards( final OrganizationScope scope, final Id nodeId, final UUID maxShardId,
                                      final int pageSize, final String... edgeTypes ) {
-        return edgeSeriesSerialization.getEdgeMetaData( scope, nodeId, maxShardId, pageSize, edgeTypes );
+
+        final Iterator<UUID> existingShards =
+                edgeSeriesSerialization.getEdgeMetaData( scope, nodeId, maxShardId, pageSize, edgeTypes );
+
+        final PushbackIterator<UUID> pushbackIterator = new PushbackIterator( existingShards );
+
+
+        final UUID now = UUIDGenerator.newTimeUUID(timeService.getCurrentTime());
+
+
+        final List<UUID> futures = new ArrayList<UUID>();
+
+
+        //loop through all shards, any shard > now+1 should be deleted
+        while ( pushbackIterator.hasNext() ) {
+
+            final UUID value = pushbackIterator.next();
+
+            //we're done, our current time uuid is greater than the value stored
+            if ( UUIDComparator.staticCompare( now, value ) > 0 ) {
+                //push it back into the iterator
+                pushbackIterator.pushback( value );
+                break;
+            }
+
+            futures.add( value );
+        }
+
+
+        //we have more than 1 future value, we need to remove it
+
+        MutationBatch cleanup = keyspace.prepareMutationBatch();
+
+        //remove all futures except the last one, it is the only value we shouldn't lazy remove
+        for ( int i = futures.size() - 2; i > 0; i-- ) {
+            final UUID toRemove = futures.get( i );
+
+            final MutationBatch batch = edgeSeriesSerialization.removeEdgeMeta( scope, nodeId, toRemove, edgeTypes );
+
+            cleanup.mergeShallow( batch );
+        }
+
+
+        try {
+            cleanup.execute();
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to remove future shards, mutation error", e );
+        }
+
+
+        final int futuresSize =  futures.size();
+
+        if ( futuresSize > 0 ) {
+            pushbackIterator.pushback( futures.get( futuresSize - 1 ) );
+        }
+
+
+        return pushbackIterator;
     }
 
 
     @Override
     public boolean auditMaxShard( final OrganizationScope scope, final Id nodeId, final String... edgeType ) {
 
-        final UUID now = UUIDGenerator.newTimeUUID();
+        final UUID now = UUIDGenerator.newTimeUUID( timeService.getCurrentTime() );
 
-        Iterator<UUID> maxShards = getShards( scope, nodeId, MAX_UUID, 1, edgeType );
+        final Iterator<UUID> maxShards = getShards( scope, nodeId, MAX_UUID, 1, edgeType );
+
 
         //if the first shard has already been allocated, do nothing.
 
         //now is already > than the max, don't do anything
-        if ( maxShards.hasNext() && UUIDComparator.staticCompare( now, maxShards.next() ) < 0 ) {
+        if ( !maxShards.hasNext() ) {
             return false;
         }
 
-        final long newShardTime = timeService.getCurrentTime() + graphFig.getCacheTimeout()*2;
+        final UUID maxShard = maxShards.next();
 
-        //allocate a new shard at least now+ 2x our shard timeout.  We want to be sure that all replicas pick up on the new
+        /**
+         * Nothing to do, it's already in the future
+         */
+        if ( UUIDComparator.staticCompare( maxShard, now ) > 0 ) {
+            return false;
+        }
+
+
+        /**
+         * Check out if we have a count for our shard allocation
+         */
+        final long count = edgeSeriesCounterSerialization.getCount( scope, nodeId, maxShard, edgeType );
+
+        if ( count < graphFig.getShardSize() ) {
+            return false;
+        }
+
+        //try to get a lock here, and fail if one isn't present
+
+        final long newShardTime = timeService.getCurrentTime() + graphFig.getShardCacheTimeout() * 2;
+
+        //allocate a new shard at least now+ 2x our shard timeout.  We want to be sure that all replicas pick up on
+        // the new
         //shard
 
-        final UUID futureUUID = UUIDGenerator.newTimeUUID(newShardTime);
+        final UUID futureUUID = UUIDGenerator.newTimeUUID( newShardTime );
 
         try {
             this.edgeSeriesSerialization.writeEdgeMeta( scope, nodeId, futureUUID, edgeType ).execute();
@@ -97,53 +185,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             throw new RuntimeException( "Unable to write the new edge metadata" );
         }
 
-        UUID max = null;
-
-
-        MutationBatch rollup = null;
-
-        Iterator<UUID> shards = getShards( scope, nodeId, MAX_UUID, 1000, edgeType );
-
-        while ( shards.hasNext() ) {
-
-            final UUID shardId = shards.next();
-
-            if ( UUIDComparator.staticCompare( shardId, max ) >= 0 ) {
-                break;
-            }
-
-
-            //remove the edge that is too large from the node shard allocation
-            final MutationBatch batch = edgeSeriesSerialization.removeEdgeMeta( scope, nodeId, shardId, edgeType );
-
-            if ( rollup == null ) {
-                rollup = batch;
-            }
-            else {
-                rollup.mergeShallow( batch );
-            }
-
-
-            //while our max value is > than the value we just created, delete it
-        }
-
-        if ( rollup != null ) {
-            try {
-                rollup.execute();
-            }
-            catch ( ConnectionException e ) {
-                throw new RuntimeException( "Unable to cleanup allocated shards" );
-            }
-        }
 
         return true;
-    }
-
-
-    @Override
-    public void increment( final OrganizationScope scope, final Id nodeId, final UUID shardId, final int count,
-                           final String... edgeType ) {
-        //delegate
-//        edgeSeriesCounterSerialization.incrementMetadataCount( scope, nodeId, shardId, count, edgeType );
     }
 }

@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
 
@@ -60,36 +61,26 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
 
 public class NodeShardApproximationImpl implements NodeShardApproximation {
 
-    //TODO T.N. refactor into an expiring local cache.  We need each hyperlog to be it's own instance of a given shard
-    //if this is to work\
-    private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
-
-    /**
-     * We generate a new time uuid every time a new instance is started.  We should never re-use an instance.
-     */
-    private final UUID identity = UUIDGenerator.newTimeUUID();
-
     private final GraphFig graphFig;
 
-    private final LoadingCache<ShardKey, HyperLogLog> graphLogs;
-
-    private final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization;
+    //TODO, replace with with our counters. This is just a POC for now.  HyperLogLog appears to use too much ram, waiting
+    //to hear back on http://dsiutils.di.unimi.it/#install
+    //for our use case
+    private final LoadingCache<ShardKey, AtomicLong> graphLogs;
 
 
     /**
      * Create a time shard approximation with the correct configuration.
      */
     @Inject
-    public NodeShardApproximationImpl( final GraphFig graphFig,
-                                       final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization ) {
+    public NodeShardApproximationImpl( final GraphFig graphFig) {
         this.graphFig = graphFig;
-        this.edgeSeriesCounterSerialization = edgeSeriesCounterSerialization;
 
         graphLogs = CacheBuilder.newBuilder()
-               .maximumSize( graphFig.getShardCacheTimeout() )
-               .build( new CacheLoader<ShardKey, HyperLogLog>() {
-                   public HyperLogLog load( ShardKey key ) {
-                       return loadCache( key );
+               .maximumSize( graphFig.getShardCacheSize() )
+               .build( new CacheLoader<ShardKey, AtomicLong>() {
+                   public AtomicLong load( ShardKey key ) {
+                       return new AtomicLong(  );
                    }
                } );
 
@@ -97,23 +88,14 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
 
     @Override
-    public void increment( final OrganizationScope scope, final Id nodeId, final UUID shardId,
+    public void increment( final OrganizationScope scope, final Id nodeId, final UUID shardId,  final long count,
                            final String... edgeType ) {
 
-
-
-        final ByteBuffer buff = UUID_SERIALIZER.toByteBuffer( shardId );
-
-        byte[] bytes = buff.array();
-
-
-
-        long longHash = MurmurHash.hash64(bytes, bytes.length );
 
         final ShardKey key = new ShardKey( scope, nodeId, shardId, edgeType );
 
         try {
-            graphLogs.get( key).offerHashed( longHash );
+            graphLogs.get( key).addAndGet(count);
         }
         catch ( ExecutionException e ) {
             throw new RuntimeException( "Unable to get hyperloglog from cache", e );
@@ -123,40 +105,21 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
     }
 
 
-    private HyperLogLog loadCache(ShardKey key){
-//         edgeSeriesCounterSerialization
-        return null;
-    }
-
-
     @Override
     public long getCount( final OrganizationScope scope, final Id nodeId, final UUID shardId,
                           final String... edgeType ) {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
-    }
+
+        final ShardKey key = new ShardKey( scope, nodeId, shardId, edgeType );
 
 
-    private byte[] hash( final OrganizationScope scope, final Id nodeId, final UUID shardId,
-                         final String... edgeTypes ) {
-        StringBuilder builder = new StringBuilder();
-
-        final Id organization = scope.getOrganization();
-
-        builder.append( organization.getUuid() );
-        builder.append( organization.getType() );
-
-        builder.append( nodeId.getUuid() );
-        builder.append( nodeId.getType() );
-
-        builder.append( shardId.toString() );
-
-        for ( String edgeType : edgeTypes ) {
-            builder.append( edgeType );
+        try {
+            return graphLogs.get( key ).get();
         }
-
-        return null;
-//        return builder.toString().getBytes( CHARSET );
+        catch ( ExecutionException e ) {
+            throw new RuntimeException("Unable to execute cache get", e);
+        }
     }
+
 
 
     /**

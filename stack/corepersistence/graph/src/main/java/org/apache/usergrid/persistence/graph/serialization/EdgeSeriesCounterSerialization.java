@@ -59,18 +59,8 @@ public interface EdgeSeriesCounterSerialization {
      * @param shardId The shard Id to use
      * @param types The types to write to.  Can be edge type, or edgeType+id type
      */
-    public MutationBatch writeMetaDataLog( OrganizationScope scope, Id nodeId, UUID shardId, HyperLogLog log, UUID workerId, String... types );
+    public MutationBatch writeMetaDataLog( OrganizationScope scope, Id nodeId, UUID shardId, long count, String... types );
 
-    /**
-     * return all persistent instance of the hyperlog log
-     * @param scope
-     * @param nodeId
-     * @param shardId
-     * @param types
-     * @return
-     */
-
-    public List<HyperLogLog> getMetadataLog( OrganizationScope scope, Id nodeId, UUID shardId, String... types );
 
     /**
      * Get the most recent rollup of all of the given summations.  If one is not present the optional will be empty
@@ -80,28 +70,8 @@ public interface EdgeSeriesCounterSerialization {
      * @param types
      * @return
      */
-    public Optional<HyperLogLog> getSummationLog(OrganizationScope scope, Id nodeId, UUID shardId, String... types);
-
-    /**
-     * Write the summation log.  Uses the timestamp passed in the column
-     * @param scope The scope to write
-     * @param nodeId The id in the edge
-     * @param shardId The shard Id to use
-     * @param log The log to write
-     * @param creatorId The identifier of this writer
-     * @param types The types to write to.  Can be edge type, or edgeType+id type
-     */
-    public MutationBatch writeSummationLog( OrganizationScope scope, Id nodeId, UUID shardId, HyperLogLog log, UUID workerId,  String... types );
+    public long getCount(OrganizationScope scope, Id nodeId, UUID shardId, String... types);
 
 
-    /**
-     * Remove the slice from the edge meta data from the types.
-     * @param scope
-     * @param nodeId
-     * @param shardId
-     * @param types
-     * @return
-     */
-    public MutationBatch removeEdgeMetadataCount( OrganizationScope scope, Id nodeId, UUID shardId, String... types );
 
 }

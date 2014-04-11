@@ -39,7 +39,7 @@ public class MultiTennantColumnFamilyDefinition {
      */
     public enum CacheOption {
         /**
-         * Use both row key cache and key cache
+         * Use both row key shard and key shard
          */
         ALL( "ALL" ),
 

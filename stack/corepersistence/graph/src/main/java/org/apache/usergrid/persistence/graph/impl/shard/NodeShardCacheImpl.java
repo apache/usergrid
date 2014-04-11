@@ -77,7 +77,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
             public void propertyChange( final PropertyChangeEvent evt ) {
                 final String propertyName = evt.getPropertyName();
 
-                if ( propertyName.equals( GraphFig.CACHE_SIZE ) || propertyName.equals( GraphFig.CACHE_TIMEOUT ) ) {
+                if ( propertyName.equals( GraphFig.SHARD_CACHE_SIZE ) || propertyName.equals( GraphFig.SHARD_CACHE_TIMEOUT ) ) {
                     updateCache();
                 }
             }
@@ -122,23 +122,26 @@ public class NodeShardCacheImpl implements NodeShardCache {
     private void updateCache() {
 
         this.graphs = CacheBuilder.newBuilder().maximumSize( graphFig.getShardCacheSize() )
-                                  .expireAfterWrite( graphFig.getCacheTimeout(), TimeUnit.MILLISECONDS )
+                                  .expireAfterWrite( graphFig.getShardCacheSize(), TimeUnit.MILLISECONDS )
                                   .build( new CacheLoader<CacheKey, CacheEntry>() {
 
 
                                       @Override
                                       public CacheEntry load( final CacheKey key ) throws Exception {
 
-                                          //TODO, we need to put some sort of upper bounds on this, it could possibly
-                                          //get too large
-                                          final Iterator<UUID> edges = nodeShardAllocation
-                                                  .getShards( key.scope, key.id, MAX_UUID, SHARD_PAGE_SIZE, key.types );
-
 
                                           /**
-                                           * Perform an async audit in case we need to allocate a new shard
+                                           * Perform an audit in case we need to allocate a new shard
                                            */
                                           nodeShardAllocation.auditMaxShard( key.scope, key.id, key.types );
+                                             //TODO, we need to put some sort of upper bounds on this, it could possibly
+                                          //get too large
+
+
+
+
+                                          final Iterator<UUID> edges = nodeShardAllocation
+                                                                                          .getShards( key.scope, key.id, MAX_UUID, SHARD_PAGE_SIZE, key.types );
 
                                           return new CacheEntry( edges );
                                       }

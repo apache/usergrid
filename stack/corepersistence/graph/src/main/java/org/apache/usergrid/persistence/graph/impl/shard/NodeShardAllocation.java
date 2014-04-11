@@ -59,15 +59,4 @@ public interface NodeShardAllocation {
     public boolean auditMaxShard(final OrganizationScope scope, final Id nodeId, final String... edgeType);
 
 
-    /**
-     * Increment the shard Id the specified amount
-     * @param scope The scope
-     * @param nodeId The node id
-     * @param shardId The shard id
-     * @param count The count
-     * @param edgeType The edge type
-     */
-    public void increment(final OrganizationScope scope, final Id nodeId, final UUID shardId, int count, final String... edgeType);
-
-
 }

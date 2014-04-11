@@ -39,6 +39,12 @@
       <version>${project.version}</version>
     </dependency>
 
+    <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-collections4</artifactId>
+        <version>4.0</version>
+    </dependency>
+
 
     <!-- utilized for hyperloglog cardinality terms -->
     <dependency>

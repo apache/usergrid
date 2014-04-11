@@ -116,4 +116,21 @@ public class UUIDGeneratorTest {
             return null;
         }
     }
+
+    @Test
+    public void testUUIDOrderingWithTimestamp(){
+        long first = 10000l;
+        long second = first+1;
+
+        //ensure the values are reproducible
+        UUID firstUUID = UUIDGenerator.newTimeUUID( first );
+        UUID firstUUIDx2 = UUIDGenerator.newTimeUUID( first );
+        UUID secondUUID = UUIDGenerator.newTimeUUID( second );
+
+        assertTrue(UUIDComparator.staticCompare( firstUUID, secondUUID ) < 0);
+        assertTrue(UUIDComparator.staticCompare( secondUUID, firstUUID ) > 0);
+
+        assertTrue(UUIDComparator.staticCompare( firstUUIDx2, firstUUID ) == 0);
+
+    }
 }

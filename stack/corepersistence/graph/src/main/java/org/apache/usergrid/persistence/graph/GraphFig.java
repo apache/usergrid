@@ -49,15 +49,15 @@ public interface GraphFig extends GuicyFig {
 
     public static final String READ_TIMEOUT = "usergrid.graph.read.timeout";
 
-    public static final String CACHE_TIMEOUT = "usergrid.graph.shard.timeout";
+    public static final String SHARD_SIZE = "usergrid.graph.shard.size";
 
-    public static final String CACHE_SIZE = "usergrid.graph.shard.size";
+    public static final String SHARD_CACHE_SIZE = "usergrid.graph.shard.cache.size";
 
     public static final String SHARD_CACHE_TIMEOUT = "usergrid.graph.shard.cache.timeout";
 
     public static final String COUNTER_PRECISION_LOSS = "usergrid.graph.shard.counter.precision.loss";
 
-    @Default( "1000" )
+    @Default("1000")
     @Key(SCAN_PAGE_SIZE)
     int getScanPageSize();
 
@@ -69,8 +69,8 @@ public interface GraphFig extends GuicyFig {
     @Key(WRITE_CL)
     String getWriteCL();
 
-    @Default( "10000" )
-    @Key( WRITE_TIMEOUT )
+    @Default("10000")
+    @Key(WRITE_TIMEOUT)
     int getWriteTimeout();
 
     /**
@@ -97,23 +97,21 @@ public interface GraphFig extends GuicyFig {
     int getRepairTimeout();
 
 
-    @Default( "10000" )
-    @Key( CACHE_SIZE )
-    int getShardCacheSize();
-
-    @Default( "30000" )
-    @Key( CACHE_TIMEOUT )
-    long getCacheTimeout();
+    @Default("10000")
+    @Key(SHARD_SIZE)
+    long getShardSize();
 
     @Default(".02")
     @Key(COUNTER_PRECISION_LOSS)
     double getShardCounterPrecisionLoss();
 
 
-    @Default( "10000" )
+    @Default("30000")
     @Key(SHARD_CACHE_TIMEOUT)
     long getShardCacheTimeout();
 
-
+    @Default( "250000" )
+    @Key( SHARD_CACHE_SIZE )
+    long getShardCacheSize();
 }
 

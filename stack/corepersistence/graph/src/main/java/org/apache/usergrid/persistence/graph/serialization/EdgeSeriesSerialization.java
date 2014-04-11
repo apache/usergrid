@@ -45,7 +45,7 @@ public interface EdgeSeriesSerialization {
     public MutationBatch writeEdgeMeta(OrganizationScope scope, Id nodeId, UUID slice,  String... types);
 
     /**
-     * Get an iterator of all meta data and types
+     * Get an iterator of all meta data and types.  Returns a range from High to low
      * @param scope The organization scope
      * @param nodeId The id of the node
      * @param start The uuid to start seeking from.  Values <= this value will be returned.

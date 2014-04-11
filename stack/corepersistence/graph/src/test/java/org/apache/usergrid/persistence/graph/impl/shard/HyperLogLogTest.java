@@ -43,7 +43,7 @@ public class HyperLogLogTest {
 
     private static final UUIDSerializer UUID_SER = UUIDSerializer.get();
 
-    private static final double LOSS = 0.01d;
+    private static final double LOSS = 0.10d;
 
 
     @Test
@@ -133,9 +133,9 @@ public class HyperLogLogTest {
         log.info( "Expected max is {}", max );
 
 
-//        assertTrue( "Min is <= the cardinality", min <= cardinality );
-//
-//        assertTrue( "Cardinality is <= max ", cardinality <= max );
+        assertTrue( "Min is <= the cardinality", min <= cardinality );
+
+        assertTrue( "Cardinality is <= max ", cardinality <= max );
     }
 
 
