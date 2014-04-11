@@ -24,7 +24,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
   $rootScope.help.helpButtonStatus = 'Enable Help';
   $rootScope.help.helpTooltipsEnabled = false;
   $rootScope.help.clicked = false;
-  $rootScope.help.showHelpButtons = false;
+  $rootScope.help.showHelpButtons = false;  
   var tooltipStartTime;
   var helpStartTime;
   var introjs_step;    
@@ -41,11 +41,13 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
       //turn on help tooltips
       $rootScope.help.helpButtonStatus = 'Disable Help';
       $rootScope.help.helpTooltipsEnabled = true;
-      showHelpModal('tooltips');
+      $rootScope.$broadcast('tooltips-enabled');
+      showHelpModal('tooltips');      
     } else {
       //turn off help tooltips
       $rootScope.help.helpButtonStatus = 'Enable Help';
       $rootScope.help.helpTooltipsEnabled = false;
+      $rootScope.$broadcast('tooltips-disabled');
     }
   };
 
@@ -63,7 +65,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
   $rootScope.$on("$routeChangeSuccess", function(event, current) {      
     //hide the help buttons if not on org-overview page
     var path = current.$$route ? current.$$route.originalPath : null;
-    if (path == '/org-overview' || path.indexOf('/performance') != -1 || path == '/users') {
+    if (path == '/org-overview' || path.indexOf('/performance') != -1 || path == '/users' || path == '/groups' || path == '/roles') {
       
       $rootScope.help.showHelpButtons = true;
 
@@ -103,9 +105,8 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
     angular.forEach(helpJson.tooltip, function(value, binding) {
       $rootScope[binding] = value;
     });
+    $rootScope.help.tooltip = helpJson.tooltip;    
   }
-
-  
 
   //user starts introjs
   $rootScope.help.introjs_StartEvent = function() {
@@ -130,6 +131,27 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
     });      
   };
 
+  //user completes all steps in introjs for page
+  $rootScope.help.intros_CompleteEvent = function() {
+    switch ($rootScope.currentPath) {
+      case "/performance/app-usage":
+        $location.url('/performance/errors-crashes?multipage=true');
+        break;
+
+      case "/performance/errors-crashes":
+        $location.url('/performance/api-perf?multipage=true');
+        break;
+
+      case "/users":
+        $location.url('/performance/groups?multipage=true');
+        break;
+
+      case "/groups":
+        $location.url('/performance/roles?multipage=true');
+        break;
+    }
+  }
+
   //increment the step tracking when user goes to next introjs step
   $rootScope.help.introjs_ChangeEvent = function() {
     introjs_step++;
@@ -140,7 +162,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
 
 
   var getHelpJson = function(path) {
-    return $http.get('https://s3.amazonaws.com/sdk.apigee.com/portal_help' + path + '/helpJson.json');
+    return $http.jsonp('https://s3.amazonaws.com/sdk.apigee.com/portal_help' + path + '/helpJson.json');
   };
 
   var getHelpStatus = function(helpType) {

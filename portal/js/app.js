@@ -86,8 +86,8 @@ angular.module('appservices', ['ngRoute',
   'appservices.controllers',
   'appservices.max',
   'angular-intro',
-]).config(['$routeProvider', '$locationProvider', '$sceDelegateProvider', '$analyticsProvider',
-  function($routeProvider, $locationProvider, $sceDelegateProvider, $analyticsProvider) {
+]).config(['$routeProvider', '$locationProvider', '$sceDelegateProvider', '$analyticsProvider', '$httpProvider',
+  function($routeProvider, $locationProvider, $sceDelegateProvider, $analyticsProvider, $httpProvider) {
     $routeProvider
       .when('/org-overview', {
         templateUrl: 'org-overview/org-overview.html',
@@ -238,7 +238,7 @@ angular.module('appservices', ['ngRoute',
     $analyticsProvider.virtualPageviews(false);
     $analyticsProvider.firstPageview(false);
 
-    //$httpProvider.defaults.useXDomain = true;
+    $httpProvider.defaults.useXDomain = true;    
 
   }
 ]);

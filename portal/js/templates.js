@@ -188,7 +188,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\tApigeeClient apigeeClient = new ApigeeClient(ORGNAME,APPNAME,this.getBaseContext());\n" +
     "\n" +
     "\t// hold onto the ApigeeClient instance in our application object.\n" +
-    "\tyourApp = (YourApplication) getApplication;\n" +
+    "\tYourApplication yourApp = (YourApplication) getApplication;\n" +
     "\tyourApp.setApigeeClient(apigeeClient);\t\t\t\n" +
     "}\n" +
     "\t\t</pre>\n" +

@@ -405,6 +405,5 @@ AppServices.Controllers.controller('PageCtrl',
       //call introjs start
       $scope.startHelp();
     }
-
   }
 ]);
