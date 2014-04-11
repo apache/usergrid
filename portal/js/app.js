@@ -238,7 +238,7 @@ angular.module('appservices', ['ngRoute',
     $analyticsProvider.virtualPageviews(false);
     $analyticsProvider.firstPageview(false);
 
-    $httpProvider.defaults.useXDomain = true;
+    //$httpProvider.defaults.useXDomain = true;
 
   }
 ]);
