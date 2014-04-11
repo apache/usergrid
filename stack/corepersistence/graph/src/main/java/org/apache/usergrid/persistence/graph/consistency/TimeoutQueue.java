@@ -13,7 +13,7 @@ public interface TimeoutQueue<T> {
      * Queue the event with the timeout provided
      *
      * @param event The event to queue
-     * @param timeout The timeout to set on the queue element
+     * @param timeout The timeout to set on the queue element before it becomes available for consumption
      * @return The AsynchronousMessage that has been queued
      */
     public AsynchronousMessage<T> queue( T event, long timeout );
@@ -25,7 +25,7 @@ public interface TimeoutQueue<T> {
      * This implicitly re-schedules every taken operation at currentTime+timeout
      *
      * @param  maxSize The maximum number of elements to take
-     * @param timeout The timeout to set when taking the elements from the Q
+     * @param timeout The timeout to set when taking the elements from the Q and allowing them to become available
      *
      * @return A collection of events.
      */
