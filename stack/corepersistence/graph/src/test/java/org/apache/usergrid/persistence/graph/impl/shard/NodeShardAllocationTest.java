@@ -282,7 +282,16 @@ public class NodeShardAllocationTest {
 
         UUID expectedUUID = UUIDGenerator.newTimeUUID( expectedUUIDTime );
 
-        assertEquals( "Expected UUID at 2x timeout generated", expectedUUID, newUUIDValue.getValue() );
+        final int comparison = UUIDComparator.staticCompare( expectedUUID, newUUIDValue.getValue() );
+
+        //the comparison uuid will be larger than the new value due to randomness even though they share a timestamp
+        //however the delta should not be more than the 1/10000 ticks in the uuid
+        final long expectedTimestamp = expectedUUID.timestamp()/10000;
+        final long savedTimestamp = newUUIDValue.getValue().timestamp()/10000;
+
+
+
+        assertEquals( "Expected UUID at 2x timeout generated",expectedTimestamp, savedTimestamp);
     }
 
 
@@ -334,7 +343,9 @@ public class NodeShardAllocationTest {
         assertTrue("Future time is actually in the future", futureTime > timeService.getCurrentTime());
 
 
-
+        /**
+         * We were getting time UUID sort errors.  I've added this to ensure the test data is valid before proceeding
+         */
 
         UUID futureUUID1 = UUIDGenerator.newTimeUUID(futureTime);
 
@@ -349,11 +360,11 @@ public class NodeShardAllocationTest {
         //verify all future IDS are greater than "now" if they're not, then there's something wrong with the
         //UUID Generation, which is crucial to this functionality
 
+        assertTrue( UUIDComparator.staticCompare( futureUUID3, futureUUID2 ) > 0);
+
+        assertTrue( UUIDComparator.staticCompare( futureUUID2, futureUUID1 ) > 0);
+
         assertTrue( UUIDComparator.staticCompare( futureUUID1, now ) > 0);
-
-        assertTrue( UUIDComparator.staticCompare( futureUUID2, now ) > 0);
-
-        assertTrue( UUIDComparator.staticCompare( futureUUID3, now ) > 0);
 
 
         final int pageSize = 100;
@@ -398,7 +409,7 @@ public class NodeShardAllocationTest {
 
         List<UUID> values = newUUIDValue.getAllValues();
 
-        assertEquals("2 values removed", values.size());
+        assertEquals("2 values removed", 2,  values.size());
 
         assertEquals("Deleted Max Future", futureUUID3, values.get( 0 ));
         assertEquals("Deleted Next Future", futureUUID2, values.get( 1 ));

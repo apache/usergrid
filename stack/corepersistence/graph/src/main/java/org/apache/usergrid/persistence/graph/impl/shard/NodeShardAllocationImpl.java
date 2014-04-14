@@ -106,7 +106,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         MutationBatch cleanup = keyspace.prepareMutationBatch();
 
         //remove all futures except the last one, it is the only value we shouldn't lazy remove
-        for ( int i = futures.size() - 2; i > 0; i-- ) {
+        for ( int i = 0; i < futures.size() -1; i++ ) {
             final UUID toRemove = futures.get( i );
 
             final MutationBatch batch = edgeSeriesSerialization.removeEdgeMeta( scope, nodeId, toRemove, edgeTypes );

@@ -130,7 +130,9 @@ public class UUIDGeneratorTest {
         assertTrue(UUIDComparator.staticCompare( firstUUID, secondUUID ) < 0);
         assertTrue(UUIDComparator.staticCompare( secondUUID, firstUUID ) > 0);
 
-        assertTrue(UUIDComparator.staticCompare( firstUUIDx2, firstUUID ) == 0);
+        //Even though we use the same timestamp, the first x2 was generated AFTEr the firstUUID.  It should
+        //therefore be greater
+        assertTrue(UUIDComparator.staticCompare( firstUUIDx2, firstUUID ) > 0);
 
     }
 }
