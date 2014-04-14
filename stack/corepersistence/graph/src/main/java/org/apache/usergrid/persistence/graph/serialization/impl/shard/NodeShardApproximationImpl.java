@@ -17,10 +17,9 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.impl.shard;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -30,16 +29,11 @@ import javax.inject.Inject;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.serialization.EdgeSeriesCounterSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.clearspring.analytics.hash.MurmurHash;
-import com.clearspring.analytics.stream.cardinality.HyperLogLog;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
 /**

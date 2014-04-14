@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl.shard;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.Arrays;
@@ -291,7 +291,7 @@ public class NodeShardAllocationTest {
 
 
 
-        assertEquals( "Expected UUID at 2x timeout generated",expectedTimestamp, savedTimestamp);
+        assertEquals( "Expected UUID at 2x timeout generated", expectedTimestamp, savedTimestamp );
     }
 
 

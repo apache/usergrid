@@ -16,14 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl.shard;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -112,6 +115,29 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
         //if we get here, something went wrong, our shard should always have a time UUID to return to us
         throw new RuntimeException( "No time UUID shard was found and could not allocate one" );
+    }
+
+
+    @Override
+    public Iterator<UUID> getVersions( final OrganizationScope scope, final Id nodeId, final UUID maxTime,
+                                       final String... edgeType ) {
+        final CacheKey key = new CacheKey( scope, nodeId, edgeType );
+              CacheEntry entry;
+
+              try {
+                  entry = this.graphs.get( key );
+              }
+              catch ( ExecutionException e ) {
+                  throw new RuntimeException( "Unable to load shard key for graph", e );
+              }
+
+        Iterator<UUID> iterator = entry.getShards( maxTime );
+
+        if(iterator == null){
+            return Collections.<UUID>emptyList().iterator();
+        }
+
+        return iterator;
     }
 
 
@@ -220,6 +246,16 @@ public class NodeShardCacheImpl implements NodeShardCache {
          */
         public UUID getShardId( final UUID seek ) {
             return this.shards.floor( seek );
+        }
+
+
+        /**
+         * Get all shards <= this one in decending order
+         * @param maxUUID
+         * @return
+         */
+        public Iterator<UUID> getShards(final UUID maxUUID){
+            return this.shards.headSet(maxUUID, true  ).descendingIterator();
         }
     }
 

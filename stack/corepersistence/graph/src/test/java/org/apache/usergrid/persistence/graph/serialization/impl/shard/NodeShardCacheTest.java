@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl.shard;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.junit.Before;
@@ -88,7 +89,8 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning no shards at all.
          */
-        when( allocation.getShards( same( scope ), same( id ), same(Constants.MAX_UUID), any( Integer.class ), same( edgeType ), same( otherIdType ) ) )
+        when( allocation.getShards( same( scope ), same( id ), same( Constants.MAX_UUID ), any( Integer.class ),
+                same( edgeType ), same( otherIdType ) ) )
                 .thenReturn( Collections.singletonList( Constants.MIN_UUID ).iterator() );
 
 
@@ -132,8 +134,8 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning single shard
          */
-        when( allocation.getShards( same( scope ), same( id ), same(Constants.MAX_UUID), any( Integer.class ),  same( edgeType ), same( otherIdType ) ) )
-                .thenReturn( Collections.singletonList( min ).iterator() );
+        when( allocation.getShards( same( scope ), same( id ), same( Constants.MAX_UUID ), any( Integer.class ),
+                same( edgeType ), same( otherIdType ) ) ).thenReturn( Collections.singletonList( min ).iterator() );
 
 
         UUID slice = cache.getSlice( scope, id, newTime, edgeType, otherIdType );
@@ -181,8 +183,8 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning all shards
          */
-        when( allocation.getShards( same( scope ), same( id ),  same(Constants.MAX_UUID), any( Integer.class ), same( edgeType ), same( otherIdType ) ) )
-                .thenReturn( Arrays.asList( min, mid, max ).iterator() );
+        when( allocation.getShards( same( scope ), same( id ), same( Constants.MAX_UUID ), any( Integer.class ),
+                same( edgeType ), same( otherIdType ) ) ).thenReturn( Arrays.asList( min, mid, max ).iterator() );
 
 
         //check getting equal to our min, mid and max
@@ -245,6 +247,70 @@ public class NodeShardCacheTest {
          * Verify that we fired the audit
          */
         verify( allocation ).auditMaxShard( scope, id, edgeType, otherIdType );
+    }
+
+
+    @Test
+    public void testRangeShardIterator() {
+
+        final GraphFig graphFig = getFigMock();
+
+        final NodeShardAllocation allocation = mock( NodeShardAllocation.class );
+
+        final Id id = createId( "test" );
+
+        final String edgeType = "edge";
+
+        final String otherIdType = "type";
+
+
+        /**
+         * Set our min mid and max
+         */
+        final UUID min = new UUID( 0, 1 );
+
+
+        final UUID mid = new UUID( 0, 100 );
+
+
+        final UUID max = new UUID( 0, 200 );
+
+
+        NodeShardCache cache = new NodeShardCacheImpl( allocation, graphFig );
+
+
+        /**
+         * Simulate returning all shards
+         */
+        when( allocation.getShards( same( scope ), same( id ), same( Constants.MAX_UUID ), any( Integer.class ),
+                same( edgeType ), same( otherIdType ) ) ).thenReturn( Arrays.asList( min, mid, max ).iterator() );
+
+
+        //check getting equal to our min, mid and max
+
+        Iterator<UUID> slice =
+                cache.getVersions( scope, id, new UUID( max.getMostSignificantBits(), max.getLeastSignificantBits() ),
+                        edgeType, otherIdType );
+
+
+        assertEquals( max, slice.next() );
+        assertEquals( mid, slice.next() );
+        assertEquals( min, slice.next() );
+
+
+        slice = cache.getVersions( scope, id, new UUID( mid.getMostSignificantBits(), mid.getLeastSignificantBits() ),
+                edgeType, otherIdType );
+
+        assertEquals( mid, slice.next() );
+        assertEquals( min, slice.next() );
+
+
+        slice = cache.getVersions( scope, id, new UUID( min.getMostSignificantBits(), min.getLeastSignificantBits() ),
+                edgeType, otherIdType );
+
+        assertEquals( min, slice.next() );
+
+
     }
 
 

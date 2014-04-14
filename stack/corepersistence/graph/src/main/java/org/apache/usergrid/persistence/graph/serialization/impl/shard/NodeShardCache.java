@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl.shard;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
@@ -40,4 +41,14 @@ public interface NodeShardCache {
      * @param edgeType
      */
     public UUID getSlice(final OrganizationScope scope, final Id nodeId, final UUID time, final String... edgeType);
+
+    /**
+     * Get an iterator of all versions <= the version
+     * @param scope
+     * @param nodeId
+     * @param maxTime
+     * @param edgeType
+     * @return
+     */
+    public Iterator<UUID> getVersions(final OrganizationScope scope, final Id nodeId, final UUID maxTime, final String... edgeType);
 }
