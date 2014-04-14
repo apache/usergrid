@@ -22,9 +22,13 @@ import com.google.inject.Inject;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.legacy.CoreApplication;
@@ -90,11 +94,13 @@ public class CollectionIT {
     @Before
     public void setup() {
 
-        Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+        Id appId = new SimpleId("application");
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "test-collection" );
 
-        em = new EntityManagerFacade( orgId, appId, 
-            cmf, cif );
+        em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
 
         app.setEntityManager( em );                
     }

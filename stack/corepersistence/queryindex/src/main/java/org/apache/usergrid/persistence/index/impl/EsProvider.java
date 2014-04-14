@@ -88,7 +88,7 @@ public class EsProvider {
                 log.info("--------------------------------");
 
                 Settings settings = ImmutableSettings.settingsBuilder()
-                        .put("cluster.name", fig.getIndexName() ).build();
+                        .put("cluster.name", fig.getIndexNamePrefix() ).build();
 
                 TransportClient transportClient = new TransportClient(settings);
                 for (String host : fig.getHosts().split(",")) {

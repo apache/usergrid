@@ -33,6 +33,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
@@ -100,19 +101,26 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     // These are not allowed in document type names: _ . , | #
     public static final String DOC_TYPE_SEPARATOR = "^";
 
+    public static final String INDEX_NAME_SEPARATOR = "^";
+
     @Inject
-    public EsEntityCollectionIndex(@Assisted final CollectionScope scope,
+    public EsEntityCollectionIndex(
+            @Assisted final OrganizationScope orgScope, 
+            @Assisted("appScope") final CollectionScope appScope,
+            @Assisted("scope") final CollectionScope scope,
             IndexFig config,
             EsProvider provider,
             EntityCollectionManagerFactory factory) {
-
+        
+        ValidationUtils.validateOrganizationScope( orgScope );
+        ValidationUtils.validateCollectionScope( appScope );
         ValidationUtils.validateCollectionScope( scope );
 
         this.manager = factory.createCollectionManager(scope);
         this.client = provider.getClient();
         this.scope = scope;
 
-        this.indexName = config.getIndexName();
+        this.indexName = createIndexName( config.getIndexNamePrefix(), orgScope, appScope );
         this.typeName = createTypeName( scope );
 
         this.refresh = config.isForcedRefresh();
@@ -166,12 +174,22 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     }
    
     
-    private String createIndexId(Entity entity) {
-        return createIndexId(entity.getId(), entity.getVersion());
+    private String createIndexName( String prefix, OrganizationScope orgScope, CollectionScope appScope ) {
+        StringBuilder sb = new StringBuilder();
+        String sep = INDEX_NAME_SEPARATOR;
+        sb.append( orgScope.getOrganization().getUuid() ).append(sep);
+        sb.append( orgScope.getOrganization().getType() ).append(sep);
+        sb.append( appScope.getOrganization().getUuid() ).append(sep);
+        sb.append( appScope.getOrganization().getType() );
+        return sb.toString();
+    }
+
+    private String createIndexDocId(Entity entity) {
+        return createIndexDocId(entity.getId(), entity.getVersion());
     }
 
     
-    private String createIndexId(Id entityId, UUID version) {
+    private String createIndexDocId(Id entityId, UUID version) {
         StringBuilder sb = new StringBuilder();
         String sep = DOC_ID_SEPARATOR;
         sb.append( entityId.getUuid() ).append(sep);
@@ -207,7 +225,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         entityAsMap.put("created", entity.getId().getUuid().timestamp());
         entityAsMap.put("updated", entity.getVersion().timestamp());
 
-        String indexId = createIndexId(entity);
+        String indexId = EsEntityCollectionIndex.this.createIndexDocId(entity);
 
         IndexRequestBuilder irb = client.prepareIndex(indexName, typeName, indexId)
                 .setSource(entityAsMap)
@@ -238,7 +256,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     public void deindex(Id entityId, UUID version) {
 
-        String indexId = createIndexId(entityId, version);
+        String indexId = createIndexDocId(entityId, version);
 
         client.prepareDelete( indexName, typeName, indexId )
             .setRefresh( refresh )
