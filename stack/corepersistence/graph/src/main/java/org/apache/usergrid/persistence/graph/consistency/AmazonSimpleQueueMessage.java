@@ -9,35 +9,50 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**
- *  Simple message that just contains the event and the timeout.  More advanced queue implementations
- *  will most likely subclass this class.
+ *
  *
  */
-//@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
-public class SimpleAsynchronousMessage<T> implements AsynchronousMessage<T>, Serializable {
+public class AmazonSimpleQueueMessage<T> implements AsynchronousMessage<T>, Serializable {
 
     @JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
     @JsonProperty
     private final T event;
     @JsonProperty
     private final long timeout;
+    @JsonProperty
+    private final String messageId;
+    @JsonProperty
+    private final String receiptHandle;
 
 
     @JsonCreator
-    public SimpleAsynchronousMessage(@JsonProperty("event") final T event, @JsonProperty("timeout") final long timeout ) {
+    public AmazonSimpleQueueMessage(@JsonProperty("event") final T event, @JsonProperty("timeout") final long timeout,
+                                    final String messageId, final String receiptHandle) {
         this.event = event;
         this.timeout = timeout;
+        this.messageId = messageId;
+        this.receiptHandle = receiptHandle;
     }
 
 
     @Override
     public T getEvent() {
-       return event;
+        return event;
     }
 
 
     @Override
     public long getTimeout() {
         return timeout;
+    }
+
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+
+    public String getReceiptHandle() {
+        return receiptHandle;
     }
 }
