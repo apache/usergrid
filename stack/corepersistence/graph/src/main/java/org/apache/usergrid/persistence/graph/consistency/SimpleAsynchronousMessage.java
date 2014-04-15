@@ -13,10 +13,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *  will most likely subclass this class.
  *
  */
-//@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
 public class SimpleAsynchronousMessage<T> implements AsynchronousMessage<T>, Serializable {
 
-    @JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
+    @JsonTypeInfo( use= JsonTypeInfo.Id.MINIMAL_CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
     @JsonProperty
     private final T event;
     @JsonProperty

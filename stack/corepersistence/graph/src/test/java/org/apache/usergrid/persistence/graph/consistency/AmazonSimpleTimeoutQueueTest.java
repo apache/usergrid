@@ -34,11 +34,8 @@ public class AmazonSimpleTimeoutQueueTest {
         AmazonSQSAsyncClient sqsAsyncClient = new AmazonSQSAsyncClient( awsCredentials );
         String queueName = "testRemove" + UUID.randomUUID();
 
-        final long time = 1l;
         final long timeout = 1;
         final long extentedTimeout = 50;
-
-        // when( timeService.getCurrentTime() ).thenReturn( time );
 
         TimeoutQueue queue = null;
         try {
@@ -62,11 +59,6 @@ public class AmazonSimpleTimeoutQueueTest {
             assertEquals( timeout, asynchronousMessage.getTimeout() );
 
             Collection<AsynchronousMessage<TestEvent>> results = queue.take( 100, timeout );
-
-            assertEquals( "Time not yet elapsed", 0, results.size() );
-
-            //now elapse the time
-            final long firstTime = time + timeout;
 
             try {
                 Thread.sleep( 1000 );
@@ -103,9 +95,7 @@ public class AmazonSimpleTimeoutQueueTest {
     @Test
     public void queueReadTimeout() {
 
-        final long time = 1l;
         final long timeout = 5;
-        final long extentedTimeout = 50;
 
 
         final int queueSize = 100;
@@ -144,23 +134,6 @@ public class AmazonSimpleTimeoutQueueTest {
 
             Collection<AsynchronousMessage<TestEvent>> results = queue.take( 100, timeout );
 
-           // assertEquals( "Time not yet elapsed", 0, results.size() );
-
-            //now elapse the time
-            final long firstTime = time + timeout;
-
-            final int takeSize = 100;
-
-            final int iterations = queueSize;
-
-            //for ( int i = 0; i < iterations; i++ ) {
-
-                //results = queue.take( takeSize, extentedTimeout );
-
-//                if ( results.size() == 0 ) {
-//                    break;
-//                }
-
                 assertEquals( "Time elapsed", 100, results.size() );
 
                 //validate we get a new timeout event since the old one was re-scheduled
@@ -170,15 +143,12 @@ public class AmazonSimpleTimeoutQueueTest {
 
                     AsynchronousMessage<TestEvent> message = eventIterator.next();
 
-                    //assertTrue( events.remove( message.getEvent() ) );
-
                     //remove from our queue
                     boolean removed = queue.remove( message );
 
                     assertTrue( removed );
                 }
 
-//            assertEquals( "All elements dequeued", 0, events.size() );
         }
         finally {
             sqsAsyncClient.deleteQueue( queueName );
@@ -190,7 +160,7 @@ public class AmazonSimpleTimeoutQueueTest {
     public static class TestEvent implements Serializable {
 
         @JsonProperty
-        UUID version = UUID.randomUUID();
+        String version = UUID.randomUUID().toString();
 
 
         @Override
