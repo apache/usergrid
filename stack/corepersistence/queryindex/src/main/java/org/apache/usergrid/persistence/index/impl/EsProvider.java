@@ -32,65 +32,68 @@ import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * Provides access to ElasticSearch client.
  */
 @Singleton
 public class EsProvider {
-    private static final Logger log = LoggerFactory.getLogger( EsProvider.class ); 
+
+    private static final Logger log = LoggerFactory.getLogger(EsProvider.class);
 
     private final IndexFig indexFig;
     private static Client client;
 
     @Inject
-    public EsProvider( IndexFig fig ) {
+    public EsProvider(IndexFig fig) {
         this.indexFig = fig;
     }
 
     public synchronized Client getClient() {
-       if ( client == null ) {
-           client = getClient( indexFig );
-       }
-       return client;
+        if (client == null) {
+            client = getClient(indexFig);
+        }
+        return client;
     }
 
-    public static synchronized Client getClient( IndexFig fig ) {
+    public static synchronized Client getClient(IndexFig fig) {
 
-        if ( client == null ) {
+        if (client == null) {
 
             Client newClient = null;
 
-            if ( fig.isEmbedded() ) {
+            if (fig.isEmbedded()) {
 
                 log.info("--------------------------------");
                 log.info("Starting embedded ElasticSearch");
                 log.info("--------------------------------");
 
-                int port = AvailablePortFinder.getNextAvailable( 2000 );
+                int port = AvailablePortFinder.getNextAvailable(2000);
                 Settings settings = ImmutableSettings.settingsBuilder()
-                        .put( "node.http.enabled", true )
-                        .put( "transport.tcp.port", port )
-                        .put( "path.logs", "target/elasticsearch/logs_" + port )
-                        .put( "path.data", "target/elasticsearch/data_" + port )
-                        .put( "gateway.type", "none" )
-                        .put( "index.store.type", "memory" )
-                        .put( "index.number_of_shards", 1 )
-                        .put( "index.number_of_replicas", 1 ).build();
+                        .put("node.http.enabled", true)
+                        .put("transport.tcp.port", port)
+                        .put("path.logs", "target/elasticsearch/logs_" + port)
+                        .put("path.data", "target/elasticsearch/data_" + port)
+                        .put("gateway.type", "none")
+                        .put("index.store.type", "memory")
+                        .put("index.number_of_shards", 1)
+                        .put("index.number_of_replicas", 1).build();
 
-                Node node = NodeBuilder.nodeBuilder().local( true ).settings( settings ).node();
+                Node node = NodeBuilder.nodeBuilder().local(true).settings(settings).node();
                 newClient = node.client();
-            
+
             } else { // build client that connects to all hosts
 
                 log.info("--------------------------------");
                 log.info("Creating ElasticSearch client");
                 log.info("--------------------------------");
 
-                TransportClient transportClient = new TransportClient();
-                for ( String host : fig.getHosts().split(",") ) {
+                Settings settings = ImmutableSettings.settingsBuilder()
+                        .put("cluster.name", fig.getIndexNamePrefix() ).build();
+
+                TransportClient transportClient = new TransportClient(settings);
+                for (String host : fig.getHosts().split(",")) {
                     transportClient.addTransportAddress(
-                            new InetSocketTransportAddress( host, fig.getPort() ));
+                            new InetSocketTransportAddress(host.trim(), fig.getPort()));
                 }
                 newClient = transportClient;
             }

@@ -52,7 +52,6 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
-import static junit.framework.TestCase.assertSame;
 import static junit.framework.TestCase.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -160,36 +159,36 @@ public class MvccEntitySerializationStrategyImplTest {
         assertEquals( "Mvcc entities are the same", saved, returned );
 
 
-        assertEquals( id, entity.getId() );
+        assertEquals( id, returned.getId() );
 
 
-        Field<Boolean> boolFieldReturned = entity.getField( boolField.getName() );
+        Field<Boolean> boolFieldReturned = returned.getEntity().get().getField( boolField.getName() );
 
-        assertSame( boolField, boolFieldReturned );
+        assertEquals( boolField, boolFieldReturned );
 
-        Field<Double> doubleFieldReturned = entity.getField( doubleField.getName() );
+        Field<Double> doubleFieldReturned = returned.getEntity().get().getField( doubleField.getName() );
 
-        assertSame( doubleField, doubleFieldReturned );
+        assertEquals( doubleField, doubleFieldReturned );
 
-        Field<Integer> intFieldReturned = entity.getField( intField.getName() );
+        Field<Integer> intFieldReturned = returned.getEntity().get().getField( intField.getName() );
 
-        assertSame( intField, intFieldReturned );
+        assertEquals( intField, intFieldReturned );
 
-        Field<Long> longFieldReturned = entity.getField( longField.getName() );
+        Field<Long> longFieldReturned = returned.getEntity().get().getField( longField.getName() );
 
-        assertSame( longField, longFieldReturned );
+        assertEquals( longField, longFieldReturned );
 
-        Field<String> stringFieldReturned = entity.getField( stringField.getName() );
+        Field<String> stringFieldReturned = returned.getEntity().get().getField( stringField.getName() );
 
-        assertSame( stringField, stringFieldReturned );
+        assertEquals( stringField, stringFieldReturned );
 
-        Field<UUID> uuidFieldReturned = entity.getField( uuidField.getName() );
+        Field<UUID> uuidFieldReturned = returned.getEntity().get().getField( uuidField.getName() );
 
-        assertSame( uuidField, uuidFieldReturned );
+        assertEquals( uuidField, uuidFieldReturned );
 
 
         Set<Field> results = new HashSet<Field>();
-        results.addAll( entity.getFields() );
+        results.addAll( returned.getEntity().get().getFields());
 
 
         assertTrue( results.contains( boolField ) );
@@ -275,6 +274,73 @@ public class MvccEntitySerializationStrategyImplTest {
         assertNull( returned );
     }
 
+    @Test
+    public void writeLoadDeleteMinimalFields() throws ConnectionException {
+
+        final Id organizationId = new SimpleId( "organization" );
+        final Id applicationId = new SimpleId( "application" );
+        final String name = "test";
+
+        CollectionScope context = new CollectionScopeImpl( organizationId,  applicationId, name );
+
+
+        final UUID entityId = UUIDGenerator.newTimeUUID();
+        final UUID version = UUIDGenerator.newTimeUUID();
+        final String type = "test";
+
+        final Id id = new SimpleId( entityId, type );
+
+        Entity entity = new Entity( id );
+
+        EntityUtils.setVersion( entity, version );
+
+        BooleanField boolField = new BooleanField( "boolean", false );
+
+        entity.setField( boolField );
+
+        MvccEntity saved = new MvccEntityImpl( id, version, MvccEntity.Status.COMPLETE, Optional.of( entity ) );
+
+
+        //persist the entity
+        serializationStrategy.write( context, saved ).execute();
+
+        //now load it back
+
+        MvccEntity returned = serializationStrategy.load( context, id, version );
+
+        assertEquals( "Mvcc entities are the same", saved, returned );
+
+
+        assertEquals( id, entity.getId() );
+
+        //TODO: TN-> shouldn't this be testing the returned value to make sure we were able to load it correctly?
+        //YES THIS SHOULD BE DOING WHA TI THOUGHT< BUT ITSN:T
+        Field<Boolean> boolFieldReturned = returned.getEntity().get().getField( boolField.getName() );
+
+        assertEquals( boolField, boolFieldReturned );
+
+        Set<Field> results = new HashSet<Field>();
+        results.addAll( entity.getFields() );
+
+
+        assertTrue( results.contains( boolField ) );
+
+
+        assertEquals( 1, results.size() );
+
+        assertEquals( id, entity.getId() );
+        assertEquals( version, entity.getVersion() );
+
+
+        //now delete it
+        serializationStrategy.delete( context, id, version ).execute();
+
+        //now get it, should be gone
+
+        returned = serializationStrategy.load( context, id, version );
+
+        assertNull( returned );
+    }
 
     @Test
     public void writeX2ClearDelete() throws ConnectionException {
@@ -435,36 +501,36 @@ public class MvccEntitySerializationStrategyImplTest {
         assertEquals( "Mvcc entities are the same", saved, returned );
 
 
-        assertEquals( id, entity.getId() );
+        assertEquals( id, returned.getId() );
 
 
-        Field<Boolean> boolFieldReturned = entity.getField( boolField.getName() );
+        Field<Boolean> boolFieldReturned = returned.getEntity().get().getField( boolField.getName() );
 
-        assertSame( boolField, boolFieldReturned );
+        assertEquals( boolField, boolFieldReturned );
 
-        Field<Double> doubleFieldReturned = entity.getField( doubleField.getName() );
+        Field<Double> doubleFieldReturned = returned.getEntity().get().getField( doubleField.getName() );
 
-        assertSame( doubleField, doubleFieldReturned );
+        assertEquals( doubleField, doubleFieldReturned );
 
-        Field<Integer> intFieldReturned = entity.getField( intField.getName() );
+        Field<Integer> intFieldReturned = returned.getEntity().get().getField( intField.getName() );
 
-        assertSame( intField, intFieldReturned );
+        assertEquals( intField, intFieldReturned );
 
-        Field<Long> longFieldReturned = entity.getField( longField.getName() );
+        Field<Long> longFieldReturned = returned.getEntity().get().getField( longField.getName() );
 
-        assertSame( longField, longFieldReturned );
+        assertEquals( longField, longFieldReturned );
 
-        Field<String> stringFieldReturned = entity.getField( stringField.getName() );
+        Field<String> stringFieldReturned = returned.getEntity().get().getField( stringField.getName() );
 
-        assertSame( stringField, stringFieldReturned );
+        assertEquals( stringField, stringFieldReturned );
 
-        Field<UUID> uuidFieldReturned = entity.getField( uuidField.getName() );
+        Field<UUID> uuidFieldReturned = returned.getEntity().get().getField( uuidField.getName() );
 
-        assertSame( uuidField, uuidFieldReturned );
+        assertEquals( uuidField, uuidFieldReturned );
 
 
         Set<Field> results = new HashSet<Field>();
-        results.addAll( entity.getFields() );
+        results.addAll( returned.getEntity().get().getFields());
 
 
         assertTrue( results.contains( boolField ) );

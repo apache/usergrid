@@ -24,7 +24,7 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.exception.WriteStartException;
 
-import rx.util.functions.Func1;
+import rx.functions.Func1;
 
 
 /**

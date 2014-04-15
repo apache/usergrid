@@ -139,6 +139,7 @@ public class ChangeLogGeneratorImplTest {
                 LOG.info( cle.toString() );
                 Assert.assertFalse( cle.getVersions().isEmpty() );
             }
+
             Assert.assertEquals( 6, result.size() );
             Assert.assertTrue( isAscendingOrder( result ) );
 

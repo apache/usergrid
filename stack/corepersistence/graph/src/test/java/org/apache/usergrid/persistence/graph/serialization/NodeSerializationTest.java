@@ -36,8 +36,8 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
+@RunWith(JukitoRunner.class)
+@UseModules({ TestGraphModule.class })
 public class NodeSerializationTest {
 
 
@@ -171,12 +171,13 @@ public class NodeSerializationTest {
         serialization.mark( scope, nodeId1, version ).execute();
         serialization.mark( scope, nodeId2, version ).execute();
 
-        Map<Id, UUID> marks = serialization.getMaxVersions( scope, Arrays.asList(  createEdge( nodeId1, "test", nodeId2 ), createEdge(nodeId2, "test", nodeId3) ) );
+        Map<Id, UUID> marks = serialization.getMaxVersions( scope,
+                Arrays.asList( createEdge( nodeId1, "test", nodeId2 ), createEdge( nodeId2, "test", nodeId3 ) ) );
 
 
-        assertEquals(version, marks.get( nodeId1 ));
-        assertEquals(version, marks.get( nodeId2 ));
-        assertFalse(marks.containsKey( nodeId3 ));
+        assertEquals( version, marks.get( nodeId1 ) );
+        assertEquals( version, marks.get( nodeId2 ) );
+        assertFalse( marks.containsKey( nodeId3 ) );
     }
 }
 

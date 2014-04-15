@@ -12,6 +12,11 @@ import org.safehaus.guicyfig.Key;
  */
 @FigSingleton
 public interface SerializationFig extends GuicyFig {
+
+    /**
+     * Time to live timeout in seconds.
+     * @return Timeout in seconds.
+     */
     @Key( "collection.stage.transient.timeout" )
     @Default( "60" )
     int getTimeout();

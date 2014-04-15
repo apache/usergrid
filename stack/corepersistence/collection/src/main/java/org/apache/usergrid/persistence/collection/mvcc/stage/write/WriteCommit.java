@@ -42,7 +42,7 @@ import org.apache.usergrid.persistence.collection.exception.WriteCommitException
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.model.field.Field;
 
-import rx.util.functions.Func1;
+import rx.functions.Func1;
 
 
 /**

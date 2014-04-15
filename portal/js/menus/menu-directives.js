@@ -351,7 +351,6 @@ AppServices.Directives.directive('appMenu', ["$location", "$routeParams", "$root
         for (key in applications) {
           if (applications.hasOwnProperty(key)) size++;
         }
-        scope.addApplications = size<10;
         scope.hasApplications = Object.keys(applications).length > 0;
 
         if(!scope.myApp.currentApp){

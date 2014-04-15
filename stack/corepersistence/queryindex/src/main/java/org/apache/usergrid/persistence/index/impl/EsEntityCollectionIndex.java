@@ -33,8 +33,9 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
-import org.apache.usergrid.persistence.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -47,9 +48,8 @@ import org.apache.usergrid.persistence.model.field.ListField;
 import org.apache.usergrid.persistence.model.field.LocationField;
 import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.query.Query;
-import org.apache.usergrid.persistence.query.Results;
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Results;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -68,6 +68,7 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * Implements index using ElasticSearch Java API and Core Persistence Collections.
@@ -100,31 +101,42 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     // These are not allowed in document type names: _ . , | #
     public static final String DOC_TYPE_SEPARATOR = "^";
 
+    public static final String INDEX_NAME_SEPARATOR = "^";
+
     @Inject
-    public EsEntityCollectionIndex(@Assisted final CollectionScope scope,
+    public EsEntityCollectionIndex(
+            @Assisted final OrganizationScope orgScope, 
+            @Assisted("appScope") final CollectionScope appScope,
+            @Assisted("scope") final CollectionScope scope,
             IndexFig config,
             EsProvider provider,
             EntityCollectionManagerFactory factory) {
-
+        
+        ValidationUtils.validateOrganizationScope( orgScope );
+        ValidationUtils.validateCollectionScope( appScope );
         ValidationUtils.validateCollectionScope( scope );
 
         this.manager = factory.createCollectionManager(scope);
         this.client = provider.getClient();
         this.scope = scope;
 
-        this.indexName = config.getIndexName();
+        this.indexName = createIndexName( config.getIndexNamePrefix(), orgScope, appScope );
         this.typeName = createTypeName( scope );
 
         this.refresh = config.isForcedRefresh();
         this.cursorTimeout = config.getQueryCursorTimeout();
 
-        // if new index then create it 
         AdminClient admin = client.admin();
-        if (!admin.indices().exists(
-                new IndicesExistsRequest(indexName)).actionGet().isExists()) {
-
+        try {
             admin.indices().prepareCreate(indexName).execute().actionGet();
             log.debug("Created new index: " + indexName);
+
+        } catch (Exception e) {
+            if ( log.isDebugEnabled() ) {
+                log.debug("Exception creating index, already exists?", e);
+            } else {
+                log.info(e.getMessage());
+            }
         }
 
         // if new type then create mapping
@@ -162,12 +174,22 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
     }
    
     
-    private String createIndexId(Entity entity) {
-        return createIndexId(entity.getId(), entity.getVersion());
+    private String createIndexName( String prefix, OrganizationScope orgScope, CollectionScope appScope ) {
+        StringBuilder sb = new StringBuilder();
+        String sep = INDEX_NAME_SEPARATOR;
+        sb.append( orgScope.getOrganization().getUuid() ).append(sep);
+        sb.append( orgScope.getOrganization().getType() ).append(sep);
+        sb.append( appScope.getOrganization().getUuid() ).append(sep);
+        sb.append( appScope.getOrganization().getType() );
+        return sb.toString();
+    }
+
+    private String createIndexDocId(Entity entity) {
+        return createIndexDocId(entity.getId(), entity.getVersion());
     }
 
     
-    private String createIndexId(Id entityId, UUID version) {
+    private String createIndexDocId(Id entityId, UUID version) {
         StringBuilder sb = new StringBuilder();
         String sep = DOC_ID_SEPARATOR;
         sb.append( entityId.getUuid() ).append(sep);
@@ -203,7 +225,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
         entityAsMap.put("created", entity.getId().getUuid().timestamp());
         entityAsMap.put("updated", entity.getVersion().timestamp());
 
-        String indexId = createIndexId(entity);
+        String indexId = EsEntityCollectionIndex.this.createIndexDocId(entity);
 
         IndexRequestBuilder irb = client.prepareIndex(indexName, typeName, indexId)
                 .setSource(entityAsMap)
@@ -234,7 +256,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
 
     public void deindex(Id entityId, UUID version) {
 
-        String indexId = createIndexId(entityId, version);
+        String indexId = createIndexDocId(entityId, version);
 
         client.prepareDelete( indexName, typeName, indexId )
             .setRefresh( refresh )
@@ -361,7 +383,7 @@ public class EsEntityCollectionIndex implements EntityCollectionIndex {
                 LocationField locField = (LocationField) f;
                 Map<String, Object> locMap = new HashMap<String, Object>();
 
-                // field names lat and lon triggerl ElasticSearch geo location 
+                // field names lat and lon trigger ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude());
                 locMap.put("lon", locField.getValue().getLongtitude());
                 entityMap.put(field.getName() + GEO_SUFFIX, locMap);

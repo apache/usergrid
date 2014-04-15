@@ -226,7 +226,6 @@ public class ApplicationResource extends AbstractContextResource {
         Map<String,Object> properties;
         Map<String, Object> storage_info;
 
-//TODO: do input verification here! make sure json map has all correct values.
         try {
             if((properties = ( Map<String, Object> )  json.get( "properties" )) == null){
                 throw new NullPointerException("Could not find 'properties'");

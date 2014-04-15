@@ -30,9 +30,11 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityBuilder;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
@@ -42,8 +44,8 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.query.Query;
-import org.apache.usergrid.persistence.query.Results;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Results;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
@@ -78,13 +80,15 @@ public class EntityCollectionIndexTest {
     @Test
     public void testIndex() throws IOException {
 
-        Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+        Id appId = new SimpleId("application");
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "contacts" );
 
+        EntityCollectionIndex entityIndex = cif.createCollectionIndex( orgScope, appScope, scope );
         EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
 
-        EntityCollectionIndex entityIndex = cif.createCollectionIndex( scope );
 
         InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
         ObjectMapper mapper = new ObjectMapper();
@@ -120,11 +124,13 @@ public class EntityCollectionIndexTest {
     @Test 
     public void testDeindex() {
 
-        Id appId = new SimpleId("AutoSpotterApp");
-        Id orgId = new SimpleId("AutoWorldMagazine");
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+        Id appId = new SimpleId("application");
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "fastcars" );
 
-        EntityCollectionIndex entityIndex = cif.createCollectionIndex( scope );
+        EntityCollectionIndex entityIndex = cif.createCollectionIndex( orgScope, appScope, scope );
         EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
 
         Map entityMap = new HashMap() {{

@@ -27,7 +27,7 @@
 
   <groupId>org.apache.usergrid</groupId>
   <artifactId>usergrid</artifactId>
-  <version>0.0.29-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <name>Usergrid Parent</name>
   <description>Usergrid Project</description>
   <packaging>pom</packaging>
@@ -101,6 +101,7 @@
     <hector-version>1.1-4</hector-version>
     <hector-test-version>1.1-4</hector-test-version>
     <jackson-version>1.9.9</jackson-version>
+    <jackson-2-version>2.3.1</jackson-2-version>
     <jclouds.version>1.6.2-incubating</jclouds.version>
     <jersey-version>1.18</jersey-version>
     <junit-version>4.11</junit-version>
@@ -113,6 +114,7 @@
     <tomcat-version>7.0.42</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
+
 
   </properties>
 
@@ -192,7 +194,6 @@
     <module>websocket</module>
     <module>rest</module>
     <module>launcher</module>
-    <module>query-validator</module>
     <module>test-utils</module>
     <module>query-validator</module>
     <module>build-tools</module>
@@ -719,6 +720,47 @@
         <groupId>javax.servlet</groupId>
         <artifactId>jstl</artifactId>
         <version>1.2</version>
+      </dependency>
+
+      <!-- the core, which includes Streaming API, shared low-level abstractions (but NOT data-binding) -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
+      <!-- Just the annotations; use this dependency if you want to attach annotations
+           to classes without connecting them to the code. -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
+      <!-- databinding; ObjectMapper, JsonNode and related classes are here -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
+      <!-- smile (binary JSON). Other artifacts in this group do other formats. -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-smile</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+      <!-- JAX-RS provider -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+        <artifactId>jackson-jaxrs-json-provider</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+      <!-- Support for JAX-B annotations as additional configuration -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-jaxb-annotations</artifactId>
+        <version>${jackson-2-version}</version>
       </dependency>
 
       <!-- Other Commercial Dependencies -->
@@ -1309,8 +1351,8 @@
       <dependency>
         <groupId>com.apple</groupId>
         <artifactId>AppleJavaExtensions</artifactId>
-        <!-- we'd like to use 1.5, but it is not in Maven Central -->
-        <version>1.4</version>
+        <!-- from local-depedendencies -->
+        <version>1.5.4</version>
       </dependency>
 
       <dependency>
@@ -1769,6 +1811,8 @@
 
                     <exclude>**/README.md</exclude>
                     <exclude>**/CHANGES.txt</exclude>
+                    <exclude>**/*.json</exclude>
+                    <exclude>**/*.properties</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
@@ -1796,9 +1840,14 @@
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
-                    <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
-                    <exclude>**/aws.properties</exclude>
+
+                    <exclude>**/src/test/resources/**</exclude>
+                    <exclude>**/src/main/dist/lib/**</exclude>
+                    <exclude>**/src/main/dist/webapps/**</exclude>
+
+                    <!-- TODO: need to add headers to many files in corepersistence -->
+                    <exclude>**/corepersistence/**</exclude>
 
                 </excludes>
             </configuration>

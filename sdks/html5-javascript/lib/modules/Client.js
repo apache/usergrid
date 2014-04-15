@@ -12,7 +12,9 @@
     if (options.appName) {
       this.set('appName', options.appName);
     }
-
+    if(options.qs){
+      this.setObject('default_qs', options.qs);
+    }
     //other options
     this.buildCurl = options.buildCurl || false;
     this.logging = options.logging || false;
@@ -48,6 +50,7 @@
     var mQuery = options.mQuery || false; //is this a query to the management endpoint?
     var orgName = this.get('orgName');
     var appName = this.get('appName');
+    var default_qs=this.getObject('default_qs');
     var uri;
       var logoutCallback=function(){
           if (typeof(this.logoutCallback) === 'function') {
@@ -68,6 +71,9 @@
        xhr.setRequestHeader("Authorization", "Bearer " + self.getToken());
        xhr.withCredentials = true;
        */
+    }
+    if(default_qs){
+      qs=propCopy(qs, default_qs);
     }
       var req = new Usergrid.Request(method, uri, qs, body, function (err, response) {
           if ([
@@ -238,7 +244,7 @@
    */
   Usergrid.Client.prototype.createCollection = function (options, callback) {
     options.client = this;
-    var collection = new Usergrid.Collection(options, function(err, data) {
+    new Usergrid.Collection(options, function(err, data, collection) {
         doCallback(callback, [err, collection, data]);
     });
   };
@@ -681,6 +687,70 @@
   Usergrid.Client.prototype.logout = function () {
     this.setToken();
   };
+
+    /*
+    *  A public method to destroy access tokens on the server
+    *
+    *  @method logout
+    *  @public    
+    *	 @param {string} username	the user associated with the token to revoke
+    *	 @param {string} token set to 'null' to revoke the token of the currently logged in user 
+    *  	 or set to token value to revoke a specific token
+    *	 @param {string} revokeAll set to 'true' to revoke all tokens for the user            
+    *  @return none
+    */
+		Usergrid.Client.prototype.destroyToken = function (username, token, revokeAll, callback) {
+      var options = {
+	        client:self,
+	        method:'PUT',	        
+				}
+				
+      if (revokeAll == true) {
+				options.endpoint = 'users/'+username+'/revoketokens';
+			} else if (token == null) {
+				options.endpoint = 'users/'+username+'/revoketoken?token='+this.getToken();
+			} else {
+				options.endpoint = 'users/'+username+'/revoketoken?token='+token;
+			}
+      this.request(options, function(err,data) {
+		    if (err) {
+	          if (self.logging) {
+	            console.log('error destroying access token');
+	          }
+	          doCallback(callback, [err, data, null], self);
+	        } else {
+	          if (revokeAll == true) {
+	            console.log('all user tokens invalidated');
+	          } else {
+							console.log('token invalidated');
+	          }
+	          doCallback(callback, [err, data, null], self);
+	        }
+      });
+	  };
+  
+    /*
+    *  A public method to log out an app user - clears all user fields from client
+    *  and destroys the access token on the server.
+    *
+    *  @method logout
+    *  @public
+    *	 @param {string} username the user associated with the token to revoke
+    *	 @param {string} token set to 'null' to revoke the token of the currently logged in user 
+    *  	 or set to token value to revoke a specific token
+    *	 @param {string} revokeAll set to 'true' to revoke all tokens for the user        
+    *  @return none
+    */
+    Usergrid.Client.prototype.logoutAndDestroyToken = function(username, token, revokeAll, callback) {
+			if (username == null) {
+				console.log('username required to revoke tokens');
+			} else {
+				this.destroyToken(username, token, revokeAll, callback);
+				if (revokeAll == true || token == this.getToken() || token == null) {
+		    	this.setToken(null);
+		    }
+		  }
+    };
 
   /*
    *  A private method to build the curl call to display on the command line

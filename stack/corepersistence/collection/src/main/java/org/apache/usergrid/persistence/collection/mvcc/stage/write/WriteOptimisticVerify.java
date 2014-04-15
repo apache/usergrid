@@ -18,8 +18,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
@@ -31,11 +29,16 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Scheduler;
-import rx.util.functions.Func1;
+
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -54,12 +57,13 @@ public class WriteOptimisticVerify
     private final Scheduler scheduler;
 
     @Inject
-    public WriteOptimisticVerify( MvccLogEntrySerializationStrategy logEntryStrat, 
-            final UniqueValueSerializationStrategy uniqueValueStrat, final Scheduler scheduler ) {
+    public WriteOptimisticVerify( 
+            MvccLogEntrySerializationStrategy logEntryStrat, 
+            final UniqueValueSerializationStrategy uniqueValueStrat) {
 
         this.logEntryStrat = logEntryStrat;
         this.uniqueValueStrat = uniqueValueStrat; 
-        this.scheduler = scheduler;
+        this.scheduler = Schedulers.io();
     }
 
 

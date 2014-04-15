@@ -22,7 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
@@ -190,20 +188,15 @@ public class ExportServiceImpl implements ExportService {
 
         if ( config.get("collectionName") == null) {
             //exports all the applications for a given organization.
-            Map<UUID, String> organizations = getOrgs();
-            if(organizations == null){
-                logger.error( "No organizations could be found" );
+
+            if(config.get( "organizationId" ) == null){
+                logger.error( "No organization could be found" );
+                export.setState( Export.State.FAILED );
+                em.update( export );
                 return;
             }
-            for ( Map.Entry<UUID, String> organization : organizations.entrySet() ) {
-                try {
-                    exportApplicationsForOrg( organization, config, jobExecution );
-                }catch ( Exception e ) {
-                    export.setState( Export.State.FAILED );
-                    em.update( export );
-                    return;
-                }
-            }
+           exportApplicationsForOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution );
+
         }
         else {
             try {
@@ -222,36 +215,6 @@ public class ExportServiceImpl implements ExportService {
     }
 
 
-    /**
-     * Loops through all the organizations and returns a Map with the corresponding information
-     * @param
-     * @return Map<UUID, String>
-     * @throws Exception
-     */
-    private Map<UUID, String> getOrgs() throws Exception {
-        // Loop through the organizations
-        UUID orgId = null;
-
-        Map<UUID, String> organizationNames = null;
-
-        if ( orgId == null ) {
-            organizationNames = managementService.getOrganizations();
-        }
-
-        else {//this case isn't used yet, but might be in the future.
-            OrganizationInfo info = managementService.getOrganizationByUuid( orgId );
-
-            if ( info == null ) {
-                logger.error( "Organization info is null!" );
-                return null;
-            }
-
-            organizationNames = new HashMap<UUID, String>();
-            organizationNames.put( orgId, info.getName() );
-        }
-
-        return organizationNames;
-    }
 
     public SchedulerService getSch() {
         return sch;
@@ -285,12 +248,12 @@ public class ExportServiceImpl implements ExportService {
 
     /**
      * Exports all applications for the given organization.
-     * @param organization
+     * @param organizationUUID
      * @param config
      * @param jobExecution
      * @throws Exception
      */
-    private void exportApplicationsForOrg( Map.Entry<UUID, String> organization, final Map<String,Object> config,
+    private void exportApplicationsForOrg( UUID organizationUUID, final Map<String,Object> config,
                                            final JobExecution jobExecution ) throws Exception {
 
         //retrieves export entity
@@ -301,10 +264,8 @@ public class ExportServiceImpl implements ExportService {
         //sets up a output stream for s3 backup.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        logger.info( "" + organization );
-
         // Loop through the applications per organization
-        BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organization.getKey() );
+        BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
         for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
 
             logger.info( application.getValue() + " : " + application.getKey() );

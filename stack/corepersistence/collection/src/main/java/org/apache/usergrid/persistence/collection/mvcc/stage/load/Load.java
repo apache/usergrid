@@ -39,7 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import rx.util.functions.Func1;
+import rx.functions.Func1;
 
 
 /**

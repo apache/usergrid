@@ -84,4 +84,42 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
     public Optional<Edge> last() {
         return last;
     }
+
+
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( o == null || getClass() != o.getClass() ) {
+            return false;
+        }
+
+        final SimpleSearchByEdgeType that = ( SimpleSearchByEdgeType ) o;
+
+        if ( !last.equals( that.last ) ) {
+            return false;
+        }
+        if ( !maxVersion.equals( that.maxVersion ) ) {
+            return false;
+        }
+        if ( !node.equals( that.node ) ) {
+            return false;
+        }
+        if ( !type.equals( that.type ) ) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = node.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + maxVersion.hashCode();
+        result = 31 * result + last.hashCode();
+        return result;
+    }
 }

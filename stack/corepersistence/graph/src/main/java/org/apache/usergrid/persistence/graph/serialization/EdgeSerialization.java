@@ -39,7 +39,7 @@ public interface EdgeSerialization {
 
 
     /**
-     * Write both the source--->Target edge and the target <----- source edge into the mutation
+     * EdgeWrite both the source--->Target edge and the target <----- source edge into the mutation
      *
      * @param scope The org scope of the graph
      * @param edge The edge to write
@@ -56,7 +56,7 @@ public interface EdgeSerialization {
     MutationBatch markEdge( OrganizationScope scope, Edge edge);
 
     /**
-     * Write both the source -->target edge and the target<--- source edge into the mutation
+     * EdgeWrite both the source -->target edge and the target<--- source edge into the mutation
      *
      * @param scope The org scope of the graph
      * @param edge The edge to write
@@ -65,12 +65,12 @@ public interface EdgeSerialization {
 
 
     /**
-     * Search for specific versions of the edge from source->target. Will return all versions.
+     * Search for all versions of this edge < the search version.  Returns all versions
      * @param scope
      * @param search
      * @return
      */
-    Iterator<MarkedEdge> getEdgeFromSource( OrganizationScope scope, SearchByEdge search );
+    Iterator<MarkedEdge> getEdgeVersions( OrganizationScope scope, SearchByEdge search );
 
     /**
      * Get an iterator of all edges by edge type originating from source node
@@ -96,14 +96,6 @@ public interface EdgeSerialization {
      * @param edgeType The search edge
      */
     Iterator<MarkedEdge> getEdgesToTarget( OrganizationScope scope, SearchByEdgeType edgeType );
-
-    /**
-     * Search for specific versions of the edge from source->target. Will return all versions
-     * @param scope
-     * @param search
-     * @return
-     */
-    Iterator<MarkedEdge> getEdgeToTarget( OrganizationScope scope, SearchByEdge search );
 
 
     /**

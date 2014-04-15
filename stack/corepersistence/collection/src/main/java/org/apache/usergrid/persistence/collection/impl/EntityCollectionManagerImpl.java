@@ -42,10 +42,10 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
-import rx.Scheduler;
-import rx.util.functions.Func1;
-import rx.util.functions.Func2;
-import rx.util.functions.FuncN;
+import rx.functions.Func1;
+import rx.functions.Func2;
+import rx.functions.FuncN;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -61,7 +61,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
-    private final Scheduler scheduler;
 
 
     //start stages
@@ -84,7 +83,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public EntityCollectionManagerImpl( 
         final UUIDService uuidService, 
         final WriteStart writeStart,
-        final Scheduler scheduler, 
         final WriteUniqueVerify writeVerifyUnique,
         final WriteOptimisticVerify writeOptimisticVerify,
         final WriteCommit writeCommit, 
@@ -107,7 +105,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.markCommit = markCommit;
 
         this.uuidService = uuidService;
-        this.scheduler = scheduler;
         this.collectionScope = collectionScope;
     }
 
@@ -137,7 +134,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         // fire the stages
-        // TODO use our own scheduler to help with multitenancy here.
+        // TODO use our own Schedulers.io() to help with multitenancy here.
         // TODO writeOptimisticVerify and writeVerifyUnique should be concurrent to reduce wait time
         // these 3 lines could be done in a single line, but they are on multiple lines for clarity
 
@@ -145,10 +142,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
         Observable<CollectionIoEvent<MvccEntity>> observable =
-            Observable.from( writeData )
-                    .subscribeOn( scheduler )
-                    .map( writeStart )
-                    .flatMap(
+            Observable.from( writeData ).subscribeOn( Schedulers.io() ).map( writeStart ).flatMap(
                 new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
 
                     @Override
@@ -164,13 +158,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                         // parallel and zip the results
 
                         Observable<CollectionIoEvent<MvccEntity>> unique =
-                            Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( scheduler )
+                            Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
                                 .flatMap( writeVerifyUnique);
 
 
                         // optimistic verification
                         Observable<CollectionIoEvent<MvccEntity>> optimistic =
-                            Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( scheduler )
+                            Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
                                 .map( writeOptimisticVerify );
 
                         // zip the results
@@ -193,7 +187,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         // execute all validation stages concurrently.  Needs refactored when this is done.  
         // https://github.com/Netflix/RxJava/issues/627
-        // observable = Concurrent.concurrent( observable, scheduler, new WaitZip(), 
+        // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(), 
         //                  writeVerifyUnique, writeOptimisticVerify );
 
         // return the commit result.
@@ -209,7 +203,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
         return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-            .subscribeOn( scheduler ).map( markStart ).map( markCommit );
+            .subscribeOn( Schedulers.io() ).map( markStart ).map( markCommit );
     }
 
 
@@ -221,7 +215,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage");
 
         return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-            .subscribeOn( scheduler ).map( load );
+            .subscribeOn( Schedulers.io() ).map( load );
     }
 
 

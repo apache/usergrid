@@ -5,6 +5,7 @@ AppServices.Controllers.controller('LoginCtrl', ['ug', '$scope', '$rootScope', '
   $scope.loading = false;
   $scope.login = {};
   $scope.activation = {};
+  $scope.requiresDeveloperKey=$scope.options.client.requiresDeveloperKey||false;
   $rootScope.gotoForgotPasswordPage = function(){
     $location.path("/forgot-password");
   };
@@ -32,8 +33,9 @@ AppServices.Controllers.controller('LoginCtrl', ['ug', '$scope', '$rootScope', '
 
   $scope.logout = function() {
     ug.logout();
+    ug.setClientProperty('developerkey', null);
     if($scope.use_sso){
-      window.location = $rootScope.urls().LOGOUT_URL + '?callback=' +  encodeURIComponent($location.absUrl().split('?')[0]);
+      window.location = $rootScope.urls().LOGOUT_URL + '?redirect=no&callback=' +  encodeURIComponent($location.absUrl().split('?')[0]);
     }else{
       $location.path('/login');
       $scope.applyScope();
@@ -45,13 +47,15 @@ AppServices.Controllers.controller('LoginCtrl', ['ug', '$scope', '$rootScope', '
       $location.path('/login');
       $scope.logout();
     }
-
     $scope.applyScope();
   });
 
 
   $scope.$on('loginSuccesful', function(event, user, organizations, applications) {
     $scope.loading = false;
+    if($scope.requiresDeveloperKey){
+      ug.setClientProperty('developerkey', $scope.login.developerkey);
+    }
     $scope.login = {};
 
     //if on login page, send to org overview page.  if on a different page, let them stay there

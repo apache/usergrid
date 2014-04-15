@@ -21,9 +21,13 @@ package org.apache.usergrid.persistence.index.impl;
 import com.google.inject.Inject;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.legacy.CoreApplication;
@@ -33,9 +37,9 @@ import org.apache.usergrid.persistence.index.legacy.EntityManagerFacade;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.query.Query;
-import org.apache.usergrid.persistence.query.Results;
-import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Results;
+import org.apache.usergrid.persistence.index.utils.JsonUtils;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
@@ -86,9 +90,13 @@ public class IndexIT {
     public void testCollectionOrdering() throws Exception {
         LOG.info( "testCollectionOrdering" );
 
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
         Id appId = new SimpleId("application");
-        Id orgId = new SimpleId("testCollectionOrdering");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "test-collection" );
+
+        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
@@ -159,9 +167,13 @@ public class IndexIT {
     public void testCollectionFilters() throws Exception {
         LOG.info( "testCollectionFilters" );
 
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
         Id appId = new SimpleId("application");
-        Id orgId = new SimpleId("testCollectionFilters");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "test-collection" );
+
+        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];
@@ -281,9 +293,13 @@ public class IndexIT {
     public void testSecondarySorts() throws Exception {
         LOG.info( "testSecondarySorts" );
 
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
         Id appId = new SimpleId("application");
-        Id orgId = new SimpleId("testSecondarySorts");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "test-collection" );
+
+        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
 
         for ( int i = alphabet.length - 1; i >= 0; i-- ) {
             String name = alphabet[i];

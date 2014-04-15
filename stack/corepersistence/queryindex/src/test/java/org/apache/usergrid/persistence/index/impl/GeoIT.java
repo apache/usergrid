@@ -24,9 +24,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.legacy.CoreApplication;
@@ -37,17 +41,16 @@ import org.apache.usergrid.persistence.index.legacy.Point;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.query.EntityRef;
-import org.apache.usergrid.persistence.query.Query;
-import org.apache.usergrid.persistence.query.Results;
-import org.apache.usergrid.persistence.query.SimpleEntityRef;
-import org.apache.usergrid.utils.MapUtils;
+import org.apache.usergrid.persistence.index.query.EntityRef;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Results;
+import org.apache.usergrid.persistence.index.query.SimpleEntityRef;
+import org.apache.usergrid.persistence.index.utils.MapUtils;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -92,9 +95,13 @@ public class GeoIT {
     public void testGeo() throws Exception {
         LOG.info( "GeoIT.testGeo" );
 
-        Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testOrganization");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+        Id appId = new SimpleId("application");
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "people" );
+
+        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
         assertNotNull( em );
 
 		// Two intersections two blocks apart
@@ -243,9 +250,14 @@ public class GeoIT {
     @Test
     public void testPointPaging() throws Exception {
 
-        Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testPointPaging");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+        Id appId = new SimpleId("application");
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "locations" );
+
+        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
+
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
@@ -306,11 +318,13 @@ public class GeoIT {
     @Test
     public void testSamePointPaging() throws Exception {
 
-        Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testSamePointPaging");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            cmf, cif );
-        assertNotNull( em );
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+        Id appId = new SimpleId("application");
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "locations" );
+
+        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
@@ -355,10 +369,13 @@ public class GeoIT {
     @Test
     public void testDistanceByLimit() throws Exception {
 
-        Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testDistanceByLimit");
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, 
-            cmf, cif );
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+        Id appId = new SimpleId("application");
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "locations" );
+
+        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
         assertNotNull( em );
 
         // save objects in a diagonal line from -90 -180 to 90 180
@@ -416,10 +433,13 @@ public class GeoIT {
     @Test
     public void testGeoWithIntersection() throws Exception {
 
-        Id appId = new SimpleId("testGeo");
-        Id orgId = new SimpleId("testGeoWithIntersection");
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+        Id appId = new SimpleId("application");
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "locations" );
 
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
+        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
 
         assertNotNull( em );
 

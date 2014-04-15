@@ -34,8 +34,9 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Scheduler;
 import rx.util.functions.Action1;
-import rx.util.functions.Func1;
-import rx.util.functions.FuncN;
+import rx.functions.Func1;
+import rx.functions.FuncN;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -52,7 +53,7 @@ public class RollbackAction implements Action1<Throwable> {
 
     public RollbackAction() {
         Injector injector = Guice.createInjector( new CollectionModule() );
-        scheduler = injector.getInstance( Scheduler.class );
+        scheduler = Schedulers.io(); //injector.getInstance( Scheduler.class );
         uniqueValueStrat = injector.getInstance( UniqueValueSerializationStrategy.class );
     }
 
@@ -89,8 +90,9 @@ public class RollbackAction implements Action1<Throwable> {
                                     try {
                                         mb.execute();
                                     } catch (ConnectionException ex) {
-                                        throw new WriteUniqueVerifyException(
-                                            entity, scope, "Rollback error deleting unique value " + field.toString(), ex);
+                                        throw new WriteUniqueVerifyException( entity, scope, 
+                                            "Rollback error deleting unique value " 
+                                                + field.toString(), ex);
                                     }
                                     return new FieldDeleteResult(field.getName());
                                 }
@@ -109,7 +111,8 @@ public class RollbackAction implements Action1<Throwable> {
                         for (Object resultObj : args) {
 
                             FieldDeleteResult result = (FieldDeleteResult) resultObj;
-                            log.debug("Rollback deleted unique value from entity: {} version: {} name: {}",
+                            log.debug("Rollback deleted unique value from entity: "
+                                    + "{} version: {} name: {}",
                                  new String[]{
                                      entity.getId().toString(),
                                      entity.getVersion().toString(),

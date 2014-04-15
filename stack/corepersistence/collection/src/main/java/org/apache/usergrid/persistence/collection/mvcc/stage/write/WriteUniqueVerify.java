@@ -41,9 +41,9 @@ import java.util.Map;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 
 import rx.Observable;
-import rx.Scheduler;
-import rx.util.functions.Func1;
-import rx.util.functions.FuncN;
+import rx.functions.Func1;
+import rx.functions.FuncN;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -57,21 +57,16 @@ public class WriteUniqueVerify implements
 
     private final UniqueValueSerializationStrategy uniqueValueStrat;
 
-    private final Scheduler scheduler;
-
     protected final SerializationFig serializationFig;
 
 
     @Inject
-    public WriteUniqueVerify( final UniqueValueSerializationStrategy uniqueValueStrat,
-                              final Scheduler scheduler, final SerializationFig serializationFig ) {
+    public WriteUniqueVerify( final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy, final SerializationFig serializationFig ) {
 
-        Preconditions.checkNotNull( uniqueValueStrat, "uniqueValueStrat is required" );
-        Preconditions.checkNotNull( scheduler, "scheduler is required" );
+        Preconditions.checkNotNull( uniqueValueSerializiationStrategy, "uniqueValueSerializationStrategy is required" );
         Preconditions.checkNotNull( serializationFig, "serializationFig is required" );
 
-        this.uniqueValueStrat = uniqueValueStrat;
-        this.scheduler = scheduler;
+        this.uniqueValueStrat = uniqueValueSerializiationStrategy;
         this.serializationFig = serializationFig;
     }
 
@@ -103,10 +98,7 @@ public class WriteUniqueVerify implements
             // concurrent validations
             if ( field.isUnique() ) {
 
-                Observable<FieldUniquenessResult> result =  
-                        Observable.from( field ).subscribeOn( scheduler )
-                                .map(new Func1<Field,  FieldUniquenessResult>() {
-
+                Observable<FieldUniquenessResult> result =  Observable.from( field ).subscribeOn( Schedulers.io() ).map(new Func1<Field,  FieldUniquenessResult>() {
                     @Override
                     public FieldUniquenessResult call(Field field ) {
 
@@ -144,9 +136,9 @@ public class WriteUniqueVerify implements
             }
         }
 
-        // short circuit.  If we zip up nothing, we block forever.
-        if ( fields.isEmpty() ){
-            return Observable.from( ioevent ).subscribeOn( scheduler );
+        //short circuit.  If we zip up nothing, we block forever.
+        if(fields.size() == 0){
+            return Observable.from(ioevent ).subscribeOn( Schedulers.io() );
         }
 
         //
@@ -177,6 +169,8 @@ public class WriteUniqueVerify implements
                 return ioevent;
             }
         };
+
+
 
         return Observable.zip( fields, zipFunction );
 

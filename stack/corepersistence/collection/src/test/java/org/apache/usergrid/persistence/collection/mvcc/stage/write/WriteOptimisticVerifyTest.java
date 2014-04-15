@@ -25,7 +25,6 @@ import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
@@ -49,7 +48,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Scheduler;
 
 
 @UseModules( TestCollectionModule.class )
@@ -64,9 +62,8 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
         UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class);
         Injector injector = Guice.createInjector( new TestCollectionModule() );
-        Scheduler scheduler = injector.getInstance( Scheduler.class );
 
-        new WriteOptimisticVerify( logstrat, uvstrat, scheduler ).call( event );
+        new WriteOptimisticVerify( logstrat, uvstrat ).call( event );
     }
 
     @Test
@@ -97,11 +94,9 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
             .thenReturn( logEntries );
 
         UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class);
-        Injector injector = Guice.createInjector( new TestCollectionModule() );
-        Scheduler scheduler = injector.getInstance( Scheduler.class );
 
         // Run the stage
-        WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog, uvstrat, scheduler );
+        WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog, uvstrat );
 
         CollectionIoEvent<MvccEntity> result;
         result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
@@ -160,14 +155,13 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
         // use a real scheduler
         Injector injector = Guice.createInjector( new TestCollectionModule() );
-        Scheduler scheduler = injector.getInstance( Scheduler.class );
 
         // Run the stage, conflict should be detected
         final MvccEntity mvccEntity = fromEntity( entity );
         boolean conflictDetected = false;
 
         WriteOptimisticVerify newStage = 
-            new WriteOptimisticVerify( conflictLog, uvstrat, scheduler );
+            new WriteOptimisticVerify( conflictLog, uvstrat );
 
         try {
             newStage.call( new CollectionIoEvent<MvccEntity>(scope, mvccEntity));

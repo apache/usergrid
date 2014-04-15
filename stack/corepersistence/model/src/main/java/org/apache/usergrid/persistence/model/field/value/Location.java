@@ -20,15 +20,20 @@ package org.apache.usergrid.persistence.model.field.value;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+
 /**
  * Geographic point. Should be used when we want to store geo information
  */
 public class Location implements Serializable {
 
-    private final double latitude;
-    private final double longtitude;
+    private double latitude;
+    private double longtitude;
 
-    public Location( double latitude, double longtitude ) {
+    @JsonCreator
+    public Location(@JsonProperty("latitude") double latitude,@JsonProperty("longtitude") double longtitude ) {
         this.latitude = latitude;
         this.longtitude = longtitude;
     }
