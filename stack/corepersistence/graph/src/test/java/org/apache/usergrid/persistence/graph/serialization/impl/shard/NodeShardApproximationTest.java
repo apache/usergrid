@@ -21,19 +21,19 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.serialization.EdgeSeriesCounterSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardApproximationImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -79,7 +79,7 @@ public class NodeShardApproximationTest {
 
 
         final Id id = createId( "test" );
-        final UUID shardId = UUIDGenerator.newTimeUUID();
+        final long shardId = 0l;
         final String type = "type";
         final String type2 = "subType";
 
@@ -102,6 +102,7 @@ public class NodeShardApproximationTest {
         final Id id = createId( "test" );
         final String type = "type";
         final String type2 = "subType";
+        final AtomicLong shardIdGenerator = new AtomicLong( );
 
         ExecutorService executor = Executors.newFixedThreadPool( workers );
 
@@ -113,7 +114,7 @@ public class NodeShardApproximationTest {
                 @Override
                 public Long call() throws Exception {
 
-                    final UUID shardId = UUIDGenerator.newTimeUUID();
+                    final long shardId = shardIdGenerator.incrementAndGet();
 
 
                     long count = approximation.getCount( scope, id, shardId, type, type2 );

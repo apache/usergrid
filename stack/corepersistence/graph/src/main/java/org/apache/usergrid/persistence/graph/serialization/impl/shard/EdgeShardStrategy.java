@@ -16,39 +16,48 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
-/**
- *  Cache implementation for returning versions based on the slice.  This shard may be latent.  As a result
- *  the allocation of new shards should be 2*shard timeout in the future.
- *
- */
-public interface NodeShardCache {
+public interface EdgeShardStrategy {
+
+    /**
+     * Get the shard key used for writing this shard.  CUD operations should use this
+     */
+    public long getWriteShard( Id rowKeyId, UUID version, String... types );
 
 
     /**
-     * Get the time meta data for the given node
-     * @param nodeId
-     * @param version The time to select the slice for.
-     * @param edgeType
+     * Get the iterator of all shards for this entity
      */
-    public long getSlice(final OrganizationScope scope, final Id nodeId, final UUID version, final String... edgeType);
+    public Iterator<Long> getReadShards( Id rowKeyId, UUID maxVersion, String... types );
+
 
     /**
-     * Get an iterator of all versions <= the version
-     * @param scope
-     * @param nodeId
-     * @param maxVersion
-     * @param edgeType
-     * @return
+     * Get the name of the column family for getting source nodes
      */
-    public Iterator<Long> getVersions(final OrganizationScope scope, final Id nodeId, final UUID maxVersion, final String... edgeType);
+    public String getSourceNodeCfName();
+
+    /**
+     * Get the name of the column family for getting target nodes
+     */
+    public String getTargetNodeCfName();
+
+
+    /**
+     * Get the name of the column family for getting source nodes  with a target type
+     */
+    public String getSourceNodeTargetTypeCfName();
+
+    /**
+     * Get the name of the column family for getting target nodes with a source type
+     */
+    public String getTargetNodeSourceTypeCfName();
 }

@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,13 +31,10 @@ import org.mockito.ArgumentCaptor;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.consistency.TimeService;
-import org.apache.usergrid.persistence.graph.impl.Constants;
-import org.apache.usergrid.persistence.graph.serialization.EdgeSeriesCounterSerialization;
-import org.apache.usergrid.persistence.graph.serialization.EdgeSeriesSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.fasterxml.uuid.UUIDComparator;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 
@@ -109,8 +105,8 @@ public class NodeShardAllocationTest {
          * Mock up returning an empty iterator, our audit shouldn't create a new shard
          */
         when( edgeSeriesSerialization
-                .getEdgeMetaData( same( scope ), same( nodeId ), any( UUID.class ), eq( 1 ), same( type ),
-                        same( subType ) ) ).thenReturn( Collections.<UUID>emptyList().iterator() );
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Long.class ), eq( 1 ), same( type ),
+                        same( subType ) ) ).thenReturn( Collections.<Long>emptyList().iterator() );
 
         final boolean result = approximation.auditMaxShard( scope, nodeId, type, subType );
 
@@ -149,13 +145,13 @@ public class NodeShardAllocationTest {
 
         when( timeService.getCurrentTime() ).thenReturn( timeservicetime );
 
-        final UUID futureShard = UUIDGenerator.newTimeUUID( timeservicetime + graphFig.getShardCacheTimeout() * 2 );
+        final long futureShard =  timeservicetime + graphFig.getShardCacheTimeout() * 2 ;
 
         /**
          * Mock up returning a min shard, and a future shard
          */
         when( edgeSeriesSerialization
-                .getEdgeMetaData( same( scope ), same( nodeId ), any( UUID.class ), eq( 1 ), same( type ),
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Long.class ), eq( 1 ), same( type ),
                         same( subType ) ) ).thenReturn( Arrays.asList( futureShard ).iterator() );
 
         final boolean result = approximation.auditMaxShard( scope, nodeId, type, subType );
@@ -199,8 +195,8 @@ public class NodeShardAllocationTest {
          * Mock up returning a min shard, and a future shard
          */
         when( edgeSeriesSerialization
-                .getEdgeMetaData( same( scope ), same( nodeId ), any( UUID.class ), eq( 1 ), same( type ),
-                        same( subType ) ) ).thenReturn( Arrays.asList( Constants.MIN_UUID ).iterator() );
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Long.class ), eq( 1 ), same( type ),
+                        same( subType ) ) ).thenReturn( Arrays.asList( 0l ).iterator() );
 
 
         //return a shard size < our max by 1
@@ -208,7 +204,7 @@ public class NodeShardAllocationTest {
         final long count = graphFig.getShardSize() - 1;
 
         when( edgeSeriesCounterSerialization
-                .getCount( same( scope ), same( nodeId ), eq( Constants.MIN_UUID ), same( type ), same( subType ) ) )
+                .getCount( same( scope ), same( nodeId ), eq( 0l ), same( type ), same( subType ) ) )
                 .thenReturn( count );
 
         final boolean result = approximation.auditMaxShard( scope, nodeId, type, subType );
@@ -252,18 +248,18 @@ public class NodeShardAllocationTest {
          * Mock up returning a min shard
          */
         when( edgeSeriesSerialization
-                .getEdgeMetaData( same( scope ), same( nodeId ), any( UUID.class ), eq( 1 ), same( type ),
-                        same( subType ) ) ).thenReturn( Arrays.asList( Constants.MIN_UUID ).iterator() );
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Long.class ), eq( 1 ), same( type ),
+                        same( subType ) ) ).thenReturn( Arrays.asList( 0l ).iterator() );
 
 
         final long shardCount = graphFig.getShardSize();
 
         //return a shard size equal to our max
         when( edgeSeriesCounterSerialization
-                .getCount( same( scope ), same( nodeId ), eq( Constants.MIN_UUID ), same( type ), same( subType ) ) )
+                .getCount( same( scope ), same( nodeId ), eq( 0l ), same( type ), same( subType ) ) )
                 .thenReturn( shardCount );
 
-        ArgumentCaptor<UUID> newUUIDValue = ArgumentCaptor.forClass( UUID.class );
+        ArgumentCaptor<Long> newUUIDValue = ArgumentCaptor.forClass( Long.class );
 
 
         //mock up our mutation
@@ -278,20 +274,13 @@ public class NodeShardAllocationTest {
 
         //check our new allocated UUID
 
-        final long expectedUUIDTime = timeservicetime + 2 * graphFig.getShardCacheTimeout();
+        final long expectedTime = timeservicetime + 2 * graphFig.getShardCacheTimeout();
 
-        UUID expectedUUID = UUIDGenerator.newTimeUUID( expectedUUIDTime );
-
-        final int comparison = UUIDComparator.staticCompare( expectedUUID, newUUIDValue.getValue() );
-
-        //the comparison uuid will be larger than the new value due to randomness even though they share a timestamp
-        //however the delta should not be more than the 1/10000 ticks in the uuid
-        final long expectedTimestamp = expectedUUID.timestamp()/10000;
-        final long savedTimestamp = newUUIDValue.getValue().timestamp()/10000;
+        final long savedTimestamp = newUUIDValue.getValue();
 
 
 
-        assertEquals( "Expected UUID at 2x timeout generated", expectedTimestamp, savedTimestamp );
+        assertEquals( "Expected at 2x timeout generated", expectedTime, savedTimestamp );
     }
 
 
@@ -340,31 +329,14 @@ public class NodeShardAllocationTest {
         final long futureTime = timeService.getCurrentTime()  + 2 * graphFig.getShardCacheTimeout();
 
 
-        assertTrue("Future time is actually in the future", futureTime > timeService.getCurrentTime());
-
-
         /**
-         * We were getting time UUID sort errors.  I've added this to ensure the test data is valid before proceeding
+         * Simulate slow node
          */
+        final long futureShard1 = futureTime - 1;
 
-        UUID futureUUID1 = UUIDGenerator.newTimeUUID(futureTime);
+        final long futureShard2 = futureTime + 10000;
 
-        UUID futureUUID2 = UUIDGenerator.newTimeUUID(futureTime+1);
-
-        UUID futureUUID3 = UUIDGenerator.newTimeUUID(futureTime+2);
-
-
-        UUID now = UUIDGenerator.newTimeUUID( timeService.getCurrentTime() );
-
-
-        //verify all future IDS are greater than "now" if they're not, then there's something wrong with the
-        //UUID Generation, which is crucial to this functionality
-
-        assertTrue( UUIDComparator.staticCompare( futureUUID3, futureUUID2 ) > 0);
-
-        assertTrue( UUIDComparator.staticCompare( futureUUID2, futureUUID1 ) > 0);
-
-        assertTrue( UUIDComparator.staticCompare( futureUUID1, now ) > 0);
+        final long futureShard3 = futureShard2 + 10000;
 
 
         final int pageSize = 100;
@@ -373,33 +345,33 @@ public class NodeShardAllocationTest {
          * Mock up returning a min shard
          */
         when( edgeSeriesSerialization
-                .getEdgeMetaData( same( scope ), same( nodeId ), any( UUID.class ), eq( pageSize ), same( type ),
-                        same( subType ) ) ).thenReturn( Arrays.asList(futureUUID3, futureUUID2, futureUUID1, Constants.MIN_UUID ).iterator() );
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Long.class ), eq( pageSize ), same( type ),
+                        same( subType ) ) ).thenReturn( Arrays.asList(futureShard3, futureShard2, futureShard1, 0l).iterator() );
 
 
 
-        ArgumentCaptor<UUID> newUUIDValue = ArgumentCaptor.forClass( UUID.class );
+        ArgumentCaptor<Long> newLongValue = ArgumentCaptor.forClass( Long.class );
 
 
 
 
         //mock up our mutation
         when( edgeSeriesSerialization
-                .removeEdgeMeta( same( scope ), same( nodeId ), newUUIDValue.capture(), same( type ), same( subType ) ) )
+                .removeEdgeMeta( same( scope ), same( nodeId ), newLongValue.capture(), same( type ), same( subType ) ) )
                 .thenReturn( mock( MutationBatch.class ) );
 
 
-        final Iterator<UUID>
-                result = approximation.getShards( scope, nodeId, Constants.MAX_UUID, pageSize, type, subType );
+        final Iterator<Long>
+                result = approximation.getShards( scope, nodeId, Long.MAX_VALUE, pageSize, type, subType );
 
+
+        assertTrue( "Shards present", result.hasNext() );
+
+        assertEquals("Only single next shard returned", futureShard1,  result.next().longValue());
 
         assertTrue("Shards present", result.hasNext());
 
-        assertEquals("Only single next shard returned", futureUUID1,  result.next());
-
-        assertTrue("Shards present", result.hasNext());
-
-        assertEquals("Previous shard present", Constants.MIN_UUID, result.next());
+        assertEquals("Previous shard present", 0l, result.next().longValue());
 
         assertFalse("No shards left", result.hasNext());
 
@@ -407,12 +379,12 @@ public class NodeShardAllocationTest {
          * Now we need to verify that both our mutations have been added
          */
 
-        List<UUID> values = newUUIDValue.getAllValues();
+        List<Long> values = newLongValue.getAllValues();
 
         assertEquals("2 values removed", 2,  values.size());
 
-        assertEquals("Deleted Max Future", futureUUID3, values.get( 0 ));
-        assertEquals("Deleted Next Future", futureUUID2, values.get( 1 ));
+        assertEquals("Deleted Max Future", futureShard3, values.get( 0 ).longValue());
+        assertEquals("Deleted Next Future", futureShard2, values.get( 1 ).longValue());
 
 
 

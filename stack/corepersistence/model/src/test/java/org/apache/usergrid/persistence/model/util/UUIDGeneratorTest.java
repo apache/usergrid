@@ -117,22 +117,4 @@ public class UUIDGeneratorTest {
         }
     }
 
-    @Test
-    public void testUUIDOrderingWithTimestamp(){
-        long first = 10000l;
-        long second = first+1;
-
-        //ensure the values are reproducible
-        UUID firstUUID = UUIDGenerator.newTimeUUID( first );
-        UUID firstUUIDx2 = UUIDGenerator.newTimeUUID( first );
-        UUID secondUUID = UUIDGenerator.newTimeUUID( second );
-
-        assertTrue(UUIDComparator.staticCompare( firstUUID, secondUUID ) < 0);
-        assertTrue(UUIDComparator.staticCompare( secondUUID, firstUUID ) > 0);
-
-        //Even though we use the same timestamp, the first x2 was generated AFTEr the firstUUID.  It should
-        //therefore be greater
-        assertTrue(UUIDComparator.staticCompare( firstUUIDx2, firstUUID ) > 0);
-
-    }
 }

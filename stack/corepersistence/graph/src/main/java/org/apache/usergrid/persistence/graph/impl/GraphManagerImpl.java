@@ -44,6 +44,7 @@ import org.apache.usergrid.persistence.graph.hystrix.HystrixGraphObservable;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.PermanentStorage;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -83,7 +84,7 @@ public class GraphManagerImpl implements GraphManager {
 
     @Inject
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
-                            final EdgeSerialization edgeSerialization, final NodeSerialization nodeSerialization,
+                             @PermanentStorage final EdgeSerialization edgeSerialization, final NodeSerialization nodeSerialization,
                             final GraphFig graphFig,
                             @EdgeDelete final AsyncProcessor edgeDelete, @NodeDelete final AsyncProcessor nodeDelete,
                             @Assisted final OrganizationScope scope ) {

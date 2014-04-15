@@ -16,17 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.serialization.impl.shard;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -34,16 +31,16 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
 import org.apache.usergrid.persistence.graph.serialization.util.IterableUtil;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 
-import static org.apache.usergrid.persistence.graph.impl.Constants.MAX_UUID;
 
 
 /**
@@ -94,7 +91,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
     @Override
-    public UUID getSlice( final OrganizationScope scope, final Id nodeId, final UUID time, final String... edgeType ) {
+    public long getSlice( final OrganizationScope scope, final Id nodeId, final UUID time, final String... edgeType ) {
 
 
         final CacheKey key = new CacheKey( scope, nodeId, edgeType );
@@ -107,7 +104,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
             throw new RuntimeException( "Unable to load shard key for graph", e );
         }
 
-        final UUID shardId = entry.getShardId( time );
+        final Long shardId = entry.getShardId( time.timestamp() );
 
         if ( shardId != null ) {
             return shardId;
@@ -119,7 +116,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
     @Override
-    public Iterator<UUID> getVersions( final OrganizationScope scope, final Id nodeId, final UUID maxTime,
+    public Iterator<Long> getVersions( final OrganizationScope scope, final Id nodeId, final UUID maxVersion,
                                        final String... edgeType ) {
         final CacheKey key = new CacheKey( scope, nodeId, edgeType );
               CacheEntry entry;
@@ -131,10 +128,10 @@ public class NodeShardCacheImpl implements NodeShardCache {
                   throw new RuntimeException( "Unable to load shard key for graph", e );
               }
 
-        Iterator<UUID> iterator = entry.getShards( maxTime );
+        Iterator<Long> iterator = entry.getShards( maxVersion.timestamp() );
 
         if(iterator == null){
-            return Collections.<UUID>emptyList().iterator();
+            return Collections.<Long>emptyList().iterator();
         }
 
         return iterator;
@@ -148,30 +145,27 @@ public class NodeShardCacheImpl implements NodeShardCache {
     private void updateCache() {
 
         this.graphs = CacheBuilder.newBuilder().maximumSize( graphFig.getShardCacheSize() )
-                                  .expireAfterWrite( graphFig.getShardCacheSize(), TimeUnit.MILLISECONDS )
-                                  .build( new CacheLoader<CacheKey, CacheEntry>() {
+                  .expireAfterWrite( graphFig.getShardCacheSize(), TimeUnit.MILLISECONDS )
+                  .build( new CacheLoader<CacheKey, CacheEntry>() {
 
 
-                                      @Override
-                                      public CacheEntry load( final CacheKey key ) throws Exception {
+                      @Override
+                      public CacheEntry load( final CacheKey key ) throws Exception {
 
 
-                                          /**
-                                           * Perform an audit in case we need to allocate a new shard
-                                           */
-                                          nodeShardAllocation.auditMaxShard( key.scope, key.id, key.types );
-                                             //TODO, we need to put some sort of upper bounds on this, it could possibly
-                                          //get too large
+                          /**
+                           * Perform an audit in case we need to allocate a new shard
+                           */
+                          nodeShardAllocation.auditMaxShard( key.scope, key.id, key.types );
+                          //TODO, we need to put some sort of upper bounds on this, it could possibly get too large
 
 
+                          final Iterator<Long> edges = nodeShardAllocation
+                                  .getShards( key.scope, key.id, Long.MAX_VALUE, SHARD_PAGE_SIZE, key.types );
 
-
-                                          final Iterator<UUID> edges = nodeShardAllocation
-                                                                                          .getShards( key.scope, key.id, MAX_UUID, SHARD_PAGE_SIZE, key.types );
-
-                                          return new CacheEntry( edges );
-                                      }
-                                  } );
+                          return new CacheEntry( edges );
+                      }
+                  } );
     }
 
 
@@ -229,13 +223,13 @@ public class NodeShardCacheImpl implements NodeShardCache {
         /**
          * Get the list of all segments
          */
-        private TreeSet<UUID> shards;
+        private TreeSet<Long> shards;
 
 
-        private CacheEntry( final Iterator<UUID> shards ) {
-            this.shards = new TreeSet<>( MetaComparator.INSTANCE );
+        private CacheEntry( final Iterator<Long> shards ) {
+            this.shards = new TreeSet<>( );
 
-            for ( UUID shard : IterableUtil.wrap( shards ) ) {
+            for ( Long shard : IterableUtil.wrap( shards ) ) {
                 this.shards.add( shard );
             }
         }
@@ -244,33 +238,19 @@ public class NodeShardCacheImpl implements NodeShardCache {
         /**
          * Get the shard's UUID for the uuid we're attempting to seek from
          */
-        public UUID getShardId( final UUID seek ) {
+        public Long getShardId( final Long seek ) {
             return this.shards.floor( seek );
         }
 
 
         /**
          * Get all shards <= this one in decending order
-         * @param maxUUID
          * @return
          */
-        public Iterator<UUID> getShards(final UUID maxUUID){
-            return this.shards.headSet(maxUUID, true  ).descendingIterator();
+        public Iterator<Long> getShards( final Long maxShard ){
+            return this.shards.headSet(maxShard, true  ).descendingIterator();
         }
     }
 
 
-    /**
-     * UUID Comparator
-     */
-    private static class MetaComparator implements Comparator<UUID> {
-
-        public static final UUIDComparator INSTANCE = new UUIDComparator();
-
-
-        @Override
-        public int compare( final UUID o1, final UUID o2 ) {
-            return com.fasterxml.uuid.UUIDComparator.staticCompare( o1, o2 );
-        }
-    }
 }

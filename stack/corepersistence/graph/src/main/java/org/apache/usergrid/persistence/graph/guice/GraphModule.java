@@ -41,14 +41,29 @@ import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.PermanentStorage;
 import org.apache.usergrid.persistence.graph.serialization.impl.CassandraConfigImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeSeriesCounterSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeSeriesSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeSeriesCounterSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeSeriesSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardApproximationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeShardStrategy;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
+import com.netflix.astyanax.Keyspace;
 
 
 public class GraphModule extends AbstractModule {
@@ -57,24 +72,22 @@ public class GraphModule extends AbstractModule {
     protected void configure() {
 
         //configure collections and our core astyanax framework
-        install(new CollectionModule());
+        install( new CollectionModule() );
 
         //install our configuration
-        install (new GuicyFigModule( GraphFig.class ));
+        install( new GuicyFigModule( GraphFig.class ) );
 
         bind( PostProcessObserver.class ).to( CollectionIndexObserver.class );
 
-        bind( EdgeMetadataSerialization.class).to( EdgeMetadataSerializationImpl.class);
-        bind( EdgeSerialization.class).to( EdgeSerializationImpl.class );
-        bind( NodeSerialization.class).to( NodeSerializationImpl.class );
+        bind( EdgeMetadataSerialization.class ).to( EdgeMetadataSerializationImpl.class );
+        bind( NodeSerialization.class ).to( NodeSerializationImpl.class );
 
 
-        bind( CassandraConfig.class).to( CassandraConfigImpl.class );
+        bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
 
         // create a guice factory for getting our collection manager
         install( new FactoryModuleBuilder().implement( GraphManager.class, GraphManagerImpl.class )
                                            .build( GraphManagerFactory.class ) );
-
 
 
         //do multibindings for migrations
@@ -84,28 +97,52 @@ public class GraphModule extends AbstractModule {
         migrationBinding.addBinding().to( NodeSerializationImpl.class );
 
 
+        /**
+         * bindings for shard allocations
+         */
+
+        bind( NodeShardAllocation.class ).to( NodeShardAllocationImpl.class );
+        bind( NodeShardApproximation.class ).to( NodeShardApproximationImpl.class );
+        bind( NodeShardCache.class ).to( NodeShardCacheImpl.class );
+
+        /**
+         * Bind our strategies based on their internal annotations.
+         */
+
+        bind( EdgeSeriesSerialization.class ).to( EdgeSeriesSerializationImpl.class );
+        bind( EdgeSeriesCounterSerialization.class ).to( EdgeSeriesCounterSerializationImpl.class );
+
 
         /**
          * Graph event bus, will need to be refactored into it's own classes
          */
 
-          // create a guice factor for getting our collection manager
+        // create a guice factor for getting our collection manager
 
         //local queue.  Need to
-        bind(TimeoutQueue.class).to( LocalTimeoutQueue.class );
+        bind( TimeoutQueue.class ).to( LocalTimeoutQueue.class );
 
-        bind(AsyncProcessor.class).annotatedWith( EdgeDelete.class ).to( AsyncProcessorImpl.class );
-        bind(AsyncProcessor.class).annotatedWith( NodeDelete.class ).to( AsyncProcessorImpl.class );
+        bind( AsyncProcessor.class ).annotatedWith( EdgeDelete.class ).to( AsyncProcessorImpl.class );
+        bind( AsyncProcessor.class ).annotatedWith( NodeDelete.class ).to( AsyncProcessorImpl.class );
 
         //Repair/cleanup classes
-        bind( EdgeMetaRepair.class).to( EdgeMetaRepairImpl.class );
+        bind( EdgeMetaRepair.class ).to( EdgeMetaRepairImpl.class );
 
 
-        bind( EdgeDeleteRepair.class).to( EdgeDeleteRepairImpl.class );
+        bind( EdgeDeleteRepair.class ).to( EdgeDeleteRepairImpl.class );
     }
 
 
+    @Provides
+    @PermanentStorage
+    public EdgeSerialization permanentStorageSerialization( final NodeShardCache cache, final Keyspace keyspace,
+                                                            final CassandraConfig cassandraConfig,
+                                                            final GraphFig graphFig ) {
 
+        EdgeShardStrategy sizeBasedStrategy = new SizebasedEdgeShardStrategy( cache );
+
+        return new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy );
+    }
 }
 
 

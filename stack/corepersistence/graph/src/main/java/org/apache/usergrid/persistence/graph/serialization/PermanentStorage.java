@@ -17,27 +17,18 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.impl;
+package org.apache.usergrid.persistence.graph.serialization;
 
 
-import java.util.UUID;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import com.google.inject.BindingAnnotation;
 
 
-/**
- * Simple stat class for re-used constants
- */
-public class Constants {
-
-    /**
-     * The min time uuid type
-     */
-    public static final UUID MIN_UUID =  new UUID( 0, 1 );
-
-    /**
-     * The max time uuid type
-     */
-    public static final UUID MAX_UUID = UUID.fromString( "ffffffff-ffff-1fff-bfff-ffffffffffff" );
-
-
-
-}
+@Retention( RetentionPolicy.RUNTIME)
+    @Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
+    @BindingAnnotation
+    public @interface PermanentStorage {}

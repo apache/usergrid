@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.serialization.impl.shard;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
 import java.util.Arrays;
@@ -29,6 +29,7 @@ import javax.inject.Inject;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.cache.CacheBuilder;
@@ -82,7 +83,7 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
 
     @Override
-    public void increment( final OrganizationScope scope, final Id nodeId, final UUID shardId,  final long count,
+    public void increment( final OrganizationScope scope, final Id nodeId, final long shardId,  final long count,
                            final String... edgeType ) {
 
 
@@ -100,7 +101,7 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
 
     @Override
-    public long getCount( final OrganizationScope scope, final Id nodeId, final UUID shardId,
+    public long getCount( final OrganizationScope scope, final Id nodeId, final long shardId,
                           final String... edgeType ) {
 
         final ShardKey key = new ShardKey( scope, nodeId, shardId, edgeType );
@@ -122,11 +123,11 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
     private static final class ShardKey {
         private final OrganizationScope scope;
         private final Id nodeId;
-        private final UUID shardId;
+        private final long shardId;
         private final String[] edgeTypes;
 
 
-        private ShardKey( final OrganizationScope scope, final Id nodeId, final UUID shardId, final String[] edgeTypes ) {
+        private ShardKey( final OrganizationScope scope, final Id nodeId, final long shardId, final String[] edgeTypes ) {
 
 
             this.scope = scope;
@@ -147,6 +148,9 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
             final ShardKey shardKey = ( ShardKey ) o;
 
+            if ( shardId != shardKey.shardId ) {
+                return false;
+            }
             if ( !Arrays.equals( edgeTypes, shardKey.edgeTypes ) ) {
                 return false;
             }
@@ -154,9 +158,6 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
                 return false;
             }
             if ( !scope.equals( shardKey.scope ) ) {
-                return false;
-            }
-            if ( !shardId.equals( shardKey.shardId ) ) {
                 return false;
             }
 
@@ -168,7 +169,7 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
         public int hashCode() {
             int result = scope.hashCode();
             result = 31 * result + nodeId.hashCode();
-            result = 31 * result + shardId.hashCode();
+            result = 31 * result + ( int ) ( shardId ^ ( shardId >>> 32 ) );
             result = 31 * result + Arrays.hashCode( edgeTypes );
             return result;
         }

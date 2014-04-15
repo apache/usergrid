@@ -42,9 +42,9 @@ public interface NodeShardAllocation {
      * @param maxShardId The max value to start seeking from.  Values <= this will be returned
      * @param pageSize The page size to use in the fetch
      * @param edgeTypes
-     * @return A list of all shards <= the current shard.  This will always return MIN_UUID if no shards are allocated
+     * @return A list of all shards <= the current shard.  This will always return 0l if no shards are allocated
      */
-    public Iterator<UUID> getShards( final OrganizationScope scope, final Id nodeId, UUID maxShardId, int pageSize,
+    public Iterator<Long> getShards( final OrganizationScope scope, final Id nodeId, long maxShardId, int pageSize,
                                      final String... edgeTypes );
 
 

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.serialization;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.Iterator;
@@ -42,18 +42,18 @@ public interface EdgeSeriesSerialization {
      * @param slice The next time to write
      * @param types The types to write to.  Can be edge type, or edgeType+id type
      */
-    public MutationBatch writeEdgeMeta(OrganizationScope scope, Id nodeId, UUID slice,  String... types);
+    public MutationBatch writeEdgeMeta(OrganizationScope scope, Id nodeId, long slice,  String... types);
 
     /**
      * Get an iterator of all meta data and types.  Returns a range from High to low
      * @param scope The organization scope
      * @param nodeId The id of the node
-     * @param start The uuid to start seeking from.  Values <= this value will be returned.
+     * @param start The shard time to start seeking from.  Values <= this value will be returned.
      * @param count The maximum size to return
      * @param types The types to use
      * @return
      */
-    public Iterator<UUID> getEdgeMetaData(OrganizationScope scope, Id nodeId, UUID start, int count, String... types);
+    public Iterator<Long> getEdgeMetaData(OrganizationScope scope, Id nodeId, long start, int count, String... types);
 
     /**
      * Remove the slice from the edge meta data from the types.
@@ -64,6 +64,6 @@ public interface EdgeSeriesSerialization {
      * @param types
      * @return
      */
-    public MutationBatch removeEdgeMeta(OrganizationScope scope, Id nodeId, UUID slice, String... types);
+    public MutationBatch removeEdgeMeta(OrganizationScope scope, Id nodeId, long slice, String... types);
 
 }

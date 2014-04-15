@@ -41,13 +41,13 @@ public interface NodeShardApproximation {
      * @param count
      * @param edgeType The edge type
      */
-    public void increment( final OrganizationScope scope, final Id nodeId, final UUID shardId,  final long count,
+    public void increment( final OrganizationScope scope, final Id nodeId, final long shardId,  final long count,
                            final String... edgeType );
 
 
     /**
      * Get the approximation of the number of unique items
      */
-    public long getCount( final OrganizationScope scope, final Id nodeId, final UUID shardId,
+    public long getCount( final OrganizationScope scope, final Id nodeId, final long shardId,
                           final String... edgeType );
 }
