@@ -27,24 +27,24 @@ public class CollectionRuntimeException extends RuntimeException {
     private CollectionScope collectionScope;
 
 
-    public CollectionRuntimeException( Entity entity, CollectionScope scope ) {
+    public CollectionRuntimeException( Entity entity, CollectionScope scope, final String message ) {
+        super( message ); 
         this.entity = entity;
         this.collectionScope = scope; 
     }
 
 
-    public CollectionRuntimeException( Entity entity, CollectionScope scope, final String message ) {
-        super( message );
-    }
-
-
     public CollectionRuntimeException( Entity entity, CollectionScope scope, final String message, final Throwable cause ) {
         super( message, cause );
+        this.entity = entity;
+        this.collectionScope = scope; 
     }
 
 
     public CollectionRuntimeException( Entity entity, CollectionScope scope, final Throwable cause ) {
         super( cause );
+        this.entity = entity;
+        this.collectionScope = scope; 
     }
 
 
@@ -52,6 +52,8 @@ public class CollectionRuntimeException extends RuntimeException {
             final String message, final Throwable cause, final boolean enableSuppression,
             final boolean writableStackTrace ) {
         super( message, cause, enableSuppression, writableStackTrace );
+        this.entity = entity;
+        this.collectionScope = scope; 
     }
 
     

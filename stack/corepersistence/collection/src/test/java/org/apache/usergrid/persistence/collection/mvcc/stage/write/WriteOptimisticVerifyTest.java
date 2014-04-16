@@ -17,8 +17,6 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.netflix.astyanax.MutationBatch;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,13 +55,8 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
     @Override
     protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
-
         MvccLogEntrySerializationStrategy logstrat = mock( MvccLogEntrySerializationStrategy.class);
-
-        UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class);
-        Injector injector = Guice.createInjector( new TestCollectionModule() );
-
-        new WriteOptimisticVerify( logstrat, uvstrat ).call( event );
+        new WriteOptimisticVerify( logstrat ).call( event );
     }
 
     @Test
@@ -96,7 +89,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class);
 
         // Run the stage
-        WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog, uvstrat );
+        WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog );
 
         CollectionIoEvent<MvccEntity> result;
         result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
@@ -138,9 +131,9 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
             entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE));
 
         // mock up the log
-        MvccLogEntrySerializationStrategy conflictLog = 
+        MvccLogEntrySerializationStrategy mvccLog = 
             mock( MvccLogEntrySerializationStrategy.class );
-        when( conflictLog.load( scope, entity.getId(), entity.getVersion(), 2) )
+        when( mvccLog.load( scope, entity.getId(), entity.getVersion(), 2) )
             .thenReturn( logEntries );
 
         // mock up unique values interface
@@ -153,15 +146,12 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         when( uvstrat.delete(uv1) ).thenReturn(mb);
         when( uvstrat.delete(uv2) ).thenReturn(mb);
 
-        // use a real scheduler
-        Injector injector = Guice.createInjector( new TestCollectionModule() );
-
         // Run the stage, conflict should be detected
         final MvccEntity mvccEntity = fromEntity( entity );
         boolean conflictDetected = false;
 
-        WriteOptimisticVerify newStage = 
-            new WriteOptimisticVerify( conflictLog, uvstrat );
+        WriteOptimisticVerify newStage = new WriteOptimisticVerify( mvccLog );
+        RollbackAction rollbackAction = new RollbackAction( mvccLog, uvstrat );
 
         try {
             newStage.call( new CollectionIoEvent<MvccEntity>(scope, mvccEntity));
@@ -169,6 +159,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         } catch (WriteOptimisticVerifyException e) {
             log.info("Error", e);
             conflictDetected = true;
+            rollbackAction.call( e );
         }
         assertTrue( conflictDetected );
 

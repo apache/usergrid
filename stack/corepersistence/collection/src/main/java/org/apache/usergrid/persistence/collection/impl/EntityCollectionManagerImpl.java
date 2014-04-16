@@ -191,7 +191,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         //                  writeVerifyUnique, writeOptimisticVerify );
 
         // return the commit result.
-        return observable.map(writeCommit); // TODO: .doOnError( rollback );
+        return observable.map(writeCommit).doOnError( rollback );
     }
 
 

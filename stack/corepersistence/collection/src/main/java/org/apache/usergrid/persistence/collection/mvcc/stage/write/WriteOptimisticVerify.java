@@ -35,10 +35,8 @@ import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Scheduler;
 
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 
 /**
@@ -52,18 +50,9 @@ public class WriteOptimisticVerify
 
     private final MvccLogEntrySerializationStrategy logEntryStrat;
 
-    private final UniqueValueSerializationStrategy uniqueValueStrat;
-
-    private final Scheduler scheduler;
-
     @Inject
-    public WriteOptimisticVerify( 
-            MvccLogEntrySerializationStrategy logEntryStrat, 
-            final UniqueValueSerializationStrategy uniqueValueStrat) {
-
+    public WriteOptimisticVerify( MvccLogEntrySerializationStrategy logEntryStrat ) {
         this.logEntryStrat = logEntryStrat;
-        this.uniqueValueStrat = uniqueValueStrat; 
-        this.scheduler = Schedulers.io();
     }
 
 
@@ -93,15 +82,14 @@ public class WriteOptimisticVerify
                 log.debug("Conflict writing entity id {} version {}", 
                     entity.getId().toString(), entity.getVersion().toString());
             
-                logEntryStrat.delete( collectionScope, entity.getId(), entity.getVersion() );
                 throw new WriteOptimisticVerifyException( entity, collectionScope, 
-                        "Change conflict, not first writer");
+                    "Change conflict, not first writer");
             }
 
         } catch ( ConnectionException e ) {
             log.error( "Error reading entity log", e );
             throw new CollectionRuntimeException( entity, collectionScope, 
-                    "Error reading entity log", e );
+                "Error reading entity log", e );
         }
 
         // No op, just emit the value

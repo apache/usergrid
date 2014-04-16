@@ -36,8 +36,6 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.inject.Inject;
 
-import rx.Scheduler;
-
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
 import static org.junit.Assert.assertSame;

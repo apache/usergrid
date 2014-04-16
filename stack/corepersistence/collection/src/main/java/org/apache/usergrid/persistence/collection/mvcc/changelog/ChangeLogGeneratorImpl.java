@@ -63,52 +63,52 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
         // TODO: what about cleared entities, all fields deleted but entity still there.
         // i.e. the optional entity will be delete
 
-        for ( MvccEntity mvccEntity : mvccEntities ) {
+        for (MvccEntity mvccEntity : mvccEntities) {
 
             Entity entity = mvccEntity.getEntity().get();
-            int compare = UUIDComparator.staticCompare( mvccEntity.getVersion(), minVersion );
+            int compare = UUIDComparator.staticCompare(mvccEntity.getVersion(), minVersion);
 
-            if ( compare < 0 ) { // less than minVersion
-
-                for ( Field field : entity.getFields() ) {
-
-                    // only delete field if it is not in the keeper
-                    Field keeperField = keeper.getField( field.getName() );
-                    if ( keeperField == null
-                            || keeperField.getValue() == null
-                            || !keeperField.getValue().equals( field.getValue() ) ) {
-
-                            String key = field.getName() + field.getValue(); 
-                            ChangeLogEntry cle = deleteMap.get( key );
-                            if ( cle == null ) {
-                                cle = new ChangeLogEntry( 
-                                    entity.getId(), mvccEntity.getVersion(), 
-                                    ChangeLogEntry.ChangeType.PROPERTY_DELETE, field );
-                                changeLog.add( cle );
-                            } else {
-                                cle.addVersion( mvccEntity.getVersion() );
-                            }
-                        }
-                    }
-
-                }else { // greater than or equal to minVersion
+            if (compare < 0) { // less than minVersion
 
                 for (Field field : entity.getFields()) {
 
-                    String key = field.getName() + field.getValue(); 
-                    ChangeLogEntry cle = writeMap.get( key );
-                    if ( cle == null ) {
-                        cle = new ChangeLogEntry( 
-                            entity.getId(), mvccEntity.getVersion(), 
-                            ChangeLogEntry.ChangeType.PROPERTY_WRITE, field );
-                        writeMap.put( key, cle );
-                        changeLog.add( cle );
+                    // only delete field if it is not in the keeper
+                    Field keeperField = keeper.getField(field.getName());
+                    if (keeperField == null
+                            || keeperField.getValue() == null
+                            || !keeperField.getValue().equals(field.getValue())) {
+
+                        String key = field.getName() + field.getValue();
+                        ChangeLogEntry cle = deleteMap.get(key);
+                        if (cle == null) {
+                            cle = new ChangeLogEntry(
+                                    entity.getId(), mvccEntity.getVersion(),
+                                    ChangeLogEntry.ChangeType.PROPERTY_DELETE, field);
+                            changeLog.add(cle);
+                        } else {
+                            cle.addVersion(mvccEntity.getVersion());
+                        }
+                    }
+                }
+
+            } else { // greater than or equal to minVersion
+
+                for (Field field : entity.getFields()) {
+
+                    String key = field.getName() + field.getValue();
+                    ChangeLogEntry cle = writeMap.get(key);
+                    if (cle == null) {
+                        cle = new ChangeLogEntry(
+                                entity.getId(), mvccEntity.getVersion(),
+                                ChangeLogEntry.ChangeType.PROPERTY_WRITE, field);
+                        writeMap.put(key, cle);
+                        changeLog.add(cle);
                     } else {
-                        cle.addVersion( mvccEntity.getVersion() );
-                    } 
-                } 
+                        cle.addVersion(mvccEntity.getVersion());
+                    }
+                }
             }
-            }
-            return changeLog;
         }
+        return changeLog;
     }
+ }

@@ -17,8 +17,6 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.ArrayList;
@@ -26,7 +24,7 @@ import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
+import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
@@ -49,12 +47,16 @@ public class RollbackAction implements Action1<Throwable> {
 
     private final Scheduler scheduler;
     private final UniqueValueSerializationStrategy uniqueValueStrat;
+    private final MvccLogEntrySerializationStrategy logEntryStrat;
 
 
-    public RollbackAction() {
-        Injector injector = Guice.createInjector( new CollectionModule() );
+    public RollbackAction( 
+            MvccLogEntrySerializationStrategy logEntryStrat, 
+            UniqueValueSerializationStrategy uniqueValueStrat ) {
+
         scheduler = Schedulers.io(); //injector.getInstance( Scheduler.class );
-        uniqueValueStrat = injector.getInstance( UniqueValueSerializationStrategy.class );
+        this.uniqueValueStrat = uniqueValueStrat;
+        this.logEntryStrat = logEntryStrat;
     }
 
 
@@ -126,6 +128,8 @@ public class RollbackAction implements Action1<Throwable> {
                 // "zip" up the concurrent results
                 Observable.zip(results, zipFunction).toBlockingObservable().last();
             }
+
+            logEntryStrat.delete( scope, entity.getId(), entity.getVersion() );
         }
     }
 
