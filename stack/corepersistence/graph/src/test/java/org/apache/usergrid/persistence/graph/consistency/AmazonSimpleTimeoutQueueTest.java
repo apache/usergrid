@@ -139,7 +139,7 @@ public class AmazonSimpleTimeoutQueueTest {
 
             //takes from the queue, if 10 seconds have passed without accruing 100 elements
             //then the test fails. otherwise exit when you have 100 elements.
-            while(results.size()!=100 || !has10SecondsPassed( currentTimeMillis )) {
+            while(results.size()!=100 && !has10SecondsPassed( currentTimeMillis )) {
 
                 results.addAll( queue.take( 100, 50 ) );
             }
