@@ -7,11 +7,15 @@ import org.apache.usergrid.persistence.collection.migration.MigrationManager;
 import org.apache.usergrid.persistence.collection.migration.MigrationManagerImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.spi.TypeEncounter;
+import com.google.inject.spi.TypeListener;
 import com.netflix.astyanax.Keyspace;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
 
 
 /**
@@ -37,5 +41,6 @@ public class SerializationModule extends AbstractModule {
         uriBinder.addBinding().to( MvccEntitySerializationStrategyImpl.class );
         uriBinder.addBinding().to( MvccLogEntrySerializationStrategyImpl.class );
         uriBinder.addBinding().to( UniqueValueSerializationStrategyImpl.class );
+
     }
 }

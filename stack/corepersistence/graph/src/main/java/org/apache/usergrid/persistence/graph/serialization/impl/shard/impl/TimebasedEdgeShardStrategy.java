@@ -35,13 +35,13 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * Simple sized based shard strategy. For now always returns the same shard.
  */
-public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
+public class TimebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     private final NodeShardCache shardCache;
 
 
-    public SizebasedEdgeShardStrategy( final NodeShardCache shardCache ) {this.shardCache = shardCache;}
+    public TimebasedEdgeShardStrategy( final NodeShardCache shardCache ) {this.shardCache = shardCache;}
 
 
 
@@ -62,7 +62,7 @@ public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
     @Override
     public void increment( final MutationBatch batch, final OrganizationScope scope, final Id rowKeyId,
                            final long shardId, final int count, final String... types ) {
-        //TODO, delegate this
+        //NO-OP
     }
 
 

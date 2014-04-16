@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepairImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepairImpl;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
+import org.apache.usergrid.persistence.graph.serialization.CommitLog;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
@@ -58,9 +59,12 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeS
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardApproximationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeShardStrategy;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.TimebasedEdgeShardStrategy;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
 import com.netflix.astyanax.Keyspace;
@@ -93,7 +97,6 @@ public class GraphModule extends AbstractModule {
         //do multibindings for migrations
         Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
         migrationBinding.addBinding().to( EdgeMetadataSerializationImpl.class );
-        migrationBinding.addBinding().to( EdgeSerializationImpl.class );
         migrationBinding.addBinding().to( NodeSerializationImpl.class );
 
 
@@ -117,9 +120,9 @@ public class GraphModule extends AbstractModule {
          * Graph event bus, will need to be refactored into it's own classes
          */
 
-        // create a guice factor for getting our collection manager
+        // create a guice factory for getting our collection manager
 
-        //local queue.  Need to
+        //local queue.  Need to replace with a real implementation
         bind( TimeoutQueue.class ).to( LocalTimeoutQueue.class );
 
         bind( AsyncProcessor.class ).annotatedWith( EdgeDelete.class ).to( AsyncProcessorImpl.class );
@@ -133,15 +136,55 @@ public class GraphModule extends AbstractModule {
     }
 
 
+    /**
+     * Our permanent serialization strategy
+     */
     @Provides
+    @Singleton
     @PermanentStorage
+    @Inject
     public EdgeSerialization permanentStorageSerialization( final NodeShardCache cache, final Keyspace keyspace,
                                                             final CassandraConfig cassandraConfig,
-                                                            final GraphFig graphFig ) {
+                                                            final GraphFig graphFig) {
 
-        EdgeShardStrategy sizeBasedStrategy = new SizebasedEdgeShardStrategy( cache );
+        final EdgeShardStrategy sizeBasedStrategy = new SizebasedEdgeShardStrategy( cache );
 
-        return new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy );
+        final EdgeSerializationImpl edgeSerialization =
+                new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy );
+
+
+        //register this instance in the multi binding
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
+        migrationBinding.addBinding().toInstance( edgeSerialization );
+
+
+        return edgeSerialization;
+    }
+
+
+    /**
+     * The commit log strategy for fast writes
+     */
+    @Provides
+    @Singleton
+    @CommitLog
+    @Inject
+    public EdgeSerialization commitlogStorageSerialization( final NodeShardCache cache, final Keyspace keyspace,
+                                                            final CassandraConfig cassandraConfig,
+                                                            final GraphFig graphFig) {
+
+        final EdgeShardStrategy sizeBasedStrategy = new TimebasedEdgeShardStrategy( cache );
+
+        final EdgeSerializationImpl edgeSerialization =
+                new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy );
+
+
+        //register this instance in the multi binding
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
+        migrationBinding.addBinding().toInstance( edgeSerialization );
+
+
+        return edgeSerialization;
     }
 }
 

@@ -26,7 +26,6 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.clearspring.analytics.stream.cardinality.HyperLogLog;
 import com.google.common.base.Optional;
 import com.netflix.astyanax.MutationBatch;
 

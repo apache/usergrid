@@ -17,18 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.serialization;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import com.google.inject.BindingAnnotation;
-
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD })
-@BindingAnnotation
-public @interface PermanentStorage {}
+public class EdgeSeriesCounterSerializationTest {}

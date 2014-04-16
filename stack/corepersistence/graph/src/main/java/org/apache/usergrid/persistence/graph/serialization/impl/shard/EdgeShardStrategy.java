@@ -23,7 +23,12 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 import java.util.Iterator;
 import java.util.UUID;
 
+import org.apache.cassandra.thrift.Mutation;
+
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.netflix.astyanax.MutationBatch;
 
 
 public interface EdgeShardStrategy {
@@ -31,13 +36,25 @@ public interface EdgeShardStrategy {
     /**
      * Get the shard key used for writing this shard.  CUD operations should use this
      */
-    public long getWriteShard( Id rowKeyId, UUID version, String... types );
+    public long getWriteShard(final OrganizationScope scope, final Id rowKeyId, final  UUID version, final String... types );
 
 
     /**
      * Get the iterator of all shards for this entity
      */
-    public Iterator<Long> getReadShards( Id rowKeyId, UUID maxVersion, String... types );
+    public Iterator<Long> getReadShards(final OrganizationScope scope,final  Id rowKeyId, final UUID maxVersion,final  String... types );
+
+    /**
+     * Increment our count meta data by the passed value.  Can be a positive or a negative number.
+     * @param batch The batch to add the count to
+     * @param scope
+     * @param rowKeyId
+     * @param shardId The shard id to use
+     * @param count The amount to increment or decrement
+     * @param types
+     * @return
+     */
+    public void increment(final MutationBatch batch, final OrganizationScope scope,final  Id rowKeyId, long shardId, int count ,final  String... types );
 
 
     /**
@@ -60,4 +77,6 @@ public interface EdgeShardStrategy {
      * Get the name of the column family for getting target nodes with a source type
      */
     public String getTargetNodeSourceTypeCfName();
+
+
 }
