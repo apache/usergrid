@@ -34,5 +34,8 @@ stack/corepersistence/nbactions.xml
 stack/corepersistence/queryindex/nbactions.xml
 stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
 stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
-
 /portal/nbproject/private/
+/portal/js/templates.js
+/portal/index.html
+/portal/index-debug.html
+
