@@ -7,6 +7,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
@@ -19,7 +23,6 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 
 /**
@@ -28,12 +31,15 @@ import com.fasterxml.jackson.dataformat.smile.SmileFactory;
  */
 public class AmazonSimpleTimeoutQueue<T> implements TimeoutQueue<T> {
 
+    private static final Logger logger = LoggerFactory.getLogger( AmazonSimpleTimeoutQueue.class );
+
+
     static final private String VisibilityTimeoutAttr = "VisibilityTimeout";
+    static final private int MaxNumberOfMessages = 10;
     //final AmazonSimpleTimeoutQueue simpleTimeoutQueue;
 
     private String queueEndpoint;
 
-    public static final SmileFactory f = new SmileFactory();
 
     public static ObjectMapper mapper = new ObjectMapper();
 
@@ -63,13 +69,15 @@ public class AmazonSimpleTimeoutQueue<T> implements TimeoutQueue<T> {
         AWSCredentials awsCredentials =
                 new BasicAWSCredentials( System.getProperty( "accessKey" ), System.getProperty( "secretKey" ) );
         CreateQueueRequest createQueueRequest = new CreateQueueRequest( name );
+        createQueueRequest.addAttributesEntry( VisibilityTimeoutAttr,"1" );
 
         AmazonSQSAsyncClient sqsAsyncClient = new AmazonSQSAsyncClient( awsCredentials );
 
         //creates the queue
-        CreateQueueResult createQueueResult = sqsAsyncClient.createQueue( name );
+        CreateQueueResult createQueueResult = sqsAsyncClient.createQueue( createQueueRequest );
         this.queueEndpoint = createQueueResult.getQueueUrl();
-        System.out.println( "Created a new queue.  Queue url: " + queueEndpoint );
+
+        logger.debug( "Created a new queue.  Queue url: " + queueEndpoint );
     }
 
 
@@ -93,7 +101,7 @@ public class AmazonSimpleTimeoutQueue<T> implements TimeoutQueue<T> {
         //TODO: check if event is instanceof serializable. if not blow up.
 
         if ( !( event instanceof Serializable ) ) {
-            return null;
+            throw new RuntimeException( event.getClass().getName() + " is not serializable!" );
         }
 
 
@@ -104,14 +112,14 @@ public class AmazonSimpleTimeoutQueue<T> implements TimeoutQueue<T> {
 
             sendMessageRequest.setDelaySeconds( ( int ) timeout );
 
-            sendMessageResult = sqsAsyncClient.sendMessage( sendMessageRequest );
+            sqsAsyncClient.sendMessage( sendMessageRequest );
         }
         catch ( JsonProcessingException e ) {
-            sqsAsyncClient.deleteQueue( "test" );
-            e.printStackTrace();
-            return null;
+            logger.error( "Couldn't serialize the following event: " + event.toString() );
+            throw new RuntimeException(e.getMessage());
         }
         ;
+        logger.debug( "Finished adding " + asynchronousMessage.toString() + " to the following queue: " +queueEndpoint );
 
         return asynchronousMessage;
     }
@@ -126,14 +134,14 @@ public class AmazonSimpleTimeoutQueue<T> implements TimeoutQueue<T> {
         AmazonSQSAsyncClient sqsAsyncClient = new AmazonSQSAsyncClient( awsCredentials );
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest( getQueueEndpoint() );
         receiveMessageRequest.setVisibilityTimeout( ( int ) timeout );
-        receiveMessageRequest.setMaxNumberOfMessages( 1 );
+        receiveMessageRequest.setMaxNumberOfMessages( MaxNumberOfMessages );
         Collection<AsynchronousMessage<T>> asynchronousMessageCollection;
         asynchronousMessageCollection = new ArrayList<>();//new Collection<AsynchronousMessage<T>>();
 
 
         //recieves a single message back from the queue because default return is one. For reference
         //max number able to be returned is 10.
-        for ( int index = 0; index < maxSize; index++ ) {
+        for ( int index = 0; index < (maxSize / 10 + 1); index++ ) {
             ReceiveMessageResult receiveMessageResult = sqsAsyncClient.receiveMessage( receiveMessageRequest );
             //I can only get out from the result using getMessages.
             List<Message> messageList = receiveMessageResult.getMessages();
@@ -142,17 +150,19 @@ public class AmazonSimpleTimeoutQueue<T> implements TimeoutQueue<T> {
                 //always get the first message because there should only be one
 
                 try {
-                    //TODO: make this simplier
-                    SimpleAsynchronousMessage<T> simpleAsynchronousMessage =
-                            mapper.readValue( messageList.get( 0 ).getBody(), SimpleAsynchronousMessage.class );
+                    for ( int j = 0; j < messageList.size(); j++ ) {
+                        //TODO: make this simplier
+                        SimpleAsynchronousMessage<T> simpleAsynchronousMessage =
+                                mapper.readValue( messageList.get( j ).getBody(), SimpleAsynchronousMessage.class );
 
-                    AmazonSimpleQueueMessage<T> amazonSimpleQueueMessage =
-                            new AmazonSimpleQueueMessage<T>( simpleAsynchronousMessage.getEvent(),
-                                    simpleAsynchronousMessage.getTimeout(), messageList.get( 0 ).getMessageId(),
-                                    messageList.get( 0 ).getReceiptHandle() );
+                        AmazonSimpleQueueMessage<T> amazonSimpleQueueMessage =
+                                new AmazonSimpleQueueMessage<T>( simpleAsynchronousMessage.getEvent(),
+                                        simpleAsynchronousMessage.getTimeout(), messageList.get( j ).getMessageId(),
+                                        messageList.get( j ).getReceiptHandle() );
 
 
-                    asynchronousMessageCollection.add( amazonSimpleQueueMessage );
+                        asynchronousMessageCollection.add( amazonSimpleQueueMessage );
+                    }
                 }
                 catch ( IOException e ) {
                     e.printStackTrace();
@@ -163,6 +173,7 @@ public class AmazonSimpleTimeoutQueue<T> implements TimeoutQueue<T> {
                 break;
             }
         }
+        logger.debug( "Took " +asynchronousMessageCollection.size() + " queue elements." );
 
         return asynchronousMessageCollection;
     }
@@ -176,10 +187,11 @@ public class AmazonSimpleTimeoutQueue<T> implements TimeoutQueue<T> {
         try {
             AmazonSimpleQueueMessage amazonSimpleQueueMessage = ( AmazonSimpleQueueMessage ) event;
             sqsAsyncClient.deleteMessage( getQueueEndpoint(), amazonSimpleQueueMessage.getReceiptHandle() );
+            logger.debug( "Removed the uuid " +amazonSimpleQueueMessage.getMessageId() + " from the queue." );
         }
         catch ( Exception e ) {
-            e.printStackTrace();
-            return false;
+            logger.error( "Failed to delete the following event:" + ( ( AmazonSimpleQueueMessage ) event ).getMessageId()  );
+            throw new RuntimeException( e.getMessage() );
         }
 
         return true;

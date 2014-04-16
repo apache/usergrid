@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -27,7 +26,7 @@ import static org.junit.Assert.assertTrue;
  *
  */
 public class AmazonSimpleTimeoutQueueTest {
-    @Ignore
+    //@Ignore
     @Test
     public void queueReadRemove() {
 
@@ -93,11 +92,11 @@ public class AmazonSimpleTimeoutQueueTest {
         }
     }
 
-    @Ignore
+    //@Ignore
     @Test
     public void queueReadTimeout() {
 
-        final long timeout = 5;
+        final long timeout = 1;
 
 
         final int queueSize = 100;
@@ -132,9 +131,18 @@ public class AmazonSimpleTimeoutQueueTest {
                 assertEquals( event, asynchronousMessage.getEvent() );
                 assertEquals( timeout, asynchronousMessage.getTimeout() );
             }
+            Thread.sleep( 1000 );
 
 
-            Collection<AsynchronousMessage<TestEvent>> results = queue.take( 100, timeout );
+            Collection<AsynchronousMessage<TestEvent>> results = queue.take( 10, 50 ) ;
+            long currentTimeMillis = System.currentTimeMillis();
+
+            //takes from the queue, if 10 seconds have passed without accruing 100 elements
+            //then the test fails. otherwise exit when you have 100 elements.
+            while(results.size()!=100 || !has10SecondsPassed( currentTimeMillis )) {
+
+                results.addAll( queue.take( 100, 50 ) );
+            }
 
                 assertEquals( "Time elapsed", 100, results.size() );
 
@@ -152,13 +160,23 @@ public class AmazonSimpleTimeoutQueueTest {
                 }
 
         }
+        catch ( InterruptedException e ) {
+            e.printStackTrace();
+        }
         finally {
             sqsAsyncClient.deleteQueue( queueName );
         }
     }
 
+    public boolean has10SecondsPassed (long startTime){
+        if(startTime+10000 > System.currentTimeMillis() ){
+            return false;
+        }
+        return true;
+    }
 
-    @JsonTypeInfo( use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT, property = "@class" )
+
+    @JsonTypeInfo( use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT, property = "@class" )
     public static class TestEvent implements Serializable {
 
         @JsonProperty
