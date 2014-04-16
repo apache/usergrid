@@ -27,7 +27,7 @@
  * @since 26-Apr-2013
  */
 
-namespace Apigee\Usergrid;
+namespace Apache\Usergrid;
 
 require_once(dirname(__FILE__) . '/Exceptions.php');
 
@@ -46,13 +46,13 @@ class Client {
   private $url = 'http://api.usergrid.com';
 
   /**
-   * Organization name. Find your in the Admin Portal (http://apigee.com/usergrid)
+   * Organization name. Find your in the Admin Portal 
    * @var string
    */
   private $org_name;
 
   /**
-   * App name. Find your in the Admin Portal (http://apigee.com/usergrid)
+   * App name. Find your in the Admin Portal 
    * @var string
    */
   private $app_name;
@@ -195,7 +195,7 @@ class Client {
 
   /**
    * Sets the client secret. You should have received this information when
-   * you registered your UserGrid/Apigee account.
+   * you registered your UserGrid/Apache account.
    *
    * @param $secret
    */
@@ -534,7 +534,7 @@ class Client {
    * returned object's ->parsed_objects['entity'] member.
    *
    * @param array $entity_data
-   * @return \Apigee\Usergrid\Entity
+   * @return \Apache\Usergrid\Entity
    */
   public function create_entity($entity_data) {
     $entity = new Entity($this, $entity_data);
@@ -564,7 +564,7 @@ class Client {
    * Fetches and returns an entity.
    *
    * @param $entity_data
-   * @return \Apigee\Usergrid\Entity|bool
+   * @return \Apache\Usergrid\Entity|bool
    */
   public function get_entity($entity_data) {
     $entity = new Entity($this, $entity_data);
@@ -582,7 +582,7 @@ class Client {
    *
    * @param string $type
    * @param array $qs
-   * @return \Apigee\Usergrid\Collection
+   * @return \Apache\Usergrid\Collection
    */
   public function get_collection($type, $qs = array()) {
     $collection = new Collection($this, $type, $qs);
@@ -595,7 +595,7 @@ class Client {
    *
    * @param string $user_identifier
    * @param array $user_data
-   * @return \Apigee\Usergrid\Entity|bool
+   * @return \Apache\Usergrid\Entity|bool
    */
   public function create_user_activity($user_identifier, $user_data) {
     $user_data['type'] = "users/$user_identifier/activities";
@@ -611,7 +611,7 @@ class Client {
    *
    * @param string $username
    * @param string $password
-   * @return \Apigee\Usergrid\Entity|bool
+   * @return \Apache\Usergrid\Entity|bool
    */
   public function login($username, $password) {
     $body = array(
@@ -654,7 +654,7 @@ class Client {
    * @params string $password
    * @params string $email
    * @params string $name
-   * @return \Apigee\Usergrid\Entity
+   * @return \Apache\Usergrid\Entity
    */
   public function signup($username, $password, $email, $name) {
     $data = array(

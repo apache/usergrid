@@ -26,7 +26,7 @@
 * @since 26-Apr-2013
 */
 
-namespace Apigee\Usergrid;
+namespace Apache\Usergrid;
 
 require_once (dirname(__FILE__) . '/Exceptions.php');
 

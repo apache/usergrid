@@ -20,10 +20,10 @@
 
 //include autoloader to make sure all files are included
 include '../autoloader.inc.php';
-usergrid_autoload('Apigee\\Usergrid\\Client');
+usergrid_autoload('Apache\\Usergrid\\Client');
 
 //initialize the SDK
-$client = new Apigee\Usergrid\Client('yourorgname','sandbox');
+$client = new Apache\Usergrid\Client('yourorgname','sandbox');
 
 //reading data
 $books = $client->get_collection('books');

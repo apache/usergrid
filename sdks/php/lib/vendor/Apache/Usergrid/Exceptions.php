@@ -28,7 +28,7 @@
 */
 
 
-namespace Apigee\Usergrid;
+namespace Apache\Usergrid;
 
 
 class UGException extends \Exception { }

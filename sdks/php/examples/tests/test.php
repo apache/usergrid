@@ -28,11 +28,11 @@
 
 //@han {include-sdk}
 include '../autoloader.inc.php';
-usergrid_autoload('Apigee\\Usergrid\\Client');
+usergrid_autoload('Apache\\Usergrid\\Client');
 //@solo
 
 //@han {create-new-client}
-$client = new Apigee\Usergrid\Client('1hotrod','sandbox');
+$client = new Apache\Usergrid\Client('1hotrod','sandbox');
 //@solo
 
 include 'Tester.php';

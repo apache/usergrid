@@ -23,7 +23,7 @@ function usergrid_autoload($class) {
 
   if (strpos($class, '\\') !== FALSE) {
     $path_parts = explode('\\', $class);
-    if ($path_parts[0] == 'Apigee') {
+    if ($path_parts[0] == 'Apache') {
       $lib_path = realpath(dirname(__FILE__) . '/../lib/vendor');
       $class_path = $lib_path . '/' . join('/', $path_parts) . '.php';
       if (file_exists($class_path)) {

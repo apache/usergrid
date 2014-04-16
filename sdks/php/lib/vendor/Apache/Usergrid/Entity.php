@@ -27,7 +27,7 @@
  * @since 26-Apr-2013
  */
 
-namespace Apigee\Usergrid;
+namespace Apache\Usergrid;
 
 class Entity {
 

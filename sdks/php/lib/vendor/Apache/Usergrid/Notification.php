@@ -26,7 +26,7 @@
  * @since 09-Mar-2013
  */
 
-namespace Apigee\Usergrid;
+namespace Apache\Usergrid;
 
 define('DEVICES', 'DEVICES');
 define('GROUPS', 'GROUPS');
