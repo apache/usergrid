@@ -18,19 +18,24 @@
  * limitations under the License.
  */
 
-function usergrid_autoload($class) {
+/**
+* @file
+* Request - a data structure to hold all request-related parameters
+*
+* @author Daniel Johnson <djohnson@apigee.com>
+* @author Rod Simpson <rod@apigee.com>
+* @since 26-Apr-2013
+*/
 
 
-  if (strpos($class, '\\') !== FALSE) {
-    $path_parts = explode('\\', $class);
-    if ($path_parts[0] == 'Apigee') {
-      $lib_path = realpath(dirname(__FILE__) . '/../lib/vendor');
-      $class_path = $lib_path . '/' . join('/', $path_parts) . '.php';
-      if (file_exists($class_path)) {
-        require_once($class_path);
-      }
-    }
-  }
-}
+namespace Apigee\Usergrid;
 
-spl_autoload_register('usergrid_autoload');
+
+class UGException extends \Exception { }
+class UG_400_BadRequest extends UGException {}
+class UG_401_Unauthorized extends UGException {}
+class UG_403_Forbidden extends UGException {}
+class UG_404_NotFound extends UGException {}
+class UG_500_ServerError extends UGException {}
+
+?>
