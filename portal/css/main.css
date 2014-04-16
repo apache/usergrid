@@ -1987,6 +1987,7 @@ li.selected .btn.btn-primary.toolbar {
 }
 
 .introjs-tooltip {
+    min-width: 210px;
     max-width: 450px;
 }
 /** End introjs **/

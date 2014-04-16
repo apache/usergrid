@@ -18,17 +18,19 @@
  */
 'use strict';
 
-AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
+AppServices.Services.factory('help', function($rootScope, $http, $location, $analytics) {
 
   $rootScope.help = {};
   $rootScope.help.helpButtonStatus = 'Enable Help';
   $rootScope.help.helpTooltipsEnabled = false;
   $rootScope.help.clicked = false;
   $rootScope.help.showHelpButtons = false;  
+  $rootScope.help.introjs_shouldLaunch = false;
   var tooltipStartTime;
   var helpStartTime;
   var introjs_step;    
 
+  /** sends GA event on mouseover of tooltip **/
   $rootScope.help.sendTooltipGA = function (tooltipName) {      
     $analytics.eventTrack('tooltip - ' + $rootScope.currentPath, {
       category: 'App Services', 
@@ -36,6 +38,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
     });
   }
   
+  /** hides/shows tooltips **/
   $rootScope.help.toggleTooltips = function() {
     if ($rootScope.help.helpTooltipsEnabled == false) {
       //turn on help tooltips
@@ -51,6 +54,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
     }
   };
 
+  /** options for introjs - steps are loaded from help.setHelpStrings() **/
   $rootScope.help.IntroOptions = {
     steps: [],
     showStepNumbers: false,
@@ -85,7 +89,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
     }
   });
 
-  //pop modal if local storage 'ftu_tour'/'ftu_tooltip' is not set
+  /** pop modal if local storage 'ftu_tour'/'ftu_tooltip' is not set **/
   var showHelpModal = function(helpType) {
     //visitor is first time user
     var shouldHelp = location.search.indexOf('noHelp') <= 0;
@@ -96,7 +100,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
     }
   };
 
-  //set help strings
+  /** set help strings for tooltips and introjs **/
   var setHelpStrings = function(helpJson) {
     //Intro.js steps
     $rootScope.help.IntroOptions.steps = helpJson.introjs;
@@ -105,7 +109,8 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
     angular.forEach(helpJson.tooltip, function(value, binding) {
       $rootScope[binding] = value;
     });
-    $rootScope.help.tooltip = helpJson.tooltip;    
+    $rootScope.help.tooltip = helpJson.tooltip;  
+    $rootScope.$broadcast('helpJsonLoaded');  
   }
 
   //user starts introjs
@@ -132,24 +137,31 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
   };
 
   //user completes all steps in introjs for page
-  $rootScope.help.intros_CompleteEvent = function() {
+  $rootScope.help.introjs_CompleteEvent = function() {
+    //go to the next page in the section and start introjs
     switch ($rootScope.currentPath) {
       case "/performance/app-usage":
-        $location.url('/performance/errors-crashes?multipage=true');
+        introjs_TransitionEvent('/performance/errors-crashes');        
         break;
 
       case "/performance/errors-crashes":
-        $location.url('/performance/api-perf?multipage=true');
+        introjs_TransitionEvent('/performance/api-perf');        
         break;
 
       case "/users":
-        $location.url('/performance/groups?multipage=true');
+        introjs_TransitionEvent('/groups');        
         break;
 
       case "/groups":
-        $location.url('/performance/roles?multipage=true');
+        introjs_TransitionEvent('/roles');        
         break;
-    }
+    }        
+  }
+
+  var introjs_TransitionEvent = function(url) {
+    $location.url(url);
+    $rootScope.help.introjs_shouldLaunch = true;
+    $rootScope.$apply();        
   }
 
   //increment the step tracking when user goes to next introjs step
@@ -162,7 +174,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $analytics) {
 
 
   var getHelpJson = function(path) {
-    return $http.jsonp('https://s3.amazonaws.com/sdk.apigee.com/portal_help' + path + '/helpJson.json');
+    return $http.get('https://s3.amazonaws.com/sdk.apigee.com/portal_help' + path + '/helpJson.json');
   };
 
   var getHelpStatus = function(helpType) {
