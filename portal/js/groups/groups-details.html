@@ -6,9 +6,11 @@
               <h4 class="ui-dform-legend">Group Information</h4>
               <label for="group-title" class="ui-dform-label">Group Title</label>
               <input type="text" id="group-title" ng-pattern="titleRegex" ng-attr-title="{{titleRegexDescription}}" required class="ui-dform-text" ng-model="group.title" ug-validate>
+                  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('group title box')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_details_title}}" tooltip-placement="right">(?)</a>
               <br/>
             <label for="group-path" class="ui-dform-label">Group Path</label>
             <input type="text" id="group-path" required ng-attr-title="{{pathRegexDescription}}" placeholder="ex: /mydata" ng-pattern="pathRegex" class="ui-dform-text" ng-model="group.path" ug-validate>
+                <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('group path box')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_details_path}}" tooltip-placement="right">(?)</a>
             <br/>
           </div>
           <br style="clear:both"/>
@@ -18,8 +20,8 @@
           </div>
 
           <div class="content-container">
-              <h4>JSON Group Object</h4>
-              <pre>{{json}}</pre>
+              <h4>JSON Group Object <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('group json object')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_groups_json_object}}" tooltip-placement="right">(?)</a></h4>
+              <pre id="intro-json-object">{{json}}</pre>
           </div>
       </form>
   </div>
