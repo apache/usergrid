@@ -331,7 +331,7 @@ module.exports = function (grunt) {
       }
     },
     clean: {
-        build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile],
+        build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile,'index.html','index-debug.html'],
         coverage: ['reports/']
     },
     dom_munger: {
