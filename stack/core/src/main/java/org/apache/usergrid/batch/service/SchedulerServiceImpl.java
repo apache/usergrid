@@ -405,6 +405,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
     @Autowired
     public void setQmf( QueueManagerFactory qmf ) {
         this.qmf = qmf;
+        this.qm = qmf.getQueueManager( CassandraService.MANAGEMENT_APPLICATION_ID );
     }
 
 
@@ -412,6 +413,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
     @Autowired
     public void setEmf( EntityManagerFactory emf ) {
         this.emf = emf;
+        this.em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
     }
 
 
