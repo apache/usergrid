@@ -1754,6 +1754,18 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
   );
 
 
+  $templateCache.put('menu.html',
+    "<ul class=\"nav nav-list\" menu=\"sideMenu\">\n" +
+    "    <li class=\"option {{item.active ? 'active' : ''}}\" ng-cloak=\"\" ng-repeat=\"item in menuItems\"><a data-ng-href=\"{{item.path}}\"><i class=\"pictogram\" ng-bind-html=\"item.pic\"></i>{{item.title}}</a>\n" +
+    "        <ul class=\"nav nav-list\" ng-if=\"item.items\">\n" +
+    "            <li ng-repeat=\"subItem in item.items\"><a data-ng-href=\"{{subItem.path}}\"><i class=\"pictogram sub\" ng-bind-html=\"subItem.pic\"></i>{{subItem.title}}</a>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "    </li>\n" +
+    "</ul>"
+  );
+
+
   $templateCache.put('menus/appMenu.html',
     "<ul id=\"app-menu\" class=\"nav top-nav span12\">\n" +
     "    <li class=\"span7\">\n" +

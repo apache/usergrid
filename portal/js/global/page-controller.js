@@ -406,8 +406,7 @@ AppServices.Controllers.controller('PageCtrl',
       $scope.startHelp();
     }
 
-    $scope.$on('helpJsonLoaded', function() {
-      console.log('also made it');
+    $scope.$on('helpJsonLoaded', function() {      
       if ($rootScope.help.introjs_shouldLaunch == true) {
         
         //for GA
