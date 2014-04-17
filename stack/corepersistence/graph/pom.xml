@@ -121,6 +121,7 @@
           aren't intended to be part of the build process-->
           <excludes>
             <exclude>**/*ChopTest.java</exclude>
+            <exclude>**/*LoadTest.java</exclude>
             <exclude>**/*StressTest.java</exclude>
           </excludes>
         </configuration>
