@@ -43,6 +43,7 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.PermanentStorage;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -79,6 +80,7 @@ public class EdgeMetaRepairTest {
     protected EdgeMetaRepair edgeMetaRepair;
 
     @Inject
+    @PermanentStorage
     protected EdgeSerialization edgeSerialization;
 
     @Inject

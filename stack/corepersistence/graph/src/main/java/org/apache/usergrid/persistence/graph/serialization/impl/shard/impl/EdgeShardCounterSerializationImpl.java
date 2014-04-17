@@ -33,12 +33,15 @@ import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFam
 import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.cassandra.ColumnTypes;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
+import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.impl.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
+import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -78,6 +81,12 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
     @Override
     public MutationBatch writeMetaDataLog( final OrganizationScope scope, final Id nodeId, final long shardId,
                                            final long count, final String... types ) {
+
+        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.verifyIdentity(nodeId);
+        Preconditions.checkArgument( shardId > -1, "shardId must be greater than -1" );
+        Preconditions.checkNotNull( types );
+
         final EdgeRowKey key = new EdgeRowKey( nodeId, types );
 
         final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, key );
@@ -92,6 +101,13 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
 
     @Override
     public long getCount( final OrganizationScope scope, final Id nodeId, final long shardId, final String... types ) {
+
+
+        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.verifyIdentity(nodeId);
+        Preconditions.checkArgument( shardId > -1, "shardId must be greater than -1" );
+        Preconditions.checkNotNull( types );
+
 
         final EdgeRowKey key = new EdgeRowKey( nodeId, types );
 

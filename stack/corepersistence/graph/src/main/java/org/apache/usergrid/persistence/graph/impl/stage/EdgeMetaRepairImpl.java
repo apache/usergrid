@@ -71,6 +71,12 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
     public EdgeMetaRepairImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                                final EdgeSerialization edgeSerialization, final Keyspace keyspace,
                                final GraphFig graphFig ) {
+
+        Preconditions.checkNotNull( "edgeMetadataSerialization is required", edgeMetadataSerialization );
+        Preconditions.checkNotNull( "edgeSerialization is required", edgeSerialization );
+        Preconditions.checkNotNull( "graphFig is required", graphFig );
+        Preconditions.checkNotNull( "keyspace is required", keyspace );
+
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeSerialization = edgeSerialization;
         this.keyspace = keyspace;
@@ -119,11 +125,13 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                         //for each id type, check if the exist in parallel to increase processing speed
                         for ( final String subType : types ) {
 
-                            LOG.debug( "Checking for edges with nodeId {}, type {}, and subtype {}", node, edgeType, subType );
+                            LOG.debug( "Checking for edges with nodeId {}, type {}, and subtype {}", node, edgeType,
+                                    subType );
 
                             Observable<Integer> search =
                                     //load each edge in it's own thread
-                                    serialization.loadEdges( scope, node, edgeType, subType, version ).subscribeOn( Schedulers.io() ).take( 1 ).count()
+                                    serialization.loadEdges( scope, node, edgeType, subType, version )
+                                                 .subscribeOn( Schedulers.io() ).take( 1 ).count()
                                                  .doOnNext( new Action1<Integer>() {
 
                                                      @Override
@@ -139,13 +147,18 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                                           * iteration
                                                           **/
                                                          if ( count != 0 ) {
-                                                             LOG.debug( "Found edge with nodeId {}, type {}, and subtype {}. Not removing subtype. ", node, edgeType, subType );
+                                                             LOG.debug(
+                                                                     "Found edge with nodeId {}, type {}, " +
+                                                                             "and subtype {}. Not removing subtype. ",
+                                                                     node, edgeType, subType );
                                                              return;
                                                          }
 
 
-
-                                                         LOG.debug( "No edges with nodeId {}, type {}, and subtype {}. Removing subtype.", node, edgeType, subType );
+                                                         LOG.debug(
+                                                                 "No edges with nodeId {}, type {}, " +
+                                                                         "and subtype {}. Removing subtype.",
+                                                                 node, edgeType, subType );
                                                          batch.mergeShallow( serialization
                                                                  .removeEdgeSubType( scope, node, edgeType, subType,
                                                                          version ) );
@@ -166,10 +179,9 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                                  public void call( final Integer count ) {
 
 
-                                                     LOG.debug(
-                                                             "Executing batch for subtype deletion with type {}.  " +
-                                                                     "Mutation has {} rows to mutate ",
-                                                             edgeType, batch.getRowCount() );
+                                                     LOG.debug( "Executing batch for subtype deletion with type {}.  "
+                                                             + "Mutation has {} rows to mutate ", edgeType,
+                                                             batch.getRowCount() );
 
                                                      try {
                                                          batch.execute();
@@ -196,7 +208,8 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                  * We can only execute deleting this type if no sub types were deleted
                  */
                 if ( subTypeUsedCount != 0 ) {
-                    LOG.debug( "Type {} has {} subtypes in use as of version {}.  Not deleting type.", edgeType, subTypeUsedCount, version );
+                    LOG.debug( "Type {} has {} subtypes in use as of version {}.  Not deleting type.", edgeType,
+                            subTypeUsedCount, version );
                     return;
                 }
 

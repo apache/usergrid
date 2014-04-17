@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFam
 import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.cassandra.ColumnTypes;
+import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.impl.OrganizationScopedRowKeySerializer;
@@ -40,6 +41,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardS
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -81,8 +83,14 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
     @Override
-    public MutationBatch writeEdgeMeta( final OrganizationScope scope, final Id nodeId, final long slice,
+    public MutationBatch writeEdgeMeta( final OrganizationScope scope, final Id nodeId, final long shard,
                                         final String... types ) {
+
+
+        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.verifyIdentity(nodeId);
+        Preconditions.checkArgument( shard > -1, "shardId must be greater than -1" );
+        Preconditions.checkNotNull( types );
 
         final EdgeRowKey key = new EdgeRowKey( nodeId, types );
 
@@ -90,7 +98,7 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        batch.withRow( EDGE_SHARDS, rowKey ).putColumn( slice, HOLDER );
+        batch.withRow( EDGE_SHARDS, rowKey ).putColumn( shard, HOLDER );
 
         return batch;
     }
@@ -124,8 +132,13 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
     @Override
-    public MutationBatch removeEdgeMeta( final OrganizationScope scope, final Id nodeId, final long slice,
+    public MutationBatch removeEdgeMeta( final OrganizationScope scope, final Id nodeId, final long shard,
                                          final String... types ) {
+
+        ValidationUtils.validateOrganizationScope( scope );
+              ValidationUtils.verifyIdentity(nodeId);
+              Preconditions.checkArgument( shard > -1, "shard must be greater than -1" );
+              Preconditions.checkNotNull( types );
 
         final EdgeRowKey key = new EdgeRowKey( nodeId, types );
 
@@ -133,7 +146,7 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        batch.withRow( EDGE_SHARDS, rowKey ).deleteColumn( slice );
+        batch.withRow( EDGE_SHARDS, rowKey ).deleteColumn( shard );
 
         return batch;
     }

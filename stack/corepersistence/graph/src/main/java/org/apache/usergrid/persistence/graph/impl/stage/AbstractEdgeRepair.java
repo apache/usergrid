@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -66,6 +67,11 @@ public abstract class AbstractEdgeRepair  {
     @Inject
     public AbstractEdgeRepair( final EdgeSerialization edgeSerialization, final GraphFig graphFig,
                                final Keyspace keyspace) {
+        Preconditions.checkNotNull( "edgeSerialization is required", edgeSerialization );
+        Preconditions.checkNotNull( "graphFig is required", graphFig );
+        Preconditions.checkNotNull( "keyspace is required", keyspace );
+
+
         this.edgeSerialization = edgeSerialization;
         this.graphFig = graphFig;
         this.keyspace = keyspace;

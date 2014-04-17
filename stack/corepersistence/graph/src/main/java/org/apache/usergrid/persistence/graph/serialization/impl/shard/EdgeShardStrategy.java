@@ -54,7 +54,7 @@ public interface EdgeShardStrategy {
      * @param types
      * @return
      */
-    public void increment(final MutationBatch batch, final OrganizationScope scope,final  Id rowKeyId, long shardId, int count ,final  String... types );
+    public void increment(final OrganizationScope scope,final  Id rowKeyId, long shardId, long count ,final  String... types );
 
 
     /**

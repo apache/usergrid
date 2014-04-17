@@ -51,4 +51,15 @@ public interface NodeShardCache {
      * @return
      */
     public Iterator<Long> getVersions(final OrganizationScope scope, final Id nodeId, final UUID maxVersion, final String... edgeType);
+
+
+    /**
+     * Increment the cached counter amount for this shard
+     * @param scope
+     * @param nodeId
+     * @param shard
+     * @param count
+     * @return The new local cached count
+     */
+    public long increment(final OrganizationScope scope, final Id nodeId, final long shard, final long count, final String... edgeTypes);
 }

@@ -51,6 +51,9 @@ import com.google.inject.Inject;
 public class NodeShardCacheImpl implements NodeShardCache {
 
 
+    private static final int SHARD_PAGE_SIZE = 1000;
+
+
     private final NodeShardAllocation nodeShardAllocation;
     private final GraphFig graphFig;
 
@@ -133,6 +136,14 @@ public class NodeShardCacheImpl implements NodeShardCache {
         }
 
         return iterator;
+    }
+
+
+    @Override
+    public long increment( final OrganizationScope scope, final Id nodeId, final long shard, final long count,
+                                     final String... edgeTypes ) {
+        //TODO, implement this
+        return 0;
     }
 
 

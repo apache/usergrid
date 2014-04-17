@@ -60,10 +60,11 @@ public class TimebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     @Override
-    public void increment( final MutationBatch batch, final OrganizationScope scope, final Id rowKeyId,
-                           final long shardId, final int count, final String... types ) {
+    public void increment( final OrganizationScope scope, final Id rowKeyId, final long shardId, final long count,
+                           final String... types ) {
         //NO-OP
     }
+
 
 
     @Override

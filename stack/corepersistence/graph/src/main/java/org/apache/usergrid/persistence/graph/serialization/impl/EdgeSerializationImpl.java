@@ -178,6 +178,10 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public MutationBatch writeEdge( final OrganizationScope scope, final Edge edge ) {
+        ValidationUtils.validateOrganizationScope( scope );
+        EdgeUtils.validateEdge( edge );
+
+
         final MutationBatch batch =
                 keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
 
@@ -192,7 +196,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             @Override
             public void countEdge( final Id rowId, final long shardId, final String... types ) {
-                edgeShardStrategy.increment( batch, scope, rowId, shardId, 1, types );
+                edgeShardStrategy.increment( scope, rowId, shardId, 1l, types );
             }
 
 
@@ -210,6 +214,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public MutationBatch markEdge( final OrganizationScope scope, final Edge edge ) {
+        ValidationUtils.validateOrganizationScope( scope );
+        EdgeUtils.validateEdge( edge );
+
         final MutationBatch batch =
                 keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
 
@@ -242,6 +249,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public MutationBatch deleteEdge( final OrganizationScope scope, final Edge edge ) {
+        ValidationUtils.validateOrganizationScope( scope );
+        EdgeUtils.validateEdge( edge );
+
         final MutationBatch batch =
                 keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
 
@@ -256,7 +266,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             @Override
             public void countEdge( final Id rowId, final long shardId, final String... types ) {
-                edgeShardStrategy.increment( batch, scope, rowId, shardId, -11, types );
+                edgeShardStrategy.increment( scope, rowId, shardId, -1, types );
             }
 
 

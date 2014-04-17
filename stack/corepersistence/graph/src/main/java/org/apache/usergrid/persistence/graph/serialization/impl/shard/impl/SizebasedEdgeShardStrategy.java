@@ -29,18 +29,22 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardS
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 
 
 /**
  * Simple sized based shard strategy. For now always returns the same shard.
  */
+@Singleton
 public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     private final NodeShardCache shardCache;
 
 
+    @Inject
     public SizebasedEdgeShardStrategy( final NodeShardCache shardCache ) {this.shardCache = shardCache;}
 
 
@@ -48,21 +52,21 @@ public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
     @Override
     public long getWriteShard( final OrganizationScope scope, final Id rowKeyId, final UUID version,
                                final String... types ) {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return shardCache.getSlice( scope, rowKeyId, version, types );
     }
 
 
     @Override
     public Iterator<Long> getReadShards( final OrganizationScope scope, final Id rowKeyId, final UUID maxVersion,
                                          final String... types ) {
-        return Collections.singleton(0l).iterator();
+        return shardCache.getVersions( scope, rowKeyId, maxVersion, types );
     }
 
 
     @Override
-    public void increment( final MutationBatch batch, final OrganizationScope scope, final Id rowKeyId,
-                           final long shardId, final int count, final String... types ) {
-        //TODO, delegate this
+    public void increment( final OrganizationScope scope, final Id rowKeyId,
+                           final long shardId, final long count, final String... types ) {
+        shardCache.increment(  scope, rowKeyId, shardId, count, types );
     }
 
 
