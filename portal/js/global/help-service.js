@@ -26,6 +26,9 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
   $rootScope.help.clicked = false;
   $rootScope.help.showHelpButtons = false;  
   $rootScope.help.introjs_shouldLaunch = false;
+  $rootScope.help.userTooltips.;
+  $rootScope.help.usersIntro.tabs = "notVisible";
+  $rootScope.help.usersIntro.json = "notVisible";
   var tooltipStartTime;
   var helpStartTime;
   var introjs_step;    
@@ -73,6 +76,12 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
       $rootScope.$broadcast('tooltips-disabled');
     }
   };
+
+  $rootScope.$on('users-received', function() {
+    $rootScope.help.usersIntro.tabs = "intro-information-tabs";
+    $rootScope.help.usersIntro.json = "intro-json-object";
+  });
+
 
   $rootScope.$on("$routeChangeSuccess", function(event, current) {      
     //hide the help buttons if not on org-overview page
