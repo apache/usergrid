@@ -82,8 +82,8 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
      * Columns are always a byte, and the entire value is contained within a row key.  This is intentional
      * This allows us to make heavy use of Cassandra's bloom filters, as well as key caches.
      * Since most nodes will only exist for a short amount of time in this CF, we'll most likely have them in the key
-     * shard, and we'll also bounce from the BloomFilter on read.  This means our performance will be no worse
-     * than checking a distributed shard in RAM for the existence of a marked node.
+     * cache, and we'll also bounce from the BloomFilter on read.  This means our performance will be no worse
+     * than checking a distributed cache in RAM for the existence of a marked node.
      */
     private static final MultiTennantColumnFamily<OrganizationScope, Id, Boolean> GRAPH_DELETE =
             new MultiTennantColumnFamily<OrganizationScope, Id, Boolean>( "Graph_Marked_Nodes",

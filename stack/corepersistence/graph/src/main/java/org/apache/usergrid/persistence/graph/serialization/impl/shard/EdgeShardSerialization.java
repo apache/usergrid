@@ -25,15 +25,17 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.netflix.astyanax.MutationBatch;
 
 
 /**
  * The interface for creating and retrieving time series row keys
  */
-public interface EdgeSeriesSerialization {
+public interface EdgeShardSerialization extends Migration{
 
     /**
      * Write a new time shard for the meta data
@@ -49,11 +51,10 @@ public interface EdgeSeriesSerialization {
      * @param scope The organization scope
      * @param nodeId The id of the node
      * @param start The shard time to start seeking from.  Values <= this value will be returned.
-     * @param count The maximum size to return
      * @param types The types to use
      * @return
      */
-    public Iterator<Long> getEdgeMetaData(OrganizationScope scope, Id nodeId, long start, int count, String... types);
+    public Iterator<Long> getEdgeMetaData(OrganizationScope scope, Id nodeId, Optional<Long> start,  String... types);
 
     /**
      * Remove the slice from the edge meta data from the types.

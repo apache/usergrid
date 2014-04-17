@@ -73,7 +73,7 @@ public class NodeShardApproximationTest {
     @Test
     public void testSingleShard() {
 
-        EdgeSeriesCounterSerialization ser = mock( EdgeSeriesCounterSerialization.class );
+        EdgeShardCounterSerialization ser = mock( EdgeShardCounterSerialization.class );
 
         NodeShardApproximation approximation = new NodeShardApproximationImpl( graphFig );
 

@@ -11,6 +11,9 @@ import org.apache.cassandra.db.marshal.DynamicCompositeType;
  */
 public class ColumnTypes {
 
+    /**
+     * UUID from max by the row key to min at the end of the row
+     */
     public static final String UUID_TYPE_REVERSED = "UUIDType(reversed=true)";
     /**
      * Constant for the dynamic composite comparator type we'll need
@@ -20,7 +23,10 @@ public class ColumnTypes {
                         "I=>IntegerType(reversed=true),X=>LexicalUUIDType(reversed=true),L=>LongType(reversed=true)," +
                         "T=>TimeUUIDType(reversed=true),S=>UTF8Type(reversed=true),U=>"+UUID_TYPE_REVERSED+ ")";
 
-    public static final String BOOLEAN_TYPE = BooleanType.class.getSimpleName();
+    /**
+     * Long time with max by the row key and min at the end of the row
+     */
+    public static final String LONG_TYPE_REVERSED = "LongType(reversed=true)";
 
 
 }

@@ -26,6 +26,8 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
+
 
 /**
  * Interface used to create and retrieve shards
@@ -39,12 +41,11 @@ public interface NodeShardAllocation {
      *
      * @param scope
      * @param nodeId
-     * @param maxShardId The max value to start seeking from.  Values <= this will be returned
-     * @param pageSize The page size to use in the fetch
+     * @param maxShardId The max value to start seeking from.  Values <= this will be returned if specified
      * @param edgeTypes
      * @return A list of all shards <= the current shard.  This will always return 0l if no shards are allocated
      */
-    public Iterator<Long> getShards( final OrganizationScope scope, final Id nodeId, long maxShardId, int pageSize,
+    public Iterator<Long> getShards( final OrganizationScope scope, final Id nodeId, Optional<Long> maxShardId,
                                      final String... edgeTypes );
 
 

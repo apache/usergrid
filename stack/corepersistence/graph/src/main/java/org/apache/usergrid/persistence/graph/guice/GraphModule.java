@@ -47,14 +47,14 @@ import org.apache.usergrid.persistence.graph.serialization.impl.CassandraConfigI
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeSeriesCounterSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeSeriesSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeSeriesCounterSerializationImpl;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeSeriesSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeShardCounterSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeShardSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardApproximationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
@@ -95,14 +95,6 @@ public class GraphModule extends AbstractModule {
                                            .build( GraphManagerFactory.class ) );
 
 
-        //do multibindings for migrations
-        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
-        migrationBinding.addBinding().to( Key.get( NodeSerialization.class ) );
-        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class ) );
-
-        //bind each singleton to the multi set.  Otherwise we won't migrate properly
-        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, PermanentStorage.class ) );
-        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, CommitLog.class ) );
 
 
         /**
@@ -117,8 +109,8 @@ public class GraphModule extends AbstractModule {
          * Bind our strategies based on their internal annotations.
          */
 
-        bind( EdgeSeriesSerialization.class ).to( EdgeSeriesSerializationImpl.class );
-        bind( EdgeSeriesCounterSerialization.class ).to( EdgeSeriesCounterSerializationImpl.class );
+        bind( EdgeShardSerialization.class ).to( EdgeShardSerializationImpl.class );
+        bind( EdgeShardCounterSerialization.class ).to( EdgeShardCounterSerializationImpl.class );
 
 
         /**
@@ -138,6 +130,24 @@ public class GraphModule extends AbstractModule {
 
 
         bind( EdgeDeleteRepair.class ).to( EdgeDeleteRepairImpl.class );
+
+
+        /********
+         * Migration bindings
+         ********/
+
+
+        //do multibindings for migrations
+        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
+        migrationBinding.addBinding().to( Key.get( NodeSerialization.class ) );
+        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class ) );
+
+        //bind each singleton to the multi set.  Otherwise we won't migrate properly
+        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, PermanentStorage.class ) );
+        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, CommitLog.class ) );
+
+        migrationBinding.addBinding().to( Key.get( EdgeShardSerialization.class ) );
+        migrationBinding.addBinding().to( Key.get( EdgeShardCounterSerialization.class ) );
     }
 
 

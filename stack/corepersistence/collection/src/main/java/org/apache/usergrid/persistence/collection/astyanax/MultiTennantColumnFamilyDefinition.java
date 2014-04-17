@@ -82,25 +82,26 @@ public class MultiTennantColumnFamilyDefinition {
     private final ColumnFamily columnFamily;
     private final String columnComparatorType;
     private final String keyValidationType;
-    private final String valueValidationType;
+    private final String columnValidationType;
     private final CacheOption cacheOption;
 
 
     public MultiTennantColumnFamilyDefinition( final ColumnFamily columnFamily, final String keyValidationType,
-                                               final String columnComparatorType, final String valueValidationType, final CacheOption cacheOption ) {
+                                               final String columnComparatorType, final String columnValidationType, final CacheOption cacheOption ) {
 
         Preconditions.checkNotNull( columnFamily, "columnFamily is required" );
         Preconditions.checkNotNull( columnComparatorType, "columnComparatorType is required" );
         Preconditions.checkNotNull( keyValidationType, "keyValidationType is required" );
-        Preconditions.checkNotNull( valueValidationType, "valueValidationType is required" );
+        Preconditions.checkNotNull( columnValidationType, "columnValueValidationType is required" );
         Preconditions.checkNotNull( cacheOption, "cacheOption is required" );
 
         this.columnFamily = columnFamily;
         this.columnComparatorType = columnComparatorType;
         this.keyValidationType = keyValidationType;
-        this.valueValidationType = valueValidationType;
+        this.columnValidationType = columnValidationType;
         this.cacheOption = cacheOption;
     }
+
 
 
     public Map<String, Object> getOptions() {
@@ -108,7 +109,7 @@ public class MultiTennantColumnFamilyDefinition {
         Map<String, Object> options = new HashMap<String, Object>();
         options.put( COMPARATOR_TYPE, columnComparatorType );
         options.put( KEY_VALIDATION, keyValidationType );
-        options.put( VALUE_VALIDATION, valueValidationType );
+        options.put( VALUE_VALIDATION, columnValidationType );
         options.put( CACHE_OPTION, cacheOption.getValue() );
 
 

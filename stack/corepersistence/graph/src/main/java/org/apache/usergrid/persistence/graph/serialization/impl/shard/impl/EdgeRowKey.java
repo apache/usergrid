@@ -16,8 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
-package org.apache.usergrid.persistence.graph.serialization.impl.shard;
+
+import org.apache.usergrid.persistence.graph.serialization.util.EdgeHasher;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public class EdgeSeriesCounterSerializationTest {}
+/**
+ * Used to store row keys by sourceId, targetId and edgeType
+ */
+public class EdgeRowKey {
+    public final Id targetId;
+    public final long[] edgeTypesHash;
+
+
+    public EdgeRowKey( final Id rowId, final String[] edgeTypes ) {
+        this( rowId, EdgeHasher.createEdgeHash( edgeTypes ) );
+    }
+
+
+    public EdgeRowKey( final Id rowId, final long[] hash ) {
+        this.targetId = rowId;
+        this.edgeTypesHash = hash;
+    }
+}
+
+
+

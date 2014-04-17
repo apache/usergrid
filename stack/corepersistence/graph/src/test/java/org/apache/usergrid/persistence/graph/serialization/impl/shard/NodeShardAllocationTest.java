@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeS
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.google.common.base.Optional;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 
@@ -79,10 +80,10 @@ public class NodeShardAllocationTest {
 
     @Test
     public void noShards() {
-        final EdgeSeriesSerialization edgeSeriesSerialization = mock( EdgeSeriesSerialization.class );
+        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization =
-                mock( EdgeSeriesCounterSerialization.class );
+        final EdgeShardCounterSerialization edgeShardCounterSerialization =
+                mock( EdgeShardCounterSerialization.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -94,7 +95,7 @@ public class NodeShardAllocationTest {
         when( keyspace.prepareMutationBatch() ).thenReturn( batch );
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeSeriesSerialization, edgeSeriesCounterSerialization, timeService,
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeShardCounterSerialization, timeService,
                         graphFig, keyspace );
 
         final Id nodeId = createId( "test" );
@@ -104,8 +105,8 @@ public class NodeShardAllocationTest {
         /**
          * Mock up returning an empty iterator, our audit shouldn't create a new shard
          */
-        when( edgeSeriesSerialization
-                .getEdgeMetaData( same( scope ), same( nodeId ), any( Long.class ), eq( 1 ), same( type ),
+        when( edgeShardSerialization
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Optional.class ),  same( type ),
                         same( subType ) ) ).thenReturn( Collections.<Long>emptyList().iterator() );
 
         final boolean result = approximation.auditMaxShard( scope, nodeId, type, subType );
@@ -116,10 +117,10 @@ public class NodeShardAllocationTest {
 
     @Test
     public void existingFutureShard() {
-        final EdgeSeriesSerialization edgeSeriesSerialization = mock( EdgeSeriesSerialization.class );
+        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization =
-                mock( EdgeSeriesCounterSerialization.class );
+        final EdgeShardCounterSerialization edgeShardCounterSerialization =
+                mock( EdgeShardCounterSerialization.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -133,7 +134,7 @@ public class NodeShardAllocationTest {
 
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeSeriesSerialization, edgeSeriesCounterSerialization, timeService,
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeShardCounterSerialization, timeService,
                         graphFig, keyspace );
 
         final Id nodeId = createId( "test" );
@@ -150,8 +151,8 @@ public class NodeShardAllocationTest {
         /**
          * Mock up returning a min shard, and a future shard
          */
-        when( edgeSeriesSerialization
-                .getEdgeMetaData( same( scope ), same( nodeId ), any( Long.class ), eq( 1 ), same( type ),
+        when( edgeShardSerialization
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Optional.class ),  same( type ),
                         same( subType ) ) ).thenReturn( Arrays.asList( futureShard ).iterator() );
 
         final boolean result = approximation.auditMaxShard( scope, nodeId, type, subType );
@@ -162,10 +163,10 @@ public class NodeShardAllocationTest {
 
     @Test
     public void lowCountFutureShard() {
-        final EdgeSeriesSerialization edgeSeriesSerialization = mock( EdgeSeriesSerialization.class );
+        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization =
-                mock( EdgeSeriesCounterSerialization.class );
+        final EdgeShardCounterSerialization edgeShardCounterSerialization =
+                mock( EdgeShardCounterSerialization.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -178,7 +179,7 @@ public class NodeShardAllocationTest {
 
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeSeriesSerialization, edgeSeriesCounterSerialization, timeService,
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeShardCounterSerialization, timeService,
                         graphFig, keyspace );
 
         final Id nodeId = createId( "test" );
@@ -194,8 +195,8 @@ public class NodeShardAllocationTest {
         /**
          * Mock up returning a min shard, and a future shard
          */
-        when( edgeSeriesSerialization
-                .getEdgeMetaData( same( scope ), same( nodeId ), any( Long.class ), eq( 1 ), same( type ),
+        when( edgeShardSerialization
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Optional.class ),  same( type ),
                         same( subType ) ) ).thenReturn( Arrays.asList( 0l ).iterator() );
 
 
@@ -203,7 +204,7 @@ public class NodeShardAllocationTest {
 
         final long count = graphFig.getShardSize() - 1;
 
-        when( edgeSeriesCounterSerialization
+        when( edgeShardCounterSerialization
                 .getCount( same( scope ), same( nodeId ), eq( 0l ), same( type ), same( subType ) ) )
                 .thenReturn( count );
 
@@ -215,10 +216,10 @@ public class NodeShardAllocationTest {
 
     @Test
     public void equalCountFutureShard() {
-        final EdgeSeriesSerialization edgeSeriesSerialization = mock( EdgeSeriesSerialization.class );
+        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization =
-                mock( EdgeSeriesCounterSerialization.class );
+        final EdgeShardCounterSerialization edgeShardCounterSerialization =
+                mock( EdgeShardCounterSerialization.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -231,7 +232,7 @@ public class NodeShardAllocationTest {
 
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeSeriesSerialization, edgeSeriesCounterSerialization, timeService,
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeShardCounterSerialization, timeService,
                         graphFig, keyspace );
 
         final Id nodeId = createId( "test" );
@@ -247,15 +248,15 @@ public class NodeShardAllocationTest {
         /**
          * Mock up returning a min shard
          */
-        when( edgeSeriesSerialization
-                .getEdgeMetaData( same( scope ), same( nodeId ), any( Long.class ), eq( 1 ), same( type ),
+        when( edgeShardSerialization
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Optional.class ),  same( type ),
                         same( subType ) ) ).thenReturn( Arrays.asList( 0l ).iterator() );
 
 
         final long shardCount = graphFig.getShardSize();
 
         //return a shard size equal to our max
-        when( edgeSeriesCounterSerialization
+        when( edgeShardCounterSerialization
                 .getCount( same( scope ), same( nodeId ), eq( 0l ), same( type ), same( subType ) ) )
                 .thenReturn( shardCount );
 
@@ -263,7 +264,7 @@ public class NodeShardAllocationTest {
 
 
         //mock up our mutation
-        when( edgeSeriesSerialization
+        when( edgeShardSerialization
                 .writeEdgeMeta( same( scope ), same( nodeId ), newUUIDValue.capture(), same( type ), same( subType ) ) )
                 .thenReturn( mock( MutationBatch.class ) );
 
@@ -288,10 +289,10 @@ public class NodeShardAllocationTest {
 
     @Test
     public void futureCountShardCleanup() {
-        final EdgeSeriesSerialization edgeSeriesSerialization = mock( EdgeSeriesSerialization.class );
+        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization =
-                mock( EdgeSeriesCounterSerialization.class );
+        final EdgeShardCounterSerialization edgeShardCounterSerialization =
+                mock( EdgeShardCounterSerialization.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -304,7 +305,7 @@ public class NodeShardAllocationTest {
 
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeSeriesSerialization, edgeSeriesCounterSerialization, timeService,
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeShardCounterSerialization, timeService,
                         graphFig, keyspace );
 
         final Id nodeId = createId( "test" );
@@ -344,8 +345,8 @@ public class NodeShardAllocationTest {
         /**
          * Mock up returning a min shard
          */
-        when( edgeSeriesSerialization
-                .getEdgeMetaData( same( scope ), same( nodeId ), any( Long.class ), eq( pageSize ), same( type ),
+        when( edgeShardSerialization
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Optional.class ), same( type ),
                         same( subType ) ) ).thenReturn( Arrays.asList(futureShard3, futureShard2, futureShard1, 0l).iterator() );
 
 
@@ -356,13 +357,13 @@ public class NodeShardAllocationTest {
 
 
         //mock up our mutation
-        when( edgeSeriesSerialization
+        when( edgeShardSerialization
                 .removeEdgeMeta( same( scope ), same( nodeId ), newLongValue.capture(), same( type ), same( subType ) ) )
                 .thenReturn( mock( MutationBatch.class ) );
 
 
         final Iterator<Long>
-                result = approximation.getShards( scope, nodeId, Long.MAX_VALUE, pageSize, type, subType );
+                result = approximation.getShards( scope, nodeId, Optional.<Long>absent(), type, subType );
 
 
         assertTrue( "Shards present", result.hasNext() );

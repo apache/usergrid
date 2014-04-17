@@ -29,11 +29,12 @@ import org.apache.commons.collections4.iterators.PushbackIterator;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.consistency.TimeService;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeSeriesCounterSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeSeriesSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
@@ -46,19 +47,19 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
-    private final EdgeSeriesSerialization edgeSeriesSerialization;
-    private final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization;
+    private final EdgeShardSerialization edgeShardSerialization;
+    private final EdgeShardCounterSerialization edgeShardCounterSerialization;
     private final TimeService timeService;
     private final GraphFig graphFig;
     private final Keyspace keyspace;
 
 
     @Inject
-    public NodeShardAllocationImpl( final EdgeSeriesSerialization edgeSeriesSerialization,
-                                    final EdgeSeriesCounterSerialization edgeSeriesCounterSerialization,
+    public NodeShardAllocationImpl( final EdgeShardSerialization edgeShardSerialization,
+                                    final EdgeShardCounterSerialization edgeShardCounterSerialization,
                                     final TimeService timeService, final GraphFig graphFig, final Keyspace keyspace ) {
-        this.edgeSeriesSerialization = edgeSeriesSerialization;
-        this.edgeSeriesCounterSerialization = edgeSeriesCounterSerialization;
+        this.edgeShardSerialization = edgeShardSerialization;
+        this.edgeShardCounterSerialization = edgeShardCounterSerialization;
         this.timeService = timeService;
         this.graphFig = graphFig;
         this.keyspace = keyspace;
@@ -66,11 +67,10 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
     @Override
-    public Iterator<Long> getShards( final OrganizationScope scope, final Id nodeId, final long maxShardId,
-                                     final int pageSize, final String... edgeTypes ) {
+    public Iterator<Long> getShards( final OrganizationScope scope, final Id nodeId, Optional<Long> maxShardId, final String... edgeTypes ) {
 
         final Iterator<Long> existingShards =
-                edgeSeriesSerialization.getEdgeMetaData( scope, nodeId, maxShardId, pageSize, edgeTypes );
+                edgeShardSerialization.getEdgeMetaData( scope, nodeId, maxShardId, edgeTypes );
 
         final PushbackIterator<Long> pushbackIterator = new PushbackIterator( existingShards );
 
@@ -105,7 +105,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         for ( int i = 0; i < futures.size() -1; i++ ) {
             final long toRemove = futures.get( i );
 
-            final MutationBatch batch = edgeSeriesSerialization.removeEdgeMeta( scope, nodeId, toRemove, edgeTypes );
+            final MutationBatch batch = edgeShardSerialization.removeEdgeMeta( scope, nodeId, toRemove, edgeTypes );
 
             cleanup.mergeShallow( batch );
         }
@@ -135,7 +135,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         final long now =  timeService.getCurrentTime() ;
 
-        final Iterator<Long> maxShards = getShards( scope, nodeId, Long.MAX_VALUE, 1, edgeType );
+        final Iterator<Long> maxShards = getShards( scope, nodeId, Optional.<Long>absent(), edgeType );
 
 
         //if the first shard has already been allocated, do nothing.
@@ -158,7 +158,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         /**
          * Check out if we have a count for our shard allocation
          */
-        final long count = edgeSeriesCounterSerialization.getCount( scope, nodeId, maxShard, edgeType );
+        final long count = edgeShardCounterSerialization.getCount( scope, nodeId, maxShard, edgeType );
 
         if ( count < graphFig.getShardSize() ) {
             return false;
@@ -170,7 +170,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         try {
-            this.edgeSeriesSerialization.writeEdgeMeta( scope, nodeId, newShardTime, edgeType ).execute();
+            this.edgeShardSerialization.writeEdgeMeta( scope, nodeId, newShardTime, edgeType ).execute();
         }
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to write the new edge metadata" );

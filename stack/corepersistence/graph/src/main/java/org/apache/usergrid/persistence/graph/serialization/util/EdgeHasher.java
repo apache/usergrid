@@ -55,16 +55,17 @@ public class EdgeHasher {
 
     /**
      * Create the edge hash from the edge type and id type
-     * @param edgeType
-     * @param idType
+     * @param edgeTypes
      * @return
      */
-    public static long[] createEdgeHash(final String edgeType, final String idType){
+    public static long[] createEdgeHash(final String... edgeTypes){
+       final StringBuilder hashString =  new StringBuilder();
 
-        final String hashString =
-                new StringBuilder( edgeType ).append(idType ).toString();
+        for(String edge: edgeTypes){
+            hashString.append(edge);
+        }
 
-        return createEdgeHash( hashString );
+        return createEdgeHash( hashString.toString() );
     }
 
 

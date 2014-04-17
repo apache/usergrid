@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardC
 import org.apache.usergrid.persistence.graph.serialization.util.IterableUtil;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -48,9 +49,6 @@ import com.google.inject.Inject;
  * shard, it will need to be searched via cassandra.
  */
 public class NodeShardCacheImpl implements NodeShardCache {
-
-
-    private static final int SHARD_PAGE_SIZE = 1000;
 
 
     private final NodeShardAllocation nodeShardAllocation;
@@ -161,7 +159,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
                           final Iterator<Long> edges = nodeShardAllocation
-                                  .getShards( key.scope, key.id, Long.MAX_VALUE, SHARD_PAGE_SIZE, key.types );
+                                  .getShards( key.scope, key.id, Optional.<Long>absent(), key.types );
 
                           return new CacheEntry( edges );
                       }
