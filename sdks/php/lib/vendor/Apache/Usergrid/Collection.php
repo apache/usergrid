@@ -1,4 +1,23 @@
+#!/usr/bin/env php
 <?php
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /**
  * @file
  * Allows CRUD operations on Usergrid Collections.
@@ -8,13 +27,13 @@
  * @since 26-Apr-2013
  */
 
-namespace Apigee\Usergrid;
+namespace Apache\Usergrid;
 require_once(dirname(__FILE__) . '/Exceptions.php');
 
 class Collection {
 
   /**
-   * @var \Apigee\Usergrid\Client
+   * @var \Apache\Usergrid\Client
    */
   private $client;
   /**
@@ -54,7 +73,7 @@ class Collection {
   /**
    * Object constructor.
    *
-   * @param \Apigee\Usergrid\Client $client
+   * @param \Apache\Usergrid\Client $client
    * @param string $type
    * @param array $qs
    */
@@ -96,7 +115,7 @@ class Collection {
   }
 
   /**
-   * @return \Apigee\Usergrid\Response
+   * @return \Apache\Usergrid\Response
    */
   public function fetch() {
     if ($this->cursor) {
@@ -134,7 +153,7 @@ class Collection {
 
   /**
    * @param array $entity_data
-   * @return \Apigee\Usergrid\Entity
+   * @return \Apache\Usergrid\Entity
    */
   public function add_entity($entity_data) {
     $entity = $this->client->create_entity($entity_data);
@@ -145,8 +164,8 @@ class Collection {
   }
 
   /**
-   * @param \Apigee\Usergrid\Entity $entity
-   * @return \Apigee\Usergrid\Response
+   * @param \Apache\Usergrid\Entity $entity
+   * @return \Apache\Usergrid\Response
    */
   public function destroy_entity(Entity $entity) {
     $response = $entity->destroy();
@@ -161,8 +180,8 @@ class Collection {
 
   /**
    * @param string $uuid
-   * @return \Apigee\Usergrid\Response|bool
-   * @throws \Apigee\Usergrid\UGException
+   * @return \Apache\Usergrid\Response|bool
+   * @throws \Apache\Usergrid\UGException
    */
   public function get_entity_by_uuid($uuid) {
     if (!Client::is_uuid($uuid)) {
@@ -176,14 +195,14 @@ class Collection {
   }
 
   /**
-   * @return \Apigee\Usergrid\Entity|null
+   * @return \Apache\Usergrid\Entity|null
    */
   public function get_first_entity() {
     return (count($this->list) > 0 ? $this->list[0] : NULL);
   }
 
   /**
-   * @return \Apigee\Usergrid\Entity|null
+   * @return \Apache\Usergrid\Entity|null
    */
   public function get_last_entity() {
     return (count($this->list) > 0 ? $this->list[count($this->list) - 1] : NULL);
@@ -206,7 +225,7 @@ class Collection {
   }
 
   /**
-   * @return \Apigee\Usergrid\Entity|null
+   * @return \Apache\Usergrid\Entity|null
    */
   public function get_next_entity() {
     if ($this->has_next_entity()) {
@@ -217,7 +236,7 @@ class Collection {
   }
 
   /**
-   * @return \Apigee\Usergrid\Entity|null
+   * @return \Apache\Usergrid\Entity|null
    */
   public function get_prev_entity() {
     if ($this->has_prev_entity()) {
@@ -250,7 +269,7 @@ class Collection {
   }
 
   /**
-   * @return \Apigee\Usergrid\Response|bool
+   * @return \Apache\Usergrid\Response|bool
    */
   public function get_next_page() {
     if ($this->has_next_page()) {
@@ -263,7 +282,7 @@ class Collection {
   }
 
   /**
-   * @return \Apigee\Usergrid\Response|bool
+   * @return \Apache\Usergrid\Response|bool
    */
   public function get_prev_page() {
     if ($this->has_prev_page()) {
