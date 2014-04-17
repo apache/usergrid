@@ -34,12 +34,13 @@
 
 <div ng-controller="UsersRolesCtrl">
 
-    <div class="button-strip">
+<div class="button-strip">
+  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles add role button')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_add_leave_role}}" tooltip-placement="left">(?)</a>
       <button class="btn btn-primary" ng-click="showModal('addRole')">Add Role</button>
       <button class="btn btn-primary" ng-disabled="!hasRoles || !valueSelected(selectedUser.roles)" ng-click="showModal('leaveRole')">Leave role(s)</button>
     </div>
     <br>
-    <h4>Roles</h4>
+      <h4>Roles <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles roles list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_roles}}" tooltip-placement="top">(?)</a></h4>
     <table class="table table-striped">
       <tbody>
       <tr class="table-header">
@@ -77,9 +78,9 @@
              extrabutton="addUserPermissionDialog"
              extrabuttonlabel="Add"
              ng-cloak>
-      <p>Path: <input ng-model="$parent.permissions.path" placeholder="ex: /mydata" id="usersRolePermissions" type="text" ng-pattern="pathRegex" required ug-validate ng-attr-title="{{pathRegexDescription}}" /></p>
+      <p>Path: <input ng-model="$parent.permissions.path" placeholder="ex: /mydata" id="usersRolePermissions" type="text" ng-pattern="pathRegex" required ug-validate ng-attr-title="{{pathRegexDescription}}" /> <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles new permission path box')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_new_permission_path}}" tooltip-placement="right">(?)</a></p>
       <div class="control-group">
-        <input type="checkbox" ng-model="$parent.permissions.getPerm"> GET
+        <input type="checkbox" ng-model="$parent.permissions.getPerm"> GET <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles new permission verbs check boxes')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_new_permission_verbs}}" tooltip-placement="right">(?)</a>
       </div>
       <div class="control-group">
         <input type="checkbox" ng-model="$parent.permissions.postPerm"> POST
@@ -93,11 +94,12 @@
     </bsmodal>
 
     <div class="button-strip">
+      <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles add permission button')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_add_delete_permission}}" tooltip-placement="left">(?)</a>
       <button class="btn btn-primary" ng-click="showModal('addPermission')">Add Permission</button>
       <button class="btn btn-primary" ng-disabled="!hasPermissions || !valueSelected(selectedUser.permissions)" ng-click="showModal('deletePermission')">Delete Permission(s)</button>
     </div>
     <br>
-    <h4>Permissions</h4>
+      <h4>Permissions <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles permissions list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_permissions}}" tooltip-placement="top">(?)</a></h4>
     <table class="table table-striped">
       <tbody>
       <tr class="table-header">

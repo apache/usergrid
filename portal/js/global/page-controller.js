@@ -406,5 +406,17 @@ AppServices.Controllers.controller('PageCtrl',
       $scope.startHelp();
     }
 
+    $scope.$on('helpJsonLoaded', function() {
+      console.log('also made it');
+      if ($rootScope.help.introjs_shouldLaunch == true) {
+        
+        //for GA
+        $rootScope.help.introjs_StartEvent();
+      
+        //call introjs start
+        $scope.startHelp();
+        $rootScope.help.introjs_shouldLaunch = false;
+      }
+    });
   }
 ]);

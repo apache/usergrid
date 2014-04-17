@@ -1985,4 +1985,9 @@ li.selected .btn.btn-primary.toolbar {
   line-height: 19px;
   font-family: marquette-medium,'Helvetica Neue',Helvetica,Arial,sans-serif;
 }
+
+.introjs-tooltip {
+    min-width: 210px;
+    max-width: 450px;
+}
 /** End introjs **/
