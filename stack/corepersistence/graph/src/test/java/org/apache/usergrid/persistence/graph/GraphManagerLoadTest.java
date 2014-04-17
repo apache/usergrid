@@ -62,6 +62,7 @@ import static org.junit.Assert.fail;
 
 @RunWith( JukitoRunner.class )
 @UseModules( TestGraphModule.class )
+@Ignore("Not for testing during build.  Kills embedded Cassandra")
 public class GraphManagerLoadTest {
     private static final Logger log = LoggerFactory.getLogger( GraphManagerLoadTest.class );
 

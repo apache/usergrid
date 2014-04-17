@@ -63,6 +63,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.Timeb
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -96,8 +97,12 @@ public class GraphModule extends AbstractModule {
 
         //do multibindings for migrations
         Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
-        migrationBinding.addBinding().to( EdgeMetadataSerializationImpl.class );
-        migrationBinding.addBinding().to( NodeSerializationImpl.class );
+        migrationBinding.addBinding().to( Key.get( NodeSerialization.class ) );
+        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class ) );
+
+        //bind each singleton to the multi set.  Otherwise we won't migrate properly
+        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, PermanentStorage.class ) );
+        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, CommitLog.class ) );
 
 
         /**
@@ -141,21 +146,16 @@ public class GraphModule extends AbstractModule {
      */
     @Provides
     @Singleton
-    @PermanentStorage
     @Inject
+    @PermanentStorage
     public EdgeSerialization permanentStorageSerialization( final NodeShardCache cache, final Keyspace keyspace,
                                                             final CassandraConfig cassandraConfig,
-                                                            final GraphFig graphFig) {
+                                                            final GraphFig graphFig ) {
 
         final EdgeShardStrategy sizeBasedStrategy = new SizebasedEdgeShardStrategy( cache );
 
         final EdgeSerializationImpl edgeSerialization =
                 new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy );
-
-
-        //register this instance in the multi binding
-        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
-        migrationBinding.addBinding().toInstance( edgeSerialization );
 
 
         return edgeSerialization;
@@ -167,21 +167,16 @@ public class GraphModule extends AbstractModule {
      */
     @Provides
     @Singleton
-    @CommitLog
     @Inject
+    @CommitLog
     public EdgeSerialization commitlogStorageSerialization( final NodeShardCache cache, final Keyspace keyspace,
                                                             final CassandraConfig cassandraConfig,
-                                                            final GraphFig graphFig) {
+                                                            final GraphFig graphFig ) {
 
         final EdgeShardStrategy sizeBasedStrategy = new TimebasedEdgeShardStrategy( cache );
 
         final EdgeSerializationImpl edgeSerialization =
                 new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy );
-
-
-        //register this instance in the multi binding
-        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
-        migrationBinding.addBinding().toInstance( edgeSerialization );
 
 
         return edgeSerialization;

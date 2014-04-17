@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -36,7 +37,7 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * Simple interface for serializing node information for mark/sweep
  */
-public interface NodeSerialization {
+public interface NodeSerialization extends Migration {
 
 
     /**

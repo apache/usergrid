@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.graph.serialization;
 import java.util.Iterator;
 
 import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.collection.migration.Migration;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
@@ -35,7 +36,7 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * Simple interface for serializing ONLY an edge
  */
-public interface EdgeSerialization {
+public interface EdgeSerialization extends Migration {
 
 
     /**

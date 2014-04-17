@@ -67,9 +67,7 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
-public class EdgeSerializationTest {
+public abstract class EdgeSerializationTest {
 
     private static final Logger log = LoggerFactory.getLogger( EdgeSerializationTest.class );
 
@@ -82,7 +80,7 @@ public class EdgeSerializationTest {
     public MigrationManagerRule migrationManagerRule;
 
 
-    @Inject
+
     protected EdgeSerialization serialization;
 
     @Inject
@@ -104,8 +102,16 @@ public class EdgeSerializationTest {
         when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
 
         when( scope.getOrganization() ).thenReturn( orgId );
+
+        serialization = getSerialization();
     }
 
+
+    /**
+     * Get the edge Serialization to use
+     * @return
+     */
+    protected abstract EdgeSerialization getSerialization();
 
     /**
      * Tests mixing 2 edge types between 2 nodes.  We should get results for the same source->destination with the 2

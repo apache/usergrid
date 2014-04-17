@@ -62,7 +62,7 @@ public class MigrationManagerImpl implements MigrationManager {
                 final Collection<MultiTennantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
 
 
-                if ( columnFamilies == null ) {
+                if ( columnFamilies == null || columnFamilies.size() == 0 ) {
                     logger.warn(
                             "Class {} implements {} but returns null column families for migration.  Either implement"
                                     + " this method or remove the interface from the class", migration.getClass(),
