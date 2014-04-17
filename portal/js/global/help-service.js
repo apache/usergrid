@@ -25,8 +25,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
   $rootScope.help.helpTooltipsEnabled = false;
   $rootScope.help.clicked = false;
   $rootScope.help.showHelpButtons = false;  
-  $rootScope.help.introjs_shouldLaunch = false;
-  $rootScope.help.userTooltips.;
+  $rootScope.help.introjs_shouldLaunch = false;  
   $rootScope.help.usersIntro.tabs = "notVisible";
   $rootScope.help.usersIntro.json = "notVisible";
   var tooltipStartTime;
