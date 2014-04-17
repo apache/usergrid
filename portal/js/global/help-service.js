@@ -30,6 +30,26 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
   var helpStartTime;
   var introjs_step;    
 
+  /** get introjs and tooltip json from s3 **/
+  var getHelpJson = function(path) {
+    return $http.get('https://s3.amazonaws.com/sdk.apigee.com/portal_help' + path + '/helpJson.json');
+  };
+
+  /** check if first-time user experience should launch **/
+  var getHelpStatus = function(helpType) {
+    var status;
+    if (helpType == 'tour') {
+      //ftu for introjs
+      status = localStorage.getItem('ftu_tour');        
+      localStorage.setItem('ftu_tour', 'false');
+    } else if (helpType == 'tooltips') {
+      //ftu for tooltips
+      status = localStorage.getItem('ftu_tooltips');        
+      localStorage.setItem('ftu_tooltips', 'false');
+    }
+    return status;
+  }
+
   /** sends GA event on mouseover of tooltip **/
   $rootScope.help.sendTooltipGA = function (tooltipName) {      
     $analytics.eventTrack('tooltip - ' + $rootScope.currentPath, {
@@ -52,18 +72,6 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
       $rootScope.help.helpTooltipsEnabled = false;
       $rootScope.$broadcast('tooltips-disabled');
     }
-  };
-
-  /** options for introjs - steps are loaded from help.setHelpStrings() **/
-  $rootScope.help.IntroOptions = {
-    steps: [],
-    showStepNumbers: false,
-    exitOnOverlayClick: true,
-    exitOnEsc: true,
-    nextLabel: 'Next',
-    prevLabel: 'Back',
-    skipLabel: 'Exit',
-    doneLabel: 'Done'
   };
 
   $rootScope.$on("$routeChangeSuccess", function(event, current) {      
@@ -113,6 +121,20 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
     $rootScope.$broadcast('helpJsonLoaded');  
   }
 
+  /** Start introjs **/
+
+  /** options for introjs - steps are loaded from help.setHelpStrings() **/
+  $rootScope.help.IntroOptions = {
+    steps: [],
+    showStepNumbers: false,
+    exitOnOverlayClick: true,
+    exitOnEsc: true,
+    nextLabel: 'Next',
+    prevLabel: 'Back',
+    skipLabel: 'Exit',
+    doneLabel: 'Done'
+  };
+
   //user starts introjs
   $rootScope.help.introjs_StartEvent = function() {
     helpStartTime = Date.now();
@@ -158,6 +180,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
     }        
   }
 
+  //transition user to next tab in feature section
   var introjs_TransitionEvent = function(url) {
     $location.url(url);
     $rootScope.help.introjs_shouldLaunch = true;
@@ -169,24 +192,6 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
     introjs_step++;
   };
 
-  //In-portal help end
-
-
-
-  var getHelpJson = function(path) {
-    return $http.get('https://s3.amazonaws.com/sdk.apigee.com/portal_help' + path + '/helpJson.json');
-  };
-
-  var getHelpStatus = function(helpType) {
-    var status;
-    if (helpType == 'tour') {
-      status = localStorage.getItem('ftu_tour');        
-      localStorage.setItem('ftu_tour', 'false');
-    } else if (helpType == 'tooltips') {
-      status = localStorage.getItem('ftu_tooltips');        
-      localStorage.setItem('ftu_tooltips', 'false');
-    }
-    return status;
-  }
+  /** End introjs **/
 
 });
