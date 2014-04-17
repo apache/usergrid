@@ -25,12 +25,12 @@ Just manually install the gem:
 ### Prerequisite
 You'll want to be at least a little bit familiar with Usergrid / Apigee's App Services before you jump in here - but it easy and it's great! Start here:
 
-  App Services docs: <http://apigee.com/docs/usergrid/>  
+  App Services docs: <http://apigee.com/docs/usergrid/>
   Open source stack: <https://github.com/apigee/usergrid-stack>
 
 Awesome. Let's go!
 
-### Getting started with the Usergrid_iron SDK is simple! 
+### Getting started with the Usergrid_iron SDK is simple!
 
 #### Let's start with the basics.
 For this example, we'll assume you've already set up an organization, application, and user -
@@ -129,15 +129,15 @@ you shouldn't need to do anything!)
   # retrieve all the dogs (well, the first 'page' anyway) and tell them hi!
   # note: we're calling collection() instead of entity() because we have several
   dogs = application['dogs'].collection
-  
+
   # you can iterate a collection just like an array
-  dogs.each do |dog|                        
+  dogs.each do |dog|
     puts "Hello, #{dog.name}!"
   end
 
   # Let's get Benji ("Benji, come!"), but this time we'll retrieve by query
   response = dogs.query "select * where name = 'Benji'"
-  
+
   # we could call "response.collection.first"
   # but there's a shortcut: entity() will also return the first
   benji = response.entity
@@ -251,17 +251,18 @@ The following features are not currently implemented on the server:
 * delete user
 
 
-## Copyright
-Copyright (c) 2012 Scott Ganyo 
+## License
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+the ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use the included files except in compliance with the License.
+     http://www.apache.org/licenses/LICENSE-2.0
 
-You may obtain a copy of the License at
-
-  <http://www.apache.org/licenses/LICENSE-2.0>
-  
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License.
