@@ -26,8 +26,8 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
   $rootScope.help.clicked = false;
   $rootScope.help.showHelpButtons = false;  
   $rootScope.help.introjs_shouldLaunch = false;  
-  $rootScope.help.usersIntro.tabs = 'invisible';
-  $rootScope.help.usersIntro.json = 'invisible';
+  $rootScope.help.usersTabsId = 'invisible';
+  $rootScope.help.usersJsonId = 'invisible';
   var tooltipStartTime;
   var helpStartTime;
   var introjs_step;    
@@ -78,14 +78,14 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
 
   /** Add introjs id attrs to the users>profile tab **/
   $rootScope.$on('users-received', function() {
-    $rootScope.help.usersIntro.tabs = "intro-information-tabs";
-    $rootScope.help.usersIntro.json = "intro-json-object";
+    $rootScope.help.usersTabsId = "intro-information-tabs";
+    $rootScope.help.usersJsonId = "intro-json-object";
   });
 
   /** Hide introjs id attrs from users>profile on org change **/
   $rootScope.$on('org-changed', function() {
-    $rootScope.help.usersIntro.tabs = "invisible";
-    $rootScope.help.usersIntro.json = "invisible";
+    $rootScope.help.usersTabs = "invisible";
+    $rootScope.help.usersJson = "invisible";
   });
 
   $rootScope.$on('$routeChangeSuccess', function(event, current) {      
