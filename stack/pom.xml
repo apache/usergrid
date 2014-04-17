@@ -1799,6 +1799,7 @@
                     <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
                     <exclude>**/aws.properties</exclude>
+                    <exclude>**/usergrid-custom.properties</exclude>
 
                 </excludes>
             </configuration>
@@ -1844,7 +1845,7 @@
                   <version>1.6.0</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
-                  <version>[3.0,3.1.1]</version>
+                  <version>[3.0,)</version>
                 </requireMavenVersion>
               </rules>
             </configuration>
