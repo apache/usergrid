@@ -26,8 +26,8 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
   $rootScope.help.clicked = false;
   $rootScope.help.showHelpButtons = false;  
   $rootScope.help.introjs_shouldLaunch = false;  
-  $rootScope.help.usersIntro.tabs = "notVisible";
-  $rootScope.help.usersIntro.json = "notVisible";
+  $rootScope.help.usersIntro.tabs = 'invisible';
+  $rootScope.help.usersIntro.json = 'invisible';
   var tooltipStartTime;
   var helpStartTime;
   var introjs_step;    
@@ -76,13 +76,19 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
     }
   };
 
+  /** Add introjs id attrs to the users>profile tab **/
   $rootScope.$on('users-received', function() {
     $rootScope.help.usersIntro.tabs = "intro-information-tabs";
     $rootScope.help.usersIntro.json = "intro-json-object";
   });
 
+  /** Hide introjs id attrs from users>profile on org change **/
+  $rootScope.$on('org-changed', function() {
+    $rootScope.help.usersIntro.tabs = "invisible";
+    $rootScope.help.usersIntro.json = "invisible";
+  });
 
-  $rootScope.$on("$routeChangeSuccess", function(event, current) {      
+  $rootScope.$on('$routeChangeSuccess', function(event, current) {      
     //hide the help buttons if not on org-overview page
     var path = current.$$route ? current.$$route.originalPath : null;
     if (path == '/org-overview' || path.indexOf('/performance') != -1 || path == '/users' || path == '/groups' || path == '/roles') {
