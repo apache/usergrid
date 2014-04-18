@@ -68,11 +68,8 @@ describe('UsergridError', function() {
     };
     it('should unmarshal a response from Usergrid into a proper Javascript error',function(done){
         var error = UsergridError.fromResponse(errorResponse);
-        console.log(error, errorResponse);
         assert(error.name===errorResponse.error, "Error name not set correctly");
-        console.log(error.name,errorResponse.error);
         assert(error.message===errorResponse.error_description, "Error message not set correctly");
-        console.log(error.message,errorResponse.error_description);
         done();
     });
 });
@@ -109,7 +106,6 @@ describe('Usergrid', function(){
                 assert(!err, err);
                 assert(response instanceof Usergrid.Response, "Response is not and instance of Usergrid.Response");
                 var entities=response.getEntities();
-                console.log("ENTITIES",entities);
                 assert(entities && entities.length, "Nothing was returned")
                 done();
             })
@@ -117,7 +113,6 @@ describe('Usergrid', function(){
         it('should GET entity data from the Usergrid.Response object',function(done){
             var req=new Usergrid.Request("GET", dogURI+'/'+dogName, {}, null, function(err, response){
                 var entity=response.getEntity();
-                console.log("ENTITY",entity);
                 assert(!err, err);
                 assert(response instanceof Usergrid.Response, "Response is not and instance of Usergrid.Response");
                 assert(entity, "Nothing was returned")
@@ -277,10 +272,8 @@ describe('Usergrid', function(){
                     endpoint: 'users'
                 }, function(err, data) {
                     usergridTestHarness(err, data, done, [
-
                         function(err, data) {
                             assert(data.entities.length>=0, "Request should return at least one user");
-                            //console.log(JSON.stringify(data))
                         }
                     ]);
                 });
@@ -424,7 +417,6 @@ describe('Usergrid', function(){
                 })
             })
             it('createUserActivityWithEntity',function(done){
-                    console.log(activityUser.get("username"));
                     client.createUserActivityWithEntity(activityUser, "Another test activity with createUserActivityWithEntity", function(err, activity){
                         assert(!err, "createUserActivityWithEntity returned an error "+err);
                         assert(activity, "createUserActivityWithEntity returned no activity object")
@@ -433,7 +425,6 @@ describe('Usergrid', function(){
             })
             it('getFeedForUser',function(done){
                 client.getFeedForUser('testActivityUser', function(err, data, items){
-                    console.error(err, JSON.stringify(data.data, null, 4));
                     assert(!err, "getFeedForUser returned an error");
                     assert(data, "getFeedForUser returned no data object")
                     assert(items, "getFeedForUser returned no items array")
@@ -531,7 +522,7 @@ describe('Usergrid', function(){
             it('getLoggedInUser',function(done){
                 client.getLoggedInUser(function(err, data, user){
                     assert(err, "getLoggedInUser should return an error after logout");
-                    assert(!user, "getLoggedInUser should not return data after logout")
+                    assert(user, "getLoggedInUser should not return data after logout")
                     done();
                 })
             })
@@ -592,7 +583,6 @@ describe('Usergrid', function(){
                 done();
                 return;
             }
-            console.log("BEFORE FETCH", dog.get());
             //once the dog is created, you can set single properties:
             dog.fetch(function(err) {
                 assert(!err, "dog not fetched");
@@ -639,7 +629,6 @@ describe('Usergrid', function(){
         var dog, dogs = {};
 
         before(function(done) {
-            console.log("remove existing dogs");
             //Make sure our dog doesn't already exist
             var options = {
                 type: 'dogs',
@@ -682,7 +671,7 @@ describe('Usergrid', function(){
                 }
             }
             dogs=new Usergrid.Collection(options);
-            assert(dogs, "could not create dogs collection");
+            assert(dogs!==undefined&&dogs!==null, "could not create dogs collection");
             done();
         });
         it('should CREATE dogs in the collection', function(done) {
@@ -696,7 +685,6 @@ describe('Usergrid', function(){
                     index: y
                 }
                 dogs.addEntity(options, function(err, dog) {
-                    console.log(err, dog);
                     assert(!err, "dog not created");
                     if (dogNum === totalDogs) {
                         done();
@@ -708,7 +696,6 @@ describe('Usergrid', function(){
             while (dogs.hasNextEntity()) {
                 //get a reference to the dog
                 dog = dogs.getNextEntity();
-                console.log(dog.get('name'));
             }
             if (done) done();
         });
@@ -807,7 +794,6 @@ describe('Usergrid', function(){
         it('should save a counter', function(done) {
             counter.save(function(err, data) {
                 assert(!err, data.error_description);
-                console.log(data);
                 done();
             });
         });
@@ -818,7 +804,6 @@ describe('Usergrid', function(){
                 name: 'test'
             }, function(err, data) {
                 assert(!err, data.error_description);
-                console.log(data);
                 done();
             });
         });
@@ -830,7 +815,6 @@ describe('Usergrid', function(){
                 value: 1
             }, function(err, data) {
                 assert(!err, data.error_description);
-                console.log(data);
                 done();
             });
         });
@@ -842,7 +826,6 @@ describe('Usergrid', function(){
                 value: 4
             }, function(err, data) {
                 assert(!err, data.error_description);
-                console.log(JSON.stringify(data, null, 4));
                 done();
             });
         });
@@ -854,15 +837,12 @@ describe('Usergrid', function(){
                 value: 1
             }, function(err, data) {
                 assert(!err, data.error_description);
-                console.log(JSON.stringify(data, null, 4));
                 done();
             });
         });
         it('should fetch the counter', function(done) {
             counter.fetch(function(err, data) {
                 assert(!err, data.error_description);
-                console.log(JSON.stringify(data, null, 4));
-                console.log(time, Date.now());
                 done();
             });
         });
@@ -872,8 +852,6 @@ describe('Usergrid', function(){
                 counters: ['test', 'test_counter']
             }, function(err, data) {
                 assert(!err, data.error_description);
-                console.log(data);
-                console.log(time, Date.now());
                 done();
             });
         });
@@ -968,7 +946,6 @@ describe('Usergrid', function(){
                 }
             });
             user.fetch(function(err, data) {
-                console.log(user);
                 if (err) {
                     user.save(function() {
                         done();
@@ -979,7 +956,6 @@ describe('Usergrid', function(){
             })
         });
         it('should CREATE a folder', function(done) {
-            console.log("FOLDERNAME:", foldername);
             folder = new Usergrid.Folder({
                 client: client,
                 data: {
@@ -1004,7 +980,6 @@ describe('Usergrid', function(){
                 if(err){
                     assert(false, err);
                 }
-                //console.log(data);
                 done();
             });
         });
@@ -1045,7 +1020,6 @@ describe('Usergrid', function(){
                 if(err){
                     assert(false, err.error_description);
                 }
-                //console.log(data['entities']);
                 done();
             })
         });
@@ -1054,7 +1028,6 @@ describe('Usergrid', function(){
                 if(err){
                     assert(false, err.error_description);
                 }
-                //console.log(folder['assets']);
                 done();
             })
         });
@@ -1065,7 +1038,6 @@ describe('Usergrid', function(){
                 if(err){
                     assert(false, err.error_description);
                 }
-                //console.log(data['entities']);
                 done();
             })
         });
@@ -1074,7 +1046,6 @@ describe('Usergrid', function(){
                 if(err){
                     assert(false, err.error_description);
                 }
-                //console.log(data);
                 done();
             })
         });
@@ -1083,7 +1054,6 @@ describe('Usergrid', function(){
                 if(err){
                     assert(false, err.error_description);
                 }
-                //console.log(data);
                 done();
             })
         });
