@@ -1,13 +1,14 @@
 package org.apache.usergrid.persistence.graph.consistency;
 
 
+import java.io.Serializable;
 import java.util.Collection;
 
 
 /**
  * Interface for implementations of a timeout queue.
  */
-public interface TimeoutQueue<T> {
+public interface TimeoutQueue<T extends Serializable> {
 
     /**
      * Queue the event with the timeout provided

@@ -29,7 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * The way this should work is that a single AmazonSimpleTimeoutQueue will be created under a single name. Then it will
  * be called from many different clusters storing stuff in the same queue.
  */
-public class AmazonSimpleTimeoutQueue<T> implements TimeoutQueue<T> {
+public class AmazonSimpleTimeoutQueue<T extends Serializable> implements TimeoutQueue<T> {
 
     private static final Logger logger = LoggerFactory.getLogger( AmazonSimpleTimeoutQueue.class );
 
@@ -97,13 +97,6 @@ public class AmazonSimpleTimeoutQueue<T> implements TimeoutQueue<T> {
 
         SimpleAsynchronousMessage<T> asynchronousMessage = new SimpleAsynchronousMessage<T>( event, timeout );
         SendMessageResult sendMessageResult = null;
-
-        //TODO: check if event is instanceof serializable. if not blow up.
-
-        if ( !( event instanceof Serializable ) ) {
-            throw new RuntimeException( event.getClass().getName() + " is not serializable!" );
-        }
-
 
         SendMessageRequest sendMessageRequest = null; /*encoding of asyncMessage here */
         try {
