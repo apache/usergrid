@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -26,7 +27,7 @@ import static org.junit.Assert.assertTrue;
  *
  */
 public class AmazonSimpleTimeoutQueueTest {
-    //@Ignore
+    @Ignore
     @Test
     public void queueReadRemove() {
 
@@ -100,7 +101,7 @@ public class AmazonSimpleTimeoutQueueTest {
         }
     }
 
-    //@Ignore
+    @Ignore
     @Test
     public void queueReadTimeout() {
 
