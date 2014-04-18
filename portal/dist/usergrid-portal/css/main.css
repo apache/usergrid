@@ -1596,6 +1596,11 @@ li.tab.selected .btn.btn-primary.toolbar {
 
 }
 
+li.tab.selected .btn-content {
+    text-decoration:none;
+    color: #494949;    
+}
+
 .btn.btn-primary.toolbar,
 .btn-group.compare .filter-selector.btn:first-child{
     color:#494949;

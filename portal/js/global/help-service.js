@@ -26,8 +26,8 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
   $rootScope.help.clicked = false;
   $rootScope.help.showHelpButtons = false;  
   $rootScope.help.introjs_shouldLaunch = false;  
-  $rootScope.help.usersTabsId = 'invisible';
-  $rootScope.help.usersJsonId = 'invisible';
+  $rootScope.help.showTabsId = 'invisible';
+  $rootScope.help.showJsonId = 'invisible';
   var tooltipStartTime;
   var helpStartTime;
   var introjs_step;    
@@ -76,22 +76,33 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
     }
   };
 
-  /** Add introjs id attrs to the users>profile tab **/
-  $rootScope.$on('users-received', function() {
-    $rootScope.help.usersTabsId = "intro-information-tabs";
-    $rootScope.help.usersJsonId = "intro-json-object";
+  /** show/hide introjs id attrs in the users>profile tab **/
+  $rootScope.$on('users-received', function(event, users) {
+    
+    if(users._list.length > 0){            
+      $rootScope.help.showTabsId = "intro-information-tabs";
+      $rootScope.help.showJsonId = "intro-json-object";
+    } else {      
+      $rootScope.help.showTabsId = "invisible";
+      $rootScope.help.showJsonId = "invisible";
+    }
   });
 
-  /** Hide introjs id attrs from users>profile on org change **/
-  $rootScope.$on('org-changed', function() {
-    $rootScope.help.usersTabs = "invisible";
-    $rootScope.help.usersJson = "invisible";
+  /** show/hide introjs id attrs in the users>profile tab **/
+  $rootScope.$on('groups-received', function(event, groups) {    
+    if(groups._list.length > 0){       
+      $rootScope.help.showTabsId = "intro-information-tabs";
+      $rootScope.help.showJsonId = "intro-json-object";
+    } else {            
+      $rootScope.help.showTabsId = "invisible";
+      $rootScope.help.showJsonId = "invisible";
+    }
   });
 
   $rootScope.$on('$routeChangeSuccess', function(event, current) {      
     //hide the help buttons if not on org-overview page
     var path = current.$$route ? current.$$route.originalPath : null;
-    if (path == '/org-overview' || path.indexOf('/performance') != -1 || path == '/users' || path == '/groups' || path == '/roles') {
+    if (path == '/org-overview' || path.indexOf('/performance') != -1 || path == '/users' || path == '/groups' || path == '/roles' || path == '/data') {
       
       $rootScope.help.showHelpButtons = true;
 
@@ -177,25 +188,25 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
     //go to the next page in the section and start introjs
     switch ($rootScope.currentPath) {
       case "/performance/app-usage":
-        introjs_TransitionEvent('/performance/errors-crashes');        
+        introjs_PageTransitionEvent('/performance/errors-crashes');        
         break;
 
       case "/performance/errors-crashes":
-        introjs_TransitionEvent('/performance/api-perf');        
+        introjs_PageTransitionEvent('/performance/api-perf');        
         break;
 
       case "/users":
-        introjs_TransitionEvent('/groups');        
+        introjs_PageTransitionEvent('/groups');        
         break;
 
       case "/groups":
-        introjs_TransitionEvent('/roles');        
+        introjs_PageTransitionEvent('/roles');        
         break;
     }        
   }
 
   //transition user to next tab in feature section
-  var introjs_TransitionEvent = function(url) {
+  var introjs_PageTransitionEvent = function(url) {
     $location.url(url);
     $rootScope.help.introjs_shouldLaunch = true;
     $rootScope.$apply();        
