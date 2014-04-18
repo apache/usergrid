@@ -161,6 +161,7 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
 	fr.onload = function() {
 		var binary = fr.result;
 		xhr.overrideMimeType('application/octet-stream');
+		xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 		xhr.sendAsBinary(binary);
 	};
 	fr.readAsBinaryString(data);
