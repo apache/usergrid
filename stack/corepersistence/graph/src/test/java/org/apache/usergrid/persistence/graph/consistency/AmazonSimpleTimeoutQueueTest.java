@@ -59,18 +59,26 @@ public class AmazonSimpleTimeoutQueueTest {
             assertEquals( event, asynchronousMessage.getEvent() );
             assertEquals( timeout, asynchronousMessage.getTimeout() );
 
-            Collection<AsynchronousMessage<TestEvent>> results = queue.take( 100, timeout );
-
+            //makes sure the that orginally visibility timeout on the queued message runs out before
+            //we try to take it
             try {
                 Thread.sleep( 1000 );
             }
             catch ( InterruptedException e ) {
                 e.printStackTrace();
             }
-
-            results = queue.take( 100, extentedTimeout );
+            Collection<AsynchronousMessage<TestEvent>> results = queue.take( 100, timeout );
 
             assertEquals( "Time elapsed", 1, results.size() );
+
+            // Now we wait again so that the queue object has an expired visibility timeout to be sure the
+            //message is deleted.
+            try {
+                Thread.sleep( 1000 );
+            }
+            catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
 
             //validate we get a new timeout event since the old one was re-scheduled
             Iterator<AsynchronousMessage<TestEvent>> events = results.iterator();
