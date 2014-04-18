@@ -35,7 +35,7 @@ import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
-import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.legacy.CoreApplication;
 import org.apache.usergrid.persistence.index.legacy.CoreITSetup;
@@ -80,7 +80,7 @@ public abstract class AbstractIteratingQueryIT {
     public EntityCollectionManagerFactory cmf;
     
     @Inject
-    public EntityCollectionIndexFactory cif;
+    public EntityIndexFactory cif;
 
     private EntityManagerFacade em;
 

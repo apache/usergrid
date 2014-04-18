@@ -29,8 +29,8 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
-import org.apache.usergrid.persistence.index.EntityConnectionIndex;
-import org.apache.usergrid.persistence.index.EntityConnectionIndexFactory;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
@@ -64,7 +64,7 @@ public class EntityConnectionIndexImplTest {
     public MigrationManagerRule migrationManagerRule;
         
     @Inject
-    public EntityConnectionIndexFactory ecif;    
+    public EntityIndexFactory ecif;    
 
     @Inject
     public EntityCollectionManagerFactory ecmf;
@@ -105,14 +105,13 @@ public class EntityConnectionIndexImplTest {
         assertNotNull( person.getId().getUuid() );
 
         // index connection of "person Dave likes Large Blueberry muffin"
-        EntityConnectionIndex personLikesIndex = 
-            ecif.createConnectionIndex( person, "likes", orgScope, appScope );
-        personLikesIndex.indexConnection( muffin, muffinScope );
+        EntityIndex personLikesIndex = ecif.createEntityIndex( orgScope, appScope );
+        personLikesIndex.indexConnection( person, "likes", muffin, muffinScope );
 
         personLikesIndex.refresh();
 
         // now, let's search for things that Dave likes
-        Results likes = personLikesIndex.searchConnections( Query.fromQL( "select *"));
+        Results likes = personLikesIndex.searchConnections( person, "likes", Query.fromQL( "select *"));
         assertEquals( 1, likes.size() );
         assertEquals( "Blueberry", likes.getEntities().get(0).getField("flavor").getValue() );
     }

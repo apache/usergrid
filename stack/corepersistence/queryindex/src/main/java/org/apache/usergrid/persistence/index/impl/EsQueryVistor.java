@@ -71,7 +71,7 @@ public class EsQueryVistor implements QueryVisitor {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
-            name += EsEntityIndex.ANALYZED_SUFFIX;
+            name += EsEntityIndexImpl.ANALYZED_SUFFIX;
         }        
         stack.push( QueryBuilders.matchQuery( name, value ));
     }
@@ -84,7 +84,7 @@ public class EsQueryVistor implements QueryVisitor {
         float lon = op.getLongitude().getFloatValue();
         float distance = op.getDistance().getFloatValue();
 
-        FilterBuilder fb = FilterBuilders.geoDistanceFilter( name + EsEntityIndex.GEO_SUFFIX )
+        FilterBuilder fb = FilterBuilders.geoDistanceFilter( name + EsEntityIndexImpl.GEO_SUFFIX )
            .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
 
         filterBuilders.add( fb );
@@ -94,7 +94,7 @@ public class EsQueryVistor implements QueryVisitor {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
-            name += EsEntityIndex.ANALYZED_SUFFIX;
+            name += EsEntityIndexImpl.ANALYZED_SUFFIX;
         }
         stack.push( QueryBuilders.rangeQuery( name ).lt( value ));
     }
@@ -103,7 +103,7 @@ public class EsQueryVistor implements QueryVisitor {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
-            name += EsEntityIndex.ANALYZED_SUFFIX;
+            name += EsEntityIndexImpl.ANALYZED_SUFFIX;
         }
         stack.push( QueryBuilders.rangeQuery( name ).lte( value ));
     }
@@ -121,7 +121,7 @@ public class EsQueryVistor implements QueryVisitor {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
-            name += EsEntityIndex.ANALYZED_SUFFIX;
+            name += EsEntityIndexImpl.ANALYZED_SUFFIX;
         }
         stack.push( QueryBuilders.rangeQuery( name ).gt( value ) );
     }
@@ -130,7 +130,7 @@ public class EsQueryVistor implements QueryVisitor {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
-            name += EsEntityIndex.ANALYZED_SUFFIX;
+            name += EsEntityIndexImpl.ANALYZED_SUFFIX;
         }
         stack.push( QueryBuilders.rangeQuery( name ).gte( value ) );
     }

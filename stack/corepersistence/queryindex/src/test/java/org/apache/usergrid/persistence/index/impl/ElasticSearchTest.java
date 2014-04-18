@@ -115,7 +115,7 @@ public class ElasticSearchTest {
         admin.indices().prepareCreate( index ).execute().actionGet();
 
         // add dynamic string-double index mapping
-        XContentBuilder mxcb = EsEntityIndex
+        XContentBuilder mxcb = EsEntityIndexImpl
             .createDoubleStringIndexMapping( jsonBuilder(), type );
         PutMappingResponse pmr = admin.indices().preparePutMapping(index)
             .setType( type ).setSource( mxcb ).execute().actionGet();

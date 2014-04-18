@@ -36,8 +36,8 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
-import org.apache.usergrid.persistence.index.EntityCollectionIndex;
-import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -60,9 +60,9 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
-public class EntityCollectionIndexTest {
+public class EntityIndexTest {
 
-    private static final Logger log = LoggerFactory.getLogger( EntityCollectionIndexTest.class );
+    private static final Logger log = LoggerFactory.getLogger( EntityIndexTest.class );
     
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
@@ -72,7 +72,7 @@ public class EntityCollectionIndexTest {
     public MigrationManagerRule migrationManagerRule;
         
     @Inject
-    public EntityCollectionIndexFactory cif;    
+    public EntityIndexFactory cif;    
     
     @Inject
     public EntityCollectionManagerFactory cmf;
@@ -86,9 +86,8 @@ public class EntityCollectionIndexTest {
         CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "contacts" );
 
-        EntityCollectionIndex entityIndex = cif.createCollectionIndex( orgScope, appScope, scope );
+        EntityIndex entityIndex = cif.createEntityIndex(orgScope, appScope );
         EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
-
 
         InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
         ObjectMapper mapper = new ObjectMapper();
@@ -107,7 +106,7 @@ public class EntityCollectionIndexTest {
 
             entity = entityManager.write( entity ).toBlockingObservable().last();
 
-            entityIndex.index( entity );
+            entityIndex.index( scope, entity );
 
             count++;
         }
@@ -117,7 +116,7 @@ public class EntityCollectionIndexTest {
 
         entityIndex.refresh();
 
-        testQueries( entityIndex );
+        testQueries( entityIndex, scope );
     }
 
     
@@ -130,7 +129,7 @@ public class EntityCollectionIndexTest {
         CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "fastcars" );
 
-        EntityCollectionIndex entityIndex = cif.createCollectionIndex( orgScope, appScope, scope );
+        EntityIndex entityIndex = cif.createEntityIndex(orgScope, appScope );
         EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
 
         Map entityMap = new HashMap() {{
@@ -142,30 +141,30 @@ public class EntityCollectionIndexTest {
         Entity entity = EntityBuilder.fromMap( scope.getName(), entityMap );
         EntityUtils.setId( entity, new SimpleId( "fastcar" ));
         entity = entityManager.write( entity ).toBlockingObservable().last();
-        entityIndex.index( entity );
+        entityIndex.index( scope, entity );
 
         entityIndex.refresh();
 
-        Results results = entityIndex.execute( Query.fromQL( "name contains 'Ferrari*'"));
+        Results results = entityIndex.search( scope, Query.fromQL( "name contains 'Ferrari*'"));
         assertEquals( 1, results.getEntities().size() );
 
         entityManager.delete( entity.getId() );
-        entityIndex.deindex( entity );
+        entityIndex.deindex( scope, entity );
 
         entityIndex.refresh();
 
-        results = entityIndex.execute( Query.fromQL( "name contains 'Ferrari*'"));
+        results = entityIndex.search( scope, Query.fromQL( "name contains 'Ferrari*'"));
         assertEquals( 0, results.getEntities().size() );
     }
    
    
-    private void testQuery( EntityCollectionIndex entityIndex, String queryString, int num ) {
+    private void testQuery( EntityIndex entityIndex, CollectionScope scope, String queryString, int num ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
         Query query = Query.fromQL( queryString );
         query.setLimit( 1000 );
-        Results results = entityIndex.execute( query );
+        Results results = entityIndex.search( scope, query );
         timer.stop();
 
         if ( num == 1 ) {
@@ -177,29 +176,29 @@ public class EntityCollectionIndexTest {
     }
 
 
-    private void testQueries( EntityCollectionIndex entityIndex ) {
+    private void testQueries( EntityIndex entityIndex, CollectionScope scope ) {
 
-        testQuery( entityIndex, "name = 'Morgan Pierce'", 1);
+        testQuery( entityIndex, scope, "name = 'Morgan Pierce'", 1);
 
-        testQuery( entityIndex, "name = 'morgan pierce'", 1);
+        testQuery( entityIndex, scope, "name = 'morgan pierce'", 1);
 
-        testQuery( entityIndex, "name = 'Morgan'", 0);
+        testQuery( entityIndex, scope, "name = 'Morgan'", 0);
 
-        testQuery( entityIndex, "name contains 'Morgan'", 1);
+        testQuery( entityIndex, scope, "name contains 'Morgan'", 1);
 
-        testQuery( entityIndex, "company > 'GeoLogix'", 564);
+        testQuery( entityIndex, scope, "company > 'GeoLogix'", 564);
 
-        testQuery( entityIndex, "gender = 'female'", 433);
+        testQuery( entityIndex, scope, "gender = 'female'", 433);
 
-        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 39", 1);
+        testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age > 39", 1);
 
-        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 39 and age < 41", 1);
+        testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age > 39 and age < 41", 1);
 
-        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 40", 0);
+        testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age > 40", 0);
 
-        testQuery( entityIndex, "name = 'Minerva Harrell' and age >= 40", 1);
+        testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age >= 40", 1);
 
-        testQuery( entityIndex, "name = 'Minerva Harrell' and age <= 40", 1);
+        testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age <= 40", 1);
     }
 
        
@@ -218,7 +217,7 @@ public class EntityCollectionIndexTest {
             Entity entity1 = EntityBuilder.fromMap( "testscope", map1 );
 
             // convert entity back to map
-            Map map2 = EsEntityIndex.entityToMap( entity1 );
+            Map map2 = EsEntityIndexImpl.entityToMap( entity1 );
 
             // the two maps should be the same except for six new system properties
             Map diff = Maps.difference( map1, map2 ).entriesDiffering();

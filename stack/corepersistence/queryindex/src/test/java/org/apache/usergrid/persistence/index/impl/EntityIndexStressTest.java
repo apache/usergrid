@@ -30,7 +30,7 @@ import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
-import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.legacy.EntityManagerFacade;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -51,10 +51,10 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(JukitoRunner.class)
 @UseModules(TestIndexModule.class)
-public class EntityCollectionIndexStressTest {
+public class EntityIndexStressTest {
 
     private static final Logger log = LoggerFactory.getLogger( 
-            EntityCollectionIndexStressTest.class );
+            EntityIndexStressTest.class );
 
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
@@ -67,7 +67,7 @@ public class EntityCollectionIndexStressTest {
     public EntityCollectionManagerFactory cmf;
     
     @Inject
-    public EntityCollectionIndexFactory cif;
+    public EntityIndexFactory cif;
 
     @Test
     public void indexThousands() throws IOException {
