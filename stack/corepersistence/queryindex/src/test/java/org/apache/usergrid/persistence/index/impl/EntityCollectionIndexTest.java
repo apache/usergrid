@@ -218,7 +218,7 @@ public class EntityCollectionIndexTest {
             Entity entity1 = EntityBuilder.fromMap( "testscope", map1 );
 
             // convert entity back to map
-            Map map2 = EsEntityCollectionIndex.entityToMap( entity1 );
+            Map map2 = EsEntityIndex.entityToMap( entity1 );
 
             // the two maps should be the same except for six new system properties
             Map diff = Maps.difference( map1, map2 ).entriesDiffering();

@@ -25,7 +25,10 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.index.EntityCollectionIndex;
 import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
-import org.apache.usergrid.persistence.index.impl.EsEntityCollectionIndex;
+import org.apache.usergrid.persistence.index.EntityConnectionIndex;
+import org.apache.usergrid.persistence.index.EntityConnectionIndexFactory;
+import org.apache.usergrid.persistence.index.impl.EsEntityCollectionIndexImpl;
+import org.apache.usergrid.persistence.index.impl.EsEntityConnectionIndexImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 
@@ -41,7 +44,11 @@ public class IndexModule extends AbstractModule {
         install (new GuicyFigModule( IndexFig.class ));
 
         install( new FactoryModuleBuilder()
-            .implement( EntityCollectionIndex.class, EsEntityCollectionIndex.class )
+            .implement( EntityCollectionIndex.class, EsEntityCollectionIndexImpl.class )
             .build( EntityCollectionIndexFactory.class ) );
+
+        install( new FactoryModuleBuilder()
+            .implement( EntityConnectionIndex.class, EsEntityConnectionIndexImpl.class )
+            .build( EntityConnectionIndexFactory.class ) );
     }
 }

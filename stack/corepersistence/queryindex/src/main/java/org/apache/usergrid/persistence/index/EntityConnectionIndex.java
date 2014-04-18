@@ -16,35 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
-
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 /**
- * Provides indexing of Entities within a scope.
+ * Interface for indexing Entities within scope of one source Entity and Connection type 
  */
-public interface EntityCollectionIndex {
+public interface EntityConnectionIndex {
 
     /** 
-     * Create index for Entity
-     * @param entity Entity to be indexed.
+     * Index a named and one-way Connection from a Source to a Target entity. 
+     * @param target Entity that is the target of the Connection (e.g. beer).
+     * @param targetScope CollectionScope of the target Entity (e.g. beverages)
      */
-    public void index( Entity entity );
-    
-    /**
-     * Remove index of entity.
-     * @param entity Entity to be removed from index. 
-     */
-    public void deindex( Entity entity );
+    void indexConnection( Entity target, CollectionScope targetScope);
 
-    /**
-     * Execute query in Usergrid syntax.
+    /** 
+     * Delete single Connection from index. 
+     * @param target Entity that is the target of the Connection (e.g. beer).
      */
-    public Results execute( Query query );
+    void deleteConnection( Id target );
+
+    /** 
+     * Search within Connections of a specific Entity and Connection Type. 
+     * @param query Represents Query created from Usergrid syntax query string.
+     */
+    Results searchConnections( Query query  );
 
     /**
      * Force refresh of index (should be used for testing purposes only).

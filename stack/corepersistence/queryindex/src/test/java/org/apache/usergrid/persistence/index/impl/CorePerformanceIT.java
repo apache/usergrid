@@ -103,7 +103,8 @@ public class CorePerformanceIT {
         public OrganizationScope orgScope;
         public CollectionScope appScope;
         public CollectionScope scope;
-        public OrgAppCollectionScope( OrganizationScope orgScope, CollectionScope appScope, CollectionScope scope ) {
+        public OrgAppCollectionScope( 
+                OrganizationScope orgScope, CollectionScope appScope, CollectionScope scope ) {
             this.orgScope = orgScope;
             this.appScope = appScope;
             this.scope = scope;

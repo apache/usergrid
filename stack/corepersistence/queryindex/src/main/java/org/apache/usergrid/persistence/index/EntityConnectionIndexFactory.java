@@ -16,38 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.usergrid.persistence.index;
 
+import com.google.inject.assistedinject.Assisted;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Results;
 
 
-/**
- * Provides indexing of Entities within a scope.
- */
-public interface EntityCollectionIndex {
-
-    /** 
-     * Create index for Entity
-     * @param entity Entity to be indexed.
-     */
-    public void index( Entity entity );
-    
-    /**
-     * Remove index of entity.
-     * @param entity Entity to be removed from index. 
-     */
-    public void deindex( Entity entity );
-
-    /**
-     * Execute query in Usergrid syntax.
-     */
-    public Results execute( Query query );
-
-    /**
-     * Force refresh of index (should be used for testing purposes only).
-     */
-    public void refresh();
+public interface EntityConnectionIndexFactory {
+   
+    public EntityConnectionIndex createConnectionIndex( 
+        @Assisted Entity sourceEntity,
+        @Assisted String type,
+        @Assisted OrganizationScope orgScope, 
+        @Assisted("appScope") CollectionScope appScope
+    ); 
 }
