@@ -1596,6 +1596,11 @@ li.tab.selected .btn.btn-primary.toolbar {
 
 }
 
+li.tab.selected .btn-content {
+    text-decoration:none;
+    color: #494949;    
+}
+
 .btn.btn-primary.toolbar,
 .btn-group.compare .filter-selector.btn:first-child{
     color:#494949;
@@ -1984,5 +1989,10 @@ li.selected .btn.btn-primary.toolbar {
   font-size: 13px;
   line-height: 19px;
   font-family: marquette-medium,'Helvetica Neue',Helvetica,Arial,sans-serif;
+}
+
+.introjs-tooltip {
+    min-width: 210px;
+    max-width: 450px;
 }
 /** End introjs **/

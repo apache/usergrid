@@ -1,5 +1,5 @@
 /**
- * @license AngularJS v1.3.0-build.2544+sha.7914d34
+ * @license AngularJS v1.3.0-build.2534+sha.908ab52
  * (c) 2010-2014 Google, Inc. http://angularjs.org
  * License: MIT
  */
@@ -68,7 +68,7 @@ function minErr(module) {
       return match;
     });
 
-    message = message + '\nhttp://errors.angularjs.org/1.3.0-build.2544+sha.7914d34/' +
+    message = message + '\nhttp://errors.angularjs.org/1.3.0-build.2534+sha.908ab52/' +
       (module ? module + '/' : '') + code;
     for (i = 2; i < arguments.length; i++) {
       message = message + (i == 2 ? '?' : '&') + 'p' + (i-2) + '=' +
@@ -1919,7 +1919,7 @@ function setupModuleLoader(window) {
  * - `codeName` – `{string}` – Code name of the release, such as "jiggling-armfat".
  */
 var version = {
-  full: '1.3.0-build.2544+sha.7914d34',    // all of these placeholder strings will be replaced by grunt's
+  full: '1.3.0-build.2534+sha.908ab52',    // all of these placeholder strings will be replaced by grunt's
   major: 1,    // package task
   minor: 3,
   dot: 0,
@@ -9401,7 +9401,8 @@ function locationGetterSetter(property, preprocess) {
  *   - Clicks on a link.
  * - Represents the URL object as a set of methods (protocol, host, port, path, search, hash).
  *
- * For more information see {@link guide/$location Developer Guide: Using $location}
+ * For more information see {@link guide/dev_guide.services.$location Developer Guide: Angular
+ * Services: Using $location}
  */
 
 /**
@@ -10137,11 +10138,7 @@ var Parser = function (lexer, $filter, options) {
   this.options = options;
 };
 
-Parser.ZERO = extend(function () {
-  return 0;
-}, {
-  constant: true
-});
+Parser.ZERO = function () { return 0; };
 
 Parser.prototype = {
   constructor: Parser,
@@ -12308,15 +12305,26 @@ function $RootScopeProvider(){
 
         forEach(this.$$listenerCount, bind(null, decrementListenerCount, this));
 
+        // sever all the references to parent scopes (after this cleanup, the current scope should
+        // not be retained by any of our references and should be eligible for garbage collection)
         if (parent.$$childHead == this) parent.$$childHead = this.$$nextSibling;
         if (parent.$$childTail == this) parent.$$childTail = this.$$prevSibling;
         if (this.$$prevSibling) this.$$prevSibling.$$nextSibling = this.$$nextSibling;
         if (this.$$nextSibling) this.$$nextSibling.$$prevSibling = this.$$prevSibling;
 
-        // This is bogus code that works around Chrome's GC leak
-        // see: https://github.com/angular/angular.js/issues/1313#issuecomment-10378451
-        this.$parent = this.$$nextSibling = this.$$prevSibling = this.$$childHead =
-            this.$$childTail = null;
+        // This is bogus code that works around V8's memory leak coming from ICs
+        // see: https://code.google.com/p/v8/issues/detail?id=2073#c26
+        //
+        // for more info also see:
+        // - https://github.com/angular/angular.js/issues/6794#issuecomment-38648909
+        // - https://github.com/angular/angular.js/issues/1313#issuecomment-10378451
+        for (var prop in this) {
+          if (hasOwnProperty.call(this, prop)) {
+            this[prop] = null;
+          }
+        }
+        // recreate the $$destroyed flag
+        this.$$destroyed = true;
       },
 
       /**
