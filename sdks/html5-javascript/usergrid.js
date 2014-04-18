@@ -55,27 +55,6 @@ UsergridEventable.mixin = function(destObject) {
     }
 };
 
-/*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- *
- *  @author ryan bridges (rbridges@apigee.com)
- */
-//Logger
 (function() {
     var name = "Logger", global = this, overwrittenName = global[name], exports;
     /* logging */
@@ -141,27 +120,6 @@ UsergridEventable.mixin = function(destObject) {
     return global[name];
 })();
 
-/*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- *
- *  @author ryan bridges (rbridges@apigee.com)
- */
-//Promise
 (function(global) {
     var name = "Promise", overwrittenName = global[name], exports;
     function Promise() {
@@ -213,7 +171,6 @@ UsergridEventable.mixin = function(destObject) {
         } else {
             promises[0](error, result).then(function(res, err) {
                 promises.splice(0, 1);
-                //self.logger.info(promises.length)
                 if (promises) {
                     Promise.chain(promises, res, err).then(function(r, e) {
                         p.done(r, e);
@@ -235,27 +192,6 @@ UsergridEventable.mixin = function(destObject) {
     return global[name];
 })(this);
 
-/*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- *
- *  @author ryan bridges (rbridges@apigee.com)
- */
-//Ajax
 (function() {
     var name = "Ajax", global = this, overwrittenName = global[name], exports;
     function partial() {
@@ -312,7 +248,6 @@ UsergridEventable.mixin = function(destObject) {
                     xhr.abort();
                     p.done("API Call timed out.", null);
                 }, 3e4);
-                //TODO stick that timeout in a config variable
                 xhr.send(encode(d));
             })(new XMLHttpRequest());
             return p;
@@ -356,7 +291,6 @@ UsergridEventable.mixin = function(destObject) {
  *  @author matt dobson (matt@Usergrid.com)
  *  @author ryan bridges (rbridges@Usergrid.com)
  */
-//Hack around IE console.log
 window.console = window.console || {};
 
 window.console.log = window.console.log || function() {};
@@ -490,13 +424,11 @@ function doCallback(callback, params, context) {
         if (!params) params = [];
         if (!context) context = this;
         params.push(context);
-        //try {
         returnValue = callback.apply(context, params);
     }
     return returnValue;
 }
 
-//noinspection ThisExpressionReferencesGlobalObjectJS
 (function(global) {
     var name = "Usergrid", overwrittenName = global[name];
     var VALID_REQUEST_METHODS = [ "GET", "POST", "PUT", "DELETE" ];
@@ -504,7 +436,6 @@ function doCallback(callback, params, context) {
         this.logger = new Logger(name);
     }
     Usergrid.isValidEndpoint = function(endpoint) {
-        //TODO actually implement this
         return true;
     };
     Usergrid.Request = function(method, endpoint, query_params, data, callback) {
@@ -519,7 +450,6 @@ function doCallback(callback, params, context) {
          */
         this.endpoint = endpoint + "?" + encodeParams(query_params);
         this.method = method.toUpperCase();
-        //this.query_params = query_params;
         this.data = "object" === typeof data ? JSON.stringify(data) : data;
         if (VALID_REQUEST_METHODS.indexOf(this.method) === -1) {
             throw new UsergridInvalidHTTPMethodError("invalid request method '" + this.method + "'");
@@ -550,15 +480,12 @@ function doCallback(callback, params, context) {
         Promise.chain([ request, response ]).then(oncomplete);
         return p;
     };
-    //TODO more granular handling of statusCodes
     Usergrid.Response = function(err, response) {
         var p = new Promise();
         var data = null;
         try {
             data = JSON.parse(response.responseText);
         } catch (e) {
-            //this.logger.error("Error parsing response text: ",this.text);
-            //this.logger.error("Caught error ", e.message);
             data = {};
         }
         Object.keys(data).forEach(function(key) {
@@ -599,20 +526,14 @@ function doCallback(callback, params, context) {
         });
         switch (this.statusGroup) {
           case 200:
-            //success
             this.success = true;
             break;
 
           case 400:
-          //user error
-            case 500:
-          //server error
-            case 300:
-          //cache and redirects
-            case 100:
-          //upgrade
-            default:
-            //server error
+          case 500:
+          case 300:
+          case 100:
+          default:
             this.success = false;
             break;
         }
@@ -645,31 +566,11 @@ function doCallback(callback, params, context) {
     return global[name];
 })(this);
 
-/*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- */
 (function() {
     var name = "Client", global = this, overwrittenName = global[name], exports;
     var AUTH_ERRORS = [ "auth_expired_session_token", "auth_missing_credentials", "auth_unverified_oath", "expired_token", "unauthorized", "auth_invalid" ];
     Usergrid.Client = function(options) {
-        //usergrid endpoint
         this.URI = options.URI || "https://api.usergrid.com";
-        //Find your Orgname and Appname in the Admin portal (http://apigee.com/usergrid)
         if (options.orgName) {
             this.set("orgName", options.orgName);
         }
@@ -679,7 +580,6 @@ function doCallback(callback, params, context) {
         if (options.qs) {
             this.setObject("default_qs", options.qs);
         }
-        //other options
         this.buildCurl = options.buildCurl || false;
         this.logging = options.logging || false;
     };
@@ -705,7 +605,6 @@ function doCallback(callback, params, context) {
         var body = options.body || {};
         var qs = options.qs || {};
         var mQuery = options.mQuery || false;
-        //is this a query to the management endpoint?
         var orgName = this.get("orgName");
         var appName = this.get("appName");
         var default_qs = this.getObject("default_qs");
@@ -756,7 +655,6 @@ function doCallback(callback, params, context) {
         if (self.getToken()) {
             qs.access_token = self.getToken();
         }
-        //append params to the path
         var encoded_params = encodeParams(qs);
         if (encoded_params) {
             assetURL += "?" + encoded_params;
@@ -1164,7 +1062,6 @@ function doCallback(callback, params, context) {
             if (err && self.logging) {
                 console.log("error trying to re-authenticate user");
             } else {
-                //save the re-authed token and current email/username
                 self.setToken(response.data.access_token);
             }
             doCallback(callback, [ err ]);
@@ -1188,11 +1085,9 @@ function doCallback(callback, params, context) {
                 data = response.data;
                 self.setToken(data.token);
                 self.set("email", data.email);
-                //delete next block and corresponding function when iframes are refactored
                 localStorage.setItem("accessToken", data.token);
                 localStorage.setItem("userUUID", data.uuid);
                 localStorage.setItem("userEmail", data.email);
-                //end delete block
                 var userData = {
                     username: data.username,
                     email: data.email,
@@ -1207,7 +1102,6 @@ function doCallback(callback, params, context) {
                 organizations = data.organizations;
                 var org = "";
                 try {
-                    //if we have an org stored, then use that one. Otherwise, use the first one.
                     var existingOrg = self.get("orgName");
                     org = organizations[existingOrg] ? organizations[existingOrg] : organizations[Object.keys(organizations)[0]];
                     self.set("orgName", org.name);
@@ -1217,7 +1111,6 @@ function doCallback(callback, params, context) {
                         console.log("error selecting org");
                     }
                 }
-                //should always be an org
                 applications = self.parseApplicationsArray(org);
                 self.selectFirstApp(applications);
                 self.setObject("organizations", organizations);
@@ -1391,17 +1284,14 @@ function doCallback(callback, params, context) {
         var method = (options.method || "GET").toUpperCase();
         var body = options.body;
         var uri = options.uri;
-        //curl - add the method to the command (no need to add anything for GET)
         curl.push("-X");
         curl.push([ "POST", "PUT", "DELETE" ].indexOf(method) >= 0 ? method : "GET");
-        //curl - append the path
         curl.push(uri);
         if ("object" === typeof body && Object.keys(body).length > 0 && [ "POST", "PUT" ].indexOf(method) !== -1) {
             curl.push("-d");
             curl.push("'" + JSON.stringify(body) + "'");
         }
         curl = curl.join(" ");
-        //log the curl command to the console
         console.log(curl);
         return curl;
     };
@@ -1428,24 +1318,6 @@ function doCallback(callback, params, context) {
     return global[name];
 })();
 
-/*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- */
 var ENTITY_SYSTEM_PROPERTIES = [ "metadata", "created", "modified", "oldpassword", "newpassword", "type", "activated", "uuid" ];
 
 /*
@@ -1459,7 +1331,6 @@ Usergrid.Entity = function(options) {
     this._data = {};
     this._client = undefined;
     if (options) {
-        //this._data = options.data || {};
         this.set(options.data || {});
         this._client = options.client || {};
     }
@@ -1587,12 +1458,10 @@ Usergrid.Entity.prototype.save = function(callback) {
         method: method,
         endpoint: type
     };
-    //update the entity if the UUID is present
     if (entityId) {
         options.method = "PUT";
         options.endpoint += "/" + entityId;
     }
-    //remove system-specific properties
     options.body = Object.keys(entityData).filter(function(key) {
         return ENTITY_SYSTEM_PROPERTIES.indexOf(key) === -1;
     }).reduce(function(data, key) {
@@ -1617,8 +1486,6 @@ Usergrid.Entity.prototype.save = function(callback) {
  * Updates the user's password
  */
 Usergrid.Entity.prototype.changePassword = function(oldpassword, password, newpassword, callback) {
-    //Note: we have a ticket in to change PUT calls to /users to accept the password change
-    //      once that is done, we will remove this call and merge it all into one
     var self = this;
     if ("function" === typeof oldpassword && callback === undefined) {
         callback = oldpassword;
@@ -1626,7 +1493,6 @@ Usergrid.Entity.prototype.changePassword = function(oldpassword, password, newpa
         password = self.get("password");
         newpassword = self.get("newpassword");
     }
-    //clear out pw info if present
     self.set({
         password: null,
         oldpassword: null,
@@ -1648,7 +1514,6 @@ Usergrid.Entity.prototype.changePassword = function(oldpassword, password, newpa
             if (err && self._client.logging) {
                 console.log("could not update user");
             }
-            //remove old and new password fields so they don't end up as part of the entity object
             doCallback(callback, [ err, response, self ], self);
         });
     } else {
@@ -1752,13 +1617,11 @@ Usergrid.Entity.prototype.addOrRemoveConnection = function(method, connection, e
     if ([ "POST", "DELETE" ].indexOf(method.toUpperCase()) == -1) {
         throw new UsergridInvalidArgumentError("invalid method for connection call. must be 'POST' or 'DELETE'");
     }
-    //connectee info
     var connecteeType = entity.get("type");
     var connectee = this.getEntityId(entity);
     if (!connectee) {
         throw new UsergridInvalidArgumentError("connectee could not be identified");
     }
-    //connector info
     var connectorType = this.get("type");
     var connector = this.getEntityId(this);
     if (!connector) {
@@ -1812,7 +1675,6 @@ Usergrid.Entity.prototype.getEntityId = function(entity) {
  */
 Usergrid.Entity.prototype.getConnections = function(connection, callback) {
     var self = this;
-    //connector info
     var connectorType = this.get("type");
     var connector = this.getEntityId(this);
     if (!connector) {
@@ -1988,24 +1850,6 @@ Usergrid.Entity.prototype.getPermissions = function(callback) {
 };
 
 /*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- */
-/*
  *  The Collection class models Usergrid Collections.  It essentially
  *  acts as a container for holding Entity objects, while providing
  *  additional funcitonality such as paging, and saving
@@ -2019,19 +1863,14 @@ Usergrid.Collection = function(options) {
         this._client = options.client;
         this._type = options.type;
         this.qs = options.qs || {};
-        //iteration
         this._list = options.list || [];
         this._iterator = options.iterator || -1;
-        //first thing we do is increment, so set to -1
-        //paging
         this._previous = options.previous || [];
         this._next = options.next || null;
         this._cursor = options.cursor || null;
-        //restore entities if available
         if (options.list) {
             var count = options.list.length;
             for (var i = 0; i < count; i++) {
-                //make new entity with
                 var entity = this._client.restoreEntity(options.list[i]);
                 this._list[i] = entity;
             }
@@ -2058,7 +1897,6 @@ Usergrid.isCollection = function(obj) {
  *  @return {object} data
  */
 Usergrid.Collection.prototype.serialize = function() {
-    //pull out the state from this object and return it
     var data = {};
     data.type = this._type;
     data.qs = this.qs;
@@ -2078,7 +1916,6 @@ Usergrid.Collection.prototype.serialize = function() {
     return data;
 };
 
-//addCollection is deprecated?
 /*Usergrid.Collection.prototype.addCollection = function (collectionName, options, callback) {
   self = this;
   options.client = this._client;
@@ -2108,7 +1945,6 @@ Usergrid.Collection.prototype.serialize = function() {
 Usergrid.Collection.prototype.fetch = function(callback) {
     var self = this;
     var qs = this.qs;
-    //add in the cursor if one is available
     if (this._cursor) {
         qs.cursor = this._cursor;
     } else {
@@ -2123,10 +1959,8 @@ Usergrid.Collection.prototype.fetch = function(callback) {
         if (err && self._client.logging) {
             console.log("error getting collection");
         } else {
-            //save the cursor if there is one
             self.saveCursor(response.cursor || null);
             self.resetEntityPointer();
-            //save entities locally
             self._list = response.getEntities().filter(function(entity) {
                 return isUUID(entity.uuid);
             }).map(function(entity) {
@@ -2135,7 +1969,6 @@ Usergrid.Collection.prototype.fetch = function(callback) {
                 });
                 ent.set(entity);
                 ent.type = self._type;
-                //ent._json = JSON.stringify(entity, null, 2);
                 return ent;
             });
         }
@@ -2154,10 +1987,8 @@ Usergrid.Collection.prototype.fetch = function(callback) {
 Usergrid.Collection.prototype.addEntity = function(entityObject, callback) {
     var self = this;
     entityObject.type = this._type;
-    //create the new entity
     this._client.createEntity(entityObject, function(err, response, entity) {
         if (!err) {
-            //then add the entity to the list
             self.addExistingEntity(entity);
         }
         doCallback(callback, [ err, response, self ], self);
@@ -2165,7 +1996,6 @@ Usergrid.Collection.prototype.addEntity = function(entityObject, callback) {
 };
 
 Usergrid.Collection.prototype.addExistingEntity = function(entity) {
-    //entity should already exist in the db, so just add it to the list
     var count = this._list.length;
     this._list[count] = entity;
 };
@@ -2187,10 +2017,8 @@ Usergrid.Collection.prototype.destroyEntity = function(entity, callback) {
             }
             doCallback(callback, [ err, response, self ], self);
         } else {
-            //destroy was good, so repopulate the collection
             self.fetch(callback);
         }
-        //remove entity from the local store
         self.removeEntity(entity);
     });
 };
@@ -2249,7 +2077,6 @@ Usergrid.Collection.prototype.getEntityByUUID = function(uuid, callback) {
     if (entity) {
         doCallback(callback, [ null, entity, entity ], this);
     } else {
-        //get the entity from the database
         var options = {
             data: {
                 type: this._type,
@@ -2376,7 +2203,6 @@ Usergrid.Collection.prototype.resetEntityPointer = function() {
  * @return none
  */
 Usergrid.Collection.prototype.saveCursor = function(cursor) {
-    //if current cursor is different, grab it for next cursor
     if (this._next !== cursor) {
         this._next = cursor;
     }
@@ -2416,10 +2242,8 @@ Usergrid.Collection.prototype.hasNextPage = function() {
  */
 Usergrid.Collection.prototype.getNextPage = function(callback) {
     if (this.hasNextPage()) {
-        //set the cursor to the next page of data
         this._previous.push(this._cursor);
         this._cursor = this._next;
-        //empty the list
         this._list = [];
         this.fetch(callback);
     }
@@ -2447,32 +2271,12 @@ Usergrid.Collection.prototype.hasPreviousPage = function() {
 Usergrid.Collection.prototype.getPreviousPage = function(callback) {
     if (this.hasPreviousPage()) {
         this._next = null;
-        //clear out next so the comparison will find the next item
         this._cursor = this._previous.pop();
-        //empty the list
         this._list = [];
         this.fetch(callback);
     }
 };
 
-/*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- */
 /*
  *  A class to model a Usergrid group.
  *  Set the path in the options object.
@@ -2525,7 +2329,6 @@ Usergrid.Group.prototype.fetch = function(callback) {
             var entities = response.getEntities();
             if (entities && entities.length) {
                 var groupresponse = entities.shift();
-                //self._response = groupresponse || {};
                 self._client.request(memberOptions, function(err, response) {
                     if (err && self._client.logging) {
                         console.log("error getting group users");
@@ -2557,7 +2360,6 @@ Usergrid.Group.prototype.fetch = function(callback) {
  *  @return {function} callback(err, data);
  */
 Usergrid.Group.prototype.members = function(callback) {
-    //doCallback(callback, [null, this._list, this], this);
     return this._list;
 };
 
@@ -2681,24 +2483,6 @@ Usergrid.Group.prototype.createGroupActivity = function(options, callback) {
 };
 
 /*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- */
-/*
  *  A class to model a Usergrid event.
  *
  *  @constructor
@@ -2706,7 +2490,6 @@ Usergrid.Group.prototype.createGroupActivity = function(options, callback) {
  *  @returns {callback} callback(err, event)
  */
 Usergrid.Counter = function(options) {
-    // var self=this;
     this._client = options.client;
     this._data = options.data || {};
     this._data.category = options.category || "UNKNOWN";
@@ -2823,7 +2606,6 @@ Usergrid.Counter.prototype.getData = function(options, callback) {
     start_time = getSafeTime(start);
     end_time = getSafeTime(end);
     var self = this;
-    //https://api.usergrid.com/yourorgname/sandbox/counters?counter=test_counter
     var params = Object.keys(counters).map(function(counter) {
         return [ "counter", encodeURIComponent(counters[counter]) ].join("=");
     });
@@ -2864,24 +2646,6 @@ function getSafeTime(prop) {
     return time;
 }
 
-/*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- */
 /*
  *  A class to model a Usergrid folder.
  *
@@ -2992,7 +2756,6 @@ Usergrid.Folder.prototype.addAsset = function(options, callback) {
             });
         }
     } else {
-        //nothing to add
         doCallback(callback, [ new UsergridInvalidArgumentError("No asset specified"), null, self ], self);
     }
 };
@@ -3040,7 +2803,6 @@ Usergrid.Folder.prototype.removeAsset = function(options, callback) {
             });
         }
     } else {
-        //nothing to add
         doCallback(callback, [ new UsergridInvalidArgumentError("No asset specified"), null, self ], self);
     }
 };
@@ -3056,24 +2818,6 @@ Usergrid.Folder.prototype.getAssets = function(callback) {
     return this.getConnections("assets", callback);
 };
 
-/*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- */
 /*
  *  XMLHttpRequest.prototype.sendAsBinary polyfill
  *  from: https://developer.mozilla.org/en-US/docs/DOM/XMLHttpRequest#sendAsBinary()
@@ -3138,7 +2882,6 @@ Usergrid.Asset.prototype = new Usergrid.Entity();
 Usergrid.Asset.prototype.addToFolder = function(options, callback) {
     var self = this, error = null;
     if ("folder" in options && isUUID(options.folder)) {
-        //we got a valid UUID
         var folder = Usergrid.Folder({
             uuid: options.folder
         }, function(err, folder) {
@@ -3186,11 +2929,9 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
     self.set("content-type", data.type);
     self.set("size", data.size);
     var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");
-    //self._client.buildAssetURL(self.get("uuid"));
     var xhr = new XMLHttpRequest();
     xhr.open("POST", endpoint, true);
     xhr.onerror = function(err) {
-        //callback(true, err);
         doCallback(callback, [ new UsergridError("The File APIs are not fully supported by your browser.") ], xhr, self);
     };
     xhr.onload = function(ev) {
@@ -3242,30 +2983,10 @@ Usergrid.Asset.prototype.download = function(callback) {
     xhr.send();
 };
 
-/*
- *Licensed to the Apache Software Foundation (ASF) under one
- *or more contributor license agreements.  See the NOTICE file
- *distributed with this work for additional information
- *regarding copyright ownership.  The ASF licenses this file
- *to you under the Apache License, Version 2.0 (the
- *"License"); you may not use this file except in compliance
- *with the License.  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
-
- *Unless required by applicable law or agreed to in writing,
- *software distributed under the License is distributed on an
- *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *KIND, either express or implied.  See the License for the
- *specific language governing permissions and limitations
- *under the License.
- */
-//noinspection ThisExpressionReferencesGlobalObjectJS
 /**
  * Created by ryan bridges on 2014-02-05.
  */
 (function(global) {
-    //noinspection JSUnusedAssignment
     var name = "UsergridError", short, _name = global[name], _short = short && short !== undefined ? global[short] : undefined;
     /*
      *  Instantiates a new UsergridError
@@ -3370,7 +3091,6 @@ Usergrid.Asset.prototype.download = function(callback) {
     global.UsergridKeystoreDatabaseUpgradeNeededError = UsergridKeystoreDatabaseUpgradeNeededError;
     global[name] = UsergridError;
     if (short !== undefined) {
-        //noinspection JSUnusedAssignment
         global[short] = UsergridError;
     }
     global[name].noConflict = function() {
