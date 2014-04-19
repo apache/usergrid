@@ -27,6 +27,7 @@ import org.apache.usergrid.management.EmailFlowIT;
 import org.apache.usergrid.management.OrganizationIT;
 import org.apache.usergrid.management.RoleIT;
 import org.apache.usergrid.management.cassandra.ApplicationCreatorIT;
+import org.apache.usergrid.management.cassandra.ExportServiceIT;
 import org.apache.usergrid.management.cassandra.ManagementServiceIT;
 import org.apache.usergrid.security.providers.FacebookProviderIT;
 import org.apache.usergrid.security.providers.PingIdentityProviderIT;
@@ -47,7 +48,7 @@ import org.apache.usergrid.services.UsersServiceIT;
 @Suite.SuiteClasses(
         {
                 ActivitiesServiceIT.class, ApplicationCreatorIT.class, ApplicationsServiceIT.class,
-                CollectionServiceIT.class, ConnectionsServiceIT.class, ManagementServiceIT.class, EmailFlowIT.class,
+                CollectionServiceIT.class, ConnectionsServiceIT.class, ManagementServiceIT.class, ExportServiceIT.class ,EmailFlowIT.class,
                 FacebookProviderIT.class, GroupServiceIT.class, OrganizationIT.class, PingIdentityProviderIT.class,
                 RolesServiceIT.class, RoleIT.class, ServiceRequestIT.class, ServiceFactoryIT.class,
                 ServiceInvocationIT.class, TokenServiceIT.class, UsersServiceIT.class

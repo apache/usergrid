@@ -1,3 +1,21 @@
+/**
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ */
 var bower = require('./bower.json');
 
 var distPath = 'dist/'+bower.name,
@@ -8,8 +26,25 @@ var distPath = 'dist/'+bower.name,
   coverageFile = 'test/coverage/instrument/js/usergrid-coverage.min.js',
   mainFile = 'js/usergrid.min.js',
   templateFile = 'js/templates.js',
-  distName = bower.name
-  ;
+  distName = bower.name,
+  licenseHeader =' /**\n \
+ Licensed to the Apache Software Foundation (ASF) under one\n \
+ or more contributor license agreements.  See the NOTICE file\n \
+ distributed with this work for additional information \n \
+ regarding copyright ownership.  The ASF licenses this file \n\
+ to you under the Apache License, Version 2.0 (the \n \
+ "License"); you may not use this file except in compliance \n \
+ with the License.  You may obtain a copy of the License at \n \
+  \n \
+ http://www.apache.org/licenses/LICENSE-2.0 \n \
+  \n \
+ Unless required by applicable law or agreed to in writing,\n \
+ software distributed under the License is distributed on an\n \
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY\n \
+ KIND, either express or implied.  See the License for the\n \
+ specific language governing permissions and limitations\n \
+ under the License.\n \
+ */\n';
 console.warn('to run e2e tests you need to have a running instance of webdriver, 1) npm install protractor -g -> 2) webdriver-manager start --standalone');
 module.exports = function (grunt) {
 
@@ -20,7 +55,7 @@ module.exports = function (grunt) {
 
     uglify: {
       options: {
-        banner: '/*! <%= pkg.name %>@<%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        banner: licenseHeader + '\n /*! <%= pkg.name %>@<%= pkg.version %>  */\n'
       },
       'usergrid-libs':{
         options: {
@@ -45,8 +80,8 @@ module.exports = function (grunt) {
             'js/libs/ui-bootstrap/ui-bootstrap-custom-tpls-0.3.0.min.js',
             'js/libs/jqueryui/jquery-ui-1.8.18.min.js',
             'js/libs/jqueryui/date.min.js',
-            'bower_components/angular-intro.js/angular-intro.js',
-            'bower_components/intro.js/minified/intro.min.js'
+            'bower_components/intro.js/minified/intro.min.js',
+            'bower_components/angular-intro.js/src/angular-intro.js',
           ]
         }
       },
@@ -296,7 +331,7 @@ module.exports = function (grunt) {
       }
     },
     clean: {
-        build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile],
+        build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile,'index.html','index-debug.html'],
         coverage: ['reports/']
     },
     dom_munger: {
@@ -403,7 +438,7 @@ module.exports = function (grunt) {
   grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','karma:unit']);
   grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
 
-  grunt.registerTask('default', ['build','karma:unit']);
+  grunt.registerTask('default', ['build']);
 
   grunt.registerTask('e2e', ['connect:e2e-phantom','protractor:phantom']);
   grunt.registerTask('e2e-chrome', ['connect:e2e-chrome','protractor:chrome']);

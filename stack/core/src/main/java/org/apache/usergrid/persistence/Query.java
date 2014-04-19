@@ -371,12 +371,6 @@ public class Query {
             return false;
         }
         for ( Identifier identifier : identifiers ) {
-        	
-        	//part of fix for the bug USERGRID-22 (to prevent a null pointer exception).
-        	if ( identifier == null ){ 
-        		return false; 
-        	}
-        	
             if ( !identifier.isEmail() && !identifier.isName() ) {
                 return false;
             }
@@ -419,12 +413,6 @@ public class Query {
         }
 
         for ( Identifier identifier : identifiers ) {
-        	
-        	//part of fix for the bug USERGRID-22 (to prevent a null pointer exception).
-        	if ( identifier == null ){ 
-        		return true; 
-        	}
-        	
             if ( !identifier.isUUID() ) {
                 return false;
             }
@@ -454,11 +442,6 @@ public class Query {
         if ( !containsSingleUuidIdentifier() ) {
             return null;
         }
-        //part of fix for the bug USERGRID-22 (to prevent a null pointer exception).
-        if( identifiers.get( 0 ) == null ){ 
-        	return null; 
-        }
-        
         return ( identifiers.get( 0 ).getUUID() );
     }
 

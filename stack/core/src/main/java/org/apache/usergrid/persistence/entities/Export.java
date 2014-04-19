@@ -36,37 +36,14 @@ public class Export extends TypedEntity {
         CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
     }
 
-
     @EntityProperty
     protected State curState;
-
-    @EntityProperty
-    protected Long queued;
 
     /**
      * Time send started
      */
     @EntityProperty
     protected Long started;
-
-    /**
-     * Time processed
-     */
-    @EntityProperty
-    protected Long finished;
-
-
-    /**
-     * Time to expire the exportJob
-     */
-    @EntityProperty
-    protected Long expire;
-
-    /**
-     * True if exportJob is canceled
-     */
-    @EntityProperty
-    protected Boolean canceled;
 
     /**
      * Error message
@@ -78,12 +55,6 @@ public class Export extends TypedEntity {
     public Export() {
     }
 
-
-    public boolean isExpired() {
-        return ( expire != null && expire > System.currentTimeMillis() );
-    }
-
-
     public Long getStarted() {
         return started;
     }
@@ -92,32 +63,6 @@ public class Export extends TypedEntity {
     public void setStarted( final Long started ) {
         this.started = started;
     }
-
-
-    public Long getFinished() {
-        return finished;
-    }
-
-
-    public void setFinished( final Long finished ) {
-        this.finished = finished;
-    }
-
-
-    public Long getExpire() {
-        return expire;
-    }
-
-
-    public void setExpire( final Long expire ) {
-        this.expire = expire;
-    }
-
-
-    public Boolean getCanceled() {
-        return canceled;
-    }
-
 
     //state should moved to a derived state, but it is not there yet.
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -131,12 +76,6 @@ public class Export extends TypedEntity {
     @EntityProperty
     public State getState() { return curState; }
 
-
-    public void setCanceled( final Boolean canceled ) {
-        this.canceled = canceled;
-    }
-
-
     public String getErrorMessage() {
         return errorMessage;
     }
@@ -146,13 +85,4 @@ public class Export extends TypedEntity {
         this.errorMessage = errorMessage;
     }
 
-
-    public Long getQueued() {
-        return queued;
-    }
-
-
-    public void setQueued( final Long queued ) {
-        this.queued = queued;
-    }
 }

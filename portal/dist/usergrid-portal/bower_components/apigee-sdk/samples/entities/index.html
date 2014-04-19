@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!-- APIGEE JavaScript SDK ENTITY EXAMPLE APP
+
+This sample app will show you how to perform basic entity operation using the Apigee JavaScript SDK, including:
+	
+	- creating an entity
+	- retrieving an entity
+	- updating/altering an entity
+	- deleting an entity
+
+This index.html is the UI for the app. To see the code that makes the actual API request, see index.js.
+
+** IMPORTANT - BEFORE YOU BEGIN **
+
+Be sure to include the Apigee JavaScript SDK (apigee.js) in this project. By default this app is set up to 
+include apigee.js from the /js directory. -->	      
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Apigee Entities Sample App</title>
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.css" />
+        <link rel="stylesheet" href="css/theme.min.css" />
+		<link rel="stylesheet" href="css/themes/jquery.mobile.icons.min.css" />
+        <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.1.1/jquery.mobile-1.1.1.min.js"></script>
+        
+        <!-- Include our API request functions from index.js and the SDK from apigee.js -->
+        <script src="js/index.js"></script>
+        <script src="../../apigee.js"></script>                
+        
+		<script>
+			$(document).ready( function(){				
+				$('#start-button').bind('click',promptClientCredsAndInitializeSDK);
+				$('#create-button').bind('click',function () {$('#result-text').empty(); createEntity();});
+				$('#add-button').bind('click',function () {$('#result-text').empty(); retrieveEntity();});
+				$('#retrieve-button').bind('click',function () {$('#result-text').empty(); updateEntity();});
+				$('#page-button').bind('click',function () {$('#result-text').empty(); deleteEntity();});
+	        });
+	    </script>
+    </head>
+    <body>        
+		<div data-role='page' data-theme='b'>
+			<div data-role='header' data-theme='b'><h3>Apigee Entity Sample App</h3></div>
+			<div data-role='content'>
+				<p>This sample app will show you how to perform basic operations on entities using the Apigee JavaScript SDK, including:</p>
+				<ul>	
+					<li>creating an entity</li>
+					<li>retrieving an entity</li>
+					<li>updating an entity</li>
+					<li>deleting an entity</li>	
+				</ul>
+				<p><strong>IMPORTANT - BEFORE YOU BEGIN</strong></p>					
+				<p>Be sure the Apigee JavaScript SDK (apigee.js) is properly included in this project.</p>
+				<p>See /samples/Readme.md for more information on including the SDK.</p>
+				<a href='#main-page' id='start-button' data-role='button' data-inline='true'>Start</a>
+			</div>
+		</div>
+		<div id='main-page' data-role='page' data-theme='b'>
+			<div data-role='header' data-theme='b'><h3>Apigee Entity Sample App</h3></div>
+			<div data-role='content'>
+				<p>This app show the basics of working with entities using the Apigee JavaScript SDK. Click each button to execute an API call and see its response. For this app to work properly you must run the create step first.</p>
+				<p>To view the code and more detailed comments on how this app operates, open js/index.js.</p>
+				<ol>
+					<li><strong>Create a 'book' entity</strong><br />
+						This creates a new entity of type 'book'. The entity is automatically added to the 'books' collection. If you don't have a 'books' collection, it will automatically be created for you when the entity is created.<br />
+						<a href='#result-page' data-transition='slide' id='create-button' data-role='button' data-inline='true'>Create</a></li>
+					<li><strong>Retrieve an entity</strong><br />
+						Next we retrieve the entity.<br />
+						<a href='#result-page' data-transition='slide' id='add-button' data-role='button' data-inline='true'>Retrieve</a></li>
+					<li><strong>Update an entity</strong><br />
+						Let's update our entity by adding some additional properties. This will add a 'price' and 'available' property to our book entity<br />
+						<a href='#result-page' data-transition='slide' id='retrieve-button' data-role='button' data-inline='true'>Update</a></li>
+					<li><strong>Delete an entity</strong><br />
+						Last, we delete our entity.<br />
+						<a href='#result-page' data-transition='slide' id='page-button' data-role='button' data-inline='true'>Delete</a></li>
+				</ol>
+			</div>			
+		</div>
+		<div id='result-page' data-role='page' data-theme='b'>
+			<div data-role='header' data-theme='b'><h3>Apigee Entity Sample App</h3></div>
+			<a href='#main-page' data-transition='slide' id='back-button' data-role='button' data-inline='true' class='ui-btn-right'>Back</a>
+			<div id='result-text' data-role='content'></div>
+		</div>
+    </body>
+</html>

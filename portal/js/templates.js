@@ -188,7 +188,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\tApigeeClient apigeeClient = new ApigeeClient(ORGNAME,APPNAME,this.getBaseContext());\n" +
     "\n" +
     "\t// hold onto the ApigeeClient instance in our application object.\n" +
-    "\tyourApp = (YourApplication) getApplication;\n" +
+    "\tYourApplication yourApp = (YourApplication) getApplication;\n" +
     "\tyourApp.setApigeeClient(apigeeClient);\t\t\t\n" +
     "}\n" +
     "\t\t</pre>\n" +
@@ -720,11 +720,14 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "    </fieldset>\n" +
     "  </bsmodal>\n" +
     "\n" +
-    "  <page-title title=\" Collections\" icon=\"&#128254;\"></page-title>\n" +
+    "  <div id=\"intro-page\">    \n" +
+    "    <page-title title=\" Collections\" icon=\"&#128254;\"></page-title>\n" +
+    "  </div>\n" +
     "\n" +
     "  <section class=\"row-fluid\">\n" +
-    "    <div class=\"span3 user-col\">\n" +
-    "        <a class=\"btn btn-primary\" id=\"new-collection-link\" ng-click=\"showModal('newCollection')\">New Collection</a>\n" +
+    "    <div id=\"intro-list\" class=\"span3 user-col\">\n" +
+    "      <a class=\"btn btn-primary\" id=\"new-collection-link\" ng-click=\"showModal('newCollection')\">New Collection</a>\n" +
+    "      <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('data new collection')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_new_collection}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "        <ul  class=\"user-list\">\n" +
     "          <li ng-class=\"queryCollection._type === entity.name ? 'selected' : ''\" ng-repeat=\"entity in collectionList\" ng-click=\"loadCollection('/'+entity.name);\">\n" +
     "            <a id=\"collection-{{entity.name}}-link\" href=\"javaScript:void(0)\">/{{entity.name}} </a>\n" +
@@ -735,7 +738,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "    <div class=\"span9 tab-content\">\n" +
     "      <div class=\"content-page\">\n" +
-    "      <form name=\"dataForm\" ng-submit=\"run();\">\n" +
+    "        <form id=\"intro-collection-query\" name=\"dataForm\" ng-submit=\"run();\">\n" +
     "        <fieldset>\n" +
     "          <div class=\"control-group\">\n" +
     "            <div class=\"\" data-toggle=\"buttons-radio\">\n" +
@@ -745,7 +748,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "              <input type=\"radio\" id=\"create-rb\" name=\"query-action\" style=\"margin-top: -2px;\" ng-click=\"selectPOST();\" ng-checked=\"verb=='POST'\"> CREATE &nbsp; &nbsp;\n" +
     "              <input type=\"radio\" id=\"read-rb\" name=\"query-action\" style=\"margin-top: -2px;\" ng-click=\"selectGET();\" ng-checked=\"verb=='GET'\"> READ &nbsp; &nbsp;\n" +
     "              <input type=\"radio\" id=\"update-rb\" name=\"query-action\" style=\"margin-top: -2px;\" ng-click=\"selectPUT();\" ng-checked=\"verb=='PUT'\"> UPDATE &nbsp; &nbsp;\n" +
-    "              <input type=\"radio\" id=\"delete-rb\" name=\"query-action\" style=\"margin-top: -2px;\" ng-click=\"selectDELETE();\" ng-checked=\"verb=='DELETE'\"> DELETE\n" +
+    "                <input type=\"radio\" id=\"delete-rb\" name=\"query-action\" style=\"margin-top: -2px;\" ng-click=\"selectDELETE();\" ng-checked=\"verb=='DELETE'\"> DELETE             <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('data query verbs')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_verb_buttons}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "            </div>\n" +
     "          </div>\n" +
     "\n" +
@@ -753,6 +756,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "            <strong>Path </strong>\n" +
     "            <div class=\"controls\">\n" +
     "              <input ng-model=\"data.queryPath\" type=\"text\" ug-validate id=\"pathDataQuery\" ng-attr-title=\"{{pathRegexDescription}}\" ng-pattern=\"pathRegex\" class=\"span6\" autocomplete=\"off\" placeholder=\"ex: /users\" required/>\n" +
+    "              <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('data query path')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_path_box}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "            </div>\n" +
     "          </div>\n" +
     "          <div class=\"control-group\">\n" +
@@ -762,6 +766,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "            <strong>Query</strong>\n" +
     "            <div class=\"controls\">\n" +
     "              <input ng-model=\"data.searchString\" type=\"text\" class=\"span6\" autocomplete=\"off\" placeholder=\"ex: select * where name='fred'\"/>\n" +
+    "              <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('data query string')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_query_box}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "              <div style=\"display:none\">\n" +
     "                <a class=\"btn dropdown-toggle \" data-toggle=\"dropdown\">\n" +
     "                  <span id=\"query-collections-caret\" class=\"caret\"></span>\n" +
@@ -774,7 +779,8 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "\n" +
     "          <div class=\"control-group\" ng-show=\"verb=='GET' || verb=='DELETE'\">\n" +
-    "            <label class=\"control-label\" for=\"query-limit\"><strong>Limit</strong> <a id=\"query-limit-help\" href=\"#\" ng-show=\"false\" class=\"help-link\">get help</a></label>\n" +
+    "            <label class=\"control-label\" for=\"query-limit\"><strong>Limit</strong>\n" +
+    "              <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('data limit')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_limit}}\" tooltip-placement=\"right\">(?)</a><a id=\"query-limit-help\" href=\"#\" ng-show=\"false\" class=\"help-link\">get help</a></label>\n" +
     "            <div class=\"controls\">\n" +
     "              <div class=\"input-append\">\n" +
     "                <input ng-model=\"data.queryLimit\" type=\"text\" class=\"span5\" id=\"query-limit\" placeholder=\"ex: 10\">\n" +
@@ -783,33 +789,35 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "          </div>\n" +
     "\n" +
     "          <div class=\"control-group\" style=\"display:{{queryBodyDisplay}}\">\n" +
-    "            <label class=\"control-label\" for=\"query-source\"><strong>JSON Body</strong> <a id=\"query-json-help\" href=\"#\" ng-show=\"false\" class=\"help-link\">get help</a></label>\n" +
+    "            <label class=\"control-label\" for=\"query-source\"><strong>JSON Body</strong>\n" +
+    "              <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('data json body')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_json_body}}\" tooltip-placement=\"right\">(?)</a> <a id=\"query-json-help\" href=\"#\" ng-show=\"false\" class=\"help-link\">get help</a></label>\n" +
     "            <div class=\"controls\">\n" +
     "            <textarea ng-model=\"data.queryBody\" id=\"query-source\" class=\"span6 pull-left\" rows=\"4\">\n" +
     "      { \"name\":\"value\" }\n" +
     "            </textarea>\n" +
     "              <br>\n" +
     "            <a class=\"btn pull-left\" ng-click=\"validateJson();\">Validate JSON</a>\n" +
+    "                <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('data validate json')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_json_validate}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "            </div>\n" +
     "          </div>\n" +
     "          <div style=\"clear: both; height: 10px;\"></div>\n" +
     "          <div class=\"control-group\">\n" +
     "            <input type=\"submit\" ng-disabled=\"!dataForm.$valid || loading\" class=\"btn btn-primary\" id=\"button-query\"  value=\"{{loading ? loadingText : 'Run Query'}}\"/>\n" +
+    "            <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('data run query')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_run_query}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "          </div>\n" +
     "        </fieldset>\n" +
     "       </form>\n" +
-    "        <div ng-include=\"display=='generic' ? 'data/display-generic.html' : ''\"></div>\n" +
-    "        <div ng-include=\"display=='users' ? 'data/display-users.html' : ''\"></div>\n" +
-    "        <div ng-include=\"display=='groups' ? 'data/display-groups.html' : ''\"></div>\n" +
-    "        <div ng-include=\"display=='roles' ? 'data/display-roles.html' : ''\"></div>\n" +
+    "        <div id=\"intro-entity-list\">\n" +
+    "          <div ng-include=\"display=='generic' ? 'data/display-generic.html' : ''\"></div>\n" +
+    "          <div ng-include=\"display=='users' ? 'data/display-users.html' : ''\"></div>\n" +
+    "          <div ng-include=\"display=='groups' ? 'data/display-groups.html' : ''\"></div>\n" +
+    "          <div ng-include=\"display=='roles' ? 'data/display-roles.html' : ''\"></div>\n" +
+    "        </div>\n" +
     "\n" +
     "      </div>\n" +
     "\n" +
     "      </div>\n" +
     "    </section>\n" +
-    "\n" +
-    "\n" +
-    "\n" +
     "\n" +
     "</div>\n" +
     "\n"
@@ -833,7 +841,8 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "    </fieldset>\n" +
     "</bsmodal>\n" +
     "\n" +
-    "<span  class=\"button-strip\">\n" +
+    "<span class=\"button-strip\">\n" +
+    "  <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('data entities list')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_entities_list}}\" tooltip-placement=\"left\">(?)</a>\n" +
     "  <button class=\"btn btn-primary\" ng-disabled=\"!valueSelected(queryCollection._list) || deleteLoading\" ng-click=\"deleteEntitiesDialog()\">{{deleteLoading ? loadingText : 'Delete Entity(s)'}}</button>\n" +
     "</span>\n" +
     "<table class=\"table table-striped collection-list\">\n" +
@@ -892,7 +901,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "      </ul>\n" +
     "\n" +
     "    <div class=\"control-group\">\n" +
-    "      <h4 style=\"margin: 20px 0 20px 0\">Edit Entity</h4>\n" +
+    "      <h4 style=\"margin: 20px 0 20px 0\">Edit Entity <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('data edit entity')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_edit_entity}}\" tooltip-placement=\"right\">(?)</a></h4>\n" +
     "      <div class=\"controls\">\n" +
     "        <textarea ng-model=\"entity._json\" class=\"span12\" rows=\"12\"></textarea>\n" +
     "        <br>\n" +
@@ -1052,26 +1061,6 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
   );
 
 
-  $templateCache.put('data/shell.html',
-    "<div class=\"content-page\">\n" +
-    "  <div class=\"well\">\n" +
-    "    <h2>Interactive Shell</h2>\n" +
-    "    <div style=\"float:right\"><a target=\"_blank\" href=\"http://apigee.com/docs/usergrid/content/usergrid-admin-portal\" class=\"notifications-links\">Learn more in our docs</a></div>\n" +
-    "  </div>\n" +
-    "\n" +
-    "  <div class=\"console-section-contents\">\n" +
-    "    <div id=\"shell-input-div\">\n" +
-    "      <p>   Type \"help\" to view a list of the available commands.</p><hr>\n" +
-    "      <span>&nbsp;&gt;&gt; </span>\n" +
-    "      <!--textarea id=\"shell-input\" rows=\"2\" autofocus=\"autofocus\"></textarea-->\n" +
-    "    </div>\n" +
-    "    <pre id=\"shell-output\" class=\"prettyprint lang-js\" style=\"overflow-x: auto; height: 400px;\"><span class=\"pln\">                      </span><p><span class=\"pln\">  </span><span class=\"typ\">Response</span><span class=\"pun\">:</span></p><hr><span class=\"pln\">\n" +
-    "    </span></pre>\n" +
-    "  </div>\n" +
-    "</div>"
-  );
-
-
   $templateCache.put('dialogs/modal.html',
     "    <div class=\"modal show fade\" tabindex=\"-1\" role=\"dialog\" aria-hidden=\"true\">\n" +
     "        <form ng-submit=\"extraDelegate(extrabutton)\" name=\"dialogForm\" novalidate>\n" +
@@ -1199,9 +1188,11 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "              <h4 class=\"ui-dform-legend\">Group Information</h4>\n" +
     "              <label for=\"group-title\" class=\"ui-dform-label\">Group Title</label>\n" +
     "              <input type=\"text\" id=\"group-title\" ng-pattern=\"titleRegex\" ng-attr-title=\"{{titleRegexDescription}}\" required class=\"ui-dform-text\" ng-model=\"group.title\" ug-validate>\n" +
+    "                  <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('group title box')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_details_title}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "              <br/>\n" +
     "            <label for=\"group-path\" class=\"ui-dform-label\">Group Path</label>\n" +
     "            <input type=\"text\" id=\"group-path\" required ng-attr-title=\"{{pathRegexDescription}}\" placeholder=\"ex: /mydata\" ng-pattern=\"pathRegex\" class=\"ui-dform-text\" ng-model=\"group.path\" ug-validate>\n" +
+    "                <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('group path box')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_details_path}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "            <br/>\n" +
     "          </div>\n" +
     "          <br style=\"clear:both\"/>\n" +
@@ -1211,8 +1202,8 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "          </div>\n" +
     "\n" +
     "          <div class=\"content-container\">\n" +
-    "              <h4>JSON Group Object</h4>\n" +
-    "              <pre>{{json}}</pre>\n" +
+    "              <h4>JSON Group Object <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('group json object')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_json_object}}\" tooltip-placement=\"right\">(?)</a></h4>\n" +
+    "              <pre id=\"{{help.showJsonId}}\">{{json}}</pre>\n" +
     "          </div>\n" +
     "      </form>\n" +
     "  </div>\n" +
@@ -1256,6 +1247,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "\n" +
     "  <div class=\"button-strip\">\n" +
+    "    <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('group add user button')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_users_add_user}}\" tooltip-placement=\"left\">(?)</a>\n" +
     "    <button class=\"btn btn-primary\"  ng-click=\"showModal('addGroupToUser')\">Add User to Group</button>\n" +
     "    <button class=\"btn btn-primary\" ng-disabled=\"!hasMembers || !valueSelected(groupsCollection.users._list)\" ng-click=\"showModal('removeFromGroup')\">Remove User(s) from Group</button>\n" +
     "  </div>\n" +
@@ -1319,10 +1311,11 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "\n" +
     "  <div class=\"button-strip\">\n" +
+    "    <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('groups roles add role button')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_roles_add_leave_role}}\" tooltip-placement=\"left\">(?)</a>\n" +
     "    <button class=\"btn btn-primary\" ng-click=\"showModal('addGroupToRole')\">Add Role to Group</button>\n" +
     "    <button class=\"btn btn-primary\" ng-disabled=\"!hasRoles || !valueSelected(groupsCollection.roles._list)\" ng-click=\"showModal('leaveRoleFromGroup')\">Remove Role(s) from Group</button>\n" +
     "  </div>\n" +
-    "  <h4>Roles</h4>\n" +
+    "  <h4>Roles <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('groups roles roles list')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_roles_roles}}\" tooltip-placement=\"top\">(?)</a></h4>\n" +
     "  <table class=\"table table-striped\">\n" +
     "    <tbody>\n" +
     "    <tr class=\"table-header\">\n" +
@@ -1366,9 +1359,9 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "           extrabutton=\"addGroupPermissionDialog\"\n" +
     "           extrabuttonlabel=\"Add\"\n" +
     "           ng-cloak>\n" +
-    "    <p>Path: <input ng-model=\"$parent.permissions.path\" placeholder=\"ex: /mydata\" id=\"groupsrolespermissions\" type=\"text\" ng-pattern=\"pathRegex\" ng-attr-title=\"{{pathRegexDescription}}\" required ug-validate  /></p>\n" +
+    "    <p>Path: <input ng-model=\"$parent.permissions.path\" placeholder=\"ex: /mydata\" id=\"groupsrolespermissions\" type=\"text\" ng-pattern=\"pathRegex\" ng-attr-title=\"{{pathRegexDescription}}\" required ug-validate  /> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles new permission path box')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_roles_new_permission_path}}\" tooltip-placement=\"right\">(?)</a></p>\n" +
     "    <div class=\"control-group\">\n" +
-    "      <input type=\"checkbox\" ng-model=\"$parent.permissions.getPerm\"> GET\n" +
+    "      <input type=\"checkbox\" ng-model=\"$parent.permissions.getPerm\"> GET <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles add permission button')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_roles_new_permission_verbs}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "    </div>\n" +
     "    <div class=\"control-group\">\n" +
     "      <input type=\"checkbox\" ng-model=\"$parent.permissions.postPerm\"> POST\n" +
@@ -1383,10 +1376,12 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "\n" +
     "  <div class=\"button-strip\">\n" +
+    "    <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('groups roles add permission button')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_roles_add_delete_permission}}\" tooltip-placement=\"left\">(?)</a>\n" +
     "    <button class=\"btn btn-primary\" ng-click=\"showModal('addPermission')\">Add Permission</button>\n" +
     "    <button class=\"btn btn-primary\" ng-disabled=\"!hasPermissions || !valueSelected(selectedGroup.permissions)\" ng-click=\"showModal('deletePermission')\">Delete Permission(s)</button>\n" +
     "  </div>\n" +
-    "  <h4>Permissions</h4>\n" +
+    "  <h4>Permissions <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('groups roles permissions list')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_roles_permissions}}\" tooltip-placement=\"top\">(?)</a>\n" +
+    "  </h4>\n" +
     "  <table class=\"table table-striped\">\n" +
     "    <tbody>\n" +
     "    <tr class=\"table-header\">\n" +
@@ -1455,7 +1450,10 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
   $templateCache.put('groups/groups.html',
     "<div class=\"content-page\">\n" +
     "\n" +
+    "  <div id=\"intro-page\" >\n" +
     "  <page-title title=\" Groups\" icon=\"&#128101;\"></page-title>\n" +
+    "    \n" +
+    "  </div>\n" +
     "  <bsmodal id=\"newGroup\"\n" +
     "           title=\"New Group\"\n" +
     "           close=\"hideModal\"\n" +
@@ -1469,12 +1467,14 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "        <label for=\"title\">Title</label>\n" +
     "        <div class=\"controls\">\n" +
     "          <input type=\"text\" id=\"title\" ng-pattern=\"titleRegex\" ng-attr-title=\"{{titleRegexDescription}}\" required ng-model=\"newGroup.title\"class=\"input-xlarge\" ug-validate/>\n" +
+    "          <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('group title box')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_details_title}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "        </div>\n" +
     "      </div>\n" +
     "      <div class=\"control-group\">\n" +
     "        <label for=\"path\">Path</label>\n" +
     "        <div class=\"controls\">\n" +
     "          <input id=\"path\" type=\"text\" ng-attr-title=\"{{pathRegexDescription}}\" placeholder=\"ex: /mydata\" ng-pattern=\"pathRegex\" required ng-model=\"newGroup.path\" class=\"input-xlarge\" ug-validate/>\n" +
+    "          <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('group path box')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_details_path}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "        </div>\n" +
     "      </div>\n" +
     "    </fieldset>\n" +
@@ -1492,12 +1492,12 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "\n" +
     "  <section class=\"row-fluid\">\n" +
-    "    <div class=\"span3 user-col\">\n" +
-    "\n" +
+    "    <div id=\"intro-list\" class=\"span3 user-col\">\n" +
     "      <div class=\"button-toolbar span12\">\n" +
     "        <a title=\"Select All\" class=\"btn btn-primary select-all toolbar\" ng-show=\"hasGroups\" ng-click=\"selectAllEntities(groupsCollection._list,this,'groupBoxesSelected',true)\"> <i class=\"pictogram\">&#8863;</i></a>\n" +
     "        <button title=\"Delete\" class=\"btn btn-primary toolbar\" ng-disabled=\"!hasGroups || !valueSelected(groupsCollection._list)\" ng-click=\"showModal('deleteGroup')\"><i class=\"pictogram\">&#9749;</i></button>\n" +
     "        <button title=\"Add\" class=\"btn btn-primary toolbar\" ng-click=\"showModal('newGroup')\"><i class=\"pictogram\">&#59136;</i></button>\n" +
+    "        <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users list')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_add_remove_buttons}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "      </div>\n" +
     "      <ul class=\"user-list\">\n" +
     "        <li ng-class=\"selectedGroup._data.uuid === group._data.uuid ? 'selected' : ''\" ng-repeat=\"group in groupsCollection._list\" ng-click=\"selectGroup(group._data.uuid)\">\n" +
@@ -1518,16 +1518,23 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "        <button class=\"btn btn-primary\" ng-click=\"getPrevious()\" style=\"display:{{previous_display}}\">< Previous</button>\n" +
     "        <button class=\"btn btn-primary\" ng-click=\"getNext()\" style=\"display:{{next_display}}; float:right;\">Next ></button>\n" +
     "      </div>\n" +
-    "\n" +
     "    </div>\n" +
     "\n" +
-    "    <div class=\"span9 tab-content\" ng-show=\"selectedGroup.get\" >\n" +
+    "    <div id=\"{{help.showTabsId}}\" class=\"span9 tab-content\" ng-show=\"selectedGroup.get\" >\n" +
     "      <div class=\"menu-toolbar\">\n" +
     "        <ul class=\"inline\" >\n" +
-    "          <li class=\"tab\" ng-class=\"currentGroupsPage.route === '/groups/details' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectGroupPage('/groups/details')\"><i class=\"pictogram\">&#59170;</i>Details</a></li>\n" +
-    "          <li class=\"tab\" ng-class=\"currentGroupsPage.route === '/groups/members' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectGroupPage('/groups/members')\"><i class=\"pictogram\">&#128101;</i>Users</a></li>\n" +
-    "          <li class=\"tab\" ng-class=\"currentGroupsPage.route === '/groups/activities' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectGroupPage('/groups/activities')\"><i class=\"pictogram\">&#59194;</i>Activities</a></li>\n" +
-    "          <li class=\"tab\" ng-class=\"currentGroupsPage.route === '/groups/roles' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectGroupPage('/groups/roles')\"><i class=\"pictogram\">&#127758;</i>Roles &amp; Permissions</a></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentGroupsPage.route === '/groups/details' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectGroupPage('/groups/details')\"><i class=\"pictogram\">&#59170;</i>Details</a>\n" +
+    "             <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('groups details tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_details_tab}}\" tooltip-placement=\"right\">(?)</a></div>\n" +
+    "          </li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentGroupsPage.route === '/groups/members' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectGroupPage('/groups/members')\"><i class=\"pictogram\">&#128101;</i>Users</a>\n" +
+    "             <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('groups users tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_users_tab}}\" tooltip-placement=\"right\">(?)</a></div>\n" +
+    "          </li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentGroupsPage.route === '/groups/activities' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectGroupPage('/groups/activities')\"><i class=\"pictogram\">&#59194;</i>Activities</a>\n" +
+    "             <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('groups activities tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_activities_tab}}\" tooltip-placement=\"right\">(?)</a></div>\n" +
+    "          </li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentGroupsPage.route === '/groups/roles' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectGroupPage('/groups/roles')\"><i class=\"pictogram\">&#127758;</i>Roles &amp; Permissions</a>\n" +
+    "             <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('groups role tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_roles_tab}}\" tooltip-placement=\"right\">(?)</a></div>\n" +
+    "          </li>\n" +
     "        </ul>\n" +
     "      </div>\n" +
     "      <span ng-include=\"currentGroupsPage.template\"></span>\n" +
@@ -1753,6 +1760,18 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "  </div>\n" +
     "\n" +
     "</div>\n"
+  );
+
+
+  $templateCache.put('menu.html',
+    "<ul class=\"nav nav-list\" menu=\"sideMenu\">\n" +
+    "    <li class=\"option {{item.active ? 'active' : ''}}\" ng-cloak=\"\" ng-repeat=\"item in menuItems\"><a data-ng-href=\"{{item.path}}\"><i class=\"pictogram\" ng-bind-html=\"item.pic\"></i>{{item.title}}</a>\n" +
+    "        <ul class=\"nav nav-list\" ng-if=\"item.items\">\n" +
+    "            <li ng-repeat=\"subItem in item.items\"><a data-ng-href=\"{{subItem.path}}\"><i class=\"pictogram sub\" ng-bind-html=\"subItem.pic\"></i>{{subItem.title}}</a>\n" +
+    "            </li>\n" +
+    "        </ul>\n" +
+    "    </li>\n" +
+    "</ul>"
   );
 
 
@@ -2142,6 +2161,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "  <div class=\"users-section\">\n" +
     "    <div class=\"button-strip\">\n" +
+    "      <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('group add user button')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_groups_add_group}}\" tooltip-placement=\"left\">(?)</a>\n" +
     "        <button class=\"btn btn-primary\" ng-click=\"showModal('addRoleToGroup')\">Add Group to Role</button>\n" +
     "        <button class=\"btn btn-primary\"  ng-disabled=\"!hasGroups || !valueSelected(rolesCollection.groups._list)\" ng-click=\"showModal('removeGroupFromRole')\">Remove Group(s) from Role</button>\n" +
     "    </div>\n" +
@@ -2191,9 +2211,9 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "           extrabutton=\"addRolePermissionDialog\"\n" +
     "           extrabuttonlabel=\"Add\"\n" +
     "           ng-cloak>\n" +
-    "    <p>Path: <input ng-model=\"$parent.permissions.path\" placeholder=\"ex: /mydata\" required ng-pattern=\"pathRegex\" ng-attr-title=\"{{pathRegexDescription}}\" ug-validate id=\"rolePermissionsPath\"/></p>\n" +
+    "    <p>Path: <input ng-model=\"$parent.permissions.path\" placeholder=\"ex: /mydata\" required ng-pattern=\"pathRegex\" ng-attr-title=\"{{pathRegexDescription}}\" ug-validate id=\"rolePermissionsPath\"/> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles new permission path box')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_roles_new_permission_path}}\" tooltip-placement=\"right\">(?)</a></p>\n" +
     "    <div class=\"control-group\">\n" +
-    "      <input type=\"checkbox\" ng-model=\"$parent.permissions.getPerm\"> GET\n" +
+    "      <input type=\"checkbox\" ng-model=\"$parent.permissions.getPerm\"> GET <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles add permission verbs')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_new_permission_verbs}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "    </div>\n" +
     "    <div class=\"control-group\">\n" +
     "      <input type=\"checkbox\" ng-model=\"$parent.permissions.postPerm\"> POST\n" +
@@ -2207,7 +2227,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "  </bsmodal>\n" +
     "\n" +
     "  <div>\n" +
-    "    <h4>Inactivity</h4>\n" +
+    "    <h4>Inactivity <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles inactivity')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_inactivity}}\" tooltip-placement=\"right\">(?)</a></h4>\n" +
     "    <div id=\"role-permissions\">\n" +
     "        <p>Integer only. 0 (zero) means no expiration.</p>\n" +
     "\n" +
@@ -2220,11 +2240,12 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "    <br/>\n" +
     "    <div class=\"button-strip\">\n" +
+    "      <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('roles details add permission button')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_add_delete_permission}}\" tooltip-placement=\"left\">(?)</a>\n" +
     "      <button class=\"btn btn-primary\" ng-click=\"showModal('addPermission')\">Add Permission</button>\n" +
     "      <button class=\"btn btn-primary\"  ng-disabled=\"!hasSettings || !valueSelected(role.permissions)\" ng-click=\"showModal('deletePermission')\">Delete Permission(s)</button>\n" +
     "    </div>\n" +
     "\n" +
-    "    <h4>Permissions</h4>\n" +
+    "    <h4>Permissions <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('roles settings permissions list')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_permissions}}\" tooltip-placement=\"top\">(?)</a></h4>\n" +
     "    <table class=\"table table-striped\">\n" +
     "      <tbody>\n" +
     "      <tr class=\"table-header\">\n" +
@@ -2261,7 +2282,8 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "    <div class=\"span12\">\n" +
     "      <div class=\"page-filters\">\n" +
-    "        <h1 class=\"title\" class=\"pull-left\"><i class=\"pictogram title\">&#59170;</i> Roles</h1>\n" +
+    "        <h1 class=\"title\" class=\"pull-left\"><i class=\"pictogram title\">&#59170;</i> Roles </h1>\n" +
+    "        <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('roles page title')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_page_title}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "      </div>\n" +
     "    </div>\n" +
     "\n" +
@@ -2321,6 +2343,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "  <div class=\"users-section\">\n" +
     "    <div class=\"button-strip\">\n" +
+    "      <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('roles add user button')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_users_add_user}}\" tooltip-placement=\"left\">(?)</a>\n" +
     "        <button class=\"btn btn-primary\" ng-click=\"showModal('addRoleToUser')\">Add User to Role</button>\n" +
     "        <button class=\"btn btn-primary\"  ng-disabled=\"!hasUsers || !valueSelected(rolesCollection.users._list)\" ng-click=\"showModal('removeFromRole')\">Remove User(s) from Role</button>\n" +
     "    </div>\n" +
@@ -2354,8 +2377,9 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
 
   $templateCache.put('roles/roles.html',
     "<div class=\"content-page\">\n" +
-    "\n" +
-    "  <page-title title=\" Roles\" icon=\"&#59170;\"></page-title>\n" +
+    "  <div id=\"intro-page\" >\n" +
+    "    <page-title title=\" Roles\" icon=\"&#59170;\"></page-title>\n" +
+    "  </div>\n" +
     "\n" +
     "  <bsmodal id=\"newRole\"\n" +
     "           title=\"New Role\"\n" +
@@ -2395,13 +2419,13 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "  </bsmodal>\n" +
     "\n" +
     "  <section class=\"row-fluid\">\n" +
-    "    <div class=\"span3 user-col\">\n" +
+    "    <div id=\"intro-list\" class=\"span3 user-col\">\n" +
     "\n" +
     "      <div class=\"button-toolbar span12\">\n" +
     "        <a title=\"Select All\" class=\"btn btn-primary select-all toolbar\" ng-show=\"hasRoles\" ng-click=\"selectAllEntities(rolesCollection._list,this,'rolesSelected',true)\"> <i class=\"pictogram\">&#8863;</i></a>\n" +
     "        <button id=\"delete-role-btn\" title=\"Delete\" class=\"btn btn-primary toolbar\"  ng-disabled=\"!hasRoles || !valueSelected(rolesCollection._list)\" ng-click=\"showModal('deleteRole')\"><i class=\"pictogram\">&#9749;</i></button>\n" +
     "        <button id=\"add-role-btn\" title=\"Add\" class=\"btn btn-primary toolbar\" ng-click=\"showModal('newRole')\"><i class=\"pictogram\">&#59136;</i></button>\n" +
-    "      </div>\n" +
+    "        <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users add remove buttons')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_add_remove_buttons}}\" tooltip-placement=\"right\">(?)</a>      </div>\n" +
     "\n" +
     "      <ul class=\"user-list\">\n" +
     "        <li ng-class=\"selectedRole._data.uuid === role._data.uuid ? 'selected' : ''\" ng-repeat=\"role in rolesCollection._list\" ng-click=\"selectRole(role._data.uuid)\">\n" +
@@ -2426,13 +2450,13 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "  </div>\n" +
     "\n" +
     "    </div>\n" +
-    "\n" +
-    "    <div class=\"span9 tab-content\" ng-show=\"hasRoles\">\n" +
+    "    \n" +
+    "    <div id=\"intro-information-tabs\" class=\"span9 tab-content\" ng-show=\"hasRoles\">\n" +
     "      <div class=\"menu-toolbar\">\n" +
     "        <ul class=\"inline\">\n" +
-    "          <li class=\"tab\" ng-class=\"currentRolesPage.route === '/roles/settings' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectRolePage('/roles/settings')\"><i class=\"pictogram\">&#59170;</i>Settings</a></li>\n" +
-    "          <li class=\"tab\" ng-class=\"currentRolesPage.route === '/roles/users' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectRolePage('/roles/users')\"><i class=\"pictogram\">&#128101;</i>Users</a></li>\n" +
-    "          <li class=\"tab\" ng-class=\"currentRolesPage.route === '/roles/groups' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectRolePage('/roles/groups')\"><i class=\"pictogram\">&#59194;</i>Groups</a></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentRolesPage.route === '/roles/settings' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectRolePage('/roles/settings')\"><i class=\"pictogram\">&#59170;</i>Settings</a> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('roles settings tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_settings_tab}}\" tooltip-placement=\"right\">(?)</a></div></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentRolesPage.route === '/roles/users' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectRolePage('/roles/users')\"><i class=\"pictogram\">&#128101;</i>Users</a> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('roles users tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_users_tab}}\" tooltip-placement=\"right\">(?)</a></div></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentRolesPage.route === '/roles/groups' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectRolePage('/roles/groups')\"><i class=\"pictogram\">&#59194;</i>Groups</a> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('roles groups tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_groups_tab}}\" tooltip-placement=\"right\">(?)</a></div></li>\n" +
     "        </ul>\n" +
     "      </div>\n" +
     "      <span ng-include=\"currentRolesPage.template\"></span>\n" +
@@ -2477,13 +2501,13 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "           extrabutton=\"addActivityToUserDialog\"\n" +
     "           extrabuttonlabel=\"Add\"\n" +
     "           ng-cloak>\n" +
-    "      <p>Content: <input id=\"activityMessage\" ng-model=\"$parent.newActivity.activityToAdd\" required name=\"activityMessage\" ug-validate /></p>\n" +
+    "    <p>Content: <input id=\"activityMessage\" ng-model=\"$parent.newActivity.activityToAdd\" required name=\"activityMessage\" ug-validate /> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users add activity content')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_activities_add_activity_content}}\" tooltip-placement=\"right\">(?)</a></p>\n" +
     "  </bsmodal>\n" +
     "\n" +
     "\n" +
     "  <div ng:include=\"'users/users-tabs.html'\"></div>\n" +
     "  <br>\n" +
-    "  <div class=\"button-strip\">\n" +
+    "    <div class=\"button-strip\"><a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users add activity button')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_activities_add_activity}}\" tooltip-placement=\"left\">(?)</a> \n" +
     "    <button class=\"btn btn-primary\" ng-click=\"showModal('addActivityToUser')\">Add activity to user</button>\n" +
     "  </div>\n" +
     "  <div>\n" +
@@ -2568,10 +2592,11 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "\n" +
     "    <div class=\"button-strip\">\n" +
+    "      <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users follow user')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_graph_follow_user}}\" tooltip-placement=\"left\">(?)</a> \n" +
     "      <button class=\"btn btn-primary\" ng-click=\"showModal('followUser')\">Follow User</button>\n" +
     "    </div>\n" +
     "    <br>\n" +
-    "    <h4>Following</h4>\n" +
+    "      <h4>Following <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users following list')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_graph_following}}\" tooltip-placement=\"right\">(?)</a></h4>\n" +
     "    <table class=\"table table-striped\">\n" +
     "      <tbody>\n" +
     "      <tr class=\"table-header\">\n" +
@@ -2589,7 +2614,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "      </tbody>\n" +
     "    </table>\n" +
     "\n" +
-    "    <h4>Followers</h4>\n" +
+    "      <h4>Followers <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users followers list')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_graph_followers}}\" tooltip-placement=\"right\">(?)</a></h4>\n" +
     "    <table class=\"table table-striped\">\n" +
     "      <tbody>\n" +
     "      <tr class=\"table-header\">\n" +
@@ -2648,6 +2673,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "    </bsmodal>\n" +
     "\n" +
     "    <div class=\"button-strip\">\n" +
+    "      <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users add leave group buttons')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_add_leave_buttons}}\" tooltip-placement=\"left\">(?)</a>\n" +
     "      <button class=\"btn btn-primary\" ng-click=\"showModal('addUserToGroup')\">Add to group</button>\n" +
     "      <button class=\"btn btn-primary\" ng-disabled=\"!hasGroups || !valueSelected(userGroupsCollection._list)\" ng-click=\"showModal('leaveGroup')\">Leave group(s)</button>\n" +
     "    </div>\n" +
@@ -2657,7 +2683,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "        <td>\n" +
     "          <input type=\"checkbox\" ng-show=\"hasGroups\" id=\"selectAllCheckBox\" ng-model=\"userGroupsSelected\" ng-click=\"selectAllEntities(userGroupsCollection._list,this,'userGroupsSelected')\" >\n" +
     "        </td>\n" +
-    "        <td>Group Name</td>\n" +
+    "        <td>Group Name <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('add user group list')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_group_name}}\" tooltip-placement=\"top\">(?)</a></td>\n" +
     "        <td>Path</td>\n" +
     "      </tr>\n" +
     "      <tr class=\"zebraRows\" ng-repeat=\"group in userGroupsCollection._list\">\n" +
@@ -2692,7 +2718,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "  <form ng-submit=\"saveSelectedUser()\" name=\"profileForm\" novalidate>\n" +
     "    <div class=\"span6\">\n" +
-    "      <h4>User Information</h4>\n" +
+    "      <h4>User Information <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users profile information')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_profile_information}}\" tooltip-placement=\"top\">(?)</a></h4>\n" +
     "      <label for=\"ui-form-username\" class=\"ui-dform-label\">Username</label>\n" +
     "      <input type=\"text\" ug-validate required  name=\"ui-form-username\" ng-pattern=\"usernameRegex\" ng-attr-title=\"{{usernameRegexDescription}}\" id=\"ui-form-username\" class=\"ui-dform-text\" ng-model=\"user.username\">\n" +
     "      <br/>\n" +
@@ -2746,12 +2772,11 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "\n" +
     "    <div class=\"content-container\">\n" +
-    "      <legend>JSON User Object</legend>\n" +
-    "      <pre>{{user.json}}</pre>\n" +
+    "      <legend>JSON User Object <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users profile json')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_profile_json}}\" tooltip-placement=\"top\">(?)</a></legend>\n" +
+    "      <pre id=\"{{help.usersJsonId}}\">{{user.json}}</pre>\n" +
     "    </div>\n" +
     "    </form>\n" +
     "  </div>\n" +
-    "\n" +
     "\n" +
     "</div>\n"
   );
@@ -2794,12 +2819,13 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "<div ng-controller=\"UsersRolesCtrl\">\n" +
     "\n" +
-    "    <div class=\"button-strip\">\n" +
+    "<div class=\"button-strip\">\n" +
+    "  <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles add role button')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_add_leave_role}}\" tooltip-placement=\"left\">(?)</a>\n" +
     "      <button class=\"btn btn-primary\" ng-click=\"showModal('addRole')\">Add Role</button>\n" +
     "      <button class=\"btn btn-primary\" ng-disabled=\"!hasRoles || !valueSelected(selectedUser.roles)\" ng-click=\"showModal('leaveRole')\">Leave role(s)</button>\n" +
     "    </div>\n" +
     "    <br>\n" +
-    "    <h4>Roles</h4>\n" +
+    "      <h4>Roles <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles roles list')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_roles}}\" tooltip-placement=\"top\">(?)</a></h4>\n" +
     "    <table class=\"table table-striped\">\n" +
     "      <tbody>\n" +
     "      <tr class=\"table-header\">\n" +
@@ -2837,9 +2863,9 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "             extrabutton=\"addUserPermissionDialog\"\n" +
     "             extrabuttonlabel=\"Add\"\n" +
     "             ng-cloak>\n" +
-    "      <p>Path: <input ng-model=\"$parent.permissions.path\" placeholder=\"ex: /mydata\" id=\"usersRolePermissions\" type=\"text\" ng-pattern=\"pathRegex\" required ug-validate ng-attr-title=\"{{pathRegexDescription}}\" /></p>\n" +
+    "      <p>Path: <input ng-model=\"$parent.permissions.path\" placeholder=\"ex: /mydata\" id=\"usersRolePermissions\" type=\"text\" ng-pattern=\"pathRegex\" required ug-validate ng-attr-title=\"{{pathRegexDescription}}\" /> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles new permission path box')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_new_permission_path}}\" tooltip-placement=\"right\">(?)</a></p>\n" +
     "      <div class=\"control-group\">\n" +
-    "        <input type=\"checkbox\" ng-model=\"$parent.permissions.getPerm\"> GET\n" +
+    "        <input type=\"checkbox\" ng-model=\"$parent.permissions.getPerm\"> GET <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles new permission verbs check boxes')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_new_permission_verbs}}\" tooltip-placement=\"right\">(?)</a>\n" +
     "      </div>\n" +
     "      <div class=\"control-group\">\n" +
     "        <input type=\"checkbox\" ng-model=\"$parent.permissions.postPerm\"> POST\n" +
@@ -2853,11 +2879,12 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "    </bsmodal>\n" +
     "\n" +
     "    <div class=\"button-strip\">\n" +
+    "      <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles add permission button')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_add_delete_permission}}\" tooltip-placement=\"left\">(?)</a>\n" +
     "      <button class=\"btn btn-primary\" ng-click=\"showModal('addPermission')\">Add Permission</button>\n" +
     "      <button class=\"btn btn-primary\" ng-disabled=\"!hasPermissions || !valueSelected(selectedUser.permissions)\" ng-click=\"showModal('deletePermission')\">Delete Permission(s)</button>\n" +
     "    </div>\n" +
     "    <br>\n" +
-    "    <h4>Permissions</h4>\n" +
+    "      <h4>Permissions <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles permissions list')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_permissions}}\" tooltip-placement=\"top\">(?)</a></h4>\n" +
     "    <table class=\"table table-striped\">\n" +
     "      <tbody>\n" +
     "      <tr class=\"table-header\">\n" +
@@ -2900,7 +2927,9 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
   $templateCache.put('users/users.html',
     "<div class=\"content-page\">\n" +
     "\n" +
-    "  <page-title title=\" Users\" icon=\"&#128100;\"></page-title>\n" +
+    "  <div id=\"intro-page\">    \n" +
+    "    <page-title title=\" Users\" icon=\"&#128100;\"></page-title>\n" +
+    "  </div>\n" +
     "  <bsmodal id=\"newUser\"\n" +
     "           title=\"Create New User\"\n" +
     "           close=\"hideModal\"\n" +
@@ -2971,14 +3000,15 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "  </bsmodal>\n" +
     "\n" +
     "  <section class=\"row-fluid\">\n" +
-    "    <div class=\"span3 user-col\">\n" +
-    "\n" +
-    "        <div class=\"button-toolbar span12\">\n" +
+    "    <div id=\"intro-list\" class=\"span3 user-col\">\n" +
+    "      \n" +
+    "      <div class=\"button-toolbar span12\">\n" +
     "          <a title=\"Select All\" class=\"btn btn-primary toolbar select-all\" ng-show=\"hasUsers\" ng-click=\"selectAllEntities(usersCollection._list,this,'usersSelected',true)\" ng-model=\"usersSelected\"> <i class=\"pictogram\">&#8863;</i></a>\n" +
     "          <button title=\"Delete\" class=\"btn btn-primary toolbar\" ng-disabled=\"!hasUsers || !valueSelected(usersCollection._list)\" ng-click=\"showModal('deleteUser')\" id=\"delete-user-button\"><i class=\"pictogram\">&#9749;</i></button>\n" +
-    "          <button title=\"Add\" class=\"btn btn-primary toolbar\" ng-click=\"showModal('newUser')\" id=\"new-user-button\" ng-attr-id=\"new-user-button\"><i class=\"pictogram\">&#59136;</i></button>\n" +
-    "        </div>\n" +
-    "        <ul class=\"user-list\">\n" +
+    "        <button title=\"Add\" class=\"btn btn-primary toolbar\" ng-click=\"showModal('newUser')\" id=\"new-user-button\" ng-attr-id=\"new-user-button\"><i class=\"pictogram\">&#59136;</i></button>\n" +
+    "        <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users add remove buttons')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_users_add_remove_buttons}}\" tooltip-placement=\"right\">(?)</a>\n" +
+    "      </div>\n" +
+    "      <ul class=\"user-list\">\n" +
     "          <li ng-class=\"selectedUser._data.uuid === user._data.uuid ? 'selected' : ''\" ng-repeat=\"user in usersCollection._list\" ng-click=\"selectUser(user._data.uuid)\">\n" +
     "            <input\n" +
     "                type=\"checkbox\"\n" +
@@ -2989,27 +3019,26 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "                >\n" +
     "              <a href=\"javaScript:void(0)\"  id=\"user-{{user.get('username')}}-link\" >{{user.get('username')}}</a>\n" +
     "              <span ng-if=\"user.name\" class=\"label\">Display Name:</span>{{user.name}}\n" +
-    "          </li>\n" +
+    "            </li>\n" +
     "        </ul>\n" +
-    "\n" +
     "        <div style=\"padding: 10px 5px 10px 5px\">\n" +
     "          <button class=\"btn btn-primary toolbar\" ng-click=\"getPrevious()\" style=\"display:{{previous_display}}\">< Previous\n" +
     "          </button>\n" +
     "          <button class=\"btn btn-primary toolbar\" ng-click=\"getNext()\" style=\"display:{{next_display}}; float:right;\">Next >\n" +
     "          </button>\n" +
     "        </div>\n" +
-    "\n" +
+    "      \n" +
     "    </div>\n" +
     "\n" +
-    "    <div class=\"span9 tab-content\" ng-show=\"hasUsers\">\n" +
+    "    <div id=\"{{help.usersTabsId}}\" class=\"span9 tab-content\" ng-show=\"hasUsers\">\n" +
     "      <div class=\"menu-toolbar\">\n" +
     "        <ul class=\"inline\">\n" +
-    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/profile' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/profile')\"><i class=\"pictogram\">&#59170;</i>Profile</a></li>\n" +
-    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/groups' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/groups')\"><i class=\"pictogram\">&#128101;</i>Groups</a></li>\n" +
-    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/activities' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/activities')\"><i class=\"pictogram\">&#59194;</i>Activities</a></li>\n" +
-    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/feed' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/feed')\"><i class=\"pictogram\">&#128196;</i>Feed</a></li>\n" +
-    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/graph' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/graph')\"><i class=\"pictogram\">&#9729;</i>Graph</a></li>\n" +
-    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/roles' ? 'selected' : ''\"><a class=\"btn btn-primary toolbar\" ng-click=\"selectUserPage('/users/roles')\"><i class=\"pictogram\">&#127758;</i>Roles &amp; Permissions</a></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/profile' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectUserPage('/users/profile')\"><i class=\"pictogram\">&#59170;</i>Profile</a> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users profile tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_profile_tab}}\" tooltip-placement=\"right\">(?)</a></div></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/groups' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectUserPage('/users/groups')\"><i class=\"pictogram\">&#128101;</i>Groups</a> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users groups tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_groups_tab}}\" tooltip-placement=\"right\">(?)</a></div></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/activities' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectUserPage('/users/activities')\"><i class=\"pictogram\">&#59194;</i>Activities</a> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users activities tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_activities_tab}}\" tooltip-placement=\"right\">(?)</a></div></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/feed' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectUserPage('/users/feed')\"><i class=\"pictogram\">&#128196;</i>Feed</a> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users feed tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_feed_tab}}\" tooltip-placement=\"right\">(?)</a></div></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/graph' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectUserPage('/users/graph')\"><i class=\"pictogram\">&#9729;</i>Graph</a> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users graph tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_graph_tab}}\" tooltip-placement=\"top\">(?)</a></div></li>\n" +
+    "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/roles' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectUserPage('/users/roles')\"><i class=\"pictogram\">&#127758;</i>Roles &amp; Permissions</a> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users roles tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_roles_tab}}\" tooltip-placement=\"top\">(?)</a></div></li>\n" +
     "        </ul>\n" +
     "      </div>\n" +
     "      <span ng-include=\"currentUsersPage.template\"></span>\n" +

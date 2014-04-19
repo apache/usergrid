@@ -60,6 +60,7 @@ public class ExportJob extends OnlyOnceJob {
         }
         catch ( Exception e ) {
             logger.error( "Export Service failed to complete job" );
+            logger.error(e.getMessage());
             return;
         }
 

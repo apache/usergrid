@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.usergrid.java.client;
 
 import static org.springframework.util.StringUtils.arrayToDelimitedString;
@@ -36,7 +52,7 @@ import org.apache.usergrid.java.client.response.ApiResponse;
 /**
  * The Client class for accessing the Usergrid API. Start by instantiating this
  * class though the appropriate constructor.
- * 
+ *
  */
 public class Client {
 
@@ -80,7 +96,7 @@ public class Client {
 
     /**
      * Instantiate client for a specific app
-     * 
+     *
      * @param applicationId
      *            the application id or name
      */
@@ -118,8 +134,8 @@ public class Client {
         this.apiUrl = apiUrl;
         return this;
     }
-    
-    
+
+
     /**
      * the organizationId to set
      * @param organizationId
@@ -129,8 +145,8 @@ public class Client {
         this.organizationId = organizationId;
         return this;
     }
-    
-    
+
+
 
     /**
      * @return the organizationId
@@ -160,7 +176,7 @@ public class Client {
     public void setApplicationId(String applicationId) {
         this.applicationId = applicationId;
     }
-   
+
 
     /**
      * @param applicationId
@@ -275,7 +291,7 @@ public class Client {
     /**
      * Low-level HTTP request method. Synchronous, blocks till response or
      * timeout.
-     * 
+     *
      * @param method
      *            HttpMethod method
      * @param cls
@@ -328,7 +344,7 @@ public class Client {
 
     /**
      * High-level Usergrid API request.
-     * 
+     *
      * @param method
      * @param params
      * @param data
@@ -366,7 +382,7 @@ public class Client {
 
     /**
      * Log the user in and get a valid access token.
-     * 
+     *
      * @param email
      * @param password
      * @return non-null ApiResponse if request succeeds, check getError() for
@@ -402,7 +418,7 @@ public class Client {
     /**
      * Change the password for the currently logged in user. You must supply the
      * old password and the new password.
-     * 
+     *
      * @param username
      * @param oldPassword
      * @param newPassword
@@ -422,7 +438,7 @@ public class Client {
 
     /**
      * Log the user in with their numeric pin-code and get a valid access token.
-     * 
+     *
      * @param email
      * @param pin
      * @return non-null ApiResponse if request succeeds, check getError() for
@@ -458,7 +474,7 @@ public class Client {
     /**
      * Log the user in with their Facebook access token retrived via Facebook
      * OAuth.
-     * 
+     *
      * @param email
      * @param pin
      * @return non-null ApiResponse if request succeeds, check getError() for
@@ -493,7 +509,7 @@ public class Client {
     /**
      * Log the app in with it's client id and client secret key. Not recommended
      * for production apps.
-     * 
+     *
      * @param email
      * @param pin
      * @return non-null ApiResponse if request succeeds, check getError() for
@@ -535,7 +551,7 @@ public class Client {
 
     /**
      * Registers a device using the device's unique device ID.
-     * 
+     *
      * @param context
      * @param properties
      * @return a Device object if success
@@ -572,7 +588,7 @@ public class Client {
 
     /**
      * Create a new entity on the server.
-     * 
+     *
      * @param entity
      * @return an ApiResponse with the new entity in it.
      */
@@ -589,7 +605,7 @@ public class Client {
     /**
      * Create a new entity on the server from a set of properties. Properties
      * must include a "type" property.
-     * 
+     *
      * @param properties
      * @return an ApiResponse with the new entity in it.
      */
@@ -605,7 +621,7 @@ public class Client {
 
     /**
      * Creates a user.
-     * 
+     *
      * @param username
      *            required
      * @param name
@@ -634,7 +650,7 @@ public class Client {
 
     /**
      * Get the groups for the user.
-     * 
+     *
      * @param userId
      * @return a map with the group path as the key and the Group entity as the
      *         value
@@ -654,7 +670,7 @@ public class Client {
 
     /**
      * Get a user's activity feed. Returned as a query to ease paging.
-     * 
+     *
      * @param userId
      * @return
      */
@@ -666,7 +682,7 @@ public class Client {
 
     /**
      * Posts an activity to a user. Activity must already be created.
-     * 
+     *
      * @param userId
      * @param activity
      * @return
@@ -678,7 +694,7 @@ public class Client {
 
     /**
      * Creates and posts an activity to a user.
-     * 
+     *
      * @param verb
      * @param title
      * @param content
@@ -700,7 +716,7 @@ public class Client {
 
     /**
      * Posts an activity to a group. Activity must already be created.
-     * 
+     *
      * @param userId
      * @param activity
      * @return
@@ -712,7 +728,7 @@ public class Client {
 
     /**
      * Creates and posts an activity to a group.
-     * 
+     *
      * @param groupId
      * @param verb
      * @param title
@@ -735,7 +751,7 @@ public class Client {
 
     /**
      * Post an activity to the stream.
-     * 
+     *
      * @param activity
      * @return
      */
@@ -745,7 +761,7 @@ public class Client {
 
     /**
      * Creates and posts an activity to a group.
-     * 
+     *
      * @param verb
      * @param title
      * @param content
@@ -764,10 +780,10 @@ public class Client {
                 category, user, object, objectType, objectName, objectContent);
         return createEntity(activity);
     }
-    
+
     /**
      * Get a group's activity feed. Returned as a query to ease paging.
-     * 
+     *
      * @param userId
      * @return
      */
@@ -777,11 +793,11 @@ public class Client {
         return q;
     }
 
-    
+
 
     /**
      * Get a group's activity feed. Returned as a query to ease paging.
-     * 
+     *
      * @param userId
      * @return
      */
@@ -795,7 +811,7 @@ public class Client {
      * Perform a query request and return a query object. The Query object
      * provides a simple way of dealing with result sets that need to be
      * iterated or paged through.
-     * 
+     *
      * @param method
      * @param params
      * @param data
@@ -810,7 +826,7 @@ public class Client {
 
     /**
      * Perform a query of the users collection.
-     * 
+     *
      * @return
      */
     public Query queryUsers() {
@@ -822,7 +838,7 @@ public class Client {
     /**
      * Perform a query of the users collection using the provided query command.
      * For example: "name contains 'ed'".
-     * 
+     *
      * @param ql
      * @return
      */
@@ -838,7 +854,7 @@ public class Client {
      * Perform a query of the users collection within the specified distance of
      * the specified location and optionally using the provided query command.
      * For example: "name contains 'ed'".
-     * 
+     *
      * @param distance
      * @param location
      * @param ql
@@ -856,7 +872,7 @@ public class Client {
 
     /**
      * Queries the users for the specified group.
-     * 
+     *
      * @param groupId
      * @return
      */
@@ -868,7 +884,7 @@ public class Client {
 
     /**
      * Adds a user to the specified groups.
-     * 
+     *
      * @param userId
      * @param groupId
      * @return
@@ -881,7 +897,7 @@ public class Client {
     /**
      * Creates a group with the specified group path. Group paths can be slash
      * ("/") delimited like file paths for hierarchical group relationships.
-     * 
+     *
      * @param groupPath
      * @return
      */
@@ -893,15 +909,15 @@ public class Client {
      * Creates a group with the specified group path and group title. Group
      * paths can be slash ("/") delimited like file paths for hierarchical group
      * relationships.
-     * 
+     *
      * @param groupPath
      * @param groupTitle
      * @return
      */
     public ApiResponse createGroup(String groupPath, String groupTitle) {
-     return createGroup(groupPath, groupTitle, null);  
+     return createGroup(groupPath, groupTitle, null);
     }
-    
+
     /**
      * Create a group with a path, title and name
      * @param groupPath
@@ -913,22 +929,22 @@ public class Client {
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("type", "group");
         data.put("path", groupPath);
-        
+
         if (groupTitle != null) {
             data.put("title", groupTitle);
         }
-        
+
         if(groupName != null){
             data.put("name", groupName);
         }
-        
+
         return apiRequest(HttpMethod.POST, null, data,  organizationId, applicationId, "groups");
     }
-    
+
     /**
      * Perform a query of the users collection using the provided query command.
      * For example: "name contains 'ed'".
-     * 
+     *
      * @param ql
      * @return
      */
@@ -940,11 +956,11 @@ public class Client {
         return q;
     }
 
-    
+
 
     /**
      * Connect two entities together.
-     * 
+     *
      * @param connectingEntityType
      * @param connectingEntityId
      * @param connectionType
@@ -961,7 +977,7 @@ public class Client {
 
     /**
      * Disconnect two entities.
-     * 
+     *
      * @param connectingEntityType
      * @param connectingEntityId
      * @param connectionType
@@ -978,7 +994,7 @@ public class Client {
 
     /**
      * Query the connected entities.
-     * 
+     *
      * @param connectingEntityType
      * @param connectingEntityId
      * @param connectionType
@@ -1005,7 +1021,7 @@ public class Client {
 
     /**
      * Query the connected entities within distance of a specific point.
-     * 
+     *
      * @param connectingEntityType
      * @param connectingEntityId
      * @param connectionType
@@ -1038,7 +1054,7 @@ public class Client {
 
     /**
      * Query object
-     * 
+     *
      */
     private class EntityQuery implements Query {
         final HttpMethod method;
@@ -1084,7 +1100,7 @@ public class Client {
 
         /**
          * Performs a request for the next set of results
-         * 
+         *
          * @return query that contains results and where to get more from.
          */
         public Query next() {
@@ -1246,7 +1262,7 @@ public class Client {
 
         /**
          * Performs a request for the next set of results
-         * 
+         *
          * @return query that contains results and where to get more from.
          */
         public Query next() {
