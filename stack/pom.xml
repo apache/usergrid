@@ -1799,6 +1799,7 @@
                     <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
                     <exclude>**/aws.properties</exclude>
+                    <exclude>**/usergrid-custom.properties</exclude>
 
                 </excludes>
             </configuration>

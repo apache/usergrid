@@ -186,7 +186,7 @@ public class AvailablePortFinder {
 
             try {
                 s = new ServerSocket( i );
-                result.add( new Integer( i ) );
+                result.add(i);
             }
             catch ( IOException e ) {
                 // Do nothing
