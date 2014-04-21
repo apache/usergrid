@@ -18,14 +18,11 @@
 package org.apache.usergrid.persistence.index.query;
 
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
@@ -38,16 +35,15 @@ public class Results implements Iterable<Entity> {
 
     final List<Id> ids;
     final Query query;
-    final EntityCollectionManager ecm;
 
     String cursor = null;
     List<Entity> entities = null;
     List<EntityRef> refs = null;
 
-    public Results( EntityCollectionManager ecm, Query query, List<Id> ids ) {
-        this.ecm = ecm;
+    public Results(Query query, List<Id> ids, List<Entity> entities) {
         this.query = query;
         this.ids = ids;
+        this.entities = entities;
     }
 
 
@@ -90,18 +86,6 @@ public class Results implements Iterable<Entity> {
 
     @JsonSerialize(include = Inclusion.NON_NULL)
     public List<Entity> getEntities() {
-        if ( entities == null ) {
-            entities = new ArrayList<Entity>();
-            refs = new ArrayList<EntityRef>();
-            for ( Id id : ids ) {
-                Entity entity = ecm.load( id ).toBlockingObservable().last();
-                if (entity == null) {
-                    throw new IndexException("Entity id [" + id + "] not found");
-                }
-                entities.add( entity );
-                refs.add( new SimpleEntityRef( entity.getId(), entity.getVersion() ));
-            }
-        }
         return Collections.unmodifiableList( entities );
     }
 

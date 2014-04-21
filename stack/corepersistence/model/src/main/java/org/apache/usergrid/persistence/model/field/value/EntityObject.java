@@ -19,25 +19,35 @@
 package org.apache.usergrid.persistence.model.field.value;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.usergrid.persistence.model.field.Field;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /**
  * Simple wrapper for holding nested objects
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityObject implements Serializable {
 
     /**
      * Fields the users can set
      */
+    @JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
     private final Map<String, Field> fields = new HashMap<String, Field>();
 
     /**
      * Add the field, return the old one if it existed
      */
+    @JsonIgnore
     public <T extends java.lang.Object> Field<T> setField( Field<T> value ) {
         return fields.put( value.getName(), value );
     }
@@ -45,10 +55,30 @@ public class EntityObject implements Serializable {
     /**
      * Get the field by name the user has set into the entity
      */
+    @JsonIgnore
     public <T extends java.lang.Object> Field<T> getField( String name ) {
         return fields.get( name );
     }
 
+    @JsonAnySetter
+    public void setFields(ArrayList al) {
+        if(al.size() == 0)
+            return;
+
+        for(int i = 0; i < al.size(); i++) {
+            String str = al.get( i ).toString();
+            if(str.contains( "version" )){
+                continue;
+            }
+            Field fd = ( Field ) al.get( i );
+            fields.put( fd.getName(), fd);
+        }
+    }
+
+    @JsonAnyGetter
+    public void getFields( String name) {
+        fields.get( name );
+    }
     /**
      * Get all fields in the entity
      */

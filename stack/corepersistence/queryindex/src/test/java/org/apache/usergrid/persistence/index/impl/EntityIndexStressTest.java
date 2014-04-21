@@ -25,10 +25,12 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
+import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.legacy.EntityManagerFacade;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -49,10 +51,10 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(JukitoRunner.class)
 @UseModules(TestIndexModule.class)
-public class EntityCollectionIndexStressTest {
+public class EntityIndexStressTest {
 
     private static final Logger log = LoggerFactory.getLogger( 
-            EntityCollectionIndexStressTest.class );
+            EntityIndexStressTest.class );
 
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
@@ -65,21 +67,23 @@ public class EntityCollectionIndexStressTest {
     public EntityCollectionManagerFactory cmf;
     
     @Inject
-    public EntityCollectionIndexFactory cif;
+    public EntityIndexFactory cif;
 
     @Test
     public void indexThousands() throws IOException {
 
-        Id appId = new SimpleId("application");
         Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+        Id appId = new SimpleId("application");
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
         CollectionScope scope = new CollectionScopeImpl( appId, orgId, "characters" );
+
+        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
 
         int limit = 2000;
         StopWatch timer = new StopWatch();
         timer.start();
 
-        EntityManagerFacade em = new EntityManagerFacade( orgId, appId, cmf, cif );
-        
         for ( int i = 1; i <= limit; i++ ) { 
             em.create("character", new LinkedHashMap<String, Object>() {{
                 put( "username", RandomStringUtils.random(20) );

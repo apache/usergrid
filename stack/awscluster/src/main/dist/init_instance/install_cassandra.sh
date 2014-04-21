@@ -43,6 +43,17 @@ groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
 
 /etc/init.d/cassandra start
 
+#Install opscenter
+echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/datastax.community.list
+
+curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
+
+apt-get update
+apt-get  --force-yes -y install opscenter
+
+sudo service opscenterd start
+
+
 ## Configure Priam
 #groovy configure_priam.groovy
 #
