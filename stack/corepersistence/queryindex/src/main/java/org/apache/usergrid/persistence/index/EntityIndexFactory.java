@@ -22,10 +22,9 @@ import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 
-public interface EntityCollectionIndexFactory {
+public interface EntityIndexFactory {
 
-    public EntityCollectionIndex createCollectionIndex( 
+    public EntityIndex createEntityIndex( 
         @Assisted OrganizationScope orgScope, 
-        @Assisted("appScope") CollectionScope appScope, 
-        @Assisted("scope") CollectionScope scope );
+        @Assisted CollectionScope appScope);
 }
