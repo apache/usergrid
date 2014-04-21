@@ -21,6 +21,7 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
@@ -68,65 +69,34 @@ public class RollbackAction implements Action1<Throwable> {
             final Entity entity = cre.getEntity();
             final CollectionScope scope = cre.getCollectionScope();
 
-            // Delete all unique values of entity, and do it concurrently 
-            List<Observable<FieldDeleteResult>> results
-                = new ArrayList<Observable<FieldDeleteResult>>();
+            // one batch to handle rollback
+            MutationBatch rollbackMb = null;
 
-            int uniqueFieldCount = 0;
             for (final Field field : entity.getFields()) {
 
-                // if it's unique, create a function to delete it
+                // if it's unique, add its deletion to the rollback batch
                 if (field.isUnique()) {
 
-                    uniqueFieldCount++;
+                    UniqueValue toDelete = new UniqueValueImpl(
+                        scope, field, entity.getId(), entity.getVersion());
 
-                    Observable<FieldDeleteResult> result = Observable.from(field)
-                            .subscribeOn(scheduler).map(new Func1<Field, FieldDeleteResult>() {
+                    MutationBatch deleteMb = uniqueValueStrat.delete(toDelete);
 
-                                @Override
-                                public FieldDeleteResult call(Field field) {
-                                    UniqueValue toDelete = new UniqueValueImpl(
-                                        scope, field, entity.getId(), entity.getVersion());
-
-                                    MutationBatch mb = uniqueValueStrat.delete(toDelete);
-                                    try {
-                                        mb.execute();
-                                    } catch (ConnectionException ex) {
-                                        throw new WriteUniqueVerifyException( entity, scope, 
-                                            "Rollback error deleting unique value " 
-                                                + field.toString(), ex);
-                                    }
-                                    return new FieldDeleteResult(field.getName());
-                                }
-                            });
-
-                    results.add(result);
+                    if ( rollbackMb == null ) {
+                        rollbackMb = deleteMb;
+                    } else { 
+                        rollbackMb.mergeShallow( deleteMb );
+                    }
                 }
             }
 
-            if (uniqueFieldCount > 0) {
+            if ( rollbackMb != null ) {
+                try {
+                    rollbackMb.execute();
 
-                final FuncN<Boolean> zipFunction = new FuncN<Boolean>() {
-
-                    @Override
-                    public Boolean call(final Object... args) {
-                        for (Object resultObj : args) {
-
-                            FieldDeleteResult result = (FieldDeleteResult) resultObj;
-                            log.debug("Rollback deleted unique value from entity: "
-                                    + "{} version: {} name: {}",
-                                 new String[]{
-                                     entity.getId().toString(),
-                                     entity.getVersion().toString(),
-                                     result.getName()
-                                 });
-                        }
-                        return true;
-                    }
-                };
-
-                // "zip" up the concurrent results
-                Observable.zip(results, zipFunction).toBlockingObservable().last();
+                } catch (ConnectionException ex) {
+                    throw new RuntimeException("Error rolling back changes", ex);
+                }
             }
 
             logEntryStrat.delete( scope, entity.getId(), entity.getVersion() );

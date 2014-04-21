@@ -89,6 +89,9 @@ public class WriteUniqueVerifyIT {
             // verify two unique value violations
             assertEquals( 2, e.getVioliations().size() );
         }
+
+        entity.setField( new IntegerField("top_speed_mph", 190) );
+        entityManager.write( entity );
     }
 }
 
