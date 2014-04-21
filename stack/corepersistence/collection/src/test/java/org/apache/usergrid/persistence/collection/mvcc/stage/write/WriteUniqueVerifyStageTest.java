@@ -26,7 +26,6 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityS
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import static org.mockito.Mockito.mock;
-import rx.Scheduler;
 
 
 /**

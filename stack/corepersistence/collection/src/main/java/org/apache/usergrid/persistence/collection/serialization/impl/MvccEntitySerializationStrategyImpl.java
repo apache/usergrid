@@ -108,8 +108,16 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                colMutation.putColumn( colName,
+                try {
+                    colMutation.putColumn( colName,
                         SER.toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getEntity() ) ) );
+                } catch ( Exception e ) {
+                    // throw better exception if we can
+                    if ( entity != null || entity.getEntity().get() != null ) {
+                        throw new CollectionRuntimeException( entity.getEntity().get(), collectionScope, e );
+                    }
+                    throw e;
+                }
             }
         } );
     }
@@ -134,7 +142,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             return null;
         }
         catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra", e );
         }
 
 
@@ -159,7 +167,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                             .withColumnRange( version, null, false, maxSize ).execute().getResult();
         }
         catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra", e );
         }
 
 
@@ -321,7 +329,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 builder.addBytes( mapper.writeValueAsBytes( wrapper.entity.get() ) );
             }
             catch ( Exception e ) {
-                throw new CollectionRuntimeException(e.getMessage());
+                throw new RuntimeException(e.getMessage());
             }
 
             return builder.build();
@@ -359,7 +367,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 storedEntity = mapper.readValue( array,start,length,Entity.class);
             }
             catch ( Exception e ) {
-                throw new CollectionRuntimeException(e.getMessage());
+                throw new RuntimeException(e.getMessage());
             }
 
             final Optional<Entity> entity = Optional.of( storedEntity );
