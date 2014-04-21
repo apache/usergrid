@@ -90,6 +90,7 @@ public class WriteUniqueVerifyIT {
             assertEquals( 2, e.getVioliations().size() );
         }
 
+        // ensure we can update original entity without error
         entity.setField( new IntegerField("top_speed_mph", 190) );
         entityManager.write( entity );
     }
