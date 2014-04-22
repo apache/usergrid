@@ -149,6 +149,10 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
       $scope.data.queryPath = '/' + $rootScope.queryCollection._type + '/' + uuid;
     }
 
+    $scope.removeFromPath = function(){
+      $scope.data.queryPath = '/' + $rootScope.queryCollection._type;
+    }
+
     $scope.isDeep = function(item){
       //can be better, just see if object for now
       return (Object.prototype.toString.call(item) === "[object Object]");
@@ -271,6 +275,8 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
       $rootScope.selectedEntity = $rootScope.queryCollection.getEntityByUUID(uuid);
       if (addToPath) {
         $scope.addToPath(uuid);
+      } else {
+        $scope.removeFromPath();
       }
     }
 
