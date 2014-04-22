@@ -39,7 +39,7 @@
     </td>
     <td ng-if="hasProperty('name')">{{entity._data.name}}</td>
     <td>{{entity._data.uuid}}</td>
-    <td><a href="javaScript:void(0)" ng-click="entitySelected[$index] = !entitySelected[$index];selectEntity(entity._data.uuid)">{{entitySelected[$index] ? 'Hide' : 'View'}} Details</a></td>
+    <td><a href="javaScript:void(0)" ng-click="entitySelected[$index] = !entitySelected[$index]; selectEntity(entity._data.uuid, entitySelected[$index]);">{{entitySelected[$index] ? 'Hide' : 'View'}} Details</a></td>
   </tr>
   <tr ng-if="entitySelected[$index]">
     <td colspan="5">

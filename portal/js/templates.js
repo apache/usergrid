@@ -866,7 +866,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "    </td>\n" +
     "    <td ng-if=\"hasProperty('name')\">{{entity._data.name}}</td>\n" +
     "    <td>{{entity._data.uuid}}</td>\n" +
-    "    <td><a href=\"javaScript:void(0)\" ng-click=\"entitySelected[$index] = !entitySelected[$index];selectEntity(entity._data.uuid)\">{{entitySelected[$index] ? 'Hide' : 'View'}} Details</a></td>\n" +
+    "    <td><a href=\"javaScript:void(0)\" ng-click=\"entitySelected[$index] = !entitySelected[$index]; selectEntity(entity._data.uuid, entitySelected[$index]);\">{{entitySelected[$index] ? 'Hide' : 'View'}} Details</a></td>\n" +
     "  </tr>\n" +
     "  <tr ng-if=\"entitySelected[$index]\">\n" +
     "    <td colspan=\"5\">\n" +

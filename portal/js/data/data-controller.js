@@ -267,9 +267,11 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
       }
     }
 
-    $scope.selectEntity = function(uuid){
+    $scope.selectEntity = function(uuid, addToPath){
       $rootScope.selectedEntity = $rootScope.queryCollection.getEntityByUUID(uuid);
-      $scope.addToPath(uuid);
+      if (addToPath) {
+        $scope.addToPath(uuid);
+      }
     }
 
     $scope.getJSONView = function(entity){
