@@ -99,12 +99,14 @@ public class MarkStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent
         }
         catch ( ConnectionException e ) {
             LOG.error( "Failed to execute write asynchronously ", e );
-            throw new CollectionRuntimeException( "Failed to execute write asynchronously ", e );
+            throw new CollectionRuntimeException( null, collectionScope, 
+                    "Failed to execute write asynchronously ", e );
         }
 
 
         //create the mvcc entity for the next stage
-        final MvccEntityImpl nextStage = new MvccEntityImpl(entityId, version, MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
+        final MvccEntityImpl nextStage = new MvccEntityImpl(
+            entityId, version, MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
 
 
         return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );

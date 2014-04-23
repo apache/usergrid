@@ -157,9 +157,6 @@ public class EntityMapUtils {
 
         } else if ( sample instanceof Long ) {
             return new ListField<Long>( fieldName, (List<Long>)list );
-        
-        } else if ( sample instanceof UUID ) {
-            return new ListField<UUID>( fieldName, (List<UUID>)list );
 
         } else {
             throw new RuntimeException("Unknown type " + sample.getClass().getName());

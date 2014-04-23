@@ -17,31 +17,55 @@
  */
 package org.apache.usergrid.persistence.collection.exception;
 
-/**
- * @author tnine
- */
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.model.entity.Entity;
+
+
 public class CollectionRuntimeException extends RuntimeException {
-    public CollectionRuntimeException() {
+
+    private Entity entity;
+    private CollectionScope collectionScope;
+
+
+    public CollectionRuntimeException( Entity entity, CollectionScope scope, final String message ) {
+        super( message ); 
+        this.entity = entity;
+        this.collectionScope = scope; 
     }
 
 
-    public CollectionRuntimeException( final String message ) {
-        super( message );
-    }
-
-
-    public CollectionRuntimeException( final String message, final Throwable cause ) {
+    public CollectionRuntimeException( Entity entity, CollectionScope scope, final String message, final Throwable cause ) {
         super( message, cause );
+        this.entity = entity;
+        this.collectionScope = scope; 
     }
 
 
-    public CollectionRuntimeException( final Throwable cause ) {
+    public CollectionRuntimeException( Entity entity, CollectionScope scope, final Throwable cause ) {
         super( cause );
+        this.entity = entity;
+        this.collectionScope = scope; 
     }
 
 
-    public CollectionRuntimeException( final String message, final Throwable cause, final boolean enableSuppression,
-                                       final boolean writableStackTrace ) {
+    public CollectionRuntimeException( Entity entity, CollectionScope scope, 
+            final String message, final Throwable cause, final boolean enableSuppression,
+            final boolean writableStackTrace ) {
         super( message, cause, enableSuppression, writableStackTrace );
+        this.entity = entity;
+        this.collectionScope = scope; 
+    }
+
+    
+    public CollectionScope getCollectionScope() {
+        return collectionScope;
+    }
+
+    /**
+     * Entity involved in operation.
+     * @return Entity or null if entity not instantiated yet in operation. 
+     */
+    public Entity getEntity() {
+        return entity;
     }
 }

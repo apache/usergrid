@@ -17,7 +17,6 @@
  */
 package org.apache.usergrid.persistence.index.legacy;
 
-import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.usergrid.persistence.collection.CollectionScope;
@@ -37,6 +36,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.index.query.EntityRef;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
+import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
