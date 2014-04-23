@@ -48,6 +48,7 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.OperationResult;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.serializers.LongSerializer;
 
@@ -119,6 +120,10 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
                     keyspace.prepareQuery( EDGE_SHARD_COUNTS ).getKey( rowKey ).getColumn( shardId ).execute();
 
             return column.getResult().getLongValue();
+        }
+        //column not found, return 0
+        catch ( NotFoundException nfe ) {
+            return 0;
         }
         catch ( ConnectionException e ) {
             throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );

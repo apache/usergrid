@@ -94,4 +94,8 @@ public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
     }
 
 
+    @Override
+    public String getGraphEdgeVersions() {
+        return "Graph_Edge_Versions";
+    }
 }

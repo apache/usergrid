@@ -89,23 +89,6 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                 final MutationBatch batch = keyspace.prepareMutationBatch();
 
 
-//             TODO T.N. no longer needed since each version is explicity deleted
-//                //go through every version of this edge <= the current version and remove it
-//                Observable<MarkedEdge> edges = Observable.create( new ObservableIterator<MarkedEdge>() {
-//                    @Override
-//                    protected Iterator<MarkedEdge> getIterator() {
-//                        return edgeSerialization.getEdgeVersions( scope,
-//                                new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-//                                        edge.getVersion(), null ) );
-//                    }
-//                } ).doOnNext( new Action1<MarkedEdge>() {
-//                    @Override
-//                    public void call( final MarkedEdge markedEdge ) {
-//                        final MutationBatch delete = edgeSerialization.deleteEdge( scope, markedEdge );
-//                        batch.mergeShallow( delete );
-//                    }
-//                } );
-
                 //search by edge type and target type.  If any other edges with this target type exist,
                 // we can't delete it
                 Observable<Integer> sourceIdType = graphManager.loadEdgesFromSourceByType(

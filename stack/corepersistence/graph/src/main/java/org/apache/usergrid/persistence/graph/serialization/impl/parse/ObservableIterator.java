@@ -24,6 +24,8 @@ import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import rx.Observable;
 import rx.Subscriber;
 
@@ -52,7 +54,9 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T>
 
         try {
             //get our iterator and push data to the observer
-            Iterator<T> itr = getIterator();
+            final Iterator<T> itr = getIterator();
+
+            Preconditions.checkNotNull( itr, "The observable must return an iterator.  Null was returned for iterator " + name );
 
 
             //while we have items to emit and our subscriber is subscribed, we want to keep emitting items

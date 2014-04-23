@@ -69,26 +69,30 @@ public class TimebasedEdgeShardStrategy implements EdgeShardStrategy {
 
     @Override
     public String getSourceNodeCfName() {
-        return "Graph_Source_Node_Edges";
+        return "Graph_Source_Node_Edges_Log";
     }
 
 
     @Override
     public String getTargetNodeCfName() {
-        return "Graph_Target_Node_Edges";
+        return "Graph_Target_Node_Edges_Log";
     }
 
 
     @Override
     public String getSourceNodeTargetTypeCfName() {
-        return "Graph_Source_Node_Target_Type";
+        return "Graph_Source_Node_Target_Type_Log";
     }
 
 
     @Override
     public String getTargetNodeSourceTypeCfName() {
-        return "Graph_Target_Node_Source_Type";
+        return "Graph_Target_Node_Source_Type_Log";
     }
 
 
+    @Override
+    public String getGraphEdgeVersions() {
+        return "Graph_Edge_Versions_Log";
+    }
 }

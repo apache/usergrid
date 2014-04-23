@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -125,6 +126,13 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             pushbackIterator.pushback( futures.get( futuresSize - 1 ) );
         }
 
+
+        /**
+         * Nothing to iterate, return an iterator with 0.
+         */
+        if(!pushbackIterator.hasNext()){
+            pushbackIterator.pushback( 0l );
+        }
 
         return pushbackIterator;
     }

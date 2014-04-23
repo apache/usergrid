@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.serialization;
+package org.apache.usergrid.persistence.graph.guice;
 
 
 import java.lang.annotation.ElementType;

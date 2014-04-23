@@ -17,29 +17,28 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.serialization;
+package org.apache.usergrid.persistence.graph.impl.stage;
 
 
-import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
-import org.junit.runner.RunWith;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 
-import org.apache.usergrid.persistence.graph.guice.CommitLog;
-import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
-
-import com.google.inject.Inject;
+import rx.Observable;
 
 
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
-public class CommitlogSerializationTest extends EdgeSerializationTest {
+/**
+ * Interface to perform repair operations on an edge when it is written
+ */
+public interface EdgeWriteCompact {
 
-    @Inject
-    @CommitLog
-    protected EdgeSerialization edgeSerialization;
 
-    @Override
-    protected EdgeSerialization getSerialization() {
-        return edgeSerialization;
-    }
+    /**
+     * Remove this edge from the commit log and move it into permanent storage
+     * @param scope The scope to use
+     * @param edge The last edge to move.
+     *
+     * @return An observable that emits the edge we've moved
+     */
+    public Observable<MarkedEdge> compact( OrganizationScope scope, Edge edge );
 }

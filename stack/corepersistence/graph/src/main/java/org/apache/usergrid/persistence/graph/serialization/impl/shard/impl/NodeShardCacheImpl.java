@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.graph.serialization.util.IterableUtil;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -67,6 +68,9 @@ public class NodeShardCacheImpl implements NodeShardCache {
      */
     @Inject
     public NodeShardCacheImpl( final NodeShardAllocation nodeShardAllocation, final GraphFig graphFig ) {
+        Preconditions.checkNotNull(nodeShardAllocation, "nodeShardAllocation is required");
+        Preconditions.checkNotNull(graphFig, "graphFig is required");
+
         this.nodeShardAllocation = nodeShardAllocation;
         this.graphFig = graphFig;
 

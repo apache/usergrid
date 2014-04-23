@@ -38,11 +38,9 @@ import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepairImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepairImpl;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
-import org.apache.usergrid.persistence.graph.serialization.CommitLog;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.PermanentStorage;
 import org.apache.usergrid.persistence.graph.serialization.impl.CassandraConfigImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
@@ -124,6 +122,7 @@ public class GraphModule extends AbstractModule {
 
         bind( AsyncProcessor.class ).annotatedWith( EdgeDelete.class ).to( AsyncProcessorImpl.class );
         bind( AsyncProcessor.class ).annotatedWith( NodeDelete.class ).to( AsyncProcessorImpl.class );
+        bind( AsyncProcessor.class ).annotatedWith( EdgeWrite.class ).to( AsyncProcessorImpl.class );
 
         //Repair/cleanup classes
         bind( EdgeMetaRepair.class ).to( EdgeMetaRepairImpl.class );

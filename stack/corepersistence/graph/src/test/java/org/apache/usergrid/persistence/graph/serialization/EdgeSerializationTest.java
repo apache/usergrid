@@ -220,6 +220,9 @@ public abstract class EdgeSerializationTest {
 
         final Edge edgev2 = createEdge( sourceId, "edge1", targetId );
 
+        //we shouldn't get this one back
+        final Edge diffTarget = createEdge(sourceId, "edge1", createId("newTarget"));
+
         assertTrue( "Edge version 1 has lower time uuid",
                 UUIDComparator.staticCompare( edgev1.getVersion(), edgev2.getVersion() ) < 0 );
 
@@ -229,6 +232,7 @@ public abstract class EdgeSerializationTest {
         serialization.writeEdge( scope, edgev1 ).execute();
         serialization.writeEdge( scope, edgev2 ).execute();
         serialization.writeEdge( scope, edgeType2V1 ).execute();
+        serialization.writeEdge( scope, diffTarget ).execute();
 
         final UUID now = UUIDGenerator.newTimeUUID();
 

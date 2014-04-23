@@ -387,9 +387,47 @@ public class NodeShardAllocationTest {
         assertEquals("Deleted Max Future", futureShard3, values.get( 0 ).longValue());
         assertEquals("Deleted Next Future", futureShard2, values.get( 1 ).longValue());
 
-
-
-
-
     }
+
+
+
+
+    @Test
+    public void noShardsReturns() {
+        final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
+
+        final EdgeShardCounterSerialization edgeShardCounterSerialization =
+                mock( EdgeShardCounterSerialization.class );
+
+
+        final TimeService timeService = mock( TimeService.class );
+
+        final Keyspace keyspace = mock( Keyspace.class );
+
+        final MutationBatch batch = mock( MutationBatch.class );
+
+        when( keyspace.prepareMutationBatch() ).thenReturn( batch );
+
+        NodeShardAllocation approximation =
+                new NodeShardAllocationImpl( edgeShardSerialization, edgeShardCounterSerialization, timeService,
+                        graphFig, keyspace );
+
+        final Id nodeId = createId( "test" );
+        final String type = "type";
+        final String subType = "subType";
+
+        /**
+         * Mock up returning an empty iterator, our audit shouldn't create a new shard
+         */
+        when( edgeShardSerialization
+                .getEdgeMetaData( same( scope ), same( nodeId ), any( Optional.class ),  same( type ),
+                        same( subType ) ) ).thenReturn( Collections.<Long>emptyList().iterator() );
+
+        final Iterator<Long> result = approximation.getShards( scope, nodeId, Optional.<Long>absent(), type, subType );
+
+        assertEquals("0 shard allocated", 0l, result.next().longValue());
+
+        assertFalse( "No shard allocated", result.hasNext() );
+    }
+
 }

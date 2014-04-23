@@ -107,6 +107,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         ValidationUtils.verifyIdentity( node );
         Preconditions.checkNotNull( edgeType, "edge type is required" );
         Preconditions.checkNotNull( version, "version is required" );
+        Preconditions.checkNotNull( serialization, "serialization is required" );
 
 
         Observable<Integer> deleteCounts = serialization.loadEdgeSubTypes( scope, node, edgeType, version )

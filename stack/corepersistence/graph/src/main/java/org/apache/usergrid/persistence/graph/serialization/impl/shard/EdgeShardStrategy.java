@@ -78,5 +78,11 @@ public interface EdgeShardStrategy {
      */
     public String getTargetNodeSourceTypeCfName();
 
+    /**
+     * Get the Graph edge versions cf
+     * @return
+     */
+    public String getGraphEdgeVersions();
+
 
 }

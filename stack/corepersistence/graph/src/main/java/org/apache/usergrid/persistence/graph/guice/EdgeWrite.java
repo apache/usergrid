@@ -17,29 +17,21 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.serialization;
+package org.apache.usergrid.persistence.graph.guice;
 
 
-import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
-import org.junit.runner.RunWith;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-import org.apache.usergrid.persistence.graph.guice.CommitLog;
-import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
+import com.google.inject.BindingAnnotation;
 
-import com.google.inject.Inject;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
-public class CommitlogSerializationTest extends EdgeSerializationTest {
-
-    @Inject
-    @CommitLog
-    protected EdgeSerialization edgeSerialization;
-
-    @Override
-    protected EdgeSerialization getSerialization() {
-        return edgeSerialization;
-    }
-}
+@BindingAnnotation
+@Target( { FIELD, PARAMETER, METHOD } )
+@Retention( RUNTIME )
+public @interface EdgeWrite {}
