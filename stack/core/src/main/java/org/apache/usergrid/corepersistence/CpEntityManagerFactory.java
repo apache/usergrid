@@ -68,8 +68,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private ApplicationContext applicationContext;
 
-    private static EntityCollectionManagerFactory ecmf;
-    private static EntityIndexFactory ecif;
+    private EntityCollectionManagerFactory ecmf;
+    private EntityIndexFactory ecif;
 
     public static final Class<DynamicEntity> APPLICATION_ENTITY_CLASS = DynamicEntity.class;
 
@@ -121,36 +121,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         });
 
 
-    static { // initialize Core Persistence system and do any necessary migration.
-
-//        try {
-//            ConfigurationManager.loadCascadedPropertiesFromResources("core-persistence");
-//
-//            // TODO: make CpEntityManagerFactory support multple Cassandra hosts  
-//            Properties testProps = new Properties() {{
-//                put("cassandra.hosts", "localhost:" + System.getProperty("cassandra.rpc_port"));
-//            }};
-//            ConfigurationManager.loadProperties( testProps );
-//
-//        } catch (IOException ex) {
-//            throw new RuntimeException("Error loading Core Persistence proprties", ex);
-//        }
-
+    public CpEntityManagerFactory() {
         Injector injector = Guice.createInjector( new GuiceModule() );
-
-//        MigrationManager m = injector.getInstance( MigrationManager.class );
-//        try {
-//            m.migrate();
-//        } catch (MigrationException ex) {
-//            throw new RuntimeException("Error migrating Core Persistence", ex);
-//        }
-
         ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
         ecif = injector.getInstance( EntityIndexFactory.class );
     }
-
-
-    public CpEntityManagerFactory() {}
 
 
     @Override
@@ -209,6 +184,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
+    @Override
     public UUID initializeApplication( String organizationName, UUID applicationId, String name,
                                        Map<String, Object> properties ) throws Exception {
 
