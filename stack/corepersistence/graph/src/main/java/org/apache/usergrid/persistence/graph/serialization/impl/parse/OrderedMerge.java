@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -38,8 +39,10 @@ import rx.subscriptions.CompositeSubscription;
 
 
 /**
- * Produces a single Observable from multiple ordered source observables.  The same as the "merge" step in a
- * merge sort.  Ensure that your comparator matches the ordering of your inputs, or you may get strange results.
+ * Produces a single Observable from multiple ordered source observables.  The same as the "merge" step in a merge sort.
+ * Ensure that your comparator matches the ordering of your inputs, or you may get strange results.
+ * The current implementation requires each Observable to be running in it's own thread.  Once backpressure in RX is
+ * implemented, this requirement can be removed.
  */
 public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
@@ -78,30 +81,29 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
         //we have to do this in 2 steps to get the synchronization correct.  We must set up our total inner observers
         //before starting subscriptions otherwise our assertions for completion or starting won't work properly
-        for ( int i = 0; i < observables.length; i ++ ) {
+        for ( int i = 0; i < observables.length; i++ ) {
             //subscribe to each one and add it to the composite
             //create a new inner and subscribe
             final InnerObserver<T> inner = new InnerObserver<T>( coordinator, maxBufferSize );
 
             coordinator.add( inner );
 
-           innerObservers[i] = inner;
+            innerObservers[i] = inner;
         }
 
         /**
          * Once we're set up, begin the subscription to sub observables
          */
-        for(int i = 0; i < observables.length; i ++){
+        for ( int i = 0; i < observables.length; i++ ) {
             //subscribe after setting them up
-             //add our subscription to the composite for future cancellation
-            Subscription subscription = observables[i].subscribe( innerObservers[i]);
+            //add our subscription to the composite for future cancellation
+            Subscription subscription = observables[i].subscribe( innerObservers[i] );
 
             csub.add( subscription );
 
             //add the internal composite subscription
             outerOperation.add( csub );
         }
-
     }
 
 
@@ -130,8 +132,13 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
         public void onCompleted() {
 
+            /**
+             * Invoke next to remove any elements from other Q's from this event
+             */
+            next();
 
             final int completed = completedCount.incrementAndGet();
+
 
             //we're done, just drain the queue since there are no more running producers
             if ( completed == innerSubscribers.size() ) {
@@ -202,8 +209,8 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
                     }
 
                     //No max observer was ever assigned, meaning all our inners are drained, break from loop
-                    if(maxObserver == null){
-                       return;
+                    if ( maxObserver == null ) {
+                        return;
                     }
 
                     subscriber.onNext( maxObserver.pop() );
@@ -257,6 +264,10 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
         private final SubscriberCoordinator<T> coordinator;
         private final Deque<T> items = new LinkedList<T>();
         private final int maxQueueSize;
+        /**
+         * TODO: T.N. Once backpressure makes it into RX Java, this needs to be remove and should use backpressure
+         */
+        private final Semaphore semaphore;
 
 
         /**
@@ -270,6 +281,7 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
         public InnerObserver( final SubscriberCoordinator<T> coordinator, final int maxQueueSize ) {
             this.coordinator = coordinator;
             this.maxQueueSize = maxQueueSize;
+            this.semaphore = new Semaphore( maxQueueSize );
         }
 
 
@@ -278,7 +290,13 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
             started = true;
             completed = true;
             checkDrained();
-            coordinator.onCompleted();
+
+            /**
+             * release this semaphore and invoke next.  Both these calls can be removed when backpressure is added.
+             * We need the next to force removal of other inner consumers
+             */
+             coordinator.onCompleted();
+
         }
 
 
@@ -293,8 +311,16 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
             log.trace( "Received {}", a );
 
-            if(items.size() == maxQueueSize ){
-                RuntimeException e = new RuntimeException("The maximum queue size of " + maxQueueSize + " has been reached");
+            try {
+                this.semaphore.acquire();
+            }
+            catch ( InterruptedException e ) {
+                onError(e);
+            }
+
+            if ( items.size() == maxQueueSize ) {
+                RuntimeException e =
+                        new RuntimeException( "The maximum queue size of " + maxQueueSize + " has been reached" );
                 onError( e );
             }
 
@@ -315,6 +341,9 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
         public T pop() {
             T item = items.pollFirst();
 
+            //release the semaphore since we just took an item
+            this.semaphore.release();
+
             checkDrained();
 
             return item;
@@ -324,10 +353,9 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
         /**
          * if we've started and finished, and this is the last element, we want to mark ourselves as completely drained
          */
-        private void checkDrained(){
-            drained = started && completed && items.size() == 0 ;
+        private void checkDrained() {
+            drained = started && completed && items.size() == 0;
         }
-
     }
 
 

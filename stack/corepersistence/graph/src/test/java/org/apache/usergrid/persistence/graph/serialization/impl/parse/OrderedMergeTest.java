@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,6 +147,7 @@ public class OrderedMergeTest {
 
 
     @Test
+    @Ignore( "Doesn't work until backpressure is implemented" )
     public void multipleOperatorSingleThreadSizeException() throws InterruptedException {
 
         List<Integer> expected1List = Arrays.asList( 5, 3, 2, 0 );
@@ -181,7 +183,7 @@ public class OrderedMergeTest {
             public void onError( final Throwable e ) {
                 log.error( "Expected error thrown", e );
 
-                if(e.getMessage().contains( "The maximum queue size of 2 has been reached" )){
+                if ( e.getMessage().contains( "The maximum queue size of 2 has been reached" ) ) {
                     errorThrown[0] = true;
                 }
 
@@ -204,7 +206,7 @@ public class OrderedMergeTest {
          */
         assertEquals( 0, results.size() );
 
-        assertTrue("An exception was thrown", errorThrown[0]);
+        assertTrue( "An exception was thrown", errorThrown[0] );
     }
 
 
@@ -265,15 +267,17 @@ public class OrderedMergeTest {
     }
 
 
-
     @Test
+    @Ignore(
+            "Shouldn't throw an exception, should work with current impl.  Needs changed when backpressure is " +
+                    "introduced" )
     public void multipleOperatorMultipleThreadSizeException() throws InterruptedException {
 
         List<Integer> expected1List = Arrays.asList( 10, 4, 3, 2, 1 );
 
         Observable<Integer> expected1 = Observable.from( expected1List ).subscribeOn( Schedulers.io() );
 
-        List<Integer> expected2List = Arrays.asList(  9, 8, 7 );
+        List<Integer> expected2List = Arrays.asList( 9, 8, 7 );
 
         Observable<Integer> expected2 = Observable.from( expected2List ).subscribeOn( Schedulers.io() );
 
@@ -284,7 +288,8 @@ public class OrderedMergeTest {
 
 
         /**
-         * Fails because our first observable will have to buffer the last 4 elements while waiting for the others to proceed
+         * Fails because our first observable will have to buffer the last 4 elements while waiting for the others to
+         * proceed
          */
         Observable<Integer> ordered =
                 OrderedMerge.orderedMerge( new IntegerComparator(), 2, expected1, expected2, expected3 );
@@ -304,7 +309,7 @@ public class OrderedMergeTest {
             public void onError( final Throwable e ) {
                 log.error( "Expected error thrown", e );
 
-                if(e.getMessage().contains( "The maximum queue size of 2 has been reached" )){
+                if ( e.getMessage().contains( "The maximum queue size of 2 has been reached" ) ) {
                     errorThrown[0] = true;
                 }
 
@@ -321,9 +326,76 @@ public class OrderedMergeTest {
         latch.await();
 
 
+        assertTrue( "An exception was thrown", errorThrown[0] );
+    }
 
-        assertTrue("An exception was thrown", errorThrown[0]);
 
+    /**
+     * Tests that with a buffer size much smaller than our inputs, we successfully block observables from
+     * producing values when our pressure gets too high.  Eventually, one of these events should begin production, eventually
+     * draining all values
+     *
+     * @throws InterruptedException
+     */
+    @Test
+    public void multipleOperatorMultipleThreadSizePressure() throws InterruptedException {
+
+        List<Integer> expected1List = Arrays.asList( 10, 4, 3, 2, 1 );
+
+        Observable<Integer> expected1 = Observable.from( expected1List ).subscribeOn( Schedulers.io() );
+
+        List<Integer> expected2List = Arrays.asList( 9, 8, 7 );
+
+        Observable<Integer> expected2 = Observable.from( expected2List ).subscribeOn( Schedulers.io() );
+
+
+        List<Integer> expected3List = Arrays.asList( 6, 5, 0 );
+
+        Observable<Integer> expected3 = Observable.from( expected3List ).subscribeOn( Schedulers.io() );
+
+
+        /**
+         * Fails because our first observable will have to buffer the last 4 elements while waiting for the others to
+         * proceed
+         */
+        Observable<Integer> ordered =
+                OrderedMerge.orderedMerge( new IntegerComparator(), 2, expected1, expected2, expected3 );
+
+
+        final CountDownLatch latch = new CountDownLatch( 1 );
+        final List<Integer> results = new ArrayList();
+
+        ordered.subscribe( new Subscriber<Integer>() {
+            @Override
+            public void onCompleted() {
+                latch.countDown();
+            }
+
+
+            @Override
+            public void onError( final Throwable e ) {
+                e.printStackTrace();
+                fail( "An error was thrown " );
+            }
+
+
+            @Override
+            public void onNext( final Integer integer ) {
+                log.info( "onNext invoked with {}", integer );
+                results.add( integer );
+            }
+        } );
+
+        latch.await();
+
+        List<Integer> expected = Arrays.asList( 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 );
+
+        assertEquals( expected.size(), results.size() );
+
+
+        for ( int i = 0; i < expected.size(); i++ ) {
+            assertEquals( "Same element expected", expected.get( i ), results.get( i ) );
+        }
     }
 
 
