@@ -214,6 +214,10 @@ public class CpEntityManager implements EntityManager {
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
             ecm.load( id ).toBlockingObservable().last();
 
+        if ( cpEntity == null ) {
+            return null;
+        }
+
         Entity entity = new DynamicEntity( type, cpEntity.getId().getUuid() );
         entity.setUuid( cpEntity.getId().getUuid() );
         Map<String, Object> entityMap = EntityMapUtils.toMap( cpEntity );
@@ -264,30 +268,56 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void update( Entity entity ) throws Exception {
 
-//        Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
-//
-//        org.apache.usergrid.persistence.model.entity.Entity cpEntity =
-//            ecm.load( entityId ).toBlockingObservable().last();
-//        
-//        cpEntity = EntityMapUtils.fromMap( cpEntity, entity.getProperties() );
-//
-//        cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
-//        eci.index( cpEntity );
+        String collectionName = Schema.defaultCollectionName( entity.getType() );
+
+        OrganizationScope organizationScope = emf.getOrganizationScope(applicationId);
+        CollectionScope applicationScope = emf.getApplicationScope(applicationId);
+
+        CollectionScope collectionScope = new CollectionScopeImpl( 
+            applicationScope.getOrganization(), 
+            applicationScope.getOwner(), 
+            collectionName );
+
+        EntityCollectionManager ecm = ecmf.createCollectionManager(collectionScope);
+        EntityIndex ei = eif.createEntityIndex(organizationScope, applicationScope);
+
+        Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
+
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity =
+            ecm.load( entityId ).toBlockingObservable().last();
+        
+        cpEntity = EntityMapUtils.fromMap( cpEntity, entity.getProperties() );
+
+        cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+        ei.index( collectionScope, cpEntity );
     }
 
 
     @Override
     public void delete(EntityRef entityRef) throws Exception {
 
-//        Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
-//
-//        org.apache.usergrid.persistence.model.entity.Entity entity =
-//            ecm.load( entityId ).toBlockingObservable().last();
-//
-//        if ( entity != null ) {
-//            eci.deindex( entity );
-//            ecm.delete( entityId );
-//        }
+        String collectionName = Schema.defaultCollectionName( entityRef.getType() );
+
+        OrganizationScope organizationScope = emf.getOrganizationScope(applicationId);
+        CollectionScope applicationScope = emf.getApplicationScope(applicationId);
+
+        CollectionScope collectionScope = new CollectionScopeImpl( 
+            applicationScope.getOrganization(), 
+            applicationScope.getOwner(), 
+            collectionName );
+
+        EntityCollectionManager ecm = ecmf.createCollectionManager(collectionScope);
+        EntityIndex ei = eif.createEntityIndex(organizationScope, applicationScope);
+
+        Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
+
+        org.apache.usergrid.persistence.model.entity.Entity entity =
+            ecm.load( entityId ).toBlockingObservable().last();
+
+        if ( entity != null ) {
+            ei.deindex( collectionScope, entity );
+            ecm.delete( entityId ).toBlockingObservable().last();
+        }
     }
 
 
@@ -1082,8 +1112,6 @@ public class CpEntityManager implements EntityManager {
         entity.setUuid( cpEntity.getId().getUuid() );
         Map<String, Object> entityMap = EntityMapUtils.toMap( cpEntity );
         entity.addProperties( entityMap );
-
-
 
 //        if ( !is_application ) {
 //            incrementEntityCollection( collection_name, timestamp );

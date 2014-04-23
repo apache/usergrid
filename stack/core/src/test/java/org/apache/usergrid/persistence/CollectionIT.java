@@ -81,7 +81,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         app.remove( user );
         user = app.get( user.getUuid(), "user" );
-        // TODO: assertNull( user );
+        assertNull( user );
     }
 
 
