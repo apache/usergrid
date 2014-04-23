@@ -470,9 +470,11 @@ public class CassandraResource extends ExternalResource {
                 sslStoragePort = AvailablePortFinder.getNextAvailable( sslStoragePort );
             }
 
-            instance = new CassandraResource( schemaManagerName, rpcPort, storagePort, sslStoragePort,
-                    nativeTransportPort );
+            instance = new CassandraResource( 
+                schemaManagerName, rpcPort, storagePort, sslStoragePort, nativeTransportPort );
+
             LOG.info("Created a new instance of CassandraResource: {}", instance);
+            LOG.info("Cassandra using ports {} and {}", storagePort, sslStoragePort);
             return instance;
         }
     }

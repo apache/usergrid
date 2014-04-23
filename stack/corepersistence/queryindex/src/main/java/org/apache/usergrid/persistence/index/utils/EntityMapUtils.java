@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.ANALYZED_SUFFIX;
 import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.GEO_SUFFIX;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -40,6 +41,7 @@ import org.apache.usergrid.persistence.model.field.LocationField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.Location;
 
 
@@ -78,7 +80,10 @@ public class EntityMapUtils {
                 entity.setField( new LongField( fieldName, (Long)value ));
 
             } else if ( value instanceof List) {
-                entity.setField( listToListField( fieldName, (List)value ));
+                entity.setField( listToListField( fieldName, (List)value ));  
+            
+            } else if ( value instanceof UUID) {
+                entity.setField( new UUIDField( fieldName, (UUID)value ));
 
             } else if ( value instanceof Map ) {
 
@@ -152,6 +157,9 @@ public class EntityMapUtils {
 
         } else if ( sample instanceof Long ) {
             return new ListField<Long>( fieldName, (List<Long>)list );
+        
+        } else if ( sample instanceof UUID ) {
+            return new ListField<UUID>( fieldName, (List<UUID>)list );
 
         } else {
             throw new RuntimeException("Unknown type " + sample.getClass().getName());

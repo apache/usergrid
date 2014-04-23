@@ -2858,4 +2858,14 @@ public class EntityManagerImpl implements EntityManager {
         permission = permission.toLowerCase();
         removeFromDictionary( groupRef( groupId ), DICTIONARY_PERMISSIONS, permission );
     }
+
+    @Override
+    public Entity get(UUID entityId, String type) throws Exception {
+        return get(entityId);
+    }
+
+    @Override
+    public void refreshIndex() {
+        // no action necessary
+    }
 }

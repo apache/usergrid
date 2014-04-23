@@ -124,7 +124,10 @@ public interface EntityManager {
 
     public EntityRef getRef( UUID entityId ) throws Exception;
 
+    @Deprecated
     public Entity get( UUID entityId ) throws Exception;
+
+    public Entity get( UUID entityId, String type ) throws Exception;
 
     /**
      * Retrieves the entity for the specified entity reference.
@@ -690,4 +693,6 @@ public interface EntityManager {
 
     /** @return the cass */
     CassandraService getCass();
+
+    void refreshIndex();
 }

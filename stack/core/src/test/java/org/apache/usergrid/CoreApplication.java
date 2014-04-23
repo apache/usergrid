@@ -177,4 +177,9 @@ public class CoreApplication implements Application, TestRule {
         EntityRef ref = new SimpleEntityRef( entity.getType(), entity.getUuid() );
         em.delete( ref );
     }
+
+    @Override
+    public Entity get(UUID id, String type) throws Exception {
+        return em.get( id, type );
+    }
 }

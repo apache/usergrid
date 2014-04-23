@@ -60,6 +60,10 @@ public class EntityObject implements Serializable {
         return fields.get( name );
     }
 
+    public void removeField( String name ) {
+        fields.remove( name );
+    }
+
     @JsonAnySetter
     public void setFields(ArrayList al) {
         if(al.size() == 0)

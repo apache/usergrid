@@ -171,14 +171,14 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      *
      * @return Setup helper
      */
-    public Setup getSetup() {
-        return new Setup( this, cass );
+    public SetupImpl getSetup() {
+        return new SetupImpl( this, cass );
     }
 
 
     @Override
     public void setup() throws Exception {
-        Setup setup = getSetup();
+        SetupImpl setup = getSetup();
 
         setup.setup();
 
@@ -249,7 +249,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         properties.put( PROPERTY_NAME, appName );
 
         getSetup().setupApplicationKeyspace( applicationId, appName );
-
 
         Keyspace ko = cass.getSystemKeyspace();
         Mutator<ByteBuffer> m = createMutator( ko, be );
