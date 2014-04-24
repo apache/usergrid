@@ -103,7 +103,7 @@
       
     </div>
 
-    <div id="{{help.usersTabsId}}" class="span9 tab-content" ng-show="hasUsers">
+    <div id="{{help.showTabsId}}" class="span9 tab-content" ng-show="hasUsers">
       <div class="menu-toolbar">
         <ul class="inline">
           <li class="tab" ng-class="currentUsersPage.route === '/users/profile' ? 'selected' : ''"><div class="btn btn-primary toolbar" ><a class="btn-content" ng-click="selectUserPage('/users/profile')"><i class="pictogram">&#59170;</i>Profile</a> <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users profile tab')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_profile_tab}}" tooltip-placement="right">(?)</a></div></li>
