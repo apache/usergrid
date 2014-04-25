@@ -56,8 +56,9 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+
 /**
- * Core Persistence backed EntityManagerFactory.
+ * Implement good-old Usergrid EntityManagerFactory with the new-fangled Core Persistence API.
  * This is where we keep track of applications and system properties.
  */
 public class CpEntityManagerFactory implements EntityManagerFactory, ApplicationContextAware {
@@ -76,19 +77,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     // organization scope in which to store system info
     public static final String SYSTEM_ORG_UUID = "b6768a08-b5d5-11e3-a495-10ddb1de66c1";
-    public static final String SYSTEM_ORG_TYPE = "zzz_systemorg_zzz";
+    public static final String SYSTEM_ORG_TYPE = "zzzsystemorgzzz";
 
     // collection scope in which to store Organization record entities
     public static final String SYSTEM_ORGS_UUID = "b6768a08-b5d5-11e3-a495-10ddb1de66c2";
-    public static final String SYSTEM_ORGS_TYPE = "zzz_orgs_zzz";
+    public static final String SYSTEM_ORGS_TYPE = "zzzorgszzz";
 
     // collection scope in which to store Application record entities
     public static final String SYSTEM_APPS_UUID = "b6768a08-b5d5-11e3-a495-10ddb1de66c3";
-    public static final String SYSTEM_APPS_TYPE = "zzz_apps_zzz";
+    public static final String SYSTEM_APPS_TYPE = "zzzappszzz";
     
     // collection scope in which to store the one and only Properties entity
     public static final String SYSTEM_PROPS_UUID = "b6768a08-b5d5-11e3-a495-10ddb1de66c5";
-    public static final String SYSTEM_PROPS_TYPE = "zzz_props_zzz"; 
+    public static final String SYSTEM_PROPS_TYPE = "zzzpropszzz"; 
 
 
     public static final OrganizationScope SYSTEM_ORG_SCOPE = 

@@ -182,4 +182,9 @@ public class CoreApplication implements Application, TestRule {
     public Entity get(UUID id, String type) throws Exception {
         return em.get( id, type );
     }
+
+    @Override
+    public void refreshIndex() {
+        em.refreshIndex();
+    }
 }

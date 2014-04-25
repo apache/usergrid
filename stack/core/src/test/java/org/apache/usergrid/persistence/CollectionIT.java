@@ -109,7 +109,7 @@ public class CollectionIT extends AbstractCoreIT {
         LOG.info( "" + activity.getClass() );
         LOG.info( JsonUtils.mapToFormattedJsonString( activity ) );
 
-        activity = app.get( activity.getUuid() );
+        activity = app.get( activity.getUuid(), activity.getType() );
 
         LOG.info( "Activity class = {}", activity.getClass() );
         LOG.info( JsonUtils.mapToFormattedJsonString( activity ) );
@@ -128,7 +128,7 @@ public class CollectionIT extends AbstractCoreIT {
         app.put( "content", "I ate a pickle" );
         app.put( "ordinal", 2 );
         Entity activity2 = app.create( "activity" );
-        activity2 = app.get( activity2.getUuid() );
+        activity2 = app.get( activity2.getUuid(), activity2.getType() );
         app.addToCollection( user, "activities", activity2 );
 
         app.put( "actor", new LinkedHashMap<String, Object>() {
@@ -141,8 +141,10 @@ public class CollectionIT extends AbstractCoreIT {
         app.put( "content", "I ate an apple" );
         app.put( "ordinal", 1 );
         Entity activity3 = app.create( "activity" );
-        activity3 = app.get( activity3.getUuid() );
+        activity3 = app.get( activity3.getUuid(), activity3.getType() );
         app.addToCollection( user, "activities", activity3 );
+
+        app.refreshIndex();
 
         // empty query
         Query query = new Query();

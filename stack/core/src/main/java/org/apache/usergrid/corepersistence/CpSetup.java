@@ -22,6 +22,7 @@ import com.google.inject.Injector;
 import com.netflix.config.ConfigurationManager;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.UUID;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.cassandra.*;
 
@@ -105,9 +106,12 @@ public class CpSetup implements Setup {
 
 
     public void createDefaultApplications() throws Exception {
-        // TODO unique check?
-        emf.initializeApplication( DEFAULT_ORGANIZATION, DEFAULT_APPLICATION_ID, DEFAULT_APPLICATION, null );
-        emf.initializeApplication( DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION_ID, MANAGEMENT_APPLICATION, null );
+
+        UUID DEFAULT_APP_ID    = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
+        UUID MANAGEMENT_APP_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
+
+        emf.initializeApplication( DEFAULT_ORGANIZATION, DEFAULT_APP_ID, DEFAULT_APPLICATION, null );
+        emf.initializeApplication( DEFAULT_ORGANIZATION, MANAGEMENT_APP_ID, MANAGEMENT_APPLICATION, null );
     }
 
 

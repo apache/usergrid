@@ -59,7 +59,7 @@ public class CorePerformanceIT {
     private static final Logger log = LoggerFactory.getLogger(CorePerformanceIT.class);
 
     // max entities we will write and read
-    static int maxEntities = Integer.MAX_VALUE;
+    static int maxEntities = 100; // TODO: make this configurable when you add Chop 
 
     // each app will get all data
     static int orgCount = 2;

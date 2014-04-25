@@ -146,4 +146,6 @@ public interface Application extends TestRule {
      * @param Entity to be removed.
      */
     public void remove( Entity entity ) throws Exception;
+
+    public void refreshIndex();
 }

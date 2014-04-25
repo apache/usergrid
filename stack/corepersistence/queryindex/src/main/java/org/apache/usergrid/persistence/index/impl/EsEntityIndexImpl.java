@@ -51,6 +51,7 @@ import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -238,11 +239,16 @@ public class EsEntityIndexImpl implements EntityIndex {
         index( collScopeTypeName, collScopeTypeName, entity ); 
     }
 
-    private void index( String collScopeTypeName, String connScopeTypeName, Entity entity ) {
+    private void index( String entityScope, String targetScope, Entity entity ) {
+
+        log.debug("Indexing entity:  " + entity.getId().toString());
+        log.debug("    Index Name:   " + this.indexName);
+        log.debug("    Entity Scope: " + entityScope);
+        log.debug("    Target Scope: " + targetScope);
         
         ValidationUtils.verifyEntityWrite(entity);
 
-        initType( connScopeTypeName );
+        initType( targetScope );
 
         StopWatch timer = null;
         if ( log.isDebugEnabled() ) {
@@ -253,12 +259,12 @@ public class EsEntityIndexImpl implements EntityIndex {
         Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
         entityAsMap.put("created", entity.getId().getUuid().timestamp());
         entityAsMap.put("updated", entity.getVersion().timestamp());
-        entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, collScopeTypeName ); 
+        entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, entityScope ); 
 
         String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
 
         IndexRequestBuilder irb = client
-            .prepareIndex( indexName, connScopeTypeName, indexId)
+            .prepareIndex( indexName, targetScope, indexId)
             .setSource(entityAsMap)
             .setRefresh(refresh);
 
@@ -308,12 +314,16 @@ public class EsEntityIndexImpl implements EntityIndex {
     public Results search( String typeName, Query query) {
 
         QueryBuilder qb = query.createQueryBuilder();
-
+        
+        log.debug("Search");
+        log.debug("    Index Name:  " + this.indexName);
+        log.debug("    Target Type: " + typeName);
+        log.debug("    Query:       " + qb.toString() );
+        
+            
         SearchResponse searchResponse;
-
         if (query.getCursor() == null) {
 
-            log.debug("Executing query query: {} ", qb.toString());
 
             SearchRequestBuilder srb = client.prepareSearch(indexName)
                 .setTypes( typeName )
@@ -420,7 +430,7 @@ public class EsEntityIndexImpl implements EntityIndex {
      * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each
      * StringField.
      */
-    public static Map entityToMap(Entity entity) {
+    public static Map entityToMap(EntityObject entity) {
 
         Map<String, Object> entityMap = new HashMap<String, Object>();
 
@@ -438,8 +448,8 @@ public class EsEntityIndexImpl implements EntityIndex {
                         new ArrayList(processCollectionForMap(set)));
 
             } else if (f instanceof EntityObjectField) {
-                Entity ev = (Entity) field.getValue();
-                entityMap.put(field.getName(), entityToMap(ev)); // recursion
+                EntityObject eo = (EntityObject)field.getValue();
+                entityMap.put(field.getName(), entityToMap(eo)); // recursion
 
             } else if (f instanceof StringField) {
                 // index in lower case because Usergrid queries are case insensitive

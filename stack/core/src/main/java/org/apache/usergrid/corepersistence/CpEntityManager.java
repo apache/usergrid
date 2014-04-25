@@ -51,6 +51,7 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
@@ -79,6 +80,10 @@ import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+/**
+ * Implement good-old Usergrid EntityManager with the new-fangled Core Persistence API.
+ */
 public class CpEntityManager implements EntityManager {
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManager.class );
 
@@ -101,12 +106,11 @@ public class CpEntityManager implements EntityManager {
             UUID applicationId, boolean skipAggregateCounters ) {
 
         this.emf = emf;
+        this.applicationId = applicationId;
 
 //        this.cass = cass;
 //        this.counterUtils = counterUtils;
-//        this.applicationId = applicationId;
 //        this.skipAggregateCounters = skipAggregateCounters;
-//
 //        qmf = ( QueueManagerFactoryImpl ) getApplicationContext().getBean( "queueManagerFactory" );
 //        indexBucketLocator = ( IndexBucketLocator ) getApplicationContext().getBean( "indexBucketLocator" );
 
@@ -208,8 +212,8 @@ public class CpEntityManager implements EntityManager {
 
         EntityCollectionManager ecm = ecmf.createCollectionManager(collectionScope);
 
-        logger.debug("Loading entity {} type {} to {}", 
-            new String[] { entityId.toString(), type, collectionName });
+//        logger.debug("Loading entity {} type {} to {}", 
+//            new String[] { entityId.toString(), type, collectionName });
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
             ecm.load( id ).toBlockingObservable().last();
@@ -324,15 +328,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Results searchCollection(
             EntityRef entityRef, String collectionName, Query query) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
-//        String type = typesByCollectionNames.get( collectionName );
-//		if ( type == null ) {
-//			throw new RuntimeException( 
-//					"No type found for collection name: " + collectionName);
-//		}
-//
-//        org.apache.usergrid.persistence.index.query.Results results = eci.execute( query );
-//        return results;
+
+        return getRelationManager(entityRef).searchCollection(collectionName, query);
     }
 
 
@@ -348,7 +345,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public EntityRef getApplicationRef() {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return new SimpleEntityRef( TYPE_APPLICATION, applicationId );
     }
 
     @Override
@@ -373,7 +370,9 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public RelationManager getRelationManager(EntityRef entityRef) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        CpRelationManager rmi = new CpRelationManager();
+        rmi.init( this, emf, applicationId, entityRef, null);
+        return rmi;
     }
 
     @Override
@@ -421,8 +420,9 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public EntityRef validate(EntityRef entityRef) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public EntityRef validate( EntityRef entityRef ) throws Exception {
+        // all entity refs should have type in CP
+        return entityRef; 
     }
 
     @Override
@@ -567,7 +567,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Entity addToCollection(
             EntityRef entityRef, String collectionName, EntityRef itemRef) throws Exception {
-        return get( entityRef );
+
+        return getRelationManager( entityRef ).addToCollection(collectionName, itemRef);
     }
 
     @Override
@@ -1020,7 +1021,6 @@ public class CpEntityManager implements EntityManager {
 
         if ( !is_application ) {
             // Add entity to collection
-
 //            if ( !emptyPropertyMap ) {
 //                addInsertToMutator( m, ENTITY_ID_SETS, collection_key, itemId, null, timestamp );
 //            }
@@ -1067,7 +1067,7 @@ public class CpEntityManager implements EntityManager {
         }
 
         A entity = EntityFactory.newEntity( itemId, eType, entityClass );
-        logger.info( "Entity created of type {}", entity.getClass().getName() );
+//        logger.info( "Entity created of type {}", entity.getClass().getName() );
 
         if ( Event.ENTITY_TYPE.equals( eType ) ) {
             Event event = ( Event ) entity.toTypedEntity();
@@ -1102,8 +1102,8 @@ public class CpEntityManager implements EntityManager {
         EntityCollectionManager ecm = ecmf.createCollectionManager(collectionScope);
         EntityIndex ei = eif.createEntityIndex(organizationScope, applicationScope);
 
-        logger.debug("Writing entity {} type {} to {}", 
-            new String[] { cpEntity.getId().getUuid().toString(), entity.getType(), collectionName });
+//        logger.debug("Writing entity {} type {} to {}", 
+//            new String[] { cpEntity.getId().getUuid().toString(), entity.getType(), collectionName });
         
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
         ei.index( collectionScope, cpEntity );
@@ -1112,10 +1112,6 @@ public class CpEntityManager implements EntityManager {
         entity.setUuid( cpEntity.getId().getUuid() );
         Map<String, Object> entityMap = EntityMapUtils.toMap( cpEntity );
         entity.addProperties( entityMap );
-
-//        if ( !is_application ) {
-//            incrementEntityCollection( collection_name, timestamp );
-//        }
 
         return entity;
     }
