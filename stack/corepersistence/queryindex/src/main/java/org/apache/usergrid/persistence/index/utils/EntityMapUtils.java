@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.persistence.model.field.value.Location;
 
 
@@ -190,7 +191,7 @@ public class EntityMapUtils {
      * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each
      * StringField.
      */
-    public static Map toMap(Entity entity) {
+    public static Map toMap(EntityObject entity) {
 
         Map<String, Object> entityMap = new HashMap<String, Object>();
 
@@ -208,8 +209,8 @@ public class EntityMapUtils {
                         new ArrayList(processCollectionForMap(set)));
 
             } else if (f instanceof EntityObjectField) {
-                Entity ev = (Entity) field.getValue();
-                entityMap.put(field.getName(), toMap(ev)); // recursion
+                EntityObject eo = (EntityObject) field.getValue();
+                entityMap.put(field.getName(), toMap(eo)); // recursion
 
             } else if (f instanceof StringField) {
                 // index in lower case because Usergrid queries are case insensitive
