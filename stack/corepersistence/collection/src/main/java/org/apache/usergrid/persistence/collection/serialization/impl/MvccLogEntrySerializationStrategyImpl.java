@@ -237,7 +237,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     /**
-     * Internal stage cache
+     * Internal stage shard
      */
     private static class StageCache {
         private Map<Integer, Stage> values = new HashMap<Integer, Stage>( Stage.values().length );

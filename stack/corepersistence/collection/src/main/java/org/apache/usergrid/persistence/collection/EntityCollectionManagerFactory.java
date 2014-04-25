@@ -28,7 +28,7 @@ public interface EntityCollectionManagerFactory {
     /**
      * Create a new EntityCollectionManager for the given context. 
      * The EntityCollectionManager can safely be used on the current thread 
-     * and will cache responses.  The returned instance should not be shared 
+     * and will shard responses.  The returned instance should not be shared
      * among threads it will not be guaranteed to be thread safe.
      *
      * @param collectionScope The collectionScope collectionScope to use 
@@ -44,7 +44,7 @@ public interface EntityCollectionManagerFactory {
     /**
      * Create a new EntityCollectionManagerSync for the given context. 
      * The EntityCollectionManager can safely be used on the current thread 
-     * and will cache responses.  The returned instance should not be shared 
+     * and will shard responses.  The returned instance should not be shared
      * among threads it will not be guaranteed to be thread safe.  
      * This implementation will be synchronous. Try to use the consistency
      * implementation if possible

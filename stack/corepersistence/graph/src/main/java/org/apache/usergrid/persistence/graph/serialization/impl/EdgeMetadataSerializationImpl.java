@@ -47,6 +47,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.parse.StringColu
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -89,7 +90,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
             new MultiTennantColumnFamily<OrganizationScope, Id, String>( "Graph_Source_Edge_Types", ROW_KEY_SER,
                     STRING_SERIALIZER );
 
-       //all target id types for source edge type
+    //all target id types for source edge type
     private static final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> CF_SOURCE_EDGE_ID_TYPES =
             new MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String>( "Graph_Source_Edge_Id_Types",
                     EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
@@ -102,12 +103,10 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                     STRING_SERIALIZER );
 
 
-
     //all source id types for target edge type
     private static final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> CF_TARGET_EDGE_ID_TYPES =
             new MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String>( "Graph_Target_Edge_Id_Types",
                     EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
-
 
 
     protected final Keyspace keyspace;
@@ -115,10 +114,14 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     private final GraphFig graphFig;
 
 
-
     @Inject
     public EdgeMetadataSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
                                           final GraphFig graphFig ) {
+
+        Preconditions.checkNotNull( "cassandraConfig is required", cassandraConfig );
+        Preconditions.checkNotNull( "graphFig is required", graphFig );
+        Preconditions.checkNotNull( "keyspace is required", keyspace );
+
         this.keyspace = keyspace;
         this.cassandraConfig = cassandraConfig;
         this.graphFig = graphFig;
@@ -147,7 +150,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
         //write source->target edge type and id type to meta data
-        EdgeIdTypeKey tk = new EdgeIdTypeKey( source, edgeType ); 
+        EdgeIdTypeKey tk = new EdgeIdTypeKey( source, edgeType );
         final ScopedRowKey<OrganizationScope, EdgeIdTypeKey> sourceTypeKey =
                 new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope, tk );
 
@@ -191,7 +194,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     @Override
     public MutationBatch removeIdTypeFromSource( final OrganizationScope scope, final Edge edge ) {
-        return removeIdTypeFromSource( scope, edge.getSourceNode(), edge.getType(),  edge.getTargetNode().getType(),
+        return removeIdTypeFromSource( scope, edge.getSourceNode(), edge.getType(), edge.getTargetNode().getType(),
                 edge.getVersion() );
     }
 
@@ -199,8 +202,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     @Override
     public MutationBatch removeIdTypeFromSource( final OrganizationScope scope, final Id sourceNode, final String type,
                                                  final String idType, final UUID version ) {
-        return removeIdType( scope, sourceNode, idType, type, version,
-                        CF_SOURCE_EDGE_ID_TYPES );
+        return removeIdType( scope, sourceNode, idType, type, version, CF_SOURCE_EDGE_ID_TYPES );
     }
 
 
@@ -213,21 +215,21 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     @Override
     public MutationBatch removeEdgeTypeToTarget( final OrganizationScope scope, final Id targetNode, final String type,
                                                  final UUID version ) {
-        return removeEdgeType( scope, targetNode,type, version, CF_TARGET_EDGE_TYPES );
+        return removeEdgeType( scope, targetNode, type, version, CF_TARGET_EDGE_TYPES );
     }
 
 
     @Override
     public MutationBatch removeIdTypeToTarget( final OrganizationScope scope, final Edge edge ) {
-        return removeIdTypeToTarget(scope, edge.getTargetNode(), edge.getType(),  edge.getSourceNode().getType(), edge.getVersion());
+        return removeIdTypeToTarget( scope, edge.getTargetNode(), edge.getType(), edge.getSourceNode().getType(),
+                edge.getVersion() );
     }
 
 
     @Override
     public MutationBatch removeIdTypeToTarget( final OrganizationScope scope, final Id targetNode, final String type,
                                                final String idType, final UUID version ) {
-        return removeIdType( scope, targetNode, idType,type, version,
-                CF_TARGET_EDGE_ID_TYPES );
+        return removeIdType( scope, targetNode, idType, type, version, CF_TARGET_EDGE_ID_TYPES );
     }
 
 
@@ -257,7 +259,6 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
         return batch;
     }
-
 
 
     /**
@@ -338,9 +339,8 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
-        return new ColumnNameIterator<String, String>( query, PARSER,
-                    search.getLast().isPresent(), graphFig.getReadTimeout() );
-
+        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent(),
+                graphFig.getReadTimeout() );
     }
 
 
@@ -370,15 +370,15 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
         //resume from the last if specified.  Also set the range
         final ByteBufferRange searchRange =
-                new RangeBuilder().setLimit( cassandraConfig.getScanPageSize() ).setStart( search.getLast().or( "" ) ).build();
+                new RangeBuilder().setLimit( cassandraConfig.getScanPageSize() ).setStart( search.getLast().or( "" ) )
+                                  .build();
 
         RowQuery<ScopedRowKey<OrganizationScope, EdgeIdTypeKey>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true ).withColumnRange( searchRange );
 
 
-       return new ColumnNameIterator<String, String>( query, PARSER,
-                    search.getLast().isPresent(), graphFig.getReadTimeout() );
-
+        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent(),
+                graphFig.getReadTimeout() );
     }
 
 
@@ -393,8 +393,9 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      * Helper to generate an edge definition by the type
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
-        return new MultiTennantColumnFamilyDefinition( cf,
-                BytesType.class.getSimpleName(),UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+        return new MultiTennantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(),
+                UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(),
+                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
     }
 
 

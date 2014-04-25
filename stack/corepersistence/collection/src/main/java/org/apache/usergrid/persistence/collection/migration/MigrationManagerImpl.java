@@ -36,17 +36,15 @@ public class MigrationManagerImpl implements MigrationManager {
 
     private final Set<Migration> migrations;
     private final Keyspace keyspace;
-    private final Properties props;
 
     private final MigrationManagerFig fig;
 
 
     @Inject
-    public MigrationManagerImpl( final Keyspace keyspace, final Set<Migration> migrations, final Properties props,
+    public MigrationManagerImpl( final Keyspace keyspace, final Set<Migration> migrations,
                                  MigrationManagerFig fig ) {
         this.keyspace = keyspace;
         this.migrations = migrations;
-        this.props = props;
         this.fig = fig;
     }
 
@@ -64,7 +62,7 @@ public class MigrationManagerImpl implements MigrationManager {
                 final Collection<MultiTennantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
 
 
-                if ( columnFamilies == null ) {
+                if ( columnFamilies == null || columnFamilies.size() == 0 ) {
                     logger.warn(
                             "Class {} implements {} but returns null column families for migration.  Either implement"
                                     + " this method or remove the interface from the class", migration.getClass(),
@@ -133,10 +131,7 @@ public class MigrationManagerImpl implements MigrationManager {
         }
 
 
-        ImmutableMap.Builder<String, Object> strategyOptions =
-                ImmutableMap.<String, Object>builder().put( "replication_factor", fig.getReplicationFactor() );
-
-        strategyOptions.putAll( getKeySpaceProps() );
+        ImmutableMap.Builder<String, Object> strategyOptions = getKeySpaceProps();
 
 
         ImmutableMap<String, Object> options =
@@ -153,19 +148,22 @@ public class MigrationManagerImpl implements MigrationManager {
     /**
      * Get keyspace properties
      */
-    private Map<String, String> getKeySpaceProps() {
-        Map<String, String> keyspaceProps = new HashMap<String, String>();
+    private ImmutableMap.Builder<String, Object> getKeySpaceProps() {
+        ImmutableMap.Builder<String, Object> keyspaceProps = ImmutableMap.<String, Object>builder();
 
-        for ( Map.Entry<Object, Object> entry : props.entrySet() ) {
-            final String key = entry.getKey().toString();
+        String optionString = fig.getStrategyOptions();
 
-            if ( ! key.startsWith( fig.getKeyByMethod( "getStrategyOptions" ) ) ) {
-                continue;
-            }
+        if(optionString == null){
+            return keyspaceProps;
+        }
 
-            final String optionKey = key.substring( fig.getKeyByMethod( "getStrategyOptions" ).length() + 1 );
 
-            keyspaceProps.put( optionKey, entry.getValue().toString() );
+
+        for ( String key : optionString.split( "," ) ) {
+
+            final String[] options = key.split( ":" );
+
+            keyspaceProps.put( options[0], options[1] );
         }
 
         return keyspaceProps;

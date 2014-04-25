@@ -26,7 +26,7 @@ import java.util.UUID;
  * Interface for creating identifiers for an entity. The implementation should implement
  * the equals and hasCode methods
  * @author tnine */
-public interface Id {
+public interface Id extends Comparable<Id> {
 
     /**
      * Get the uuid for this id

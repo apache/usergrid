@@ -482,8 +482,15 @@ public class EdgeMetadataSerializationTest {
         final String CF_NAME = "test";
         final StringSerializer STR_SER = StringSerializer.get();
 
+
+
         ColumnFamily<String, String> testCf = new ColumnFamily<String, String>( CF_NAME, STR_SER, STR_SER );
-        keyspace.createColumnFamily( testCf, null );
+
+        if(keyspace.describeKeyspace().getColumnFamily( CF_NAME ) == null){
+            keyspace.createColumnFamily( testCf, null );
+        }
+
+
 
 
         final String key = "key";

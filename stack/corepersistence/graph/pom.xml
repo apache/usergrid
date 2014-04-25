@@ -26,7 +26,7 @@
     <groupId>org.apache.usergrid</groupId>
     <version>2.0.0-SNAPSHOT</version>
   </parent>
-  
+
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>graph</artifactId>
@@ -37,6 +37,20 @@
       <groupId>org.apache.usergrid</groupId>
       <artifactId>collection</artifactId>
       <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
+      <version>4.0</version>
+    </dependency>
+
+    <!-- utilized for hyperloglog cardinality terms -->
+    <dependency>
+      <groupId>com.clearspring.analytics</groupId>
+      <artifactId>stream</artifactId>
+      <version>2.6.0</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -96,6 +110,20 @@
             <param>${myip.address}/32:24981</param>
             <param>${myip.address}/32:22</param>
           </securityGroupExceptions>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- We want to exclude any chop tests or stress tests.  They kill the embedded cassandra and
+          aren't intended to be part of the build process-->
+          <excludes>
+            <exclude>**/*ChopTest.java</exclude>
+            <exclude>**/*LoadTest.java</exclude>
+            <exclude>**/*StressTest.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
 
