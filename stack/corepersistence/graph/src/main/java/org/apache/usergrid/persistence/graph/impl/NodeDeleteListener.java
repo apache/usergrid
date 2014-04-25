@@ -35,9 +35,10 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.graph.consistency.MessageListener;
-import org.apache.usergrid.persistence.graph.guice.CommitLog;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.NodeDelete;
-import org.apache.usergrid.persistence.graph.guice.PermanentStorage;
+import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -84,8 +85,8 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                                final EdgeMetadataSerialization edgeMetadataSerialization,
                                final EdgeMetaRepair edgeMetaRepair, final GraphFig graphFig,
                                @NodeDelete final AsyncProcessor nodeDelete,
-                               @CommitLog final EdgeSerialization commitLogSerialization,
-                               @PermanentStorage final EdgeSerialization storageSerialization,
+                               @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
+                               @StorageEdgeSerialization final EdgeSerialization storageSerialization,
                                final MergedEdgeReader mergedEdgeReader, final Keyspace keyspace ) {
 
 

@@ -24,7 +24,8 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.graph.guice.CommitLog;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 
 import com.google.inject.Inject;
@@ -35,7 +36,7 @@ import com.google.inject.Inject;
 public class CommitlogSerializationTest extends EdgeSerializationTest {
 
     @Inject
-    @CommitLog
+    @CommitLogEdgeSerialization
     protected EdgeSerialization edgeSerialization;
 
     @Override

@@ -38,13 +38,14 @@ import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.guice.CommitLog;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
-import org.apache.usergrid.persistence.graph.guice.PermanentStorage;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -81,11 +82,11 @@ public class EdgeMetaRepairTest {
     protected EdgeMetaRepair edgeMetaRepair;
 
     @Inject
-    @CommitLog
+    @CommitLogEdgeSerialization
     protected EdgeSerialization commitLogEdgeSerialization;
 
     @Inject
-    @PermanentStorage
+    @StorageEdgeSerialization
     protected EdgeSerialization storageEdgeSerialization;
 
     @Inject

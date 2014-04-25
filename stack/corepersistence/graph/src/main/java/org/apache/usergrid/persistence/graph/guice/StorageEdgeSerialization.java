@@ -31,4 +31,4 @@ import com.google.inject.BindingAnnotation;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD })
 @BindingAnnotation
-public @interface CommitLog {}
+public @interface StorageEdgeSerialization {}

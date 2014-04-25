@@ -29,7 +29,8 @@ import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.graph.consistency.MessageListener;
-import org.apache.usergrid.persistence.graph.guice.CommitLog;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.EdgeWrite;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
@@ -61,8 +62,8 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, EdgeE
 
 
     @Inject
-    public EdgeWriteListener( @CommitLog final EdgeSerialization commitLog,
-                              @CommitLog final EdgeSerialization permanentStorage, final Keyspace keyspace,
+    public EdgeWriteListener( @CommitLogEdgeSerialization final EdgeSerialization commitLog,
+                              @CommitLogEdgeSerialization final EdgeSerialization permanentStorage, final Keyspace keyspace,
                               @EdgeWrite final AsyncProcessor edgeWrite, final GraphFig graphFig ) {
 
 

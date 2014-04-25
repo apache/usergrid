@@ -29,8 +29,9 @@ import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
-import org.apache.usergrid.persistence.graph.guice.CommitLog;
-import org.apache.usergrid.persistence.graph.guice.PermanentStorage;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
@@ -53,8 +54,8 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
 
 
     @Inject
-    public MergedEdgeReaderImpl( @CommitLog final EdgeSerialization commitLogSerialization,
-                                 @PermanentStorage final EdgeSerialization permanentSerialization,
+    public MergedEdgeReaderImpl( @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
+                                 @StorageEdgeSerialization final EdgeSerialization permanentSerialization,
                                  final CassandraConfig cassandraConfig ) {
         this.commitLogSerialization = commitLogSerialization;
         this.permanentSerialization = permanentSerialization;

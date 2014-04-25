@@ -29,8 +29,9 @@ import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.guice.CommitLog;
-import org.apache.usergrid.persistence.graph.guice.PermanentStorage;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
@@ -65,8 +66,8 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
 
     @Inject
-    public EdgeDeleteRepairImpl( @CommitLog final EdgeSerialization commitLogSerialization,
-                                 @PermanentStorage final EdgeSerialization storageSerialization,
+    public EdgeDeleteRepairImpl( @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
+                                 @StorageEdgeSerialization final EdgeSerialization storageSerialization,
                                  final MergedEdgeReader mergedEdgeReader, final GraphFig graphFig,
                                  final Keyspace keyspace ) {
 

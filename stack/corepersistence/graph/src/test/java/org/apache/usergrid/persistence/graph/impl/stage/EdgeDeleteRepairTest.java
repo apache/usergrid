@@ -37,8 +37,9 @@ import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.guice.CommitLog;
-import org.apache.usergrid.persistence.graph.guice.PermanentStorage;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -76,12 +77,12 @@ public class EdgeDeleteRepairTest {
 
 
     @Inject
-    @CommitLog
+    @CommitLogEdgeSerialization
     protected EdgeSerialization commitLogEdgeSerialization;
 
 
     @Inject
-    @PermanentStorage
+    @StorageEdgeSerialization
     protected EdgeSerialization storageEdgeSerialization;
 
     @Inject

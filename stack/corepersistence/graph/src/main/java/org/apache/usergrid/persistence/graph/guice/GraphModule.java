@@ -147,8 +147,8 @@ public class GraphModule extends AbstractModule {
         migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class ) );
 
         //bind each singleton to the multi set.  Otherwise we won't migrate properly
-        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, PermanentStorage.class ) );
-        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, CommitLog.class ) );
+        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, StorageEdgeSerialization.class ) );
+        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, CommitLogEdgeSerialization.class ) );
 
         migrationBinding.addBinding().to( Key.get( EdgeShardSerialization.class ) );
         migrationBinding.addBinding().to( Key.get( EdgeShardCounterSerialization.class ) );
@@ -161,7 +161,7 @@ public class GraphModule extends AbstractModule {
     @Provides
     @Singleton
     @Inject
-    @PermanentStorage
+    @StorageEdgeSerialization
     public EdgeSerialization permanentStorageSerialization( final NodeShardCache cache, final Keyspace keyspace,
                                                             final CassandraConfig cassandraConfig,
                                                             final GraphFig graphFig ) {
@@ -182,7 +182,7 @@ public class GraphModule extends AbstractModule {
     @Provides
     @Singleton
     @Inject
-    @CommitLog
+    @CommitLogEdgeSerialization
     public EdgeSerialization commitlogStorageSerialization( final NodeShardCache cache, final Keyspace keyspace,
                                                             final CassandraConfig cassandraConfig,
                                                             final GraphFig graphFig ) {
