@@ -31,9 +31,11 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.index.EntityCollectionIndex;
-import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
+import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -68,7 +70,7 @@ public class CorePerformanceIT {
     // total number of records = orgCount x appCount x numRecords
 
     static EntityCollectionManagerFactory ecmf;
-    static EntityCollectionIndexFactory ecif ;
+    static EntityIndexFactory ecif ;
 
 
     @Ignore
@@ -83,10 +85,10 @@ public class CorePerformanceIT {
         //m.migrate()
 
         ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
-        ecif = injector.getInstance( EntityCollectionIndexFactory.class );
+        ecif = injector.getInstance( EntityIndexFactory.class );
 
         log.info("Start Data Load");
-        List<CollectionScope> scopes = loadData();
+        List<OrgAppCollectionScope> scopes = loadData();
         log.info("Finish Data Load");
 
         log.info("Start Data Read");
@@ -97,28 +99,42 @@ public class CorePerformanceIT {
 
     }
 
+    private static class OrgAppCollectionScope {
+        public OrganizationScope orgScope;
+        public CollectionScope appScope;
+        public CollectionScope scope;
+        public OrgAppCollectionScope( 
+                OrganizationScope orgScope, CollectionScope appScope, CollectionScope scope ) {
+            this.orgScope = orgScope;
+            this.appScope = appScope;
+            this.scope = scope;
+        }
+    }
 
-    private List<CollectionScope> loadData() throws InterruptedException {
+    private List<OrgAppCollectionScope> loadData() throws InterruptedException {
 
         long time = new Date().getTime();
 
-        List<CollectionScope> scopes = new ArrayList<CollectionScope>();
+        List<OrgAppCollectionScope> scopes = new ArrayList<OrgAppCollectionScope>();
         List<Thread> threads = new ArrayList<Thread>();
 
         for ( int i=0; i<orgCount; i++ ) {
 
             String orgName = "org-" + i + "-" + time;
-            final Id orgId = new SimpleId(orgName);
+            Id orgId = new SimpleId(orgName);
+            OrganizationScope orgScope = new OrganizationScopeImpl(orgId);
 
             for ( int j=0; j<appCount; j++ ) {
 
                 String appName = "app-" + j + "-" + time;
-                final Id appId = new SimpleId(appName);
+                Id appId = new SimpleId(appName);
+                CollectionScope appScope = new CollectionScopeImpl( orgId, appId, appName );
 
                 CollectionScope scope = new CollectionScopeImpl( orgId, appId, "reviews" );
-                scopes.add( scope );
+                OrgAppCollectionScope orgAppScope = new OrgAppCollectionScope(orgScope, appScope, scope); 
+                scopes.add( orgAppScope );
 
-                Thread t = new Thread( new DataLoader( scope ));
+                Thread t = new Thread( new DataLoader( orgAppScope ));
                 t.start();
                 threads.add(t);
             }
@@ -133,10 +149,10 @@ public class CorePerformanceIT {
     }
 
 
-    private void readData( List<CollectionScope> scopes ) throws InterruptedException {
+    private void readData( List<OrgAppCollectionScope> scopes ) throws InterruptedException {
 
         List<Thread> threads = new ArrayList<Thread>();
-        for ( CollectionScope scope : scopes ) {
+        for ( OrgAppCollectionScope scope : scopes ) {
 
             Thread t = new Thread( new DataReader( scope ));
             t.start();
@@ -151,30 +167,30 @@ public class CorePerformanceIT {
 
 
     static class DataReader implements Runnable {
-        CollectionScope scope;
+        OrgAppCollectionScope orgAppScope;
 
-        public DataReader( CollectionScope scope ) {
-            this.scope = scope;
+        public DataReader( OrgAppCollectionScope orgAppScope ) {
+            this.orgAppScope = orgAppScope;
         }
 
         public void run() {
 
-            Id orgId = scope.getOrganization();
-            Id appId = scope.getOwner();
+            Id orgId = orgAppScope.scope.getOrganization();
+            Id appId = orgAppScope.scope.getOwner();
 
-            EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
-            EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+            EntityCollectionManager ecm = ecmf.createCollectionManager( orgAppScope.scope );
+            EntityIndex eci = ecif.createEntityIndex(orgAppScope.orgScope, orgAppScope.appScope );
 
             Query query = Query.fromQL( "review_score > 0"); // get all reviews;
             query.withLimit( maxEntities < 1000 ? maxEntities : 1000 );
 
-            Results results = eci.execute( query );
+            Results results = eci.search( orgAppScope.scope, query );
             results.getEntities(); // cause retrieval from Cassandra
             int count = results.size();
 
             while ( results.hasCursor() && count < maxEntities ) {
                 query.setCursor( results.getCursor() )   ;
-                results = eci.execute( query );
+                results = eci.search( orgAppScope.scope, query );
                 results.getEntities(); // cause retrieval from Cassanda;
                 count += results.size();
 
@@ -185,16 +201,16 @@ public class CorePerformanceIT {
 
 
     static class DataLoader implements Runnable {
-        CollectionScope scope;
+        OrgAppCollectionScope orgAppScope;
 
-        public DataLoader( CollectionScope scope ) {
-            this.scope = scope;
+        public DataLoader( OrgAppCollectionScope orgAppScope ) {
+            this.orgAppScope = orgAppScope;
         }
 
         public void run() {
 
-            EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
-            EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+            EntityCollectionManager ecm = ecmf.createCollectionManager( orgAppScope.scope );
+            EntityIndex eci = ecif.createEntityIndex(orgAppScope.orgScope, orgAppScope.appScope );
 
             FileReader fr;
             try {
@@ -209,8 +225,8 @@ public class CorePerformanceIT {
             Entity current = new Entity(
                 new SimpleId(UUIDGenerator.newTimeUUID(), "review")); 
 
-            Id orgId = scope.getOrganization();
-            Id appId = scope.getOwner();
+            Id orgId = orgAppScope.scope.getOrganization();
+            Id appId = orgAppScope.scope.getOwner();
 
             int count = 0;
             try {
@@ -222,7 +238,7 @@ public class CorePerformanceIT {
                             
                             // write and index current entity
                             ecm.write( current ).toBlockingObservable().last();
-                            eci.index( current );
+                            eci.index( orgAppScope.scope, current );
                             
                             if ( maxEntities < 20 ) {
                                 log.info("Index written for {}", current.getId());
@@ -272,32 +288,32 @@ public class CorePerformanceIT {
     }   
 
 
-    public void runSelectedQueries( List<CollectionScope> scopes ) { 
+    public void runSelectedQueries( List<OrgAppCollectionScope> orgAppScopes ) { 
 
-        for ( CollectionScope scope : scopes ) {
+        for ( OrgAppCollectionScope orgAppScope : orgAppScopes ) {
 
-            EntityCollectionManager ecm = ecmf.createCollectionManager( scope );
-            EntityCollectionIndex eci = ecif.createCollectionIndex( scope );
+            EntityCollectionManager ecm = ecmf.createCollectionManager( orgAppScope.scope );
+            EntityIndex eci = ecif.createEntityIndex(orgAppScope.orgScope, orgAppScope.appScope );
 
             // TODO: come up with more and more complex queries for CorePerformanceIT
 
-            query(eci, "product_productid = 'B006K2ZZ7K'") ;
-            query(eci, "review_profilename = 'Twoapennything'") ;
-            query(eci, "review_profilename contains 'Natalia'") ;
-            query(eci, "review_profilename contains 'Patrick'") ;
-            query(eci, "review_time = 1342051200") ;
-            query(eci, "review_time > 1342051200") ;
-            query(eci, "review_score > 0");
-            query(eci, "review_score > 2");
-            query(eci, "review_score > 3");
-            query(eci, "review_score > 4");
-            query(eci, "review_score > 5");
+            query(eci, orgAppScope.scope, "product_productid = 'B006K2ZZ7K'") ;
+            query(eci, orgAppScope.scope, "review_profilename = 'Twoapennything'") ;
+            query(eci, orgAppScope.scope, "review_profilename contains 'Natalia'") ;
+            query(eci, orgAppScope.scope, "review_profilename contains 'Patrick'") ;
+            query(eci, orgAppScope.scope, "review_time = 1342051200") ;
+            query(eci, orgAppScope.scope, "review_time > 1342051200") ;
+            query(eci, orgAppScope.scope, "review_score > 0");
+            query(eci, orgAppScope.scope, "review_score > 2");
+            query(eci, orgAppScope.scope, "review_score > 3");
+            query(eci, orgAppScope.scope, "review_score > 4");
+            query(eci, orgAppScope.scope, "review_score > 5");
         }
     }
 
-    public static void query( EntityCollectionIndex eci, String query ) {;
+    public static void query( EntityIndex eci, CollectionScope scope, String query ) {;
         Query q = Query.fromQL(query) ;
-        Results results = eci.execute( q );
+        Results results = eci.search( scope, q );
         log.info("size = {} returned from query {}",results.size(), q.getQl() );
     }
 

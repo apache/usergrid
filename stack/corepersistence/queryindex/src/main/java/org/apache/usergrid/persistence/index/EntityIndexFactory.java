@@ -18,10 +18,13 @@
  */
 package org.apache.usergrid.persistence.index;
 
+import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 
-public interface EntityCollectionIndexFactory {
+public interface EntityIndexFactory {
 
-    public EntityCollectionIndex createCollectionIndex( CollectionScope scope );
-    
+    public EntityIndex createEntityIndex( 
+        @Assisted OrganizationScope orgScope, 
+        @Assisted CollectionScope appScope);
 }

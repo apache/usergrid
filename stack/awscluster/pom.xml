@@ -23,7 +23,10 @@
     <version>1.0-SNAPSHOT</version>
 
     <name>awscluster</name>
-    <description>Creates bundle for initializing a Cassandra and Priam cluster via CloudFormation</description>
+
+    <description>
+        Creates bundle for initializing a Tomcat and Cassandra Usergrid cluster via CloudFormation
+    </description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

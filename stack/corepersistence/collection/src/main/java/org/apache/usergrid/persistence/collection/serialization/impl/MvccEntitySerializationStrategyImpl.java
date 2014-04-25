@@ -43,6 +43,8 @@ import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -58,10 +60,9 @@ import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
+import com.netflix.astyanax.serializers.ByteBufferSerializer;
 import com.netflix.astyanax.serializers.BytesArraySerializer;
-import com.netflix.astyanax.serializers.ObjectSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
-
 
 /**
  * @author tnine
@@ -73,6 +74,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     private static final EntitySerializer SER = new EntitySerializer();
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
+
+    private static final ByteBufferSerializer BUFFER_SERIALIZER = ByteBufferSerializer.get();
+
+    private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
+
 
     private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
             new CollectionScopedRowKeySerializer<Id>( ID_SER );
@@ -102,8 +108,16 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                colMutation.putColumn( colName,
+                try {
+                    colMutation.putColumn( colName,
                         SER.toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getEntity() ) ) );
+                } catch ( Exception e ) {
+                    // throw better exception if we can
+                    if ( entity != null || entity.getEntity().get() != null ) {
+                        throw new CollectionRuntimeException( entity.getEntity().get(), collectionScope, e );
+                    }
+                    throw e;
+                }
             }
         } );
     }
@@ -128,7 +142,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             return null;
         }
         catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra", e );
         }
 
 
@@ -153,7 +167,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                             .withColumnRange( version, null, false, maxSize ).execute().getResult();
         }
         catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra", e );
         }
 
 
@@ -268,16 +282,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         }
     }
 
+    public static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
 
-    /**
-     * TODO: Serializer for the entity. This just uses object serialization, change this to use SMILE before production!
-     * We want to retain the Optional wrapper.  It helps us easily mark something as cleaned without removing the column
-     * and makes it obvious that the entity could be missing in the api
-     */
-    private static class EntitySerializer extends AbstractSerializer<EntityWrapper> {
+        public static final SmileFactory f = new SmileFactory(  );
 
-        private static final BytesArraySerializer BYTES_ARRAY_SERIALIZER = BytesArraySerializer.get();
-        private static final ObjectSerializer SER = ObjectSerializer.get();
+        public static ObjectMapper mapper = new ObjectMapper(  );
 
         private static byte[] STATE_COMPLETE = new byte[] { 0 };
         private static byte[] STATE_DELETED = new byte[] { 1 };
@@ -289,17 +298,15 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         //the marker for when we're passed a "null" value
         private static final byte[] EMPTY = new byte[] { 0x0 };
 
-
         @Override
         public ByteBuffer toByteBuffer( final EntityWrapper wrapper ) {
-
+            if ( wrapper == null ) {
+                return null;
+            }
 
             CompositeBuilder builder = Composites.newCompositeBuilder();
 
-
             builder.addBytes( VERSION );
-
-
             //mark this version as empty
             if ( !wrapper.entity.isPresent() ) {
                 //we're empty
@@ -318,26 +325,27 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 builder.addBytes( STATE_PARTIAL );
             }
 
-            builder.addBytes( SER.toByteBuffer( wrapper.entity.get() ));
+            try {
+                builder.addBytes( mapper.writeValueAsBytes( wrapper.entity.get() ) );
+            }
+            catch ( Exception e ) {
+                throw new RuntimeException(e.getMessage());
+            }
 
             return builder.build();
         }
 
-
         @Override
         public EntityWrapper fromByteBuffer( final ByteBuffer byteBuffer ) {
+           CompositeParser parser = Composites.newCompositeParser( byteBuffer );
 
-            CompositeParser parser = Composites.newCompositeParser( byteBuffer );
-
-
-            final byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
+            byte[] version = parser.read( BYTES_ARRAY_SERIALIZER );
 
             if ( !Arrays.equals( VERSION, version ) ) {
                 throw new UnsupportedOperationException( "A version of type " + version + " is unsupported" );
             }
 
-
-            final byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
+            byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
 
             /**
              * It's been deleted, remove it
@@ -346,7 +354,21 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
             }
 
-            final Entity storedEntity = ( Entity ) parser.read( SER );
+            Entity storedEntity = null;
+
+            ByteBuffer jsonBytes = parser.read(  BUFFER_SERIALIZER );
+
+            try {
+
+                byte[] array = jsonBytes.array();
+                int start = jsonBytes.arrayOffset();
+                int length = jsonBytes.remaining();
+
+                storedEntity = mapper.readValue( array,start,length,Entity.class);
+            }
+            catch ( Exception e ) {
+                throw new RuntimeException(e.getMessage());
+            }
 
             final Optional<Entity> entity = Optional.of( storedEntity );
 
@@ -355,7 +377,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             }
 
             //it's partial by default
-
             return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
         }
     }

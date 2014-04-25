@@ -126,7 +126,7 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
             return 0;
         }
         catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+            throw new RuntimeException( "An error occurred connecting to cassandra", e );
         }
 
     }

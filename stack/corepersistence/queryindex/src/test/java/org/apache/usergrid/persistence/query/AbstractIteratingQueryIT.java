@@ -28,10 +28,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.legacy.CoreApplication;
 import org.apache.usergrid.persistence.index.legacy.CoreITSetup;
@@ -76,16 +80,22 @@ public abstract class AbstractIteratingQueryIT {
     public EntityCollectionManagerFactory cmf;
     
     @Inject
-    public EntityCollectionIndexFactory cif;
+    public EntityIndexFactory cif;
 
     private EntityManagerFacade em;
 
     @Before
     public void setup() {
-        Id appId = new SimpleId( getClass().getName() );
-        Id orgId = new SimpleId( RandomStringUtils.randomAlphabetic(6));
 
-        em = new EntityManagerFacade( orgId, appId, cmf, cif );
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+
+        Id appId = new SimpleId("application");
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+
+        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "test-collection" );
+
+        em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
         app.setEntityManager( em );                
     }
 

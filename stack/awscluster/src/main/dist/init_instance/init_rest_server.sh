@@ -53,7 +53,7 @@ groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.pr
 
 rm -rf /var/lib/tomcat7/webapps/*
 cp -r /usr/share/usergrid/webapps/* /var/lib/tomcat7/webapps
-groovy configure_portal_new.groovy > /var/lib/tomcat7/webapps/portal/config.js 
+groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js 
 
 # Go
 /etc/init.d/tomcat7 restart
