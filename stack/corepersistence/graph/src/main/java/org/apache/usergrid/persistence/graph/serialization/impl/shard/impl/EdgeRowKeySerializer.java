@@ -19,8 +19,8 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
-import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
-import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
+import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.model.CompositeBuilder;

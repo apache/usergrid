@@ -28,14 +28,13 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.MessageListener;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
-import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.graph.consistency.MessageListener;
-import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.NodeDelete;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
@@ -44,7 +43,7 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerializa
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
-import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -211,8 +210,9 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                         } );
 
         //merge both source and target into 1 observable.  We'll need to check them all regardless of order
-        return Observable.merge( targetEdges,
-                sourceEdges )//buffer and delete marked edges in our buffer size so we're making less trips to cassandra
+        return Observable.merge( targetEdges, sourceEdges )
+
+                //buffer and delete marked edges in our buffer size so we're making less trips to cassandra
                 .buffer( graphFig.getScanPageSize() ).flatMap( new Func1<List<MarkedEdge>, Observable<MarkedEdge>>() {
                     @Override
                     public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {

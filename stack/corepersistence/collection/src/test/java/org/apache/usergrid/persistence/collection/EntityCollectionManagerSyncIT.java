@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNull;
 
 
 /**
- * TODO: Refactor this and the consistency test into 1 common set of assertions with seperate invocations and result
+ * TODO: Refactor this and the org.apache.usergrid.persistence.core.consistency test into 1 common set of assertions with seperate invocations and result
  * returns once jukito is finished
  *
  */
