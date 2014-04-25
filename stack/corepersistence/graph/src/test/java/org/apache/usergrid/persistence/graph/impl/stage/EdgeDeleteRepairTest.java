@@ -20,11 +20,7 @@
 package org.apache.usergrid.persistence.graph.impl.stage;
 
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
@@ -41,14 +37,14 @@ import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.guice.CommitLog;
+import org.apache.usergrid.persistence.graph.guice.PermanentStorage;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
@@ -56,7 +52,6 @@ import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.crea
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -65,8 +60,8 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith(JukitoRunner.class)
-@UseModules({ TestGraphModule.class })
+@RunWith( JukitoRunner.class )
+@UseModules( { TestGraphModule.class } )
 public class EdgeDeleteRepairTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( EdgeDeleteRepairTest.class );
@@ -81,7 +76,13 @@ public class EdgeDeleteRepairTest {
 
 
     @Inject
-    protected EdgeSerialization edgeSerialization;
+    @CommitLog
+    protected EdgeSerialization commitLogEdgeSerialization;
+
+
+    @Inject
+    @PermanentStorage
+    protected EdgeSerialization storageEdgeSerialization;
 
     @Inject
     protected EdgeDeleteRepair edgeDeleteRepair;
@@ -117,101 +118,89 @@ public class EdgeDeleteRepairTest {
 
 
     /**
-     * Test repairing with no edges TODO: TN.  There appears to be a race condition here with ordering.  Not sure if
-     * this is intentional as part of the impl or if it's an issue
+     * Commit log tests
      */
     @Test
-    public void versionTest() throws ConnectionException {
-        final int size = 3;
+    public void commitLogTest() throws ConnectionException {
+        testSingleLocation( commitLogEdgeSerialization );
+    }
 
-        final List<Edge> versions = new ArrayList<Edge>( size );
+
+    /**
+     * Commit log tests
+     */
+    @Test
+    public void storageTest() throws ConnectionException {
+        testSingleLocation( storageEdgeSerialization );
+    }
+
+
+    private void testSingleLocation( EdgeSerialization edgeSerialization ) throws ConnectionException {
 
         final Id sourceId = createId( "source" );
         final Id targetId = createId( "target" );
         final String edgeType = "edge";
 
-        Set<Edge> deletedEdges = new HashSet<Edge>();
-        int deleteIndex = size / 2;
 
+        final Edge edge1 = createEdge( sourceId, edgeType, targetId );
+        edgeSerialization.writeEdge( scope, edge1 ).execute();
 
-        for ( int i = 0; i < size; i++ ) {
-            final Edge edge = createEdge( sourceId, edgeType, targetId );
+        final Edge edge2 = createEdge( sourceId, edgeType, targetId );
+        edgeSerialization.writeEdge( scope, edge2 ).execute();
 
-            versions.add( edge );
+        //now repair delete the first edge
 
-            edgeSerialization.writeEdge( scope, edge ).execute();
+        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1 ).toBlockingObservable().single();
 
-            LOG.info( "Writing edge at index [{}] {}", i, edge );
+        assertEquals( edge1, deleted );
 
-            if ( i <= deleteIndex ) {
-                deletedEdges.add( edge );
-            }
-        }
-
-
-        Edge keep = versions.get( deleteIndex );
-
-        Iterable<MarkedEdge> edges = edgeDeleteRepair.repair( scope, keep ).toBlockingObservable().toIterable();
-
-
-        Multiset<Edge> deletedStream = HashMultiset.create();
-
-        for ( MarkedEdge edge : edges ) {
-
-            LOG.info( "Returned edge {} for repair", edge );
-
-
-            final boolean shouldBeDeleted = deletedEdges.contains( edge );
-
-            assertTrue( "Removed matches saved index", shouldBeDeleted );
-
-            deletedStream.add( edge );
-        }
-
-        deletedEdges.removeAll( deletedStream.elementSet() );
-
-        assertEquals( 0, deletedEdges.size() );
-
-
-        //now verify we get all the versions we expect back
-        Iterator<MarkedEdge> iterator = edgeSerialization.getEdgeVersions( scope,
+        Iterator<MarkedEdge> itr = edgeSerialization.getEdgeVersions( scope,
                 new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
 
-        int count = 0;
+        assertEquals( edge2, itr.next() );
 
-        for ( MarkedEdge edge : new IterableWrapper<MarkedEdge>( iterator ) ) {
-
-            LOG.info( "Returned edge {} to verify", edge );
-
-            final int index = size - count - 1;
-
-            LOG.info( "Checking for correct version at index {}", index );
-
-            final Edge saved = versions.get( index );
-
-            assertEquals( "Retained edge correct", saved, edge );
-
-            count++;
-        }
-
-        final int keptCount = size - deleteIndex;
-
-        assertEquals( "Kept edge version was the minimum", keptCount, count + 1 );
+        assertFalse( itr.hasNext() );
     }
 
 
-    private class IterableWrapper<T> implements Iterable<T> {
-        private final Iterator<T> sourceIterator;
+    /**
+     * Tests the edge in both
+     * @throws ConnectionException
+     */
+    @Test
+    public void testBoth() throws ConnectionException {
+
+        final Id sourceId = createId( "source" );
+        final Id targetId = createId( "target" );
+        final String edgeType = "edge";
 
 
-        private IterableWrapper( final Iterator<T> sourceIterator ) {
-            this.sourceIterator = sourceIterator;
-        }
+        final Edge edge1 = createEdge( sourceId, edgeType, targetId );
+        commitLogEdgeSerialization.writeEdge( scope, edge1 ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge1 ).execute();
 
+        final Edge edge2 = createEdge( sourceId, edgeType, targetId );
+        commitLogEdgeSerialization.writeEdge( scope, edge2 ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge2 ).execute();
 
-        @Override
-        public Iterator<T> iterator() {
-            return this.sourceIterator;
-        }
+        //now repair delete the first edge
+
+        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1 ).toBlockingObservable().single();
+
+        assertEquals( edge1, deleted );
+
+        Iterator<MarkedEdge> itr = commitLogEdgeSerialization.getEdgeVersions( scope,
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
+
+        assertEquals( edge2, itr.next() );
+
+        assertFalse( itr.hasNext() );
+
+        itr = storageEdgeSerialization.getEdgeVersions( scope,
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
+
+        assertEquals( edge2, itr.next() );
+
+        assertFalse( itr.hasNext() );
     }
 }

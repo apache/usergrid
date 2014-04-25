@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.model.util.Verify;
 
+import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.base.Preconditions;
 
 
@@ -103,5 +104,18 @@ public class SimpleId implements Id, Serializable {
                 "uuid=" + uuid +
                 ", type='" + type + '\'' +
                 '}';
+    }
+
+
+    @Override
+    public int compareTo( final Id o ) {
+
+        int compare = UUIDComparator.staticCompare( uuid, o.getUuid() );
+
+        if(compare == 0){
+            compare = type.compareTo( o.getType() );
+        }
+
+        return compare;
     }
 }

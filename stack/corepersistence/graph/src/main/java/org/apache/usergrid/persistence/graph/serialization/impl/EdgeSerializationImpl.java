@@ -77,7 +77,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
- *
+ *  Serialization for edges.  Delegates partitioning to the sharding strategy.
  *
  */
 @Singleton
@@ -101,31 +101,31 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     /**
      * Get all graph edge versions
      */
-    private final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID> GRAPH_EDGE_VERSIONS;
+    private final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID> graphEdgeVersionsCf;
 
 
     // column families
     /**
      * Edges that are from the source node. The row key is the source node
      */
-    private final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> GRAPH_SOURCE_NODE_EDGES;
+    private final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> sourceNodeEdgesCf;
 
 
     /**
      * Edges that are incoming to the target node.  The target node is the row key
      */
-    private final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> GRAPH_TARGET_NODE_EDGES;
+    private final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> targetNodeEdgesCf;
 
     /**
      * The edges that are from the source node with target type.  The source node is the row key.
      */
-    private final MultiTennantColumnFamily<OrganizationScope, RowKeyType, DirectedEdge> GRAPH_SOURCE_NODE_TARGET_TYPE;
+    private final MultiTennantColumnFamily<OrganizationScope, RowKeyType, DirectedEdge> sourceNodeTargetTypeCf;
 
 
     /**
      * The edges that are to the target node with the source type.  The target node is the row key
      */
-    private final MultiTennantColumnFamily<OrganizationScope, RowKeyType, DirectedEdge> GRAPH_TARGET_NODE_SOURCE_TYPE;
+    private final MultiTennantColumnFamily<OrganizationScope, RowKeyType, DirectedEdge> targetNodeSourceTypeCf;
 
     protected final Keyspace keyspace;
     protected final CassandraConfig cassandraConfig;
@@ -152,17 +152,17 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         this.edgeShardStrategy = edgeShardStrategy;
 
         //initialize the CF's from our implementation
-        GRAPH_SOURCE_NODE_EDGES = new MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge>(
+        sourceNodeEdgesCf = new MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge>(
                 edgeShardStrategy.getSourceNodeCfName(),
                 new OrganizationScopedRowKeySerializer<RowKey>( ROW_SERIALIZER ), EDGE_SERIALIZER );
 
 
-        GRAPH_TARGET_NODE_EDGES = new MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge>(
+        targetNodeEdgesCf = new MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge>(
                 edgeShardStrategy.getTargetNodeCfName(),
                 new OrganizationScopedRowKeySerializer<RowKey>( ROW_SERIALIZER ), EDGE_SERIALIZER );
 
 
-        GRAPH_SOURCE_NODE_TARGET_TYPE = new MultiTennantColumnFamily<OrganizationScope, RowKeyType, DirectedEdge>(
+        sourceNodeTargetTypeCf = new MultiTennantColumnFamily<OrganizationScope, RowKeyType, DirectedEdge>(
                 edgeShardStrategy.getSourceNodeTargetTypeCfName(),
                 new OrganizationScopedRowKeySerializer<RowKeyType>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
 
@@ -170,11 +170,11 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         /**
          * The edges that are to the target node with the source type.  The target node is the row key
          */
-        GRAPH_TARGET_NODE_SOURCE_TYPE = new MultiTennantColumnFamily<OrganizationScope, RowKeyType, DirectedEdge>(
+        targetNodeSourceTypeCf = new MultiTennantColumnFamily<OrganizationScope, RowKeyType, DirectedEdge>(
                 edgeShardStrategy.getTargetNodeSourceTypeCfName(),
                 new OrganizationScopedRowKeySerializer<RowKeyType>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
 
-        GRAPH_EDGE_VERSIONS = new MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID>(
+        graphEdgeVersionsCf = new MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID>(
                 edgeShardStrategy.getGraphEdgeVersions(),
                 new OrganizationScopedRowKeySerializer<EdgeRowKey>( EDGE_ROW_KEY_SERIALIZER ), UUID_SERIALIZER );
     }
@@ -334,23 +334,23 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
          * write edges from source->target
          */
 
-        op.writeEdge( GRAPH_SOURCE_NODE_EDGES, sourceRowKey, sourceEdge );
+        op.writeEdge( sourceNodeEdgesCf, sourceRowKey, sourceEdge );
 
-        op.writeEdge( GRAPH_SOURCE_NODE_TARGET_TYPE, sourceRowKeyType, sourceEdge );
+        op.writeEdge( sourceNodeTargetTypeCf, sourceRowKeyType, sourceEdge );
 
 
         /**
          * write edges from target<-source
          */
-        op.writeEdge( GRAPH_TARGET_NODE_EDGES, targetRowKey, targetEdge );
+        op.writeEdge( targetNodeEdgesCf, targetRowKey, targetEdge );
 
-        op.writeEdge( GRAPH_TARGET_NODE_SOURCE_TYPE, targetRowKeyType, targetEdge );
+        op.writeEdge( targetNodeSourceTypeCf, targetRowKeyType, targetEdge );
 
 
         /**
          * Write this in the version log for this edge of source->target
          */
-        op.writeVersion( GRAPH_EDGE_VERSIONS, edgeRowKey, version );
+        op.writeVersion( graphEdgeVersionsCf, edgeRowKey, version );
     }
 
 
@@ -406,7 +406,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                     }
                 };
 
-        return new ShardRowIterator<>( searcher, GRAPH_EDGE_VERSIONS );
+        return new ShardRowIterator<>( searcher, graphEdgeVersionsCf );
     }
 
 
@@ -449,7 +449,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                     }
                 };
 
-        return new ShardRowIterator<>( searcher, GRAPH_SOURCE_NODE_EDGES );
+        return new ShardRowIterator<>( searcher, sourceNodeEdgesCf );
     }
 
 
@@ -493,7 +493,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                     }
                 };
 
-        return new ShardRowIterator( searcher, GRAPH_SOURCE_NODE_TARGET_TYPE );
+        return new ShardRowIterator( searcher, sourceNodeTargetTypeCf );
     }
 
 
@@ -536,7 +536,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                 };
 
 
-        return new ShardRowIterator<>( searcher, GRAPH_TARGET_NODE_EDGES );
+        return new ShardRowIterator<>( searcher, targetNodeEdgesCf );
     }
 
 
@@ -580,15 +580,15 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                     }
                 };
 
-        return new ShardRowIterator<>( searcher, GRAPH_TARGET_NODE_SOURCE_TYPE );
+        return new ShardRowIterator<>( searcher, targetNodeSourceTypeCf );
     }
 
 
     @Override
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
-        return Arrays.asList( graphCf( GRAPH_SOURCE_NODE_EDGES ), graphCf( GRAPH_TARGET_NODE_EDGES ),
-                graphCf( GRAPH_SOURCE_NODE_TARGET_TYPE ), graphCf( GRAPH_TARGET_NODE_SOURCE_TYPE ),
-                new MultiTennantColumnFamilyDefinition( GRAPH_EDGE_VERSIONS, BytesType.class.getSimpleName(),
+        return Arrays.asList( graphCf( sourceNodeEdgesCf ), graphCf( targetNodeEdgesCf ),
+                graphCf( sourceNodeTargetTypeCf ), graphCf( targetNodeSourceTypeCf ),
+                new MultiTennantColumnFamilyDefinition( graphEdgeVersionsCf, BytesType.class.getSimpleName(),
                         ColumnTypes.UUID_TYPE_REVERSED, BytesType.class.getSimpleName(),
                         MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
     }

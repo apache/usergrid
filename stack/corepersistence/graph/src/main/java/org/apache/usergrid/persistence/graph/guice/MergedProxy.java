@@ -16,34 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.model.entity;
+
+package org.apache.usergrid.persistence.graph.guice;
 
 
-import java.util.UUID;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import com.google.inject.BindingAnnotation;
 
 
-/**
- * Interface for creating identifiers for an entity. The implementation should implement
- * the equals and hasCode methods
- * @author tnine */
-public interface Id extends Comparable<Id> {
-
-    /**
-     * Get the uuid for this id
-     * @return
-     */
-    UUID getUuid();
-
-    /**
-     * Get the unique type for this id
-     * @return
-     */
-    String getType();
-
-
-    //Application -> Class "Application"
-
-    //DynamicEntity -> DynamicEntity
-
-
-}
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD })
+@BindingAnnotation
+public @interface MergedProxy {}

@@ -34,8 +34,9 @@ import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
+import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
-import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -62,25 +63,29 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
     private static final Logger LOG = LoggerFactory.getLogger( EdgeMetaRepairImpl.class );
     private final EdgeMetadataSerialization edgeMetadataSerialization;
-    private final EdgeSerialization edgeSerialization;
+
+
     private final Keyspace keyspace;
     private final GraphFig graphFig;
+    private final MergedEdgeReader mergedEdgeReader;
 
 
     @Inject
     public EdgeMetaRepairImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
-                               final EdgeSerialization edgeSerialization, final Keyspace keyspace,
-                               final GraphFig graphFig ) {
+                               final MergedEdgeReader mergedEdgeReader, final Keyspace keyspace,
+                               final GraphFig graphFig, final CassandraConfig cassandraConfig ) {
+
 
         Preconditions.checkNotNull( "edgeMetadataSerialization is required", edgeMetadataSerialization );
-        Preconditions.checkNotNull( "edgeSerialization is required", edgeSerialization );
+        Preconditions.checkNotNull( "mergedEdgeReader is required", mergedEdgeReader );
         Preconditions.checkNotNull( "graphFig is required", graphFig );
+        Preconditions.checkNotNull( "cassandraConfig is required", graphFig );
         Preconditions.checkNotNull( "keyspace is required", keyspace );
 
         this.edgeMetadataSerialization = edgeMetadataSerialization;
-        this.edgeSerialization = edgeSerialization;
         this.keyspace = keyspace;
         this.graphFig = graphFig;
+        this.mergedEdgeReader = mergedEdgeReader;
     }
 
 
@@ -148,18 +153,16 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                                           * iteration
                                                           **/
                                                          if ( count != 0 ) {
-                                                             LOG.debug(
-                                                                     "Found edge with nodeId {}, type {}, " +
-                                                                             "and subtype {}. Not removing subtype. ",
-                                                                     node, edgeType, subType );
+                                                             LOG.debug( "Found edge with nodeId {}, type {}, "
+                                                                     + "and subtype {}. Not removing subtype. ", node,
+                                                                     edgeType, subType );
                                                              return;
                                                          }
 
 
-                                                         LOG.debug(
-                                                                 "No edges with nodeId {}, type {}, " +
-                                                                         "and subtype {}. Removing subtype.",
-                                                                 node, edgeType, subType );
+                                                         LOG.debug( "No edges with nodeId {}, type {}, "
+                                                                 + "and subtype {}. Removing subtype.", node, edgeType,
+                                                                 subType );
                                                          batch.mergeShallow( serialization
                                                                  .removeEdgeSubType( scope, node, edgeType, subType,
                                                                          version ) );
@@ -264,9 +267,12 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
      */
     private final CleanSerialization target = new CleanSerialization() {
 
+
         @Override
         public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
+
+
             return Observable.create( new ObservableIterator<String>( "edgeTargetIdTypes" ) {
                 @Override
                 protected Iterator<String> getIterator() {
@@ -280,13 +286,8 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
-            return Observable.create( new ObservableIterator<MarkedEdge>( "edgeTargetSubTypes" ) {
-                @Override
-                protected Iterator<MarkedEdge> getIterator() {
-                    return edgeSerialization.getEdgesToTargetBySourceType( scope,
-                            new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
-                }
-            } );
+            return mergedEdgeReader.getEdgesToTargetBySourceType( scope,
+                    new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
         }
 
 
@@ -325,13 +326,9 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
-            return Observable.create( new ObservableIterator<MarkedEdge>( "edgeSourceSubTypes" ) {
-                @Override
-                protected Iterator<MarkedEdge> getIterator() {
-                    return edgeSerialization.getEdgesFromSourceByTargetType( scope,
-                            new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
-                }
-            } );
+
+            return mergedEdgeReader.getEdgesFromSourceByTargetType( scope,
+                    new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
         }
 
 

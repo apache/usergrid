@@ -46,6 +46,7 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerializa
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.guice.PermanentStorage;
+import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
 import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -74,7 +75,7 @@ public class GraphManagerImpl implements GraphManager {
     private final EdgeMetadataSerialization edgeMetadataSerialization;
 
 
-    private final EdgeSerialization permanentStorageSerialization;
+    private final MergedEdgeReader mergedEdgeReader;
     private final EdgeSerialization commitLogSerialization;
 
     private final NodeSerialization nodeSerialization;
@@ -88,28 +89,27 @@ public class GraphManagerImpl implements GraphManager {
 
     @Inject
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
-                             @PermanentStorage final EdgeSerialization permanentStorageSerialization,
                              @CommitLog final EdgeSerialization commitLogSerialization,
                              final NodeSerialization nodeSerialization, final GraphFig graphFig,
-                             @EdgeDelete final AsyncProcessor edgeDelete,
-                             @NodeDelete final AsyncProcessor nodeDelete,
-                             @NodeDelete final AsyncProcessor edgeWrite,
-                             @Assisted final OrganizationScope scope ) {
+                             @EdgeDelete final AsyncProcessor edgeDelete, @NodeDelete final AsyncProcessor nodeDelete,
+                             @NodeDelete final AsyncProcessor edgeWrite, @Assisted final OrganizationScope scope,
+                             final MergedEdgeReader mergedEdgeReader ) {
+
 
         ValidationUtils.validateOrganizationScope( scope );
         Preconditions.checkNotNull( edgeMetadataSerialization, "edgeMetadataSerialization must not be null" );
-        Preconditions.checkNotNull( permanentStorageSerialization, "permanentStorageSerialization must not be null" );
+        Preconditions.checkNotNull( mergedEdgeReader, "mergedEdgeReader must not be null" );
         Preconditions.checkNotNull( commitLogSerialization, "commitLogSerialization must not be null" );
         Preconditions.checkNotNull( nodeSerialization, "nodeSerialization must not be null" );
         Preconditions.checkNotNull( graphFig, "graphFig must not be null" );
-        Preconditions.checkNotNull( graphFig, "edgeDelete must not be null" );
-        Preconditions.checkNotNull( graphFig, "nodeDelete must not be null" );
-        Preconditions.checkNotNull( graphFig, "edgeWrite must not be null" );
-        Preconditions.checkNotNull( graphFig, "scope must not be null" );
+        Preconditions.checkNotNull( edgeDelete, "edgeDelete must not be null" );
+        Preconditions.checkNotNull( nodeDelete, "nodeDelete must not be null" );
+        Preconditions.checkNotNull( edgeWrite, "edgeWrite must not be null" );
+        Preconditions.checkNotNull( scope, "scope must not be null" );
 
         this.scope = scope;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
-        this.permanentStorageSerialization = permanentStorageSerialization;
+        this.mergedEdgeReader = mergedEdgeReader;
         this.commitLogSerialization = commitLogSerialization;
         this.nodeSerialization = nodeSerialization;
         this.graphFig = graphFig;
@@ -220,12 +220,7 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<Edge> loadEdgeVersions( final SearchByEdge searchByEdge ) {
-        return HystrixGraphObservable.user( Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeVersions" ) {
-            @Override
-            protected Iterator<MarkedEdge> getIterator() {
-                return permanentStorageSerialization.getEdgeVersions( scope, searchByEdge );
-            }
-        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( searchByEdge.getMaxVersion() ) )
+        return HystrixGraphObservable.user( mergedEdgeReader.getEdgeVersions( scope, searchByEdge ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( searchByEdge.getMaxVersion() ) )
                                                       .cast( Edge.class ) );
     }
 
@@ -233,12 +228,7 @@ public class GraphManagerImpl implements GraphManager {
     @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
         return HystrixGraphObservable
-                .user( Observable.create( new ObservableIterator<MarkedEdge>( "getEdgesFromSource" ) {
-                    @Override
-                    protected Iterator<MarkedEdge> getIterator() {
-                        return permanentStorageSerialization.getEdgesFromSource( scope, search );
-                    }
-                } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                .user( mergedEdgeReader.getEdgesFromSource( scope, search ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
                                  .cast( Edge.class ) );
     }
 
@@ -246,12 +236,7 @@ public class GraphManagerImpl implements GraphManager {
     @Override
     public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
         return HystrixGraphObservable
-                .user( Observable.create( new ObservableIterator<MarkedEdge>( "getEdgesToTarget" ) {
-                    @Override
-                    protected Iterator<MarkedEdge> getIterator() {
-                        return permanentStorageSerialization.getEdgesToTarget( scope, search );
-                    }
-                } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                .user( mergedEdgeReader.getEdgesToTarget( scope, search ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
                                  .cast( Edge.class ) );
     }
 
@@ -259,12 +244,7 @@ public class GraphManagerImpl implements GraphManager {
     @Override
     public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
         return HystrixGraphObservable
-                .user( Observable.create( new ObservableIterator<MarkedEdge>( "getEdgesFromSourceByTargetType" ) {
-                    @Override
-                    protected Iterator<MarkedEdge> getIterator() {
-                        return permanentStorageSerialization.getEdgesFromSourceByTargetType( scope, search );
-                    }
-                } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                .user(mergedEdgeReader.getEdgesFromSourceByTargetType( scope, search ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
 
                                  .cast( Edge.class ) );
     }
@@ -273,12 +253,7 @@ public class GraphManagerImpl implements GraphManager {
     @Override
     public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
         return HystrixGraphObservable
-                .user( Observable.create( new ObservableIterator<MarkedEdge>( "getEdgesToTargetBySourceType" ) {
-                    @Override
-                    protected Iterator<MarkedEdge> getIterator() {
-                        return permanentStorageSerialization.getEdgesToTargetBySourceType( scope, search );
-                    }
-                } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                .user(mergedEdgeReader.getEdgesToTargetBySourceType( scope, search ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
                                  .cast( Edge.class ) );
     }
 

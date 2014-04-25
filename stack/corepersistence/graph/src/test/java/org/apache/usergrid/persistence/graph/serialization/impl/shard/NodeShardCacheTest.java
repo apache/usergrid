@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
+import org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -195,20 +196,20 @@ public class NodeShardCacheTest {
 
         //check getting equal to our min, mid and max
 
-        long slice = cache.getSlice( scope, id, new UUID( 0, min ), edgeType, otherIdType );
+        long slice = cache.getSlice( scope, id, EdgeTestUtils.setTimestamp(min), edgeType, otherIdType );
 
 
         //we return the min UUID possible, all edges should start by writing to this edge
         assertEquals( min, slice );
 
-        slice = cache.getSlice( scope, id, new UUID( 0, mid),
+        slice = cache.getSlice( scope, id, EdgeTestUtils.setTimestamp(mid),
                 edgeType, otherIdType );
 
 
         //we return the mid UUID possible, all edges should start by writing to this edge
         assertEquals( mid, slice );
 
-        slice = cache.getSlice( scope, id, new UUID( 0, max ),
+        slice = cache.getSlice( scope, id, EdgeTestUtils.setTimestamp(max) ,
                 edgeType, otherIdType );
 
 
@@ -216,33 +217,33 @@ public class NodeShardCacheTest {
         assertEquals( max, slice );
 
         //now test in between
-        slice = cache.getSlice( scope, id, new UUID( 0, min+1 ), edgeType, otherIdType );
+        slice = cache.getSlice( scope, id, EdgeTestUtils.setTimestamp( min+1 ), edgeType, otherIdType );
 
 
         //we return the min UUID possible, all edges should start by writing to this edge
         assertEquals( min, slice );
 
-        slice = cache.getSlice( scope, id, new UUID( 0, mid-1 ), edgeType, otherIdType );
+        slice = cache.getSlice( scope, id,  EdgeTestUtils.setTimestamp(  mid-1 ), edgeType, otherIdType );
 
 
         //we return the min UUID possible, all edges should start by writing to this edge
         assertEquals( min, slice );
 
 
-        slice = cache.getSlice( scope, id, new UUID( 0, mid+1 ), edgeType, otherIdType );
+        slice = cache.getSlice( scope, id,  EdgeTestUtils.setTimestamp(  mid+1 ), edgeType, otherIdType );
 
 
         //we return the mid UUID possible, all edges should start by writing to this edge
         assertEquals( mid, slice );
 
-        slice = cache.getSlice( scope, id, new UUID( 0, max-1 ), edgeType, otherIdType );
+        slice = cache.getSlice( scope, id,  EdgeTestUtils.setTimestamp( max-1), edgeType, otherIdType );
 
 
         //we return the mid UUID possible, all edges should start by writing to this edge
         assertEquals( mid, slice );
 
 
-        slice = cache.getSlice( scope, id, new UUID( 0, max ), edgeType, otherIdType );
+        slice = cache.getSlice( scope, id,  EdgeTestUtils.setTimestamp(  max ), edgeType, otherIdType );
 
 
         //we return the mid UUID possible, all edges should start by writing to this edge
@@ -294,7 +295,7 @@ public class NodeShardCacheTest {
         //check getting equal to our min, mid and max
 
         Iterator<Long> slice =
-                cache.getVersions( scope, id, new UUID( 0, max ), edgeType, otherIdType );
+                cache.getVersions( scope, id,  EdgeTestUtils.setTimestamp(  max ), edgeType, otherIdType );
 
 
         assertEquals( max, slice.next().longValue() );
@@ -302,14 +303,14 @@ public class NodeShardCacheTest {
         assertEquals( min, slice.next().longValue() );
 
 
-        slice = cache.getVersions( scope, id, new UUID( 0, mid ),
+        slice = cache.getVersions( scope, id,  EdgeTestUtils.setTimestamp(  mid ),
                 edgeType, otherIdType );
 
         assertEquals( mid, slice.next().longValue() );
         assertEquals( min, slice.next().longValue() );
 
 
-        slice = cache.getVersions( scope, id, new UUID( 0, min),
+        slice = cache.getVersions( scope, id,  EdgeTestUtils.setTimestamp(  min ),
                 edgeType, otherIdType );
 
         assertEquals( min, slice.next().longValue() );

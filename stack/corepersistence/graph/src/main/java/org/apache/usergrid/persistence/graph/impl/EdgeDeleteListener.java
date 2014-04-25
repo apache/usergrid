@@ -188,6 +188,8 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                                               ).map( new Func1<MutationBatch, EdgeEvent<Edge>>() {
             @Override
             public EdgeEvent<Edge> call( final MutationBatch mutationBatch ) {
+
+                //actually delete the edge from both the commit log and
                 try {
                     mutationBatch.execute();
                 }

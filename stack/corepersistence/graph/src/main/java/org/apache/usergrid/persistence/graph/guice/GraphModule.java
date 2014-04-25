@@ -44,6 +44,8 @@ import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.CassandraConfigImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
+import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReaderImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
@@ -108,6 +110,7 @@ public class GraphModule extends AbstractModule {
          */
 
         bind( EdgeShardSerialization.class ).to( EdgeShardSerializationImpl.class );
+        bind( MergedEdgeReader.class).to( MergedEdgeReaderImpl.class );
         bind( EdgeShardCounterSerialization.class ).to( EdgeShardCounterSerializationImpl.class );
 
 
@@ -129,6 +132,8 @@ public class GraphModule extends AbstractModule {
 
 
         bind( EdgeDeleteRepair.class ).to( EdgeDeleteRepairImpl.class );
+
+
 
 
         /********
