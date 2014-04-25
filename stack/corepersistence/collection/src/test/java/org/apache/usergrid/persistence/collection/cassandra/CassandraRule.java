@@ -59,6 +59,11 @@ public class CassandraRule extends EnvironResource {
 
         synchronized ( mutex ) {
 
+            //second into mutex
+            if(started){
+                return;
+            }
+
             File dataDir = Files.createTempDir();
             dataDir.deleteOnExit();
 

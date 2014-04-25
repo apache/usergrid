@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.usergrid.persistence.graph.serialization;
 
 
@@ -49,9 +67,7 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
-public class EdgeSerializationTest {
+public abstract class EdgeSerializationTest {
 
     private static final Logger log = LoggerFactory.getLogger( EdgeSerializationTest.class );
 
@@ -64,7 +80,7 @@ public class EdgeSerializationTest {
     public MigrationManagerRule migrationManagerRule;
 
 
-    @Inject
+
     protected EdgeSerialization serialization;
 
     @Inject
@@ -86,8 +102,16 @@ public class EdgeSerializationTest {
         when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
 
         when( scope.getOrganization() ).thenReturn( orgId );
+
+        serialization = getSerialization();
     }
 
+
+    /**
+     * Get the edge Serialization to use
+     * @return
+     */
+    protected abstract EdgeSerialization getSerialization();
 
     /**
      * Tests mixing 2 edge types between 2 nodes.  We should get results for the same source->destination with the 2
@@ -196,6 +220,9 @@ public class EdgeSerializationTest {
 
         final Edge edgev2 = createEdge( sourceId, "edge1", targetId );
 
+        //we shouldn't get this one back
+        final Edge diffTarget = createEdge(sourceId, "edge1", createId("newTarget"));
+
         assertTrue( "Edge version 1 has lower time uuid",
                 UUIDComparator.staticCompare( edgev1.getVersion(), edgev2.getVersion() ) < 0 );
 
@@ -205,6 +232,7 @@ public class EdgeSerializationTest {
         serialization.writeEdge( scope, edgev1 ).execute();
         serialization.writeEdge( scope, edgev2 ).execute();
         serialization.writeEdge( scope, edgeType2V1 ).execute();
+        serialization.writeEdge( scope, diffTarget ).execute();
 
         final UUID now = UUIDGenerator.newTimeUUID();
 

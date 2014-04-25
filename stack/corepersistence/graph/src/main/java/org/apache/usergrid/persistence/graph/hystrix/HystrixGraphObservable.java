@@ -34,12 +34,12 @@ public class HystrixGraphObservable {
     /**
      * Command group used for realtime user commands
      */
-    private static final HystrixCommandGroupKey USER_GROUP = HystrixCommandGroupKey.Factory.asKey( "Graph-User" );
+    private static final HystrixCommandGroupKey USER_GROUP = HystrixCommandGroupKey.Factory.asKey( "graph_user" );
 
     /**
      * Command group for asynchronous operations
      */
-    private static final HystrixCommandGroupKey ASYNC_GROUP = HystrixCommandGroupKey.Factory.asKey( "Graph-Async" );
+    private static final HystrixCommandGroupKey ASYNC_GROUP = HystrixCommandGroupKey.Factory.asKey( "graph_async" );
 
 
     /**
@@ -57,15 +57,15 @@ public class HystrixGraphObservable {
 
 
     /**
-      * Wrap the observable in the timeout for asynchronous operations.  This is for compaction and cleanup processing.
-      */
-     public static <T> Observable<T> async( final Observable<T> observable ) {
-         return new HystrixObservableCommand<T>( ASYNC_GROUP ) {
+     * Wrap the observable in the timeout for asynchronous operations.  This is for compaction and cleanup processing.
+     */
+    public static <T> Observable<T> async( final Observable<T> observable ) {
+        return new HystrixObservableCommand<T>( ASYNC_GROUP ) {
 
-             @Override
-             protected Observable<T> run() {
-                 return observable;
-             }
-         }.observe();
-     }
+            @Override
+            protected Observable<T> run() {
+                return observable;
+            }
+        }.observe();
+    }
 }
