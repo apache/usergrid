@@ -73,7 +73,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
         Preconditions.checkNotNull( "commitLogSerialization is required", commitLogSerialization );
         Preconditions.checkNotNull( "storageSerialization is required", storageSerialization );
         Preconditions.checkNotNull( "mergedEdgeReader is required", mergedEdgeReader );
-        Preconditions.checkNotNull( "graphFig is required", graphFig );
+        Preconditions.checkNotNull( "consistencyFig is required", graphFig );
         Preconditions.checkNotNull( "keyspace is required", keyspace );
 
 

@@ -69,7 +69,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
     @Inject
     public NodeShardCacheImpl( final NodeShardAllocation nodeShardAllocation, final GraphFig graphFig ) {
         Preconditions.checkNotNull(nodeShardAllocation, "nodeShardAllocation is required");
-        Preconditions.checkNotNull(graphFig, "graphFig is required");
+        Preconditions.checkNotNull(graphFig, "consistencyFig is required");
 
         this.nodeShardAllocation = nodeShardAllocation;
         this.graphFig = graphFig;

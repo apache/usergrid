@@ -1,7 +1,6 @@
-package org.apache.usergrid.persistence.collection.cassandra;
+package org.apache.usergrid.persistence.core.cassandra;
 
 
-import org.apache.usergrid.persistence.collection.util.AvailablePortFinder;
 import java.io.File;
 import java.io.IOException;
 
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.io.util.FileUtils;
 
+import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 
 import com.google.common.io.Files;

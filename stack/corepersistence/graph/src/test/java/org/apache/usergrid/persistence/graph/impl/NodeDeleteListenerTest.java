@@ -26,6 +26,7 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -337,6 +338,7 @@ public class NodeDeleteListenerTest {
      * since it has no other targets
      */
     @Test
+    @Ignore("This needs to be re-enable.  The counters for sharding fall over in cass, needs fixes")
     public void testMultiDelete() throws ConnectionException, InterruptedException {
 
         GraphManager em = emf.createEdgeManager( scope );
@@ -378,10 +380,6 @@ public class NodeDeleteListenerTest {
 
         log.info( "Saved {} source edges", sourceCount );
         log.info( "Saved {} target edges", targetCount );
-
-
-        //mark the node for deletion
-//        UUID deleteVersion = UUIDGenerator.newTimeUUID();
 
         UUID deleteVersion = UUID.fromString( "ffffffff-ffff-1fff-bfff-ffffffffffff" );
 

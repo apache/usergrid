@@ -70,7 +70,7 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, EdgeE
         Preconditions.checkNotNull( permanentStorage, "permanentStorage is required" );
         Preconditions.checkNotNull( edgeWrite, "edgeWrite is required" );
         Preconditions.checkNotNull( keyspace, "keyspace is required" );
-        Preconditions.checkNotNull( keyspace, "graphFig is required" );
+        Preconditions.checkNotNull( keyspace, "consistencyFig is required" );
 
 
         this.keyspace = keyspace;

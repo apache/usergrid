@@ -94,6 +94,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         @Assisted final CollectionScope collectionScope ) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
+
         MvccValidationUtils.validateCollectionScope( collectionScope );
 
         this.writeStart = writeStart;

@@ -119,7 +119,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                                           final GraphFig graphFig ) {
 
         Preconditions.checkNotNull( "cassandraConfig is required", cassandraConfig );
-        Preconditions.checkNotNull( "graphFig is required", graphFig );
+        Preconditions.checkNotNull( "consistencyFig is required", graphFig );
         Preconditions.checkNotNull( "keyspace is required", keyspace );
 
         this.keyspace = keyspace;

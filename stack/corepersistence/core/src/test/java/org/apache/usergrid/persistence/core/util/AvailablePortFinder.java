@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.apache.usergrid.persistence.collection.util;
+package org.apache.usergrid.persistence.core.util;
 
 
 import java.io.IOException;

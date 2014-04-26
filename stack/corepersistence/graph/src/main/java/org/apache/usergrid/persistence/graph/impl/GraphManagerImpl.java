@@ -103,12 +103,12 @@ public class GraphManagerImpl implements GraphManager {
         Preconditions.checkNotNull( mergedEdgeReader, "mergedEdgeReader must not be null" );
         Preconditions.checkNotNull( commitLogSerialization, "commitLogSerialization must not be null" );
         Preconditions.checkNotNull( nodeSerialization, "nodeSerialization must not be null" );
-        Preconditions.checkNotNull( graphFig, "graphFig must not be null" );
+        Preconditions.checkNotNull( graphFig, "consistencyFig must not be null" );
         Preconditions.checkNotNull( edgeDelete, "edgeDelete must not be null" );
         Preconditions.checkNotNull( nodeDelete, "nodeDelete must not be null" );
         Preconditions.checkNotNull( edgeWrite, "edgeWrite must not be null" );
         Preconditions.checkNotNull( scope, "scope must not be null" );
-        Preconditions.checkNotNull( consistencyFig, "graphFig must not be null" );
+        Preconditions.checkNotNull( consistencyFig, "consistencyFig must not be null" );
 
         this.scope = scope;
         this.edgeMetadataSerialization = edgeMetadataSerialization;

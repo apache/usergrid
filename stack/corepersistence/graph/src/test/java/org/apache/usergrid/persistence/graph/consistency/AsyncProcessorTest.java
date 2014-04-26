@@ -29,6 +29,14 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorImpl;
+import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
+import org.apache.usergrid.persistence.core.consistency.CompleteListener;
+import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
+import org.apache.usergrid.persistence.core.consistency.ErrorListener;
+import org.apache.usergrid.persistence.core.consistency.MessageListener;
+import org.apache.usergrid.persistence.core.consistency.TimeoutQueue;
 import org.apache.usergrid.persistence.graph.GraphFig;
 
 import rx.Observable;
@@ -271,9 +279,9 @@ public class AsyncProcessorTest {
      */
     public <T> AsyncProcessorImpl<T> constructProcessor( TimeoutQueue<T> queue ) {
 
-        GraphFig fig = mock( GraphFig.class );
+        ConsistencyFig fig = mock( ConsistencyFig.class );
 
-        when( fig.getScanPageSize() ).thenReturn( 0 );
+        when( fig.getRepairTimeout() ).thenReturn( 0 );
 
         AsyncProcessorImpl<T> processor = new AsyncProcessorImpl( queue,  fig );
 

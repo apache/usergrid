@@ -52,7 +52,7 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
     private static final Logger LOG = LoggerFactory.getLogger( AsyncProcessor.class );
 
     protected final TimeoutQueue<T> queue;
-    protected final ConsistencyFig graphFig;
+    protected final ConsistencyFig consistencyFig;
     protected final List<MessageListener<T, T>> listeners = new ArrayList<MessageListener<T, T>>();
 
 
@@ -61,14 +61,14 @@ public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
 
 
     @Inject
-    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final ConsistencyFig graphFig ) {
+    public AsyncProcessorImpl( final TimeoutQueue<T> queue, final ConsistencyFig consistencyFig ) {
         this.queue = queue;
-        this.graphFig = graphFig;
+        this.consistencyFig = consistencyFig;
 
         //we purposefully use a new thread.  We don't want to use one of the I/O threads to run this task
         //in the event the scheduler is full, we'll end up rejecting the reschedule of this task
-        Schedulers.newThread().schedulePeriodically( new TimeoutTask<T>( this, graphFig ), graphFig.getTaskLoopTime(),
-                graphFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
+        Schedulers.newThread().schedulePeriodically( new TimeoutTask<T>( this, consistencyFig ), consistencyFig.getTaskLoopTime(),
+                consistencyFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
     }
 
 

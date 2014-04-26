@@ -139,7 +139,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         checkNotNull( "keyspace required", keyspace );
         checkNotNull( "cassandraConfig required", cassandraConfig );
-        checkNotNull( "graphFig required", graphFig );
+        checkNotNull( "consistencyFig required", graphFig );
         checkNotNull( "sourceNodeCfName required", edgeShardStrategy.getSourceNodeCfName() );
         checkNotNull( "targetNodeCfName required", edgeShardStrategy.getTargetNodeCfName() );
         checkNotNull( "sourceNodeTargetTypeCfName required", edgeShardStrategy.getSourceNodeTargetTypeCfName() );
