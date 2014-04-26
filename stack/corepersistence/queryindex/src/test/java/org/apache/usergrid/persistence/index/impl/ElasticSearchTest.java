@@ -210,7 +210,7 @@ public class ElasticSearchTest {
 
                 }
             } catch ( Exception e ) {
-                log.error( "Error processing {} : {}", key, value, e );
+                log.error( "Error processing {} : {}", key, value);
                 throw new RuntimeException(e);
             }
         }
