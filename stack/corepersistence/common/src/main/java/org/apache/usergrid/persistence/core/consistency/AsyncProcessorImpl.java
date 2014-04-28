@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.core.consistency;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -43,7 +44,7 @@ import rx.schedulers.Schedulers;
  * This way reflection is not used, event dispatching is easier, and has compile time checking
  */
 @Singleton
-public class AsyncProcessorImpl<T> implements AsyncProcessor<T> {
+public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcessor<T> {
 
     /**
      * TODO, run this with hystrix
