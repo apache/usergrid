@@ -32,6 +32,8 @@ import java.util.TreeSet;
  *
  * @author <a href="http://mina.apache.org">Apache MINA Project</a>
  * @see <a href="http://www.iana.org/assignments/port-numbers">IANA.org</a>
+ * 
+ * TODO: move this to test folder once Query Index uses it properly.
  */
 public class AvailablePortFinder {
     /** The minimum number of server port number. */
