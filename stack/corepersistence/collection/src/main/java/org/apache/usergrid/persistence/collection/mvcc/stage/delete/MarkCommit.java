@@ -30,7 +30,8 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationSt
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -75,7 +76,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
         final MvccEntity entity = idIoEvent.getEvent();
 
-        ValidationUtils.verifyMvccEntityOptionalEntity( entity );
+        MvccValidationUtils.verifyMvccEntityOptionalEntity( entity );
 
         final Id entityId = entity.getId();
         final UUID version = entity.getVersion();
@@ -95,6 +96,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         //merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );
 
+        //set up the post processing queue
 
         try {
             logMutation.execute();
@@ -104,6 +106,9 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
             throw new CollectionRuntimeException( entity.getEntity().get(), collectionScope, 
                     "Failed to execute write asynchronously ", e );
         }
+
+
+        //fork post processing
 
         /**
          * We're done executing.

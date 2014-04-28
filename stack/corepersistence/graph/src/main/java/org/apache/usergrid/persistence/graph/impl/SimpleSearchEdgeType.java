@@ -19,7 +19,7 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 

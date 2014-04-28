@@ -28,14 +28,14 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.MessageListener;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
-import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.graph.consistency.MessageListener;
-import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.NodeDelete;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
@@ -44,7 +44,6 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerializa
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
-import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -145,10 +144,32 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                          * Delete from the commit log and storage concurrently
                          */
                         Observable<MarkedEdge> commitLogRemovals =
-                                doDeletes( commitLogSerialization, node, scope, version );
+                                doDeletes( commitLogSerialization, new NodeMutator() {
+                                    @Override
+                                    public MutationBatch doDeleteMutation( final OrganizationScope scope,
+                                                                           final MarkedEdge edge ) {
+                                        final MutationBatch commitBatch =
+                                                commitLogSerialization.deleteEdge( scope, edge );
 
-                        Observable<MarkedEdge> storageRemovals =
-                                doDeletes( storageSerialization, node, scope, version );
+                                        final MutationBatch storageBatch =
+                                                storageSerialization.deleteEdge( scope, edge );
+
+                                        commitBatch.mergeShallow( storageBatch );
+
+                                        return commitBatch;
+                                    }
+                                }, node, scope, version );
+
+                        Observable<MarkedEdge> storageRemovals = doDeletes( storageSerialization, new NodeMutator() {
+                            @Override
+                            public MutationBatch doDeleteMutation( final OrganizationScope scope,
+                                                                   final MarkedEdge edge ) {
+
+                                final MutationBatch storageBatch = storageSerialization.deleteEdge( scope, edge );
+
+                                return storageBatch;
+                            }
+                        }, node, scope, version );
 
                         return Observable.merge( commitLogRemovals, storageRemovals );
                     }
@@ -175,16 +196,15 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
 
     /**
      * Do the deletes
-     * @param serialization
-     * @param node
-     * @param scope
-     * @param version
-     * @return
      */
-    private Observable<MarkedEdge> doDeletes( final EdgeSerialization serialization, final Id node,
-                                              final OrganizationScope scope, final UUID version ) {
+    private Observable<MarkedEdge> doDeletes( final EdgeSerialization serialization, final NodeMutator mutator,
+                                              final Id node, final OrganizationScope scope, final UUID version ) {
         /**
-         * Commit log operation
+         * Note that while we're processing, returned edges could be moved from the commit log to storage.  As a result,
+         * we need to issue a delete with the same version as the node delete on both commit log and storage for
+         * results from the commit log.  This
+         * ensures that the edge is removed from both, regardless of another thread or nodes' processing state.
+         *
          */
 
         //get all edges pointing to the target node and buffer then into groups for deletion
@@ -211,8 +231,9 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                         } );
 
         //merge both source and target into 1 observable.  We'll need to check them all regardless of order
-        return Observable.merge( targetEdges,
-                sourceEdges )//buffer and delete marked edges in our buffer size so we're making less trips to cassandra
+        return Observable.merge( targetEdges, sourceEdges )
+
+                //buffer and delete marked edges in our buffer size so we're making less trips to cassandra
                 .buffer( graphFig.getScanPageSize() ).flatMap( new Func1<List<MarkedEdge>, Observable<MarkedEdge>>() {
                     @Override
                     public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
@@ -227,7 +248,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                         for ( MarkedEdge edge : markedEdges ) {
 
                             //delete the newest edge <= the version on the node delete
-                            final MutationBatch delete = serialization.deleteEdge( scope, edge );
+                            final MutationBatch delete = mutator.doDeleteMutation( scope, edge );
 
                             batch.mergeShallow( delete );
 
@@ -285,6 +306,18 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                                          } );
                     }
                 } );
+    }
+
+
+    /**
+     * Interface to define mutation delete callbacks
+     */
+    private static interface NodeMutator {
+
+        /**
+         * Perform the delete mutation on the marked edge
+         */
+        public MutationBatch doDeleteMutation( final OrganizationScope scope, MarkedEdge edge );
     }
 
 

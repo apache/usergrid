@@ -33,7 +33,6 @@
         <jackson-smile.verson>1.9.13</jackson-smile.verson>
         <jukito.version>1.4-UG</jukito.version>
         <junit.version>4.11</junit.version>
-        <kryo.version>2.22</kryo.version>
         <kryo-serializers.version>0.26</kryo-serializers.version>
         <log4j.version>1.2.17</log4j.version>
         <slf4j.version>1.7.2</slf4j.version>
@@ -49,6 +48,7 @@
         <module>collection</module>
         <module>graph</module>
         <module>queryindex</module>
+      <module>core</module>
     </modules>
 
     <build>

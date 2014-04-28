@@ -35,8 +35,16 @@
 
     <dependency>
       <groupId>org.apache.usergrid</groupId>
-      <artifactId>collection</artifactId>
+      <artifactId>core</artifactId>
       <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.usergrid</groupId>
+      <artifactId>core</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
 
     <dependency>

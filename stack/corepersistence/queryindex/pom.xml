@@ -170,7 +170,15 @@
             <version>${jackson-smile.verson}</version>
             <type>jar</type>
         </dependency>
-        
+
+      <dependency>
+          <groupId>org.apache.usergrid</groupId>
+          <artifactId>core</artifactId>
+          <version>${project.version}</version>
+          <classifier>tests</classifier>
+          <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

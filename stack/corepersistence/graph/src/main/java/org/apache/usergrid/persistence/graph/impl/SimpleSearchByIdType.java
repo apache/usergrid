@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.graph.impl;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.model.entity.Id;

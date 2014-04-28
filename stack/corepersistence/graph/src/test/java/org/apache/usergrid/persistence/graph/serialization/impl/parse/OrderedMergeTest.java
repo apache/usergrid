@@ -30,6 +30,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.rx.OrderedMerge;
+
 import rx.Observable;
 import rx.Subscriber;
 import rx.schedulers.Schedulers;

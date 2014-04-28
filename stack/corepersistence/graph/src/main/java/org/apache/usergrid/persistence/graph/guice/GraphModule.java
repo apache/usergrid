@@ -21,17 +21,15 @@ package org.apache.usergrid.persistence.graph.guice;
 
 import org.safehaus.guicyfig.GuicyFigModule;
 
-import org.apache.usergrid.persistence.collection.guice.CollectionModule;
-import org.apache.usergrid.persistence.collection.migration.Migration;
-import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessObserver;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorImpl;
+import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueue;
+import org.apache.usergrid.persistence.core.consistency.TimeoutQueue;
+import org.apache.usergrid.persistence.core.guice.CoreModule;
+import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.graph.consistency.AsyncProcessorImpl;
-import org.apache.usergrid.persistence.graph.consistency.LocalTimeoutQueue;
-import org.apache.usergrid.persistence.graph.consistency.TimeoutQueue;
-import org.apache.usergrid.persistence.graph.impl.CollectionIndexObserver;
 import org.apache.usergrid.persistence.graph.impl.GraphManagerImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepairImpl;
@@ -77,12 +75,11 @@ public class GraphModule extends AbstractModule {
     protected void configure() {
 
         //configure collections and our core astyanax framework
-        install( new CollectionModule() );
+        install( new CoreModule() );
 
         //install our configuration
         install( new GuicyFigModule( GraphFig.class ) );
 
-        bind( PostProcessObserver.class ).to( CollectionIndexObserver.class );
 
         bind( EdgeMetadataSerialization.class ).to( EdgeMetadataSerializationImpl.class );
         bind( NodeSerialization.class ).to( NodeSerializationImpl.class );

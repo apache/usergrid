@@ -46,7 +46,7 @@ public interface EntityCollectionManagerFactory {
      * The EntityCollectionManager can safely be used on the current thread 
      * and will shard responses.  The returned instance should not be shared
      * among threads it will not be guaranteed to be thread safe.  
-     * This implementation will be synchronous. Try to use the consistency
+     * This implementation will be synchronous. Try to use the org.apache.usergrid.persistence.core.consistency
      * implementation if possible
      *
      * @param collectionScope The collectionScope collectionScope to use when 

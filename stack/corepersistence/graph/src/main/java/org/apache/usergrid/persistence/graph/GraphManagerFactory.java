@@ -20,7 +20,7 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 
 
 /**

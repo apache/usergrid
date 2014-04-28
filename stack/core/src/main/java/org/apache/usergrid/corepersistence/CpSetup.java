@@ -36,9 +36,8 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_ORGANIZATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.STATIC_APPLICATION_KEYSPACE;
-import org.apache.usergrid.persistence.collection.migration.MigrationException;
-import org.apache.usergrid.persistence.collection.migration.MigrationManager;
+import org.apache.usergrid.persistence.core.migration.MigrationException;
+import org.apache.usergrid.persistence.core.migration.MigrationManager;
 
 
 /**

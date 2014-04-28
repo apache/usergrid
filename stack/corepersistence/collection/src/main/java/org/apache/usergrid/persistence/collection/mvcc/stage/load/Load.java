@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -94,7 +94,7 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         //The version exists, but does not have entity data
         if ( !targetVersion.isPresent() ) {
 
-            //TODO, a lazy consistency repair/cleanup here?
+            //TODO, a lazy org.apache.usergrid.persistence.core.consistency repair/cleanup here?
 
             return null;
         }

@@ -16,7 +16,7 @@
 
 package org.apache.usergrid.corepersistence;
 
-import org.apache.usergrid.persistence.graph.consistency.TimeService;
+import org.apache.usergrid.persistence.core.consistency.TimeService;
 
 /**
  * TODO: this should be in the Graph module. 
