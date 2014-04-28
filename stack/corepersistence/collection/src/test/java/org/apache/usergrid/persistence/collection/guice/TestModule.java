@@ -19,7 +19,9 @@
 
 package org.apache.usergrid.persistence.collection.guice;
 
+
 import java.io.IOException;
+
 import com.google.inject.AbstractModule;
 import com.netflix.config.ConfigurationManager;
 

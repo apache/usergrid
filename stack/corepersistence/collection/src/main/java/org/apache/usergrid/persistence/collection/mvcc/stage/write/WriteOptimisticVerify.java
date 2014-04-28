@@ -26,8 +26,9 @@ import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerif
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 
 import com.google.inject.Inject;
@@ -58,7 +59,7 @@ public class WriteOptimisticVerify
 
     @Override
     public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> ioevent ) {
-        ValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
+        MvccValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
 
         // If the version was included on the entity write operation (delete or write) we need
         // to read back the entity log, and ensure that our "new" version is the only version

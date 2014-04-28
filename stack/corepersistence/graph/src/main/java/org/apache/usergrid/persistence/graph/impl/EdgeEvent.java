@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.graph.impl;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 
 
 /**

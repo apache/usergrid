@@ -18,13 +18,18 @@
 
 package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
+
 import java.util.UUID;
+
 import org.junit.Test;
+
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
 import com.google.common.base.Optional;
+
 import static org.junit.Assert.assertEquals;
 
 

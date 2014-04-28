@@ -25,8 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
+import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
+import org.apache.usergrid.persistence.core.hystrix.HystrixGraphObservable;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManager;
@@ -36,18 +41,13 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
-import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.graph.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
 import org.apache.usergrid.persistence.graph.guice.NodeDelete;
-import org.apache.usergrid.persistence.graph.hystrix.HystrixGraphObservable;
-import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
-import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -85,6 +85,7 @@ public class GraphManagerImpl implements GraphManager {
     private final AsyncProcessor<Id> nodeDeleteAsyncProcessor;
 
     private final GraphFig graphFig;
+    private final ConsistencyFig consistencyFig;
 
 
     @Inject
@@ -93,7 +94,8 @@ public class GraphManagerImpl implements GraphManager {
                              final NodeSerialization nodeSerialization, final GraphFig graphFig,
                              @EdgeDelete final AsyncProcessor edgeDelete, @NodeDelete final AsyncProcessor nodeDelete,
                              @NodeDelete final AsyncProcessor edgeWrite, @Assisted final OrganizationScope scope,
-                             final MergedEdgeReader mergedEdgeReader ) {
+                             final MergedEdgeReader mergedEdgeReader, final ConsistencyFig consistencyFig ) {
+
 
 
         ValidationUtils.validateOrganizationScope( scope );
@@ -101,11 +103,12 @@ public class GraphManagerImpl implements GraphManager {
         Preconditions.checkNotNull( mergedEdgeReader, "mergedEdgeReader must not be null" );
         Preconditions.checkNotNull( commitLogSerialization, "commitLogSerialization must not be null" );
         Preconditions.checkNotNull( nodeSerialization, "nodeSerialization must not be null" );
-        Preconditions.checkNotNull( graphFig, "graphFig must not be null" );
+        Preconditions.checkNotNull( graphFig, "consistencyFig must not be null" );
         Preconditions.checkNotNull( edgeDelete, "edgeDelete must not be null" );
         Preconditions.checkNotNull( nodeDelete, "nodeDelete must not be null" );
         Preconditions.checkNotNull( edgeWrite, "edgeWrite must not be null" );
         Preconditions.checkNotNull( scope, "scope must not be null" );
+        Preconditions.checkNotNull( consistencyFig, "consistencyFig must not be null" );
 
         this.scope = scope;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
@@ -113,6 +116,7 @@ public class GraphManagerImpl implements GraphManager {
         this.commitLogSerialization = commitLogSerialization;
         this.nodeSerialization = nodeSerialization;
         this.graphFig = graphFig;
+        this.consistencyFig = consistencyFig;
 
 
         this.edgeDeleteAsyncProcessor = edgeDelete;
@@ -308,10 +312,10 @@ public class GraphManagerImpl implements GraphManager {
 
 
     /**
-     * Get our timeout for write consistency
+     * Get our timeout for write org.apache.usergrid.persistence.core.consistency
      */
     private long getTimeout() {
-        return graphFig.getRepairTimeout() * 2;
+        return consistencyFig.getRepairTimeout() * 2;
     }
 
 

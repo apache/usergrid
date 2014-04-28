@@ -27,7 +27,8 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationSt
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -81,7 +82,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
     public Entity call( final CollectionIoEvent<MvccEntity> ioEvent ) {
 
         final MvccEntity mvccEntity = ioEvent.getEvent();
-        ValidationUtils.verifyMvccEntityWithEntity( mvccEntity );
+        MvccValidationUtils.verifyMvccEntityWithEntity( mvccEntity );
 
         final Id entityId = mvccEntity.getId();
         final UUID version = mvccEntity.getVersion();
