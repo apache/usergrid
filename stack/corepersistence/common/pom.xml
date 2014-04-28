@@ -114,6 +114,14 @@
     </dependency>
 
 
+    <!-- aws sdks -->
+    <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk</artifactId>
+         <version>1.7.5</version>
+       </dependency>
+
+
     <dependency>
       <groupId>org.jukito</groupId>
       <artifactId>jukito</artifactId>

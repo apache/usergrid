@@ -28,8 +28,10 @@ import static org.junit.Assert.assertTrue;
  *
  *
  */
+@Ignore("Run explicity with profiles")
 public class AmazonSimpleTimeoutQueueTest {
-    @Ignore
+
+
     @Test
     public void queueReadRemove() {
 
@@ -103,7 +105,7 @@ public class AmazonSimpleTimeoutQueueTest {
         }
     }
 
-    @Ignore
+
     @Test
     public void queueReadTimeout() {
 

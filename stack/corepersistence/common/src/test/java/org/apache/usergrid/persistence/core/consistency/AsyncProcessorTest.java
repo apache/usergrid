@@ -283,7 +283,7 @@ public class AsyncProcessorTest {
     /**
      * Marked class for events, does nothing
      */
-    public static class TestEvent {
+    public static class TestEvent implements Serializable{
 
         public boolean equals( Object other ) {
             return this == other;
