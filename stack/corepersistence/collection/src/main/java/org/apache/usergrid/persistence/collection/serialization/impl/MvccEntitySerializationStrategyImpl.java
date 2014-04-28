@@ -286,7 +286,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         public static final SmileFactory f = new SmileFactory(  );
 
-        public static ObjectMapper mapper = new ObjectMapper(  );
+        public static ObjectMapper mapper = new ObjectMapper( f );
 
         private static byte[] STATE_COMPLETE = new byte[] { 0 };
         private static byte[] STATE_DELETED = new byte[] { 1 };

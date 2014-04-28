@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.graph.consistency;
 
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -173,7 +174,7 @@ public class LocalTimeoutQueueTest {
     }
 
 
-    public static class TestEvent {
+    public static class TestEvent implements Serializable {
 
         public boolean equals( Object o ) {
             return this == o;
