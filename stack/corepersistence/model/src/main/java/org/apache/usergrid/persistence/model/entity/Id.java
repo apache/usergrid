@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.model.entity;
 
 
+import java.io.Serializable;
 import java.util.UUID;
 
 
@@ -26,7 +27,7 @@ import java.util.UUID;
  * Interface for creating identifiers for an entity. The implementation should implement
  * the equals and hasCode methods
  * @author tnine */
-public interface Id extends Comparable<Id> {
+public interface Id extends Comparable<Id>, Serializable {
 
     /**
      * Get the uuid for this id
