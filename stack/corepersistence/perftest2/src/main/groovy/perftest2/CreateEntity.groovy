@@ -24,7 +24,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager
 import com.google.inject.Guice
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl
-import org.apache.usergrid.persistence.collection.migration.MigrationManager
+import org.apache.usergrid.persistence.core.migration.MigrationManager
 import org.apache.usergrid.persistence.collection.util.EntityUtils
 import org.apache.usergrid.persistence.index.EntityCollectionIndex
 import org.apache.usergrid.persistence.index.guice.IndexModule

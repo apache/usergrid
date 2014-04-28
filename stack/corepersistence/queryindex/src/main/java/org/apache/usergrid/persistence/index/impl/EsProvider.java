@@ -20,7 +20,8 @@ package org.apache.usergrid.persistence.index.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.usergrid.persistence.collection.util.AvailablePortFinder;
+
+import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
@@ -67,7 +68,7 @@ public class EsProvider {
                 log.info("Starting embedded ElasticSearch");
                 log.info("--------------------------------");
 
-                int port = AvailablePortFinder.getNextAvailable(2000);
+                int port = AvailablePortFinder.getNextAvailable( 2000 );
                 Settings settings = ImmutableSettings.settingsBuilder()
                         .put("node.http.enabled", true)
                         .put("transport.tcp.port", port)
@@ -88,7 +89,7 @@ public class EsProvider {
                 log.info("--------------------------------");
 
                 Settings settings = ImmutableSettings.settingsBuilder()
-                        .put("cluster.name", fig.getIndexName() ).build();
+                        .put("cluster.name", fig.getIndexNamePrefix() ).build();
 
                 TransportClient transportClient = new TransportClient(settings);
                 for (String host : fig.getHosts().split(",")) {

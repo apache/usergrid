@@ -1,15 +1,33 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.usergrid.persistence.graph.impl;
 
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.MessageListener;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.graph.consistency.MessageListener;
 import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -33,7 +51,6 @@ import rx.functions.Func4;
 public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, EdgeEvent<Edge>> {
 
 
-    private final EdgeSerialization edgeSerialization;
     private final EdgeMetadataSerialization edgeMetadataSerialization;
     private final GraphManagerFactory graphManagerFactory;
     private final Keyspace keyspace;
@@ -41,11 +58,9 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
 
 
     @Inject
-    public EdgeDeleteListener( final EdgeSerialization edgeSerialization,
-                               final EdgeMetadataSerialization edgeMetadataSerialization,
+    public EdgeDeleteListener(  final EdgeMetadataSerialization edgeMetadataSerialization,
                                final GraphManagerFactory graphManagerFactory, final Keyspace keyspace,
                                @EdgeDelete final AsyncProcessor edgeDelete, final GraphFig graphFig ) {
-        this.edgeSerialization = edgeSerialization;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.graphManagerFactory = graphManagerFactory;
         this.keyspace = keyspace;
@@ -70,23 +85,6 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
 
                 final MutationBatch batch = keyspace.prepareMutationBatch();
 
-
-//             TODO T.N. no longer needed since each version is explicity deleted
-//                //go through every version of this edge <= the current version and remove it
-//                Observable<MarkedEdge> edges = Observable.create( new ObservableIterator<MarkedEdge>() {
-//                    @Override
-//                    protected Iterator<MarkedEdge> getIterator() {
-//                        return edgeSerialization.getEdgeVersions( scope,
-//                                new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-//                                        edge.getVersion(), null ) );
-//                    }
-//                } ).doOnNext( new Action1<MarkedEdge>() {
-//                    @Override
-//                    public void call( final MarkedEdge markedEdge ) {
-//                        final MutationBatch delete = edgeSerialization.deleteEdge( scope, markedEdge );
-//                        batch.mergeShallow( delete );
-//                    }
-//                } );
 
                 //search by edge type and target type.  If any other edges with this target type exist,
                 // we can't delete it
@@ -187,6 +185,8 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                                               ).map( new Func1<MutationBatch, EdgeEvent<Edge>>() {
             @Override
             public EdgeEvent<Edge> call( final MutationBatch mutationBatch ) {
+
+                //actually delete the edge from both the commit log and
                 try {
                     mutationBatch.execute();
                 }

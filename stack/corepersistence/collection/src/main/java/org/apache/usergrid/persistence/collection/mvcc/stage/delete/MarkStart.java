@@ -30,7 +30,7 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -99,12 +99,14 @@ public class MarkStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent
         }
         catch ( ConnectionException e ) {
             LOG.error( "Failed to execute write asynchronously ", e );
-            throw new CollectionRuntimeException( "Failed to execute write asynchronously ", e );
+            throw new CollectionRuntimeException( null, collectionScope, 
+                    "Failed to execute write asynchronously ", e );
         }
 
 
         //create the mvcc entity for the next stage
-        final MvccEntityImpl nextStage = new MvccEntityImpl(entityId, version, MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
+        final MvccEntityImpl nextStage = new MvccEntityImpl(
+            entityId, version, MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
 
 
         return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );

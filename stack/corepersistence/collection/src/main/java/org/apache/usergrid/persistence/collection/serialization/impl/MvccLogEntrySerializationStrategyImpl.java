@@ -35,11 +35,11 @@ import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.collection.migration.Migration;
+import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
@@ -237,7 +237,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
 
     /**
-     * Internal stage cache
+     * Internal stage shard
      */
     private static class StageCache {
         private Map<Integer, Stage> values = new HashMap<Integer, Stage>( Stage.values().length );

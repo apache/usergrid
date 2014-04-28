@@ -30,12 +30,12 @@ import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
-import org.apache.usergrid.persistence.collection.migration.Migration;
+import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
@@ -108,8 +108,16 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         return doWrite( collectionScope, entityId, new RowOp() {
             @Override
             public void doOp( final ColumnListMutation<UUID> colMutation ) {
-                colMutation.putColumn( colName,
+                try {
+                    colMutation.putColumn( colName,
                         SER.toByteBuffer( new EntityWrapper( entity.getStatus(), entity.getEntity() ) ) );
+                } catch ( Exception e ) {
+                    // throw better exception if we can
+                    if ( entity != null || entity.getEntity().get() != null ) {
+                        throw new CollectionRuntimeException( entity.getEntity().get(), collectionScope, e );
+                    }
+                    throw e;
+                }
             }
         } );
     }
@@ -134,7 +142,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             return null;
         }
         catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra", e );
         }
 
 
@@ -159,7 +167,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                             .withColumnRange( version, null, false, maxSize ).execute().getResult();
         }
         catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( "An error occurred connecting to cassandra", e );
+            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra", e );
         }
 
 
@@ -278,7 +286,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         public static final SmileFactory f = new SmileFactory(  );
 
-        public static ObjectMapper mapper = new ObjectMapper(  );
+        public static ObjectMapper mapper = new ObjectMapper( f );
 
         private static byte[] STATE_COMPLETE = new byte[] { 0 };
         private static byte[] STATE_DELETED = new byte[] { 1 };
@@ -321,7 +329,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 builder.addBytes( mapper.writeValueAsBytes( wrapper.entity.get() ) );
             }
             catch ( Exception e ) {
-                throw new CollectionRuntimeException(e.getMessage());
+                throw new RuntimeException(e.getMessage());
             }
 
             return builder.build();
@@ -359,7 +367,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 storedEntity = mapper.readValue( array,start,length,Entity.class);
             }
             catch ( Exception e ) {
-                throw new CollectionRuntimeException(e.getMessage());
+                throw new RuntimeException(e.getMessage());
             }
 
             final Optional<Entity> entity = Optional.of( storedEntity );

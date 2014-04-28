@@ -17,15 +17,16 @@
  */
 package org.apache.usergrid.persistence.index.legacy;
 
-import org.apache.usergrid.persistence.index.utils.EntityBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.index.EntityCollectionIndex;
-import org.apache.usergrid.persistence.index.EntityCollectionIndexFactory;
+import org.apache.usergrid.persistence.collection.util.EntityBuilder;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -47,31 +48,31 @@ import org.slf4j.LoggerFactory;
 public class EntityManagerFacade {
     private static final Logger logger = LoggerFactory.getLogger( EntityManagerFacade.class );
 
-    private final Id orgId;
-    private final Id appId;
+    private final OrganizationScope orgScope;
+    private final CollectionScope appScope;
     private final EntityCollectionManagerFactory ecmf;
-    private final EntityCollectionIndexFactory ecif;
+    private final EntityIndexFactory ecif;
     private final Map<String, String> typesByCollectionNames = new HashMap<String, String>();
 
     private final Map<CollectionScope, EntityCollectionManager> managers = new HashMap<>();
-    private final Map<CollectionScope, EntityCollectionIndex> indexes = new HashMap<>();
+    private final Map<CollectionScope, EntityIndex> indexes = new HashMap<>();
     
     public EntityManagerFacade( 
-        Id orgId, 
-        Id appId, 
+        OrganizationScope orgScope, 
+        CollectionScope appScope, 
         EntityCollectionManagerFactory ecmf, 
-        EntityCollectionIndexFactory ecif ) {
+        EntityIndexFactory ecif ) {
 
-        this.appId = appId;
-        this.orgId = orgId;
+        this.appScope = appScope;
+        this.orgScope = orgScope;
         this.ecmf = ecmf;
         this.ecif = ecif;
     }
 
-    private EntityCollectionIndex getIndex( CollectionScope scope ) { 
-        EntityCollectionIndex eci = indexes.get( scope );
+    private EntityIndex getIndex( CollectionScope scope ) { 
+        EntityIndex eci = indexes.get( scope );
         if ( eci == null ) {
-            eci = ecif.createCollectionIndex( scope );
+            eci = ecif.createEntityIndex( orgScope, appScope );
             indexes.put( scope, eci );
         }
         return eci;
@@ -88,9 +89,10 @@ public class EntityManagerFacade {
 
     public Entity create( String type, Map<String, Object> properties ) {
 
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
+        CollectionScope scope = new CollectionScopeImpl( 
+                orgScope.getOrganization(), appScope.getOwner(), type );
         EntityCollectionManager ecm = getManager( scope );
-        EntityCollectionIndex eci = getIndex( scope );
+        EntityIndex eci = getIndex( scope );
 
         final String collectionName;
         if ( type.endsWith("y") ) {
@@ -106,7 +108,7 @@ public class EntityManagerFacade {
         entity.setField(new LongField("modified", entity.getId().getUuid().timestamp()) );
         entity = ecm.write( entity ).toBlockingObservable().last();
 
-        eci.index( entity );
+        eci.index( scope, entity );
         return entity;
     }
 
@@ -117,15 +119,17 @@ public class EntityManagerFacade {
 			throw new RuntimeException( 
 					"No type found for collection name: " + collectionName);
 		}
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
+        CollectionScope scope = new CollectionScopeImpl( 
+                orgScope.getOrganization(), appScope.getOwner(), type );
 
-        EntityCollectionIndex eci = getIndex( scope );
-        Results results = eci.execute( query );
+        EntityIndex eci = getIndex( scope );
+        Results results = eci.search( scope, query );
         return results;
     }
 
     public Entity get( Id id ) {
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, id.getType() );
+        CollectionScope scope = new CollectionScopeImpl( 
+                orgScope.getOrganization(), appScope.getOwner(), id.getType() );
         EntityCollectionManager ecm = getManager( scope );
         return ecm.load( id ).toBlockingObservable().last();
     }
@@ -143,9 +147,11 @@ public class EntityManagerFacade {
 
         String type = entity.getId().getType();
 
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
+        CollectionScope scope = new CollectionScopeImpl( 
+                orgScope.getOrganization(), appScope.getOwner(), type );
+
         EntityCollectionManager ecm = getManager( scope );
-        EntityCollectionIndex eci = getIndex( scope );
+        EntityIndex eci = getIndex( scope );
 
         final String collectionName;
         if ( type.endsWith("y") ) {
@@ -157,7 +163,7 @@ public class EntityManagerFacade {
         
         entity = ecm.write( entity ).toBlockingObservable().last();
 
-        eci.index( entity );
+        eci.index( scope, entity );
     }
 
 	
@@ -165,11 +171,13 @@ public class EntityManagerFacade {
 
         String type = entity.getId().getType();
 
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
-        EntityCollectionManager ecm = getManager( scope );
-        EntityCollectionIndex eci = getIndex( scope );
+        CollectionScope scope = new CollectionScopeImpl( 
+                orgScope.getOrganization(), appScope.getOwner(), type );
 
-		eci.deindex( entity );
+        EntityCollectionManager ecm = getManager( scope );
+        EntityIndex eci = getIndex( scope );
+
+		eci.deindex( scope, entity );
 		ecm.delete( entity.getId() );
 	}
 
@@ -178,22 +186,27 @@ public class EntityManagerFacade {
 
         String type = entityRef.getId().getType();
 
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, type );
+        CollectionScope scope = new CollectionScopeImpl( 
+                orgScope.getOrganization(), appScope.getOwner(), type );
+
         EntityCollectionManager ecm = getManager( scope );
-        EntityCollectionIndex eci = getIndex( scope );
+        EntityIndex eci = getIndex( scope );
 
 		Entity entity = ecm.load( entityRef.getId() ).toBlockingObservable().last();
 		entity.setField( new LocationField( fieldName, new Location( lat, lon )));
 
         entity = ecm.write(entity).toBlockingObservable().last();
-        eci.index(entity);
+        eci.index( scope, entity);
 	}
 
 
     public void refreshIndex() {
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "dummy" );
+
+        CollectionScope scope = new CollectionScopeImpl( 
+                orgScope.getOrganization(), appScope.getOwner(), "dummy" );
+
         EntityCollectionManager ecm = getManager( scope );
-        EntityCollectionIndex eci = getIndex( scope );
+        EntityIndex eci = getIndex( scope );
 		eci.refresh();
     }
 

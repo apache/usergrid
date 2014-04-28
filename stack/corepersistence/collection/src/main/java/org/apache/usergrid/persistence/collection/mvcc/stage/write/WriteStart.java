@@ -7,11 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -23,13 +22,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.collection.exception.WriteStartException;
 
 import rx.functions.Func1;
 
 
 /**
- * This is the first stage and should be invoked immediately when a write is started.  It should persist the start of a
- * new write in the data store for a checkpoint and recovery
+ * This is the first stage and should be invoked immediately when a write is started.  It should 
+ * persist the start of a new write in the data store for a checkpoint and recovery
  */
 @Singleton
 public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIoEvent<MvccEntity>> {
@@ -73,13 +73,15 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             }
             catch ( ConnectionException e ) {
                 LOG.error( "Failed to execute write ", e );
-                throw new CollectionRuntimeException( "Failed to execute write ", e );
+                throw new WriteStartException( entity, collectionScope, 
+                        "Failed to execute write ", e );
             }
 
 
             //create the mvcc entity for the next stage
             //todo, we need to create a complete or partial update here (or sooner)
-            final MvccEntityImpl nextStage = new MvccEntityImpl( entityId, version, MvccEntity.Status.COMPLETE, entity );
+            final MvccEntityImpl nextStage = 
+                    new MvccEntityImpl( entityId, version, MvccEntity.Status.COMPLETE, entity );
 
             return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
         }

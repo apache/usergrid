@@ -21,11 +21,11 @@ package org.apache.usergrid.persistence.graph.serialization;
 
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -36,7 +36,7 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * Simple interface for serializing node information for mark/sweep
  */
-public interface NodeSerialization {
+public interface NodeSerialization extends Migration {
 
 
     /**

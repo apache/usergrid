@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
@@ -122,12 +122,13 @@ public class ChangeLogGeneratorImplTest {
             // 
             // based on that data we expect something like this:
             //
-            // Type = PROPERTY_WRITE, Property = count, Value = 2, Versions = [cd54818c-67f6-11e3-945d-cae0eb411d00]
-            // Type = PROPERTY_WRITE, Property = name, Value = name3, Versions = [cd54818c-67f6-11e3-945d-cae0eb411d00]
-            // Type = PROPERTY_DELETE, Property = nickname, Value = buddy, Versions = [cd53be3a-67f6-11e3-945d-cae0eb411d00]
-            // Type = PROPERTY_DELETE, Property = name, Value = name2, Versions = [cd53be3a-67f6-11e3-945d-cae0eb411d00]
-            // Type = PROPERTY_DELETE, Property = count, Value = 1, Versions = [cd47b048-67f6-11e3-945d-cae0eb411d00]
-            // Type = PROPERTY_DELETE, Property = name, Value = name1, Versions = [cd47b048-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_WRITE, Property = count,     Value = 2, Versions = [560c7e10-a925-11e3-bf9d-10ddb1de66c4]
+            // Type = PROPERTY_WRITE, Property = name,      Value = name3, Versions = [560c7e10-a925-11e3-bf9d-10ddb1de66c4]
+            //
+            // Type = PROPERTY_DELETE, Property = nickname, Value = buddy, Versions = [560b6c9e-a925-11e3-bf9d-10ddb1de66c4]
+            // Type = PROPERTY_DELETE, Property = name,     Value = name2, Versions = [560b6c9e-a925-11e3-bf9d-10ddb1de66c4]
+            // Type = PROPERTY_DELETE, Property = count,    Value = 1, Versions = [55faa3bc-a925-11e3-bf9d-10ddb1de66c4]
+            // Type = PROPERTY_DELETE, Property = name,     Value = name1, Versions = [55faa3bc-a925-11e3-bf9d-10ddb1de66c4]
 
             List<MvccEntity> versions = mvccEntitySerializationStrategy
                .load( context, e1.getId(), e3.getVersion(), 10);
@@ -139,13 +140,32 @@ public class ChangeLogGeneratorImplTest {
                 LOG.info( cle.toString() );
                 Assert.assertFalse( cle.getVersions().isEmpty() );
             }
+
             Assert.assertEquals( 6, result.size() );
             Assert.assertTrue( isAscendingOrder( result ) );
 
+            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_WRITE, result.get( 0 ).getChangeType() );
+            Assert.assertEquals( "count", result.get( 0 ).getField().getName() );
+            Assert.assertEquals( "2", result.get( 0 ).getField().getValue().toString() );
+            
             Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_WRITE, result.get( 1 ).getChangeType() );
+            Assert.assertEquals( "name", result.get( 1 ).getField().getName() );
             Assert.assertEquals( "name3", result.get( 1 ).getField().getValue() );
 
+            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 2 ).getChangeType() );
+            Assert.assertEquals( "nickname", result.get( 2 ).getField().getName() );
+            Assert.assertEquals( "buddy", result.get( 2 ).getField().getValue() );
+
+            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 3 ).getChangeType() );
+            Assert.assertEquals( "name", result.get( 3 ).getField().getName() );
+            Assert.assertEquals( "name2", result.get( 3 ).getField().getValue() );
+
+            Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 4 ).getChangeType() );
+            Assert.assertEquals( "count", result.get( 4 ).getField().getName() );
+            Assert.assertEquals( "1", result.get( 4 ).getField().getValue().toString() );
+
             Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 5 ).getChangeType() );
+            Assert.assertEquals( "name", result.get( 5 ).getField().getName() );
             Assert.assertEquals( "name1", result.get( 5 ).getField().getValue() );
         }
        
@@ -155,12 +175,13 @@ public class ChangeLogGeneratorImplTest {
             // 
             // based on that data we expect something like this:
             //
-            // Type = PROPERTY_WRITE, Property = count, Value = 2, Versions = [cd53be3a-67f6-11e3-945d-cae0eb411d00, cd54818c-67f6-11e3-945d-cae0eb411d00]
-            // Type = PROPERTY_WRITE, Property = name, Value = name3, Versions = [cd54818c-67f6-11e3-945d-cae0eb411d00]
-            // Type = PROPERTY_WRITE, Property = nickname, Value = buddy, Versions = [cd53be3a-67f6-11e3-945d-cae0eb411d00]
-            // Type = PROPERTY_WRITE, Property = name, Value = name2, Versions = [cd53be3a-67f6-11e3-945d-cae0eb411d00]
-            // Type = PROPERTY_DELETE, Property = count, Value = 1, Versions = [cd47b048-67f6-11e3-945d-cae0eb411d00]
-            // Type = PROPERTY_DELETE, Property = name, Value = name1, Versions = [cd47b048-67f6-11e3-945d-cae0eb411d00]
+            // Type = PROPERTY_WRITE, Property = name, Value = name3, Versions = [c771f63f-a927-11e3-8bfc-10ddb1de66c4]
+            // Type = PROPERTY_WRITE, Property = count, Value = 2, Versions = [c770e4cd-a927-11e3-8bfc-10ddb1de66c4, c771f63f-a927-11e3-8bfc-10ddb1de66c4]
+            // Type = PROPERTY_WRITE, Property = nickname, Value = buddy, Versions = [c770e4cd-a927-11e3-8bfc-10ddb1de66c4]
+            // Type = PROPERTY_WRITE, Property = name, Value = name2, Versions = [c770e4cd-a927-11e3-8bfc-10ddb1de66c4]
+
+            // Type = PROPERTY_DELETE, Property = count, Value = 1, Versions = [c75f589b-a927-11e3-8bfc-10ddb1de66c4]
+            // Type = PROPERTY_DELETE, Property = name, Value = name1, Versions = [c75f589b-a927-11e3-8bfc-10ddb1de66c4]
 
             List<MvccEntity> versions = mvccEntitySerializationStrategy
                .load( context, e1.getId(), e3.getVersion(), 10);
@@ -176,10 +197,12 @@ public class ChangeLogGeneratorImplTest {
             Assert.assertTrue( isAscendingOrder( result ) );
 
             Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_WRITE, result.get( 2 ).getChangeType() );
+            Assert.assertEquals( "nickname", result.get( 2 ).getField().getName() );
             Assert.assertEquals( "buddy", result.get( 2 ).getField().getValue() );
 
             Assert.assertEquals( ChangeLogEntry.ChangeType.PROPERTY_DELETE, result.get( 4 ).getChangeType() );
             Assert.assertEquals( "count", result.get( 4 ).getField().getName() );
+            Assert.assertEquals( "1", result.get( 4 ).getField().getValue().toString() );
         }
     }
 

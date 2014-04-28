@@ -28,19 +28,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
-import com.netflix.config.ConfigurationManager;
-
 import rx.Observable;
-import rx.Scheduler;
 import rx.functions.Func1;
 import rx.functions.FuncN;
 import rx.schedulers.Schedulers;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -90,9 +83,6 @@ public class ParallelTest {
 
         //latch used to make each thread block to prove correctness
         final CountDownLatch latch = new CountDownLatch( size );
-
-
-        final Multiset<String> set = HashMultiset.create();
 
 
         //create our observable and execute it in the I/O pool since we'll be doing I/O operations
@@ -151,7 +141,7 @@ public class ParallelTest {
 //                                    logger.info( "Invoking hystrix task in thread {}", threadName );
 
 
-                                    set.add( threadName );
+
 
                                     latch.countDown();
 
@@ -206,13 +196,6 @@ public class ParallelTest {
 
         assertEquals( expected, last.intValue() );
 
-        assertEquals( size, set.size() );
 
-        /**
-         * Ensure only 1 entry per thread
-         */
-        for ( String entry : set.elementSet() ) {
-            assertEquals( 1, set.count( entry ) );
-        }
     }
 }

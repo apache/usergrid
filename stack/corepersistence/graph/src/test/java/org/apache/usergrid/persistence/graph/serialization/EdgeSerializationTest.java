@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.usergrid.persistence.graph.serialization;
 
 
@@ -6,24 +24,20 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
-import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
-import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -49,9 +63,7 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
-public class EdgeSerializationTest {
+public abstract class EdgeSerializationTest {
 
     private static final Logger log = LoggerFactory.getLogger( EdgeSerializationTest.class );
 
@@ -64,7 +76,7 @@ public class EdgeSerializationTest {
     public MigrationManagerRule migrationManagerRule;
 
 
-    @Inject
+
     protected EdgeSerialization serialization;
 
     @Inject
@@ -86,8 +98,16 @@ public class EdgeSerializationTest {
         when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
 
         when( scope.getOrganization() ).thenReturn( orgId );
+
+        serialization = getSerialization();
     }
 
+
+    /**
+     * Get the edge Serialization to use
+     * @return
+     */
+    protected abstract EdgeSerialization getSerialization();
 
     /**
      * Tests mixing 2 edge types between 2 nodes.  We should get results for the same source->destination with the 2
@@ -196,6 +216,9 @@ public class EdgeSerializationTest {
 
         final Edge edgev2 = createEdge( sourceId, "edge1", targetId );
 
+        //we shouldn't get this one back
+        final Edge diffTarget = createEdge(sourceId, "edge1", createId("newTarget"));
+
         assertTrue( "Edge version 1 has lower time uuid",
                 UUIDComparator.staticCompare( edgev1.getVersion(), edgev2.getVersion() ) < 0 );
 
@@ -205,6 +228,7 @@ public class EdgeSerializationTest {
         serialization.writeEdge( scope, edgev1 ).execute();
         serialization.writeEdge( scope, edgev2 ).execute();
         serialization.writeEdge( scope, edgeType2V1 ).execute();
+        serialization.writeEdge( scope, diffTarget ).execute();
 
         final UUID now = UUIDGenerator.newTimeUUID();
 

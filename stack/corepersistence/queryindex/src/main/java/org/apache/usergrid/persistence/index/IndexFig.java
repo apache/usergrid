@@ -31,7 +31,7 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
 
-    public static final String ELASTICSEARCH_INDEXNAME = "elasticsearch.index_name";
+    public static final String ELASTICSEARCH_INDEXNAME_PREFIX = "elasticsearch.index_name.prefix";
 
     public static final String ELASTICSEARCH_EMBEDDED = "elasticsearch.embedded";
 
@@ -49,9 +49,9 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_PORT )
     int getPort();
 
-    @Default( "usergrid" )
-    @Key( ELASTICSEARCH_INDEXNAME )
-    String getIndexName();
+    @Default( "usergrid_" )
+    @Key( ELASTICSEARCH_INDEXNAME_PREFIX )
+    String getIndexNamePrefix();
     
     @Default( "1" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
