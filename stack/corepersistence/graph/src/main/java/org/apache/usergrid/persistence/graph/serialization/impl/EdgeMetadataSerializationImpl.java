@@ -339,8 +339,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
-        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent(),
-                graphFig.getReadTimeout() );
+        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent());
     }
 
 
@@ -377,8 +376,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true ).withColumnRange( searchRange );
 
 
-        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent(),
-                graphFig.getReadTimeout() );
+        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent());
     }
 
 

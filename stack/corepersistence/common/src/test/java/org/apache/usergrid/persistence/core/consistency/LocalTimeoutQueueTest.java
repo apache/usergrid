@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.consistency;
+package org.apache.usergrid.persistence.core.consistency;
 
 
 import java.util.Collection;
@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueue;
@@ -46,12 +47,12 @@ public class LocalTimeoutQueueTest {
     @Test
     public void queueReadRemove() {
 
-        TimeService timeService = mock( TimeService.class );
+        TimeService timeService = Mockito.mock( TimeService.class );
 
         final long time = 1000l;
         final long timeout = 1000;
 
-        when( timeService.getCurrentTime() ).thenReturn( time );
+        Mockito.when( timeService.getCurrentTime() ).thenReturn( time );
 
         TimeoutQueue<TestEvent> queue = new LocalTimeoutQueue<TestEvent>( timeService );
 
@@ -71,7 +72,7 @@ public class LocalTimeoutQueueTest {
         //now elapse the time
         final long firstTime = time + timeout;
 
-        when( timeService.getCurrentTime() ).thenReturn( firstTime );
+        Mockito.when( timeService.getCurrentTime() ).thenReturn( firstTime );
 
         results = queue.take( 100, timeout );
 
@@ -91,7 +92,7 @@ public class LocalTimeoutQueueTest {
         queue.remove( message );
 
         //advance time again (a lot)
-        when( timeService.getCurrentTime() ).thenReturn( firstTime * 20 );
+        Mockito.when( timeService.getCurrentTime() ).thenReturn( firstTime * 20 );
 
         results = queue.take( 100, timeout );
 
@@ -102,14 +103,14 @@ public class LocalTimeoutQueueTest {
     @Test
     public void queueReadTimeout() {
 
-        TimeService timeService = mock( TimeService.class );
+        TimeService timeService = Mockito.mock( TimeService.class );
 
         final long time = 1000l;
         final long timeout = 1000;
 
         final int queueSize = 1000;
 
-        when( timeService.getCurrentTime() ).thenReturn( time );
+        Mockito.when( timeService.getCurrentTime() ).thenReturn( time );
 
         TimeoutQueue<TestEvent> queue = new LocalTimeoutQueue<TestEvent>( timeService );
 
@@ -138,7 +139,7 @@ public class LocalTimeoutQueueTest {
         //now elapse the time
         final long firstTime = time + timeout;
 
-        when( timeService.getCurrentTime() ).thenReturn( firstTime );
+        Mockito.when( timeService.getCurrentTime() ).thenReturn( firstTime );
 
 
         final int takeSize = 100;

@@ -9,7 +9,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>framework</artifactId>
+  <artifactId>common</artifactId>
 
   <dependencies>
 
@@ -112,6 +112,15 @@
       <artifactId>hystrix-core</artifactId>
       <version>${hystrix.version}</version>
     </dependency>
+
+
+    <dependency>
+      <groupId>org.jukito</groupId>
+      <artifactId>jukito</artifactId>
+      <version>${jukito.version}</version>
+      <scope>test</scope>
+    </dependency>
+
 
   </dependencies>
 

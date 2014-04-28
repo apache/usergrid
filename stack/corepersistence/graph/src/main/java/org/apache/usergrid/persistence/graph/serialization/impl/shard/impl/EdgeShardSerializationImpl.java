@@ -127,7 +127,7 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
                         .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 
 
-        return new ColumnNameIterator<>( query, COLUMN_PARSER, false, graphFig.getReadTimeout() );
+        return new ColumnNameIterator<>( query, COLUMN_PARSER, false );
     }
 
 

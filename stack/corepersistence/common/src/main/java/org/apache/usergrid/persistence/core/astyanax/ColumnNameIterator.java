@@ -37,8 +37,6 @@ public class ColumnNameIterator<C, T> implements Iterable<T>, Iterator<T> {
 
     private static final HystrixCommandGroupKey GROUP_KEY = HystrixCommandGroupKey.Factory.asKey( "CassRead" );
 
-    private final int executionTimeout;
-
 
     private final RowQuery<?, C> rowQuery;
     private final ColumnParser<C, T> parser;
@@ -46,11 +44,9 @@ public class ColumnNameIterator<C, T> implements Iterable<T>, Iterator<T> {
     private Iterator<Column<C>> sourceIterator;
 
 
-    public ColumnNameIterator( RowQuery<?, C> rowQuery, final ColumnParser<C, T> parser, final boolean skipFirst,
-                               final int executionTimeout ) {
+    public ColumnNameIterator( RowQuery<?, C> rowQuery, final ColumnParser<C, T> parser, final boolean skipFirst) {
         this.rowQuery = rowQuery.autoPaginate( true );
         this.parser = parser;
-        this.executionTimeout = executionTimeout;
 
         advanceIterator();
 

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.consistency;
+package org.apache.usergrid.persistence.core.consistency;
 
 
 import java.util.Collection;
@@ -29,26 +29,15 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorImpl;
-import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
-import org.apache.usergrid.persistence.core.consistency.CompleteListener;
-import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
-import org.apache.usergrid.persistence.core.consistency.ErrorListener;
-import org.apache.usergrid.persistence.core.consistency.MessageListener;
-import org.apache.usergrid.persistence.core.consistency.TimeoutQueue;
-import org.apache.usergrid.persistence.graph.GraphFig;
-
 import rx.Observable;
 import rx.functions.Action1;
-import rx.schedulers.Schedulers;
+
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 /**
