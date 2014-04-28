@@ -43,6 +43,7 @@ import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
+import org.apache.usergrid.persistence.graph.guice.EdgeWrite;
 import org.apache.usergrid.persistence.graph.guice.NodeDelete;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -92,8 +93,8 @@ public class GraphManagerImpl implements GraphManager {
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                              @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
                              final NodeSerialization nodeSerialization, final GraphFig graphFig,
-                             @EdgeDelete final AsyncProcessor edgeDelete, @NodeDelete final AsyncProcessor nodeDelete,
-                             @NodeDelete final AsyncProcessor edgeWrite, @Assisted final OrganizationScope scope,
+                             @EdgeDelete final AsyncProcessor<Edge> edgeDelete, @NodeDelete final AsyncProcessor<Id> nodeDelete,
+                             @EdgeWrite final AsyncProcessor<Edge> edgeWrite, @Assisted final OrganizationScope scope,
                              final MergedEdgeReader mergedEdgeReader, final ConsistencyFig consistencyFig ) {
 
 

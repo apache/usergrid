@@ -34,7 +34,7 @@ import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
-import org.apache.usergrid.persistence.graph.serialization.impl.OrganizationScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 

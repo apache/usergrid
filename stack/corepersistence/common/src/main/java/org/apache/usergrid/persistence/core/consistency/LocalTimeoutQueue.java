@@ -36,7 +36,6 @@ import com.google.inject.Singleton;
  * This SHOULD NOT be used in a production environment.  This is for development/testing runtimes only.
  * This should not be a singleton, we can have multiple instances of
  */
-@Singleton
 public class LocalTimeoutQueue<T extends Serializable> implements TimeoutQueue<T> {
 
     /**

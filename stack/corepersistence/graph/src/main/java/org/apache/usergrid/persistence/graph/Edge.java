@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.graph;
 
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -30,7 +31,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
  *
  * @author tnine
  */
-public interface Edge {
+public interface Edge extends Serializable {
 
     /**
      * Get the Id of the source node of this edge

@@ -32,7 +32,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
  * Simple bean to represent our edge
  * @author tnine
  */
-public class SimpleEdge implements Edge, Serializable {
+public class SimpleEdge implements Edge {
 
     protected final Id sourceNode;
     protected final String type;
