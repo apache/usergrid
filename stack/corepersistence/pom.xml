@@ -48,7 +48,7 @@
         <module>collection</module>
         <module>graph</module>
         <module>queryindex</module>
-      <module>core</module>
+        <module>common</module>
     </modules>
 
     <build>

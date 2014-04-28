@@ -113,7 +113,7 @@ public class EntityIndexTest {
         }
         timer.stop();
         log.info( "Total time to index {} entries {}ms, average {}ms/entry", 
-            new String[] { count+"", timer.getTime()+"", (timer.getTime() / count)+""} );
+            new Object[] { count, timer.getTime(), timer.getTime() / count });
 
         entityIndex.refresh();
 

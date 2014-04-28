@@ -194,7 +194,7 @@ public class CorePerformanceIT {
                 results.getEntities(); // cause retrieval from Cassanda;
                 count += results.size();
 
-                log.info("Read {} reviews in {} / {} ", new String[] { ""+count, ""+orgId, ""+appId });
+                log.info("Read {} reviews in {} / {} ", new Object[] { count, orgId, appId } );
             }
         }
     }
@@ -251,7 +251,7 @@ public class CorePerformanceIT {
                             
                             count++;
                             if (count % 100000 == 0) {
-                                log.info("Indexed {} reviews in {} / {} ", new String[] { count+"", orgId+"", appId+"" } );
+                                log.info("Indexed {} reviews in {} / {} ", new Object[] { count, orgId, appId } );
                             }
                             continue;
                         }

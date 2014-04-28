@@ -1069,7 +1069,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             currentColumnIterator =
-                    new ColumnNameIterator<C, T>( query, searcher, searcher.hasPage(), graphFig.getReadTimeout() );
+                    new ColumnNameIterator<C, T>( query, searcher, searcher.hasPage() );
         }
     }
 }

@@ -12,13 +12,13 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.io.util.FileUtils;
 
-import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 
 import com.google.common.io.Files;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.netflix.astyanax.test.EmbeddedCassandra;
+import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
 
 
 /**

@@ -16,14 +16,13 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.apache.usergrid.persistence.collection.util;
+package org.apache.usergrid.persistence.core.util;
 
 
 import java.util.Set;
 
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
 
 import static org.junit.Assert.assertTrue;
 

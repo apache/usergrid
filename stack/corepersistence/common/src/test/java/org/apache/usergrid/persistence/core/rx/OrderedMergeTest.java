@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.serialization.impl.parse;
+package org.apache.usergrid.persistence.core.rx;
 
 
 import java.util.ArrayList;
@@ -29,8 +29,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.core.rx.OrderedMerge;
 
 import rx.Observable;
 import rx.Subscriber;
