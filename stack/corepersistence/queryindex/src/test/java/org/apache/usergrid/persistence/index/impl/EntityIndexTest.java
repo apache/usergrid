@@ -30,13 +30,13 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityBuilder;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
@@ -112,7 +112,7 @@ public class EntityIndexTest {
         }
         timer.stop();
         log.info( "Total time to index {} entries {}ms, average {}ms/entry", 
-            count, timer.getTime(), timer.getTime() / count );
+            new Object[] { count, timer.getTime(), timer.getTime() / count });
 
         entityIndex.refresh();
 

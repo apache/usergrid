@@ -25,7 +25,8 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
@@ -93,7 +94,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         @Assisted final CollectionScope collectionScope ) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
-        ValidationUtils.validateCollectionScope( collectionScope );
+
+        MvccValidationUtils.validateCollectionScope( collectionScope );
 
         this.writeStart = writeStart;
         this.writeVerifyUnique = writeVerifyUnique;

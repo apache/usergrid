@@ -20,14 +20,10 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
-import java.util.List;
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.migration.Migration;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.google.common.base.Optional;
 import com.netflix.astyanax.MutationBatch;
 
 

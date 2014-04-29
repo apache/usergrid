@@ -31,9 +31,9 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.OrganizationScope;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.impl.OrganizationScopeImpl;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
@@ -194,7 +194,7 @@ public class CorePerformanceIT {
                 results.getEntities(); // cause retrieval from Cassanda;
                 count += results.size();
 
-                log.info("Read {} reviews in {} / {} ", count, orgId, appId );
+                log.info("Read {} reviews in {} / {} ", new Object[] { count, orgId, appId } );
             }
         }
     }
@@ -251,7 +251,7 @@ public class CorePerformanceIT {
                             
                             count++;
                             if (count % 100000 == 0) {
-                                log.info("Indexed {} reviews in {} / {} ", count, orgId, appId );
+                                log.info("Indexed {} reviews in {} / {} ", new Object[] { count, orgId, appId } );
                             }
                             continue;
                         }

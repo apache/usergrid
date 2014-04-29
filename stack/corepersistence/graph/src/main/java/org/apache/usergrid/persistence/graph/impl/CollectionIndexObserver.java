@@ -20,59 +20,52 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.event.PostProcessObserver;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 
 /**
+ * TODO, move this into the EM,it doesn't belong in graph
  * @author tnine
  */
 @Singleton
-public class CollectionIndexObserver implements PostProcessObserver {
-
-    private final GraphManagerFactory graphManagerFactory;
-
-
-    @Inject
-    public CollectionIndexObserver( final GraphManagerFactory graphManagerFactory ) {
-        Preconditions.checkNotNull( graphManagerFactory, "graphManagerFactory cannot be null" );
-        this.graphManagerFactory = graphManagerFactory;
-    }
-
-
-
-    @Override
-    public void postCommit( final CollectionScope scope, final MvccEntity entity ) {
-
-        //get the edge manager for the org scope
-        GraphManager em = graphManagerFactory.createEdgeManager( scope );
-
-        /**
-         * create an edge from owner->entity of the type name in the scope.
-         *
-         * Ex: application--users-->user
-         *
-         * Ex: user--devices->device
-         *
-         * We're essentially mapping a tree structure in to a graph edge
-         */
-        Edge edge = new SimpleMarkedEdge( scope.getOwner(), scope.getName(), entity.getId(), entity.getVersion(), false );
-
-        //entity exists, write the edge
-        if(entity.getEntity().isPresent()){
-            em.writeEdge( edge ).toBlockingObservable().last();
-        }
-        //entity does not exist, it's been removed, mark the edge
-        else{
-            em.deleteEdge( edge ).toBlockingObservable().last();
-        }
-    }
+public class CollectionIndexObserver{
+//        implements PostProcessObserver {
+//
+//    private final GraphManagerFactory graphManagerFactory;
+//
+//
+//    @Inject
+//    public CollectionIndexObserver( final GraphManagerFactory graphManagerFactory ) {
+//        Preconditions.checkNotNull( graphManagerFactory, "graphManagerFactory cannot be null" );
+//        this.graphManagerFactory = graphManagerFactory;
+//    }
+//
+//
+//
+//    @Override
+//    public void postCommit( final CollectionScope scope, final MvccEntity entity ) {
+//
+//        //get the edge manager for the org scope
+//        GraphManager em = graphManagerFactory.createEdgeManager( scope );
+//
+//        /**
+//         * create an edge from owner->entity of the type name in the scope.
+//         *
+//         * Ex: application--users-->user
+//         *
+//         * Ex: user--devices->device
+//         *
+//         * We're essentially mapping a tree structure in to a graph edge
+//         */
+//        Edge edge = new SimpleMarkedEdge( scope.getOwner(), scope.getName(), entity.getId(), entity.getVersion(), false );
+//
+//        //entity exists, write the edge
+//        if(entity.getEntity().isPresent()){
+//            em.writeEdge( edge ).toBlockingObservable().last();
+//        }
+//        //entity does not exist, it's been removed, mark the edge
+//        else{
+//            em.deleteEdge( edge ).toBlockingObservable().last();
+//        }
+//    }
 }

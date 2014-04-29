@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.collection;
 
 
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 

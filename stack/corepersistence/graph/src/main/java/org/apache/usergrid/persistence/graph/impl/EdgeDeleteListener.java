@@ -21,13 +21,13 @@ package org.apache.usergrid.persistence.graph.impl;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.MessageListener;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.graph.consistency.MessageListener;
 import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -51,7 +51,6 @@ import rx.functions.Func4;
 public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, EdgeEvent<Edge>> {
 
 
-    private final EdgeSerialization edgeSerialization;
     private final EdgeMetadataSerialization edgeMetadataSerialization;
     private final GraphManagerFactory graphManagerFactory;
     private final Keyspace keyspace;
@@ -59,11 +58,9 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
 
 
     @Inject
-    public EdgeDeleteListener( final EdgeSerialization edgeSerialization,
-                               final EdgeMetadataSerialization edgeMetadataSerialization,
+    public EdgeDeleteListener(  final EdgeMetadataSerialization edgeMetadataSerialization,
                                final GraphManagerFactory graphManagerFactory, final Keyspace keyspace,
                                @EdgeDelete final AsyncProcessor edgeDelete, final GraphFig graphFig ) {
-        this.edgeSerialization = edgeSerialization;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.graphManagerFactory = graphManagerFactory;
         this.keyspace = keyspace;

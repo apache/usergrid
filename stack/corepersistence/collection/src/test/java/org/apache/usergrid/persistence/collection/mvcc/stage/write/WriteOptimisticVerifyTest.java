@@ -17,9 +17,15 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import com.netflix.astyanax.MutationBatch;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import org.jukito.UseModules;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
@@ -30,22 +36,21 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
-import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
-import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.jukito.UseModules;
+
+import com.netflix.astyanax.MutationBatch;
+
+import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
+import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import org.junit.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 @UseModules( TestCollectionModule.class )

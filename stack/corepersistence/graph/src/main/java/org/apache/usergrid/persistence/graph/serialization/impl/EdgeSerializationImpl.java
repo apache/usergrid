@@ -31,16 +31,19 @@ import javax.inject.Inject;
 
 import org.apache.cassandra.db.marshal.BytesType;
 
-import org.apache.usergrid.persistence.astyanax.IdColDynamicCompositeSerializer;
-import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
-import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.collection.cassandra.ColumnTypes;
-import org.apache.usergrid.persistence.collection.migration.Migration;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
+import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
+import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
+import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
+import org.apache.usergrid.persistence.core.astyanax.IdColDynamicCompositeSerializer;
+import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -50,8 +53,6 @@ import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnNameIterator;
-import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnParser;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeHasher;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
@@ -139,7 +140,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         checkNotNull( "keyspace required", keyspace );
         checkNotNull( "cassandraConfig required", cassandraConfig );
-        checkNotNull( "graphFig required", graphFig );
+        checkNotNull( "consistencyFig required", graphFig );
         checkNotNull( "sourceNodeCfName required", edgeShardStrategy.getSourceNodeCfName() );
         checkNotNull( "targetNodeCfName required", edgeShardStrategy.getTargetNodeCfName() );
         checkNotNull( "sourceNodeTargetTypeCfName required", edgeShardStrategy.getSourceNodeTargetTypeCfName() );
@@ -1069,7 +1070,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             currentColumnIterator =
-                    new ColumnNameIterator<C, T>( query, searcher, searcher.hasPage(), graphFig.getReadTimeout() );
+                    new ColumnNameIterator<C, T>( query, searcher, searcher.hasPage() );
         }
     }
 }

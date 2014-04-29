@@ -18,9 +18,14 @@
  */
 package org.apache.usergrid.persistence.collection.util;
 
+
 import java.util.Set;
+
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
+
+import static org.junit.Assert.assertTrue;
 
 public class AvailablePortFinderTest {
 

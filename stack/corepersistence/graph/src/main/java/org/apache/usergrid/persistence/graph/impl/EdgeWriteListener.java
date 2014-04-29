@@ -23,17 +23,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.MessageListener;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.graph.consistency.MessageListener;
-import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.EdgeWrite;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.parse.ObservableIterator;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.fasterxml.uuid.UUIDComparator;
@@ -64,14 +63,14 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, EdgeE
     @Inject
     public EdgeWriteListener( @CommitLogEdgeSerialization final EdgeSerialization commitLog,
                               @CommitLogEdgeSerialization final EdgeSerialization permanentStorage, final Keyspace keyspace,
-                              @EdgeWrite final AsyncProcessor edgeWrite, final GraphFig graphFig ) {
+                              @EdgeWrite final AsyncProcessor<EdgeEvent<Edge>> edgeWrite, final GraphFig graphFig ) {
 
 
         Preconditions.checkNotNull( commitLog, "commitLog is required" );
         Preconditions.checkNotNull( permanentStorage, "permanentStorage is required" );
         Preconditions.checkNotNull( edgeWrite, "edgeWrite is required" );
         Preconditions.checkNotNull( keyspace, "keyspace is required" );
-        Preconditions.checkNotNull( keyspace, "graphFig is required" );
+        Preconditions.checkNotNull( keyspace, "consistencyFig is required" );
 
 
         this.keyspace = keyspace;

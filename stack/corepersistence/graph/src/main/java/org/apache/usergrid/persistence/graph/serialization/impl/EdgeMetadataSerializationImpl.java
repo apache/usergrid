@@ -28,22 +28,23 @@ import java.util.UUID;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
-import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
-import org.apache.usergrid.persistence.collection.astyanax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.collection.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.collection.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.collection.migration.Migration;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
+import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.parse.ColumnNameIterator;
-import org.apache.usergrid.persistence.graph.serialization.impl.parse.StringColumnParser;
+import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
+import org.apache.usergrid.persistence.core.astyanax.StringColumnParser;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -119,7 +120,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                                           final GraphFig graphFig ) {
 
         Preconditions.checkNotNull( "cassandraConfig is required", cassandraConfig );
-        Preconditions.checkNotNull( "graphFig is required", graphFig );
+        Preconditions.checkNotNull( "consistencyFig is required", graphFig );
         Preconditions.checkNotNull( "keyspace is required", keyspace );
 
         this.keyspace = keyspace;
@@ -339,8 +340,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
-        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent(),
-                graphFig.getReadTimeout() );
+        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent());
     }
 
 
@@ -377,8 +377,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true ).withColumnRange( searchRange );
 
 
-        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent(),
-                graphFig.getReadTimeout() );
+        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent());
     }
 
 

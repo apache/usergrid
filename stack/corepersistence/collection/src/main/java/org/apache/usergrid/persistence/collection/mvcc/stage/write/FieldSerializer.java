@@ -21,7 +21,7 @@ import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.usergrid.persistence.collection.astyanax.CompositeFieldSerializer;
+import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.IntegerField;

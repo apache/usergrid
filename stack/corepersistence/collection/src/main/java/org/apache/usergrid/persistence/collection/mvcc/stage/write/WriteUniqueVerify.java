@@ -25,7 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -75,7 +76,7 @@ public class WriteUniqueVerify implements
     public Observable<? extends CollectionIoEvent<MvccEntity>> 
         call(final CollectionIoEvent<MvccEntity> ioevent ) {
 
-        ValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
+        MvccValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
 
         final Entity entity = ioevent.getEvent().getEntity().get();
 

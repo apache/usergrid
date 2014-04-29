@@ -20,7 +20,8 @@ package org.apache.usergrid.persistence.collection.impl;
 
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.mvcc.entity.ValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
+import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -39,7 +40,7 @@ public class CollectionScopeImpl extends OrganizationScopeImpl implements Collec
         this.ownerId = ownerId;
         this.name = name;
 
-        ValidationUtils.validateCollectionScope( this );
+        MvccValidationUtils.validateCollectionScope( this );
     }
 
 

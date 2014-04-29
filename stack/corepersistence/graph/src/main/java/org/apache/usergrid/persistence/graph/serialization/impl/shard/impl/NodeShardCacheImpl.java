@@ -29,7 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.usergrid.persistence.collection.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
@@ -69,7 +69,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
     @Inject
     public NodeShardCacheImpl( final NodeShardAllocation nodeShardAllocation, final GraphFig graphFig ) {
         Preconditions.checkNotNull(nodeShardAllocation, "nodeShardAllocation is required");
-        Preconditions.checkNotNull(graphFig, "graphFig is required");
+        Preconditions.checkNotNull(graphFig, "consistencyFig is required");
 
         this.nodeShardAllocation = nodeShardAllocation;
         this.graphFig = graphFig;
