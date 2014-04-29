@@ -101,6 +101,8 @@ public class Query {
     private String collection;
     private String ql;
 
+    List<Operand> filterClauses = new ArrayList<Operand>();
+
 
     public Query() {
     }
@@ -731,6 +733,7 @@ public class Query {
 
 
     private void addClause( Operand equals ) {
+        filterClauses.add(equals);
 
         if ( rootOperand == null ) {
             rootOperand = equals;
@@ -743,6 +746,7 @@ public class Query {
 
         // redirect the root to new && clause
         rootOperand = and;
+
     }
 
 
@@ -765,6 +769,11 @@ public class Query {
 
     public void setRootOperand( Operand root ) {
         this.rootOperand = root;
+    }
+
+
+    public List<Operand> getFilterClauses() {
+        return filterClauses;
     }
 
 

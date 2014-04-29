@@ -97,6 +97,8 @@ public class Query {
     private String collection;
     private String ql;
 
+    private List<Operand> filterClauses = new ArrayList<Operand>();
+
 
     public Query() {
     }

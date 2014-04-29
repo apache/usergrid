@@ -1191,8 +1191,15 @@ public class CpEntityManager implements EntityManager {
    
     @Override
     public void refreshIndex() {
-        EntityIndex ei = eif.createEntityIndex(
+
+        // refresh system entity index
+        EntityIndex sei = eif.createEntityIndex(
             CpEntityManagerFactory.SYSTEM_ORG_SCOPE, CpEntityManagerFactory.SYSTEM_APPS_SCOPE);
-        ei.refresh();;
+        sei.refresh();
+
+        // refresh application entity index
+        EntityIndex aei = eif.createEntityIndex(
+            emf.getOrganizationScope(applicationId), emf.getApplicationScope(applicationId));
+        aei.refresh();
     }
 }
