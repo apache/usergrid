@@ -18,6 +18,16 @@ package org.apache.usergrid.corepersistence;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
+import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -37,80 +47,24 @@ public class GuiceModule  extends AbstractModule {
     @Override
     protected void configure() {
 
-        install( new GuicyFigModule( IndexFig.class ) );
+        // Graph Module
+        install( new GraphModule() );
 
+        // Collection modules
+        install( new GuicyFigModule( SerializationFig.class ) );
+        install( new SerializationModule() );
+        install( new ServiceModule() );
+        install( new FactoryModuleBuilder()
+            .implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
+            .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
+            .build( EntityCollectionManagerFactory.class ) );
+        bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
+
+        // QueryIndex modules
+        install (new GuicyFigModule( IndexFig.class ));
         install( new FactoryModuleBuilder()
             .implement( EntityIndex.class, EsEntityIndexImpl.class )
             .build( EntityIndexFactory.class ) );
 
-        install( new GraphModule() );
-
-//        //configure collections and our core astyanax framework
-//        install( new CollectionModule() );
-//
-//        //install our configuration
-//        install( new GuicyFigModule( GraphFig.class ) );
-//
-//        bind( PostProcessObserver.class ).to( CollectionIndexObserver.class );
-//
-//        bind( EdgeMetadataSerialization.class ).to( EdgeMetadataSerializationImpl.class );
-//        bind( NodeSerialization.class ).to( NodeSerializationImpl.class );
-//        bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
-//
-//        // create a guice factory for getting our collection manager
-//        install( new FactoryModuleBuilder().implement( GraphManager.class, GraphManagerImpl.class )
-//            .build( GraphManagerFactory.class ) );
-//
-//        // bindings for shard allocations
-//
-//        bind( NodeShardAllocation.class ).to( NodeShardAllocationImpl.class );
-//        bind( NodeShardApproximation.class ).to( NodeShardApproximationImpl.class );
-//        bind( NodeShardCache.class ).to( NodeShardCacheImpl.class );
-//
-//        // Bind our strategies based on their internal annotations.
-//
-//        bind( EdgeShardSerialization.class ).to( EdgeShardSerializationImpl.class );
-//        bind( MergedEdgeReader.class).to( MergedEdgeReaderImpl.class );
-//        bind( EdgeShardCounterSerialization.class ).to( EdgeShardCounterSerializationImpl.class );
-//
-//        bind( new TypeLiteral<TimeoutQueue<Edge>>(){} )
-//            .to( new TypeLiteral<LocalTimeoutQueue<Edge>>(){} );
-//
-//        bind( new TypeLiteral<TimeoutQueue<EdgeEvent<Edge>>>(){} )
-//            .to( new TypeLiteral<LocalTimeoutQueue<EdgeEvent<Edge>>>(){} );
-//        
-//        bind( new TypeLiteral<TimeoutQueue<Id>>(){} )
-//            .to( new TypeLiteral<LocalTimeoutQueue<Id>>(){} );
-//
-//        bind( new TypeLiteral<AsyncProcessor<Edge>>(){} )
-//            .annotatedWith( EdgeDelete.class )
-//            .to( new TypeLiteral<AsyncProcessorImpl<Edge>>(){} );
-//
-//        bind( new TypeLiteral<AsyncProcessor<EdgeEvent<Edge>>>(){} )
-//            .annotatedWith( EdgeDelete.class )
-//            .to( new TypeLiteral<AsyncProcessorImpl<EdgeEvent<Edge>>>(){} );
-//
-//        bind( new TypeLiteral<AsyncProcessor<Id>>(){} )
-//            .annotatedWith( NodeDelete.class )
-//            .to( new TypeLiteral<AsyncProcessorImpl<Id>>(){} );
-//
-//        //Repair/cleanup classes
-//        bind( EdgeMetaRepair.class).to( EdgeMetaRepairImpl.class );
-//        bind( EdgeDeleteRepair.class).to( EdgeDeleteRepairImpl.class );
-//        bind( TimeService.class).to( TimeServiceImpl.class );
-//
-//        // Migration bindings
-//
-//        // do multibindings for migrations
-//        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
-//        migrationBinding.addBinding().to( Key.get( NodeSerialization.class ) );
-//        migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class ) );
-//
-//        //bind each singleton to the multi set.  Otherwise we won't migrate properly
-//        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, StorageEdgeSerialization.class ) );
-//        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, CommitLogEdgeSerialization.class ) );
-//
-//        migrationBinding.addBinding().to( Key.get( EdgeShardSerialization.class ) );
-//        migrationBinding.addBinding().to( Key.get( EdgeShardCounterSerialization.class ) );
     }    
 }

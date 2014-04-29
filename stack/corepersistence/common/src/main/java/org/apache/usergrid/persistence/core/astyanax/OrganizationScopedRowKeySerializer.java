@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.graph.serialization.impl;
+package org.apache.usergrid.persistence.core.astyanax;
 
 
 import java.nio.ByteBuffer;

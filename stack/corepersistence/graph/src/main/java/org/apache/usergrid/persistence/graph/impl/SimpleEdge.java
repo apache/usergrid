@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.util.ValidationUtils;

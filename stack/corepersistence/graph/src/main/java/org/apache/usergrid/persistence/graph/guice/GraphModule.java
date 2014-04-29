@@ -23,10 +23,14 @@ import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessorImpl;
+import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueue;
+import org.apache.usergrid.persistence.core.consistency.TimeService;
+import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
 import org.apache.usergrid.persistence.core.consistency.TimeoutQueue;
-import org.apache.usergrid.persistence.core.guice.CoreModule;
+import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -58,6 +62,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeS
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.TimebasedEdgeShardStrategy;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -75,7 +80,7 @@ public class GraphModule extends AbstractModule {
     protected void configure() {
 
         //configure collections and our core astyanax framework
-        install( new CoreModule() );
+        install( new CommonModule() );
 
         //install our configuration
         install( new GuicyFigModule( GraphFig.class ) );
@@ -86,12 +91,11 @@ public class GraphModule extends AbstractModule {
 
 
         bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
+        bind( TimeService.class ).to( TimeServiceImpl.class );
 
         // create a guice factory for getting our collection manager
         install( new FactoryModuleBuilder().implement( GraphManager.class, GraphManagerImpl.class )
                                            .build( GraphManagerFactory.class ) );
-
-
 
 
         /**
@@ -107,7 +111,7 @@ public class GraphModule extends AbstractModule {
          */
 
         bind( EdgeShardSerialization.class ).to( EdgeShardSerializationImpl.class );
-        bind( MergedEdgeReader.class).to( MergedEdgeReaderImpl.class );
+        bind( MergedEdgeReader.class ).to( MergedEdgeReaderImpl.class );
         bind( EdgeShardCounterSerialization.class ).to( EdgeShardCounterSerializationImpl.class );
 
 
@@ -120,17 +124,12 @@ public class GraphModule extends AbstractModule {
         //local queue.  Need to replace with a real implementation
         bind( TimeoutQueue.class ).to( LocalTimeoutQueue.class );
 
-        bind( AsyncProcessor.class ).annotatedWith( EdgeDelete.class ).to( AsyncProcessorImpl.class );
-        bind( AsyncProcessor.class ).annotatedWith( NodeDelete.class ).to( AsyncProcessorImpl.class );
-        bind( AsyncProcessor.class ).annotatedWith( EdgeWrite.class ).to( AsyncProcessorImpl.class );
 
         //Repair/cleanup classes
         bind( EdgeMetaRepair.class ).to( EdgeMetaRepairImpl.class );
 
 
         bind( EdgeDeleteRepair.class ).to( EdgeDeleteRepairImpl.class );
-
-
 
 
         /********
@@ -191,6 +190,80 @@ public class GraphModule extends AbstractModule {
 
 
         return edgeSerialization;
+    }
+
+
+    /**
+     * Create the processor for edge deletes
+     * @param queue
+     * @param consistencyFig
+     * @return
+     */
+    @Provides
+    @Singleton
+    @Inject
+    @EdgeDelete
+    public AsyncProcessor<Edge> edgeDelete( @EdgeDelete final TimeoutQueue<Edge> queue,
+                                            final ConsistencyFig consistencyFig ) {
+        return new AsyncProcessorImpl<>( queue, consistencyFig );
+    }
+
+
+
+    @Provides
+    @Inject
+    @Singleton
+    @EdgeDelete
+    public TimeoutQueue<Edge> edgeDeleteQueue( final TimeService timeService ) {
+        return new LocalTimeoutQueue<>( timeService );
+    }
+
+
+    /**
+     * Create the processor for node deletes
+     * @param queue
+     * @param consistencyFig
+     * @return
+     */
+    @Provides
+    @Singleton
+    @Inject
+    @NodeDelete
+    public AsyncProcessor<Id> nodeDelete( @NodeDelete final TimeoutQueue<Id> queue, final ConsistencyFig consistencyFig ) {
+        return new AsyncProcessorImpl<>( queue, consistencyFig );
+    }
+
+
+    @Provides
+    @Inject
+    @Singleton
+    @NodeDelete
+    public TimeoutQueue<Id> nodeDeleteQueue( final TimeService timeService ) {
+        return new LocalTimeoutQueue<>( timeService );
+    }
+
+
+    /**
+     * Create the processor for edge writes
+     * @param queue
+     * @param consistencyFig
+     * @return
+     */
+    @Provides
+    @Singleton
+    @Inject
+    @EdgeWrite
+    public AsyncProcessor<Edge> edgeWrite( @EdgeWrite final TimeoutQueue<Edge> queue, final ConsistencyFig consistencyFig ) {
+        return new AsyncProcessorImpl<>( queue, consistencyFig );
+    }
+
+
+    @Provides
+    @Singleton
+    @Inject
+    @EdgeWrite
+    public TimeoutQueue<Edge> edgeWriteQueue( final TimeService timeService ) {
+        return new LocalTimeoutQueue<>( timeService );
     }
 }
 

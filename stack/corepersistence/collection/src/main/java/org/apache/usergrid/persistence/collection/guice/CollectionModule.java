@@ -23,11 +23,9 @@ import org.safehaus.guicyfig.GuicyFigModule;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
-import org.apache.usergrid.persistence.core.guice.CoreModule;
-import org.apache.usergrid.persistence.core.migration.MigrationManagerFig;
+import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
@@ -48,7 +46,7 @@ public class CollectionModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install( new CoreModule());
+        install( new CommonModule());
         //noinspection unchecked
         install( new GuicyFigModule(
                 SerializationFig.class ) );
