@@ -63,7 +63,7 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, EdgeE
     @Inject
     public EdgeWriteListener( @CommitLogEdgeSerialization final EdgeSerialization commitLog,
                               @CommitLogEdgeSerialization final EdgeSerialization permanentStorage, final Keyspace keyspace,
-                              @EdgeWrite final AsyncProcessor edgeWrite, final GraphFig graphFig ) {
+                              @EdgeWrite final AsyncProcessor<EdgeEvent<Edge>> edgeWrite, final GraphFig graphFig ) {
 
 
         Preconditions.checkNotNull( commitLog, "commitLog is required" );

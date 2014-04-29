@@ -81,9 +81,9 @@ public class GraphManagerImpl implements GraphManager {
 
     private final NodeSerialization nodeSerialization;
 
-    private final AsyncProcessor<Edge> edgeDeleteAsyncProcessor;
-    private final AsyncProcessor<Edge> edgeWriteAsyncProcessor;
-    private final AsyncProcessor<Id> nodeDeleteAsyncProcessor;
+    private final AsyncProcessor<EdgeEvent<Edge>> edgeDeleteAsyncProcessor;
+    private final AsyncProcessor<EdgeEvent<Edge>> edgeWriteAsyncProcessor;
+    private final AsyncProcessor<EdgeEvent<Id>> nodeDeleteAsyncProcessor;
 
     private final GraphFig graphFig;
     private final ConsistencyFig consistencyFig;
@@ -93,10 +93,11 @@ public class GraphManagerImpl implements GraphManager {
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                              @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
                              final NodeSerialization nodeSerialization, final GraphFig graphFig,
-                             @EdgeDelete final AsyncProcessor<Edge> edgeDelete, @NodeDelete final AsyncProcessor<Id> nodeDelete,
-                             @EdgeWrite final AsyncProcessor<Edge> edgeWrite, @Assisted final OrganizationScope scope,
-                             final MergedEdgeReader mergedEdgeReader, final ConsistencyFig consistencyFig ) {
-
+                             @EdgeDelete final AsyncProcessor<EdgeEvent<Edge>> edgeDelete,
+                             @NodeDelete final AsyncProcessor<EdgeEvent<Id>> nodeDelete,
+                             @EdgeWrite final AsyncProcessor<EdgeEvent<Edge>> edgeWrite,
+                             @Assisted final OrganizationScope scope, final MergedEdgeReader mergedEdgeReader,
+                             final ConsistencyFig consistencyFig ) {
 
 
         ValidationUtils.validateOrganizationScope( scope );
@@ -137,8 +138,9 @@ public class GraphManagerImpl implements GraphManager {
                 .user( Observable.from( edge ).subscribeOn( Schedulers.io() ).map( new Func1<Edge, Edge>() {
                     @Override
                     public Edge call( final Edge edge ) {
-                        final AsynchronousMessage<Edge> event =
-                                                   edgeWriteAsyncProcessor.setVerification( edge, getTimeout() );
+                        final AsynchronousMessage<EdgeEvent<Edge>> event =
+                                edgeWriteAsyncProcessor.setVerification(
+                                        new EdgeEvent<>( scope, edge.getVersion(), edge ), getTimeout() );
 
                         final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
 
@@ -172,8 +174,9 @@ public class GraphManagerImpl implements GraphManager {
                     public Edge call( final Edge edge ) {
                         final MutationBatch edgeMutation = commitLogSerialization.markEdge( scope, edge );
 
-                        final AsynchronousMessage<Edge> event =
-                                edgeDeleteAsyncProcessor.setVerification( edge, getTimeout() );
+                        final AsynchronousMessage<EdgeEvent<Edge>> event =
+                                edgeDeleteAsyncProcessor.setVerification(
+                                        new EdgeEvent<>( scope, edge.getVersion(), edge ), getTimeout() );
 
 
                         try {
@@ -204,8 +207,9 @@ public class GraphManagerImpl implements GraphManager {
 
                         final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, deleteTime );
 
-                        final AsynchronousMessage<Id> event =
-                                nodeDeleteAsyncProcessor.setVerification( node, getTimeout() );
+                        final AsynchronousMessage<EdgeEvent<Id>> event =
+                                nodeDeleteAsyncProcessor.setVerification( new EdgeEvent<>( scope, deleteTime, node ),
+                                        getTimeout() );
 
 
                         try {
@@ -225,41 +229,45 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<Edge> loadEdgeVersions( final SearchByEdge searchByEdge ) {
-        return HystrixGraphObservable.user( mergedEdgeReader.getEdgeVersions( scope, searchByEdge ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( searchByEdge.getMaxVersion() ) )
-                                                      .cast( Edge.class ) );
+        return HystrixGraphObservable
+                .user( mergedEdgeReader.getEdgeVersions( scope, searchByEdge ).buffer( graphFig.getScanPageSize() )
+                                       .flatMap( new EdgeBufferFilter( searchByEdge.getMaxVersion() ) )
+                                       .cast( Edge.class ) );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
         return HystrixGraphObservable
-                .user( mergedEdgeReader.getEdgesFromSource( scope, search ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
-                                 .cast( Edge.class ) );
+                .user( mergedEdgeReader.getEdgesFromSource( scope, search ).buffer( graphFig.getScanPageSize() )
+                                       .flatMap( new EdgeBufferFilter( search.getMaxVersion() ) ).cast( Edge.class ) );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
         return HystrixGraphObservable
-                .user( mergedEdgeReader.getEdgesToTarget( scope, search ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
-                                 .cast( Edge.class ) );
+                .user( mergedEdgeReader.getEdgesToTarget( scope, search ).buffer( graphFig.getScanPageSize() )
+                                       .flatMap( new EdgeBufferFilter( search.getMaxVersion() ) ).cast( Edge.class ) );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
-        return HystrixGraphObservable
-                .user(mergedEdgeReader.getEdgesFromSourceByTargetType( scope, search ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+        return HystrixGraphObservable.user( mergedEdgeReader.getEdgesFromSourceByTargetType( scope, search )
+                                                            .buffer( graphFig.getScanPageSize() )
+                                                            .flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
 
-                                 .cast( Edge.class ) );
+                                                            .cast( Edge.class ) );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
-        return HystrixGraphObservable
-                .user(mergedEdgeReader.getEdgesToTargetBySourceType( scope, search ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
-                                 .cast( Edge.class ) );
+        return HystrixGraphObservable.user( mergedEdgeReader.getEdgesToTargetBySourceType( scope, search )
+                                                            .buffer( graphFig.getScanPageSize() )
+                                                            .flatMap( new EdgeBufferFilter( search.getMaxVersion() ) )
+                                                            .cast( Edge.class ) );
     }
 
 
