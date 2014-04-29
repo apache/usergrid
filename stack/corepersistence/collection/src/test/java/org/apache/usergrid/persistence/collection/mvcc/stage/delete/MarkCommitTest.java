@@ -1,6 +1,9 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -106,6 +109,8 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
          */
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
         final MutationBatch logMutation = mock( MutationBatch.class );
+        final ConsistencyFig consistencyFig = mock(ConsistencyFig.class);
+        final AsyncProcessor<MvccEntityEvent<MvccEntity>> processor = mock(AsyncProcessor.class);
 
         when( logStrategy.write( any( CollectionScope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
 
@@ -117,7 +122,7 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
         when( mvccEntityStrategy.write( any( CollectionScope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
 
-        new MarkCommit( logStrategy, mvccEntityStrategy ).call( event );
+        new MarkCommit( logStrategy, mvccEntityStrategy, processor, consistencyFig ).call( event );
     }
 
 }
