@@ -173,7 +173,7 @@
 
       <dependency>
           <groupId>org.apache.usergrid</groupId>
-          <artifactId>core</artifactId>
+          <artifactId>common</artifactId>
           <version>${project.version}</version>
           <classifier>tests</classifier>
           <scope>test</scope>
