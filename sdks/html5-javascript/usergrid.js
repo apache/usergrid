@@ -17,7 +17,7 @@
  *under the License.
  * 
  * 
- * usergrid@0.11.0 2014-04-18 
+ * usergrid@0.11.0 2014-04-29 
  */
 var UsergridEventable = function() {
     throw Error("'UsergridEventable' is not intended to be invoked directly");
