@@ -66,6 +66,16 @@ public class CpSetup implements Setup {
     }
 
 
+    private static Injector injector = null;
+
+    public static Injector getInjector() {
+        if ( injector == null ) {
+            injector = Guice.createInjector( new GuiceModule() ); 
+        }
+        return injector;
+    }
+
+
     /**
      * Initialize.
      *
@@ -82,8 +92,9 @@ public class CpSetup implements Setup {
         cass.init();
 
         try {
-            ConfigurationManager.loadCascadedPropertiesFromResources( "corepersistence" );
+            logger.info("Loading Core Persistence properties");
 
+            ConfigurationManager.loadCascadedPropertiesFromResources( "corepersistence" );
             Properties testProps = new Properties() {{
                 put("cassandra.hosts", "localhost");
                 put("cassandra.port", System.getProperty("cassandra.rpc_port"));
@@ -94,7 +105,7 @@ public class CpSetup implements Setup {
             throw new RuntimeException( "Cannot do much without properly loading our configuration.", e );
         }
 
-        Injector injector = Guice.createInjector( new GuiceModule() );
+        Injector injector = CpSetup.getInjector();
         MigrationManager m = injector.getInstance( MigrationManager.class );
         try {
             m.migrate();
@@ -105,6 +116,8 @@ public class CpSetup implements Setup {
 
 
     public void createDefaultApplications() throws Exception {
+
+        logger.info("Setting up default applications");
 
         UUID DEFAULT_APP_ID    = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
         UUID MANAGEMENT_APP_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");

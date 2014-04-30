@@ -18,7 +18,6 @@ package org.apache.usergrid.corepersistence;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.yammer.metrics.annotation.Metered;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -50,6 +49,7 @@ import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.junit.After;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -123,7 +123,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     public CpEntityManagerFactory() {
-        Injector injector = Guice.createInjector( new GuiceModule() );
+
+        // TODO: better solution for getting injector? 
+        Injector injector = CpSetup.getInjector();
+
         ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
         ecif = injector.getInstance( EntityIndexFactory.class );
     }
@@ -173,7 +176,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
 
         applicationId = UUIDGenerator.newTimeUUID();
-        logger.info( "New application id " + applicationId.toString() );
+        logger.debug( "New application id " + applicationId.toString() );
 
         initializeApplication( orgName, applicationId, appName, properties );
         return applicationId;

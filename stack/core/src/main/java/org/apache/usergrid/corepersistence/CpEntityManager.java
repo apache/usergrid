@@ -99,8 +99,8 @@ public class CpEntityManager implements EntityManager {
 
     public CpEntityManager() {
 
-        // TODO: don't create own injector in CpEntityManager
-        Injector injector = Guice.createInjector( new GuiceModule() );
+        // TODO: better solution for getting injector? 
+        Injector injector = CpSetup.getInjector();
 
         this.ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
         this.eif = injector.getInstance( EntityIndexFactory.class );

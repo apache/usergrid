@@ -101,8 +101,8 @@ public class CpRelationManager implements RelationManager {
 
     public CpRelationManager() {
 
-        // TODO: don't create own injector in CpEntityManager
-        Injector injector = Guice.createInjector( new GuiceModule() );
+        // TODO: better solution for getting injector? 
+        Injector injector = CpSetup.getInjector();
 
         ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
         eif = injector.getInstance( EntityIndexFactory.class );
