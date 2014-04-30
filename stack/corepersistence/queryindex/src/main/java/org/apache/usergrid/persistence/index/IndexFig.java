@@ -49,7 +49,7 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_PORT )
     int getPort();
 
-    @Default( "usergrid_" )
+    @Default( "usergrid" ) // no underbars allowed
     @Key( ELASTICSEARCH_INDEXNAME_PREFIX )
     String getIndexNamePrefix();
     

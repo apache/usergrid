@@ -99,18 +99,11 @@ public class CpRelationManager implements RelationManager {
     public static String COLLECTION_SUFFIX = "zzzcollectionzzz"; 
 
 
-//    // collection scope in which to store Collection record entities
-//    public static final String SYSTEM_COLLECTIONS_UUID = "b6768a08-b5d5-11e3-a495-10ddb1de66c6";
-//    public static final String SYSTEM_COLLECTIONS_TYPE = "zzz_collections_zzz"; 
-//
-//    public static final CollectionScope SYSTEM_COLLECTIONS_SCOPE = 
-//        new CollectionScopeImpl( SYSTEM_ORG_SCOPE.getOrganization(), 
-//            new SimpleId( UUID.fromString(SYSTEM_COLLECTIONS_UUID), SYSTEM_COLLECTIONS_TYPE ), 
-//                SYSTEM_COLLECTIONS_TYPE);
-
-
     public CpRelationManager() {
+
+        // TODO: don't create own injector in CpEntityManager
         Injector injector = Guice.createInjector( new GuiceModule() );
+
         ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
         eif = injector.getInstance( EntityIndexFactory.class );
         gmf = injector.getInstance( GraphManagerFactory.class );

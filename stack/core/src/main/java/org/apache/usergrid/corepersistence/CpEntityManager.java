@@ -66,6 +66,7 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
@@ -93,12 +94,17 @@ public class CpEntityManager implements EntityManager {
     private CpEntityManagerFactory emf = new CpEntityManagerFactory();
     private EntityCollectionManagerFactory ecmf;
     private EntityIndexFactory eif;
+    private final GraphManagerFactory gmf;
 
 
     public CpEntityManager() {
+
+        // TODO: don't create own injector in CpEntityManager
         Injector injector = Guice.createInjector( new GuiceModule() );
+
         this.ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
         this.eif = injector.getInstance( EntityIndexFactory.class );
+        this.gmf = injector.getInstance( GraphManagerFactory.class );
     }
 
     public CpEntityManager init( 
@@ -319,11 +325,12 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void update( Entity entity ) throws Exception {
 
+        // TODO: need to update entity in every collection and connection scope that it is indexed!
+
         String collectionName = Schema.defaultCollectionName( entity.getType() );
 
         OrganizationScope organizationScope = emf.getOrganizationScope(applicationId);
         CollectionScope applicationScope = emf.getApplicationScope(applicationId);
-
         CollectionScope collectionScope = new CollectionScopeImpl( 
             applicationScope.getOrganization(), 
             applicationScope.getOwner(), 
@@ -341,6 +348,7 @@ public class CpEntityManager implements EntityManager {
 
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
         ei.index( collectionScope, cpEntity );
+
     }
 
 

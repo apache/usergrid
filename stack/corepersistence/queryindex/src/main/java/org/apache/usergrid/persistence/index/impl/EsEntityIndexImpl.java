@@ -143,8 +143,8 @@ public class EsEntityIndexImpl implements EntityIndex {
             admin.indices().prepareCreate(indexName).execute().actionGet();
             log.debug("Created new index: " + indexName);
 
-        } catch (IndexAlreadyExistsException e) {
-            log.info(e.getMessage());
+        } catch (IndexAlreadyExistsException ignored) {
+            //log.debug("Keyspace already exists", ignored);
 
         } catch (Exception e) {
             throw new RuntimeException("Error creating index", e);
@@ -273,7 +273,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         
         ValidationUtils.verifyEntityWrite(entity);
 
-        initType( targetScope );
+        initType( estype );
 
         StopWatch timer = null;
         if ( log.isDebugEnabled() ) {

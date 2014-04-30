@@ -178,15 +178,15 @@ public class CollectionIT extends AbstractCoreIT {
         // it works in the exact same test in the QueryIndex module/
 
 //        // empty query, sort content
-//        query = new Query();
-//        query.addSort( "content" );
-//        r = app.searchCollection( user, "activities", query );
-//        assertEquals( 3, r.size() );
-//        entities = r.getEntities();
-//        LOG.info( JsonUtils.mapToFormattedJsonString( entities ) );
-//        assertEquals( entities.get( 0 ).getUuid(), activity2.getUuid() );
-//        assertEquals( entities.get( 1 ).getUuid(), activity.getUuid() );
-//        assertEquals( entities.get( 2 ).getUuid(), activity3.getUuid() );
+        query = new Query();
+        query.addSort( "content" );
+        r = app.searchCollection( user, "activities", query );
+        assertEquals( 3, r.size() );
+        entities = r.getEntities();
+        LOG.info( JsonUtils.mapToFormattedJsonString( entities ) );
+        assertEquals( entities.get( 0 ).getUuid(), activity2.getUuid() );
+        assertEquals( entities.get( 1 ).getUuid(), activity.getUuid() );
+        assertEquals( entities.get( 2 ).getUuid(), activity3.getUuid() );
 
         // empty query, sort verb
         query = new Query();

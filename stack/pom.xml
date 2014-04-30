@@ -1813,6 +1813,7 @@
                     <exclude>**/.gitignore</exclude>
                     <exclude>**/.idea/**</exclude>
                     <exclude>**/*.iml</exclude>
+                    <exclude>**/*.log</exclude>
                     <exclude>**/nbactions.xml</exclude>
                     <exclude>**/nb-configuration.xml</exclude>
                     <exclude>**/.classpath/**</exclude>
@@ -1842,6 +1843,7 @@
 
                     <!-- TODO: need to add headers to many files in corepersistence -->
                     <exclude>**/corepersistence/**</exclude>
+                    <exclude>**/awscluster/**</exclude>
 
                 </excludes>
             </configuration>
