@@ -179,32 +179,46 @@ public class CpRelationManager implements RelationManager {
         Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
 
         GraphManager gm = gmf.createEdgeManager(organizationScope);
-        Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType( 
-            cpHeadEntity.getId(), "contains", cpHeadEntity.getVersion(), null ));
 
-        Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
-        while ( iter.hasNext() ) {
-            Edge edge = iter.next();
+        Iterator<String> edgeTypes = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
+            cpHeadEntity.getId(), null) ).toBlockingObservable().getIterator();
 
-            if ( !edge.getType().endsWith(COLLECTION_SUFFIX) ) {
-                continue;
+        while ( edgeTypes.hasNext() ) {
+
+            String edgeType = edgeTypes.next();
+
+            Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType( 
+                cpHeadEntity.getId(), edgeType, cpHeadEntity.getVersion(), null ));
+
+            Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
+            while ( iter.hasNext() ) {
+                Edge edge = iter.next();
+
+                if ( !edge.getType().endsWith(COLLECTION_SUFFIX) ) {
+                    continue;
+                }
+
+                String collName = edge.getType().substring(0, edge.getType().indexOf(COLLECTION_SUFFIX));
+
+                CollectionScope collScope = new CollectionScopeImpl( 
+                    applicationScope.getOrganization(), 
+                    applicationScope.getOwner(), 
+                    Schema.defaultCollectionName( edge.getSourceNode().getType() ));
+
+                EntityCollectionManager ecm = ecmf.createCollectionManager(collScope);
+
+                org.apache.usergrid.persistence.model.entity.Entity container = 
+                    ecm.load( edge.getSourceNode() ).toBlockingObservable().last();
+
+                EntityRef eref = new SimpleEntityRef( 
+                    container.getId().getType(), container.getId().getUuid() );
+
+                String cEdgeType = edge.getType();
+                if ( cEdgeType.endsWith( COLLECTION_SUFFIX )) {
+                    cEdgeType = cEdgeType.substring( 0, cEdgeType.indexOf(COLLECTION_SUFFIX));
+                }
+                addMapSet( results, eref, cEdgeType );
             }
-
-            String collName = edge.getType().substring(0, edge.getType().indexOf(COLLECTION_SUFFIX));
-
-            CollectionScope collScope = new CollectionScopeImpl( 
-                applicationScope.getOrganization(), 
-                applicationScope.getOwner(), 
-                collName );
-            EntityCollectionManager ecm = ecmf.createCollectionManager(collScope);
-
-            org.apache.usergrid.persistence.model.entity.Entity container = 
-                ecm.load( edge.getSourceNode() ).toBlockingObservable().last();
-
-            EntityRef eref = new SimpleEntityRef( 
-                container.getId().getType(), container.getId().getUuid() );
-
-            addMapSet( results, eref, edge.getType() );
         }
 
         EntityRef applicationRef = new SimpleEntityRef( TYPE_APPLICATION, applicationId );

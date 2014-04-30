@@ -250,7 +250,7 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( user.getUuid(), returned.getUuid() );
 
         // update the username
-        String newFirstName = "firstName" + UUIDUtils.newTimeUUID();
+        String newFirstName = "firstName" + UUIDUtils.newTimeUUID() + "_new";
 
         user.setProperty( "firstname", newFirstName );
 

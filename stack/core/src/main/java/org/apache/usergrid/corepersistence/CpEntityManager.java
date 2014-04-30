@@ -325,7 +325,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void update( Entity entity ) throws Exception {
 
-        // TODO: need to update entity in every collection and connection scope that it is indexed!
+        // first, update entity index in its own collection scope
 
         String collectionName = Schema.defaultCollectionName( entity.getType() );
 
@@ -349,11 +349,43 @@ public class CpEntityManager implements EntityManager {
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
         ei.index( collectionScope, cpEntity );
 
+        // next, update entity in every collection and connection scope in which it is indexed 
+
+        RelationManager rm = getRelationManager( entity );
+        Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
+
+        logger.debug("Updating indexes of all {} collections owning the entity", owners.keySet().size());
+
+        for ( String ownerType : owners.keySet() ) {
+            Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
+
+            for ( UUID uuid : collectionsByUuid.keySet() ) {
+                Set<String> collections = collectionsByUuid.get( uuid );
+                for ( String collection : collections ) {
+
+                    CollectionScope ownerScope = new CollectionScopeImpl( 
+                        applicationScope.getOrganization(), 
+                        applicationScope.getOwner(), 
+                        Schema.defaultCollectionName( ownerType ) );
+
+                    EntityCollectionManager ownerEcm = ecmf.createCollectionManager(ownerScope);
+
+                    org.apache.usergrid.persistence.model.entity.Entity cpOwner = 
+                        ownerEcm.load( new SimpleId( uuid, ownerType )).toBlockingObservable().last();
+
+                    ei.indexConnection(cpOwner, 
+                        collection+CpRelationManager.COLLECTION_SUFFIX, cpEntity, collectionScope);
+                }
+            }
+        }
+
     }
 
 
     @Override
     public void delete(EntityRef entityRef) throws Exception {
+
+        // first, delete entity index in its own collection scope
 
         String collectionName = Schema.defaultCollectionName( entityRef.getType() );
 
@@ -377,6 +409,9 @@ public class CpEntityManager implements EntityManager {
             ei.deindex( collectionScope, entity );
             ecm.delete( entityId ).toBlockingObservable().last();
         }
+
+        // TODO: next, delete entity in every collection and connection scope in which it is indexed 
+
     }
 
 
@@ -1218,7 +1253,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public UUID getApplicationId() {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return applicationId;
     }
 
     @Override
