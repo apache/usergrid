@@ -291,11 +291,11 @@ class Entity {
     $this->set($connection,array());
 
     $length = count($result->entities);
-    for ($i = 0; i < $length; $i++) {
-      if ($result['entities'][i]['type'] == 'user') {
-        $this[$connection][$result['entities'][i]['username']] = $result['entities'][i];
+    for ($i = 0; $i < $length; $i++) {
+      if ($result['entities'][$i]['type'] == 'user') {
+        $this[$connection][$result['entities'][$i]['username']] = $result['entities'][$i];
       } else {
-        $this[$connection][$result['entities'][i]['name']] = $result['entities'][i];
+        $this[$connection][$result['entities'][$i]['name']] = $result['entities'][$i];
       }
     }
   }
