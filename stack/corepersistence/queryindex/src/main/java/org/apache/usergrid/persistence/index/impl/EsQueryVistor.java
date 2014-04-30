@@ -50,23 +50,27 @@ public class EsQueryVistor implements QueryVisitor {
     Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
     List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
 
+    @Override
     public void visit( AndOperand op ) throws PersistenceException {
         op.getLeft().visit( this );
         op.getRight().visit( this );
         stack.push( QueryBuilders.boolQuery().must( stack.pop() ).must(  stack.pop() ));
     }
 
+    @Override
     public void visit( OrOperand op ) throws PersistenceException {
         op.getLeft().visit( this );
         op.getRight().visit( this );
         stack.push( QueryBuilders.boolQuery().should( stack.pop() ).should(  stack.pop() ));
     }
 
+    @Override
     public void visit( NotOperand op ) throws PersistenceException {
         op.getOperation().visit( this );
         stack.push( QueryBuilders.boolQuery().mustNot( stack.pop() ));
     }
 
+    @Override
     public void visit( ContainsOperand op ) throws NoFullTextIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
@@ -76,6 +80,7 @@ public class EsQueryVistor implements QueryVisitor {
         stack.push( QueryBuilders.matchQuery( name, value ));
     }
 
+    @Override
     public void visit( WithinOperand op ) {
 
         String name = op.getProperty().getValue();
@@ -90,6 +95,7 @@ public class EsQueryVistor implements QueryVisitor {
         filterBuilders.add( fb );
     } 
 
+    @Override
     public void visit( LessThan op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
@@ -99,6 +105,7 @@ public class EsQueryVistor implements QueryVisitor {
         stack.push( QueryBuilders.rangeQuery( name ).lt( value ));
     }
 
+    @Override
     public void visit( LessThanEqual op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
@@ -108,15 +115,18 @@ public class EsQueryVistor implements QueryVisitor {
         stack.push( QueryBuilders.rangeQuery( name ).lte( value ));
     }
 
+    @Override
     public void visit( Equal op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
+            // for equal operation on string, need to use unanalyzed field, leave off the suffix
             value = ((String)value).toLowerCase();
         }
         stack.push( QueryBuilders.termQuery( name, value ));
     }
 
+    @Override
     public void visit( GreaterThan op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
@@ -126,6 +136,7 @@ public class EsQueryVistor implements QueryVisitor {
         stack.push( QueryBuilders.rangeQuery( name ).gt( value ) );
     }
 
+    @Override
     public void visit( GreaterThanEqual op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
@@ -135,6 +146,7 @@ public class EsQueryVistor implements QueryVisitor {
         stack.push( QueryBuilders.rangeQuery( name ).gte( value ) );
     }
 
+    @Override
     public QueryBuilder getQueryBuilder() {
         if ( stack.isEmpty() ) {
             return null;
@@ -142,6 +154,7 @@ public class EsQueryVistor implements QueryVisitor {
         return stack.pop();
     }
 
+    @Override
 	public FilterBuilder getFilterBuilder() {
 
 		if ( filterBuilders.size() >  1 ) {

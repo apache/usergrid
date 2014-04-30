@@ -111,12 +111,10 @@ public class CpEntityManager implements EntityManager {
 //        this.cass = cass;
 //        this.counterUtils = counterUtils;
 //        this.skipAggregateCounters = skipAggregateCounters;
-//        qmf = ( QueueManagerFactoryImpl ) getApplicationContext().getBean( "queueManagerFactory" );
-//        indexBucketLocator = ( IndexBucketLocator ) getApplicationContext().getBean( "indexBucketLocator" );
 
         // prime the application entity for the EM
         try {
-            getApplication();
+            application = getApplication();
         }
         catch ( Exception ex ) {
             ex.printStackTrace();
@@ -239,7 +237,56 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public <A extends Entity> A get(UUID entityId, Class<A> entityClass) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        A e = null;
+        try {
+            e = ( A ) getEntity( entityId, ( Class<Entity> ) entityClass );
+        }
+        catch ( ClassCastException e1 ) {
+            logger.error( "Unable to get typed entity: {} of class {}", 
+                new Object[] {entityId, entityClass.getCanonicalName(), e1} );
+        }
+        return e;
+    }
+
+        /**
+     * Gets the specified entity.
+     *
+     * @param entityId the entity id
+     * @param entityClass the entity class
+     *
+     * @return entity
+     *
+     * @throws Exception the exception
+     */
+    public <A extends Entity> A getEntity( UUID entityId, Class<A> entityClass ) throws Exception {
+
+        String type = entityClass.getSimpleName().toLowerCase(); 
+
+        Id id = new SimpleId( entityId, type );
+        String collectionName = Schema.defaultCollectionName( type );
+
+        CollectionScope applicationScope = emf.getApplicationScope(applicationId);
+        CollectionScope collectionScope = new CollectionScopeImpl( 
+            applicationScope.getOrganization(), 
+            applicationScope.getOwner(), 
+            collectionName );
+
+        EntityCollectionManager ecm = ecmf.createCollectionManager(collectionScope);
+
+//        logger.debug("Loading entity {} type {} to {}", 
+//            new String[] { entityId.toString(), type, collectionName });
+
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
+            ecm.load( id ).toBlockingObservable().last();
+
+        if ( cpEntity == null ) {
+            return null;
+        }
+
+        A entity = EntityFactory.newEntity( entityId, type, entityClass );
+        entity.setProperties( EntityMapUtils.toMap( cpEntity ) );
+
+        return entity;
     }
 
 
@@ -743,12 +790,14 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public void grantGroupRolePermission(UUID groupId, String roleName, String permission) throws Exception {
+    public void grantGroupRolePermission(
+            UUID groupId, String roleName, String permission) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
     @Override
-    public void revokeGroupRolePermission(UUID groupId, String roleName, String permission) throws Exception {
+    public void revokeGroupRolePermission(
+            UUID groupId, String roleName, String permission) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
@@ -1019,22 +1068,6 @@ public class CpEntityManager implements EntityManager {
 
         CollectionInfo collection = null;
 
-        if ( !is_application ) {
-            // Add entity to collection
-//            if ( !emptyPropertyMap ) {
-//                addInsertToMutator( m, ENTITY_ID_SETS, collection_key, itemId, null, timestamp );
-//            }
-//
-//            // Add name of collection to dictionary property
-//            // Application.collections
-//            addInsertToMutator( m, ENTITY_DICTIONARIES, key( 
-//                applicationId, Schema.DICTIONARY_COLLECTIONS ), collection_name, null, timestamp );
-//
-//            addInsertToMutator( m, ENTITY_COMPOSITE_DICTIONARIES, key( 
-//                 itemId, Schema.DICTIONARY_CONTAINER_ENTITIES ),
-//                 asList( TYPE_APPLICATION, collection_name, applicationId ), null, timestamp );
-        }
-
         if ( emptyPropertyMap ) {
             return null;
         }
@@ -1102,9 +1135,6 @@ public class CpEntityManager implements EntityManager {
         EntityCollectionManager ecm = ecmf.createCollectionManager(collectionScope);
         EntityIndex ei = eif.createEntityIndex(organizationScope, applicationScope);
 
-//        logger.debug("Writing entity {} type {} to {}", 
-//            new String[] { cpEntity.getId().getUuid().toString(), entity.getType(), collectionName });
-        
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
         ei.index( collectionScope, cpEntity );
 
@@ -1112,6 +1142,10 @@ public class CpEntityManager implements EntityManager {
         entity.setUuid( cpEntity.getId().getUuid() );
         Map<String, Object> entityMap = EntityMapUtils.toMap( cpEntity );
         entity.addProperties( entityMap );
+
+        if ( !is_application ) {
+            getRelationManager( getApplication() ).addToCollection( collectionName, entity );
+        }
 
         return entity;
     }
@@ -1201,5 +1235,7 @@ public class CpEntityManager implements EntityManager {
         EntityIndex aei = eif.createEntityIndex(
             emf.getOrganizationScope(applicationId), emf.getApplicationScope(applicationId));
         aei.refresh();
+
+        logger.debug("Refreshed index for system and application: " + applicationId);
     }
 }

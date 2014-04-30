@@ -195,6 +195,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             String prefix, OrganizationScope orgScope, CollectionScope appScope ) {
         StringBuilder sb = new StringBuilder();
         String sep = INDEX_NAME_SEPARATOR;
+        sb.append( prefix ).append(sep);
         sb.append( orgScope.getOrganization().getUuid() ).append(sep);
         sb.append( orgScope.getOrganization().getType() ).append(sep);
         sb.append( appScope.getOwner().getUuid() ).append(sep);
@@ -285,6 +286,8 @@ public class EsEntityIndexImpl implements EntityIndex {
         entityAsMap.put("updated", entity.getVersion().timestamp());
         entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, targetScope ); 
 
+        log.debug("Indexing entity: " + entityAsMap);
+
         String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
 
         IndexRequestBuilder irb = client
@@ -358,7 +361,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         log.debug("Search");
         log.debug("    Index Name: " + this.indexName);
         log.debug("    ES Type:    " + estype);
-        log.debug("    Query:      " + qb.toString() );
+        log.debug("    Query:      " + qb.toString().replace("\n", " ") );
         
             
         SearchResponse searchResponse;
