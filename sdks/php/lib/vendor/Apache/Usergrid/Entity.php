@@ -281,7 +281,7 @@ class Entity {
 
   public function get_connections($connection) {
     $connectorType = $this->get('type');
-    $connector = md_dtl_Apigee_Usergrid_Entity::get_entity_id($this);
+    $connector = Entity::get_entity_id($this);
     if (!$connector) {
       return;
     }
