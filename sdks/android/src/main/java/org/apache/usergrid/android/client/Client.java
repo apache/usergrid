@@ -773,7 +773,7 @@ public class Client extends org.usergrid.java.client.Client {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
-				getApplicationId(), connectingEntityType, connectingEntityId,
+				getOrganizationId(), getApplicationId(), connectingEntityType, connectingEntityId,
 				connectionType);
 	}
 
@@ -799,7 +799,7 @@ public class Client extends org.usergrid.java.client.Client {
 		params.put("ql", makeLocationQL(distance, location.getLatitude(), location.getLongitude(), ql));
 		params.put("ql", ql);
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
-				getApplicationId(), connectingEntityType, connectingEntityId,
+				getApplicationId(), getApplicationId(), connectingEntityType, connectingEntityId,
 				connectionType);
 	}
 
