@@ -1654,7 +1654,7 @@ Usergrid.Entity.prototype.getEntityId = function(entity) {
     var id;
     if (isUUID(entity.get("uuid"))) {
         id = entity.get("uuid");
-    } else if (this.get("type") === "users") {
+    } else if (this.get("type") === "users" || this.get("type") === "user") {
         id = entity.get("username");
     } else {
         id = entity.get("name");
