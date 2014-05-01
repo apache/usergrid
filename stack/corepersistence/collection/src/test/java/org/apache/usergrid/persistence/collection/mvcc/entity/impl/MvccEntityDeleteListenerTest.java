@@ -61,7 +61,7 @@ public class MvccEntityDeleteListenerTest {
     }
 
     @Test
-    public void TestConstructor(){
+    public void receive(){
         CollectionScope scope = mock(CollectionScope.class);
         UUID id = UUID.randomUUID();
         MvccEntity entity = mock(MvccEntity.class);

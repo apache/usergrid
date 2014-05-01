@@ -31,8 +31,6 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.functions.Func1;
 
-import java.net.ConnectException;
-
 /**
  * Listens for delete entity event then deletes entity for real this time
  */
@@ -54,11 +52,12 @@ public class MvccEntityDeleteListener implements MessageListener<MvccEntityEvent
         return Observable.from(entity).map( new Func1<MvccEntity, MvccEntityEvent<MvccEntity>>() {
             @Override
             public MvccEntityEvent<MvccEntity> call(MvccEntity mvccEntity) {
-                MutationBatch batch = entityMetadataSerialization.delete(entityEvent.getCollectionScope(),entity.getId(),entity.getVersion());
                 try {
-                    batch.execute();
+                    entityMetadataSerialization.delete(entityEvent.getCollectionScope(),entity.getId(),entity.getVersion()).execute();
+                    LOG.info("Successfully deleted entity",entity);
                 }catch(ConnectionException e){
-                    throw new RuntimeException( "Unable to delete marked graph node " + entity, e );
+                    LOG.error("Unable to delete entity from listener",entity);
+                    throw new RuntimeException( "Unable to delete entity - " + entity, e );
                 }
                 return entityEvent;
             }
