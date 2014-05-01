@@ -319,17 +319,6 @@ module.exports = function (grunt) {
         ]
       }
     },
-    compress: {
-      main: {
-        options: {
-          archive: 'dist/'+distName+'.'+bower.version+'.zip'
-        },
-        expand: true,
-        cwd: distPath+'/',
-        src: ['**/*'],
-        dest: distName+'.'+bower.version
-      }
-    },
     clean: {
         build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile,'index.html','index-debug.html'],
         coverage: ['reports/']
@@ -416,7 +405,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
-  grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-angular-templates');
   grunt.loadNpmTasks('grunt-bower-task');
@@ -433,7 +421,7 @@ module.exports = function (grunt) {
   grunt.registerTask('validate', ['jshint', 'complexity']);
   grunt.registerTask('report', ['build', 'coverage']);
 
-  grunt.registerTask('build-release', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy','compress']);
+  grunt.registerTask('build-release', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy']);
   grunt.registerTask('build', ['bower:install','ngtemplates', 'uglify','cssmin','dom_munger','karma:unit']);
   grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','karma:unit']);
   grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
@@ -449,6 +437,6 @@ module.exports = function (grunt) {
   grunt.registerTask('e2e-mars', ['protractor:mars']);
 
 
-  grunt.registerTask('no-monitoring', ['build','clean:perf','karma:unit','compress']);
+  grunt.registerTask('no-monitoring', ['build','clean:perf','karma:unit']);
 
 };
