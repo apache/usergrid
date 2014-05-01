@@ -36,6 +36,9 @@ AppServices.Directives.directive('menu', ['$location', '$rootScope', '$log', fun
       var menuContext, parentMenuItems, activeParentElement, menuItems, activeMenuElement, locationPath, subMenuContext;
 
       function setActiveElement(ele, locationPath, $rootScope, isParentClick) {
+        if(!ele){
+          return;
+        }
         ele.removeClass('active');
 
 
@@ -183,8 +186,10 @@ AppServices.Directives.directive('menu', ['$location', '$rootScope', '$log', fun
         //see if the url location is the same as the default active parent element
         if (locationPath !== '' && locationPath.indexOf(subMenuContext) === -1) {
           activeElements = setActiveElement(activeParentElement, locationPath, scope);
-          $rootScope[menuContext + 'Parent'] = activeElements.parentMenuItem;
-          $rootScope[menuContext + 'Menu'] = activeElements.menuitem;
+          if(activeElements){
+            $rootScope[menuContext + 'Parent'] = activeElements.parentMenuItem;
+            $rootScope[menuContext + 'Menu'] = activeElements.menuitem;
+          }
         } else {
           setActiveElement(activeParentElement, subMenuContext, scope);
         }
