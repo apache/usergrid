@@ -3,6 +3,8 @@ package org.apache.usergrid.android.client;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+
 import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
 import org.apache.usergrid.android.client.callbacks.ApiResponseCallback;
@@ -27,7 +29,13 @@ import android.location.Location;
  */
 public class Client extends org.usergrid.java.client.Client {
 
-	private static final String TAG = "UsergridClient";
+
+  /**
+   * Default tag applied to all logging messages sent from an instance of Client
+   */
+  public static final String LOGGING_TAG = "UsergridClient";	
+
+  private static final String TAG = "UsergridClient";
 
 	public static boolean FORCE_PUBLIC_API = false;
 
@@ -89,6 +97,73 @@ protected static final String HTTP_METHOD_PUT    = "PUT";
 	public Client(String organizationId, String applicationId) {
 		super(organizationId, applicationId);
 	}
+
+  /**
+   * Logs a trace-level logging message with tag 'DATA_CLIENT'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logTrace(String logMessage) {
+  	if( (log != null) && (logMessage != null) ) {
+  		log.v(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs a debug-level logging message with tag 'DATA_CLIENT'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logDebug(String logMessage) {
+  	if( (log != null) && (logMessage != null) ) {
+  		log.d(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs an info-level logging message with tag 'DATA_CLIENT'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logInfo(String logMessage) {
+  	if( (log != null) && (logMessage != null) ) {
+  		log.i(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs a warn-level logging message with tag 'DATA_CLIENT'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logWarn(String logMessage) {
+  	if( (log != null) && (logMessage != null) ) {
+  		log.w(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs an error-level logging message with tag 'DATA_CLIENT'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logError(String logMessage) {
+  	if( (log != null) && (logMessage != null) ) {
+  		log.e(LOGGING_TAG,logMessage);
+  	}
+  }
+
+  /**
+   * Logs a debug-level logging message with tag 'DATA_CLIENT'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void writeLog(String logMessage) {
+      if( log != null ) {
+          //TODO: do we support different log levels in this class?
+          log.d(LOGGING_TAG, logMessage);
+      }
+  }
 
 
 	/**
