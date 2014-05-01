@@ -142,15 +142,14 @@ public class GeoIterator implements ResultIterator {
 
         lastCellsSearched = results.lastSearchedGeoCells;
 
-        for ( int i = 0; i < locations.size(); i++ ) {
+        for (final EntityLocationRef location : locations) {
 
-            final EntityLocationRef location = locations.get( i );
             final UUID id = location.getUuid();
 
-            final LocationScanColumn locationScan = new LocationScanColumn( location );
+            final LocationScanColumn locationScan = new LocationScanColumn(location);
 
-            idOrder.put( id, locationScan );
-            lastLoaded.add( locationScan );
+            idOrder.put(id, locationScan);
+            lastLoaded.add(locationScan);
 
             last = location;
         }

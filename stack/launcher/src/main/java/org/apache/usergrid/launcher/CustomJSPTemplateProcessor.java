@@ -86,7 +86,7 @@ public class CustomJSPTemplateProcessor implements com.sun.jersey.spi.template.V
             return null;
         }
 
-        if ( basePath != "" ) {
+        if (!basePath.equals("")) {
             path = basePath + path;
         }
 

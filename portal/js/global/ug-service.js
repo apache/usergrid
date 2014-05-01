@@ -54,13 +54,13 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         case host === 'appservices.apigee.com' && location.pathname.indexOf('/dit') >= 0 :
           //DIT
           BASE_URL = 'https://accounts.jupiter.apigee.net';
-          DATA_URL = 'http://apigee-internal-prod.jupiter.apigee.net';
+          DATA_URL = 'https://apigee-internal-prod.jupiter.apigee.net';
           use_sso = true;
           break;
         case host === 'appservices.apigee.com' && location.pathname.indexOf('/mars') >= 0  :
           //staging
           BASE_URL = 'https://accounts.mars.apigee.net';
-          DATA_URL = 'http://apigee-internal-prod.mars.apigee.net';
+          DATA_URL = 'https://apigee-internal-prod.mars.apigee.net';
           use_sso = true;
           break;
         case host === 'appservices.apigee.com' :

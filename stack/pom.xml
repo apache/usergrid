@@ -838,8 +838,8 @@
       <dependency>
         <groupId>net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
-        <!-- we'd like to use 0.0.8 but it is not in Maven Central -->
-        <version>0.0.7</version>
+        <!-- included as local dependency -->
+        <version>0.0.8</version>
       </dependency>
 
       <dependency>
@@ -1799,6 +1799,7 @@
                     <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
                     <exclude>**/aws.properties</exclude>
+                    <exclude>**/usergrid-custom.properties</exclude>
 
                 </excludes>
             </configuration>

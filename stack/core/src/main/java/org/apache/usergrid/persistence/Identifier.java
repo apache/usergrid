@@ -30,6 +30,9 @@ import org.apache.usergrid.utils.UUIDUtils;
 
 public class Identifier implements Serializable {
 
+    public static final String UUID_REX = "[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}";
+    public static final String EMAIL_REX =  "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}";
+
     public enum Type {
         UUID, NAME, EMAIL
     }
@@ -38,7 +41,7 @@ public class Identifier implements Serializable {
     Type type;
     Object value;
 
-    static Pattern emailRegEx = Pattern.compile( "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}" );
+    static Pattern emailRegEx = Pattern.compile( EMAIL_REX );
     static Pattern nameRegEx = Pattern.compile( "[a-zA-Z0-9_\\-./]*" );
 
 

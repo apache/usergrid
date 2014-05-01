@@ -254,9 +254,7 @@ public abstract class GeoIndexSearcher {
                     // final check - top level tiles
                     curGeocells.clear();
                     String[] items = "0123456789abcdef".split( "(?!^)" );
-                    for ( String item : items ) {
-                        curGeocells.add( item );
-                    }
+                    Collections.addAll(curGeocells, items);
                     done = true;
                 }
                 else {
@@ -276,17 +274,17 @@ public abstract class GeoIndexSearcher {
                 // Get adjacent in one direction.
                 // TODO(romannurik): Watch for +/- 90 degree latitude edge case
                 // geocells.
-                for ( int i = 0; i < sortedEdgesDistances.size(); i++ ) {
+                for (Tuple<int[], Double> sortedEdgesDistance : sortedEdgesDistances) {
 
-                    int nearestEdge[] = sortedEdgesDistances.get( i ).getFirst();
-                    String edge = GeocellUtils.adjacent( curGeocells.get( 0 ), nearestEdge );
+                    int nearestEdge[] = sortedEdgesDistance.getFirst();
+                    String edge = GeocellUtils.adjacent(curGeocells.get(0), nearestEdge);
 
                     // we're at the edge of the world, search in a different direction
-                    if ( edge == null ) {
+                    if (edge == null) {
                         continue;
                     }
 
-                    curGeocells.add( edge );
+                    curGeocells.add(edge);
                     break;
                 }
             }

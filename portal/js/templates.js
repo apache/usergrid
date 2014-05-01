@@ -866,7 +866,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "    </td>\n" +
     "    <td ng-if=\"hasProperty('name')\">{{entity._data.name}}</td>\n" +
     "    <td>{{entity._data.uuid}}</td>\n" +
-    "    <td><a href=\"javaScript:void(0)\" ng-click=\"entitySelected[$index] = !entitySelected[$index];selectEntity(entity._data.uuid)\">{{entitySelected[$index] ? 'Hide' : 'View'}} Details</a></td>\n" +
+    "    <td><a href=\"javaScript:void(0)\" ng-click=\"entitySelected[$index] = !entitySelected[$index]; selectEntity(entity._data.uuid, entitySelected[$index]);\">{{entitySelected[$index] ? 'Hide' : 'View'}} Details</a></td>\n" +
     "  </tr>\n" +
     "  <tr ng-if=\"entitySelected[$index]\">\n" +
     "    <td colspan=\"5\">\n" +
@@ -2773,7 +2773,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "\n" +
     "    <div class=\"content-container\">\n" +
     "      <legend>JSON User Object <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users profile json')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_profile_json}}\" tooltip-placement=\"top\">(?)</a></legend>\n" +
-    "      <pre id=\"{{help.usersJsonId}}\">{{user.json}}</pre>\n" +
+    "      <pre id=\"{{help.showJsonId}}\">{{user.json}}</pre>\n" +
     "    </div>\n" +
     "    </form>\n" +
     "  </div>\n" +
@@ -3030,7 +3030,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
     "      \n" +
     "    </div>\n" +
     "\n" +
-    "    <div id=\"{{help.usersTabsId}}\" class=\"span9 tab-content\" ng-show=\"hasUsers\">\n" +
+    "    <div id=\"{{help.showTabsId}}\" class=\"span9 tab-content\" ng-show=\"hasUsers\">\n" +
     "      <div class=\"menu-toolbar\">\n" +
     "        <ul class=\"inline\">\n" +
     "          <li class=\"tab\" ng-class=\"currentUsersPage.route === '/users/profile' ? 'selected' : ''\"><div class=\"btn btn-primary toolbar\" ><a class=\"btn-content\" ng-click=\"selectUserPage('/users/profile')\"><i class=\"pictogram\">&#59170;</i>Profile</a> <a class=\"help_tooltip\" ng-mouseover=\"help.sendTooltipGA('users profile tab')\" ng-show=\"help.helpTooltipsEnabled\" href=\"#\" ng-attr-tooltip=\"{{tooltip_profile_tab}}\" tooltip-placement=\"right\">(?)</a></div></li>\n" +

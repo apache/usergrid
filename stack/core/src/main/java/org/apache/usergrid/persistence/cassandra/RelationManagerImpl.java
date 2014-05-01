@@ -2129,7 +2129,6 @@ public class RelationManagerImpl implements RelationManager {
                 startId = UUID_PARSER.parse( slice.getCursor() ).getUUID();
             }
 
-
             IndexScanner indexScanner = cass.getIdList( cass.getApplicationKeyspace( applicationId ),
                     key( headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName ), startId, null,
                     queryProcessor.getPageSizeHint( node ), query.isReversed(), indexBucketLocator, applicationId,
@@ -2268,7 +2267,7 @@ public class RelationManagerImpl implements RelationManager {
             }
 
 
-            boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor();
+            boolean skipFirst = !node.isForceKeepFirst() && slice.hasCursor();
 
             UUID entityIdToUse;
 

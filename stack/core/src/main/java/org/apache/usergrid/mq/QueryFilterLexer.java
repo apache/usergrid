@@ -86,7 +86,8 @@ public class QueryFilterLexer extends Lexer {
     // delegators
 
 
-    public QueryFilterLexer() {;}
+    public QueryFilterLexer() {
+    }
 
 
     public QueryFilterLexer( CharStream input ) {
