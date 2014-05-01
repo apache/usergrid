@@ -805,6 +805,41 @@ public class Client extends org.usergrid.java.client.Client {
 		}).execute();
 	}
 
+	/**
+     * Connect two entities together.
+     * 
+     * @param connectingEntityType The type of the first entity.
+     * @param connectingEntityId The ID of the first entity.
+     * @param connectionType The type of connection between the entities.
+     * @param connectedEntityId The ID of the second entity.
+     * @return An instance with the server's response.
+     */
+    public ApiResponse connectEntities(String connectingEntityType,
+            String connectingEntityId, String connectionType,
+            String connectedEntityId) {
+        return apiRequest(HTTP_METHOD_POST, null, null,  organizationId, applicationId,
+                connectingEntityType, connectingEntityId, connectionType,
+                connectedEntityId);
+    }
+    
+    /**
+     * Connect two entities together
+     * 
+     * @param connectorType The type of the first entity in the connection.
+     * @param connectorID The first entity's ID.
+     * @param connectionType The type of connection to make.
+     * @param connecteeType The type of the second entity.
+     * @param connecteeID The second entity's ID
+     * @return An instance with the server's response.
+     */
+    public ApiResponse connectEntities(String connectorType,
+    		String connectorID,
+    		String connectionType,
+    		String connecteeType,
+    		String connecteeID) {
+		return apiRequest(HTTP_METHOD_POST, null, null, organizationId, applicationId,
+				connectorType, connectorID, connectionType, connecteeType, connecteeID);
+    }
 	
 	/**
 	 * Connect two entities together. Executes asynchronously in background and
