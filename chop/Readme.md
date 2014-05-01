@@ -1,5 +1,9 @@
 ![Judo Chop](http://stash.safehaus.org/projects/CHOP/repos/main/browse/judo-chop.jpeg?at=321c1def8f09eb0f0d488a3ea2d874d1b2ef7c94&raw)
 
+# TODO
+
+* Very old and needs to be updated for 2.0 
+
 # What is it?
 
 Judo Chop is a simple distributed performance testing framework designed to
