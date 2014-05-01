@@ -630,7 +630,8 @@ public class CollectionIT extends AbstractCoreIT {
         em.refreshIndex();
 
         // EntityRef
-        Query query = Query.fromQL( "select * where keywords contains 'Random' OR keywords contains 'Game'" );
+        Query query = Query.fromQL( "select * where keywords contains 'Random' "
+                + "OR keywords contains 'Game' order by title desc" );
 
         Results r = em.searchCollection( em.getApplicationRef(), "orquerygames", query );
 
@@ -644,7 +645,8 @@ public class CollectionIT extends AbstractCoreIT {
 
         assertEquals( game2.getUuid(), returned.getUuid() );
 
-        query = Query.fromQL( "select * where( keywords contains 'Random' OR keywords contains 'Game')" );
+        query = Query.fromQL( "select * where ( keywords contains 'Random' "
+                + "OR keywords contains 'Game') order by title desc" );
 
         r = em.searchCollection( em.getApplicationRef(), "orquerygames", query );
 
@@ -659,7 +661,8 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( game2.getUuid(), returned.getUuid() );
 
         // field order shouldn't matter USERGRID-375
-        query = Query.fromQL( "select * where keywords contains 'blah' OR title contains 'blah'" );
+        query = Query.fromQL( "select * where keywords contains 'blah' "
+                + "OR title contains 'blah'  order by title desc" );
 
         r = em.searchCollection( em.getApplicationRef(), "orquerygames", query );
 
@@ -669,7 +672,8 @@ public class CollectionIT extends AbstractCoreIT {
 
         assertEquals( game1.getUuid(), returned.getUuid() );
 
-        query = Query.fromQL( "select * where  title contains 'blah' OR keywords contains 'blah'" );
+        query = Query.fromQL( "select * where  title contains 'blah' "
+                + "OR keywords contains 'blah' order by title desc" );
 
         r = em.searchCollection( em.getApplicationRef(), "orquerygames", query );
 
@@ -706,17 +710,20 @@ public class CollectionIT extends AbstractCoreIT {
         em.refreshIndex();
 
         // overlap
-        Query query = Query.fromQL( "select * where keywords contains 'test' AND keywords contains 'random'" );
+        Query query = Query.fromQL( "select * where keywords contains 'test' "
+                + "AND keywords contains 'random' order by title desc" );
         Results r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 1, r.size() );
 
         // disjoint
-        query = Query.fromQL( "select * where keywords contains 'random' AND keywords contains 'blah'" );
+        query = Query.fromQL( "select * where keywords contains 'random' "
+                + "AND keywords contains 'blah' order by title desc" );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 0, r.size() );
 
         // same each side
-        query = Query.fromQL( "select * where keywords contains 'test' AND keywords contains 'test'" );
+        query = Query.fromQL( "select * where keywords contains 'test' "
+                + "AND keywords contains 'test' order by title desc" );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 2, r.size() );
 
@@ -727,12 +734,14 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( game2.getUuid(), returned.getUuid() );
 
         // one side, left
-        query = Query.fromQL( "select * where keywords contains 'test' AND keywords contains 'foobar'" );
+        query = Query.fromQL( "select * where keywords contains 'test' "
+                + "AND keywords contains 'foobar' order by title desc" );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 0, r.size() );
 
         // one side, right
-        query = Query.fromQL( "select * where keywords contains 'foobar' AND keywords contains 'test'" );
+        query = Query.fromQL( "select * where keywords contains 'foobar' "
+                + "AND keywords contains 'test' order by title desc" );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 0, r.size() );
     }

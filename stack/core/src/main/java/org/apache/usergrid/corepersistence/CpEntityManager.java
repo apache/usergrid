@@ -57,16 +57,19 @@ import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Role;
+import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -1146,12 +1149,8 @@ public class CpEntityManager implements EntityManager {
             return entity;
         }
 
-        // create Core Persistence Entity from those properties
-        org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
-            new org.apache.usergrid.persistence.model.entity.Entity(
-                new SimpleId(itemId, entityType ));
-
-        cpEntity = EntityMapUtils.fromMap( cpEntity, properties );
+        // TODO: need to create fields as unique for some fields
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity = entityToCpEntity( entity ); 
 
         // prepare to write and index Core Persistence Entity into correct scope
         OrganizationScope organizationScope = emf.getOrganizationScope(applicationId);
@@ -1164,7 +1163,18 @@ public class CpEntityManager implements EntityManager {
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
         EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
 
-        cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+        try {
+            cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+
+        } catch (WriteUniqueVerifyException wuve) {
+
+            // we may have multiple conflicts, but caller expects only one 
+            Map<String, Field> violiations = wuve.getVioliations();
+            Field conflict = violiations.get( violiations.keySet().iterator().next() );
+
+            throw new DuplicateUniquePropertyExistsException( 
+                entity.getType(), conflict.getName(), conflict.getValue());
+        }
         ei.index( collectionScope, cpEntity );
 
         // reflect changes in the legacy Entity
@@ -1251,7 +1261,8 @@ public class CpEntityManager implements EntityManager {
     public CassandraService getCass() {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
-   
+  
+
     @Override
     public void refreshIndex() {
 
@@ -1266,6 +1277,19 @@ public class CpEntityManager implements EntityManager {
         aei.refresh();
 
         logger.debug("Refreshed index for system and application: " + applicationId);
+    }
+
+
+    private org.apache.usergrid.persistence.model.entity.Entity entityToCpEntity( Entity entity) {
+
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
+            new org.apache.usergrid.persistence.model.entity.Entity(
+                new SimpleId( entity.getUuid(), entity.getType() ));
+
+        // TODO: can't just do this, some fields MUST be marked as unique
+        cpEntity  = EntityMapUtils.fromMap( cpEntity, entity.getProperties() );
+
+        return cpEntity;
     }
 }
 

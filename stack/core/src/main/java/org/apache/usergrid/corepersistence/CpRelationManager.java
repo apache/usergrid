@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Identifier;
@@ -490,7 +491,9 @@ public class CpRelationManager implements RelationManager {
         }
 
         headEntity = em.validate( headEntity );
-        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
+        CollectionInfo collection = 
+            getDefaultSchema().getCollection( headEntity.getType(), collName );
+
         query.setEntityType( collection.getType() );
 
         org.apache.usergrid.persistence.index.query.Query cpQuery = createCpQuery( query );
@@ -515,11 +518,14 @@ public class CpRelationManager implements RelationManager {
         List<Entity> entities = new ArrayList<Entity>();
 
         for ( org.apache.usergrid.persistence.model.entity.Entity e : cpResults.getEntities() ) {
-            Entity entity = new DynamicEntity( e.getId().getType(), e.getId().getUuid() );
-            entity.setUuid( e.getId().getUuid() );
+
+            Entity entity = EntityFactory.newEntity(
+                e.getId().getUuid(), e.getField("type").getValue().toString() );
+
             Map<String, Object> entityMap = EntityMapUtils.toMap( e );
             entity.addProperties( entityMap ); 
             entities.add( entity );
+
         }
 
         return Results.fromEntities( entities );
