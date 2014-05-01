@@ -733,6 +733,23 @@ public class Client extends org.usergrid.java.client.Client {
       }).execute();
     }
 
+  /**
+   * Disconnect two entities.
+   * 
+   * @param connectingEntityType The collection name or UUID of the first entity.
+   * @param connectingEntityId The name or UUID of the first entity.
+   * @param connectionType The type of connection between the entities.     
+   * @param connectedEntityId The name or UUID of the second entity.
+   * @return An instance with the server's response.
+   */
+  public ApiResponse disconnectEntities(String connectingEntityType,
+          String connectingEntityId, String connectionType,
+          String connectedEntityId) {
+      return apiRequest(HTTP_METHOD_DELETE, null, null,  organizationId, applicationId,
+              connectingEntityType, connectingEntityId, connectionType,
+              connectedEntityId);
+  }
+
 	/**
 	 * Disconnect two entities. Executes asynchronously in background and the
 	 * callbacks are called in the UI thread.
@@ -749,13 +766,53 @@ public class Client extends org.usergrid.java.client.Client {
 		(new ClientAsyncTask<ApiResponse>(callback) {
 			@Override
 			public ApiResponse doTask() {
-				return connectEntities(connectingEntityType,
+				return disconnectEntities(connectingEntityType,
 						connectingEntityId, connectionType, connectedEntityId);
 			}
 		}).execute();
 	}
 
+	/**
+   * Disconnect two entities.
+   * 
+   * @param connectingEntityType The collection name or UUID of the first entity.
+   * @param connectingEntityId The name or UUID of the first entity.
+   * @param connectionType The type of connection between the entities.
+   * @param connectedEntityType The collection name or UUID of the second entity.
+   * @param connectedEntityId The name or UUID of the second entity.
+   * @return An instance with the server's response.
+   */
+  public ApiResponse disconnectEntities(String connectingEntityType,
+          String connectingEntityId, String connectionType,
+          String connectedEntityType, String connectedEntityId) {
+      return apiRequest(HTTP_METHOD_DELETE, null, null,  organizationId, applicationId,
+              connectingEntityType, connectingEntityId, connectionType,
+              connectedEntityType, connectedEntityId);
+  }
 
+  /**
+   * Disconnect two entities. Executes asynchronously in background and the
+   * callbacks are called in the UI thread.
+   * 
+   * @param connectingEntityType The collection name or UUID of the first entity.
+   * @param connectingEntityId The name or UUID of the first entity.
+   * @param connectionType The type of connection between the entities.
+   * @param connectedEntityType The collection name or UUID of the second entity.
+   * @param connectedEntityId The name or UUID of the second entity.
+   * @param callback A callback with the async response.
+   */
+  public void disconnectEntitiesAsync(final String connectingEntityType,
+          final String connectingEntityId, final String connectionType,
+          final String connectedEntityType, final String connectedEntityId, 
+          final ApiResponseCallback callback) {
+      (new ClientAsyncTask<ApiResponse>(callback) {
+          @Override
+          public ApiResponse doTask() {
+              return disconnectEntities(connectingEntityType,
+                      connectingEntityId, connectionType, connectedEntityType, connectedEntityId);
+          }
+      }).execute();
+  }
 
 	/**
 	 * Query the connected entities. Executes asynchronously in background and
