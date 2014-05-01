@@ -171,6 +171,18 @@ public class Client extends org.usergrid.java.client.Client {
     Log.d(LOGGING_TAG, logMessage);      
   }
 
+  public static boolean isEmpty(Object s) {
+		if (s == null) {
+			return true;
+		}
+		if ((s instanceof String) && (((String) s).trim().length() == 0)) {
+			return true;
+		}
+		if (s instanceof Map) {
+			return ((Map<?, ?>) s).isEmpty();
+		}
+		return false;
+	}
 
 	/**
 	 * Log the user in and get a valid access token. Executes asynchronously in
