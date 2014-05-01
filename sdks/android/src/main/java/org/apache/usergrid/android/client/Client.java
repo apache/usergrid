@@ -43,7 +43,34 @@ public class Client extends org.usergrid.java.client.Client {
 	// Local API
 	public static String LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
 
-	
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final String HTTP_METHOD_DELETE = "DELETE";
+
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final String HTTP_METHOD_GET    = "GET";
+
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final String HTTP_METHOD_POST   = "POST";
+
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+protected static final String HTTP_METHOD_PUT    = "PUT";
+
 	static RestTemplate restTemplate = new RestTemplate(true);
 
 	/**
@@ -598,7 +625,7 @@ public class Client extends org.usergrid.java.client.Client {
 	 */
 	public void queryUsersAsync(QueryResultsCallback callback) {
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, null, null,
-				getApplicationId(), "users");
+				getOrganizationId(), getApplicationId(), "users");
 	}
 
 	/**
@@ -613,7 +640,7 @@ public class Client extends org.usergrid.java.client.Client {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
-				getApplicationId(), "users");
+				getOrganizationId(), getApplicationId(), "users");
 	}
 
 	
