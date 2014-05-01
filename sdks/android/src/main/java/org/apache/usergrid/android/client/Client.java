@@ -21,6 +21,7 @@ import org.apache.usergrid.android.client.utils.DeviceUuidFactory;
 
 import android.content.Context;
 import android.location.Location;
+import android.util.Log;
 
 /**
  * The Client class for accessing the Usergrid API. Start by instantiating this
@@ -77,7 +78,12 @@ public class Client extends org.usergrid.java.client.Client {
 	 * @see apiRequest 
 	 * @see doHttpRequest
 	 */
-protected static final String HTTP_METHOD_PUT    = "PUT";
+	protected static final String HTTP_METHOD_PUT    = "PUT";
+
+	private String organizationId;
+  private String applicationId;
+  private String clientId;
+  private String clientSecret;
 
 	static RestTemplate restTemplate = new RestTemplate(true);
 
@@ -96,73 +102,73 @@ protected static final String HTTP_METHOD_PUT    = "PUT";
 	 */
 	public Client(String organizationId, String applicationId) {
 		super(organizationId, applicationId);
+		this.organizationId = organizationId;
+		this.applicationId = applicationId;		
 	}
 
   /**
-   * Logs a trace-level logging message with tag 'DATA_CLIENT'
+   * Logs a trace-level logging message with tag 'UsergridClient'
    *
    * @param   logMessage  the message to log
    */
   public void logTrace(String logMessage) {
-  	if( (log != null) && (logMessage != null) ) {
-  		log.v(LOGGING_TAG,logMessage);
+  	if(logMessage != null) {
+  		Log.v(LOGGING_TAG,logMessage);
   	}
   }
   
   /**
-   * Logs a debug-level logging message with tag 'DATA_CLIENT'
+   * Logs a debug-level logging message with tag 'UsergridClient'
    *
    * @param   logMessage  the message to log
    */
   public void logDebug(String logMessage) {
-  	if( (log != null) && (logMessage != null) ) {
-  		log.d(LOGGING_TAG,logMessage);
+  	if(logMessage != null) {
+  		Log.d(LOGGING_TAG,logMessage);
   	}
   }
   
   /**
-   * Logs an info-level logging message with tag 'DATA_CLIENT'
+   * Logs an info-level logging message with tag 'UsergridClient'
    *
    * @param   logMessage  the message to log
    */
   public void logInfo(String logMessage) {
-  	if( (log != null) && (logMessage != null) ) {
-  		log.i(LOGGING_TAG,logMessage);
+  	if(logMessage != null) {
+  		Log.i(LOGGING_TAG,logMessage);
   	}
   }
   
   /**
-   * Logs a warn-level logging message with tag 'DATA_CLIENT'
+   * Logs a warn-level logging message with tag 'UsergridClient'
    *
    * @param   logMessage  the message to log
    */
   public void logWarn(String logMessage) {
-  	if( (log != null) && (logMessage != null) ) {
-  		log.w(LOGGING_TAG,logMessage);
+  	if(logMessage != null) {
+  		Log.w(LOGGING_TAG,logMessage);
   	}
   }
   
   /**
-   * Logs an error-level logging message with tag 'DATA_CLIENT'
+   * Logs an error-level logging message with tag 'UsergridClient'
    *
    * @param   logMessage  the message to log
    */
   public void logError(String logMessage) {
-  	if( (log != null) && (logMessage != null) ) {
-  		log.e(LOGGING_TAG,logMessage);
+  	if(logMessage != null) {
+  		Log.e(LOGGING_TAG,logMessage);
   	}
   }
 
   /**
-   * Logs a debug-level logging message with tag 'DATA_CLIENT'
+   * Logs a debug-level logging message with tag 'UsergridClient'
    *
    * @param   logMessage  the message to log
    */
   public void writeLog(String logMessage) {
-      if( log != null ) {
-          //TODO: do we support different log levels in this class?
-          log.d(LOGGING_TAG, logMessage);
-      }
+    //TODO: do we support different log levels in this class?
+    Log.d(LOGGING_TAG, logMessage);      
   }
 
 
