@@ -126,13 +126,8 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
                 stack.setSetupState( SetupStackState.SetupFailed );
                 return null;
             }
+            LOG.info( "Cluster {} is ready, moving on...", cluster.getName() );
         }
-
-        Map<String, String> keys = providerParams.getKeys();
-        String key = providerParams.getKeyName().trim();
-        keyFile = keys.get( key );
-
-        LOG.warn( "Key name: {}, key file: {}", key, keyFile );
 
         /** Setup runners */
         keyFile = providerParams.getKeys().get( providerParams.getKeyName() );
@@ -154,7 +149,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
         BasicInstanceSpec runnerSpec = new BasicInstanceSpec();
         runnerSpec.setImageId( providerParams.getImageId() );
         runnerSpec.setType( providerParams.getInstanceType() );
-        runnerSpec.setKeyName( keyFile );
+        runnerSpec.setKeyName( providerParams.getKeyName() );
 
         LaunchResult result = instanceManager.launchRunners( stack, runnerSpec,
                 chopUiFig.getLaunchClusterTimeout() );

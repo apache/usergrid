@@ -4,9 +4,13 @@ package org.apache.usergrid.chop.client.ssh;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collection;
@@ -29,20 +33,31 @@ public class Job implements Callable<ResponseInfo> {
 
     private static final Logger LOG = LoggerFactory.getLogger( Job.class );
 
-    private Collection<Command> commands;
-    private SshValues value;
+    protected static final int SESSION_CONNECT_TIMEOUT = 50000;
+
+    protected Collection<Command> commands;
+    protected SshValues value;
     private Session session = null;
+
+
+    protected Job() {
+
+    }
 
 
     public Job( Collection<Command> commands, SshValues value ) {
         this.commands = commands;
         this.value = value;
-        setSession();
     }
 
 
     private void setSession() {
         JSch ssh;
+        // wait until SSH port of remote end comes up
+        boolean success = waitActive( SESSION_CONNECT_TIMEOUT );
+        if( ! success ) {
+            LOG.warn( "Port 22 of {} did not open in time", value.getPublicIpAddress() );
+        }
 
         // try to open ssh session
         try {
@@ -55,6 +70,7 @@ public class Job implements Callable<ResponseInfo> {
         }
         catch ( Exception e ) {
             LOG.error( "Error while connecting to ssh session of " + value.getPublicIpAddress(), e );
+            session = null;
         }
     }
 
@@ -62,9 +78,9 @@ public class Job implements Callable<ResponseInfo> {
     @Override
     public ResponseInfo call() throws Exception {
         ResponseInfo response = new ResponseInfo( value.getPublicIpAddress() );
-        String message;
+        setSession();
         if( session == null ) {
-            message = "Could not open ssh session for " + value.getPublicIpAddress();
+            String message = "Could not open ssh session for " + value.getPublicIpAddress();
             response.addErrorMessage( message );
             return response;
         }
@@ -215,6 +231,41 @@ public class Job implements Callable<ResponseInfo> {
             }
             catch ( Exception e ) { }
         }
+    }
+
+
+    protected boolean waitActive( int timeout ) {
+        LOG.info( "Waiting maximum {} msecs for SSH port of {} to get active", timeout, value.getPublicIpAddress() );
+        long startTime = System.currentTimeMillis();
+
+        while ( System.currentTimeMillis() - startTime < timeout ) {
+            Socket s = null;
+            try {
+                s = new Socket();
+                s.setReuseAddress( true );
+                SocketAddress sa = new InetSocketAddress( value.getPublicIpAddress(), 22 );
+                s.connect( sa, 2000 );
+                LOG.info( "Port 22 of {} got opened", value.getPublicIpAddress() );
+                return true;
+            }
+            catch ( Exception e ) {
+                try {
+                    Thread.sleep( 1000 );
+                }
+                catch ( InterruptedException ee ) {
+                }
+            }
+            finally {
+                if ( s != null ) {
+                    try {
+                        s.close();
+                    }
+                    catch ( IOException e ) {
+                    }
+                }
+            }
+        }
+        return false;
     }
 
 

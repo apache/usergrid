@@ -165,6 +165,8 @@ public class CoordinatorUtils {
         StringBuilder sb = new StringBuilder();
         Collection<Command> commands = new ArrayList<Command>();
 
+        LOG.info( "Starting the execution of setup scripts on cluster {}", cluster.getName() );
+
         // Prepare instance values
         for( Instance instance: cluster.getInstances() ) {
             sshValues.add( new InstanceValues( instance, keyFile ) );
@@ -219,7 +221,7 @@ public class CoordinatorUtils {
         }
 
         // Execute commands
-        Collection<ResponseInfo> responses = null;
+        Collection<ResponseInfo> responses;
         try {
             AsyncSsh asyncSsh = new AsyncSsh( sshValues, commands );
             responses = asyncSsh.executeAll();
