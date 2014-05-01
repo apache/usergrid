@@ -694,5 +694,10 @@ public interface EntityManager {
     /** @return the cass */
     CassandraService getCass();
 
+
+    // things added for Core Persistence
+
     void refreshIndex();
+
+    public void init( EntityManagerFactory emf, UUID applicationId);
 }

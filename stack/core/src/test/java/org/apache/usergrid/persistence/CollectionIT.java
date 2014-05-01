@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.Application;
 import org.apache.usergrid.CoreApplication;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.corepersistence.GuiceModule;
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
@@ -50,7 +49,6 @@ import static org.junit.Assert.fail;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
-import org.junit.After;
 import org.junit.runner.RunWith;
 
 

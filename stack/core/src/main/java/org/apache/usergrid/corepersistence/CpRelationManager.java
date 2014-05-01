@@ -16,8 +16,6 @@
 
 package org.apache.usergrid.corepersistence;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.yammer.metrics.annotation.Metered;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -47,18 +45,15 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -82,32 +77,25 @@ public class CpRelationManager implements RelationManager {
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
 
     private CpEntityManagerFactory emf;
+    
+    private CpManagerCache managerCache;
+
     private EntityManager em;
+
     private UUID applicationId;
 
     private EntityRef headEntity;
 
     private org.apache.usergrid.persistence.model.entity.Entity cpHeadEntity;
+
     private OrganizationScope organizationScope;
     private CollectionScope applicationScope;
     private CollectionScope headEntityScope;
 
-    private final EntityCollectionManagerFactory ecmf;
-    private final EntityIndexFactory eif;
-    private final GraphManagerFactory gmf;
-
     public static String COLLECTION_SUFFIX = "zzzcollectionzzz"; 
 
 
-    public CpRelationManager() {
-
-        // TODO: better solution for getting injector? 
-        Injector injector = CpSetup.getInjector();
-
-        ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
-        eif = injector.getInstance( EntityIndexFactory.class );
-        gmf = injector.getInstance( GraphManagerFactory.class );
-    }
+    public CpRelationManager() {}
 
 
     public CpRelationManager init( 
@@ -120,19 +108,19 @@ public class CpRelationManager implements RelationManager {
         Assert.notNull( headEntity.getUuid(), "Head entity uuid cannot be null" );
 
         this.em = em;
-        this.emf = emf;
         this.applicationId = applicationId;
         this.headEntity = headEntity;
+        this.managerCache = emf.getManagerCache();
 
-        organizationScope = emf.getOrganizationScope(applicationId);
-        applicationScope = emf.getApplicationScope(applicationId);
-        headEntityScope = new CollectionScopeImpl( 
-            applicationScope.getOrganization(), 
-            applicationScope.getOwner(), 
+        this.organizationScope = emf.getOrganizationScope(applicationId);
+        this.applicationScope = emf.getApplicationScope(applicationId);
+        this.headEntityScope = new CollectionScopeImpl( 
+            this.applicationScope.getOrganization(), 
+            this.applicationScope.getOwner(), 
             Schema.defaultCollectionName( headEntity.getType()) );
 
-        EntityCollectionManager ecm = ecmf.createCollectionManager(headEntityScope);
-        cpHeadEntity = ecm.load( new SimpleId( 
+        EntityCollectionManager ecm = managerCache.getEntityCollectionManager(headEntityScope);
+        this.cpHeadEntity = ecm.load( new SimpleId( 
             headEntity.getUuid(), headEntity.getType() )).toBlockingObservable().last();
 
         return this;
@@ -143,7 +131,7 @@ public class CpRelationManager implements RelationManager {
     public Set<String> getCollectionIndexes(String collectionName) throws Exception {
         final Set<String> indexes = new HashSet<String>();
 
-        GraphManager gm = gmf.createEdgeManager(organizationScope);
+        GraphManager gm = managerCache.getGraphManager(organizationScope);
 
         Observable<String> types= gm.getEdgeTypesFromSource( 
             new SimpleSearchEdgeType( cpHeadEntity.getId(), null ));
@@ -178,7 +166,7 @@ public class CpRelationManager implements RelationManager {
 
         Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
 
-        GraphManager gm = gmf.createEdgeManager(organizationScope);
+        GraphManager gm = managerCache.getGraphManager(organizationScope);
 
         Iterator<String> edgeTypes = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
             cpHeadEntity.getId(), null) ).toBlockingObservable().getIterator();
@@ -205,7 +193,7 @@ public class CpRelationManager implements RelationManager {
                     applicationScope.getOwner(), 
                     Schema.defaultCollectionName( edge.getSourceNode().getType() ));
 
-                EntityCollectionManager ecm = ecmf.createCollectionManager(collScope);
+                EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
 
                 org.apache.usergrid.persistence.model.entity.Entity container = 
                     ecm.load( edge.getSourceNode() ).toBlockingObservable().last();
@@ -238,7 +226,7 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-        GraphManager gm = gmf.createEdgeManager(organizationScope);
+        GraphManager gm = managerCache.getGraphManager(organizationScope);
         Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType( 
             entityId, collName, cpHeadEntity.getVersion(), null ));
 
@@ -294,7 +282,7 @@ public class CpRelationManager implements RelationManager {
             applicationScope.getOrganization(), 
             applicationScope.getOwner(), 
             Schema.defaultCollectionName( memberRef.getType()));
-        EntityCollectionManager memberMgr = ecmf.createCollectionManager(memberScope);
+        EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
             new SimpleId( memberRef.getUuid(), memberRef.getType() )).toBlockingObservable().last();
@@ -303,11 +291,11 @@ public class CpRelationManager implements RelationManager {
         Edge edge = new SimpleMarkedEdge( cpHeadEntity.getId(), collName + COLLECTION_SUFFIX, 
             memberEntity.getId(), UUIDGenerator.newTimeUUID(), false );
 
-        GraphManager gm = gmf.createEdgeManager(organizationScope);
+        GraphManager gm = managerCache.getGraphManager(organizationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
         // index connection from head entity to member entity
-        EntityIndex ei = eif.createEntityIndex(organizationScope, applicationScope);
+        EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
         
         ei.indexConnection( cpHeadEntity, collName + COLLECTION_SUFFIX, memberEntity, memberScope );
 
@@ -405,17 +393,17 @@ public class CpRelationManager implements RelationManager {
             applicationScope.getOrganization(), 
             applicationScope.getOwner(), 
             Schema.defaultCollectionName( memberRef.getType() ));
-        EntityCollectionManager memberMgr = ecmf.createCollectionManager(memberScope);
+        EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
             new SimpleId( memberRef.getUuid(), memberRef.getType() )).toBlockingObservable().last();
 
-        EntityIndex ei = eif.createEntityIndex(organizationScope, applicationScope);
+        EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
         ei.deindexConnection(cpHeadEntity.getId(), collName + COLLECTION_SUFFIX, memberEntity);
 
         Edge edge = new SimpleMarkedEdge( cpHeadEntity.getId(), collName + COLLECTION_SUFFIX, 
             memberEntity.getId(), UUIDGenerator.newTimeUUID(), false );
-        GraphManager gm = gmf.createEdgeManager(organizationScope);
+        GraphManager gm = managerCache.getGraphManager(organizationScope);
         gm.deleteEdge(edge).toBlockingObservable().last();
     }
 
@@ -445,7 +433,7 @@ public class CpRelationManager implements RelationManager {
 //    private org.apache.usergrid.persistence.model.entity.Entity createCollectionEntity(
 //            String name, String type) {
 //
-//        EntityCollectionManager ccm = ecmf.createCollectionManager(SYSTEM_COLLECTIONS_SCOPE);
+//        EntityCollectionManager ccm = managerCache.getEntityCollectionManager(SYSTEM_COLLECTIONS_SCOPE);
 //        EntityIndex cci = eif.createEntityIndex( SYSTEM_ORG_SCOPE, SYSTEM_COLLECTIONS_SCOPE );
 //
 //        org.apache.usergrid.persistence.model.entity.Entity collectionEntity = 
@@ -460,7 +448,7 @@ public class CpRelationManager implements RelationManager {
 //
 //        Edge edge = new SimpleMarkedEdge( headApplicationScope.getOwner(), "contains", 
 //            collectionEntity.getId(), UUIDGenerator.newTimeUUID(), false );
-//        GraphManager gm = gmf.createEdgeManager(headOrganizationScope);
+//        GraphManager gm = managerCache.getGraphManager(headOrganizationScope);
 //        gm.writeEdge(edge).toBlockingObservable().last();
 //
 //        logger.debug("Created Collection Entity for name: " + name);
@@ -507,7 +495,7 @@ public class CpRelationManager implements RelationManager {
 
         org.apache.usergrid.persistence.index.query.Query cpQuery = createCpQuery( query );
 
-        EntityIndex ei = eif.createEntityIndex(organizationScope, applicationScope);
+        EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
       
         logger.debug("Searching collection {}", collName);
         logger.debug("Searching head entity scope {}:{}:{}",
@@ -680,12 +668,12 @@ public class CpRelationManager implements RelationManager {
             applicationScope.getOwner(), 
             Schema.defaultCollectionName( connectedEntityRef.getType() ));
 
-        EntityCollectionManager targetEcm = ecmf.createCollectionManager(targetScope);
+        EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager(targetScope);
         org.apache.usergrid.persistence.model.entity.Entity targetEntity = targetEcm.load(
             new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ))
                 .toBlockingObservable().last();
 
-        EntityIndex ei = eif.createEntityIndex(organizationScope, applicationScope);
+        EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
         ei.indexConnection(cpHeadEntity, connectionType, targetEntity, targetScope);
 
         return connection;

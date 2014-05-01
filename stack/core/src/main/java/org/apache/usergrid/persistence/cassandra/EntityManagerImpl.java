@@ -116,6 +116,7 @@ import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.locking.LockHelper.getUniqueUpdateLock;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import static org.apache.usergrid.persistence.Results.Level.REFS;
 import static org.apache.usergrid.persistence.Results.fromEntities;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
@@ -210,6 +211,12 @@ public class EntityManagerImpl implements EntityManager {
 
 
     public EntityManagerImpl() {
+    }
+
+
+    @Override
+    public void init(EntityManagerFactory emf, UUID applicationId) {
+        init( (EntityManagerFactoryImpl)emf, null, null, applicationId, false);
     }
 
 
@@ -2868,4 +2875,6 @@ public class EntityManagerImpl implements EntityManager {
     public void refreshIndex() {
         // no action necessary
     }
+
+
 }

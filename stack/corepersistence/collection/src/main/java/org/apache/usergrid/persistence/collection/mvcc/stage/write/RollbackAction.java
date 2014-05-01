@@ -49,7 +49,7 @@ public class RollbackAction implements Action1<Throwable> {
             MvccLogEntrySerializationStrategy logEntryStrat, 
             UniqueValueSerializationStrategy uniqueValueStrat ) {
 
-        scheduler = Schedulers.io(); //injector.getInstance( Scheduler.class );
+        scheduler = Schedulers.io(); 
         this.uniqueValueStrat = uniqueValueStrat;
         this.logEntryStrat = logEntryStrat;
     }
