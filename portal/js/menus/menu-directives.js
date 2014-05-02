@@ -186,7 +186,7 @@ AppServices.Directives.directive('menu', ['$location', '$rootScope', '$log', fun
         //see if the url location is the same as the default active parent element
         if (locationPath !== '' && locationPath.indexOf(subMenuContext) === -1) {
           activeElements = setActiveElement(activeParentElement, locationPath, scope);
-          if(activeElements){ 
+          if(activeElements){
             $rootScope[menuContext + 'Parent'] = activeElements.parentMenuItem;
             $rootScope[menuContext + 'Menu'] = activeElements.menuitem;
           }
@@ -196,7 +196,7 @@ AppServices.Directives.directive('menu', ['$location', '$rootScope', '$log', fun
 
       }
       var bound = false;
-      scope.$watch('menuItems')
+      setTimeout(setupMenuState,500);
       //need the listener here to detect location changes and keep the menu highlighted
       scope.$on('$routeChangeSuccess', function () {
         setTimeout(function(){
