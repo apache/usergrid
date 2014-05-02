@@ -113,6 +113,10 @@ var AUTH_NONE = 'NONE';
       qs: qs
     };
     request(callOptions, function (err, r, data) {
+
+      r.body = r.body || {};
+      data = data || {};
+
       if (self.buildCurl) {
         options.uri = r.request.uri.href;
         self.buildCurlCall(options);
@@ -136,7 +140,7 @@ var AUTH_NONE = 'NONE';
           var error = r.body.error;
           var errorDesc = r.body.error_description;
           if (self.logging) {
-            console.log('Error (' + r.statusCode + ')(' + error + '): ' + errorDesc)
+            console.log('Error (' + r.statusCode + ')(' + error + '): ' + errorDesc);
           }
           //if the user has specified a logout callback:
           if (typeof(self.logoutCallback) === 'function') {
@@ -2358,7 +2362,7 @@ Usergrid.Counter.prototype.reset=function(options, callback){
  * @returns {callback} callback(err, event)
  */
 Usergrid.Counter.prototype.getData=function(options, callback){
-  var start_time, 
+  var start_time,
       end_time,
       start=options.start||0,
       end=options.end||Date.now(),
@@ -2406,7 +2410,7 @@ Usergrid.Counter.prototype.getData=function(options, callback){
   params.push('resolution='+res)
   params.push('start_time='+String(start_time))
   params.push('end_time='+String(end_time))
-    
+
   var endpoint="counters?"+params.join('&');
   this._client.request({endpoint:endpoint}, function(err, data){
     if(data.counters && data.counters.length){
