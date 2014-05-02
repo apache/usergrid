@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -216,7 +217,7 @@ public class EntityMapUtils {
      */
     public static Map toMap(EntityObject entity) {
 
-        Map<String, Object> entityMap = new HashMap<String, Object>();
+        Map<String, Object> entityMap = new TreeMap<String,Object>();
 
         for (Object f : entity.getFields().toArray()) {
             Field field = (Field) f;

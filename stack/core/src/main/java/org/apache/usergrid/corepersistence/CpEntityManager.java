@@ -18,6 +18,7 @@ package org.apache.usergrid.corepersistence;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,8 +27,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.commons.collections.map.ListOrderedMap;
 
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
@@ -566,18 +565,27 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<Object> getDictionaryAsSet(
             EntityRef entityRef, String dictionaryName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return new LinkedHashSet<>( getDictionaryAsMap( entityRef, dictionaryName ).keySet() );
+
     }
 
     @Override
     public void addToDictionary(
             EntityRef entityRef, String dictionaryName, Object elementValue) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        addToDictionary(entityRef,dictionaryName,elementValue,null);
     }
 
     @Override
     public void addToDictionary(EntityRef entityRef, String dictionaryName, 
             Object elementName, Object elementValue) throws Exception {
+
+        if(elementName == null) {
+            return;
+        }
+        if(elementValue == null){
+            //Placeholder value
+            elementValue = new byte[0];
+        }
 
         Entity entity = get(entityRef.getUuid(),entityRef.getType());
 
@@ -588,9 +596,12 @@ public class CpEntityManager implements EntityManager {
         if ( !(elementValue instanceof Serializable)){
             throw new IllegalArgumentException( "Element Value must be serializable." );
         }
+//TODO: this overwrites dictionaries, need to add on to them not overwrite when it has the same name.
 
-        Map<String,Object> dictionary = new ListOrderedMap();
-        Map<String,Object> props = new ListOrderedMap();
+        Map<String,Object> dictionary = entity.getDynamicProperties();
+        Map<String,Object> props = ( TreeMap ) dictionary.get( dictionaryName );
+        if(props == null)
+            props = new TreeMap();
         props.put((String) elementName,elementValue );
         dictionary.put( dictionaryName,props );
 
@@ -614,7 +625,10 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Map<Object, Object> getDictionaryAsMap(
             EntityRef entityRef, String dictionaryName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+        Map<Object,Object> dictionary = ( TreeMap) entity.getProperty( dictionaryName );
+        return dictionary;
+        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
