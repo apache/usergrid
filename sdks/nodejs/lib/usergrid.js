@@ -118,7 +118,6 @@ var AUTH_NONE = 'NONE';
         self.buildCurlCall(options);
       }
       self._end = new Date().getTime();
-      r = r || {};
       if(r.statusCode === 200) {
         if (self.logging) {
           console.log('success (time: ' + self.calcTimeDiff() + '): ' + method + ' ' + uri);
@@ -134,7 +133,6 @@ var AUTH_NONE = 'NONE';
           (r.error === 'unauthorized')   ||
           (r.error === 'auth_invalid')) {
           //this error type means the user is not authorized. If a logout function is defined, call it
-          r.body = r.body || {};
           var error = r.body.error;
           var errorDesc = r.body.error_description;
           if (self.logging) {
@@ -147,7 +145,6 @@ var AUTH_NONE = 'NONE';
             callback(err, data);
           }
         } else {
-          r = r.body || {};
           var error = r.body.error;
           var errorDesc = r.body.error_description;
           if (self.logging) {
