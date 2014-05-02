@@ -3,7 +3,6 @@ package org.apache.usergrid.chop.webapp.coordinator;
 
 import java.io.File;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
@@ -86,7 +85,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
 
         /** Setup clusters */
         for ( ICoordinatedCluster cluster : stack.getClusters() ) {
-
+            LOG.info( "Starting setting up cluster {}...", cluster.getName() );
             keyFile = providerParams.getKeys().get( cluster.getInstanceSpec().getKeyName() );
             if ( keyFile == null ) {
                 errorMessage = "No key found with name " + cluster.getInstanceSpec().getKeyName() +
@@ -115,7 +114,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
             /** Setup system properties, deploy the scripts and execute them on cluster instances */
             boolean success = false;
             try {
-                success = CoordinatorUtils.executeSSHCommands( cluster, runnerJar, keyFile );
+                success = CoordinatorUtils.executeClusterSSHCommands( cluster, runnerJar, keyFile );
             }
             catch ( Exception e ) {
                 LOG.warn( "Error while executing SSH commands", e );
@@ -126,15 +125,11 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
                 stack.setSetupState( SetupStackState.SetupFailed );
                 return null;
             }
+            LOG.info( "Cluster {} is ready, moving on...", cluster.getName() );
         }
 
-        Map<String, String> keys = providerParams.getKeys();
-        String key = providerParams.getKeyName().trim();
-        keyFile = keys.get( key );
-
-        LOG.warn( "Key name: {}, key file: {}", key, keyFile );
-
         /** Setup runners */
+        LOG.info( "Starting setting up runner instances..." );
         keyFile = providerParams.getKeys().get( providerParams.getKeyName() );
         if ( keyFile == null ) {
             errorMessage = "No key found with name " + providerParams.getKeyName() + " for runners";
@@ -143,27 +138,43 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
             stack.setSetupState( SetupStackState.SetupFailed );
             return null;
         }
-        if ( !( new File( keyFile ) ).exists() ) {
+        if ( ! ( new File( keyFile ) ).exists() ) {
             errorMessage = "Key file " + keyFile + " for runners not found";
             LOG.warn( errorMessage + ", aborting and terminating launched instances..." );
             instanceManager.terminateInstances( launchedInstances );
             stack.setSetupState( SetupStackState.SetupFailed );
             return null;
         }
-
         BasicInstanceSpec runnerSpec = new BasicInstanceSpec();
         runnerSpec.setImageId( providerParams.getImageId() );
         runnerSpec.setType( providerParams.getInstanceType() );
-        runnerSpec.setKeyName( keyFile );
+        runnerSpec.setKeyName( providerParams.getKeyName() );
 
         LaunchResult result = instanceManager.launchRunners( stack, runnerSpec,
                 chopUiFig.getLaunchClusterTimeout() );
 
         for ( Instance instance : result.getInstances() ) {
+            launchedInstances.add( instance.getId() );
             stack.addRunnerInstance( instance );
         }
 
+        /** Deploy and start runner.jar on instances */
+        boolean success = false;
+        try {
+            success = CoordinatorUtils.executeRunnerSSHCommands( stack, runnerJar, keyFile );
+        }
+        catch ( Exception e ) {
+            LOG.warn( "Error while executing SSH commands", e );
+        }
+        if ( ! success ) {
+            errorMessage = "SSH commands have failed, will not continue";
+            instanceManager.terminateInstances( launchedInstances );
+            stack.setSetupState( SetupStackState.SetupFailed );
+            return null;
+        }
+
         stack.setSetupState( SetupStackState.SetUp );
+        LOG.info( "Stack {} is set up and ready...", stack.getName() );
 
         return stack;
     }

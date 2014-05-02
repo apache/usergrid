@@ -59,14 +59,14 @@ public class EC2InstanceManager implements InstanceManager {
 
     private static final long SLEEP_LENGTH = 3000;
 
-    private AmazonFig amazonFig;
-
     private AmazonEC2Client client;
 
 
+    /**
+     * @param amazonFig Fig object containing AWS credentials
+     */
     @Inject
     public EC2InstanceManager( AmazonFig amazonFig ) {
-        this.amazonFig = amazonFig;
         client = AmazonUtils.getEC2Client( amazonFig.getAwsAccessKey(), amazonFig.getAwsSecretKey() );
     }
 
@@ -77,6 +77,11 @@ public class EC2InstanceManager implements InstanceManager {
     }
 
 
+    /**
+     * Terminates instances with given Ids
+     *
+     * @param instanceIds
+     */
     @Override
     public void terminateInstances( final Collection<String> instanceIds ) {
         if( instanceIds == null || instanceIds.size() == 0 ) {
@@ -87,6 +92,17 @@ public class EC2InstanceManager implements InstanceManager {
     }
 
 
+    /**
+     * Launches instances of given cluster.
+     *
+     * After launching instances, blocks for maximum <code>timeout</code> amount until all
+     * instances get into the Running state.
+     *
+     * @param stack     <code>ICoordinatedStack</code> object containing the <code>cluster</code>
+     * @param cluster
+     * @param timeout   in milliseconds, if smaller than <code>getDefaultTimeout()</code> it doesn't wait
+     * @return          resulting runner instances which successfully got in Running state
+     */
     @Override
     public LaunchResult launchCluster( ICoordinatedStack stack, ICoordinatedCluster cluster, int timeout ) {
 
@@ -154,6 +170,19 @@ public class EC2InstanceManager implements InstanceManager {
     }
 
 
+    /**
+     * Launches runner instances of given stack.
+     *
+     * Given <code>ICoordinatedStack</code> and an <code>InstanceSpec</code>
+     * defining its runners' instance specifications, launches all runner instances.
+     * After launching instances, blocks for maximum <code>timeout</code> amount until all
+     * instances get into the Running state.
+     *
+     * @param stack
+     * @param spec
+     * @param timeout   in milliseconds, if smaller than <code>getDefaultTimeout()</code> it doesn't wait
+     * @return          resulting runner instances which successfully got in Running state
+     */
     @Override
     public LaunchResult launchRunners( ICoordinatedStack stack, InstanceSpec spec, int timeout ) {
         RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
@@ -219,6 +248,11 @@ public class EC2InstanceManager implements InstanceManager {
     }
 
 
+    /**
+     * @param stack     <code>ICoordinatedStack</code> object containing the <code>cluster</code>
+     * @param cluster
+     * @return          Cluster instances which are in <code>Running</code> state
+     */
     @Override
     public Collection<Instance> getClusterInstances( ICoordinatedStack stack, ICoordinatedCluster cluster ) {
 
@@ -233,6 +267,10 @@ public class EC2InstanceManager implements InstanceManager {
     }
 
 
+    /**
+     * @param stack
+     * @return      Runner instances which belong to <code>stack</code> and in <code>Running</code> state
+     */
     @Override
     public Collection<Instance> getRunnerInstances( ICoordinatedStack stack ) {
 
@@ -293,6 +331,7 @@ public class EC2InstanceManager implements InstanceManager {
 
 
     /**
+     * Queries instances with given Ids on AWS
      *
      * @param instanceIds   List of instance IDs
      * @return
@@ -320,6 +359,12 @@ public class EC2InstanceManager implements InstanceManager {
     }
 
 
+    /**
+     * Takes a collection of AWS instances, and converts them into a collection of <code>Instance</code>s
+     *
+     * @param ec2s
+     * @return
+     */
     protected Collection<Instance> toInstances( Collection<com.amazonaws.services.ec2.model.Instance> ec2s ) {
         Collection<Instance> instances = new ArrayList<Instance>( ec2s.size() );
 
@@ -331,7 +376,13 @@ public class EC2InstanceManager implements InstanceManager {
     }
 
 
-    protected Instance toInstance( com.amazonaws.services.ec2.model.Instance ec2 ) {
+    /**
+     * Constructs and returns an AmazonInstance object, using information from <code>ec2</code>
+     *
+     * @param ec2
+     * @return
+     */
+    protected static Instance toInstance( com.amazonaws.services.ec2.model.Instance ec2 ) {
         Instance instance;
         BasicInstanceSpec spec;
 
@@ -434,6 +485,10 @@ public class EC2InstanceManager implements InstanceManager {
     }
 
 
+    /**
+     * @param stack Coordinated stack whose definition will be returned
+     * @return      Definition string containing stack's user, module, commit and name
+     */
     protected static String getLongName( ICoordinatedStack stack ) {
 
         StringBuilder sb = new StringBuilder();
@@ -448,17 +503,35 @@ public class EC2InstanceManager implements InstanceManager {
     }
 
 
+    /**
+     * @param stack     <code>ICoordinatedStack</code> object containing the <code>cluster</code>
+     * @param cluster   cluster whose name will be returned
+     * @return          Concatenates hash code of <code>getLongName</code> of given stack with cluster's name,
+     *                  resulting a unique name for each cluster
+     */
     protected static String getInstanceName( ICoordinatedStack stack, ICoordinatedCluster cluster ) {
         StringBuilder sb = new StringBuilder();
-        sb.append( getLongName( stack ).hashCode() ).append( "-" ).append( cluster.getName() );
+        int stackHash = getLongName( stack ).hashCode();
+        if( stackHash < 0 ) {
+            stackHash += Integer.MAX_VALUE;
+        }
+        sb.append( stackHash ).append( "-" ).append( cluster.getName() );
         return sb.toString();
     }
 
 
+    /**
+     * @param stack <code>ICoordinatedStack</code> object the runners belong to
+     * @return      Concatenates hash code of <code>getLongName</code> of given stack with '-runner' suffix,
+     *              resulting a unique name for each stack
+     */
     protected static String getRunnerName( ICoordinatedStack stack ) {
         StringBuilder sb = new StringBuilder();
-        sb.append( getLongName( stack ).hashCode() ).append( "-runner" );
+        int stackHash = getLongName( stack ).hashCode();
+        if( stackHash < 0 ) {
+            stackHash += Integer.MAX_VALUE;
+        }
+        sb.append( stackHash ).append( "-runner" );
         return sb.toString();
-
     }
 }
