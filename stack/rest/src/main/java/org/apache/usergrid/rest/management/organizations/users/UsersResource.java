@@ -135,14 +135,14 @@ public class UsersResource extends AbstractContextResource {
         }
 
         if ( user == null ) {
-            user = management.createAdminUser( email, email, email, password, false, false );
-            management.startAdminUserPasswordResetFlow( user );
+            user = management.createAdminUser( username, name, email, password, false, false );
         }
 
         if ( user == null ) {
             return null;
         }
 
+        management.startAdminUserPasswordResetFlow( user );
         management.addAdminUserToOrganization( user, organization, true );
 
         Map<String, Object> result = new LinkedHashMap<String, Object>();
