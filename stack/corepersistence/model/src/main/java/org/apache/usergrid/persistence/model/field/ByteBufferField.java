@@ -25,12 +25,14 @@ import java.nio.ByteBuffer;
  */
 public class ByteBufferField extends AbstractField<ByteBuffer> {
 
+    Class classinfo;
     /**
      * Creates an immutable copy of the byte buffer
      */
-    public ByteBufferField( String name, ByteBuffer value ) {
+    public ByteBufferField( String name, ByteBuffer value,Class classinfo ) {
         //always return a duplicate so we don't mess with the markers
         super( name, value.duplicate() );
+        this.classinfo = classinfo;
     }
 
     public ByteBufferField() {
@@ -41,5 +43,9 @@ public class ByteBufferField extends AbstractField<ByteBuffer> {
     public ByteBuffer getValue() {
         //always return a duplicate so we don't mess with the markers
         return value.duplicate();
+    }
+
+    public Class getClassinfo() {
+        return classinfo;
     }
 }

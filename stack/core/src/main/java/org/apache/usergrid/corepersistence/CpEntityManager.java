@@ -15,8 +15,7 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.yammer.metrics.annotation.Metered;
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
@@ -24,8 +23,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import me.prettyprint.hector.api.mutation.Mutator;
-import static org.apache.commons.lang.StringUtils.isBlank;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.commons.collections.map.ListOrderedMap;
+
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.CounterResolution;
@@ -42,14 +45,6 @@ import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -71,13 +66,27 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
-import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import org.apache.usergrid.utils.UUIDUtils;
+
+import com.yammer.metrics.annotation.Metered;
+
+import me.prettyprint.hector.api.mutation.Mutator;
+
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
+import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -569,7 +578,25 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void addToDictionary(EntityRef entityRef, String dictionaryName, 
             Object elementName, Object elementValue) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+
+        if ( !(elementName instanceof String) ) {
+            throw new IllegalArgumentException( "Element name must be a string" );
+        }
+
+        if ( !(elementValue instanceof Serializable)){
+            throw new IllegalArgumentException( "Element Value must be serializable." );
+        }
+
+        Map<String,Object> dictionary = new ListOrderedMap();
+        Map<String,Object> props = new ListOrderedMap();
+        props.put((String) elementName,elementValue );
+        dictionary.put( dictionaryName,props );
+
+        entity.addProperties(dictionary);
+        update( entity );
+        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -593,7 +620,10 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Object getDictionaryElementValue(
             EntityRef entityRef, String dictionaryName, String elementName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+        Map<String,Object> dictionary = ( Map<String, Object> ) entity.getProperty( dictionaryName );
+        return dictionary.get( elementName );
+        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
