@@ -52,6 +52,8 @@ public class StackCoordinator {
 
     private static final Logger LOG = LoggerFactory.getLogger( StackCoordinator.class );
 
+    private final ExecutorService service = Executors.newSingleThreadExecutor();
+
     @Inject
     private ChopUiFig chopUiFig;
 
@@ -138,8 +140,8 @@ public class StackCoordinator {
         SetupStackThread setupThread = new SetupStackThread( coordinatedStack, lock );
         setupStackThreads.put( coordinatedStack, setupThread );
 
-        /** TODO Working on the same thread until the issues are resolved */
-        setupThread.call();
+        // Not registering the results for now, since they are not being used
+        service.submit( setupThread );
 
         return coordinatedStack;
     }
