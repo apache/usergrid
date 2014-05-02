@@ -28,6 +28,7 @@ import org.apache.usergrid.chop.client.ssh.Utils;
 import org.apache.usergrid.chop.stack.BasicStack;
 import org.apache.usergrid.chop.stack.CoordinatedStack;
 import org.apache.usergrid.chop.stack.ICoordinatedCluster;
+import org.apache.usergrid.chop.stack.ICoordinatedStack;
 import org.apache.usergrid.chop.stack.Instance;
 import org.apache.usergrid.chop.stack.Stack;
 
@@ -75,6 +76,12 @@ public class CoordinatorUtils {
     }
 
 
+    /**
+     *
+     * @param runnerJar
+     * @param resource
+     * @return
+     */
     public static InputStream getResourceAsStreamFromRunnerJar( File runnerJar, String resource ) {
         try {
             // Access the jar file resources after adding it to a new ClassLoader
@@ -90,6 +97,11 @@ public class CoordinatorUtils {
     }
 
 
+    /**
+     *
+     * @param runnerJar
+     * @return
+     */
     public static Stack getStackFromRunnerJar( File runnerJar ) {
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -160,7 +172,7 @@ public class CoordinatorUtils {
      * @param keyFile   SSH key file path to be used on ssh operations to instances
      * @return          true if operation fully succeeds
      */
-    public static boolean executeSSHCommands( ICoordinatedCluster cluster, File runnerJar, String keyFile ) {
+    public static boolean executeClusterSSHCommands( ICoordinatedCluster cluster, File runnerJar, String keyFile ) {
         Collection<SshValues> sshValues = new HashSet<SshValues>( cluster.getSize() );
         StringBuilder sb = new StringBuilder();
         Collection<Command> commands = new ArrayList<Command>();
@@ -220,7 +232,62 @@ public class CoordinatorUtils {
                 commands.add( new SSHCommand( sb.toString() ) );
         }
 
-        // Execute commands
+        return executeSSHCommands( sshValues, commands );
+    }
+
+
+    /**
+     * Deploys and starts runner.jar on instances
+     *
+     * @param stack
+     * @param runnerJar
+     * @param keyFile
+     * @return
+     */
+    public static boolean executeRunnerSSHCommands( ICoordinatedStack stack, File runnerJar, String keyFile ) {
+        Collection<SshValues> sshValues = new HashSet<SshValues>( stack.getRunnerCount() );
+        StringBuilder sb = new StringBuilder();
+        Collection<Command> commands = new ArrayList<Command>();
+
+        LOG.info( "Deploying and starting runner.jar to runner instances of {}", stack.getName() );
+
+        /** Prepare instance values */
+        for( Instance instance: stack.getRunnerInstances() ) {
+            sshValues.add( new InstanceValues( instance, keyFile ) );
+        }
+
+        /** SCP the runner.jar to instance **/
+        sb.append( "/home/" )
+          .append( Utils.DEFAULT_USER )
+          .append( "/" )
+          .append( runnerJar.getName() );
+
+        String destFile = sb.toString();
+        commands.add( new SCPCommand( runnerJar.getAbsolutePath(), destFile ) );
+
+        /**
+         * Start the runner.jar on instance.
+         * This assumes an appropriate java is existing at /usr/bin/java on given instances,
+         * so imageId for runners should be selected accordingly.
+         */
+        sb = new StringBuilder();
+        sb.append( "nohup /usr/bin/java -jar " )
+          .append( destFile )
+          .append( " > /home/ubuntu/chop-runner.log 2>&1 &" );
+
+        commands.add( new SSHCommand( sb.toString() ) );
+
+        return executeSSHCommands( sshValues, commands );
+    }
+
+
+    /**
+     *
+     * @param sshValues
+     * @param commands
+     * @return          true if all commands on all instances succeed
+     */
+    public static boolean executeSSHCommands( Collection<SshValues> sshValues, Collection<Command> commands ) {
         Collection<ResponseInfo> responses;
         try {
             AsyncSsh asyncSsh = new AsyncSsh( sshValues, commands );
