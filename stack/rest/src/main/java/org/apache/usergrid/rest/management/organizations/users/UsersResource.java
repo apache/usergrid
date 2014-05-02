@@ -136,13 +136,17 @@ public class UsersResource extends AbstractContextResource {
 
         if ( user == null ) {
             user = management.createAdminUser( username, name, email, password, false, false );
+
+            // A null may be returned if the user fails validation check
+            if ( user != null ) {
+                management.startAdminUserPasswordResetFlow( user );
+            }
         }
 
         if ( user == null ) {
             return null;
         }
 
-        management.startAdminUserPasswordResetFlow( user );
         management.addAdminUserToOrganization( user, organization, true );
 
         Map<String, Object> result = new LinkedHashMap<String, Object>();
