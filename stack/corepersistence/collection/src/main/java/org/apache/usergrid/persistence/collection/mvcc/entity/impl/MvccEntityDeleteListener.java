@@ -49,16 +49,22 @@ public class MvccEntityDeleteListener implements MessageListener<MvccEntityEvent
     @Override
     public Observable<MvccEntityEvent<MvccEntity>> receive(final MvccEntityEvent<MvccEntity> entityEvent) {
         final MvccEntity entity = entityEvent.getData();
-        return Observable.from(entity).map( new Func1<MvccEntity, MvccEntityEvent<MvccEntity>>() {
+        return Observable.from(entity).map( new Func1<MvccEntity, MutationBatch>() {
             @Override
-            public MvccEntityEvent<MvccEntity> call(MvccEntity mvccEntity) {
+            public MutationBatch call(MvccEntity mvccEntity) {
+               return entityMetadataSerialization.delete(entityEvent.getCollectionScope(),entity.getId(),entity.getVersion());
+            }
+        }).map(new Func1<MutationBatch, MvccEntityEvent<MvccEntity>>() {
+            @Override
+            public MvccEntityEvent<MvccEntity> call(final MutationBatch mutationBatch) {
+
+                //actually delete the edge from both the commit log and
                 try {
-                    entityMetadataSerialization.delete(entityEvent.getCollectionScope(),entity.getId(),entity.getVersion()).execute();
-                    LOG.info("Successfully deleted entity",entity);
-                }catch(ConnectionException e){
-                    LOG.error("Unable to delete entity from listener",entity);
-                    throw new RuntimeException( "Unable to delete entity - " + entity, e );
+                    mutationBatch.execute();
+                } catch (ConnectionException e) {
+                    throw new RuntimeException("Unable to execute mutation", e);
                 }
+
                 return entityEvent;
             }
         });
