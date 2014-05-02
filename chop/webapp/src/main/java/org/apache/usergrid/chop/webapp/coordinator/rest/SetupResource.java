@@ -121,6 +121,12 @@ public class SetupResource extends TestableResource implements RestParams {
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
+        if( status.equals( SetupStackState.Destroying ) ) {
+            return Response.status( Response.Status.OK )
+                           .entity( "Currently being destroyed. Wait until it is finished to set up again..." )
+                           .type( MediaType.APPLICATION_JSON )
+                           .build();
+        }
         if( status.equals( SetupStackState.SettingUp ) ) {
             return Response.status( Response.Status.OK )
                            .entity( "Already being set up" )

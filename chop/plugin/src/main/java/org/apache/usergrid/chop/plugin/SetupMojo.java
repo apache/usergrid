@@ -85,7 +85,7 @@ public class SetupMojo extends MainMojo {
             throw new MojoExecutionException( e.getMessage() );
         }
 
-        /** Get status TODO use chop-client module to talk to the coordinator */
+        /** Setup stack TODO use chop-client module to talk to the coordinator */
         DefaultClientConfig clientConfig = new DefaultClientConfig();
         Client client = Client.create( clientConfig );
         WebResource resource = client.resource( endpoint ).path( "/setup" );

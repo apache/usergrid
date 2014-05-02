@@ -52,7 +52,7 @@ public class StackCoordinator {
 
     private static final Logger LOG = LoggerFactory.getLogger( StackCoordinator.class );
 
-    private final ExecutorService service = Executors.newSingleThreadExecutor();
+    private final ExecutorService service = Executors.newCachedThreadPool();
 
     @Inject
     private ChopUiFig chopUiFig;
@@ -70,8 +70,6 @@ public class StackCoordinator {
             new ConcurrentHashMap<CoordinatedStack, SetupStackThread>();
 
     private Map<Integer, CoordinatedStack> registeredStacks = new ConcurrentHashMap<Integer, CoordinatedStack>();
-
-    private final Object lock = new Object();
 
 
     /**
@@ -122,28 +120,72 @@ public class StackCoordinator {
      */
     public CoordinatedStack setupStack( Stack stack, User user, Commit commit, Module module, int runnerCount ) {
 
-        CoordinatedStack coordinatedStack;
-
-        coordinatedStack = getCoordinatedStack( stack, user, commit, module );
-
+        CoordinatedStack coordinatedStack = getCoordinatedStack( stack, user, commit, module );
         if ( coordinatedStack != null ) {
-            LOG.info( "Stack is already registered" );
-            return coordinatedStack;
+            LOG.info( "Stack {} is already registered", stack.getName() );
+            if( coordinatedStack.getSetupState() == SetupStackState.SetUp ) {
+                return coordinatedStack;
+            }
+        }
+        else {
+            coordinatedStack = new CoordinatedStack( stack, user, commit, module, runnerCount );
         }
 
-        LOG.info( "Registering & Starting setup stack thread..." );
+        LOG.info( "Starting setup stack thread of {}...", stack.getName() );
+        synchronized ( coordinatedStack ) {
+            coordinatedStack.setSetupState( SetupStackState.SettingUp );
+            registeredStacks.put( coordinatedStack.hashCode(), coordinatedStack );
 
-        coordinatedStack = new CoordinatedStack( stack, user, commit, module, runnerCount );
-        coordinatedStack.setSetupState( SetupStackState.SettingUp );
-        registeredStacks.put( coordinatedStack.hashCode(), coordinatedStack );
+            SetupStackThread setupThread = new SetupStackThread( coordinatedStack );
+            setupStackThreads.put( coordinatedStack, setupThread );
 
-        SetupStackThread setupThread = new SetupStackThread( coordinatedStack, lock );
-        setupStackThreads.put( coordinatedStack, setupThread );
-
-        // Not registering the results for now, since they are not being used
-        service.submit( setupThread );
-
+            // Not registering the results for now, since they are not being used
+            service.submit( setupThread );
+        }
         return coordinatedStack;
+    }
+
+
+    public void destroyStack( String commitId, String artifactId, String groupId, String version, String user ) {
+        User chopUser = userDao.get( user );
+        File runnerJar = CoordinatorUtils.getRunnerJar( chopUiFig.getContextPath(), user, groupId, artifactId, version,
+                commitId );
+
+        Stack stack = CoordinatorUtils.getStackFromRunnerJar( runnerJar );
+        Module module = moduleDao.get( BasicModule.createId( groupId, artifactId, version ) );
+        Commit commit = null;
+        for( Commit c: commitDao.getByModule( module.getId() ) ) {
+            if( commitId.equals( c.getId() ) ) {
+                commit = c;
+                break;
+            }
+        }
+        destroyStack( stack, chopUser, commit, module );
+    }
+
+
+    public void destroyStack( Stack stack, User user, Commit commit, Module module ) {
+        CoordinatedStack coordinatedStack = getCoordinatedStack( stack, user, commit, module );
+        if ( coordinatedStack == null || coordinatedStack.getSetupState() == SetupStackState.NotFound ) {
+            LOG.info( "No such stack was found." );
+            return;
+        }
+
+        synchronized ( coordinatedStack ) {
+            if ( coordinatedStack.getSetupState() != SetupStackState.SetUp ) {
+                LOG.info( "Stack is in {} state, will not destroy.", coordinatedStack.getSetupState().toString() );
+                return;
+            }
+
+            // TODO should we also check run state of stack?
+            LOG.info( "Starting to destroy stack instances of {}...", stack.getName() );
+            coordinatedStack.setSetupState( SetupStackState.Destroying );
+            StackDestroyer destroyer = new StackDestroyer( coordinatedStack );
+            destroyer.destroy();
+            registeredStacks.remove( coordinatedStack.hashCode() );
+            setupStackThreads.remove( coordinatedStack );
+            coordinatedStack.notifyAll();
+        }
     }
 
 
@@ -277,11 +319,17 @@ public class StackCoordinator {
      * @param stack CoordinatedStack object whose set up operation has failed
      */
     public void removeFailedStack( CoordinatedStack stack ) {
-        if( stack == null || stack.getSetupState() != SetupStackState.SetupFailed ) {
-            LOG.debug( "Setup didn't fail for given stack, so not removed" );
+        if( stack == null ) {
             return;
         }
-        registeredStacks.remove( stack.hashCode() );
-        setupStackThreads.remove( stack );
+        synchronized ( stack ) {
+            if ( stack.getSetupState() != SetupStackState.SetupFailed ) {
+                LOG.debug( "Setup didn't fail for given stack, so not removed" );
+                return;
+            }
+            registeredStacks.remove( stack.hashCode() );
+            setupStackThreads.remove( stack );
+            stack.notifyAll();
+        }
     }
 }

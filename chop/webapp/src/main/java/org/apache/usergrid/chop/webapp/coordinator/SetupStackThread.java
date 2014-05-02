@@ -38,13 +38,11 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
     @Inject
     private ProviderParamsDao providerParamsDao;
 
-    private final Object lock;
     private CoordinatedStack stack;
     private String errorMessage;
 
 
-    public SetupStackThread( CoordinatedStack stack, Object lock ) {
-        this.lock = lock;
+    public SetupStackThread( CoordinatedStack stack ) {
         this.stack = stack;
     }
 
@@ -93,6 +91,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
                 LOG.warn( errorMessage + ", aborting and terminating launched instances..." );
                 instanceManager.terminateInstances( launchedInstances );
                 stack.setSetupState( SetupStackState.SetupFailed );
+                stack.notifyAll();
                 return null;
             }
             if ( !( new File( keyFile ) ).exists() ) {
@@ -100,6 +99,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
                 LOG.warn( errorMessage + ", aborting and terminating launched instances..." );
                 instanceManager.terminateInstances( launchedInstances );
                 stack.setSetupState( SetupStackState.SetupFailed );
+                stack.notifyAll();
                 return null;
             }
 
@@ -123,6 +123,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
                 errorMessage = "SSH commands have failed, will not continue";
                 instanceManager.terminateInstances( launchedInstances );
                 stack.setSetupState( SetupStackState.SetupFailed );
+                stack.notifyAll();
                 return null;
             }
             LOG.info( "Cluster {} is ready, moving on...", cluster.getName() );
@@ -136,6 +137,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
             LOG.warn( errorMessage + ", aborting and terminating launched instances..." );
             instanceManager.terminateInstances( launchedInstances );
             stack.setSetupState( SetupStackState.SetupFailed );
+            stack.notifyAll();
             return null;
         }
         if ( ! ( new File( keyFile ) ).exists() ) {
@@ -143,6 +145,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
             LOG.warn( errorMessage + ", aborting and terminating launched instances..." );
             instanceManager.terminateInstances( launchedInstances );
             stack.setSetupState( SetupStackState.SetupFailed );
+            stack.notifyAll();
             return null;
         }
         BasicInstanceSpec runnerSpec = new BasicInstanceSpec();
@@ -170,12 +173,14 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
             errorMessage = "SSH commands have failed, will not continue";
             instanceManager.terminateInstances( launchedInstances );
             stack.setSetupState( SetupStackState.SetupFailed );
+            stack.notifyAll();
             return null;
         }
 
         stack.setSetupState( SetupStackState.SetUp );
         LOG.info( "Stack {} is set up and ready...", stack.getName() );
 
+        stack.notifyAll();
         return stack;
     }
 

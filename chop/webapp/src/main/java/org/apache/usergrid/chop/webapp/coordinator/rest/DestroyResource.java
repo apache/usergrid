@@ -22,38 +22,93 @@ package org.apache.usergrid.chop.webapp.coordinator.rest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.usergrid.chop.api.BaseResult;
-import org.apache.usergrid.chop.api.Result;
-import org.apache.usergrid.chop.api.State;
-import org.apache.usergrid.chop.stack.Stack;
+import org.apache.usergrid.chop.api.RestParams;
+import org.apache.usergrid.chop.stack.CoordinatedStack;
+import org.apache.usergrid.chop.stack.SetupStackState;
+import org.apache.usergrid.chop.webapp.coordinator.SetupStackThread;
+import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
+
+import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 
 /**
  * REST operation to setup the Stack under test.
  */
 @Singleton
-@Produces(MediaType.APPLICATION_JSON)
-@Path(DestroyResource.ENDPOINT_URL)
-public class DestroyResource {
-    public final static String ENDPOINT_URL = "/destroy";
-    private static final Logger LOG = LoggerFactory.getLogger(DestroyResource.class);
+@Produces( MediaType.APPLICATION_JSON )
+@Path( DestroyResource.ENDPOINT)
+public class DestroyResource extends TestableResource implements RestParams {
+    public final static String ENDPOINT = "/destroy";
+    private static final Logger LOG = LoggerFactory.getLogger( DestroyResource.class );
 
 
     @Inject
+    private StackCoordinator stackCoordinator;
+
+
     public DestroyResource() {
+        super( ENDPOINT );
     }
 
 
     @POST
-    public Result setup(Stack stack) {
-        LOG.warn("Calling setup");
-        return new BaseResult(ENDPOINT_URL, true, "Setup called", State.READY);
+    @Consumes( MediaType.APPLICATION_JSON )
+    @Produces( MediaType.APPLICATION_JSON )
+    @Path( "/stack" )
+    public Response stack(
+            @QueryParam( RestParams.COMMIT_ID ) String commitId,
+            @QueryParam( RestParams.MODULE_ARTIFACTID ) String artifactId,
+            @QueryParam( RestParams.MODULE_GROUPID ) String groupId,
+            @QueryParam( RestParams.MODULE_VERSION ) String version,
+            @QueryParam( RestParams.USERNAME ) String user,
+            @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
+                         ) {
+
+        if( inTestMode( testMode ) ) {
+            LOG.info( "Calling /destroy/stack in test mode ..." );
+            LOG.info( "  Commit Id: {}", commitId );
+            LOG.info( "  Group Id: {}", groupId );
+            LOG.info( "  Artifact Id: {}", artifactId );
+            LOG.info( "  Version: {}", version );
+            LOG.info( "  User: {}", user );
+        }
+        else {
+            LOG.info( "Calling /destroy/stack" );
+        }
+
+        SetupStackState status = stackCoordinator.stackStatus( commitId, artifactId, groupId, version, user );
+
+        if( inTestMode( testMode ) ) {
+            return Response.status( Response.Status.CREATED )
+                           .entity( status )
+                           .type( MediaType.APPLICATION_JSON )
+                           .build();
+        }
+
+        if( ! status.equals( SetupStackState.SetUp ) ) {
+            return Response.status( Response.Status.OK )
+                           .entity( "Stack is " + status.toString() + ", will not destroy." )
+                           .type( MediaType.APPLICATION_JSON )
+                           .build();
+        }
+
+        /** SetupStackState.SetUp */
+        stackCoordinator.destroyStack( commitId, artifactId, groupId, version, user );
+
+        return Response.status( Response.Status.CREATED )
+                       .entity( "Destroyed the stack" )
+                       .type( MediaType.APPLICATION_JSON )
+                       .build();
     }
 }
