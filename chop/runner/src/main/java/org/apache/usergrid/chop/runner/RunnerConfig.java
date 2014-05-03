@@ -192,23 +192,21 @@ public class RunnerConfig extends GuiceServletContextListener {
          }
 
         if ( runner.getHostname() != null && project.getLoadKey() != null ) {
-            final RunnerRegistry registry = getInjector().getInstance( RunnerRegistry.class );
-
             if ( env != Env.TEST && env != Env.UNIT ) {
-                registry.register( runner );
-                registered = true;
-                Runtime.getRuntime().addShutdownHook( new Thread( new Runnable() {
+                /*
+                 * ------------------------------------------------------------
+                 * Register runner on a different thread since jetty runner
+                 * is not started yet and the port is not known
+                 * ------------------------------------------------------------
+                 */
+                Thread registryThread = new Thread( new Runnable() {
                     @Override
                     public void run() {
-                        if ( registered ) {
-                            System.err.println( "Premature shutdown, attempting to unregister this runner." );
-                            registry.unregister( runner );
-                            LOG.info( "Unregistering runner on shutdownx: {}", runner.getHostname() );
-                            registered = false;
-                        }
+                        registerRunner();
                     }
-                } ) );
-                LOG.info( "Registered runner information in coordinator registry." );
+                }
+                );
+                registryThread.start();
             }
             else {
                 LOG.warn( "Env = {} so we are not registering this runner.", env );
@@ -218,6 +216,37 @@ public class RunnerConfig extends GuiceServletContextListener {
         else {
             LOG.warn( "Runner registry not started, and not registered: insufficient configuration parameters." );
         }
+    }
+
+
+    private void registerRunner(  ) {
+        RunnerAppJettyRunner jettyRunner = RunnerAppJettyRunner.getInstance();
+
+        int time = 5000;
+        while ( ! jettyRunner.isStarted( 100 ) ) {
+            time -= 100;
+
+            if ( time < 0 ) {
+                throw new IllegalStateException( "This runner has not been started yet!" );
+            }
+        }
+        runner.bypass( Runner.SERVER_PORT_KEY, "" + jettyRunner.getPort() );
+
+        final RunnerRegistry registry = getInjector().getInstance( RunnerRegistry.class );
+        registry.register( runner );
+        registered =true;
+        Runtime.getRuntime().addShutdownHook( new Thread( new Runnable() {
+            @Override
+            public void run() {
+                if ( registered ) {
+                    System.err.println( "Premature shutdown, attempting to unregister this runner." );
+                    registry.unregister( runner );
+                    LOG.info( "Unregistering runner on shutdownx: {}", runner.getHostname() );
+                    registered = false;
+                }
+            }
+        } ) );
+        LOG.info( "Registered runner information in coordinator registry." );
     }
 
 
