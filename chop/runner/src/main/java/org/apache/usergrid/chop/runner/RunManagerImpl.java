@@ -97,6 +97,7 @@ public class RunManagerImpl implements RunManager, RestParams {
         resource = addQueryParameters( resource, project, me );
         String result = resource.path( coordinatorFig.getUploadSummaryPath() )
                                 .queryParam( TEST_CLASS, testClass.getName() )
+                                .queryParam( RUN_NUMBER, "" + summary.getRunNumber() )
                                 .type( MediaType.APPLICATION_JSON ).post( String.class, summary );
 
         LOG.debug( "Got back result from summary post = {}", result );
@@ -113,6 +114,7 @@ public class RunManagerImpl implements RunManager, RestParams {
         resource = addQueryParameters( resource, project, me );
         result = resource.path( coordinatorFig.getUploadResultsPath() )
                          .queryParam( TEST_CLASS, testClass.getName() )
+                         .queryParam( RUN_ID, summary.getRunId() )
                          .type( MediaType.MULTIPART_FORM_DATA_TYPE ).post( String.class, part );
 
         LOG.debug( "Got back result from results file upload = {}", result );

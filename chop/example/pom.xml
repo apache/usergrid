@@ -89,7 +89,7 @@
           <password>${chop.coordinator.password}</password>
           <endpoint>https://${chop.coordinator.url}:8443</endpoint>
           <testPackageBase>org.apache.usergrid.chop.example</testPackageBase>
-          <runnerCount>3</runnerCount>
+          <runnerCount>2</runnerCount>
         </configuration>
       </plugin>
     </plugins>

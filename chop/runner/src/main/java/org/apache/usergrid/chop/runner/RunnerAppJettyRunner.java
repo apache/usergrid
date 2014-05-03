@@ -43,11 +43,18 @@ import com.google.inject.servlet.GuiceFilter;
     httpsConnectors = { @HttpsConnector( id = "https", port = 0 ) }
 )
 public class RunnerAppJettyRunner extends JettyRunner {
+    private static RunnerAppJettyRunner instance;
+
 
     protected RunnerAppJettyRunner() {
         super( RunnerAppJettyRunner.class.getSimpleName() );
+        instance = this;
     }
 
+
+    public static RunnerAppJettyRunner getInstance() {
+        return instance;
+    }
 
     @Override
     public String getSubClass() {
