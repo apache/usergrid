@@ -19,6 +19,8 @@
 package org.apache.usergrid.chop.runner;
 
 
+import java.util.UUID;
+
 import org.apache.usergrid.chop.api.Summary;
 import org.apache.usergrid.chop.runner.drivers.TimeTracker;
 import org.apache.usergrid.chop.runner.drivers.Tracker;
@@ -57,6 +59,7 @@ public class BasicSummary implements Summary {
     private long stopTime;
     private boolean saturate = false;
 
+    private final UUID runId = UUID.randomUUID();
 
     public BasicSummary( int runNumber ) {
         this.runNumber = runNumber;
@@ -64,7 +67,7 @@ public class BasicSummary implements Summary {
 
     @Override
     public String getRunId() {
-        return null;
+        return runId.toString();
     }
 
     public void setIterationTracker( IterationTracker iterationTracker ) {

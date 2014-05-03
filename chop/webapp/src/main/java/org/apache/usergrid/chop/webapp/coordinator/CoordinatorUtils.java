@@ -271,7 +271,7 @@ public class CoordinatorUtils {
          * so imageId for runners should be selected accordingly.
          */
         sb = new StringBuilder();
-        sb.append( "sudo su -c \"nohup /usr/bin/java -jar " )
+        sb.append( "sudo su -c \"nohup /usr/bin/java -Darchaius.deployment.environment=CHOP -jar " )
           .append( destFile )
           .append( " > /var/log/chop-runner.log 2>&1 &\"" );
 

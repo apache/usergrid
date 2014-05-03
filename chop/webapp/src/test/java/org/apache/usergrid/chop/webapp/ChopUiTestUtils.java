@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.*;
 
@@ -318,6 +319,51 @@ class ChopUiTestUtils {
         assertEquals( UploadResource.SUCCESSFUL_TEST_MESSAGE, response.getEntity( String.class ) );
 
         tmpFile.delete();
+    }
+
+
+    static void testUploadSummary( TestParams testParams ) {
+
+        ClientResponse response = testParams.addQueryParameters( QUERY_PARAMS )
+                .setEndpoint( UploadResource.ENDPOINT )
+                .newWebResource()
+                .queryParam( RestParams.RUNNER_HOSTNAME, "localhost" )
+                .queryParam( RestParams.TEST_CLASS, ChopUiTestUtils.class.getName() )
+                .queryParam( RestParams.RUN_NUMBER, "1" )
+                .path( "/summary" )
+                .type( MediaType.APPLICATION_JSON )
+                .accept( MediaType.APPLICATION_JSON )
+                .post( ClientResponse.class );
+
+        assertEquals( Response.Status.CREATED.getStatusCode(), response.getStatus() );
+
+        assertEquals( UploadResource.SUCCESSFUL_TEST_MESSAGE, response.getEntity( String.class ) );
+    }
+
+
+    static void testUploadResults( TestParams testParams ) throws Exception {
+        FormDataMultiPart part = new FormDataMultiPart();
+        File tmpFile = File.createTempFile("results", "tmp");
+        FileInputStream in = new FileInputStream( tmpFile );
+        FormDataBodyPart body = new FormDataBodyPart( RestParams.CONTENT, in, MediaType.APPLICATION_OCTET_STREAM_TYPE );
+        part.bodyPart( body );
+
+        ClientResponse response = testParams.addQueryParameters( QUERY_PARAMS )
+                .setEndpoint( UploadResource.ENDPOINT )
+                .newWebResource()
+                .queryParam( RestParams.RUNNER_HOSTNAME, "localhost" )
+                .queryParam( RestParams.TEST_CLASS, ChopUiTestUtils.class.getName() )
+                .queryParam( RestParams.RUN_ID, "112316437" )
+                .path( "/results" )
+                .type( MediaType.MULTIPART_FORM_DATA_TYPE )
+                .accept( MediaType.APPLICATION_JSON )
+                .post( ClientResponse.class, part );
+
+        tmpFile.delete();
+
+        assertEquals( Response.Status.CREATED.getStatusCode(), response.getStatus() );
+
+        assertEquals( UploadResource.SUCCESSFUL_TEST_MESSAGE, response.getEntity( String.class ) );
     }
 
 

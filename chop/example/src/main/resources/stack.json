@@ -20,8 +20,8 @@
     "id" : "40a543f3-9cfc-44bc-b896-77574cae1772",
     "inboundRules" : [ {
       "ipProtocol" : "tcp",
-      "toPort" : 10000,
-      "fromPort" : 22,
+      "toPort" : 65535,
+      "fromPort" : 1,
       "ipRanges" : [ "0.0.0.0/0" ]
     } ],
     "outboundRules" : [ ]
