@@ -271,9 +271,9 @@ public class CoordinatorUtils {
          * so imageId for runners should be selected accordingly.
          */
         sb = new StringBuilder();
-        sb.append( "nohup /usr/bin/java -jar " )
+        sb.append( "sudo su -c \"nohup /usr/bin/java -jar " )
           .append( destFile )
-          .append( " > /home/ubuntu/chop-runner.log 2>&1 &" );
+          .append( " > /var/log/chop-runner.log 2>&1 &\"" );
 
         commands.add( new SSHCommand( sb.toString() ) );
 

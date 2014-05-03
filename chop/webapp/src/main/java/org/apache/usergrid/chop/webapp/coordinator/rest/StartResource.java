@@ -22,38 +22,89 @@ package org.apache.usergrid.chop.webapp.coordinator.rest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.usergrid.chop.api.BaseResult;
-import org.apache.usergrid.chop.api.Result;
-import org.apache.usergrid.chop.api.State;
-import org.apache.usergrid.chop.stack.Stack;
+import org.apache.usergrid.chop.api.RestParams;
+import org.apache.usergrid.chop.stack.SetupStackState;
+import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
+
+import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 
 /**
  * REST operation to setup the Stack under test.
  */
 @Singleton
-@Produces(MediaType.APPLICATION_JSON)
-@Path(StartResource.ENDPOINT)
-public class StartResource {
+@Produces( MediaType.APPLICATION_JSON )
+@Path( StartResource.ENDPOINT )
+public class StartResource extends TestableResource implements RestParams {
     public final static String ENDPOINT = "/start";
-    private static final Logger LOG = LoggerFactory.getLogger(StartResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger( StartResource.class );
 
 
     @Inject
+    private StackCoordinator stackCoordinator;
+
+
     public StartResource() {
+        super( ENDPOINT );
     }
 
 
     @POST
-    public Result setup(Stack stack) {
-        LOG.warn("Calling setup");
-        return new BaseResult(ENDPOINT, true, "Setup called", State.READY);
+    @Consumes( MediaType.APPLICATION_JSON )
+    @Produces( MediaType.APPLICATION_JSON )
+    public Response start(
+            @QueryParam( RestParams.COMMIT_ID ) String commitId,
+            @QueryParam( RestParams.MODULE_ARTIFACTID ) String artifactId,
+            @QueryParam( RestParams.MODULE_GROUPID ) String groupId,
+            @QueryParam( RestParams.MODULE_VERSION ) String version,
+            @QueryParam( RestParams.USERNAME ) String user,
+            @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
+                         ) {
+
+        if( inTestMode( testMode ) ) {
+            LOG.info( "Calling /start in test mode ..." );
+            LOG.info( "  Commit Id: {}", commitId );
+            LOG.info( "  Group Id: {}", groupId );
+            LOG.info( "  Artifact Id: {}", artifactId );
+            LOG.info( "  Version: {}", version );
+            LOG.info( "  User: {}", user );
+        }
+        else {
+            LOG.info( "Calling /start" );
+        }
+
+        SetupStackState status = stackCoordinator.stackStatus( commitId, artifactId, groupId, version, user );
+
+        if( inTestMode( testMode ) ) {
+            return Response.status( Response.Status.CREATED )
+                           .entity( status )
+                           .type( MediaType.APPLICATION_JSON )
+                           .build();
+        }
+
+        if( ! status.equals( SetupStackState.SetUp ) ) {
+            return Response.status( Response.Status.OK )
+                           .entity( "Stack is " + status.toString() + ", cannot start tests." )
+                           .type( MediaType.APPLICATION_JSON )
+                           .build();
+        }
+        /** SetupStackState.SetUp */
+        // TODO start tests
+
+        return Response.status( Response.Status.CREATED )
+                       .entity( "Started chop tests" )
+                       .type( MediaType.APPLICATION_JSON )
+                       .build();
     }
 }
