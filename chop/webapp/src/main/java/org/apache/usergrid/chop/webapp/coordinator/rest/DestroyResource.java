@@ -23,9 +23,7 @@ package org.apache.usergrid.chop.webapp.coordinator.rest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.chop.api.RestParams;
-import org.apache.usergrid.chop.stack.CoordinatedStack;
 import org.apache.usergrid.chop.stack.SetupStackState;
-import org.apache.usergrid.chop.webapp.coordinator.SetupStackThread;
 import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
 
 import org.safehaus.jettyjam.utils.TestMode;
@@ -43,7 +41,7 @@ import javax.ws.rs.core.Response;
 
 
 /**
- * REST operation to setup the Stack under test.
+ * REST operation to destroy queried stack's running instances
  */
 @Singleton
 @Produces( MediaType.APPLICATION_JSON )

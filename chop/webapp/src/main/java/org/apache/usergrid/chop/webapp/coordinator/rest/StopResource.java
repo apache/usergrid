@@ -36,14 +36,14 @@ import javax.ws.rs.core.MediaType;
 
 
 /**
- * REST operation to setup the Stack under test.
+ * REST operation to stop the ongoing test.
  */
 @Singleton
-@Produces(MediaType.APPLICATION_JSON)
-@Path(StopResource.ENDPOINT)
+@Produces( MediaType.APPLICATION_JSON )
+@Path( StopResource.ENDPOINT )
 public class StopResource {
     public final static String ENDPOINT = "/stop";
-    private static final Logger LOG = LoggerFactory.getLogger(StopResource.class);
+    private static final Logger LOG = LoggerFactory.getLogger( StopResource.class );
 
 
     @Inject
