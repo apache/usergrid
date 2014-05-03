@@ -70,6 +70,17 @@ public class RunnerRegistryImpl implements RunnerRegistry {
             LOG.error( "Failed to parse URL for coordinator", e );
         }
 
+        /**
+         * This is because we are using self-signed uniform certificates for now,
+         * it should be removed if we switch to a CA signed dynamic certificate scheme!
+         * */
+        javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+            new javax.net.ssl.HostnameVerifier() {
+                public boolean verify( String hostname, javax.net.ssl.SSLSession sslSession) {
+                    return hostname.equals( endpoint.getHost() );
+                }
+            }
+        );
         // Need to get the configuration information for the coordinator
         if ( ! CertUtils.isTrusted( endpoint.getHost() ) ) {
             CertUtils.preparations( endpoint.getHost(), endpoint.getPort() );

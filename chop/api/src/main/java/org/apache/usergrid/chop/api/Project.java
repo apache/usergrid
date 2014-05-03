@@ -201,44 +201,4 @@ public interface Project extends GuicyFig {
     @JsonProperty
     @Key( MD5_KEY )
     String getMd5();
-
-
-    String MANAGER_USERNAME_KEY = "manager.app.username";
-
-    /**
-     * Gets the username to use with the Tomcat manager of this Runner. Uses {@link
-     * Project#MANAGER_USERNAME_KEY} to access the Tomcat manager username.
-     *
-     * @return the Tomcat manager username
-     */
-    @JsonProperty
-    @Key( MANAGER_USERNAME_KEY )
-    String getManagerUsername();
-
-
-    String MANAGER_PASSWORD_KEY = "manager.app.password";
-
-    /**
-     * Gets the Tomcat manager user's password. Uses {@link Project#MANAGER_PASSWORD_KEY}
-     * to access the Tomcat manager user's password.
-     *
-     * @return the Tomcat manager user's password
-     */
-    @JsonProperty
-    @Key( MANAGER_PASSWORD_KEY )
-    String getManagerPassword();
-
-
-    String MANAGER_ENDPOINT_KEY = "manager.endpoint";
-    String DEFAULT_MANAGER_ENDPOINT = "http://localhost:8080/manager/text";
-
-    /**
-     * Gets the Tomcat manager base URL.
-     *
-     * @return the Tomcat Manager endpoint
-     */
-    @JsonProperty
-    @Key( MANAGER_ENDPOINT_KEY )
-    @Default( DEFAULT_MANAGER_ENDPOINT )
-    String getManagerEndpoint();
 }

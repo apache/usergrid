@@ -51,9 +51,6 @@ public class ProjectBuilder {
     private String chopVersion;
     private String md5;
     private String loadTime;
-    private String managerUsername;
-    private String managerPassword;
-    private String managerEndpoint;
 
 
     public ProjectBuilder() {
@@ -96,9 +93,6 @@ public class ProjectBuilder {
             this.chopVersion = supplied.getChopVersion();
             this.md5 = supplied.getMd5();
             this.loadTime = supplied.getLoadTime();
-            this.managerPassword = supplied.getManagerPassword();
-            this.managerUsername = supplied.getManagerUsername();
-            this.managerEndpoint = supplied.getManagerEndpoint();
         }
 
         if ( props != null ) {
@@ -132,18 +126,6 @@ public class ProjectBuilder {
 
             if ( props.containsKey( Project.GROUP_ID_KEY ) ) {
                 this.groupId = props.getProperty( Project.GROUP_ID_KEY );
-            }
-
-            if ( props.containsKey( Project.MANAGER_PASSWORD_KEY ) ) {
-                this.managerPassword = props.getProperty( Project.MANAGER_PASSWORD_KEY );
-            }
-
-            if ( props.containsKey( Project.MANAGER_USERNAME_KEY ) ) {
-                this.managerUsername = props.getProperty( Project.MANAGER_USERNAME_KEY );
-            }
-
-            if ( props.containsKey( Project.MANAGER_ENDPOINT_KEY ) ) {
-                this.managerEndpoint = props.getProperty( Project.MANAGER_ENDPOINT_KEY );
             }
 
             if ( props.containsKey( Project.PROJECT_VERSION_KEY ) ) {
@@ -238,27 +220,6 @@ public class ProjectBuilder {
     }
 
 
-    @JsonProperty
-    public ProjectBuilder setManagerUsername( final String managerUsername ) {
-        this.managerUsername = managerUsername;
-        return this;
-    }
-
-
-    @JsonProperty
-    public ProjectBuilder setManagerPassword( final String managerPassword ) {
-        this.managerPassword = managerPassword;
-        return this;
-    }
-
-
-    @JsonProperty
-    public ProjectBuilder setManagerEndpoint( final String managerEndpoint ) {
-        this.managerEndpoint = managerEndpoint;
-        return this;
-    }
-
-
     public Project getProject() {
         return new Project() {
             @Override
@@ -330,24 +291,6 @@ public class ProjectBuilder {
             @Override
             public String getMd5() {
                 return md5;
-            }
-
-
-            @Override
-            public String getManagerUsername() {
-                return managerUsername;
-            }
-
-
-            @Override
-            public String getManagerPassword() {
-                return managerPassword;
-            }
-
-
-            @Override
-            public String getManagerEndpoint() {
-                return managerEndpoint;
             }
 
 
