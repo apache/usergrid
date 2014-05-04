@@ -92,16 +92,6 @@ public class RunManagerImpl implements RunManager, RestParams {
                        final Class<?> testClass ) throws FileNotFoundException, MalformedURLException {
         Preconditions.checkNotNull( summary, "The summary argument cannot be null." );
 
-        // post the summary information
-        WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
-        resource = addQueryParameters( resource, project, me );
-        String result = resource.path( coordinatorFig.getUploadSummaryPath() )
-                                .queryParam( TEST_CLASS, testClass.getName() )
-                                .queryParam( RUN_NUMBER, "" + summary.getRunNumber() )
-                                .type( MediaType.APPLICATION_JSON ).post( String.class, summary );
-
-        LOG.debug( "Got back result from summary post = {}", result );
-
         // upload the results file
         InputStream in = new FileInputStream( resultsFile );
         FormDataMultiPart part = new FormDataMultiPart();
@@ -110,12 +100,13 @@ public class RunManagerImpl implements RunManager, RestParams {
         FormDataBodyPart body = new FormDataBodyPart( CONTENT, in, MediaType.APPLICATION_OCTET_STREAM_TYPE );
         part.bodyPart( body );
 
-        resource = Client.create().resource( coordinatorFig.getEndpoint() );
+        WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
         resource = addQueryParameters( resource, project, me );
-        result = resource.path( coordinatorFig.getUploadResultsPath() )
-                         .queryParam( TEST_CLASS, testClass.getName() )
+        String result = resource.path( coordinatorFig.getUploadResultsPath() )
                          .queryParam( RUN_ID, summary.getRunId() )
-                         .type( MediaType.MULTIPART_FORM_DATA_TYPE ).post( String.class, part );
+                         .queryParam( RUN_NUMBER, "" + summary.getRunNumber() )
+                         .type( MediaType.MULTIPART_FORM_DATA_TYPE )
+                         .post( String.class, part );
 
         LOG.debug( "Got back result from results file upload = {}", result );
     }
@@ -132,7 +123,8 @@ public class RunManagerImpl implements RunManager, RestParams {
                                 .queryParam( COMMIT_ID, project.getVcsVersion() )
                                 .queryParam( RUN_NUMBER, String.valueOf( runNumber ) )
                                 .queryParam( TEST_CLASS, testClass.getName() )
-                                .type( MediaType.TEXT_PLAIN ).get( String.class );
+                                .type( MediaType.APPLICATION_JSON )
+                                .get( String.class );
 
         LOG.debug( "Got back result from run status get = {}", result );
 

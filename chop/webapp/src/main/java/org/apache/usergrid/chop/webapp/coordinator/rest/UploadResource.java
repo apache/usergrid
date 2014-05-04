@@ -37,7 +37,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.usergrid.chop.api.Summary;
+import org.apache.usergrid.chop.client.ssh.Utils;
 import org.apache.usergrid.chop.webapp.ChopUiFig;
 import org.apache.usergrid.chop.webapp.coordinator.CoordinatorUtils;
 import org.apache.usergrid.chop.webapp.dao.model.BasicCommit;
@@ -219,8 +219,6 @@ public class UploadResource extends TestableResource implements RestParams {
     }
 
 
-
-
     @SuppressWarnings( "unchecked" )
     @POST
     @Path( "/results" )
@@ -228,8 +226,9 @@ public class UploadResource extends TestableResource implements RestParams {
     @Produces( MediaType.APPLICATION_JSON )
     public Response uploadResults(
             @QueryParam( RUNNER_HOSTNAME ) String runnerHostName,
-            @QueryParam( TEST_CLASS ) String testClass,
+            @QueryParam( COMMIT_ID ) String commitId,
             @QueryParam( RUN_ID ) String runId,
+            @QueryParam( RUN_NUMBER ) int runNumber,
             @FormDataParam( CONTENT ) InputStream resultsFileInputStream,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
                                  ) throws Exception {
@@ -237,8 +236,9 @@ public class UploadResource extends TestableResource implements RestParams {
         if( inTestMode( testMode ) ) {
             LOG.info( "Calling /upload/results in test mode ..." );
             LOG.info( "{} is {}", RUNNER_HOSTNAME, runnerHostName );
-            LOG.info( "{} is {}", TEST_CLASS, testClass );
+            LOG.info( "{} is {}", COMMIT_ID, commitId );
             LOG.info( "{} is {}", RUN_ID, runId );
+            LOG.info( "{} is {}", RUN_NUMBER, runNumber );
 
             return Response.status( Response.Status.CREATED ).entity( SUCCESSFUL_TEST_MESSAGE ).build();
         }
@@ -246,21 +246,39 @@ public class UploadResource extends TestableResource implements RestParams {
             LOG.info( "/upload/results called ..." );
         }
 
+        String message;
         JSONObject object = ( JSONObject ) new JSONParser().parse( new InputStreamReader( resultsFileInputStream ) );
+        String testClass = Util.getString( object, "testClass" );
+
+        // First save the summary info
+        BasicRun run = new BasicRun( commitId, runnerHostName, runNumber, testClass );
+        run.copyJson( object );
+        if ( runDao.save( run ) ) {
+            LOG.info( "Created new Run {} ", run );
+        }
+        else {
+            message = "Failed to create new Run";
+            LOG.warn( message );
+            throw new IllegalStateException( message );
+        }
+
+        // Here is the list of BasicRunResults
         JSONArray runResults = ( JSONArray ) object.get( "runResults" );
         Iterator<JSONObject> iterator = runResults.iterator();
-
-        //noinspection WhileLoopReplaceableByForEach
         while( iterator.hasNext() ) {
             JSONObject jsonResult = iterator.next();
 
+            int failureCount = Util.getInt( jsonResult, "failureCount" );
             BasicRunResult runResult = new BasicRunResult(
                     runId,
                     Util.getInt( jsonResult, "runCount"),
                     Util.getInt( jsonResult, "runTime" ),
                     Util.getInt( jsonResult, "ignoreCount" ),
-                    Util.getInt( jsonResult, "failureCount" )
+                    failureCount
             );
+            if( failureCount != 0 ) {
+                runResult.setFailures( Util.getString( jsonResult, "failures" ) );
+            }
 
             if ( runResultDao.save( runResult ) ) {
                 LOG.info( "Saved run result: {}", runResult );
@@ -268,46 +286,5 @@ public class UploadResource extends TestableResource implements RestParams {
         }
 
         return Response.status( Response.Status.CREATED ).entity( "TRUE" ).build();
-    }
-
-
-    @POST
-    @Path( "/summary" )
-    @Consumes( MediaType.APPLICATION_JSON )
-    @Produces( MediaType.APPLICATION_JSON )
-    public Response uploadSummary(
-            @QueryParam( RUNNER_HOSTNAME ) String runnerHostName,
-            @QueryParam( TEST_CLASS ) String testClass,
-            @QueryParam( RUN_NUMBER ) int runNumber,
-            @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
-                                 ) throws Exception {
-
-        if( inTestMode( testMode ) ) {
-            LOG.info( "Calling /upload/summary in test mode ..." );
-            LOG.info( "{} is {}", RUNNER_HOSTNAME, runnerHostName );
-            LOG.info( "{} is {}", TEST_CLASS, testClass );
-            LOG.info( "{} is {}", RUN_NUMBER, runNumber );
-
-            return Response.status( Response.Status.CREATED ).entity( SUCCESSFUL_TEST_MESSAGE ).build();
-        }
-        else {
-            LOG.info( "/upload/summary called ..." );
-        }
-
-        BasicRun run = new BasicRun(
-                COMMIT_ID,
-                runnerHostName,
-                runNumber,
-                testClass
-        );
-
-        if ( runDao.save( run ) ) {
-            LOG.info( "Created new Run {} ", run );
-        }
-        else {
-            LOG.warn( "Failed to create new Run" );
-        }
-
-        return Response.status( Response.Status.CREATED ).entity( run.getId() ).build();
     }
 }

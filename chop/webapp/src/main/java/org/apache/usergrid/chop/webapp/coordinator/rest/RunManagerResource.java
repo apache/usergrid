@@ -46,10 +46,6 @@ public class RunManagerResource extends TestableResource {
     public final static String ENDPOINT = "/run";
     private static final Logger LOG = LoggerFactory.getLogger(RunManagerResource.class);
 
-
-    @Inject
-    private StackCoordinator stackCoordinator;
-
     @Inject
     private RunDao runDao;
 

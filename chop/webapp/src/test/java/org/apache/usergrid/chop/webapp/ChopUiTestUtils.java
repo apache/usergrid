@@ -66,6 +66,7 @@ class ChopUiTestUtils {
             put(RestParams.MODULE_VERSION, "2.0.0-SNAPSHOT");
             put(RestParams.MODULE_ARTIFACTID, "chop-example");
             put(RestParams.MODULE_GROUPID, "org.apache.usergrid.chop");
+            put(RestParams.VCS_REPO_URL, "git@github.com:usergrid/usergrid.git");
             put(RestParams.TEST_PACKAGE, "org.apache.usergrid.chop.example");
         }
     };
@@ -322,25 +323,6 @@ class ChopUiTestUtils {
     }
 
 
-    static void testUploadSummary( TestParams testParams ) {
-
-        ClientResponse response = testParams.addQueryParameters( QUERY_PARAMS )
-                .setEndpoint( UploadResource.ENDPOINT )
-                .newWebResource()
-                .queryParam( RestParams.RUNNER_HOSTNAME, "localhost" )
-                .queryParam( RestParams.TEST_CLASS, ChopUiTestUtils.class.getName() )
-                .queryParam( RestParams.RUN_NUMBER, "1" )
-                .path( "/summary" )
-                .type( MediaType.APPLICATION_JSON )
-                .accept( MediaType.APPLICATION_JSON )
-                .post( ClientResponse.class );
-
-        assertEquals( Response.Status.CREATED.getStatusCode(), response.getStatus() );
-
-        assertEquals( UploadResource.SUCCESSFUL_TEST_MESSAGE, response.getEntity( String.class ) );
-    }
-
-
     static void testUploadResults( TestParams testParams ) throws Exception {
         FormDataMultiPart part = new FormDataMultiPart();
         File tmpFile = File.createTempFile("results", "tmp");
@@ -352,8 +334,8 @@ class ChopUiTestUtils {
                 .setEndpoint( UploadResource.ENDPOINT )
                 .newWebResource()
                 .queryParam( RestParams.RUNNER_HOSTNAME, "localhost" )
-                .queryParam( RestParams.TEST_CLASS, ChopUiTestUtils.class.getName() )
                 .queryParam( RestParams.RUN_ID, "112316437" )
+                .queryParam( RestParams.RUN_NUMBER, "3" )
                 .path( "/results" )
                 .type( MediaType.MULTIPART_FORM_DATA_TYPE )
                 .accept( MediaType.APPLICATION_JSON )

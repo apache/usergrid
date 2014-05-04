@@ -97,6 +97,7 @@ public class RunnerRegistryImpl implements RunnerRegistry {
                 .queryParam( RestParams.MODULE_ARTIFACTID, project.getArtifactId() )
                 .queryParam( RestParams.MODULE_VERSION, project.getVersion() )
                 .queryParam( RestParams.COMMIT_ID, project.getVcsVersion() )
+                .queryParam( RestParams.VCS_REPO_URL, project.getVcsRepoUrl() )
                 .queryParam( RestParams.USERNAME, coordinatorFig.getUsername() )
                 .queryParam( RestParams.PASSWORD, coordinatorFig.getPassword() );
     }

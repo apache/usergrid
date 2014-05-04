@@ -74,12 +74,6 @@ public class ChopUiIT {
 
 
     @Test
-    public void testUploadSummary() {
-        ChopUiTestUtils.testUploadSummary( jetty.newTestParams().setLogger( LOG ) );
-    }
-
-
-    @Test
     public void testUploadResults() throws Exception {
         ChopUiTestUtils.testUploadResults( jetty.newTestParams().setLogger( LOG ) );
     }

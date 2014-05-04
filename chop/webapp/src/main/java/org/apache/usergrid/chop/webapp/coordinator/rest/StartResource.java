@@ -84,6 +84,7 @@ public class StartResource extends TestableResource implements RestParams {
             LOG.info( "Calling /start" );
         }
 
+        // Check if the stack is set up first
         SetupStackState status = stackCoordinator.stackStatus( commitId, artifactId, groupId, version, user );
 
         if( inTestMode( testMode ) ) {
@@ -100,6 +101,7 @@ public class StartResource extends TestableResource implements RestParams {
                            .build();
         }
         /** SetupStackState.SetUp */
+
         // TODO start tests
 
         return Response.status( Response.Status.CREATED )
