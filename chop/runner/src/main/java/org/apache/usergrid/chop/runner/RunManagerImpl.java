@@ -102,13 +102,13 @@ public class RunManagerImpl implements RunManager, RestParams {
 
         WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
         resource = addQueryParameters( resource, project, me );
-        String result = resource.path( coordinatorFig.getUploadResultsPath() )
+        String result = resource.path( coordinatorFig.getStoreResultsPath() )
                          .queryParam( RUN_ID, summary.getRunId() )
                          .queryParam( RUN_NUMBER, "" + summary.getRunNumber() )
                          .type( MediaType.MULTIPART_FORM_DATA_TYPE )
                          .post( String.class, part );
 
-        LOG.debug( "Got back result from results file upload = {}", result );
+        LOG.debug( "Got back result from results file store = {}", result );
     }
 
 

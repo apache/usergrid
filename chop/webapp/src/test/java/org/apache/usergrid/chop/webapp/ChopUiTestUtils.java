@@ -323,7 +323,7 @@ class ChopUiTestUtils {
     }
 
 
-    static void testUploadResults( TestParams testParams ) throws Exception {
+    static void testStoreResults( TestParams testParams ) throws Exception {
         FormDataMultiPart part = new FormDataMultiPart();
         File tmpFile = File.createTempFile("results", "tmp");
         FileInputStream in = new FileInputStream( tmpFile );
@@ -331,12 +331,12 @@ class ChopUiTestUtils {
         part.bodyPart( body );
 
         ClientResponse response = testParams.addQueryParameters( QUERY_PARAMS )
-                .setEndpoint( UploadResource.ENDPOINT )
+                .setEndpoint( RunManagerResource.ENDPOINT )
                 .newWebResource()
                 .queryParam( RestParams.RUNNER_HOSTNAME, "localhost" )
                 .queryParam( RestParams.RUN_ID, "112316437" )
                 .queryParam( RestParams.RUN_NUMBER, "3" )
-                .path( "/results" )
+                .path( "/store" )
                 .type( MediaType.MULTIPART_FORM_DATA_TYPE )
                 .accept( MediaType.APPLICATION_JSON )
                 .post( ClientResponse.class, part );

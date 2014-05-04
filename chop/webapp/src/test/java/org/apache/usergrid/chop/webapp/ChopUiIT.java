@@ -75,7 +75,7 @@ public class ChopUiIT {
 
     @Test
     public void testUploadResults() throws Exception {
-        ChopUiTestUtils.testUploadResults( jetty.newTestParams().setLogger( LOG ) );
+        ChopUiTestUtils.testStoreResults( jetty.newTestParams().setLogger( LOG ) );
     }
 
 
