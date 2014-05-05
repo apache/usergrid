@@ -350,7 +350,7 @@ public class CpEntityManager implements EntityManager {
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
             ecm.load( entityId ).toBlockingObservable().last();
         
-        cpEntity = EntityMapUtils.fromMap( cpEntity, entity.getProperties() );
+        cpEntity = EntityMapUtils.fromMap( cpEntity, entity.getDynamicProperties() );
 
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
         ei.index( collectionScope, cpEntity );
@@ -675,11 +675,11 @@ public class CpEntityManager implements EntityManager {
         }
 
         Map<String,Object> dictionary = entity.getDynamicProperties();
-        dictionary.remove( dictionaryName );
-        entity.getDynamicProperties().clear();
-//        getRelationManager( entityRef ).removeFromCollection( dictionaryName,entityRef );
+        Map<String,Object> properties = ( Map<String, Object> ) dictionary.get( dictionaryName );
+        properties.remove( elementName );
+        dictionary.put( dictionaryName,properties );
 
-        //entity.addProperties(dictionary);
+        entity.setProperties( dictionary );
 
         update( entity );
     }
