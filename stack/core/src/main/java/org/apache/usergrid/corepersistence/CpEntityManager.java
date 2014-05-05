@@ -675,12 +675,12 @@ public class CpEntityManager implements EntityManager {
         }
 
         Map<String,Object> dictionary = entity.getDynamicProperties();
-        Map<String,Object> props = ( TreeMap ) dictionary.get( dictionaryName );
-        props.remove( elementName );
+        dictionary.remove( dictionaryName );
+        entity.getDynamicProperties().clear();
+//        getRelationManager( entityRef ).removeFromCollection( dictionaryName,entityRef );
 
-        dictionary.put( dictionaryName,props );
+        //entity.addProperties(dictionary);
 
-        entity.addProperties(dictionary);
         update( entity );
     }
 
@@ -1333,8 +1333,6 @@ public class CpEntityManager implements EntityManager {
             }
         }
         return batch;
-
-        //getRelationManager( entity )
     }
 
     @Override

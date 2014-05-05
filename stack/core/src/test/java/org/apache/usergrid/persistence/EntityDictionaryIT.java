@@ -32,6 +32,7 @@ import org.apache.usergrid.utils.JsonUtils;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 
 @Concurrent()
@@ -130,5 +131,40 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         assertEquals( credentials.getEncrypted(), returned.getEncrypted() );
         assertEquals( credentials.getRecoverable(), returned.getRecoverable() );
         assertArrayEquals( credentials.getCryptoChain(), returned.getCryptoChain() );
+    }
+
+    @Test
+    public void testRemoveFromDictionary() throws Exception {
+        LOG.info( "EntityDictionaryIT.testRemoveFromDictionary" );
+
+        Application.OAuthProvider provider = new Application.OAuthProvider();
+        provider.setClientId( "123456789012.apps.googleusercontent.com" );
+        provider.setClientSecret( "abcdefghijklmnopqrstuvwx" );
+        provider.setRedirectUris( "https://www.example.com/oauth2callback" );
+        provider.setJavaScriptOrigins( "https://www.example.com" );
+        provider.setAuthorizationEndpointUrl( "https://accounts.google.com/o/oauth2/auth" );
+        provider.setAccessTokenEndpointUrl( "https://accounts.google.com/o/oauth2/token" );
+        provider.setVersion( "2.0" );
+
+        LOG.info( "EntityDictionaryIT.testApplicationDictionaries" );
+
+        UUID applicationId = setup.createApplication( "testOrganization", "testApplicationDictionaries" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+        em.addToDictionary( em.getApplicationRef(), "oauthproviders", "google", provider );
+
+        Object o = em.getDictionaryElementValue( em.getApplicationRef(), "oauthproviders", "google" );
+
+        assertNotNull( o );
+
+        em.removeFromDictionary( em.getApplicationRef(),"oauthproviders","google" );
+
+        o = em.getDictionaryElementValue( em.getApplicationRef(), "oauthproviders", "google" );
+        assertNull( o );
+
+
     }
 }
