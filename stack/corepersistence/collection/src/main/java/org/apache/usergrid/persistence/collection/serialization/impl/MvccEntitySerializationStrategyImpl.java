@@ -142,7 +142,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         }
 
 
-        return getEntity( entityId, column );
+        return new MvccColumnParser(entityId).parseColumn(column);
     }
 
 
@@ -158,25 +158,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         RowQuery<ScopedRowKey<CollectionScope, Id>, UUID> query = keyspace.prepareQuery(CF_ENTITY_DATA).getKey(ScopedRowKey.fromKey(collectionScope, entityId))
                 .withColumnRange(version, null, false, fetchSize);
 
-        ColumnList<UUID> columns = null;
-
-        try {
-            columns = query.execute().getResult();
-        }
-        catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra", e );
-        }
-
-
-        List<MvccEntity> results = new ArrayList<MvccEntity>( columns.size() );
-
-        for ( Column<UUID> col : columns ) {
-            results.add( getEntity( entityId, col ) );
-        }
-
-        return results.iterator();
-
-        //return new ColumnNameIterator(query, new MvccColumnParser(entityId), false);
+       return new ColumnNameIterator(query, new MvccColumnParser(entityId), false);
 
     }
 
@@ -192,25 +174,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         RowQuery<ScopedRowKey<CollectionScope, Id>, UUID> query = keyspace.prepareQuery(CF_ENTITY_DATA).getKey(ScopedRowKey.fromKey(collectionScope, entityId))
                 .withColumnRange(null, version, false, fetchSize);
 
-        ColumnList<UUID> columns = null;
-
-        try {
-            columns = query.execute().getResult();
-        }
-        catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra", e );
-        }
-
-
-        List<MvccEntity> results = new ArrayList<MvccEntity>( columns.size() );
-
-        for ( Column<UUID> col : columns ) {
-            results.add( getEntity( entityId, col ) );
-        }
-
-        return results.iterator();
-
-       // return new ColumnNameIterator(query, new MvccColumnParser(entityId), false);
+        return new ColumnNameIterator(query, new MvccColumnParser(entityId), false);
 
     }
 
@@ -274,21 +238,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     }
 
 
-    private MvccEntity getEntity( final Id entityId, final Column<UUID> col ) {
-
-        final UUID version = col.getName();
-
-        final EntityWrapper deSerialized = col.getValue( SER );
-
-        //Inject the id into it.
-        if ( deSerialized.entity.isPresent() ) {
-            EntityUtils.setId( deSerialized.entity.get(), entityId );
-        }
-
-
-        return new MvccEntityImpl( entityId, version, deSerialized.status, deSerialized.entity );
-    }
-
 
     /**
      * Simple callback to perform puts and deletes with a common row setup code
@@ -332,8 +281,14 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         @Override
         public MvccEntity parseColumn(Column<UUID> column) {
 
-            EntityWrapper wrapper = EntitySerializer.INSTANCE.fromByteBuffer(column.getByteBufferValue());
-            return (MvccEntity)new MvccEntityImpl(id, column.getName(), wrapper.status, wrapper.entity);
+            final EntityWrapper deSerialized = column.getValue( SER );
+
+            //Inject the id into it.
+            if ( deSerialized.entity.isPresent() ) {
+                EntityUtils.setId( deSerialized.entity.get(), id );
+            }
+
+            return new MvccEntityImpl( id, column.getName(), deSerialized.status, deSerialized.entity );
         }
     }
 
