@@ -9,5 +9,6 @@ public enum SetupStackState {
     SettingUp,
     SetupFailed,
     NotSetUp,
+    Destroying,
     NotFound
 }

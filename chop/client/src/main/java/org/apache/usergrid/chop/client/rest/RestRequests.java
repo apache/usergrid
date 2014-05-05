@@ -44,10 +44,21 @@ public class RestRequests {
     private static final Logger LOG = LoggerFactory.getLogger( RestRequests.class );
 
 
-    private static void preparations( Runner runner ) {
+    private static void preparations( final Runner runner ) {
         Preconditions.checkNotNull( runner, "The runner parameter cannot be null." );
         Preconditions.checkNotNull( runner.getHostname(), "The runner parameter's hostname property cannot be null." );
 
+        /**
+         * This is because we are using self-signed uniform certificates for now,
+         * it should be removed if we switch to a CA signed dynamic certificate scheme!
+         * */
+        javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+            new javax.net.ssl.HostnameVerifier() {
+                public boolean verify( String hostname, javax.net.ssl.SSLSession sslSession) {
+                    return hostname.equals( runner.getHostname() );
+                }
+            }
+        );
         if ( ! ChopUtils.isTrusted( runner ) ) {
             try {
                 ChopUtils.installRunnerKey( null, runner );

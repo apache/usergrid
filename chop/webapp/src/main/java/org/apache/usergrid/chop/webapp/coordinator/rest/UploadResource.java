@@ -37,6 +37,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.usergrid.chop.api.Summary;
 import org.apache.usergrid.chop.webapp.ChopUiFig;
 import org.apache.usergrid.chop.webapp.coordinator.CoordinatorUtils;
 import org.apache.usergrid.chop.webapp.dao.model.BasicCommit;
@@ -224,15 +225,28 @@ public class UploadResource extends TestableResource implements RestParams {
     @POST
     @Path( "/results" )
     @Consumes( MediaType.MULTIPART_FORM_DATA )
-    @Produces( MediaType.TEXT_PLAIN )
-    public Response uploadResults( MimeMultipart multipart ) throws Exception
-    {
-        String runId = multipart.getBodyPart( RestParams.RUN_ID ).getContent().toString();
-        LOG.debug( "extracted {} = {}", RestParams.RUN_ID, runId );
+    @Produces( MediaType.APPLICATION_JSON )
+    public Response uploadResults(
+            @QueryParam( RUNNER_HOSTNAME ) String runnerHostName,
+            @QueryParam( TEST_CLASS ) String testClass,
+            @QueryParam( RUN_ID ) String runId,
+            @FormDataParam( CONTENT ) InputStream resultsFileInputStream,
+            @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
+                                 ) throws Exception {
 
-        InputStream in = multipart.getBodyPart( RestParams.CONTENT ).getInputStream();
+        if( inTestMode( testMode ) ) {
+            LOG.info( "Calling /upload/results in test mode ..." );
+            LOG.info( "{} is {}", RUNNER_HOSTNAME, runnerHostName );
+            LOG.info( "{} is {}", TEST_CLASS, testClass );
+            LOG.info( "{} is {}", RUN_ID, runId );
 
-        JSONObject object = ( JSONObject ) new JSONParser().parse( new InputStreamReader( in ) );
+            return Response.status( Response.Status.CREATED ).entity( SUCCESSFUL_TEST_MESSAGE ).build();
+        }
+        else {
+            LOG.info( "/upload/results called ..." );
+        }
+
+        JSONObject object = ( JSONObject ) new JSONParser().parse( new InputStreamReader( resultsFileInputStream ) );
         JSONArray runResults = ( JSONArray ) object.get( "runResults" );
         Iterator<JSONObject> iterator = runResults.iterator();
 
@@ -242,7 +256,7 @@ public class UploadResource extends TestableResource implements RestParams {
 
             BasicRunResult runResult = new BasicRunResult(
                     runId,
-                    Util.getInt(jsonResult, "runCount"),
+                    Util.getInt( jsonResult, "runCount"),
                     Util.getInt( jsonResult, "runTime" ),
                     Util.getInt( jsonResult, "ignoreCount" ),
                     Util.getInt( jsonResult, "failureCount" )
@@ -259,22 +273,33 @@ public class UploadResource extends TestableResource implements RestParams {
 
     @POST
     @Path( "/summary" )
-    @Consumes( MediaType.MULTIPART_FORM_DATA )
-    @Produces( MediaType.TEXT_PLAIN )
-    public Response uploadSummary( MimeMultipart multipart ) throws Exception
-    {
-        String runnerHostname = multipart.getBodyPart( RestParams.RUNNER_HOSTNAME ).getContent().toString();
-        LOG.debug( "extracted {} = {}", RestParams.RUNNER_HOSTNAME, runnerHostname );
+    @Consumes( MediaType.APPLICATION_JSON )
+    @Produces( MediaType.APPLICATION_JSON )
+    public Response uploadSummary(
+            @QueryParam( RUNNER_HOSTNAME ) String runnerHostName,
+            @QueryParam( TEST_CLASS ) String testClass,
+            @QueryParam( RUN_NUMBER ) int runNumber,
+            @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
+                                 ) throws Exception {
 
-        InputStream in = multipart.getBodyPart( RestParams.CONTENT ).getInputStream();
+        if( inTestMode( testMode ) ) {
+            LOG.info( "Calling /upload/summary in test mode ..." );
+            LOG.info( "{} is {}", RUNNER_HOSTNAME, runnerHostName );
+            LOG.info( "{} is {}", TEST_CLASS, testClass );
+            LOG.info( "{} is {}", RUN_NUMBER, runNumber );
 
-        JSONObject json = ( JSONObject ) new JSONParser().parse( new InputStreamReader( in ) );
+            return Response.status( Response.Status.CREATED ).entity( SUCCESSFUL_TEST_MESSAGE ).build();
+        }
+        else {
+            LOG.info( "/upload/summary called ..." );
+        }
+
         BasicRun run = new BasicRun(
                 COMMIT_ID,
-                runnerHostname,
-                Util.getInt( json, "runNumber" ),
-                Util.getString( json, "testName" ) );
-        run.copyJson( json );
+                runnerHostName,
+                runNumber,
+                testClass
+        );
 
         if ( runDao.save( run ) ) {
             LOG.info( "Created new Run {} ", run );

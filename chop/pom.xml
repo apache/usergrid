@@ -100,7 +100,7 @@
     <servo.version>0.4.36</servo.version>
     <slf4j.version>1.6.1</slf4j.version>
     <default.ami.id>ami-c56152ac</default.ami.id>
-    <jettyjam.version>2.1.3</jettyjam.version>
+    <jettyjam.version>2.1.5-SNAPSHOT</jettyjam.version>
     <jsch.version>0.1.50</jsch.version>
 
     <!-- Use Vaadin 7.0.x. See for details: CHOP-72 - Vaadin 7.1.x problem - UI doesn't show. -->
