@@ -46,6 +46,7 @@ import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.TypedEntity;
+import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
@@ -72,8 +73,10 @@ import com.yammer.metrics.annotation.Metered;
 import me.prettyprint.hector.api.mutation.Mutator;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static java.util.Arrays.asList;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_SETS;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
@@ -82,6 +85,12 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
@@ -1291,11 +1300,39 @@ public class CpEntityManager implements EntityManager {
             Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, 
             Object elementCoValue, boolean removeFromDictionary, UUID timestampUuid) 
             throws Exception {
+
+        long timestamp = getTimestampInMicros( timestampUuid );
+
         if(elementCoValue == null){
             //Placeholder value
             elementCoValue = new byte[0];
         }
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        boolean entityHasDictionary = getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
+
+
+        ApplicationCF dictionary_cf = entityHasDictionary ? ENTITY_DICTIONARIES : ENTITY_COMPOSITE_DICTIONARIES;
+
+        if ( elementValue != null ) {
+            if ( !removeFromDictionary ) {
+                // Set the new value
+
+                elementCoValue = toStorableBinaryValue( elementCoValue, !entityHasDictionary );
+
+                addInsertToMutator( batch, dictionary_cf, key( entity.getUuid(), dictionaryName ),
+                        entityHasDictionary ? elementValue : asList( elementValue ), elementCoValue, timestamp );
+
+                if ( !entityHasDictionary ) {
+                    addInsertToMutator( batch, ENTITY_DICTIONARIES, key( entity.getUuid(), DICTIONARY_SETS ),
+                            dictionaryName, null, timestamp );
+                }
+            }
+            else {
+                addDeleteToMutator( batch, dictionary_cf, key( entity.getUuid(), dictionaryName ),
+                        entityHasDictionary ? elementValue : asList( elementValue ), timestamp );
+            }
+        }
+        return batch;
 
         //getRelationManager( entity )
     }
