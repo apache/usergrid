@@ -96,7 +96,7 @@ public class CollectionModule extends AbstractModule {
      * Create the provider for the node delete listener
      */
     public static class MvccEntityDeleteListenerProvider
-            implements Provider<MessageListener<MvccEntityEvent<MvccEntity>, MvccEntityEvent<MvccEntity>>> {
+            implements Provider<MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity>> {
 
 
         private final MvccEntitySerializationStrategy entitySerialization;
@@ -112,7 +112,7 @@ public class CollectionModule extends AbstractModule {
 
 
         @Override
-        public MessageListener<MvccEntityEvent<MvccEntity>, MvccEntityEvent<MvccEntity>> get() {
+        public MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity> get() {
             return new MvccEntityDeleteListener( entitySerialization,entityDelete  );
         }
     }

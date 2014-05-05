@@ -175,7 +175,7 @@ public class EntityCollectionManagerIT {
         //load may return null, use last or default
         loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
 
-        assertTrue("Entity was deleted",loadReturned == null || loadReturned.getVersion() != version);
+        assertTrue("Entity was deleted",loadReturned == null );
     }
 
 

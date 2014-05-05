@@ -1,11 +1,9 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
+import junit.framework.Assert;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.After;
@@ -414,21 +412,20 @@ public class MvccEntitySerializationStrategyImplTest {
         //now ask for up to 10 versions from the current version, we should get cleared, v2, v1
         UUID current = UUIDGenerator.newTimeUUID();
 
-        List<MvccEntity> entities = serializationStrategy.load( context, id, current, 3 );
+        Iterator<MvccEntity> entities = serializationStrategy.load( context, id, current, 3 );
 
-        assertEquals( 3, entities.size() );
+        MvccEntity first = entities.next();
+        assertEquals( clearedV3, first);
 
-        assertEquals( clearedV3, entities.get( 0 ) );
+        assertEquals(id, first.getId());
 
-        assertEquals( id, entities.get( 0 ).getId() );
+        MvccEntity second = entities.next();
+        assertEquals( returnedV2, second );
+        assertEquals( id, second.getId() );
 
-
-        assertEquals( returnedV2, entities.get( 1 ) );
-        assertEquals( id, entities.get( 1 ).getId() );
-
-
-        assertEquals( returnedV1, entities.get( 2 ) );
-        assertEquals( id, entities.get( 2 ).getId() );
+        MvccEntity third = entities.next();
+        assertEquals( returnedV1, third );
+        assertEquals( id, third.getId() );
 
 
         //now delete v2 and v1, we should still get v3
@@ -437,9 +434,8 @@ public class MvccEntitySerializationStrategyImplTest {
 
         entities = serializationStrategy.load( context, id, current, 3 );
 
-        assertEquals( 1, entities.size() );
-
-        assertEquals( clearedV3, entities.get( 0 ) );
+         first = entities.next();
+        assertEquals( clearedV3, first );
 
 
         //now get it, should be gone
@@ -448,7 +444,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         entities = serializationStrategy.load( context, id, current, 3 );
 
-        assertEquals( 0, entities.size() );
+        Assert.assertTrue( !entities.hasNext());
     }
 
 

@@ -18,11 +18,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -38,73 +34,67 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
 
     /**
      * See parent comment
-     * {@link ChangeLogGenerator#getChangeLog(org.apache.usergrid.persistence.model.entity.Id, java.util.List, java.util.UUID)}
+     * {@link ChangeLogGenerator#getChangeLog(java.util.Iterator<org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity>, java.util.UUID)}
      * @param mvccEntities
      */
     @Override
-    public List<ChangeLogEntry> getChangeLog( List<MvccEntity> mvccEntities, UUID minVersion ) {
+    public List<ChangeLogEntry> getChangeLog( Iterator<MvccEntity> mvccEntities, UUID minVersion ) {
 
         Map<String, ChangeLogEntry> writeMap = new HashMap<String, ChangeLogEntry>();
         Map<String, ChangeLogEntry> deleteMap = new HashMap<String, ChangeLogEntry>();
         List<ChangeLogEntry> changeLog = new ArrayList<ChangeLogEntry>();
         Entity keeper = null;
 
-        for ( MvccEntity mvccEntity : mvccEntities ) {
+        while(mvccEntities.hasNext()) {
+            MvccEntity mvccEntity = mvccEntities.next();
 
             Entity entity = mvccEntity.getEntity().get();
 
-            int compare = UUIDComparator.staticCompare( mvccEntity.getVersion(), minVersion );
-
-            if ( compare == 0 ) {
-                keeper = entity;
-            }
-        }
-
-        // TODO: what about cleared entities, all fields deleted but entity still there.
-        // i.e. the optional entity will be delete
-
-        for (MvccEntity mvccEntity : mvccEntities) {
-
-            Entity entity = mvccEntity.getEntity().get();
             int compare = UUIDComparator.staticCompare(mvccEntity.getVersion(), minVersion);
 
-            if (compare < 0) { // less than minVersion
+            if (compare == 0) {
+                keeper = entity;
+            } else {
+                // TODO: what about cleared entities, all fields deleted but entity still there.
+                // i.e. the optional entity will be delete
+                if (compare < 0) { // less than minVersion
 
-                for (Field field : entity.getFields()) {
+                    for (Field field : entity.getFields()) {
 
-                    // only delete field if it is not in the keeper
-                    Field keeperField = keeper.getField(field.getName());
-                    if (keeperField == null
-                            || keeperField.getValue() == null
-                            || !keeperField.getValue().equals(field.getValue())) {
+                        // only delete field if it is not in the keeper
+                        Field keeperField = keeper.getField(field.getName());
+                        if (keeperField == null
+                                || keeperField.getValue() == null
+                                || !keeperField.getValue().equals(field.getValue())) {
+
+                            String key = field.getName() + field.getValue();
+                            ChangeLogEntry cle = deleteMap.get(key);
+                            if (cle == null) {
+                                cle = new ChangeLogEntry(
+                                        entity.getId(), mvccEntity.getVersion(),
+                                        ChangeLogEntry.ChangeType.PROPERTY_DELETE, field);
+                                changeLog.add(cle);
+                            } else {
+                                cle.addVersion(mvccEntity.getVersion());
+                            }
+                        }
+                    }
+
+                } else { // greater than or equal to minVersion
+
+                    for (Field field : entity.getFields()) {
 
                         String key = field.getName() + field.getValue();
-                        ChangeLogEntry cle = deleteMap.get(key);
+                        ChangeLogEntry cle = writeMap.get(key);
                         if (cle == null) {
                             cle = new ChangeLogEntry(
                                     entity.getId(), mvccEntity.getVersion(),
-                                    ChangeLogEntry.ChangeType.PROPERTY_DELETE, field);
+                                    ChangeLogEntry.ChangeType.PROPERTY_WRITE, field);
+                            writeMap.put(key, cle);
                             changeLog.add(cle);
                         } else {
                             cle.addVersion(mvccEntity.getVersion());
                         }
-                    }
-                }
-
-            } else { // greater than or equal to minVersion
-
-                for (Field field : entity.getFields()) {
-
-                    String key = field.getName() + field.getValue();
-                    ChangeLogEntry cle = writeMap.get(key);
-                    if (cle == null) {
-                        cle = new ChangeLogEntry(
-                                entity.getId(), mvccEntity.getVersion(),
-                                ChangeLogEntry.ChangeType.PROPERTY_WRITE, field);
-                        writeMap.put(key, cle);
-                        changeLog.add(cle);
-                    } else {
-                        cle.addVersion(mvccEntity.getVersion());
                     }
                 }
             }

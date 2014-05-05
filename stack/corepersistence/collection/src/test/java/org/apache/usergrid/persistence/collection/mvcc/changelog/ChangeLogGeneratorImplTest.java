@@ -18,7 +18,9 @@
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.jukito.JukitoModule;
@@ -130,7 +132,7 @@ public class ChangeLogGeneratorImplTest {
             // Type = PROPERTY_DELETE, Property = count,    Value = 1, Versions = [55faa3bc-a925-11e3-bf9d-10ddb1de66c4]
             // Type = PROPERTY_DELETE, Property = name,     Value = name1, Versions = [55faa3bc-a925-11e3-bf9d-10ddb1de66c4]
 
-            List<MvccEntity> versions = mvccEntitySerializationStrategy
+            Iterator<MvccEntity> versions = mvccEntitySerializationStrategy
                .load( context, e1.getId(), e3.getVersion(), 10);
 
             ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();
@@ -183,7 +185,7 @@ public class ChangeLogGeneratorImplTest {
             // Type = PROPERTY_DELETE, Property = count, Value = 1, Versions = [c75f589b-a927-11e3-8bfc-10ddb1de66c4]
             // Type = PROPERTY_DELETE, Property = name, Value = name1, Versions = [c75f589b-a927-11e3-8bfc-10ddb1de66c4]
 
-            List<MvccEntity> versions = mvccEntitySerializationStrategy
+            Iterator<MvccEntity> versions = mvccEntitySerializationStrategy
                .load( context, e1.getId(), e3.getVersion(), 10);
 
             ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();

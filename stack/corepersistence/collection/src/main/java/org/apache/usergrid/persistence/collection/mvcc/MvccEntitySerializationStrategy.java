@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.collection.mvcc;
 
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,13 +63,23 @@ public interface MvccEntitySerializationStrategy {
      * @param context The context to persist the entity into
      * @param entityId The entity id to load
      * @param version The max version to seek from.  I.E a stored version <= this argument
-     * @param maxSize The maximum size to return.  If you receive this size, there may be more versions to load.
+     * @param fetchSize The maximum size to return.  If you receive this size, there may be more versions to load.
      *
      * @return A list of entities up to max size ordered from max(UUID)=> min(UUID).  The return value should be null
      *         safe and return an empty list when there are no matches
      */
-    public List<MvccEntity> load( CollectionScope context, Id entityId, UUID version, int maxSize );
+    public Iterator<MvccEntity> load( CollectionScope context, Id entityId, UUID version, int fetchSize );
 
+    /**
+     * Load a list, from highest to lowest of the entity with versions <= version up to maxSize elements
+     *
+     * @param context
+     * @param entityId
+     * @param version
+     * @param fetchSize
+     * @return
+     */
+    public Iterator<MvccEntity> loadHistory( CollectionScope context, Id entityId, UUID version, int fetchSize );
 
     /**
      * Mark this  this version as deleted from the persistence store, but keep the version to mark that is has been cleared This

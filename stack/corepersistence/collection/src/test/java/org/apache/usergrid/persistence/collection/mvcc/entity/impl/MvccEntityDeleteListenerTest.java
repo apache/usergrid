@@ -35,6 +35,7 @@ import org.junit.runner.RunWith;
 import rx.Observable;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
@@ -71,10 +72,13 @@ public class MvccEntityDeleteListenerTest {
         MvccEntityEvent<MvccEntity> entityEvent = new MvccEntityEvent<MvccEntity>(scope,id,entity);
         MutationBatch batch = mock(MutationBatch.class);
 
+        ArrayList<MvccEntity> entityList = new ArrayList<MvccEntity>();
+        entityList.add(entity);
         when(mvccEntitySerializationStrategy.delete(scope,entityId,id)).thenReturn(batch);
+        when(mvccEntitySerializationStrategy.loadHistory(scope,entityId,id,1000)).thenReturn(entityList.iterator());
 
-        Observable<MvccEntityEvent<MvccEntity>> observable = listener.receive(entityEvent);
-        MvccEntityEvent<MvccEntity> entityEventReturned = observable.toBlockingObservable().last();
-        assertEquals(entityEvent,entityEventReturned);
+        Observable<MvccEntity> observable = listener.receive(entityEvent);
+        MvccEntity entityEventReturned = observable.toBlockingObservable().last();
+        assertEquals(entity,entityEventReturned);
     }
 }

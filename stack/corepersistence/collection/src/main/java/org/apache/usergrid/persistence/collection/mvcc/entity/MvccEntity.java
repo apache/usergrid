@@ -45,7 +45,13 @@ public interface MvccEntity {
         /**
          * The entity being written represents a partial entity
          */
-        PARTIAL;
+        PARTIAL,
+
+        /**
+         * This entity has been marked as deleted
+         */
+        DELETED
+        ;
     }
 
 

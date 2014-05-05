@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,5 +45,5 @@ public interface ChangeLogGenerator {
      * @return Change-log entries ordered by version, ordered from lowest time 
      *     uuid to highest timeuuid.
      */
-    List<ChangeLogEntry> getChangeLog( List<MvccEntity> versions, UUID minVersion );
+    List<ChangeLogEntry> getChangeLog( Iterator<MvccEntity> versions, UUID minVersion );
 }

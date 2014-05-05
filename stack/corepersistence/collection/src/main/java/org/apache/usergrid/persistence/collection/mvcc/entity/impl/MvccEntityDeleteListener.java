@@ -26,46 +26,51 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationSt
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.model.field.ListField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Listens for delete entity event then deletes entity for real this time
  */
-public class MvccEntityDeleteListener implements MessageListener<MvccEntityEvent<MvccEntity>,MvccEntityEvent<MvccEntity>> {
+public class MvccEntityDeleteListener implements MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MvccEntityDeleteListener.class);
 
     private final MvccEntitySerializationStrategy entityMetadataSerialization;
 
     public MvccEntityDeleteListener(final MvccEntitySerializationStrategy entityMetadataSerialization,
-                                    @MvccEntityDelete final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete){
+                                    @MvccEntityDelete final AsyncProcessor entityDelete){
         this.entityMetadataSerialization = entityMetadataSerialization;
         entityDelete.addListener( this );
     }
 
     @Override
-    public Observable<MvccEntityEvent<MvccEntity>> receive(final MvccEntityEvent<MvccEntity> entityEvent) {
+    public Observable<MvccEntity> receive(final MvccEntityEvent<MvccEntity> entityEvent) {
         final MvccEntity entity = entityEvent.getData();
-        return Observable.from(entity).map( new Func1<MvccEntity, MutationBatch>() {
+         return Observable.create( new ObservableIterator<MvccEntity>( "getEdgesToTarget" ) {
             @Override
-            public MutationBatch call(MvccEntity mvccEntity) {
-               return entityMetadataSerialization.delete(entityEvent.getCollectionScope(),entity.getId(),entity.getVersion());
+            protected Iterator<MvccEntity> getIterator() {
+                return entityMetadataSerialization.loadHistory( entityEvent.getCollectionScope(), entity.getId(), entity.getVersion(), 1000 );
             }
-        }).map(new Func1<MutationBatch, MvccEntityEvent<MvccEntity>>() {
+        } ).subscribeOn(Schedulers.io()).map(new Func1<MvccEntity,MvccEntity>() {
             @Override
-            public MvccEntityEvent<MvccEntity> call(final MutationBatch mutationBatch) {
-
+            public  MvccEntity call(MvccEntity mvccEntity) {
                 //actually delete the edge from both the commit log and
                 try {
-                    mutationBatch.execute();
+                    entityMetadataSerialization.delete(entityEvent.getCollectionScope(),entity.getId(),entity.getVersion()).execute();
                 } catch (ConnectionException e) {
                     throw new RuntimeException("Unable to execute mutation", e);
                 }
-
-                return entityEvent;
+                return mvccEntity ;
             }
         });
     }
