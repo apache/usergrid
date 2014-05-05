@@ -318,7 +318,7 @@ public class CountingMutator<K> implements Mutator<K> {
 
 
     /**
-     * If our size is > than our max, we'll flush
+     * If our size is >= than our max, we'll flush
      */
     public void checkAndFlush() {
 
