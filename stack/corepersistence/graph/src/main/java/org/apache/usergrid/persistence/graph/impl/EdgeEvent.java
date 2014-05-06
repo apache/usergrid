@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
@@ -28,7 +29,7 @@ import org.apache.usergrid.persistence.core.scope.OrganizationScope;
  * Get the edge event in the organizational scope
  *
  */
-public class EdgeEvent<T> {
+public class EdgeEvent<T> implements Serializable {
 
     private final OrganizationScope organizationScope;
     private final T data;

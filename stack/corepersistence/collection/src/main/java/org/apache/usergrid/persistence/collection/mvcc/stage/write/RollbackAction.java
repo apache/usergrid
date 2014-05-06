@@ -28,8 +28,8 @@ import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Scheduler;
-import rx.util.functions.Action1;
 import rx.schedulers.Schedulers;
+import rx.util.functions.Action1;
 
 
 /**

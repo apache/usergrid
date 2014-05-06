@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.UUID;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
@@ -245,7 +244,7 @@ public class CpRelationManager implements RelationManager {
     @Override
     public boolean isConnectionMember(String connectionName, EntityRef entity) throws Exception {
 
-        // TODO: review determine if this implementation is correct
+        // TODO: review / determine if this implementation is correct, it does not look right
 
         return isCollectionMember(connectionName, entity);
     }
@@ -264,12 +263,20 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Results getCollection(String collectionName, UUID startResult, int count, 
             Results.Level resultsLevel, boolean reversed) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        // TODO: how to set Query startResult?
+
+        Query query = Query.fromQL("select *");
+        query.setLimit(count);
+        query.setReversed(reversed);
+
+        return searchCollection(collectionName, query);
     }
 
     @Override
     public Results getCollection(
             String collName, Query query, Results.Level level) throws Exception {
+
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
@@ -480,6 +487,7 @@ public class CpRelationManager implements RelationManager {
     @Override
     public void copyRelationships(String srcRelationName, EntityRef dstEntityRef, 
             String dstRelationName) throws Exception {
+
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
@@ -509,11 +517,6 @@ public class CpRelationManager implements RelationManager {
 
         org.apache.usergrid.persistence.index.query.Results cpResults = 
             ei.searchConnections(cpHeadEntity, collName + COLLECTION_SUFFIX, cpQuery );
-
-        if ( cpResults.isEmpty() ) {
-            Results results = new Results();
-            return results;
-        }
 
         List<Entity> entities = new ArrayList<Entity>();
 
@@ -629,9 +632,10 @@ public class CpRelationManager implements RelationManager {
 
                 // use the ident with the default alias. could be an email
                 else {
+
                     org.apache.usergrid.persistence.index.query.Query newQuery = 
                         org.apache.usergrid.persistence.index.query.Query.fromQL(
-                            "select * where email='" + query.getSingleNameOrEmailIdentifier()+ "'");
+                            "select * where name='" + query.getSingleNameOrEmailIdentifier()+ "'");
 
                     cpQuery.setRootOperand( newQuery.getRootOperand() );
                 }
@@ -679,6 +683,13 @@ public class CpRelationManager implements RelationManager {
             new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ))
                 .toBlockingObservable().last();
 
+        // create graph edge connection from head entity to member entity
+        Edge edge = new SimpleMarkedEdge( cpHeadEntity.getId(), connectionType, 
+            targetEntity.getId(), UUIDGenerator.newTimeUUID(), false );
+        GraphManager gm = managerCache.getGraphManager(organizationScope);
+        gm.writeEdge(edge).toBlockingObservable().last();
+
+        // Index the new connection
         EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
         ei.indexConnection(cpHeadEntity, connectionType, targetEntity, targetScope);
 
@@ -764,8 +775,69 @@ public class CpRelationManager implements RelationManager {
     }
 
     @Override
-    public Results searchConnectedEntities(Query query) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public Results searchConnectedEntities( Query query ) throws Exception {
+
+        if ( query == null ) {
+            query = new Query();
+        }
+
+        headEntity = em.validate( headEntity );
+
+        org.apache.usergrid.persistence.index.query.Query cpQuery = createCpQuery( query );
+
+        EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
+      
+        logger.debug("Searching connections from head-entity scope {}:{}:{}",
+            new String[] { 
+                headEntityScope.getOrganization().toString(), 
+                headEntityScope.getOwner().toString(),
+                applicationScope.getName()}); 
+
+        // get list of all connection types from this entity
+        List<String> connectionTypes = new ArrayList<String>();
+
+        if ( query.getConnectionType() != null ) {
+
+            // query specifies type
+            connectionTypes.add( query.getConnectionType() );
+
+        } else {
+
+            // find all outgoing connection types of entity
+            GraphManager gm = managerCache.getGraphManager(organizationScope);
+
+            Observable<String> types= gm.getEdgeTypesFromSource( 
+                new SimpleSearchEdgeType( cpHeadEntity.getId(), null ));
+
+            Iterator<String> iter = types.toBlockingObservable().getIterator();
+            while ( iter.hasNext() ) {
+                connectionTypes.add( iter.next() );
+            }
+        }
+
+        // search across all of those types 
+        org.apache.usergrid.persistence.index.query.Results cpResults = 
+            ei.searchConnections(cpHeadEntity, connectionTypes, cpQuery );
+
+        if ( cpResults.isEmpty() ) {
+            Results results = new Results();
+            return results;
+        }
+
+        List<Entity> entities = new ArrayList<Entity>();
+
+        for ( org.apache.usergrid.persistence.model.entity.Entity e : cpResults.getEntities() ) {
+
+            Entity entity = EntityFactory.newEntity(
+                e.getId().getUuid(), e.getField("type").getValue().toString() );
+
+            Map<String, Object> entityMap = EntityMapUtils.toMap( e );
+            entity.addProperties( entityMap ); 
+            entities.add( entity );
+
+        }
+
+        return Results.fromEntities( entities );
     }
 
     @Override

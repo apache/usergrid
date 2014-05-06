@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -74,6 +75,7 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import java.util.Collections;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
@@ -343,18 +345,30 @@ public class EsEntityIndexImpl implements EntityIndex {
     @Override
     public Results searchConnections( Entity source, String type, Query query ) {
 
-        return search( createEntityConnectionScopeTypeName( source.getId(), type), query );
+        String connType = createEntityConnectionScopeTypeName( source.getId(), type ); 
+        return search( Collections.singletonList(connType), query );
     }
 
 
     @Override
     public Results search( CollectionScope collScope, Query query) {
 
-        return search( createCollectionScopeTypeName( collScope ), query);
+        String collType = createCollectionScopeTypeName( collScope );
+        return search( Collections.singletonList(collType), query);
     }
 
 
-    public Results search( String estype, Query query) {
+    @Override
+    public Results searchConnections(Entity source, List<String> types, Query query) {
+        List<String> connTypes = new ArrayList<String>();
+        for ( String type : types ) {
+            connTypes.add( createEntityConnectionScopeTypeName(source.getId(), type));
+        }
+        return search( connTypes, query );
+    }
+
+
+    public Results search( List<String> estype, Query query) {
 
         QueryBuilder qb = query.createQueryBuilder();
         
@@ -369,7 +383,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
             SearchRequestBuilder srb = client.prepareSearch(indexName)
-                .setTypes( estype )
+                .setTypes( estype.toArray( new String[estype.size()] ))
                 .setScroll( cursorTimeout + "m" )
                 .setQuery( qb );
 
@@ -481,7 +495,22 @@ public class EsEntityIndexImpl implements EntityIndex {
         for (Object f : entity.getFields().toArray()) {
             Field field = (Field) f;
 
-            if (f instanceof ListField || f instanceof ArrayField) {
+            if (f instanceof ListField)  {
+                List list = (List) field.getValue();
+                    entityMap.put(field.getName(),
+                            new ArrayList(processCollectionForMap(list)));
+
+                if ( !list.isEmpty() ) {
+                    if ( list.get(0) instanceof String ) {
+                        Joiner joiner = Joiner.on(" ").skipNulls();
+                        String joined = joiner.join(list);
+                        entityMap.put(field.getName() + ANALYZED_SUFFIX,
+                            new ArrayList(processCollectionForMap(list)));
+                        
+                    }
+                }
+
+            } else if (f instanceof ArrayField) {
                 List list = (List) field.getValue();
                 entityMap.put(field.getName(),
                         new ArrayList(processCollectionForMap(list)));
@@ -615,4 +644,5 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void refresh() {
         client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
     }
+
 }

@@ -42,9 +42,9 @@ public class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
 
         CompositeBuilder builder = Composites.newDynamicCompositeBuilder();
 
-        builder.add( ev.getEntityId().getUuid(), UUIDSerializer.get() );
-        builder.add( ev.getEntityId().getType(), StringSerializer.get() );
-        builder.add( ev.getEntityVersion(),      UUIDSerializer.get() );
+        builder.addTimeUUID( ev.getEntityVersion() );
+        builder.addTimeUUID( ev.getEntityId().getUuid() );
+        builder.addString( ev.getEntityId().getType() );
 
         return builder.build();
     }
@@ -57,9 +57,9 @@ public class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
         DynamicComposite composite = DynamicComposite.fromByteBuffer(byteBuffer);
         Preconditions.checkArgument(composite.size() == 3, "Composite should have 3 elements");
 
-        final UUID entityId     = composite.get( 0, UUIDSerializer.get() );
-        final String entityType = composite.get( 1, StringSerializer.get() );
-        final UUID version      = composite.get( 2, UUIDSerializer.get() );
+        final UUID version      = composite.get( 0, UUIDSerializer.get() );
+        final UUID entityId     = composite.get( 1, UUIDSerializer.get() );
+        final String entityType = composite.get( 2, StringSerializer.get() );
         
         return new EntityVersion( new SimpleId( entityId, entityType ), version);
     }

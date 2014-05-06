@@ -1,0 +1,32 @@
+{
+  "name" : "ChopStack",
+  "id" : "adb51dfa-ed4f-4a36-9cbf-6b5a7b6da31e",
+  "clusters" : [ {
+    "name" : "ElasticSearch",
+    "instanceSpec" : {
+      "imageId" : "ami-35dbde5c",
+      "type" : "m1.large",
+      "keyName" : "TestKeyPair",
+      "setupScripts" : [ ],
+      "scriptEnvironment" : { }
+    },
+    "size" : 3
+  } ],
+  "dataCenter" : "us-east-1a",
+  "ipRuleSet" : {
+    "name" : "ChopTestSecurityGroup",
+    "id" : "40a543f3-9cfc-44bc-b896-77574cae1772",
+    "inboundRules" : [ {
+      "ipProtocol" : "tcp",
+      "toPort" : 8443,
+      "fromPort" : 443,
+      "ipRanges" : [ "0.0.0.0/32" ]
+    }, {
+      "ipProtocol" : "tcp",
+      "toPort" : 8080,
+      "fromPort" : 80,
+      "ipRanges" : [ "0.0.0.0/32" ]
+    } ],
+    "outboundRules" : [ ]
+  }
+}
