@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.geo.GeocellManager;
 import org.apache.usergrid.persistence.geo.model.Point;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
@@ -37,7 +38,7 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_GEOCELL;
 import static org.apache.usergrid.persistence.Schema.INDEX_CONNECTIONS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
@@ -276,7 +277,7 @@ public class GeoIndexManager {
                                                 String propertyName, EntityLocationRef location ) {
 
         Keyspace ko = cass.getApplicationKeyspace( em.getApplicationId() );
-        Mutator<ByteBuffer> m = createMutator( ko, ByteBufferSerializer.get() );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, ByteBufferSerializer.get() );
 
         batchStoreLocationInCollectionIndex( m, em.getIndexBucketLocator(), em.getApplicationId(),
                 key( owner.getUuid(), collectionName, propertyName ), owner.getUuid(), location );
@@ -314,7 +315,7 @@ public class GeoIndexManager {
                                                    EntityLocationRef location ) {
 
         Keyspace ko = cass.getApplicationKeyspace( em.getApplicationId() );
-        Mutator<ByteBuffer> m = createMutator( ko, ByteBufferSerializer.get() );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, ByteBufferSerializer.get() );
 
         batchRemoveLocationFromCollectionIndex( m, em.getIndexBucketLocator(), em.getApplicationId(),
                 key( owner.getUuid(), collectionName, propertyName ), location );

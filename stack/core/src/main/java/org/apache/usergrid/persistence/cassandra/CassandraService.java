@@ -76,7 +76,7 @@ import me.prettyprint.hector.api.query.SliceQuery;
 import static me.prettyprint.cassandra.service.FailoverPolicy.ON_FAIL_TRY_ALL_AVAILABLE;
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createMultigetSliceQuery;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+
 import static me.prettyprint.hector.api.factory.HFactory.createRangeSlicesQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createSliceQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createVirtualKeyspace;
@@ -824,7 +824,7 @@ public class CassandraService {
         if ( ttl != 0 ) {
             col.setTtl( ttl );
         }
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
         m.insert( bytebuffer( key ), columnFamily.toString(), col );
     }
 
@@ -851,7 +851,7 @@ public class CassandraService {
                                                                                                  " ttl=" + ttl : "" ) );
         }
 
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
         long timestamp = createTimestamp();
 
         for ( Object name : map.keySet() ) {
@@ -912,7 +912,7 @@ public class CassandraService {
             db_logger.debug( "deleteColumn cf=" + columnFamily + " key=" + key + " name=" + column );
         }
 
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
         m.delete( bytebuffer( key ), columnFamily.toString(), bytebuffer( column ), be );
     }
 
@@ -1002,7 +1002,7 @@ public class CassandraService {
             db_logger.debug( "deleteRow cf=" + columnFamily + " key=" + key );
         }
 
-        createMutator( ko, be ).addDeletion( bytebuffer( key ), columnFamily.toString() ).execute();
+        CountingMutator.createFlushingMutator( ko, be ).addDeletion( bytebuffer( key ), columnFamily.toString() ).execute();
     }
 
 
