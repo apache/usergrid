@@ -42,8 +42,6 @@ import org.apache.usergrid.persistence.core.migration.MigrationManager;
 
 /**
  * Cassandra-specific setup utilities.
- *
- * @author edanuff
  */
 public class CpSetup implements Setup {
 

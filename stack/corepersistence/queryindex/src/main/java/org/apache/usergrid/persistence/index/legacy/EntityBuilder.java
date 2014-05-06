@@ -17,7 +17,7 @@
  */
 
 
-package org.apache.usergrid.persistence.collection.util;
+package org.apache.usergrid.persistence.index.legacy;
 
 import java.util.ArrayList;
 import java.util.List;

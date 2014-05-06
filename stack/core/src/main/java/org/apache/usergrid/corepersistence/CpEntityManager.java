@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import me.prettyprint.hector.api.mutation.Mutator;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import org.apache.usergrid.persistence.CollectionRef;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.CounterResolution;
@@ -53,6 +54,7 @@ import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.CollectionScope;
@@ -66,7 +68,6 @@ import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -74,6 +75,7 @@ import org.apache.usergrid.persistence.schema.CollectionInfo;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import org.apache.usergrid.utils.UUIDUtils;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
+import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 import org.slf4j.Logger;
@@ -217,7 +219,7 @@ public class CpEntityManager implements EntityManager {
 
         Entity entity = new DynamicEntity( type, cpEntity.getId().getUuid() );
         entity.setUuid( cpEntity.getId().getUuid() );
-        Map<String, Object> entityMap = EntityMapUtils.toMap( cpEntity );
+        Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
         entity.addProperties( entityMap );
 
         return entity; 
@@ -279,7 +281,7 @@ public class CpEntityManager implements EntityManager {
         }
 
         A entity = EntityFactory.newEntity( entityId, type, entityClass );
-        entity.setProperties( EntityMapUtils.toMap( cpEntity ) );
+        entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
 
         return entity;
     }
@@ -333,7 +335,7 @@ public class CpEntityManager implements EntityManager {
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
             ecm.load( entityId ).toBlockingObservable().last();
         
-        cpEntity = EntityMapUtils.fromMap( cpEntity, entity.getProperties() );
+        cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
 
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
         ei.index( collectionScope, cpEntity );
@@ -545,8 +547,48 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void updateProperties(
-            EntityRef entityRef, Map<String, Object> properties) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+            EntityRef ref, Map<String, Object> properties) throws Exception {
+
+        ref = validate( ref );
+        properties = getDefaultSchema().cleanUpdatedProperties( ref.getType(), properties, false );
+
+        EntityRef entityRef = ref;
+        if ( entityRef instanceof CollectionRef ) {
+            CollectionRef cref = (CollectionRef)ref;
+            entityRef = cref.getItemRef();
+        }
+
+        Entity entity = get( entityRef );
+
+        properties.put( PROPERTY_MODIFIED, getTimestampInMillis( newTimeUUID() ) );
+
+        for ( String propertyName : properties.keySet() ) {
+            Object propertyValue = properties.get( propertyName );
+
+            Schema defaultSchema = Schema.getDefaultSchema();
+
+            boolean entitySchemaHasProperty = 
+                defaultSchema.hasProperty( entity.getType(), propertyName );
+
+            propertyValue = getDefaultSchema().validateEntityPropertyValue( 
+                entity.getType(), propertyName, propertyValue );
+
+            if ( entitySchemaHasProperty ) {
+
+                if ( !defaultSchema.isPropertyMutable( entity.getType(), propertyName ) ) {
+                    continue;
+                }
+
+                if ( ( propertyValue == null ) 
+                        && defaultSchema.isRequiredProperty( entity.getType(), propertyName ) ) {
+                    continue;
+                }
+            }
+
+            entity.setProperty(propertyName, propertyValue);
+        }
+
+        update(entity);
     }
 
     @Override
@@ -621,26 +663,31 @@ public class CpEntityManager implements EntityManager {
     @Override
     public boolean isConnectionMember(
             EntityRef owner, String connectionName, EntityRef entity) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager(owner).isCollectionMember(connectionName, entity);
     }
 
     @Override
     public Set<String> getCollections(EntityRef entityRef) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager(entityRef).getCollections();
     }
 
     @Override
     public Results getCollection(
             EntityRef entityRef, String collectionName, UUID startResult, int count, 
             Results.Level resultsLevel, boolean reversed) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager(entityRef)
+                .getCollection(collectionName, startResult, count, resultsLevel, reversed);
     }
 
     @Override
     public Results getCollection(
             UUID entityId, String collectionName, Query query, Results.Level resultsLevel) 
             throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        throw new UnsupportedOperationException("Cannot get entity by UUID alone"); 
     }
 
     @Override
@@ -685,47 +732,63 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public ConnectionRef createConnection(ConnectionRef connection) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return createConnection( 
+                connection.getConnectingEntity(), 
+                connection.getConnectionType(), 
+                connection.getConnectedEntity());
     }
 
     @Override
     public ConnectionRef createConnection(
             EntityRef connectingEntity, String connectionType, EntityRef connectedEntityRef) 
             throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        
+        return getRelationManager( connectingEntity )
+                .createConnection(connectionType, connectedEntityRef);
     }
 
     @Override
     public ConnectionRef createConnection(
             EntityRef connectingEntity, String pairedConnectionType, EntityRef pairedEntity, 
             String connectionType, EntityRef connectedEntityRef) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        throw new UnsupportedOperationException("Paired connections not supported."); 
     }
 
     @Override
     public ConnectionRef createConnection(
             EntityRef connectingEntity, ConnectedEntityRef... connections) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        throw new UnsupportedOperationException("Paired connections not supported."); 
     }
 
     @Override
     public ConnectionRef connectionRef(
             EntityRef connectingEntity, String connectionType, EntityRef connectedEntityRef) 
             throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return new ConnectionRefImpl(
+                connectingEntity.getType(),
+                connectingEntity.getUuid(),
+                connectionType,
+                connectedEntityRef.getType(),
+                connectedEntityRef.getUuid());
     }
 
     @Override
     public ConnectionRef connectionRef(
             EntityRef connectingEntity, String pairedConnectionType, EntityRef pairedEntity, 
             String connectionType, EntityRef connectedEntityRef) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        throw new UnsupportedOperationException("Paired connections not supported."); 
     }
 
     @Override
     public ConnectionRef connectionRef(
             EntityRef connectingEntity, ConnectedEntityRef... connections) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        
+        throw new UnsupportedOperationException("Paired connections not supported."); 
     }
 
     @Override
@@ -761,7 +824,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Results searchConnectedEntities(
             EntityRef connectingEntity, Query query) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager( connectingEntity ).searchConnectedEntities( query );
     }
 
     @Override
@@ -1132,6 +1196,8 @@ public class CpEntityManager implements EntityManager {
         }
 
         A entity = EntityFactory.newEntity( itemId, eType, entityClass );
+        entity.addProperties(properties);
+        
 //        logger.info( "Entity created of type {}", entity.getClass().getName() );
 
         if ( Event.ENTITY_TYPE.equals( eType ) ) {
@@ -1144,12 +1210,10 @@ public class CpEntityManager implements EntityManager {
             }
 //            Message message = storeEventAsMessage( m, event, timestamp );
 //            incrementEntityCollection( "events", timestamp );
-//
 //            entity.setUuid( message.getUuid() );
             return entity;
         }
 
-        // TODO: need to create fields as unique for some fields
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = entityToCpEntity( entity ); 
 
         // prepare to write and index Core Persistence Entity into correct scope
@@ -1179,7 +1243,7 @@ public class CpEntityManager implements EntityManager {
 
         // reflect changes in the legacy Entity
         entity.setUuid( cpEntity.getId().getUuid() );
-        Map<String, Object> entityMap = EntityMapUtils.toMap( cpEntity );
+        Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
         entity.addProperties( entityMap );
 
         if ( !is_application ) {
@@ -1286,8 +1350,11 @@ public class CpEntityManager implements EntityManager {
             new org.apache.usergrid.persistence.model.entity.Entity(
                 new SimpleId( entity.getUuid(), entity.getType() ));
 
-        // TODO: can't just do this, some fields MUST be marked as unique
-        cpEntity  = EntityMapUtils.fromMap( cpEntity, entity.getProperties() );
+        cpEntity  = CpEntityMapUtils.fromMap( 
+            cpEntity, entity.getProperties(), entity.getType(), true );
+
+        cpEntity  = CpEntityMapUtils.fromMap( 
+            cpEntity, entity.getDynamicProperties(), entity.getType(), true );
 
         return cpEntity;
     }
