@@ -27,21 +27,16 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 
-import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.beans.HColumn;
 
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_TYPES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_TYPES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 /** Iterator to iterate all types of connections the entity participates in */
 public class ConnectionTypesIterator implements Iterator<String>, Iterable<String> {
-
-
-    private static final StringSerializer STRING_SER = StringSerializer.get();
-
 
     private final CassandraService cass;
     private final UUID applicationId;
@@ -178,7 +173,7 @@ public class ConnectionTypesIterator implements Iterator<String>, Iterable<Strin
 
         //do the parse here
         for ( HColumn<ByteBuffer, ByteBuffer> col : results ) {
-            final String value = STRING_SER.fromByteBuffer( col.getName() );
+            final String value = se.fromByteBuffer( col.getName() );
 
             //always ignore loopback, this is legacy data that needs cleaned up, and it doesn't belong here
             if ( !Schema.TYPE_CONNECTION.equalsIgnoreCase( value ) ) {
