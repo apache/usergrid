@@ -18,8 +18,10 @@
 package org.apache.usergrid.persistence.index.impl;
 
 import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -31,8 +33,10 @@ public class EsEntityIndexDeleteListener implements MessageListener<MvccEntityEv
 
     private final EntityIndex entityIndex;
 
-    public EsEntityIndexDeleteListener(EntityIndex entityIndex){
+    public EsEntityIndexDeleteListener(EntityIndex entityIndex,
+                                       @MvccEntityDelete final AsyncProcessor entityDelete){
         this.entityIndex = entityIndex;
+        entityDelete.addListener(this);
     }
 
     @Override
