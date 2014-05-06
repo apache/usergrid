@@ -19,11 +19,13 @@
 package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
 import com.google.inject.Inject;
+import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.jukito.JukitoRunner;
@@ -54,11 +56,17 @@ public class MvccEntityDeleteListenerTest {
 
     protected MvccEntityDeleteListener listener;
 
+    protected SerializationFig serializationFig;
+
+    protected Keyspace keyspace;
+
     @Before
     public void setup(){
-        processor = mock( AsyncProcessor.class );
+        processor = mock(AsyncProcessor.class);
+        serializationFig = mock(SerializationFig.class);
+        keyspace = mock(Keyspace.class);
         mvccEntitySerializationStrategy = mock(MvccEntitySerializationStrategy.class);
-        listener = new MvccEntityDeleteListener(mvccEntitySerializationStrategy,processor );
+        listener = new MvccEntityDeleteListener(mvccEntitySerializationStrategy, processor, keyspace, serializationFig);
     }
 
     @Test
@@ -71,11 +79,14 @@ public class MvccEntityDeleteListenerTest {
         when(entity.getVersion()).thenReturn(id);
         MvccEntityEvent<MvccEntity> entityEvent = new MvccEntityEvent<MvccEntity>(scope,id,entity);
         MutationBatch batch = mock(MutationBatch.class);
+        when(keyspace.prepareMutationBatch()).thenReturn(batch);
+        when(serializationFig.getBufferSize()).thenReturn(10);
+        when(serializationFig.getHistorySize()).thenReturn(20);
 
-        ArrayList<MvccEntity> entityList = new ArrayList<MvccEntity>();
+        ArrayList<MvccEntity> entityList = new ArrayList<>();
         entityList.add(entity);
         when(mvccEntitySerializationStrategy.delete(scope,entityId,id)).thenReturn(batch);
-        when(mvccEntitySerializationStrategy.loadHistory(scope,entityId,id,1000)).thenReturn(entityList.iterator());
+        when(mvccEntitySerializationStrategy.loadHistory(scope,entityId,id,serializationFig.getHistorySize())).thenReturn(entityList.iterator());
 
         Observable<MvccEntity> observable = listener.receive(entityEvent);
         MvccEntity entityEventReturned = observable.toBlockingObservable().last();

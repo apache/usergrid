@@ -24,17 +24,16 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.model.field.ListField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -46,34 +45,45 @@ public class MvccEntityDeleteListener implements MessageListener<MvccEntityEvent
     private static final Logger LOG = LoggerFactory.getLogger(MvccEntityDeleteListener.class);
 
     private final MvccEntitySerializationStrategy entityMetadataSerialization;
+    private final Keyspace keyspace;
+    private final SerializationFig serializationFig;
 
     public MvccEntityDeleteListener(final MvccEntitySerializationStrategy entityMetadataSerialization,
-                                    @MvccEntityDelete final AsyncProcessor entityDelete){
+                                    @MvccEntityDelete final AsyncProcessor entityDelete,
+                                    final Keyspace keyspace,
+                                    final SerializationFig serializationFig){
         this.entityMetadataSerialization = entityMetadataSerialization;
+        this.keyspace = keyspace;
+        this.serializationFig = serializationFig;
         entityDelete.addListener( this );
     }
 
     @Override
     public Observable<MvccEntity> receive(final MvccEntityEvent<MvccEntity> entityEvent) {
         final MvccEntity entity = entityEvent.getData();
-         return Observable.create( new ObservableIterator<MvccEntity>( "getEdgesToTarget" ) {
+         return Observable.create( new ObservableIterator<MvccEntity>( "deleteEntities" ) {
                 @Override
                 protected Iterator<MvccEntity> getIterator() {
-                    Iterator<MvccEntity> iterator = entityMetadataSerialization.loadHistory( entityEvent.getCollectionScope(), entity.getId(), entity.getVersion(), 100 );
+                    Iterator<MvccEntity> iterator = entityMetadataSerialization.loadHistory( entityEvent.getCollectionScope(), entity.getId(), entity.getVersion(), serializationFig.getHistorySize() );
                     return iterator;
                 }
             } ).subscribeOn(Schedulers.io())
-                .map(new Func1<MvccEntity,MvccEntity>() {
+                .buffer(serializationFig.getBufferSize())
+                .flatMap(new Func1<List<MvccEntity>, Observable<MvccEntity>>() {
                     @Override
-                    public  MvccEntity call(MvccEntity mvccEntity) {
+                    public Observable<MvccEntity> call(List<MvccEntity> mvccEntities) {
+                        MutationBatch mutationBatch = keyspace.prepareMutationBatch();
                         //actually delete the edge from both the commit log and
+                        for (MvccEntity mvccEntity : mvccEntities) {
+                            mutationBatch.mergeShallow(entityMetadataSerialization.delete(entityEvent.getCollectionScope(), mvccEntity.getId(), mvccEntity.getVersion()));
+                        }
                         try {
-                            entityMetadataSerialization.delete(entityEvent.getCollectionScope(),mvccEntity.getId(),mvccEntity.getVersion()).execute();
+                            mutationBatch.execute();
                         } catch (ConnectionException e) {
                             throw new RuntimeException("Unable to execute mutation", e);
                         }
-                        return mvccEntity ;
+                        return Observable.from(mvccEntities);
                     }
-            });
+                });
     }
 }

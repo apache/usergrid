@@ -101,19 +101,24 @@ public class CollectionModule extends AbstractModule {
 
         private final MvccEntitySerializationStrategy entitySerialization;
         private final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete;
+        private final Keyspace keyspace;
+        private final SerializationFig serializationFig;
 
 
         @Inject
         public MvccEntityDeleteListenerProvider( final MvccEntitySerializationStrategy entitySerialization,
-                                           @MvccEntityDelete final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete ) {
+                                           @MvccEntityDelete final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete,
+                                           final Keyspace keyspace,
+                                           final SerializationFig serializationFig) {
             this.entitySerialization = entitySerialization;
             this.entityDelete = entityDelete;
+            this.serializationFig = serializationFig;
+            this.keyspace = keyspace;
         }
-
 
         @Override
         public MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity> get() {
-            return new MvccEntityDeleteListener( entitySerialization,entityDelete  );
+            return new MvccEntityDeleteListener( entitySerialization,entityDelete,keyspace,serializationFig  );
         }
     }
 }

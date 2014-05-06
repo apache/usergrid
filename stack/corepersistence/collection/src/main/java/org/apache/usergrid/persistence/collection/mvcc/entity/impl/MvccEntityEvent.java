@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -28,6 +27,7 @@ import java.util.UUID;
  * Entity Event for queues
  */
 public class MvccEntityEvent<T> implements Serializable {
+
     private final CollectionScope collectionScope;
     private final T data;
     private final UUID version;
@@ -39,16 +39,13 @@ public class MvccEntityEvent<T> implements Serializable {
         this.version = version;
     }
 
-
     public CollectionScope getCollectionScope() {
         return collectionScope;
     }
 
-
     public UUID getVersion() {
         return version;
     }
-
 
     public T getData() {
         return data;
