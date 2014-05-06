@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
 import static org.apache.usergrid.persistence.Schema.defaultCollectionName;
@@ -122,6 +123,8 @@ public class CpRelationManager implements RelationManager {
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(headEntityScope);
         this.cpHeadEntity = ecm.load( new SimpleId( 
             headEntity.getUuid(), headEntity.getType() )).toBlockingObservable().last();
+
+        Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
 
         return this;
     }
@@ -531,7 +534,9 @@ public class CpRelationManager implements RelationManager {
 
         }
 
-        return Results.fromEntities( entities );
+        Results results = Results.fromEntities( entities );
+        results.setCursor(cpResults.getCursor());
+        return results;
     }
 
 
@@ -566,6 +571,26 @@ public class CpRelationManager implements RelationManager {
                     sp.getPropertyName(), newdir );
 
             cpQuery.addSort( newsp );
+        }
+
+        if ( cpQuery.isReversed() ) {
+
+            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
+                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
+                    PROPERTY_CREATED, 
+                        org.apache.usergrid.persistence.index.query.Query.SortDirection.DESCENDING );
+
+            cpQuery.addSort( newsp ); 
+        }
+
+        if ( cpQuery.getSortPredicates().isEmpty() ) {
+
+            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
+                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
+                    PROPERTY_CREATED, 
+                        org.apache.usergrid.persistence.index.query.Query.SortDirection.ASCENDING);
+
+            cpQuery.addSort( newsp ); 
         }
 
         List<org.apache.usergrid.persistence.query.tree.Operand> 

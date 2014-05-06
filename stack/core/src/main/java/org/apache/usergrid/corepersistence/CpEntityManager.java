@@ -335,7 +335,8 @@ public class CpEntityManager implements EntityManager {
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
             ecm.load( entityId ).toBlockingObservable().last();
         
-        cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
+        cpEntity = CpEntityMapUtils.fromMap( 
+                cpEntity, entity.getProperties(), entity.getType(), true );
 
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
         ei.index( collectionScope, cpEntity );
@@ -345,27 +346,29 @@ public class CpEntityManager implements EntityManager {
         RelationManager rm = getRelationManager( entity );
         Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
 
-        logger.debug("Updating indexes of all {} collections owning the entity", owners.keySet().size());
+        logger.debug("Updating indexes of all {} collections owning the entity", 
+                owners.keySet().size());
 
         for ( String ownerType : owners.keySet() ) {
             Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
 
             for ( UUID uuid : collectionsByUuid.keySet() ) {
                 Set<String> collections = collectionsByUuid.get( uuid );
-                for ( String collection : collections ) {
+                for ( String coll : collections ) {
 
                     CollectionScope ownerScope = new CollectionScopeImpl( 
                         applicationScope.getOrganization(), 
                         applicationScope.getOwner(), 
                         Schema.defaultCollectionName( ownerType ) );
 
-                    EntityCollectionManager ownerEcm = managerCache.getEntityCollectionManager(ownerScope);
+                    EntityCollectionManager ownerEcm = 
+                            managerCache.getEntityCollectionManager(ownerScope);
 
-                    org.apache.usergrid.persistence.model.entity.Entity cpOwner = 
-                        ownerEcm.load( new SimpleId( uuid, ownerType )).toBlockingObservable().last();
+                    org.apache.usergrid.persistence.model.entity.Entity cpOwner = ownerEcm.load( 
+                            new SimpleId( uuid, ownerType )).toBlockingObservable().last();
 
                     ei.indexConnection(cpOwner, 
-                        collection+CpRelationManager.COLLECTION_SUFFIX, cpEntity, collectionScope);
+                        coll + CpRelationManager.COLLECTION_SUFFIX, cpEntity, collectionScope);
                 }
             }
         }
@@ -375,8 +378,6 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void delete(EntityRef entityRef) throws Exception {
-
-        // first, delete entity index in its own collection scope
 
         String collectionName = Schema.defaultCollectionName( entityRef.getType() );
 
@@ -397,12 +398,43 @@ public class CpEntityManager implements EntityManager {
             ecm.load( entityId ).toBlockingObservable().last();
 
         if ( entity != null ) {
+
+            // first, delete entity in every collection and connection scope in which it is indexed 
+
+            RelationManager rm = getRelationManager( entityRef );
+            Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
+
+            logger.debug("Deleting indexes of all {} collections owning the entity", 
+                    owners.keySet().size());
+
+            for ( String ownerType : owners.keySet() ) {
+                Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
+
+                for ( UUID uuid : collectionsByUuid.keySet() ) {
+                    Set<String> collections = collectionsByUuid.get( uuid );
+                    for ( String coll : collections ) {
+
+                        CollectionScope ownerScope = new CollectionScopeImpl( 
+                            applicationScope.getOrganization(), 
+                            applicationScope.getOwner(), 
+                            Schema.defaultCollectionName( ownerType ) );
+
+                        EntityCollectionManager ownerEcm = 
+                                managerCache.getEntityCollectionManager(ownerScope);
+
+                        org.apache.usergrid.persistence.model.entity.Entity cpOwner = ownerEcm.load( 
+                                new SimpleId( uuid, ownerType )).toBlockingObservable().last();
+
+                        ei.deindexConnection(cpOwner.getId(), 
+                            coll + CpRelationManager.COLLECTION_SUFFIX, entity);
+                    }
+                }
+            }
+            
+            // next, delete entity index in its own collection scope
             ei.deindex( collectionScope, entity );
             ecm.delete( entityId ).toBlockingObservable().last();
         }
-
-        // TODO: next, delete entity in every collection and connection scope in which it is indexed 
-
     }
 
 
