@@ -18,15 +18,15 @@
  */
 package org.apache.usergrid.persistence.collection.impl;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
@@ -40,8 +40,11 @@ import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
@@ -219,6 +222,90 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
             .subscribeOn( Schedulers.io() ).map( load );
     }
+
+    @Override
+    public Observable<Entity> partialUpdate ( final Entity entity) {
+        //do our input validation
+        Preconditions.checkNotNull( entity,
+                "Entity is required in the new stage of the mvcc partial update" );
+
+        final Id entityId = entity.getId();
+
+        Preconditions.checkNotNull( entityId,
+                "The entity id is required to be set for an update operation" );
+
+        Preconditions.checkNotNull( entityId.getUuid(),
+                "The entity id uuid is required to be set for an update operation" );
+
+        Preconditions.checkNotNull( entityId.getType(),
+                "The entity id type required to be set for an update operation" );
+
+        final UUID version = uuidService.newTimeUUID();
+
+        EntityUtils.setVersion( entity, version );
+
+        // fire the stages
+        // TODO use our own Schedulers.io() to help with multitenancy here.
+        // TODO writeOptimisticVerify and writeVerifyUnique should be concurrent to reduce wait time
+        // these 3 lines could be done in a single line, but they are on multiple lines for clarity
+
+        // create our observable and start the write
+        CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
+
+        //flat map allows us to do concurrent calls?
+        Observable<CollectionIoEvent<MvccEntity>> observable =
+                Observable.from( writeData ).subscribeOn( Schedulers.io() ).map( writeStart ).flatMap(
+                        new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
+
+                            @Override
+                            public Observable<CollectionIoEvent<MvccEntity>> call(
+                                    final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+
+                                // do the unique and optimistic steps in parallel
+
+                                // unique function.  Since there can be more than 1 unique value in this
+                                // entity the unique verify step itself is multiple parallel executions.
+                                // This is why we use "flatMap" instead of "map", which allows the
+                                // WriteVerifyUnique stage to execute multiple verification steps in
+                                // parallel and zip the results
+
+                                Observable<CollectionIoEvent<MvccEntity>> unique =
+                                        Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                                  .flatMap( writeVerifyUnique);
+
+
+                                // optimistic verification
+                                Observable<CollectionIoEvent<MvccEntity>> optimistic =
+                                        Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                                  .map( writeOptimisticVerify );
+
+                                // zip the results
+                                // TODO: Should the zip only return errors here, and if errors are present,
+                                // we throw during the zip phase?  I couldn't find "
+
+                                return Observable.zip( unique, optimistic, new Func2<CollectionIoEvent<MvccEntity>,
+                                        CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>>() {
+
+                                    @Override
+                                    public CollectionIoEvent<MvccEntity> call(
+                                            final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent,
+                                            final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent2 ) {
+
+                                        return mvccEntityCollectionIoEvent;
+                                    }
+                                });
+                            }
+                        });
+
+        // execute all validation stages concurrently.  Needs refactored when this is done.
+        // https://github.com/Netflix/RxJava/issues/627
+        // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(),
+        //                  writeVerifyUnique, writeOptimisticVerify );
+
+        // return the commit result.
+        return observable.map(writeCommit).doOnError( rollback );
+    }
+
 
 
     /**
