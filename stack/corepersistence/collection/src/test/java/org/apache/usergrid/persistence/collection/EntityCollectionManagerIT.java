@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
+import org.apache.usergrid.persistence.model.field.StringField;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
@@ -85,6 +86,33 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Version exists" );
     }
 
+    @Test
+    public void partialUpdate() {
+        CollectionScope context = new CollectionScopeImpl(
+                new SimpleId( "organization" ),  new SimpleId( "testUpdate" ), "testUpdate" );
+
+        Entity newEntity = new Entity( new SimpleId( "testUpdate" ) );
+        newEntity.setField( new StringField("testField","value") );
+
+        EntityCollectionManager manager = factory.createCollectionManager( context );
+
+        Observable<Entity> observable = manager.write( newEntity );
+
+        Entity returned = observable.toBlockingObservable().lastOrDefault( null );
+
+        assertNotNull( "Returned has a uuid", returned.getId() );
+        assertNotNull( "Version exists" );
+
+        newEntity.setField( new StringField("testField","NEWPARTIALUPDATEZOMG") );
+        observable = manager.partialUpdate( newEntity );
+
+        returned = observable.toBlockingObservable().lastOrDefault( null );
+
+        assertNotNull( "Returned has a uuid", returned.getId() );
+        assertEquals( newEntity.getField( "testField" ),returned.getField( "testField" ) );
+        assertNotNull( "Version exists" );
+
+    }
 
     @Test
     public void writeWithUniqueValues() {
