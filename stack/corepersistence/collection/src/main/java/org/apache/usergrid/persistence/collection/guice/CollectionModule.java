@@ -93,7 +93,7 @@ public class CollectionModule extends AbstractModule {
 
 
     /**
-     * Create the provider for the node delete listener
+     * Create the provider for the entity delete listener
      */
     public static class MvccEntityDeleteListenerProvider
             implements Provider<MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity>> {
