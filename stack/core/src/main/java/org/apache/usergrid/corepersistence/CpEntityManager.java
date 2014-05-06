@@ -605,7 +605,6 @@ public class CpEntityManager implements EntityManager {
         if ( !(elementValue instanceof Serializable)){
             throw new IllegalArgumentException( "Element Value must be serializable." );
         }
-//TODO: this overwrites dictionaries, need to add on to them not overwrite when it has the same name.
 
         Map<String,Object> dictionary = entity.getDynamicProperties();
         Map<String,Object> props = ( TreeMap ) dictionary.get( dictionaryName );
@@ -616,7 +615,6 @@ public class CpEntityManager implements EntityManager {
 
         entity.addProperties(dictionary);
         update( entity );
-        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -640,7 +638,7 @@ public class CpEntityManager implements EntityManager {
 
         Entity entity = get(entityRef.getUuid(),entityRef.getType());
 
-        entity.getDynamicProperties().putAll( ( Map<? extends String, ?> ) elementValues );
+        entity.getDynamicProperties().put( dictionaryName,elementValues );
         update( entity );
     }
 

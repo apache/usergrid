@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -198,6 +199,25 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         Set<String> set = em.getDictionaryNames( em.getApplicationRef() );
 
         assertTrue( set.contains( "oauthproviders" ) );
+
+    }
+    @Test
+    public void testAddMapToDictionaries() throws Exception {
+        LOG.info( "EntityDictionaryIT.testAddMapToDictionaries" );
+
+        Map<String,Object> testMap = new HashMap<String,Object>();
+        UUID applicationId = setup.createApplication( "testOrganization", "testApplicationDictionaries" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+        testMap.put( "testName","testVal" );
+
+        em.addMapToDictionary( em.getApplicationRef(), "testProvider",testMap );
+
+        Object o = em.getDictionaryElementValue( em.getApplicationRef(), "testProvider","testName" );
+        assertEquals("testVal" , o.toString() );
 
     }
 }
