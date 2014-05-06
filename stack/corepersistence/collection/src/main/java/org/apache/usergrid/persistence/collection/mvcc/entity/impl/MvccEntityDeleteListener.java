@@ -57,21 +57,23 @@ public class MvccEntityDeleteListener implements MessageListener<MvccEntityEvent
     public Observable<MvccEntity> receive(final MvccEntityEvent<MvccEntity> entityEvent) {
         final MvccEntity entity = entityEvent.getData();
          return Observable.create( new ObservableIterator<MvccEntity>( "getEdgesToTarget" ) {
-            @Override
-            protected Iterator<MvccEntity> getIterator() {
-                return entityMetadataSerialization.loadHistory( entityEvent.getCollectionScope(), entity.getId(), entity.getVersion(), 1000 );
-            }
-        } ).subscribeOn(Schedulers.io()).map(new Func1<MvccEntity,MvccEntity>() {
-            @Override
-            public  MvccEntity call(MvccEntity mvccEntity) {
-                //actually delete the edge from both the commit log and
-                try {
-                    entityMetadataSerialization.delete(entityEvent.getCollectionScope(),entity.getId(),entity.getVersion()).execute();
-                } catch (ConnectionException e) {
-                    throw new RuntimeException("Unable to execute mutation", e);
+                @Override
+                protected Iterator<MvccEntity> getIterator() {
+                    Iterator<MvccEntity> iterator = entityMetadataSerialization.loadHistory( entityEvent.getCollectionScope(), entity.getId(), entity.getVersion(), 100 );
+                    return iterator;
                 }
-                return mvccEntity ;
-            }
-        });
+            } ).subscribeOn(Schedulers.io())
+                .map(new Func1<MvccEntity,MvccEntity>() {
+                    @Override
+                    public  MvccEntity call(MvccEntity mvccEntity) {
+                        //actually delete the edge from both the commit log and
+                        try {
+                            entityMetadataSerialization.delete(entityEvent.getCollectionScope(),mvccEntity.getId(),mvccEntity.getVersion()).execute();
+                        } catch (ConnectionException e) {
+                            throw new RuntimeException("Unable to execute mutation", e);
+                        }
+                        return mvccEntity ;
+                    }
+            });
     }
 }
