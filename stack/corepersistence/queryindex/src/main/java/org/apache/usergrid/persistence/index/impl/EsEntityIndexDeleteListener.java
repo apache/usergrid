@@ -18,39 +18,97 @@
 package org.apache.usergrid.persistence.index.impl;
 
 import com.google.common.base.Optional;
+import org.apache.cassandra.cql3.CQL3Type;
 import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.MessageListener;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.query.Results;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-public class EsEntityIndexDeleteListener implements MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity> {
+import java.util.*;
+
+public class EsEntityIndexDeleteListener implements MvccDeleteMessageListener {
 
     private final EntityIndex entityIndex;
+    private final SerializationFig serializationFig;
 
     public EsEntityIndexDeleteListener(EntityIndex entityIndex,
-                                       @MvccEntityDelete final AsyncProcessor entityDelete){
+                                       @MvccEntityDelete final AsyncProcessor entityDelete,
+                                       SerializationFig serializationFig) {
         this.entityIndex = entityIndex;
+        this.serializationFig = serializationFig;
         entityDelete.addListener(this);
     }
 
     @Override
-    public Observable<MvccEntity> receive(MvccEntityEvent<MvccEntity> event) {
-        return Observable.from(event).subscribeOn(Schedulers.io()).map(
-                new Func1<MvccEntityEvent<MvccEntity>, MvccEntity>() {
-                    @Override
-                    public MvccEntity call(MvccEntityEvent<MvccEntity> mvccEntityMvccEntityEvent) {
-                        MvccEntity mvccEntity = mvccEntityMvccEntityEvent.getData();
-                        Optional<Entity> entity =mvccEntity.getEntity();
-                        entityIndex.deindex(mvccEntityMvccEntityEvent.getCollectionScope(),entity.get());
-                        return mvccEntity;
+    public Observable<MvccEntity> receive(final MvccEntityEvent<MvccEntity> event) {
+        return Observable.create(new ObservableIterator<MvccEntity>("deleteEsIndexVersions") {
+            @Override
+            protected Iterator<MvccEntity> getIterator() {
+                Results results= entityIndex.getEntityVersions(event.getVersion(), event.getCollectionScope());
+                Iterator<MvccEntity> iterator = Collections.emptyListIterator();
+                if(results!=null) {
+                    List<Entity> entities = results.getEntities();
+                    List<MvccEntity> mvccEntities = new ArrayList<>();
+                    for (Entity entity : entities) {
+                        mvccEntities.add((MvccEntity) new EsMvccEntityImpl(entity));
                     }
+                    iterator = mvccEntities.iterator();
                 }
-        );
+                return iterator;
+            }
+        }).subscribeOn(Schedulers.io())
+                .buffer(serializationFig.getBufferSize())
+                .flatMap(new Func1<List<MvccEntity>, Observable<MvccEntity>>() {
+                    @Override
+                    public Observable<MvccEntity> call(List<MvccEntity> entities) {
+                        for (MvccEntity entity : entities) {
+                            entityIndex.deindex(event.getCollectionScope(), entity.getEntity().get());
+                        }
+                        return Observable.from(entities);
+                    }
+                });
+    }
+
+    public class EsMvccEntityImpl implements MvccEntity{
+
+        UUID version;
+        Id id;
+        Entity entity;
+
+        public EsMvccEntityImpl(Entity entity){
+            this.entity = entity;
+            this.id = entity.getId();
+            this.version = entity.getVersion();
+        }
+
+        @Override
+        public Optional<Entity> getEntity() {
+            return Optional.fromNullable(entity) ;
+        }
+
+        @Override
+        public UUID getVersion() {
+            return version;
+        }
+
+        @Override
+        public Id getId() {
+            return id;
+        }
+
+        @Override
+        public Status getStatus() {
+            return Status.DELETED;
+        }
     }
 }

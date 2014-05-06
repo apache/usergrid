@@ -23,8 +23,10 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -55,30 +57,33 @@ public class IndexModule extends AbstractModule {
 
         Multibinder<MessageListener> messageListenerMultibinder = Multibinder.newSetBinder(binder(), MessageListener.class);
 
-        messageListenerMultibinder.addBinding().toProvider( EsEntityIndexDeleteListenerProvider.class ).asEagerSingleton();
+        messageListenerMultibinder.addBinding().toProvider(EsEntityIndexDeleteListenerProvider.class).asEagerSingleton();
     }
 
     /**
      * Create the provider for the node delete listener
      */
     public static class EsEntityIndexDeleteListenerProvider
-            implements Provider<MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity>> {
+            implements Provider<MvccDeleteMessageListener> {
 
 
         private final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete;
         private final EntityIndex entityIndex;
+        private final SerializationFig serializationFig;
 
 
         @Inject
         public EsEntityIndexDeleteListenerProvider( final EntityIndex entityIndex,
-                                                 @MvccEntityDelete final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete) {
+                                                 @MvccEntityDelete final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete,
+                                                 SerializationFig serializationFig) {
             this.entityDelete = entityDelete;
             this.entityIndex = entityIndex;
+            this.serializationFig = serializationFig;
         }
 
         @Override
-        public MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity> get() {
-            return new EsEntityIndexDeleteListener(entityIndex,entityDelete);
+        public MvccDeleteMessageListener get() {
+            return new EsEntityIndexDeleteListener(entityIndex,entityDelete,serializationFig);
         }
     }
 }

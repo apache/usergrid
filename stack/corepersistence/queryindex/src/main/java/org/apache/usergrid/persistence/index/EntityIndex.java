@@ -25,6 +25,8 @@ import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import java.util.UUID;
+
 
 /**
  * Provides indexing of Entities within a scope.
@@ -70,8 +72,14 @@ public interface EntityIndex {
      * Delete single Connection from index. 
      * @param target Entity that is the target of the Connection (e.g. beer).
      */
-    void deindexConnection( Id source, String type, Entity target ); 
+    void deindexConnection( Id source, String type, Entity target );
 
+    /**
+     * Find versions prior to this version
+     * @param version find version <= this version
+     * @param collScope CollectionScope of the entity
+     */
+    Results getEntityVersions (UUID version,CollectionScope collScope);
 
     /**
      * Force refresh of index (should be used for testing purposes only).

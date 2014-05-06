@@ -45,56 +45,63 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
         List<ChangeLogEntry> changeLog = new ArrayList<ChangeLogEntry>();
         Entity keeper = null;
 
+        List<Entity> entityList = new ArrayList<>();
         while(mvccEntities.hasNext()) {
             MvccEntity mvccEntity = mvccEntities.next();
 
             Entity entity = mvccEntity.getEntity().get();
-
+            entityList.add(entity);
             int compare = UUIDComparator.staticCompare(mvccEntity.getVersion(), minVersion);
 
             if (compare == 0) {
                 keeper = entity;
-            } else {
-                // TODO: what about cleared entities, all fields deleted but entity still there.
-                // i.e. the optional entity will be delete
-                if (compare < 0) { // less than minVersion
+            }
+        }
 
-                    for (Field field : entity.getFields()) {
+        for (Entity entity : entityList) {
 
-                        // only delete field if it is not in the keeper
-                        Field keeperField = keeper.getField(field.getName());
-                        if (keeperField == null
-                                || keeperField.getValue() == null
-                                || !keeperField.getValue().equals(field.getValue())) {
+            int compare = UUIDComparator.staticCompare(entity.getVersion(), minVersion);
 
-                            String key = field.getName() + field.getValue();
-                            ChangeLogEntry cle = deleteMap.get(key);
-                            if (cle == null) {
-                                cle = new ChangeLogEntry(
-                                        entity.getId(), mvccEntity.getVersion(),
-                                        ChangeLogEntry.ChangeType.PROPERTY_DELETE, field);
-                                changeLog.add(cle);
-                            } else {
-                                cle.addVersion(mvccEntity.getVersion());
-                            }
-                        }
-                    }
 
-                } else { // greater than or equal to minVersion
+            // TODO: what about cleared entities, all fields deleted but entity still there.
+            // i.e. the optional entity will be delete
+            if (compare < 0) { // less than minVersion
 
-                    for (Field field : entity.getFields()) {
+                for (Field field : entity.getFields()) {
+
+                    // only delete field if it is not in the keeper
+                    Field keeperField = keeper.getField(field.getName());
+                    if (keeperField == null
+                            || keeperField.getValue() == null
+                            || !keeperField.getValue().equals(field.getValue())) {
 
                         String key = field.getName() + field.getValue();
-                        ChangeLogEntry cle = writeMap.get(key);
+                        ChangeLogEntry cle = deleteMap.get(key);
                         if (cle == null) {
                             cle = new ChangeLogEntry(
-                                    entity.getId(), mvccEntity.getVersion(),
-                                    ChangeLogEntry.ChangeType.PROPERTY_WRITE, field);
-                            writeMap.put(key, cle);
+                                    entity.getId(), entity.getVersion(),
+                                    ChangeLogEntry.ChangeType.PROPERTY_DELETE, field);
                             changeLog.add(cle);
                         } else {
-                            cle.addVersion(mvccEntity.getVersion());
+                            cle.addVersion(entity.getVersion());
                         }
+                    }
+                }
+
+            } else { // greater than or equal to minVersion
+
+                for (Field field : entity.getFields()) {
+
+                    String key = field.getName() + field.getValue();
+                    ChangeLogEntry cle = writeMap.get(key);
+                    if (cle == null) {
+                        cle = new ChangeLogEntry(
+                                entity.getId(), entity.getVersion(),
+                                ChangeLogEntry.ChangeType.PROPERTY_WRITE, field);
+                        writeMap.put(key, cle);
+                        changeLog.add(cle);
+                    } else {
+                        cle.addVersion(entity.getVersion());
                     }
                 }
             }

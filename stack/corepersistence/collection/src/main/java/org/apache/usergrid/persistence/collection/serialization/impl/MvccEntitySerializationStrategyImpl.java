@@ -22,6 +22,8 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import com.netflix.astyanax.query.RowQuery;
+import com.netflix.astyanax.util.RangeBuilder;
+import javafx.beans.*;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
@@ -155,6 +157,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkNotNull( version, "version is required" );
         Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
 
+
+
         RowQuery<ScopedRowKey<CollectionScope, Id>, UUID> query = keyspace.prepareQuery(CF_ENTITY_DATA).getKey(ScopedRowKey.fromKey(collectionScope, entityId))
                 .withColumnRange(version, null, false, fetchSize);
 
@@ -172,9 +176,9 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkArgument( fetchSize > 0, "max Size must be greater than 0" );
 
         RowQuery<ScopedRowKey<CollectionScope, Id>, UUID> query = keyspace.prepareQuery(CF_ENTITY_DATA).getKey(ScopedRowKey.fromKey(collectionScope, entityId))
-                .withColumnRange(null, version, false, fetchSize);
+                .withColumnRange(null, version, true, fetchSize);
 
-        return new ColumnNameIterator(query, new MvccColumnParser(entityId), false);
+         return new ColumnNameIterator(query, new MvccColumnParser(entityId), false);
 
     }
 

@@ -23,10 +23,10 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,7 @@ import java.util.List;
 /**
  * Listens for delete entity event then deletes entity for real this time
  */
-public class MvccEntityDeleteListener implements MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity> {
+public class MvccEntityDeleteListener implements MvccDeleteMessageListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(MvccEntityDeleteListener.class);
 

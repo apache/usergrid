@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 
 /** 
@@ -167,7 +168,7 @@ public class EntityManagerFacade {
     }
 
 	
-	public void delete( Entity entity ) {
+	public Observable<Void> delete( Entity entity ) {
 
         String type = entity.getId().getType();
 
@@ -178,7 +179,7 @@ public class EntityManagerFacade {
         EntityIndex eci = getIndex( scope );
 
 		eci.deindex( scope, entity );
-		ecm.delete( entity.getId() );
+		return ecm.delete(entity.getId());
 	}
 
 

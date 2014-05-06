@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -91,6 +92,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     private final CollectionScope appScope;
 
     private final Client client;
+    private final SerializationFig serializationFig;
 
     protected EntityCollectionManagerFactory ecmFactory;
 
@@ -103,6 +105,8 @@ public class EsEntityIndexImpl implements EntityIndex {
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
     public static final String GEO_SUFFIX = "_ug_geo";
     public static final String COLLECTION_SCOPE_FIELDNAME = "zzz__collectionscope__zzz";
+    public static final String VERSION_FIELDNAME = "zzz__entityversion__zzz";
+
 
     public static final String DOC_ID_SEPARATOR = "|";
     public static final String DOC_ID_SEPARATOR_SPLITTER = "\\|";
@@ -120,7 +124,8 @@ public class EsEntityIndexImpl implements EntityIndex {
             @Assisted final CollectionScope appScope,
             IndexFig config,
             EsProvider provider,
-            EntityCollectionManagerFactory factory) {
+            EntityCollectionManagerFactory factory,
+            SerializationFig serializationFig) {
         
         ValidationUtils.validateOrganizationScope( orgScope );
         MvccValidationUtils.validateCollectionScope( appScope );
@@ -132,6 +137,8 @@ public class EsEntityIndexImpl implements EntityIndex {
         this.ecmFactory = factory;
 
         this.indexName = createIndexName( config.getIndexNamePrefix(), orgScope, appScope );
+
+        this.serializationFig = serializationFig;
 
         this.refresh = config.isForcedRefresh();
         this.cursorTimeout = config.getQueryCursorTimeout();
@@ -260,7 +267,8 @@ public class EsEntityIndexImpl implements EntityIndex {
         Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
         entityAsMap.put("created", entity.getId().getUuid().timestamp());
         entityAsMap.put("updated", entity.getVersion().timestamp());
-        entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, collScopeTypeName ); 
+        entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, collScopeTypeName );
+        entityAsMap.put(VERSION_FIELDNAME, entity.getVersion().timestamp() );
 
         String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
 
@@ -586,4 +594,14 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void deindexConnection( Id sourceId, String type, Entity target ) {
         deindex( createEntityConnectionScopeTypeName( sourceId, type ), target );
     }
+
+    @Override
+    public Results getEntityVersions(UUID version, CollectionScope collScope) {
+        Query query = new Query();
+        query.addLessThanEqualFilter(VERSION_FIELDNAME,version.timestamp());
+        query.setLimit( serializationFig.getHistorySize() );
+        Results results = search(collScope,query);
+        return results;
+    }
+
 }

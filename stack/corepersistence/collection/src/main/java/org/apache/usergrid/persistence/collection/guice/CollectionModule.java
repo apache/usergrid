@@ -22,6 +22,7 @@ import com.google.inject.*;
 import com.google.inject.multibindings.Multibinder;
 import com.netflix.astyanax.Keyspace;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
@@ -96,7 +97,7 @@ public class CollectionModule extends AbstractModule {
      * Create the provider for the entity delete listener
      */
     public static class MvccEntityDeleteListenerProvider
-            implements Provider<MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity>> {
+            implements Provider<MvccDeleteMessageListener> {
 
 
         private final MvccEntitySerializationStrategy entitySerialization;
@@ -117,7 +118,7 @@ public class CollectionModule extends AbstractModule {
         }
 
         @Override
-        public MessageListener<MvccEntityEvent<MvccEntity>, MvccEntity> get() {
+        public MvccDeleteMessageListener get() {
             return new MvccEntityDeleteListener( entitySerialization,entityDelete,keyspace,serializationFig  );
         }
     }

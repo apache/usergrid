@@ -22,11 +22,21 @@ import com.google.inject.Inject;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
+import org.apache.usergrid.persistence.core.consistency.CompleteListener;
+import org.apache.usergrid.persistence.core.consistency.ErrorListener;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -59,6 +69,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
+import rx.Observable;
 
 
 @RunWith(JukitoRunner.class)
@@ -87,6 +98,10 @@ public class CollectionIT {
     
     @Inject
     public EntityIndexFactory cif;
+
+    @Inject
+    @MvccEntityDelete
+    public AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete;
 
     private EntityManagerFacade em;
 
@@ -318,6 +333,49 @@ public class CollectionIT {
         Entity returned = r.getEntities().get( 0 );
 
         assertEquals( user.getId(), returned.getId() );
+    }
+
+
+    @Test
+    public void deleteVerification() throws Exception {
+
+        final CountDownLatch latch = new CountDownLatch(2);
+        entityDelete.addCompleteListener(new CompleteListener<MvccEntityEvent<MvccEntity>>() {
+            @Override
+            public void onComplete(AsynchronousMessage<MvccEntityEvent<MvccEntity>> event) {
+                latch.countDown();
+            }
+        });
+        entityDelete.addErrorListener(new ErrorListener<MvccEntityEvent<MvccEntity>>() {
+            @Override
+            public void onError(AsynchronousMessage<MvccEntityEvent<MvccEntity>> event, Throwable t) {
+                latch.countDown();
+            }
+        });
+
+        String middleName = "middleName" + UUIDUtils.newTimeUUID();
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "username", "edanuff" );
+        properties.put( "email", "ed@anuff.com" );
+        properties.put( "middlename", middleName );
+        Entity user = em.create( "user", properties );
+        user.setField(new StringField("address1","1782 address st"));
+        em.update(user);
+        user.setField(new StringField("address2","apt 508"));
+        em.update(user);
+        user.setField(new StringField("address3","apt 508"));
+        em.update(user);
+        em.refreshIndex();
+
+        user = em.get(user.getId());
+        em.delete(user).toBlockingObservable().last();
+        latch.await(10, TimeUnit.SECONDS);
+        // EntityRef
+        Query query = new Query();
+        query.addEqualityFilter( "username", "edanuff" );
+        Results r = em.searchCollection( em.getApplicationRef(), "users", query );
+
+        assertTrue( r.size() == 0 );
     }
 
 
