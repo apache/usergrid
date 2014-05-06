@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 
 import me.prettyprint.cassandra.connection.HConnectionManager;
 import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
@@ -166,6 +167,12 @@ public class CassandraService {
         systemKeyspace =
                 HFactory.createKeyspace( SYSTEM_KEYSPACE, cluster, consistencyLevelPolicy, ON_FAIL_TRY_ALL_AVAILABLE,
                         accessMap );
+
+
+        final int flushSize = getIntValue( properties, "cassandra.mutation.flushsize", 2000 );
+        CountingMutator.MAX_SIZE = flushSize;
+
+
     }
 
 

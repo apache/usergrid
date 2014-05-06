@@ -61,6 +61,7 @@ import org.apache.usergrid.persistence.geo.CollectionGeoSearch;
 import org.apache.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.geo.model.Point;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.persistence.query.ir.AllNode;
 import org.apache.usergrid.persistence.query.ir.NameIdentifierNode;
 import org.apache.usergrid.persistence.query.ir.QueryNode;
@@ -1062,7 +1063,7 @@ public class RelationManagerImpl implements RelationManager {
     public void updateEntityConnection( boolean disconnect, ConnectionRefImpl connection ) throws Exception {
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), be );
 
         // Make or break the connection
 
@@ -1550,7 +1551,7 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator(cass.getApplicationKeyspace( applicationId ), be );
 
         batchAddToCollection( batch, collectionName, itemEntity, timestampUuid );
 
@@ -1577,7 +1578,7 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), be );
 
         Schema schema = getDefaultSchema();
         for ( Entry<String, List<UUID>> entry : collectionsByType.entrySet() ) {
@@ -1635,7 +1636,7 @@ public class RelationManagerImpl implements RelationManager {
 
         if ( itemEntity != null ) {
             UUID timestampUuid = newTimeUUID();
-            Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+            Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), be );
 
             batchAddToCollection( batch, collectionName, itemEntity, timestampUuid );
 
@@ -1678,7 +1679,7 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), be );
 
         batchRemoveFromCollection( batch, collectionName, itemEntity, timestampUuid );
 
