@@ -215,7 +215,6 @@ public class MvccEntitySerializationStrategyImplTest {
         assertNull( returned );
     }
 
-
     @Test
     public void writeLoadClearDelete() throws ConnectionException {
 
@@ -646,8 +645,6 @@ public class MvccEntitySerializationStrategyImplTest {
         serializationStrategy.load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ),
                 UUIDGenerator.newTimeUUID(), 0 );
     }
-
-
 
 
 

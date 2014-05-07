@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.util.RepairUtil;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
@@ -56,10 +57,8 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
 
 
     @Inject
-    public Load( final UUIDService uuidService, 
-            final MvccEntitySerializationStrategy entitySerializationStrategy ) {
-        Preconditions.checkNotNull( entitySerializationStrategy, 
-                "entitySerializationStrategy is required" );
+    public Load( final UUIDService uuidService, final MvccEntitySerializationStrategy entitySerializationStrategy ) {
+        Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
         Preconditions.checkNotNull( uuidService, "uuidService is required" );
 
 
@@ -80,26 +79,47 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         //generate  a version that represents now
         final UUID versionMax = uuidService.newTimeUUID();
 
-        List<MvccEntity> results = entitySerializationStrategy.load( 
-                collectionScope, entityId, versionMax, 1 );
+        List<MvccEntity> results = entitySerializationStrategy.load( collectionScope, entityId, versionMax, 5 );
 
         //nothing to do, we didn't get a result back
-        if ( results.size() != 1 ) {
+        if ( results.size() < 1 ) {
             return null;
         }
 
-        final Optional<Entity> targetVersion = results.get( 0 ).getEntity();
+        if ( results.size() == 1 ) {
+            final Optional<Entity> targetVersion = results.get( 0 ).getEntity();
 
-        //this entity has been marked as cleared.  
-        //The version exists, but does not have entity data
-        if ( !targetVersion.isPresent() ) {
+            //this entity has been marked as cleared.
+            //The version exists, but does not have entity data
+            if ( !targetVersion.isPresent() ) {
 
-            //TODO, a lazy org.apache.usergrid.persistence.core.consistency repair/cleanup here?
+                //TODO, a lazy org.apache.usergrid.persistence.core.consistency repair/cleanup here?
 
-            return null;
+                return null;
+            }
+
+
+            return targetVersion.get();
         }
 
 
-        return targetVersion.get();
+        return RepairUtil.repair( results );
+
+        //TODO: just immediately call repair.chkrepair.
+        //TODO: ignore bottom.
+        // the repair will return the completed entity.
+        //        final Optional<Entity> targetVersion = results.get( 0 ).getEntity();
+        //
+        //        //this entity has been marked as cleared.
+        //        //The version exists, but does not have entity data
+        //        if ( !targetVersion.isPresent() ) {
+        //
+        //            //TODO, a lazy org.apache.usergrid.persistence.core.consistency repair/cleanup here?
+        //
+        //            return null;
+        //        }
+        //
+        //
+        //        return targetVersion.get();
     }
 }
