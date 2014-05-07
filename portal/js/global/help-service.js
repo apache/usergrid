@@ -24,13 +24,13 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
   $rootScope.help.helpButtonStatus = 'Enable Help';
   $rootScope.help.helpTooltipsEnabled = false;
   $rootScope.help.clicked = false;
-  $rootScope.help.showHelpButtons = false;  
-  $rootScope.help.introjs_shouldLaunch = false;  
+  $rootScope.help.showHelpButtons = false;
+  $rootScope.help.introjs_shouldLaunch = false;
   $rootScope.help.showTabsId = 'invisible';
   $rootScope.help.showJsonId = 'invisible';
   var tooltipStartTime;
   var helpStartTime;
-  var introjs_step;    
+  var introjs_step;
 
   /** get introjs and tooltip json from s3 **/
   var getHelpJson = function(path) {
@@ -42,24 +42,24 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
     var status;
     if (helpType == 'tour') {
       //ftu for introjs
-      status = localStorage.getItem('ftu_tour');        
+      status = localStorage.getItem('ftu_tour');
       localStorage.setItem('ftu_tour', 'false');
     } else if (helpType == 'tooltips') {
       //ftu for tooltips
-      status = localStorage.getItem('ftu_tooltips');        
+      status = localStorage.getItem('ftu_tooltips');
       localStorage.setItem('ftu_tooltips', 'false');
     }
     return status;
   }
 
   /** sends GA event on mouseover of tooltip **/
-  $rootScope.help.sendTooltipGA = function (tooltipName) {      
+  $rootScope.help.sendTooltipGA = function (tooltipName) {
     $analytics.eventTrack('tooltip - ' + $rootScope.currentPath, {
-      category: 'App Services', 
+      category: 'App Services',
       label: tooltipName
     });
   }
-  
+
   /** hides/shows tooltips **/
   $rootScope.help.toggleTooltips = function() {
     if ($rootScope.help.helpTooltipsEnabled == false) {
@@ -67,7 +67,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
       $rootScope.help.helpButtonStatus = 'Disable Help';
       $rootScope.help.helpTooltipsEnabled = true;
       $rootScope.$broadcast('tooltips-enabled');
-      showHelpModal('tooltips');      
+      showHelpModal('tooltips');
     } else {
       //turn off help tooltips
       $rootScope.help.helpButtonStatus = 'Enable Help';
@@ -78,39 +78,39 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
 
   /** show/hide introjs id attrs in the users>profile tab **/
   $rootScope.$on('users-received', function(event, users) {
-    
-    if(users._list.length > 0){            
+
+    if(users._list.length > 0){
       $rootScope.help.showTabsId = "intro-information-tabs";
       $rootScope.help.showJsonId = "intro-json-object";
-    } else {      
+    } else {
       $rootScope.help.showTabsId = "invisible";
       $rootScope.help.showJsonId = "invisible";
     }
   });
 
   /** show/hide introjs id attrs in the users>profile tab **/
-  $rootScope.$on('groups-received', function(event, groups) {    
-    if(groups._list.length > 0){       
+  $rootScope.$on('groups-received', function(event, groups) {
+    if(groups._list.length > 0){
       $rootScope.help.showTabsId = "intro-information-tabs";
       $rootScope.help.showJsonId = "intro-json-object";
-    } else {            
+    } else {
       $rootScope.help.showTabsId = "invisible";
       $rootScope.help.showJsonId = "invisible";
     }
   });
 
-  $rootScope.$on('$routeChangeSuccess', function(event, current) {      
+  $rootScope.$on('$routeChangeSuccess', function(event, current) {
     //hide the help buttons if not on org-overview page
     var path = current.$$route ? current.$$route.originalPath : null;
-    if (path == '/org-overview' || path.indexOf('/performance') != -1 || path == '/users' || path == '/groups' || path == '/roles' || path == '/data') {
-      
+    if (path === '/org-overview' || (path && path.indexOf('/performance') >= 0) || path === '/users' || path === '/groups' || path === '/roles' || path === '/data') {
+
       $rootScope.help.showHelpButtons = true;
 
       //retrieve the introjs and tooltip json for the current route
       getHelpJson(path).success(function(json) {
-        
+
         var helpJson = json;
-        
+
         //set help strings
         setHelpStrings(helpJson);
 
@@ -142,8 +142,8 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
     angular.forEach(helpJson.tooltip, function(value, binding) {
       $rootScope[binding] = value;
     });
-    $rootScope.help.tooltip = helpJson.tooltip;  
-    $rootScope.$broadcast('helpJsonLoaded');  
+    $rootScope.help.tooltip = helpJson.tooltip;
+    $rootScope.$broadcast('helpJsonLoaded');
   }
 
   /** Start introjs **/
@@ -176,11 +176,11 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
       label: introjs_time + 's'
     });
 
-    //capture what introjs step user exited on 
+    //capture what introjs step user exited on
     $analytics.eventTrack('introjs exit - ' + $rootScope.currentPath, {
       category: 'App Services',
       label: 'step' + introjs_step
-    });      
+    });
   };
 
   //user completes all steps in introjs for page
@@ -188,28 +188,28 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
     //go to the next page in the section and start introjs
     switch ($rootScope.currentPath) {
       case "/performance/app-usage":
-        introjs_PageTransitionEvent('/performance/errors-crashes');        
+        introjs_PageTransitionEvent('/performance/errors-crashes');
         break;
 
       case "/performance/errors-crashes":
-        introjs_PageTransitionEvent('/performance/api-perf');        
+        introjs_PageTransitionEvent('/performance/api-perf');
         break;
 
       case "/users":
-        introjs_PageTransitionEvent('/groups');        
+        introjs_PageTransitionEvent('/groups');
         break;
 
       case "/groups":
-        introjs_PageTransitionEvent('/roles');        
+        introjs_PageTransitionEvent('/roles');
         break;
-    }        
+    }
   }
 
   //transition user to next tab in feature section
   var introjs_PageTransitionEvent = function(url) {
     $location.url(url);
     $rootScope.help.introjs_shouldLaunch = true;
-    $rootScope.$apply();        
+    $rootScope.$apply();
   }
 
   //increment the step tracking when user goes to next introjs step
