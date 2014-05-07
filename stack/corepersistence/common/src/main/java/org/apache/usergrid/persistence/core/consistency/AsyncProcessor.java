@@ -71,7 +71,7 @@ public interface AsyncProcessor<T> {
     /**
      * Add the listener to this instance
      */
-    public void addListener( MessageListener<T, T> listener );
+    public <R> void  addListener( MessageListener<T, R> listener );
 
     /**
      * Add a complete listener that is invoked when the listener has been invoked

@@ -39,6 +39,7 @@ import org.junit.runner.RunWith;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.graph.guice.CassandraGraphModule;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -65,7 +66,7 @@ import static org.mockito.Mockito.when;
 
 
 @RunWith( JukitoRunner.class )
-@UseModules( { TestGraphModule.class } )
+@UseModules( { CassandraGraphModule.class } )
 @Ignore("Mockings fail with mutliple threads, need to resolve this before enabling")
 //@UseModules( { TestGraphModule.class, GraphManagerIT.InvalidInput.class } )
 public class GraphManagerTimeoutIT {

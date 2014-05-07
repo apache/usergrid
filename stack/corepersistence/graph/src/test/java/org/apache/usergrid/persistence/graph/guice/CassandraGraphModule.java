@@ -16,31 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.usergrid.persistence.graph.serialization;
-
-
-import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
-import org.junit.runner.RunWith;
-
-import org.apache.usergrid.persistence.graph.guice.CassandraGraphModule;
-import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
-import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
-
-import com.google.inject.Inject;
+package org.apache.usergrid.persistence.graph.guice;
 
 
-@RunWith( JukitoRunner.class )
-@UseModules( { CassandraGraphModule.class } )
-public class PermanentSerializationTest extends EdgeSerializationTest {
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 
-    @Inject
-    @StorageEdgeSerialization
-    protected EdgeSerialization edgeSerialization;
+import com.google.inject.AbstractModule;
 
+
+public class CassandraGraphModule extends AbstractModule {
     @Override
-    protected EdgeSerialization getSerialization() {
-        return edgeSerialization;
+    protected void configure() {
+        CassandraRule.startCassandra();
+        install(new TestGraphModule());
     }
 }
