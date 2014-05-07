@@ -15,17 +15,19 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.yammer.metrics.annotation.Metered;
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import me.prettyprint.hector.api.mutation.Mutator;
-import static org.apache.commons.lang.StringUtils.isBlank;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.CollectionRef;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
@@ -43,14 +45,6 @@ import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -72,14 +66,28 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
-import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import org.apache.usergrid.utils.UUIDUtils;
+
+import com.yammer.metrics.annotation.Metered;
+
+import me.prettyprint.hector.api.mutation.Mutator;
+
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
+import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -334,7 +342,7 @@ public class CpEntityManager implements EntityManager {
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
             ecm.load( entityId ).toBlockingObservable().last();
-        
+
         cpEntity = CpEntityMapUtils.fromMap( 
                 cpEntity, entity.getProperties(), entity.getType(), true );
 
@@ -631,54 +639,120 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<Object> getDictionaryAsSet(
             EntityRef entityRef, String dictionaryName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return new LinkedHashSet<>( getDictionaryAsMap( entityRef, dictionaryName ).keySet() );
+
     }
 
     @Override
     public void addToDictionary(
             EntityRef entityRef, String dictionaryName, Object elementValue) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        addToDictionary(entityRef,dictionaryName,elementValue,null);
     }
 
     @Override
     public void addToDictionary(EntityRef entityRef, String dictionaryName, 
             Object elementName, Object elementValue) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        if(elementName == null) {
+            return;
+        }
+        if(elementValue == null){
+            //Placeholder value
+            elementValue = new byte[0];
+        }
+
+        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+
+        if ( !(elementName instanceof String) ) {
+            throw new IllegalArgumentException( "Element name must be a string" );
+        }
+
+        if ( !(elementValue instanceof Serializable)){
+            throw new IllegalArgumentException( "Element Value must be serializable." );
+        }
+
+        Map<String,Object> dictionary = entity.getDynamicProperties();
+        Map<String,Object> props = ( TreeMap ) dictionary.get( dictionaryName );
+        if(props == null)
+            props = new TreeMap();
+        props.put((String) elementName,elementValue );
+        dictionary.put( dictionaryName,props );
+
+        entity.addProperties(dictionary);
+        update( entity );
     }
 
     @Override
     public void addSetToDictionary(
             EntityRef entityRef, String dictionaryName, Set<?> elementValues) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        if(dictionaryName == null) {
+            return;
+        }
+        for ( Object elementValue : elementValues ) {
+            addToDictionary( entityRef,dictionaryName, elementValue);
+        }
     }
 
     @Override
     public void addMapToDictionary(
             EntityRef entityRef, String dictionaryName, Map<?, ?> elementValues) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        if(dictionaryName == null) {
+            return;
+        }
+
+        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+
+        entity.getDynamicProperties().put( dictionaryName,elementValues );
+        update( entity );
     }
 
     @Override
     public Map<Object, Object> getDictionaryAsMap(
             EntityRef entityRef, String dictionaryName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+        Map<Object,Object> dictionary = ( TreeMap) entity.getProperty( dictionaryName );
+        return dictionary;
+        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public Object getDictionaryElementValue(
             EntityRef entityRef, String dictionaryName, String elementName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+        Map<String,Object> dictionary = ( Map<String, Object> ) entity.getProperty( dictionaryName );
+        return dictionary.get( elementName );
     }
 
     @Override
     public void removeFromDictionary(
-            EntityRef entityRef, String dictionaryName, Object elementValue) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+            EntityRef entityRef, String dictionaryName, Object elementName) throws Exception {
+        if(elementName == null) {
+            return;
+        }
+
+        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+
+        if ( !(elementName instanceof String) ) {
+            throw new IllegalArgumentException( "Element name must be a string" );
+        }
+
+        Map<String,Object> dictionary = entity.getDynamicProperties();
+        Map<String,Object> properties = ( Map<String, Object> ) dictionary.get( dictionaryName );
+        properties.remove( elementName );
+        dictionary.put( dictionaryName,properties );
+
+        entity.setProperties( dictionary );
+
+        update( entity );
     }
 
     @Override
-    public Set<String> getDictionaries(EntityRef entity) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public Set<String> getDictionaries(EntityRef entityRef) throws Exception {
+        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+
+        return entity.getProperties().keySet();
+
     }
 
     @Override
@@ -1311,26 +1385,29 @@ public class CpEntityManager implements EntityManager {
             Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, 
             Object elementCoValue, boolean removeFromDictionary, UUID timestampUuid) 
             throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        throw new UnsupportedOperationException("This method is not supported.");
     }
 
     @Override
     public Mutator<ByteBuffer> batchUpdateDictionary(
             Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, 
             boolean removeFromDictionary, UUID timestampUuid) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return batchUpdateDictionary( batch, entity, dictionaryName, elementValue, null, removeFromDictionary,
+                timestampUuid );
     }
 
     @Override
     public Mutator<ByteBuffer> batchUpdateProperties(
             Mutator<ByteBuffer> batch, EntityRef entity, Map<String, Object> properties, 
             UUID timestampUuid) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    //TODO: ask what the difference is.
     @Override
     public Set<String> getDictionaryNames(EntityRef entity) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return getDictionaries( entity );
     }
 
     @Override

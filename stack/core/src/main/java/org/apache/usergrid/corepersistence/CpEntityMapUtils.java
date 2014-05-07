@@ -19,17 +19,21 @@
 
 package org.apache.usergrid.corepersistence;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
+import java.util.TreeMap;import java.util.UUID;
+
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.BooleanField;
+import org.apache.usergrid.persistence.model.field.ByteBufferField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -43,7 +47,8 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.persistence.model.field.value.Location;
-import org.codehaus.jackson.map.ObjectMapper;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 
 /**
@@ -51,6 +56,8 @@ import org.codehaus.jackson.map.ObjectMapper;
  * Aware of unique properties via Schema.
  */
 public class CpEntityMapUtils {
+    public static com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind
+            .ObjectMapper(  );
 
     public static Entity fromMap( Map<String, Object> map, String entityType, boolean topLevel ) {
         return fromMap( null, map, entityType, topLevel );
@@ -95,10 +102,20 @@ public class CpEntityMapUtils {
                 processMapValue( value, fieldName, entity, entityType);
 	
 			} else {
+                byte[] valueSerialized;
+                try {
+                    valueSerialized = objectMapper.writeValueAsBytes( value );
+                }
+                catch ( JsonProcessingException e ) {
+                    throw new RuntimeException( "Can't serialize object ",e );
+                }
+                ByteBuffer byteBuffer = ByteBuffer.wrap( valueSerialized );
+                ByteBufferField byteBufferField = new ByteBufferField( fieldName, byteBuffer, value.getClass() );
+                entity.setField( byteBufferField );
                 // TODO: do we really want to serialized Java objects to maps here?
-                ObjectMapper m = new ObjectMapper();
-                Map<String, Object> mapValue = m.convertValue( value, Map.class);
-                processMapValue( mapValue, fieldName, entity, entityType);
+//                ObjectMapper m = new ObjectMapper();
+//                Map<String, Object> mapValue = m.convertValue( value, Map.class);
+//                processMapValue( mapValue, fieldName, entity, entityType);
             }
         }
 
@@ -206,7 +223,7 @@ public class CpEntityMapUtils {
      */
     public static Map toMap(EntityObject entity) {
 
-        Map<String, Object> entityMap = new HashMap<String, Object>();
+        Map<String, Object> entityMap = new TreeMap<>();
 
         for (Object f : entity.getFields().toArray()) {
             Field field = (Field) f;
@@ -238,7 +255,21 @@ public class CpEntityMapUtils {
                 locMap.put("lon", locField.getValue().getLongtitude());
                  entityMap.put( field.getName(), field.getValue());
 
-            } else {
+            } else if (f instanceof ByteBufferField) {
+                    ByteBufferField byteBufferField = ( ByteBufferField ) f;
+                    ByteBuffer byteBuffer = byteBufferField.getValue();
+
+                    byte[] serilizedObj =  byteBuffer.array();
+                    Object o;
+                    try {
+                        o = objectMapper.readValue(serilizedObj,byteBufferField.getClassinfo() );
+                    }
+                    catch ( IOException e ) {
+                        throw new RuntimeException( "Can't deserialize object ",e );
+                    }
+                    entityMap.put(byteBufferField.getName(),o);
+            }
+            else {
                 entityMap.put( field.getName(), field.getValue());
             }
         }
