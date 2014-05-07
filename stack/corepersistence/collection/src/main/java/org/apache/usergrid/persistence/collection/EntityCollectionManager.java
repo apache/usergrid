@@ -55,9 +55,9 @@ public interface EntityCollectionManager {
     //TODO add partial update
 
     /**
-     * Takes the change
-     * @param entity
+     * Takes the change and reloads an entity with all changes applied.
+     * @param entityId
      * @return
      */
-    public Observable<Entity> partialUpdate ( Entity entity);
+    public Observable<Entity> update ( Id entityId );
 }

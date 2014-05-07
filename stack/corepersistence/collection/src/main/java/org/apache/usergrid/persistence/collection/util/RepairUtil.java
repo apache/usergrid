@@ -20,18 +20,20 @@ public class RepairUtil {
     public static  ChangeLogGenerator changeLogGenerator;
 
     public static Entity repair(List<MvccEntity> results){
+        //base case
+        if(results.size() == 1) {
+            return results.get( 0 ).getEntity().get();
+        }
+
         for(int i = results.size()-1; i >= 0 ; i --){
             //checks closes instance of a complete entity.
            if(results.get( i ).getStatus() == MvccEntity.Status.COMPLETE){
                 changeLogGenerator = new ChangeLogGeneratorImpl();
-               List<ChangeLogEntry> chgPersist = changeLogGenerator.getChangeLog(results.subList( i, results.size() ),results.get( results.size()-1 ).getVersion()  );
-
-               // List<ChangeLogEntry> chgPersist = changeLogGenerator.getChangeLog(results.subList( i+1, results.size() ),results.get( i ).getVersion()  );
-               //ChangeLogEntry entry = chgPersist.get( chgPersist.size()-1 );
+               List<ChangeLogEntry> chgPersist = changeLogGenerator.getChangeLog(results.subList( i, results.size() )
+                       ,results.get( results.size()-1 ).getVersion()  );
 
                return entityRepair( chgPersist, results.subList( i+1,results.size() ),results.get( i ) );
 
-               //break;
            }
         }
         return null;
