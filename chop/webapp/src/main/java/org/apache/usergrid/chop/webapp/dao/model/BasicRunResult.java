@@ -54,10 +54,12 @@ public class BasicRunResult implements RunResult {
 
 
     private static String createId( String runId ) {
-        return "" + new HashCodeBuilder()
+        return "" + Math.abs(
+                new HashCodeBuilder()
                 .append( runId )
                 .append( UUID.randomUUID() )
-                .toHashCode();
+                .toHashCode()
+                            );
     }
 
 

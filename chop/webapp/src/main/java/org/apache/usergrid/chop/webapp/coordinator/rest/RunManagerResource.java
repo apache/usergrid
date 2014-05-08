@@ -23,6 +23,8 @@ package org.apache.usergrid.chop.webapp.coordinator.rest;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -30,8 +32,12 @@ import com.google.inject.Singleton;
 import com.sun.jersey.multipart.FormDataParam;
 
 import org.apache.usergrid.chop.api.RestParams;
+import org.apache.usergrid.chop.api.Run;
+import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.webapp.dao.RunDao;
 import org.apache.usergrid.chop.webapp.dao.RunResultDao;
+import org.apache.usergrid.chop.webapp.dao.RunnerDao;
+import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
 import org.apache.usergrid.chop.webapp.dao.model.BasicRun;
 import org.apache.usergrid.chop.webapp.dao.model.BasicRunResult;
 import org.apache.usergrid.chop.webapp.elasticsearch.Util;
@@ -65,6 +71,9 @@ public class RunManagerResource extends TestableResource implements RestParams {
     @Inject
     private RunResultDao runResultDao;
 
+    @Inject
+    private RunnerDao runnerDao;
+
 
     protected RunManagerResource() {
         super( ENDPOINT );
@@ -76,7 +85,11 @@ public class RunManagerResource extends TestableResource implements RestParams {
     @Produces( MediaType.APPLICATION_JSON )
     public Response next(
 
+            @QueryParam( USERNAME ) String username,
             @QueryParam( COMMIT_ID ) String commitId,
+            @QueryParam( MODULE_GROUPID ) String groupId,
+            @QueryParam( MODULE_ARTIFACTID ) String artifactId,
+            @QueryParam( MODULE_VERSION ) String version,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
 
     ) throws Exception {
@@ -91,7 +104,10 @@ public class RunManagerResource extends TestableResource implements RestParams {
         Preconditions.checkNotNull( commitId, "The commitId should not be null." );
 
         try {
-            next = runDao.getNextRunNumber( commitId );
+            List<Runner> runners = runnerDao.getRunners( username, commitId,
+                    BasicModule.createId( groupId, artifactId, version ) );
+
+            next = runDao.getNextRunNumber( runners, commitId );
         }
         catch ( IndexMissingException e ) {
             LOG.warn( "Got an index missing exception while looking up the next run number." );
@@ -113,13 +129,31 @@ public class RunManagerResource extends TestableResource implements RestParams {
     @Produces( MediaType.TEXT_PLAIN )
     public Response completed(
 
+            @QueryParam( USERNAME ) String username,
             @QueryParam( RUNNER_HOSTNAME ) String runnerHost,
             @QueryParam( COMMIT_ID ) String commitId,
             @QueryParam( RUN_NUMBER ) Integer runNumber,
-            @QueryParam( TEST_CLASS ) String testClass
+            @QueryParam( TEST_CLASS ) String testClass,
+            @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
 
     ) throws Exception {
         LOG.warn( "Calling completed ..." );
+
+        if( inTestMode( testMode ) ) {
+            LOG.info( "Calling /run/completed in test mode ..." );
+            LOG.info( "{} is {}", RUNNER_HOSTNAME, runnerHost );
+            LOG.info( "{} is {}", COMMIT_ID, commitId );
+            LOG.info( "{} is {}", RUN_NUMBER, runNumber );
+            LOG.info( "{} is {}", TEST_CLASS, testClass );
+
+            return Response.status( Response.Status.CREATED ).entity( "TRUE" ).build();
+        }
+        else {
+            LOG.info( "/run/completed called ..." );
+        }
+
+        Map<String, Run> otherRuns = runDao.getMap( commitId, runNumber, testClass );
+
         return Response.status( Response.Status.CREATED ).entity( "FALSE" ).build();
     }
 
@@ -156,7 +190,7 @@ public class RunManagerResource extends TestableResource implements RestParams {
         String testClass = Util.getString( object, "testClass" );
 
         // First save the summary info
-        BasicRun run = new BasicRun( commitId, runnerHostName, runNumber, testClass );
+        BasicRun run = new BasicRun( runId, commitId, runnerHostName, runNumber, testClass );
         run.copyJson( object );
         if ( runDao.save( run ) ) {
             LOG.info( "Created new Run {} ", run );

@@ -29,6 +29,7 @@ import org.apache.usergrid.chop.stack.User;
 import org.apache.usergrid.chop.webapp.ChopUiModule;
 import org.apache.usergrid.chop.webapp.dao.*;
 import org.apache.usergrid.chop.webapp.dao.model.*;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -38,15 +39,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.UUID;
 
 
-@RunWith(Suite.class)
+/**
+ * This Suite populates an empty embedded elastic search with Dao related data,
+ * for all Dao unit tests that are going to be conducted.
+ * <p>
+ * Almost all data prepared here is related to each other to a degree, according to the Dao relations,
+ * by references to one another and common fields they have. So, if you want to change anything here,
+ * or decide to add more data, first be sure you understand how relevant Daos relate to one another
+ * and what existing data here relate to each other.
+ * <p>
+ * Or, if you were to change or add new functionality in Dao model, make sure you also make appropriate
+ * modifications here and in DaoTest classes too, without reducing test coverage or losing sight of
+ * the practical usage of Dao classes.
+ */
+@RunWith( Suite.class )
 @Suite.SuiteClasses(
         {
                 ModuleDaoTest.class, CommitDaoTest.class, NoteDaoTest.class, RunDaoTest.class,
                 RunnerDaoTest.class, RunnerGroupTest.class, GroupedRunnersTest.class,
                 RunResultDaoTest.class, UserDaoTest.class, ProviderParamsDaoTest.class
-        })
+        } )
 public class ESSuiteTest {
 
     private static Logger LOG = LoggerFactory.getLogger(ESSuiteTest.class);
@@ -60,17 +75,26 @@ public class ESSuiteTest {
     public static final String COMMIT_ID_3 = "e29074efad5e0e1c7c2b63128ff9284f9b47ceb3";
     public static final String NOTE = "This is a note!";
     public static final String IMAGE_ID = "ami-213213214";
-    public static final String RUNNER_ID_1 = "35231";
-    public static final String RUNNER_ID_2 = "23412";
-    public static final String TEST_NAME = "org.apache.usergrid.chop.example.DigitalWatchTest";
+    public static final String TEST_NAME_1 = "org.apache.usergrid.chop.example.DigitalWatchTest";
+    public static final String TEST_NAME_2 = "org.apache.usergrid.chop.example.MechanicalWatchTest";
     public static final String USER_1 = "testuser";
     public static final String USER_2 = "user-2";
     public static final String RUNNER_IPV4_1 = "54.227.39.111";
     public static final String RUNNER_IPV4_2 = "23.20.162.112";
+    public static final String RUNNER_HOSTNAME_1 = "ec2-54-227-39-111.compute-1.amazonaws.com";
+    public static final String RUNNER_HOSTNAME_2 = "ec2-23-20-162-112.compute-1.amazonaws.com";
     public static final String RUNNER_HOSTNAME_3 = "ec2-84-197-213-113.compute-1.amazonaws.com";
     public static final String MODULE_ID_1 = BasicModule.createId( MODULE_GROUPID, MODULE_ARTIFACT_1, MODULE_VERSION );
     public static final String MODULE_ID_2 = BasicModule.createId( MODULE_GROUPID, MODULE_ARTIFACT_2, MODULE_VERSION );
-
+    public static final String RUN_ID_1 = UUID.randomUUID().toString();
+    public static final String RUN_ID_2 = UUID.randomUUID().toString();
+    public static final String RUN_ID_3 = UUID.randomUUID().toString();
+    public static final String RUN_ID_4 = UUID.randomUUID().toString();
+    public static final String RUN_ID_5 = UUID.randomUUID().toString();
+    public static final RunnerGroup RUNNER_GROUP = new RunnerGroup( USER_1, COMMIT_ID_2, MODULE_ID_2 );
+    public static final Long RUN_DURATION = 100000L;
+    public static final Long RUN_AVG_TIME_1 = 1505L;
+    public static final int RESULT_RUN_COUNT = 18;
 
     @ClassRule
     public static ElasticSearchResource esClient = new ElasticSearchResource();
@@ -84,63 +108,114 @@ public class ESSuiteTest {
     public static UserDao userDao;
     public static RunnerDao runnerDao;
 
+
     // Populate elastic search for all tests
     @BeforeClass
     public static void setUpData() throws Exception {
-        LOG.info("Setting up sample data for elasticsearch Dao tests...");
+        LOG.info( "Setting up sample data for elasticsearch Dao tests..." );
 
-        Injector injector = Guice.createInjector(new ChopUiModule());
+        Injector injector = Guice.createInjector( new ChopUiModule() );
 
-        setupModules(injector);
-        setupCommits(injector);
-        setupNotes(injector);
-        setupProviderParams(injector);
-        String[] runIds = setupRuns(injector);
-        setupRunResults(injector, runIds);
-        setupUsers(injector);
-        setupRunners(injector);
+        setupUsers( injector );
+        setupModules( injector );
+        setupCommits( injector );
+        setupNotes( injector );
+        setupProviderParams( injector );
+        setupRunners( injector );
+        setupRuns( injector );
+        setupRunResults( injector );
 
-        LOG.info("Sample data for dao tests are saved into elasticsearch");
+        LOG.info( "Sample data for dao tests are saved into elasticsearch" );
     }
 
-    private static String[] setupRuns(Injector injector) throws Exception {
 
-        String[] runIds = new String[3];
+    private static void setupRuns( Injector injector ) throws Exception {
 
-        runDao = injector.getInstance(RunDao.class);
+        Long startTime = new Date().getTime();
+        runDao = injector.getInstance( RunDao.class );
         BasicRun run = new BasicRun(
+                RUN_ID_1,
                 COMMIT_ID_2, // commitId
-                RUNNER_ID_2, // runner
+                RUNNER_HOSTNAME_1, // runner
                 1, // runNumber
-                TEST_NAME // testName
+                TEST_NAME_1 // testName
         );
-        runDao.save(run);
-        runIds[0] = run.getId();
+        run.setActualTime( RUN_DURATION );
+        run.setStartTime( startTime );
+        run.setStopTime( startTime + RUN_DURATION );
+        run.setAvgTime( RUN_AVG_TIME_1 );
+        run.setChopType( "IterationChop" );
+        run.setIterations( 10 );
+        runDao.save( run );
 
+        startTime = new Date().getTime();
         run = new BasicRun(
+                RUN_ID_2,
                 COMMIT_ID_2, // commitId
-                RUNNER_ID_2, // runner
+                RUNNER_HOSTNAME_1, // runner
                 2, // runNumber
-                TEST_NAME // testName
+                TEST_NAME_1 // testName
         );
-        runDao.save(run);
-        runIds[1] = run.getId();
+        run.setActualTime( RUN_DURATION );
+        run.setStartTime( startTime );
+        run.setStopTime( startTime + RUN_DURATION );
+        run.setAvgTime( 1284L );
+        run.setChopType( "IterationChop" );
+        run.setIterations( 20 );
+        runDao.save( run );
 
+        startTime = new Date().getTime();
         run = new BasicRun(
+                RUN_ID_3,
                 COMMIT_ID_3, // commitId
-                RUNNER_ID_1, // runner
+                RUNNER_HOSTNAME_1, // runner
                 1, // runNumber
-                TEST_NAME // testName
+                TEST_NAME_2 // testName
         );
-        runDao.save(run);
-        runIds[2] = run.getId();
+        run.setActualTime( RUN_DURATION );
+        run.setStartTime( startTime );
+        run.setStopTime( startTime + RUN_DURATION );
+        run.setTotalTestsRun( 84 );
+        run.setChopType( "TimeChop" );
+        runDao.save( run );
 
-        return runIds;
+        startTime = new Date().getTime();
+        run = new BasicRun(
+                RUN_ID_4,
+                COMMIT_ID_2, // commitId
+                RUNNER_HOSTNAME_3, // runner
+                1, // runNumber
+                TEST_NAME_2 // testName
+        );
+        run.setActualTime( RUN_DURATION );
+        run.setStartTime( startTime );
+        run.setStopTime( startTime + RUN_DURATION );
+        run.setTotalTestsRun( 60 );
+        run.setChopType( "TimeChop" );
+        run.setSaturate( true );
+        runDao.save( run );
+
+        startTime = new Date().getTime();
+        run = new BasicRun(
+                RUN_ID_5,
+                COMMIT_ID_2, // commitId
+                RUNNER_HOSTNAME_3, // runner
+                2, // runNumber
+                TEST_NAME_2 // testName
+        );
+        run.setActualTime( RUN_DURATION );
+        run.setStartTime( startTime );
+        run.setStopTime( startTime + RUN_DURATION );
+        run.setTotalTestsRun( 72 );
+        run.setChopType( "TimeChop" );
+        run.setSaturate( true );
+        runDao.save( run );
     }
 
-    private static void setupProviderParams(Injector injector) throws Exception {
 
-        ppDao = injector.getInstance(ProviderParamsDao.class);
+    private static void setupProviderParams( Injector injector ) throws Exception {
+
+        ppDao = injector.getInstance( ProviderParamsDao.class );
         ProviderParams pp = new BasicProviderParams(
                 USER_1,
                 "m1.large",
@@ -149,7 +224,7 @@ public class ESSuiteTest {
                 IMAGE_ID,
                 "testKey1"
         );
-        ppDao.save(pp);
+        ppDao.save( pp );
 
         pp = new BasicProviderParams(
                 "testuser2",
@@ -159,18 +234,20 @@ public class ESSuiteTest {
                 "ami-2143224",
                 "testKey2"
         );
-        ppDao.save(pp);
+        ppDao.save( pp );
     }
 
-    private static void setupNotes(Injector injector) throws Exception {
-        noteDao = injector.getInstance(NoteDao.class);
-        Note note = new Note(COMMIT_ID_1, 1, NOTE);
-        noteDao.save(note);
+
+    private static void setupNotes( Injector injector ) throws Exception {
+        noteDao = injector.getInstance( NoteDao.class );
+        Note note = new Note( COMMIT_ID_1, 1, NOTE );
+        noteDao.save( note );
     }
 
-    private static void setupModules(Injector injector) throws Exception {
 
-        moduleDao = injector.getInstance(ModuleDao.class);
+    private static void setupModules( Injector injector ) throws Exception {
+
+        moduleDao = injector.getInstance( ModuleDao.class );
 
         Module module = new BasicModule(
                 MODULE_GROUPID, // groupId
@@ -191,12 +268,13 @@ public class ESSuiteTest {
         moduleDao.save( module );
     }
 
-    private static void setupCommits(Injector injector) throws Exception {
+
+    private static void setupCommits( Injector injector ) throws Exception {
 
         // Commits shouldn't have the same createDate b/c of issues with sorting them
         Date now = new Date();
 
-        commitDao = injector.getInstance(CommitDao.class);
+        commitDao = injector.getInstance( CommitDao.class );
         Commit commit = new BasicCommit(
                 COMMIT_ID_1, // commitId
                 MODULE_ID_1, // moduleId
@@ -204,70 +282,96 @@ public class ESSuiteTest {
                 now, // createDate
                 "/some/dummy/path"
         );
-        commitDao.save(commit);
+        commitDao.save( commit );
 
         commit = new BasicCommit(
                 COMMIT_ID_2, // commitId
                 MODULE_ID_2, // moduleId
                 "395cfdfc3b77242a6f957d6d92da8958", // warMD5
-                DateUtils.addMinutes(now, 1), // createDate
+                DateUtils.addMinutes( now, 1 ), // createDate
                 "/some/dummy/path"
         );
-        commitDao.save(commit);
+        commitDao.save( commit );
 
         commit = new BasicCommit(
                 COMMIT_ID_3, // commitId
                 MODULE_ID_2, // moduleId
                 "b9860ffa5e39b6f7123ed8c72c4b7046", // warMD5
-                DateUtils.addMinutes(now, 2), // createDate
+                DateUtils.addMinutes( now, 2 ), // createDate
                 "/some/dummy/path"
         );
-        commitDao.save(commit);
+        commitDao.save( commit );
     }
 
-    private static void setupRunResults(Injector injector, String[] runIds) throws Exception {
 
-        runResultDao = injector.getInstance(RunResultDao.class);
+    private static void setupRunResults( Injector injector ) throws Exception {
 
-        BasicRunResult runResult = new BasicRunResult(runIds[0], 5, 1000, 0, 1);
-        runResultDao.save(runResult);
+        runResultDao = injector.getInstance( RunResultDao.class );
 
-        runResult = new BasicRunResult(runIds[1], 5, 1200, 1, 0);
-        runResultDao.save(runResult);
+        BasicRunResult runResult = new BasicRunResult( RUN_ID_1, 5, 1000, 0, 1 );
+        runResultDao.save( runResult );
 
-        runResult = new BasicRunResult(runIds[2], 17, 15789, 2, 2);
-        runResultDao.save(runResult);
+        runResult = new BasicRunResult( RUN_ID_1, 5, 1103, 0, 0 );
+        runResultDao.save( runResult );
+
+        runResult = new BasicRunResult( RUN_ID_2, 5, 1200, 1, 0 );
+        runResultDao.save( runResult );
+
+        runResult = new BasicRunResult( RUN_ID_3, 17, 15789, 2, 2 );
+        runResultDao.save( runResult );
+
+        runResult = new BasicRunResult( RUN_ID_4, 17, 15789, 2, 2 );
+        runResultDao.save( runResult );
+
+        runResult = new BasicRunResult( RUN_ID_4, 17, 15789, 2, 2 );
+        runResultDao.save( runResult );
+
+        runResult = new BasicRunResult( RUN_ID_4, 17, 15789, 2, 2 );
+        runResultDao.save( runResult );
+
+        runResult = new BasicRunResult( RUN_ID_5, RESULT_RUN_COUNT, 15729, 2, 2 );
+        runResultDao.save( runResult );
+
+        runResult = new BasicRunResult( RUN_ID_5, RESULT_RUN_COUNT, 13429, 0, 0 );
+        runResultDao.save( runResult );
+
+        runResult = new BasicRunResult( RUN_ID_5, RESULT_RUN_COUNT, 16421, 1, 0 );
+        runResultDao.save( runResult );
     }
 
-    private static void setupUsers(Injector injector) throws Exception {
-        userDao = injector.getInstance(UserDao.class);
-        User user = new User(USER_1, "password");
-        userDao.save(user);
 
-        user = new User(USER_2, "sosecretsuchcryptowow");
-        userDao.save(user);
+    private static void setupUsers( Injector injector ) throws Exception {
+        userDao = injector.getInstance( UserDao.class );
+        User user = new User( USER_1, "password" );
+        userDao.save( user );
+
+        user = new User( USER_2, "sosecretsuchcryptowow" );
+        userDao.save( user );
     }
 
-    private static void setupRunners(Injector injector) throws Exception {
 
-        runnerDao = injector.getInstance(RunnerDao.class);
+    private static void setupRunners( Injector injector ) throws Exception {
+
+        StringBuilder url = new StringBuilder();
+        runnerDao = injector.getInstance( RunnerDao.class );
         BasicRunner runner = new BasicRunner(
                 RUNNER_IPV4_1, // ipv4Address
-                "ec2-54-227-39-111.compute-1.amazonaws.com", // hostname
-                24981,// serverPort
-                "https://ec2-54-227-39-111.compute-1.amazonaws.com:24981", // url
+                RUNNER_HOSTNAME_1, // hostname
+                24981, // serverPort
+                url.append( "https://" ).append( RUNNER_HOSTNAME_1 ).append( ":" ).append( 24981 ).toString(), // url
                 "/tmp" // tempDir
         );
-        runnerDao.save(runner, USER_1, COMMIT_ID_1, MODULE_ID_1);
+        runnerDao.save( runner, USER_1, COMMIT_ID_2, MODULE_ID_2 );
 
+        url = new StringBuilder();
         runner = new BasicRunner(
                 RUNNER_IPV4_2, // ipv4Address
-                "ec2-23-20-162-112.compute-1.amazonaws.com", // hostname
+                RUNNER_HOSTNAME_2, // hostname
                 8443, // serverPort
-                "https://ec2-23-20-162-112.compute-1.amazonaws.com:8443", // url
+                url.append( "https://" ).append( RUNNER_HOSTNAME_2 ).append( ":" ).append( 8443 ).toString(), // url
                 "/tmp" // tempDir
         );
-        runnerDao.save(runner, USER_1, COMMIT_ID_1, MODULE_ID_1);
+        runnerDao.save( runner, USER_1, COMMIT_ID_3, MODULE_ID_2 );
 
         runner = new BasicRunner(
                 "84.197.213.113", // ipv4Address
@@ -276,12 +380,13 @@ public class ESSuiteTest {
                 "https://ec2-84-197-213-113.compute-1.amazonaws.com:24981", // url
                 "/tmp" // tempDir
         );
-        runnerDao.save(runner, USER_2, COMMIT_ID_1, MODULE_ID_1);
+        runnerDao.save( runner, USER_2, COMMIT_ID_2, MODULE_ID_2 );
     }
+
 
     @AfterClass
     public static void tearDownData() {
-        LOG.info("ESSuiteTest teardown called");
+        LOG.info( "ESSuiteTest teardown called" );
     }
 
 

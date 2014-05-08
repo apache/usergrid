@@ -31,38 +31,44 @@ import static org.junit.Assert.assertEquals;
 
 public class RunnerDaoTest {
 
-    private static Logger LOG = LoggerFactory.getLogger(RunnerDaoTest.class);
+    private static Logger LOG = LoggerFactory.getLogger( RunnerDaoTest.class );
 
 
     @Test
-    public void delete() {
-        LOG.info("\n===RunnerDaoTest.delete===\n");
+    public void delete() throws Exception {
+        LOG.info( "\n===RunnerDaoTest.delete===\n" );
 
-        LOG.info("Runners before delete: ");
+        LOG.info( "Runners before delete: " );
 
-        List<Runner> runners = ESSuiteTest.runnerDao.getRunners(ESSuiteTest.USER_2, ESSuiteTest.COMMIT_ID_1, ESSuiteTest.MODULE_ID_1);
-
-        for (Runner runner : runners) {
-            LOG.info(runner.toString());
-            ESSuiteTest.runnerDao.delete(runner.getUrl());
+        List<Runner> runners = ESSuiteTest.runnerDao.getRunners(
+                ESSuiteTest.USER_2, ESSuiteTest.COMMIT_ID_2, ESSuiteTest.MODULE_ID_2
+                                                               );
+        for( Runner runner : runners ) {
+            LOG.info( runner.toString() );
+            ESSuiteTest.runnerDao.delete( runner.getUrl() );
         }
 
-        runners = ESSuiteTest.runnerDao.getRunners(ESSuiteTest.USER_2, ESSuiteTest.COMMIT_ID_1, ESSuiteTest.MODULE_ID_1);
+        List<Runner> runnersAfter = ESSuiteTest.runnerDao.getRunners(
+                ESSuiteTest.USER_2, ESSuiteTest.COMMIT_ID_2, ESSuiteTest.MODULE_ID_2
+                                                                    );
+        assertEquals( 0, runnersAfter.size() );
 
-        assertEquals(0, runners.size());
+        /** We have to save them back for other tests */
+        for ( Runner runner: runners ) {
+            ESSuiteTest.runnerDao.save( runner, ESSuiteTest.USER_2, ESSuiteTest.COMMIT_ID_2, ESSuiteTest.MODULE_ID_2 );
+        }
     }
 
 
     @Test
     public void getRunners() {
 
-        LOG.info("\n===RunnerDaoTest.getRunners===\n");
+        LOG.info( "\n===RunnerDaoTest.getRunners===\n" );
 
-        List<Runner> userRunners = ESSuiteTest.runnerDao.getRunners(ESSuiteTest.USER_1, ESSuiteTest.COMMIT_ID_1, ESSuiteTest.MODULE_ID_1);
-        assertEquals(2, userRunners.size());
+        List<Runner> userRunners = ESSuiteTest.runnerDao.getRunners(
+                ESSuiteTest.USER_1, ESSuiteTest.COMMIT_ID_2, ESSuiteTest.MODULE_ID_2
+                                                                   );
 
-//        List<BasicRunner> allRunners = ESSuiteTest.runnerDao.getAll();
-//        assertEquals( 3, allRunners.size() );
+        assertEquals( 1, userRunners.size() );
     }
-
 }

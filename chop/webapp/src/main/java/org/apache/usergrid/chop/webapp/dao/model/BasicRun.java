@@ -55,12 +55,19 @@ public class BasicRun implements Run {
     private boolean saturate;
 
 
-    public BasicRun( String commitId, String runner, int runNumber, String testName ) {
+    /**
+     * @param id
+     * @param commitId
+     * @param runner    hostname of the runner
+     * @param runNumber
+     * @param testName
+     */
+    public BasicRun( String id, String commitId, String runner, int runNumber, String testName ) {
         this.commitId = commitId;
         this.runner = runner;
         this.runNumber = runNumber;
         this.testName = testName;
-        id = "" + hashCode();
+        this.id = id;
     }
 
 

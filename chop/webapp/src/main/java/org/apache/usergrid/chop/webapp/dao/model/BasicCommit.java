@@ -24,52 +24,80 @@ import org.apache.usergrid.chop.api.Commit;
 
 import java.util.Date;
 
+
+/**
+ * A specific commit of a Maven Module under test.
+ */
 public class BasicCommit implements Commit {
 
     private String id;
     private String moduleId;
     private String md5;
     private Date createTime;
-    private String runnerWarPath;
+    private String runnerJarPath;
 
 
-    public BasicCommit(String id, String moduleId, String md5, Date createTime, String runnerWarPath) {
+    /**
+     * @param id            Commit id string
+     * @param moduleId      Id that represents the module this commit is about
+     * @param md5           An md5 string calculated using commit id and timestamp of runner file creation time
+     * @param createTime    Runner.jar file upload time
+     * @param runnerJarPath Absolute file path of the runner.jar file
+     */
+    public BasicCommit( String id, String moduleId, String md5, Date createTime, String runnerJarPath ) {
         this.id = id;
         this.moduleId = moduleId;
         this.md5 = md5;
         this.createTime = createTime;
-        this.runnerWarPath = runnerWarPath;
+        this.runnerJarPath = runnerJarPath;
     }
 
+
+    /**
+     * @return  Commit id string
+     */
     @Override
     public String getId() {
         return id;
     }
 
-    @Override
-    public String getModuleId() {
-        return moduleId;
-    }
 
+    /**
+     * @return  An md5 string calculated using commit id and timestamp of runner file creation time
+     */
     @Override
     public String getMd5() {
         return md5;
     }
 
 
-    public void setMd5() {
+    /**
+     * Maven groupId, artifactId and version should be used to calculate this id.
+     *
+     * @return  Id that represents the module this commit is about.
+     */
+    @Override
+    public String getModuleId() {
+        return moduleId;
+    }
+
+
+    public void setMd5( String md5 ) {
         this.md5 = md5;
     }
 
 
+    /**
+     * @return  Absolute file path of the runner.jar file
+     */
     @Override
     public String getRunnerPath() {
-        return runnerWarPath;
+        return runnerJarPath;
     }
 
 
-    public void setRunnerPath(String runnerWarPath) {
-        this.runnerWarPath = runnerWarPath;
+    public void setRunnerPath( String runnerJarPath ) {
+        this.runnerJarPath = runnerJarPath;
     }
 
 
@@ -78,25 +106,28 @@ public class BasicCommit implements Commit {
         return createTime;
     }
 
-    @Override
-    public int hashCode() {
-        return id.hashCode();
-    }
 
     @Override
-    public boolean equals(Object other) {
-        return other != null
-                && other instanceof BasicCommit
-                && ((BasicCommit) other).getId().equals(id);
+    public int hashCode() {
+        return Math.abs( id.hashCode() );
     }
+
+
+    @Override
+    public boolean equals( Object other ) {
+        return ( other != null )
+                && ( other instanceof BasicCommit )
+                && ( ( BasicCommit ) other ).getId().equals( id );
+    }
+
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-                .append("id", id)
-                .append("moduleId", moduleId)
-                .append("md5", md5)
-                .append("createTime", createTime)
+        return new ToStringBuilder( this, ToStringStyle.SHORT_PREFIX_STYLE )
+                .append( "id", id )
+                .append( "moduleId", moduleId )
+                .append( "md5", md5 )
+                .append( "createTime", createTime )
                 .toString();
     }
 

@@ -48,6 +48,7 @@ public class ModuleDaoTest {
         assertEquals( "Wrong number of modules in elasticsearch", 2, modules.size() );
     }
 
+
     @Test
     public void get() {
 
@@ -57,5 +58,4 @@ public class ModuleDaoTest {
         LOG.info( "Module by ID: {} is {}", ESSuiteTest.MODULE_ID_1, module.toString() );
         assertEquals( ESSuiteTest.MODULE_GROUPID, module.getGroupId() );
     }
-
 }

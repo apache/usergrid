@@ -18,10 +18,19 @@
  */
 package org.apache.usergrid.chop.webapp.dao;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.inject.Inject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.chop.api.Commit;
 import org.apache.usergrid.chop.api.Run;
+import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.webapp.dao.model.BasicRun;
 import org.apache.usergrid.chop.webapp.elasticsearch.IElasticSearchClient;
 import org.apache.usergrid.chop.webapp.elasticsearch.Util;
@@ -31,13 +40,14 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
-import java.util.*;
-
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 
+/**
+ * Run persistence operations
+ */
 public class RunDao extends Dao {
 
     public static final String DAO_INDEX_KEY = "modules";
@@ -47,39 +57,44 @@ public class RunDao extends Dao {
 
 
     @Inject
-    public RunDao(IElasticSearchClient elasticSearchClient) {
-        super(elasticSearchClient);
+    public RunDao( IElasticSearchClient elasticSearchClient ) {
+        super( elasticSearchClient );
     }
 
 
-    public boolean save(Run run) throws Exception {
+    /**
+     * @param run   Run to save in elastic search
+     * @return      Whether the operation succeeded
+     * @throws Exception
+     */
+    public boolean save( Run run ) throws IOException {
 
         IndexResponse response = elasticSearchClient.getClient()
-                .prepareIndex(DAO_INDEX_KEY, DAO_TYPE_KEY, run.getId())
-                .setRefresh(true)
+                .prepareIndex( DAO_INDEX_KEY, DAO_TYPE_KEY, run.getId() )
+                .setRefresh( true )
                 .setSource(
                         jsonBuilder()
                                 .startObject()
-                                .field("commitId", run.getCommitId())
-                                .field("runner", run.getRunner())
-                                .field("runNumber", run.getRunNumber())
-                                .field("testName", run.getTestName())
-                                .field("chopType", run.getChopType())
-                                .field("iterations", run.getIterations())
-                                .field("totalTestsRun", run.getTotalTestsRun())
-                                .field("threads", run.getThreads())
-                                .field("delay", run.getDelay())
-                                .field("time", run.getTime())
-                                .field("actualTime", run.getActualTime())
-                                .field("minTime", run.getMinTime())
-                                .field("maxTime", run.getMaxTime())
-                                .field("meanTime", run.getAvgTime())
-                                .field("failures", run.getFailures())
-                                .field("ignores", run.getIgnores())
-                                .field("saturate", run.getSaturate())
-                                        // Error in ElasticSearch while saving Long - tries to store as Integer
-                                        //.field("startTime", run.getStartTime())
-                                        //.field("stopTime", run.getStopTime())
+                                .field( "id", run.getId() )
+                                .field( "commitId", run.getCommitId() )
+                                .field( "runner", run.getRunner() )
+                                .field( "runNumber", run.getRunNumber() )
+                                .field( "testName", run.getTestName() )
+                                .field( "chopType", run.getChopType() )
+                                .field( "iterations", run.getIterations() )
+                                .field( "totalTestsRun", run.getTotalTestsRun() )
+                                .field( "threads", run.getThreads() )
+                                .field( "delay", run.getDelay() )
+                                .field( "time", run.getTime() )
+                                .field( "actualTime", run.getActualTime() )
+                                .field( "minTime", run.getMinTime() )
+                                .field( "maxTime", run.getMaxTime() )
+                                .field( "meanTime", run.getAvgTime() )
+                                .field( "failures", run.getFailures() )
+                                .field( "ignores", run.getIgnores() )
+                                .field( "saturate", run.getSaturate() )
+                                .field( "startTime", run.getStartTime() )
+                                .field( "stopTime", run.getStopTime() )
                                 .endObject()
                 )
                 .execute()
@@ -89,173 +104,242 @@ public class RunDao extends Dao {
     }
 
 
-    public Run get(String runId) {
+    /**
+     * @param runId Id of queried Run
+     * @return      Run object or null if it doesn't exist
+     */
+    public Run get( String runId ) {
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setQuery(termQuery("_id", runId))
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setQuery( termQuery( "_id", runId ) )
                 .execute()
                 .actionGet();
 
         SearchHit hits[] = response.getHits().hits();
 
-        return hits.length > 0 ? toRun(hits[0]) : null;
+        return hits.length > 0 ? toRun( hits[ 0 ] ) : null;
     }
 
 
-    // <runId, Run>
-    public Map<String, Run> getMap(String commitId, int runNumber, String testName) {
+    /**
+     * Returns a map of all Runs with queried commitId, runNumber and testName.
+     * <p>
+     * <ul>
+     *     <li>Key of the map is Run's id in elastic search</li>
+     *     <li>Value of the map is Run itself</li>
+     * </ul>
+     *
+     * @param commitId    commit id of the Run
+     * @param runNumber   Run number to filter queried Runs
+     * @param testName    Test class name that resulting Run is about
+     * @return            Map satisfying given parameters. The map is empty if there are no Runs.
+     */
+    public Map<String, Run> getMap( String commitId, int runNumber, String testName ) {
 
         BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .must(termQuery("commitId", commitId.toLowerCase()))
-                .must(termQuery("runNumber", runNumber))
-                .must(termQuery("testName", testName.toLowerCase()));
+                .must( termQuery( "commitId", commitId.toLowerCase() ) )
+                .must( termQuery( "runNumber", runNumber ) )
+                .must( termQuery( "testName", testName.toLowerCase() ) );
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setQuery(queryBuilder)
-                .setSize(MAX_RESULT_SIZE)
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setQuery( queryBuilder )
+                .setSize( MAX_RESULT_SIZE )
                 .execute()
                 .actionGet();
 
         HashMap<String, Run> runs = new HashMap<String, Run>();
 
-        for (SearchHit hit : response.getHits().hits()) {
-            runs.put(hit.getId(), toRun(hit));
+        for ( SearchHit hit : response.getHits().hits() ) {
+            runs.put( hit.getId(), toRun( hit ) );
         }
 
         return runs;
     }
 
 
-    public static Run toRun(SearchHit hit) {
-
+    private static Run toRun( SearchHit hit ) {
         Map<String, Object> json = hit.getSource();
 
         BasicRun run = new BasicRun(
-                Util.getString(json, "commitId"),
-                Util.getString(json, "runner"),
-                Util.getInt(json, "runNumber"),
-                Util.getString(json, "testName")
+                Util.getString( json, "id" ),
+                Util.getString( json, "commitId" ),
+                Util.getString( json, "runner" ),
+                Util.getInt( json, "runNumber" ),
+                Util.getString(json, "testName" )
         );
-
-        run.copyJson(hit.getSource());
+        run.copyJson( hit.getSource() );
 
         return run;
     }
 
 
+    private static String concatIds( List<Commit> commits ) {
+        StringBuilder ids = new StringBuilder();
+
+        for ( Commit commit : commits ) {
+            ids.append( commit.getId() )
+               .append( " " );
+        }
+        return ids.toString();
+    }
+
+
+    private static List<Run> toList( SearchResponse response ) {
+        ArrayList<Run> list = new ArrayList<Run>();
+
+        for ( SearchHit hit : response.getHits().hits() ) {
+            list.add( toRun( hit ) );
+        }
+        return list;
+    }
+
+
+    /**
+     * @return  All registered Runs in elastic search
+     */
     public List<Run> getAll() {
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setSize(MAX_RESULT_SIZE)
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setSize( MAX_RESULT_SIZE )
                 .execute().actionGet();
 
-        return toList(response);
+        return toList( response );
     }
 
 
-    public List<Run> getList(String commitId, String testName) {
+    /**
+     * Narrows the registered Runs list to ones that match given commitId and testName
+     *
+     * @param commitId
+     * @param testName
+     * @return
+     */
+    public List<Run> getList( String commitId, String testName ) {
 
         BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .must(termQuery("testName", testName.toLowerCase()))
-                .must(termQuery("commitId", commitId.toLowerCase()));
+                .must( termQuery( "testName", testName.toLowerCase() ) )
+                .must( termQuery( "commitId", commitId.toLowerCase() ) );
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setQuery(queryBuilder)
-                .setSize(MAX_RESULT_SIZE)
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setQuery( queryBuilder )
+                .setSize( MAX_RESULT_SIZE )
                 .execute().actionGet();
 
-        return toList(response);
+        return toList( response );
     }
 
 
-    public List<Run> getList(String commitId, int runNumber) {
+    /**
+     * Narrows the registered Runs list to ones that match given commitId and runNumber
+     *
+     * @param commitId
+     * @param runNumber
+     * @return
+     */
+    public List<Run> getList( String commitId, int runNumber ) {
 
         BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .must(termQuery("commitId", commitId.toLowerCase()))
-                .must(termQuery("runNumber", runNumber));
+                .must( termQuery( "commitId", commitId.toLowerCase() ) )
+                .must( termQuery( "runNumber", runNumber ) );
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setQuery(queryBuilder)
-                .setSize(MAX_RESULT_SIZE)
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setQuery( queryBuilder )
+                .setSize( MAX_RESULT_SIZE )
                 .execute()
                 .actionGet();
 
-        return toList(response);
+        return toList( response );
     }
 
 
-    private String concatIds(List<Commit> commits) {
+    /**
+     * @param commits
+     * @param testName
+     * @return
+     */
+    public List<Run> getList( List<Commit> commits, String testName ) {
+        String commitIds = concatIds( commits );
+        LOG.debug( "commitIds: {}; testName: {}", commitIds, testName );
 
-        String ids = "";
-
-        for (Commit commit : commits) {
-            ids += commit.getId() + " ";
-        }
-
-        return ids;
-    }
-
-
-    public List<Run> getList(List<Commit> commits, String testName) {
-
-        String commitIds = concatIds(commits);
-        LOG.info("commitIds: {}; testName: {}", commitIds, testName);
-
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setQuery(multiMatchQuery(commitIds, "commitId"))
-                .setQuery(termQuery("testName", testName.toLowerCase()))
-                .setSize(MAX_RESULT_SIZE)
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setQuery( multiMatchQuery( commitIds, "commitId" ) )
+                .setQuery( termQuery( "testName", testName.toLowerCase() ) )
+                .setSize( MAX_RESULT_SIZE )
                 .execute()
                 .actionGet();
 
-        List<Run> runs = toList(response);
+        List<Run> runs = toList( response );
 
-        LOG.info("runs found: {}", runs.size());
+        LOG.debug( "runs found: {}", runs.size() );
 
         return runs;
     }
 
 
-    public Set<String> getTestNames(List<Commit> commits) {
+    /**
+     * Gets the runs given runner has run for given commit.
+     *
+     * @param runner    Runner hostname
+     * @param commitId  Runs return will be the runs for this commitId
+     * @return          List of runs of this runner
+     */
+    public List<Run> getRuns( String runner, String commitId ) {
+        List<Run> runnerRuns = new ArrayList<Run>();
+        List<Run> runs = getAll();
+        for( Run run: runs ) {
+            if( runner.equals( run.getRunner() ) && commitId.equals( run.getCommitId() ) ) {
+                runnerRuns.add( run );
+            }
+        }
+        return runnerRuns;
+    }
 
-        String commitIds = StringUtils.join(commits, ' ');
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setQuery(multiMatchQuery(commitIds, "commitId"))
-                .setSize(MAX_RESULT_SIZE)
+    /**
+     *
+     * @param commits
+     * @return
+     */
+    public Set<String> getTestNames( List<Commit> commits ) {
+
+        String commitIds = StringUtils.join( commits, ' ' );
+
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setQuery( multiMatchQuery( commitIds, "commitId" ) )
+                .setSize( MAX_RESULT_SIZE )
                 .execute()
                 .actionGet();
 
         HashSet<String> names = new HashSet<String>();
 
-        for (SearchHit hit : response.getHits().hits()) {
-            names.add(Util.getString(hit.getSource(), "testName"));
+        for ( SearchHit hit : response.getHits().hits() ) {
+            names.add( Util.getString( hit.getSource(), "testName" ) );
         }
 
         return names;
     }
 
 
-    private static List<Run> toList(SearchResponse response) {
-
-        ArrayList<Run> list = new ArrayList<Run>();
-
-        for (SearchHit hit : response.getHits().hits()) {
-            list.add(toRun(hit));
+    /**
+     *
+     * @param runners
+     * @return
+     */
+    public int getNextRunNumber( List<Runner> runners, String commitId ) {
+        if( runners.size() == 0 ) {
+            return 1;
         }
 
-        return list;
-    }
+        int maxRunNumber = 0;
+        for( Runner runner: runners ) {
+            List<Run> runs = getRuns( runner.getHostname(), commitId );
+            for( Run run: runs ) {
+                if( run.getRunNumber() > maxRunNumber ) {
+                    maxRunNumber = run.getRunNumber();
+                }
+            }
+        }
 
-
-    public int getNextRunNumber(String commitId) {
-
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setQuery(termQuery("commitId", commitId))
-                .setSize(0)
-                .execute()
-                .actionGet();
-
-        return (int) response.getHits().totalHits() + 1;
+        return maxRunNumber + 1;
     }
 }

@@ -29,6 +29,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,29 +45,39 @@ public class RunnerDao extends Dao {
 
 
     @Inject
-    public RunnerDao(IElasticSearchClient elasticSearchClient) {
-        super(elasticSearchClient);
+    public RunnerDao( IElasticSearchClient elasticSearchClient ) {
+        super( elasticSearchClient );
     }
 
-    public boolean save(Runner runner, String user, String commitId, String moduleId) throws Exception {
 
-        String groupId = new RunnerGroup(user, commitId, moduleId).getId();
+    /**
+     *
+     * @param runner
+     * @param user
+     * @param commitId
+     * @param moduleId
+     * @return
+     * @throws IOException
+     */
+    public boolean save( Runner runner, String user, String commitId, String moduleId ) throws IOException {
+
+        String groupId = new RunnerGroup( user, commitId, moduleId ).getId();
 
         IndexResponse response = elasticSearchClient.getClient()
-                .prepareIndex(DAO_INDEX_KEY, DAO_TYPE_KEY, runner.getUrl())
-                .setRefresh(true)
+                .prepareIndex( DAO_INDEX_KEY, DAO_TYPE_KEY, runner.getUrl() )
+                .setRefresh( true )
                 .setSource(
                         jsonBuilder()
                                 .startObject()
-                                .field("groupId", groupId)
-                                .field("ipv4Address", runner.getIpv4Address())
-                                .field("hostname", runner.getHostname())
-                                .field("serverPort", runner.getServerPort())
-                                .field("url", runner.getUrl())
-                                .field("tempDir", runner.getTempDir())
-                                .field("user", user)
-                                .field("commitId", commitId)
-                                .field("moduleId", moduleId)
+                                .field( "groupId", groupId )
+                                .field( "ipv4Address", runner.getIpv4Address() )
+                                .field( "hostname", runner.getHostname() )
+                                .field( "serverPort", runner.getServerPort() )
+                                .field( "url", runner.getUrl() )
+                                .field( "tempDir", runner.getTempDir() )
+                                .field( "user", user )
+                                .field( "commitId", commitId )
+                                .field( "moduleId", moduleId )
                                 .endObject()
                 )
                 .execute()
@@ -76,19 +87,26 @@ public class RunnerDao extends Dao {
     }
 
 
-    public List<Runner> getRunners(String user, String commitId, String moduleId) {
+    /**
+     *
+     * @param user
+     * @param commitId
+     * @param moduleId
+     * @return
+     */
+    public List<Runner> getRunners( String user, String commitId, String moduleId ) {
 
-        String groupId = new RunnerGroup(user, commitId, moduleId).getId();
+        String groupId = new RunnerGroup( user, commitId, moduleId ).getId();
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setQuery(termQuery("groupId", groupId))
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setQuery( termQuery( "groupId", groupId ) )
                 .execute()
                 .actionGet();
 
         ArrayList<Runner> runners = new ArrayList<Runner>();
 
-        for (SearchHit hit : response.getHits().hits()) {
-            runners.add(toRunner(hit));
+        for ( SearchHit hit : response.getHits().hits() ) {
+            runners.add( toRunner( hit ) );
         }
 
         return runners;
@@ -100,53 +118,54 @@ public class RunnerDao extends Dao {
      */
     public Map<RunnerGroup, List<Runner>> getRunnersGrouped() {
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
                 .execute()
                 .actionGet();
 
-        LOG.debug("response: {}", response);
+        LOG.debug( "response: {}", response );
 
         HashMap<RunnerGroup, List<Runner>> runnerGroups = new HashMap<RunnerGroup, List<Runner>>();
 
-        for (SearchHit hit : response.getHits().hits()) {
+        for ( SearchHit hit : response.getHits().hits() ) {
 
-            RunnerGroup group = getGroup(hit);
-            if (group.isNull()) {
+            RunnerGroup group = getGroup( hit );
+            if ( group.isNull() ) {
                 continue;
             }
 
-            List<Runner> runners = runnerGroups.get(group);
+            List<Runner> runners = runnerGroups.get( group );
 
             if (runners == null) {
                 runners = new ArrayList<Runner>();
-                runnerGroups.put(group, runners);
+                runnerGroups.put( group, runners );
             }
 
-            runners.add(toRunner(hit));
+            runners.add( toRunner( hit ) );
         }
 
         return runnerGroups;
     }
 
+
     /**
      * Returns a runner group from the search
      */
-    private static RunnerGroup getGroup(SearchHit hit) {
+    private static RunnerGroup getGroup( SearchHit hit ) {
         Map<String, Object> json = hit.getSource();
 
         return new RunnerGroup(
-                Util.getString(json, "user"),
-                Util.getString(json, "commitId"),
-                Util.getString(json, "moduleId")
+                Util.getString( json, "user" ),
+                Util.getString( json, "commitId" ),
+                Util.getString( json, "moduleId" )
         );
     }
 
 
-    public boolean delete(String runnerUrl) {
+    public boolean delete( String runnerUrl ) {
 
         DeleteResponse response = elasticSearchClient.getClient()
-                .prepareDelete(DAO_INDEX_KEY, DAO_TYPE_KEY, runnerUrl)
-                .setRefresh(true)
+                .prepareDelete( DAO_INDEX_KEY, DAO_TYPE_KEY, runnerUrl )
+                .setRefresh( true )
                 .execute()
                 .actionGet();
 
@@ -154,16 +173,16 @@ public class RunnerDao extends Dao {
     }
 
 
-    private static Runner toRunner(SearchHit hit) {
+    private static Runner toRunner( SearchHit hit ) {
 
         Map<String, Object> json = hit.getSource();
 
         return new BasicRunner(
-                Util.getString(json, "ipv4Address"),
-                Util.getString(json, "hostname"),
-                Util.getInt(json, "serverPort"),
-                Util.getString(json, "url"),
-                Util.getString(json, "tempDir")
+                Util.getString( json, "ipv4Address" ),
+                Util.getString( json, "hostname" ),
+                Util.getInt( json, "serverPort" ),
+                Util.getString( json, "url" ),
+                Util.getString( json, "tempDir" )
         );
     }
 

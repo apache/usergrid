@@ -76,7 +76,7 @@
               <goal>runner</goal>
             </goals>
             <configuration>
-              <username>user</username>
+              <username>username</username>
               <password>pass</password>
               <endpoint>https://localhost:8443/</endpoint>
               <testPackageBase>org.apache.usergrid.chop.example</testPackageBase>

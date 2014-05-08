@@ -28,23 +28,46 @@ import java.util.Map;
 public interface ProviderParams {
 
     /**
-     * Just a plain username string for now to identify whose parameters this is
-     * May be a different type later
+     * @return  User owning these parameters
      */
     String getUsername();
 
+
+    /**
+     * @return  Instance type of virtual or container based instances
+     *          to be used on setup, corresponds to Instance Type on AWS
+     */
     String getInstanceType();
 
+
+    /**
+     * @return  Access Key to be used while communicating with Provider
+     */
     String getAccessKey();
 
+
+    /**
+     * @return  Secret Key to be used while communicating with Provider
+     */
     String getSecretKey();
 
+
+    /**
+     * @return  Base image id to be used when setting up runner instances,
+     *          corresponds to AMI ID for AWS
+     */
     String getImageId();
+
 
     /**
      * Path to key files identified by key-pair-names.
      */
     Map<String, String> getKeys();
 
+
+    /**
+     * @return  Key name for use on SSH operations to runner instances,
+     *          corresponds to Key pair name on AWS
+     */
     String getKeyName();
 }

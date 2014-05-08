@@ -137,7 +137,8 @@ public class RunManagerImpl implements RunManager, RestParams {
         WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
         resource = addQueryParameters( resource, project, me );
         Integer result = resource.path( coordinatorFig.getRunNextPath() )
-                                .type( MediaType.APPLICATION_JSON_TYPE ).get( Integer.class );
+                                 .type( MediaType.APPLICATION_JSON_TYPE )
+                                 .get( Integer.class );
 
         LOG.debug( "Got back result from next run number get = {}", result );
 
