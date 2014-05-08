@@ -57,6 +57,9 @@ public class EntityConnectionIndexImplTest extends BaseIT {
     private static final Logger log = LoggerFactory.getLogger( EntityConnectionIndexImplTest.class );
     
     @ClassRule
+    public static ElasticSearchRule es = new ElasticSearchRule();
+
+    @ClassRule
     public static CassandraRule cass = new CassandraRule();
 
     @Inject

@@ -153,7 +153,7 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.refresh();
 
         Results results = entityIndex.search( scope, Query.fromQL( "name contains 'Ferrari*'"));
-        assertEquals( 1, results.getEntities().size() );
+        assertEquals( 1, results.size() );
 
         entityManager.delete( entity.getId() );
         entityIndex.deindex( scope, entity );
@@ -161,7 +161,7 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.refresh();
 
         results = entityIndex.search( scope, Query.fromQL( "name contains 'Ferrari*'"));
-        assertEquals( 0, results.getEntities().size() );
+        assertEquals( 0, results.size() );
     }
    
    
@@ -175,9 +175,9 @@ public class EntityIndexTest extends BaseIT {
         timer.stop();
 
         if ( num == 1 ) {
-            assertNotNull( results.getEntities().get(0) != null );
+            assertNotNull( results.getEntity() != null );
         } else {
-            assertEquals( num, results.getEntities().size() );
+            assertEquals( num, results.size() );
         }
         log.debug( "Query time {}ms", timer.getTime() );
     }
@@ -193,9 +193,9 @@ public class EntityIndexTest extends BaseIT {
 
         testQuery( entityIndex, scope, "name contains 'Morgan'", 1);
 
-        testQuery( entityIndex, scope, "company > 'GeoLogix'", 564);
+        testQuery( entityIndex, scope, "company > 'GeoLogix'", 64);
 
-        testQuery( entityIndex, scope, "gender = 'female'", 433);
+        testQuery( entityIndex, scope, "gender = 'female'", 45);
 
         testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age > 39", 1);
 

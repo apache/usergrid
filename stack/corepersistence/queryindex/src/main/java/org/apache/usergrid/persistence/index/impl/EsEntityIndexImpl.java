@@ -419,8 +419,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         // TODO: do we always want to fetch entities? When do we fetch refs or ids?
         // list of entities that will be returned
-        List<Id> ids = new ArrayList<Id>();
-        List<Entity> entities = new ArrayList<Entity>();
+        List<CandidateResult> candidates = new ArrayList<CandidateResult>();
 
         for (SearchHit hit : hits.getHits()) {
 
@@ -429,29 +428,17 @@ public class EsEntityIndexImpl implements EntityIndex {
             String type    = idparts[1];
             String version = idparts[2];
 
-            EntityCollectionManager ecm = getEntityCollectionManager(
-                hit.getSource().get( COLLECTION_SCOPE_FIELDNAME ).toString() );
-
             Id entityId = new SimpleId(UUID.fromString(id), type);
 
-            Entity entity = ecm.load(entityId).toBlockingObservable().last();
-            if (entity == null) {
-                throw new IndexException("Entity id [" + entityId + "] not found");
-            }
-
-            UUID entityVersion = UUID.fromString(version);
-            if (entityVersion.compareTo(entity.getVersion()) == -1) {
-                log.debug("   Stale hit " + hit.getId());
-
-            } else {
-                ids.add( entityId );
-                entities.add( entity );
-            }
+            String scopeString = hit.getSource().get( COLLECTION_SCOPE_FIELDNAME ).toString();
+            candidates.add(
+                new CandidateResult( 
+                    entityId, UUID.fromString(version), getCollectionScope(scopeString) ));
         }
 
-        Results results = new Results( query, ids, entities );
+        Results results = new Results( query, candidates, ecmFactory );
 
-        if ( ids.size() == query.getLimit() ) {
+        if ( candidates.size() == query.getLimit() ) {
             results.setCursor(searchResponse.getScrollId());
             log.debug("   Cursor = " + searchResponse.getScrollId() );
         }
@@ -460,8 +447,8 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
 
-    private EntityCollectionManager getEntityCollectionManager( String scope ) {
-
+    private CollectionScope getCollectionScope( String scope ) {
+        
         String[] scopeParts = scope.split( DOC_TYPE_SEPARATOR_SPLITTER );
 
         String scopeName      =                  scopeParts[0];
@@ -473,11 +460,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         Id ownerId = new SimpleId( scopeOwnerUuid, scopeOwnerType );
         Id orgId = new SimpleId( scopeOrgUuid, scopeOrgType );
 
-        CollectionScope collScope = new CollectionScopeImpl( orgId, ownerId, scopeName );
-
-        EntityCollectionManager ecm = ecmFactory.createCollectionManager(collScope);
-
-        return ecm;
+        return new CollectionScopeImpl( orgId, ownerId, scopeName );
     }
 
 
@@ -641,5 +624,6 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void refresh() {
         client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
     }
+
 
 }

@@ -19,7 +19,6 @@ package org.apache.usergrid.persistence.index.impl;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.netflix.config.ConfigurationManager;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -32,6 +31,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -46,6 +46,7 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
+import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -57,6 +58,12 @@ import org.slf4j.LoggerFactory;
  */
 public class CorePerformanceIT extends BaseIT {
     private static final Logger log = LoggerFactory.getLogger(CorePerformanceIT.class);
+
+    @ClassRule
+    public static ElasticSearchRule es = new ElasticSearchRule();
+
+    @ClassRule
+    public static CassandraRule cass = new CassandraRule();
 
     // max entities we will write and read
     static int maxEntities = 10; // TODO: make this configurable when you add Chop 

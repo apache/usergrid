@@ -17,33 +17,50 @@
  */
 package org.apache.usergrid.persistence.index.query;
 
-
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.index.impl.CandidateResult;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @XmlRootElement
 public class Results implements Iterable<Entity> {
 
-    final List<Id> ids;
-    final Query query;
+    private static final Logger log = LoggerFactory.getLogger(Results.class);
 
-    String cursor = null;
-    List<Entity> entities = null;
-    List<EntityRef> refs = null;
+    private String cursor = null;
 
-    public Results(Query query, List<Id> ids, List<Entity> entities) {
+    private final Query query;
+    private final List<Id> ids = new ArrayList<Id>();
+
+    private Entity entity = null;
+    private List<Entity> entities = null;
+
+    private final List<CandidateResult> candidates;
+
+    final EntityCollectionManagerFactory ecmf;
+
+
+    public Results( Query query, List<CandidateResult> candidates, EntityCollectionManagerFactory ecmf ) {
         this.query = query;
-        this.ids = ids;
-        this.entities = entities;
+        this.candidates = candidates;
+        this.ecmf = ecmf;
+        for ( CandidateResult candidate : candidates ) {
+            ids.add( candidate.getEntityId() );
+        }
     }
 
 
@@ -75,18 +92,43 @@ public class Results implements Iterable<Entity> {
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    @SuppressWarnings("unchecked")
-    public List<EntityRef> getRefs() {
+    public List<Entity> getEntities() {
+
         if ( entities == null ) {
-            getEntities();
+
+            entities = new ArrayList<Entity>();
+
+            EntityCollectionManager ecm = null;
+            CollectionScope lastScope = null;
+
+            for ( CandidateResult candidate : candidates ) {
+
+                if ( !candidate.getCollectionScope().equals(lastScope)) {
+                    // new scope means we need new manager
+                    ecm = ecmf.createCollectionManager( candidate.getCollectionScope() );
+                    lastScope = candidate.getCollectionScope();
+                }
+
+                Entity entity = ecm.load( candidate.getEntityId() ).toBlockingObservable().last();
+                if ( candidate.getEntityVersion().compareTo(entity.getVersion()) == -1) {
+                    log.debug("   Stale hit {} version {}", entity.getId(), entity.getVersion() );
+                    continue;
+                }
+
+                entities.add(entity);
+            }
         }
-        return Collections.unmodifiableList( refs );
+
+        return Collections.unmodifiableList( entities );
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
-    public List<Entity> getEntities() {
-        return Collections.unmodifiableList( entities );
+    public Entity getEntity() {
+        if ( size() > 0 ) {
+            return getEntities().get(0);
+        }
+        return null;
     }
 
 
@@ -103,8 +145,5 @@ public class Results implements Iterable<Entity> {
     @Override
     public Iterator<Entity> iterator() {
         return getEntities().iterator();
-    }
-
-    public void setIds(List<Id> ids) {
     }
 }
