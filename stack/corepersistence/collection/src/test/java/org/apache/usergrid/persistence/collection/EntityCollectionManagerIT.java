@@ -103,13 +103,15 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Returned has a uuid", returned.getId() );
         assertNotNull( "Version exists" );
 
-        newEntity.setField( new StringField("testField","NEWPARTIALUPDATEZOMG") );
-        observable = manager.partialUpdate( newEntity );
+        newEntity.setField( new StringField("testFud","NEWPARTIALUPDATEZOMG") );
+
+        observable = manager.update( newEntity.getId() );
 
         returned = observable.toBlockingObservable().lastOrDefault( null );
 
         assertNotNull( "Returned has a uuid", returned.getId() );
         assertEquals( newEntity.getField( "testField" ),returned.getField( "testField" ) );
+        assertEquals( newEntity.getField( "testFud" ),returned.getField( "testFud" ) );
         assertNotNull( "Version exists" );
 
     }

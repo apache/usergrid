@@ -228,6 +228,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     }
 
     //TODO: since load already handles partial updates, why bother using update and why not just use load?
+    //TODO: what should update call then? The listner? How?
     @Override
     public Observable<Entity> update ( final Id entityId ) {
 

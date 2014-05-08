@@ -65,20 +65,14 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         this.entitySerializationStrategy = entitySerializationStrategy;
     }
 
-
+    //TODO: do reads partial merges in batches. maybe 5 or 10 at a time.
     /**
-     * 		you'll need to seek to the last full entity
-     then merge them in batches, maybe 5 or 10 at a time
-     that way you're not loading them all in ram, they could be too big
-     [4:40 PM] Todd Nine: so if like v1 is a full
+     * for example
+     so if like v1 is a full
      and you have v1 -> v20, where v2->20 is all partial
      you merge up to 10, then flush
      then process 10->20, then flush
-     *
-     * @param idIoEvent
-     * @return
      */
-
     @Override
     public Entity call( final CollectionIoEvent<Id> idIoEvent ) {
         final Id entityId = idIoEvent.getEvent();
