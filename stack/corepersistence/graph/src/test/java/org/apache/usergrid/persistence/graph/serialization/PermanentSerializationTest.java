@@ -24,7 +24,6 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.graph.guice.CassandraGraphModule;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 
@@ -32,7 +31,7 @@ import com.google.inject.Inject;
 
 
 @RunWith( JukitoRunner.class )
-@UseModules( { CassandraGraphModule.class } )
+@UseModules( { TestGraphModule.class } )
 public class PermanentSerializationTest extends EdgeSerializationTest {
 
     @Inject

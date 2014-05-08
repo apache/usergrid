@@ -12,16 +12,11 @@ import org.safehaus.guicyfig.Key;
  */
 @FigSingleton
 public interface MigrationManagerFig extends GuicyFig {
-
-    String COLLECTIONS_KEYSPACE_STRATEGY_CLASS = "collections.keyspace.strategy.class";
-    String COLLECTIONS_KEYSPACE_STRATEGY_OPTIONS = "collections.keyspace.strategy.options";
-
-    @Key(COLLECTIONS_KEYSPACE_STRATEGY_CLASS)
+    @Key( "collections.keyspace.strategy.class" )
     @Default( "org.apache.cassandra.locator.SimpleStrategy" )
     String getStrategyClass();
 
-    @Key(COLLECTIONS_KEYSPACE_STRATEGY_OPTIONS)
-    @Default( "replication_factor:1" )
+    @Key( "collections.keyspace.strategy.options" )
     String getStrategyOptions();
 
 }

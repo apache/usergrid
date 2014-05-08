@@ -25,50 +25,41 @@ import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 
+
 /**
  * Cassandra configuration interface.
  */
 @FigSingleton
 public interface CassandraFig extends GuicyFig {
-
-
-    public static final String CASSANDRA_HOSTS = "cassandra.hosts";
-    public static final String CASSANDRA_VERSION = "cassandra.version";
-    public static final String CASSANDRA_CLUSTER_NAME = "cassandra.cluster_name";
-    public static final String COLLECTIONS_KEYSPACE = "collections.keyspace";
-    public static final String CASSANDRA_PORT = "cassandra.port";
-    public static final String CASSANDRA_CONNECTIONS = "cassandra.connections";
-    public static final String CASSANDRA_TIMEOUT = "cassandra.timeout";
-    public static final String CASSANDRA_DISCOVERY = "cassandra.discovery";
-
-    @Key( CASSANDRA_HOSTS )
+    @Key( "cassandra.hosts" )
     String getHosts();
 
-    @Key(CASSANDRA_VERSION)
-    @Default("1.2")
+    @Key( "cassandra.version" )
+    @Default( "1.2" )
     String getVersion();
 
-    @Key(CASSANDRA_CLUSTER_NAME)
-    @Default("Usergrid")
+    @Key( "cassandra.cluster_name" )
+    @Default( "Usergrid" )
     String getClusterName();
 
-    @Key(COLLECTIONS_KEYSPACE)
-    @Default("Usergrid_Collections")
+    @Key( "collections.keyspace" )
+    @Default( "Usergrid_Collections" )
     String getKeyspaceName();
 
-    @Key(CASSANDRA_PORT)
-    @Default("9160")
+    @Key( "cassandra.port" )
+    @Default( "9160" )
     int getThriftPort();
 
-    @Key(CASSANDRA_CONNECTIONS)
-    @Default("100")
+    @Key( "cassandra.connections" )
+    @Default( "100" )
     int getConnections();
 
-    @Key(CASSANDRA_TIMEOUT)
-    @Default("5000")
+    @Key( "cassandra.timeout" )
+    @Default( "5000" )
     int getTimeout();
 
-    @Key(CASSANDRA_DISCOVERY)
-    @Default("RING_DESCRIBE")
+    @Key("cassandra.discovery")
+    @Default( "RING_DESCRIBE" )
     String getDiscoveryType();
+
 }

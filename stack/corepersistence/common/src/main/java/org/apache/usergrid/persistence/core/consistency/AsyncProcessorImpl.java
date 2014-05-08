@@ -54,7 +54,7 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
 
     protected final TimeoutQueue<T> queue;
     protected final ConsistencyFig consistencyFig;
-    protected final List<MessageListener<T, ?>> listeners = new ArrayList<>();
+    protected final List<MessageListener<T, T>> listeners = new ArrayList<MessageListener<T, T>>();
 
 
     protected List<ErrorListener<T>> errorListeners = new ArrayList<ErrorListener<T>>();
@@ -87,7 +87,7 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
          */
         List<Observable<?>> observables = new ArrayList<Observable<?>>( listeners.size() );
 
-        for ( MessageListener<T, ?> listener : listeners ) {
+        for ( MessageListener<T, T> listener : listeners ) {
             observables.add( HystrixGraphObservable.async( listener.receive( data ) ) );
         }
 
@@ -136,10 +136,8 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
     }
 
 
-
-
     @Override
-    public <R> void addListener( final MessageListener<T, R> listener ) {
+    public void addListener( final MessageListener<T, T> listener ) {
         this.listeners.add( listener );
     }
 

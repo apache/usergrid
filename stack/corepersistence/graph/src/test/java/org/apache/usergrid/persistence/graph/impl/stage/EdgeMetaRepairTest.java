@@ -38,7 +38,6 @@ import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.guice.CassandraGraphModule;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
@@ -65,7 +64,7 @@ import static org.mockito.Mockito.when;
  *
  */
 @RunWith(JukitoRunner.class)
-@UseModules({ CassandraGraphModule.class })
+@UseModules({ TestGraphModule.class })
 public class EdgeMetaRepairTest {
 
 

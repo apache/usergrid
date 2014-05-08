@@ -41,7 +41,6 @@ import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.guice.CassandraGraphModule;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
@@ -70,7 +69,7 @@ import static org.mockito.Mockito.when;
  *
  */
 @RunWith( JukitoRunner.class )
-@UseModules( { CassandraGraphModule.class } )
+@UseModules( { TestGraphModule.class } )
 public class NodeDeleteListenerTest {
 
     private static final Logger log = LoggerFactory.getLogger( NodeDeleteListenerTest.class );

@@ -33,7 +33,6 @@ import org.junit.runner.RunWith;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.graph.guice.CassandraGraphModule;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -51,7 +50,7 @@ import static org.mockito.Mockito.when;
 
 
 @RunWith( JukitoRunner.class )
-@UseModules( { CassandraGraphModule.class } )
+@UseModules( { TestGraphModule.class } )
 public class EdgeShardSerializationTest {
 
     @ClassRule

@@ -20,15 +20,12 @@ package org.apache.usergrid.persistence.graph.guice;
 
 
 import org.apache.usergrid.persistence.collection.guice.TestModule;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-
-import com.google.inject.AbstractModule;
 
 
 /**
  * Wrapper for configuring our guice test env
  */
-public class TestGraphModule extends AbstractModule {
+public class TestGraphModule extends TestModule {
 
     @Override
     protected void configure() {
