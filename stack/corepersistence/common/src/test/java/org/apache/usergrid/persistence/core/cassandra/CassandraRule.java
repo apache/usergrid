@@ -53,7 +53,7 @@ public class CassandraRule extends EnvironResource {
     @Override
     protected void before() throws Throwable {
 
-        if ( started ) {
+        if ( started || !cassandraFig.isEmbedded()) {
             return;
         }
 

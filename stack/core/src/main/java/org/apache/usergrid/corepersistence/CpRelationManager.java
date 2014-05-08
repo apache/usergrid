@@ -280,7 +280,7 @@ public class CpRelationManager implements RelationManager {
     public Results getCollection(
             String collName, Query query, Results.Level level) throws Exception {
 
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return searchCollection(collName, query);
     }
 
 

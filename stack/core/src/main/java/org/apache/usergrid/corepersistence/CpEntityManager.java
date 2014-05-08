@@ -297,13 +297,15 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Results get(Collection<UUID> entityIds, Results.Level resultsLevel) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        throw new UnsupportedOperationException("Cannot get entity by UUID alone"); 
     }
 
 
     @Override
     public Results get(Collection<UUID> entityIds) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        throw new UnsupportedOperationException("Cannot get entity by UUID alone"); 
     }
 
 
@@ -461,7 +463,8 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public GeoIndexManager getGeoIndexManager() {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        throw new UnsupportedOperationException("GeoIndexManager no longer supported."); 
     }
 
     @Override
@@ -485,7 +488,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void updateApplication(Map<String, Object> properties) throws Exception {
-        //this.updateProperties( applicationId, properties );
+        this.updateProperties( new SimpleEntityRef( "application", applicationId ), properties );
         this.application = get( applicationId, Application.class );
     }
 
@@ -639,57 +642,60 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<Object> getDictionaryAsSet(
             EntityRef entityRef, String dictionaryName) throws Exception {
-        return new LinkedHashSet<>( getDictionaryAsMap( entityRef, dictionaryName ).keySet() );
 
+        return new LinkedHashSet<>( getDictionaryAsMap( entityRef, dictionaryName ).keySet() );
     }
 
     @Override
     public void addToDictionary(
             EntityRef entityRef, String dictionaryName, Object elementValue) throws Exception {
+        
         addToDictionary(entityRef,dictionaryName,elementValue,null);
     }
 
     @Override
-    public void addToDictionary(EntityRef entityRef, String dictionaryName, 
+    public void addToDictionary(EntityRef entityRef, String dictionaryName,
             Object elementName, Object elementValue) throws Exception {
 
-        if(elementName == null) {
+        if (elementName == null) {
             return;
         }
-        if(elementValue == null){
-            //Placeholder value
+        if (elementValue == null) {
+            // placeholder value
             elementValue = new byte[0];
         }
 
-        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+        Entity entity = get(entityRef.getUuid(), entityRef.getType());
 
-        if ( !(elementName instanceof String) ) {
-            throw new IllegalArgumentException( "Element name must be a string" );
+        if (!(elementName instanceof String)) {
+            throw new IllegalArgumentException("Element name must be a string");
         }
 
-        if ( !(elementValue instanceof Serializable)){
-            throw new IllegalArgumentException( "Element Value must be serializable." );
+        if (!(elementValue instanceof Serializable)) {
+            throw new IllegalArgumentException("Element Value must be serializable.");
         }
 
-        Map<String,Object> dictionary = entity.getDynamicProperties();
-        Map<String,Object> props = ( TreeMap ) dictionary.get( dictionaryName );
-        if(props == null)
+        Map<String, Object> dictionary = entity.getDynamicProperties();
+        Map<String, Object> props = (TreeMap) dictionary.get(dictionaryName);
+        if (props == null) {
             props = new TreeMap();
-        props.put((String) elementName,elementValue );
-        dictionary.put( dictionaryName,props );
+        }
+        props.put((String) elementName, elementValue);
+        dictionary.put(dictionaryName, props);
 
         entity.addProperties(dictionary);
-        update( entity );
+        update(entity);
     }
 
     @Override
     public void addSetToDictionary(
             EntityRef entityRef, String dictionaryName, Set<?> elementValues) throws Exception {
-        if(dictionaryName == null) {
+
+        if (dictionaryName == null) {
             return;
         }
-        for ( Object elementValue : elementValues ) {
-            addToDictionary( entityRef,dictionaryName, elementValue);
+        for (Object elementValue : elementValues) {
+            addToDictionary(entityRef, dictionaryName, elementValue);
         }
     }
 
@@ -710,17 +716,20 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Map<Object, Object> getDictionaryAsMap(
             EntityRef entityRef, String dictionaryName) throws Exception {
+
         Entity entity = get(entityRef.getUuid(),entityRef.getType());
         Map<Object,Object> dictionary = ( TreeMap) entity.getProperty( dictionaryName );
+
         return dictionary;
-        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public Object getDictionaryElementValue(
             EntityRef entityRef, String dictionaryName, String elementName) throws Exception {
+
         Entity entity = get(entityRef.getUuid(),entityRef.getType());
         Map<String,Object> dictionary = ( Map<String, Object> ) entity.getProperty( dictionaryName );
+
         return dictionary.get( elementName );
     }
 
@@ -757,20 +766,22 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Map<String, Map<UUID, Set<String>>> getOwners(EntityRef entityRef) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager(entityRef).getOwners();
     }
 
     @Override
     public boolean isCollectionMember(
             EntityRef owner, String collectionName, EntityRef entity) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager(owner).isCollectionMember(collectionName, entity);
     }
 
     @Override
     public boolean isConnectionMember(
             EntityRef owner, String connectionName, EntityRef entity) throws Exception {
 
-        return getRelationManager(owner).isCollectionMember(connectionName, entity);
+        return getRelationManager(owner).isConnectionMember(connectionName, entity);
     }
 
     @Override
@@ -826,14 +837,17 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getCollectionIndexes(
             EntityRef entity, String collectionName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager(entity).getCollectionIndexes(collectionName);
     }
 
     @Override
     public void copyRelationships(
             EntityRef srcEntityRef, String srcRelationName, EntityRef dstEntityRef, 
             String dstRelationName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        getRelationManager(srcEntityRef)
+                .copyRelationships(srcRelationName, dstEntityRef, dstRelationName);
     }
 
     @Override
@@ -859,14 +873,15 @@ public class CpEntityManager implements EntityManager {
             EntityRef connectingEntity, String pairedConnectionType, EntityRef pairedEntity, 
             String connectionType, EntityRef connectedEntityRef) throws Exception {
 
-        throw new UnsupportedOperationException("Paired connections not supported."); 
+        return getRelationManager(connectingEntity).createConnection(
+                pairedConnectionType, pairedEntity, connectionType, connectedEntityRef);
     }
 
     @Override
     public ConnectionRef createConnection(
             EntityRef connectingEntity, ConnectedEntityRef... connections) throws Exception {
 
-        throw new UnsupportedOperationException("Paired connections not supported."); 
+        return getRelationManager(connectingEntity).connectionRef(connections);
     }
 
     @Override
@@ -887,19 +902,21 @@ public class CpEntityManager implements EntityManager {
             EntityRef connectingEntity, String pairedConnectionType, EntityRef pairedEntity, 
             String connectionType, EntityRef connectedEntityRef) throws Exception {
 
-        throw new UnsupportedOperationException("Paired connections not supported."); 
+        return getRelationManager(connectingEntity).connectionRef(
+                pairedConnectionType, pairedEntity, connectionType, connectedEntityRef);
     }
 
     @Override
     public ConnectionRef connectionRef(
             EntityRef connectingEntity, ConnectedEntityRef... connections) {
         
-        throw new UnsupportedOperationException("Paired connections not supported."); 
+        return getRelationManager(connectingEntity).connectionRef(connections);
     }
 
     @Override
     public void deleteConnection(ConnectionRef connectionRef) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        getRelationManager(connectionRef).deleteConnection(connectionRef);
     }
 
     @Override
