@@ -33,7 +33,6 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.index.legacy.EntityBuilder;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
@@ -61,12 +60,15 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
-public class EntityIndexTest {
+public class EntityIndexTest extends BaseIT {
 
     private static final Logger log = LoggerFactory.getLogger( EntityIndexTest.class );
     
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
+
+    @Rule
+    public ElasticSearchRule elasticSearchRule = new ElasticSearchRule();
 
     @Inject
     @Rule
@@ -80,6 +82,8 @@ public class EntityIndexTest {
 
     @Test
     public void testIndex() throws IOException {
+
+        final int MAX_ENTITIES = 100;
 
         Id orgId = new SimpleId("organization");
         OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
@@ -109,7 +113,9 @@ public class EntityIndexTest {
 
             entityIndex.index( scope, entity );
 
-            count++;
+            if ( count++ > MAX_ENTITIES ) {
+                break;
+            }
         }
         timer.stop();
         log.info( "Total time to index {} entries {}ms, average {}ms/entry", 

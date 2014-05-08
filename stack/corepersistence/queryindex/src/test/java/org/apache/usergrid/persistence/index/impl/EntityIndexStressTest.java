@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(JukitoRunner.class)
 @UseModules(TestIndexModule.class)
-public class EntityIndexStressTest {
+public class EntityIndexStressTest extends BaseIT {
 
     private static final Logger log = LoggerFactory.getLogger( 
             EntityIndexStressTest.class );
@@ -80,7 +80,7 @@ public class EntityIndexStressTest {
 
         EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
 
-        int limit = 2000;
+        int limit = 100;
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -93,7 +93,7 @@ public class EntityIndexStressTest {
                     put("longitude", 40 );
                 }});
             }});
-            if ( i % 1000 == 0 ) {
+            if ( i % 10 == 0 ) {
                 log.info("   Wrote and indexed: " + i);
             }
         }

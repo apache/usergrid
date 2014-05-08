@@ -31,7 +31,9 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
 
-    public static final String ELASTICSEARCH_INDEXNAME_PREFIX = "elasticsearch.index_name.prefix";
+    public static final String ELASTICSEARCH_CLUSTER_NAME = "elasticsearch.cluster_name";
+
+    public static final String ELASTICSEARCH_INDEX_PREFIX = "elasticsearch.index_prefix";
 
     public static final String ELASTICSEARCH_EMBEDDED = "elasticsearch.embedded";
 
@@ -45,13 +47,17 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_HOSTS )
     String getHosts();
 
-    @Default( "9200" )
+    @Default( "9300" )
     @Key( ELASTICSEARCH_PORT )
     int getPort();
 
+    @Default( "usergrid" ) 
+    @Key( ELASTICSEARCH_CLUSTER_NAME)
+    String getClusterName();
+    
     @Default( "usergrid" ) // no underbars allowed
-    @Key( ELASTICSEARCH_INDEXNAME_PREFIX )
-    String getIndexNamePrefix();
+    @Key( ELASTICSEARCH_INDEX_PREFIX )
+    String getIndexPrefix();
     
     @Default( "1" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )

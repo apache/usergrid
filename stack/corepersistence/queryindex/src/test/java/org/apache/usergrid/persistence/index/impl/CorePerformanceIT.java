@@ -55,15 +55,15 @@ import org.slf4j.LoggerFactory;
 /**
  * TODO: make CorePerformanceIT configurable, add CHOP markup.
  */
-public class CorePerformanceIT {
+public class CorePerformanceIT extends BaseIT {
     private static final Logger log = LoggerFactory.getLogger(CorePerformanceIT.class);
 
     // max entities we will write and read
-    static int maxEntities = 100; // TODO: make this configurable when you add Chop 
+    static int maxEntities = 10; // TODO: make this configurable when you add Chop 
 
     // each app will get all data
     static int orgCount = 2;
-    static int appCount = 5  ;
+    static int appCount = 5;
 
     // number of threads = orgCount x appCount 
 
@@ -77,7 +77,6 @@ public class CorePerformanceIT {
     @Test
     public void loadAndReadData() throws IOException, InterruptedException {
 
-        ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
         Injector injector = Guice.createInjector( new TestIndexModule() );
 
         // only on first run

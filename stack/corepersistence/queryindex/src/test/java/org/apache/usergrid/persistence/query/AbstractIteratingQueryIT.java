@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
+import org.apache.usergrid.persistence.index.impl.BaseIT;
 import org.apache.usergrid.persistence.index.legacy.CoreApplication;
 import org.apache.usergrid.persistence.index.legacy.CoreITSetup;
 import org.apache.usergrid.persistence.index.legacy.CoreITSetupImpl;
@@ -59,8 +60,10 @@ import org.junit.runner.RunWith;
 
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
-public abstract class AbstractIteratingQueryIT {
+public abstract class AbstractIteratingQueryIT extends BaseIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractIteratingQueryIT.class );
+
+    private static int TEST_SIZE = 300;
 
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
@@ -103,8 +106,8 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 500;
-        int queryLimit = Query.MAX_LIMIT;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
 
         long start = System.currentTimeMillis();
 
@@ -158,8 +161,8 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 700;
-        int queryLimit = Query.MAX_LIMIT;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
 
         // the number of entities that should be written including an intersection
         int intersectIncrement = 5;
@@ -229,8 +232,8 @@ public abstract class AbstractIteratingQueryIT {
 
     protected void singleOrderByComplexIntersection( IoHelper io ) throws Exception {
 
-        int size = 5000;
-        int queryLimit = Query.MAX_LIMIT;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
 
         // the number of entities that should be written including an intersection
         int intersectIncrement = 5;
@@ -305,8 +308,8 @@ public abstract class AbstractIteratingQueryIT {
     protected void singleOrderByNoIntersection( IoHelper io ) throws Exception {
         io.doSetup();
 
-        int size = 2000;
-        int queryLimit = Query.MAX_LIMIT;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
 
         // the number of entities that should be written including an intersection
         int secondIncrement = 9;
@@ -355,8 +358,8 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 2000;
-        int queryLimit = Query.MAX_LIMIT;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
 
         // the number of entities that should be written including an intersection
         int intersectIncrement = 5;
@@ -429,8 +432,8 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 2000;
-        int queryLimit = Query.MAX_LIMIT;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
 
         // the number of entities that should be written including an intersection
         int intersectIncrement = 5;
@@ -503,8 +506,8 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 500;
-        int queryLimit = Query.MAX_LIMIT;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
 
         int matchMax = queryLimit - 1;
 
@@ -567,9 +570,9 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 500;
-        int queryLimit = 100;
-        int startValue = 400;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
+        int startValue = TEST_SIZE / 20;
 
         long start = System.currentTimeMillis();
 
@@ -633,9 +636,9 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 500;
-        int queryLimit = 100;
-        int startValue = 400;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
+        int startValue = TEST_SIZE / 20;
 
         long start = System.currentTimeMillis();
 
@@ -699,9 +702,9 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 500;
-        int queryLimit = 100;
-        int startValue = 100;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
+        int startValue = TEST_SIZE / 20;
 
         long start = System.currentTimeMillis();
 
@@ -764,9 +767,9 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 500;
-        int queryLimit = 100;
-        int startValue = 99;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
+        int startValue = TEST_SIZE / 20;
 
         long start = System.currentTimeMillis();
 
@@ -829,10 +832,10 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 500;
-        int queryLimit = 100;
-        int startValue = 100;
-        int endValue = 400;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
+        int startValue = TEST_SIZE / 20;
+        int endValue = TEST_SIZE / 2;
 
         long start = System.currentTimeMillis();
 
@@ -896,10 +899,10 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 500;
-        int queryLimit = 100;
-        int startValue = 100;
-        int endValue = 400;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
+        int startValue = TEST_SIZE / 20;
+        int endValue = TEST_SIZE / 2;
 
         long start = System.currentTimeMillis();
 
@@ -968,7 +971,7 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 300;
+        int size = TEST_SIZE;
 
         long start = System.currentTimeMillis();
 
@@ -1021,8 +1024,8 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 2000;
-        int queryLimit = Query.MAX_LIMIT;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
 
         // the number of entities that should be written including an intersection
 
@@ -1128,8 +1131,8 @@ public abstract class AbstractIteratingQueryIT {
 
         io.doSetup();
 
-        int size = 2000;
-        int queryLimit = Query.MAX_LIMIT;
+        int size = TEST_SIZE;
+        int queryLimit = TEST_SIZE / 10;
 
         // the number of entities that should be written including an intersection
         int intersectIncrement = 5;
@@ -1240,7 +1243,10 @@ public abstract class AbstractIteratingQueryIT {
         /**
          * Leave this as a large size.  We have to write over 1k to reproduce this issue
          */
-        int size = 3000;
+        int size = 1500;
+        int queryLimit = TEST_SIZE / 10;
+        int startValue = TEST_SIZE / 20;
+        int endValue = TEST_SIZE / 2;
 
         long start = System.currentTimeMillis();
 

@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.index.legacy;
 
 
+import com.netflix.config.ConfigurationManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.index.utils.JsonUtils;
 

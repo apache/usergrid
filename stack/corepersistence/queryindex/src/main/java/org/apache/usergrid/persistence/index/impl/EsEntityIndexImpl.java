@@ -135,7 +135,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         this.client = provider.getClient();
         this.ecmFactory = factory;
 
-        this.indexName = createIndexName( config.getIndexNamePrefix(), orgScope, appScope );
+        this.indexName = createIndexName( config.getIndexPrefix(), orgScope, appScope );
 
         this.refresh = config.isForcedRefresh();
         this.cursorTimeout = config.getQueryCursorTimeout();
@@ -147,10 +147,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         } catch (IndexAlreadyExistsException ignored) {
             //log.debug("Keyspace already exists", ignored);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error creating index", e);
-        }
+        } 
     }
 
     

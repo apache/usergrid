@@ -53,12 +53,12 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
-public class IndexIT {
+public class IndexIT extends BaseIT {
     
     private static final Logger LOG = LoggerFactory.getLogger( IndexIT.class );
 
-//    @ClassRule
-//    public static ElasticSearchRule es = new ElasticSearchRule();
+    @ClassRule
+    public static ElasticSearchRule es = new ElasticSearchRule();
 
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
@@ -145,7 +145,7 @@ public class IndexIT {
 
         query = Query.fromQL( "order by name desc" ).withCursor( r.getCursor() );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        // LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        // LOG.debug(JsonUtils.mapToFormattedJsonString(r.getEntities()));
         for ( Entity entity : r.getEntities() ) {
             i--;
             assertEquals( alphabet[i], entity.getField( "name" ).getValue() );
@@ -185,7 +185,7 @@ public class IndexIT {
 
         Query query = Query.fromQL( "name < 'Delta' order by name" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         int i = 0;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getField( "name" ).getValue() );
@@ -195,7 +195,7 @@ public class IndexIT {
 
         query = Query.fromQL( "name <= 'delta' order by name" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 0;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getField( "name" ).getValue() );
@@ -205,7 +205,7 @@ public class IndexIT {
 
         query = Query.fromQL( "name <= 'foxtrot' and name > 'bravo' order by name" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 2;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getField( "name" ).getValue() );
@@ -215,7 +215,7 @@ public class IndexIT {
 
         query = Query.fromQL( "name < 'foxtrot' and name > 'bravo' order by name" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 2;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getField( "name" ).getValue() );
@@ -225,7 +225,7 @@ public class IndexIT {
 
         query = Query.fromQL( "name < 'foxtrot' and name >= 'bravo' order by name" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 1;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getField( "name" ).getValue() );
@@ -235,7 +235,7 @@ public class IndexIT {
 
         query = Query.fromQL( "name <= 'foxtrot' and name >= 'bravo' order by name" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 1;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getField( "name" ).getValue() );
@@ -245,7 +245,7 @@ public class IndexIT {
 
         query = Query.fromQL( "name <= 'foxtrot' and name >= 'bravo' order by name desc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 6;
         for ( Entity entity : r.getEntities() ) {
             i--;
@@ -255,7 +255,7 @@ public class IndexIT {
 
         query = Query.fromQL( "name < 'foxtrot' and name > 'bravo' order by name desc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 5;
         for ( Entity entity : r.getEntities() ) {
             i--;
@@ -265,7 +265,7 @@ public class IndexIT {
 
         query = Query.fromQL( "name < 'foxtrot' and name >= 'bravo' order by name desc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 5;
         for ( Entity entity : r.getEntities() ) {
             i--;
@@ -275,7 +275,7 @@ public class IndexIT {
 
         query = Query.fromQL( "name = 'foxtrot'" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 1, r.size() );
 
         long created = r.getEntities().get(0).getId().getUuid().timestamp();
@@ -283,14 +283,14 @@ public class IndexIT {
 
         query = Query.fromQL( "created = " + created );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 1, r.size() );
         assertEquals( entityId, r.getEntities().get(0).getId() );
     }
 
     @Test
     public void testSecondarySorts() throws Exception {
-        LOG.info( "testSecondarySorts" );
+        LOG.debug( "testSecondarySorts" );
 
         Id orgId = new SimpleId("organization");
         OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
@@ -314,7 +314,7 @@ public class IndexIT {
 
         Query query = Query.fromQL( "group = 1 order by name desc" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        LOG.debug( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         int i = 6;
         for ( Entity entity : r.getEntities() ) {
             i--;

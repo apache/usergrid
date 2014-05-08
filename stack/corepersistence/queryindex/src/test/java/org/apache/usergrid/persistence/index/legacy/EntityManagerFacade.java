@@ -50,12 +50,12 @@ public class EntityManagerFacade {
 
     private final OrganizationScope orgScope;
     private final CollectionScope appScope;
-    private final EntityCollectionManagerFactory ecmf;
-    private final EntityIndexFactory ecif;
     private final Map<String, String> typesByCollectionNames = new HashMap<String, String>();
 
     private final Map<CollectionScope, EntityCollectionManager> managers = new HashMap<>();
     private final Map<CollectionScope, EntityIndex> indexes = new HashMap<>();
+
+    private final ManagerCache managerCache;
     
     public EntityManagerFacade( 
         OrganizationScope orgScope, 
@@ -65,26 +65,15 @@ public class EntityManagerFacade {
 
         this.appScope = appScope;
         this.orgScope = orgScope;
-        this.ecmf = ecmf;
-        this.ecif = ecif;
+        this.managerCache = new ManagerCache(ecmf, ecif);
     }
 
     private EntityIndex getIndex( CollectionScope scope ) { 
-        EntityIndex eci = indexes.get( scope );
-        if ( eci == null ) {
-            eci = ecif.createEntityIndex( orgScope, appScope );
-            indexes.put( scope, eci );
-        }
-        return eci;
+        return managerCache.getEntityIndex(orgScope, scope);
     }
 
     private EntityCollectionManager getManager( CollectionScope scope ) { 
-        EntityCollectionManager ecm = managers.get( scope );
-        if ( ecm == null ) {
-            ecm = ecmf.createCollectionManager( scope );
-            managers.put( scope, ecm);
-        }
-        return ecm;
+        return managerCache.getEntityCollectionManager(scope);
     }
 
     public Entity create( String type, Map<String, Object> properties ) {

@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Elastic search experiments in the form of a test.
  */
-public class ElasticSearchTest {
+public class ElasticSearchTest extends BaseIT {
     private static final Logger log = LoggerFactory.getLogger( ElasticSearchTest.class );
 
     @Rule
@@ -98,8 +98,6 @@ public class ElasticSearchTest {
         client.prepareDelete(indexName, collectionName, id).execute().actionGet();
         getResponse = client.prepareGet( indexName, collectionName, id).get();
         assertFalse( getResponse.isExists() );
-
-        client.close();
     } 
 
 
@@ -149,7 +147,6 @@ public class ElasticSearchTest {
         testQuery( client, index, type, 
             QueryBuilders.termQuery( "contact.email", "orrbyers@bittor.com" ), 1 );
 
-        client.close();
     }
 
     

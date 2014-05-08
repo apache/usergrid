@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
-public class GeoIT {
+public class GeoIT extends BaseIT {
     private static final Logger LOG = LoggerFactory.getLogger( GeoIT.class );
 
 //    @ClassRule

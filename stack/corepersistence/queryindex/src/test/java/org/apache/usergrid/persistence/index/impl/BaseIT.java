@@ -15,36 +15,19 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-
 package org.apache.usergrid.persistence.index.impl;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.elasticsearch.client.Client;
-import org.safehaus.guicyfig.Env;
-import org.safehaus.guicyfig.EnvironResource;
-import org.safehaus.guicyfig.GuicyFigModule;
+import com.netflix.config.ConfigurationManager;
+import java.io.IOException;
 
+public abstract class BaseIT {
 
-public class ElasticSearchRule extends EnvironResource {
-
-    private Client client;
-
-    public ElasticSearchRule() {
-        super( Env.UNIT );
-    }
-
-    @Override
-    protected void before() throws Throwable {
-    }
-
-    public synchronized Client getClient() {
-        if ( client == null ) {
-            Injector injector = Guice.createInjector( new GuicyFigModule( IndexFig.class ) );
-            IndexFig indexFig = injector.getInstance( IndexFig.class );            
-            client = EsProvider.getClient( indexFig );
+    static {
+        try {
+            ConfigurationManager.loadCascadedPropertiesFromResources("usergrid");
+        } catch (IOException ex) {
+            throw new RuntimeException("Cannot load 'usergrid' configuration.", ex);
         }
-        return client;
     }
+
 }

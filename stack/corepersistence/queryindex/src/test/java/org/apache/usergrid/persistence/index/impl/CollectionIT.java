@@ -63,11 +63,12 @@ import org.junit.runner.RunWith;
 
 @RunWith(JukitoRunner.class)
 @UseModules({ TestIndexModule.class })
-public class CollectionIT {
+public class CollectionIT extends BaseIT {
+
     private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 
-//    @ClassRule
-//    public static ElasticSearchRule es = new ElasticSearchRule();
+    @ClassRule
+    public static ElasticSearchRule es = new ElasticSearchRule();
 
     @ClassRule
     public static CassandraRule cass = new CassandraRule();

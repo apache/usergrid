@@ -49,7 +49,7 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
     private static final String scanUnion =
             "select * where fieldDate = '0000-00-00' AND (field1Or > '00000000' OR field2Or > '00000000') ";
 
-    private static final int PAGE_SIZE = 300;
+    private static final int PAGE_SIZE = 100;
 
 
     @Test
@@ -82,7 +82,7 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
     private Set<String> performSetup( final IoHelper io ) throws Exception {
         io.doSetup();
 
-        int size = ( int ) ( Query.PAGE_SIZE*2.5);
+        int size = ( int ) ( PAGE_SIZE*2.5);
 
         long start = System.currentTimeMillis();
 
@@ -118,7 +118,7 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
 
             Entity saved =  io.writeEntity( entity );
 
-            LOG.info("Writing entity with id '{}'", saved.getId());
+            LOG.debug("Writing entity with id '{}'", saved.getId());
         }
 
         app.getEm().refreshIndex();
