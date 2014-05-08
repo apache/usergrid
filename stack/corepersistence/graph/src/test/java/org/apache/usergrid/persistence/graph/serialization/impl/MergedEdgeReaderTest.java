@@ -52,15 +52,6 @@ import static org.mockito.Mockito.when;
  */
 public class MergedEdgeReaderTest {
 
-    /**
-     * /** Get the edges from the source for both the commit log and the permanent storage.  Merge them into a single
-     * observable
-     *
-     * public Observable<MarkedEdge> getEdgesFromSource( final OrganizationScope scope, final SearchByEdgeType edgeType
-     * ) { Observable<MarkedEdge> commitLog = Observable.create( new ObservableIterator<MarkedEdge>(
-     * "getEdgesFromSourceCommitLog" ) {
-     */
-
     protected OrganizationScope scope;
     protected CassandraConfig config;
 
@@ -145,12 +136,10 @@ public class MergedEdgeReaderTest {
         final String type = "test";
 
 
-        MarkedEdge commitLogEdge1 =
-                createEdge( sourceId, type, createId( "target" ), UUIDGenerator.newTimeUUID(), false );
-        MarkedEdge storageEdge1 = createEdge( sourceId, type, commitLogEdge1.getTargetNode(), commitLogEdge1.getVersion(), true );
-        MarkedEdge commitLogEdge2 =
-                createEdge( sourceId, type, createId( "target" ), UUIDGenerator.newTimeUUID(), false );
-        MarkedEdge storageEdge2 = createEdge( sourceId, type, commitLogEdge2.getTargetNode(), commitLogEdge2.getVersion(), true );
+        MarkedEdge commitLogEdge1 = createEdge( sourceId, type, createId( "target" ), UUIDGenerator.newTimeUUID(), true );
+        MarkedEdge storageEdge1 =   createEdge( sourceId, type, commitLogEdge1.getTargetNode(), commitLogEdge1.getVersion(), false );
+        MarkedEdge commitLogEdge2 =  createEdge( sourceId, type, createId( "target" ), UUIDGenerator.newTimeUUID(), true );
+        MarkedEdge storageEdge2 =  createEdge( sourceId, type, commitLogEdge2.getTargetNode(), commitLogEdge2.getVersion(), false );
 
         //verify our versions are as expected
         assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getVersion(), storageEdge1.getVersion() ) ==  0 );
@@ -176,8 +165,8 @@ public class MergedEdgeReaderTest {
         Iterator<MarkedEdge> marked =
                 read.getEdgesFromSource( scope, searchByEdgeType ).toBlockingObservable().getIterator();
 
-        assertEquals( storageEdge2, marked.next() );
-        assertEquals( storageEdge1, marked.next() );
+        assertEquals( commitLogEdge2, marked.next() );
+        assertEquals( commitLogEdge1, marked.next() );
         assertFalse( marked.hasNext() );
     }
 
@@ -346,11 +335,11 @@ public class MergedEdgeReaderTest {
 
 
         MarkedEdge commitLogEdge1 =
-                createEdge( createId( "source" ), type, targetId, UUIDGenerator.newTimeUUID(), false );
-        MarkedEdge storageEdge1 = createEdge( commitLogEdge1.getSourceNode(), type, commitLogEdge1.getTargetNode(), commitLogEdge1.getVersion(), true );
+                createEdge( createId( "source" ), type, targetId, UUIDGenerator.newTimeUUID(), true );
+        MarkedEdge storageEdge1 = createEdge( commitLogEdge1.getSourceNode(), type, commitLogEdge1.getTargetNode(), commitLogEdge1.getVersion(), false );
         MarkedEdge commitLogEdge2 =
-                createEdge( createId( "source" ), type, targetId, UUIDGenerator.newTimeUUID(), false );
-        MarkedEdge storageEdge2 = createEdge( commitLogEdge2.getSourceNode(), type, commitLogEdge2.getTargetNode(), commitLogEdge2.getVersion(), true );
+                createEdge( createId( "source" ), type, targetId, UUIDGenerator.newTimeUUID(), true );
+        MarkedEdge storageEdge2 = createEdge( commitLogEdge2.getSourceNode(), type, commitLogEdge2.getTargetNode(), commitLogEdge2.getVersion(), false );
 
         //verify our versions are as expected
         assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getVersion(), storageEdge1.getVersion() ) ==  0 );
@@ -376,8 +365,8 @@ public class MergedEdgeReaderTest {
         Iterator<MarkedEdge> marked =
                 read.getEdgesToTarget( scope, searchByEdgeType ).toBlockingObservable().getIterator();
 
-        assertEquals( storageEdge2, marked.next() );
-        assertEquals( storageEdge1, marked.next() );
+        assertEquals( commitLogEdge2, marked.next() );
+        assertEquals( commitLogEdge1, marked.next() );
 
         assertFalse( marked.hasNext() );
     }
