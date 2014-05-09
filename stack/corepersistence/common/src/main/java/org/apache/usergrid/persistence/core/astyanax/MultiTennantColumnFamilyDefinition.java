@@ -77,6 +77,11 @@ public class MultiTennantColumnFamilyDefinition {
     public static final String KEY_VALIDATION = "key_validation_class";
     public static final String VALUE_VALIDATION = "default_validation_class";
     public static final String CACHE_OPTION = "caching";
+    public static final String COMPACTION_STRATEGY = "compaction_strategy";
+    public static final String COMPACTION_STRATEGY_OPTIONS = "compaction_strategy_options";
+    public static final String COMPACTION_SSTABLE_SIZE = "compaction_strategy_options";
+    public static final String BLOOM_FILTER_FP = "sstable_size_in_mb";
+
 
 
     private final ColumnFamily columnFamily;
@@ -115,6 +120,13 @@ public class MultiTennantColumnFamilyDefinition {
 
         //always use 10% read repair chance!
         options.put( READ_REPAIR_CHANCE, 0.1d );
+        options.put( BLOOM_FILTER_FP, 0.1d );
+        options.put( COMPACTION_STRATEGY, "LeveledCompactionStrategy");
+
+        Map<String, Object> compactionOptions = new HashMap<>();
+        compactionOptions.put( COMPACTION_SSTABLE_SIZE, "512" );
+
+        options.put( COMPACTION_STRATEGY_OPTIONS, compactionOptions  );
 
         return options;
     }
