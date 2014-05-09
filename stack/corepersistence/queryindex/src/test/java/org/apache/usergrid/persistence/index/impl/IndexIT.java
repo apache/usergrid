@@ -28,18 +28,21 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.legacy.CoreApplication;
 import org.apache.usergrid.persistence.index.legacy.CoreITSetup;
 import org.apache.usergrid.persistence.index.legacy.CoreITSetupImpl;
 import org.apache.usergrid.persistence.index.legacy.EntityManagerFacade;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
 import org.apache.usergrid.persistence.index.utils.JsonUtils;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
@@ -323,6 +326,36 @@ public class IndexIT {
         }
         assertEquals( 3, i );
     }
+
+    @Test
+    public void historySearch() throws Exception {
+
+        Id orgId = new SimpleId("organization");
+        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
+        Id appId = new SimpleId("application");
+
+        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
+
+        String middleName = "middleName" + UUIDUtils.newTimeUUID();
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put("username", "edanuff");
+        properties.put("email", "ed@anuff.com");
+        properties.put("middlename", middleName);
+        Entity user = em.create("user", properties);
+        user.setField(new StringField("address1", "1782 address st"));
+        em.update(user);
+        user.setField(new StringField("address2", "apt 508"));
+        em.update(user);
+        user.setField(new StringField("address3", "apt 508"));
+        em.update(user);
+        em.refreshIndex();
+
+        EntityIndex ei = cif.createEntityIndex(orgScope, appScope);
+        ei.getEntityVersions(user.getId(),user.getVersion(),appScope);
+
+    }
+
 
 
 //    @Test

@@ -57,7 +57,7 @@ public class EsEntityIndexDeleteListenerTest {
         when(serializationFig.getBufferSize()).thenReturn(10);
         when(serializationFig.getHistorySize()).thenReturn(20);
         when(results.getEntities()).thenReturn(entities);
-        when(entityIndex.getEntityVersions(uuid, scope)).thenReturn(results);
+        when(entityIndex.getEntityVersions(entityId,uuid, scope)).thenReturn(results);
         MvccEntity mvccEntity = new MvccEntityImpl(entityId,uuid, MvccEntity.Status.COMPLETE,entity);
         MvccEntityEvent<MvccEntity> event = new MvccEntityEvent<MvccEntity>(scope,uuid,mvccEntity);
         Observable<MvccEntity> o = esEntityIndexDeleteListener.receive(event);

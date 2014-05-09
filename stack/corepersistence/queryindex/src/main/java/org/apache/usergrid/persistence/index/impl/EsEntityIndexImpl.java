@@ -106,6 +106,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     public static final String GEO_SUFFIX = "_ug_geo";
     public static final String COLLECTION_SCOPE_FIELDNAME = "zzz__collectionscope__zzz";
     public static final String VERSION_FIELDNAME = "zzz__entityversion__zzz";
+    public static final String ENTITYID_FIELDNAME = "zzz__entityid__zzz";
 
 
     public static final String DOC_ID_SEPARATOR = "|";
@@ -263,14 +264,15 @@ public class EsEntityIndexImpl implements EntityIndex {
             timer = new StopWatch();
             timer.start();
         }
+        String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
 
         Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
         entityAsMap.put("created", entity.getId().getUuid().timestamp());
         entityAsMap.put("updated", entity.getVersion().timestamp());
         entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, collScopeTypeName );
         entityAsMap.put(VERSION_FIELDNAME, entity.getVersion().timestamp() );
+        entityAsMap.put(ENTITYID_FIELDNAME, entity.getId().getUuid() );
 
-        String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
 
         IndexRequestBuilder irb = client
             .prepareIndex( indexName, connScopeTypeName, indexId)
@@ -596,9 +598,8 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
     @Override
-    public Results getEntityVersions(UUID version, CollectionScope collScope) {
-        Query query = new Query();
-        query.addLessThanEqualFilter(VERSION_FIELDNAME,version.timestamp());
+    public Results getEntityVersions(Id id, UUID version, CollectionScope collScope) {
+        Query query = Query.fromQL( ENTITYID_FIELDNAME+" = '"+id.getUuid()+"'" );
         query.setLimit( serializationFig.getHistorySize() );
         Results results = search(collScope,query);
         return results;

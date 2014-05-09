@@ -33,10 +33,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEve
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
-import org.apache.usergrid.persistence.core.consistency.CompleteListener;
-import org.apache.usergrid.persistence.core.consistency.ErrorListener;
+import org.apache.usergrid.persistence.core.consistency.*;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -335,23 +332,10 @@ public class CollectionIT {
         assertEquals( user.getId(), returned.getId() );
     }
 
-
     @Test
     public void deleteVerification() throws Exception {
 
-        final CountDownLatch latch = new CountDownLatch(2);
-        entityDelete.addCompleteListener(new CompleteListener<MvccEntityEvent<MvccEntity>>() {
-            @Override
-            public void onComplete(AsynchronousMessage<MvccEntityEvent<MvccEntity>> event) {
-                latch.countDown();
-            }
-        });
-        entityDelete.addErrorListener(new ErrorListener<MvccEntityEvent<MvccEntity>>() {
-            @Override
-            public void onError(AsynchronousMessage<MvccEntityEvent<MvccEntity>> event, Throwable t) {
-                latch.countDown();
-            }
-        });
+        QueueListenerHelper helper = new QueueListenerHelper(entityDelete,2,0);
 
         String middleName = "middleName" + UUIDUtils.newTimeUUID();
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -361,7 +345,7 @@ public class CollectionIT {
         Entity user = em.create( "user", properties );
         user.setField(new StringField("address1","1782 address st"));
         em.update(user);
-        user.setField(new StringField("address2","apt 508"));
+        user.setField(new StringField("address2", "apt 508"));
         em.update(user);
         user.setField(new StringField("address3","apt 508"));
         em.update(user);
@@ -369,7 +353,11 @@ public class CollectionIT {
 
         user = em.get(user.getId());
         em.delete(user).toBlockingObservable().last();
-        latch.await(10, TimeUnit.SECONDS);
+        try {
+            helper.awaitWithoutErrors(10, TimeUnit.SECONDS);
+        }catch(Throwable e){
+            throw new Exception(e);
+        }
         // EntityRef
         Query query = new Query();
         query.addEqualityFilter( "username", "edanuff" );

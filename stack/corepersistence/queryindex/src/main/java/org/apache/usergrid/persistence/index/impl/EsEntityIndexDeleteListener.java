@@ -54,13 +54,13 @@ public class EsEntityIndexDeleteListener implements MvccDeleteMessageListener {
         return Observable.create(new ObservableIterator<MvccEntity>("deleteEsIndexVersions") {
             @Override
             protected Iterator<MvccEntity> getIterator() {
-                Results results= entityIndex.getEntityVersions(event.getVersion(), event.getCollectionScope());
+                Results results= entityIndex.getEntityVersions(event.getData().getId(),event.getVersion(), event.getCollectionScope());
                 Iterator<MvccEntity> iterator = Collections.emptyListIterator();
                 if(results!=null) {
                     List<Entity> entities = results.getEntities();
                     List<MvccEntity> mvccEntities = new ArrayList<>();
                     for (Entity entity : entities) {
-                        mvccEntities.add((MvccEntity) new EsMvccEntityImpl(entity));
+                        mvccEntities.add( new EsMvccEntityImpl(entity));
                     }
                     iterator = mvccEntities.iterator();
                 }
