@@ -57,7 +57,7 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 
 
-@RunWith(JukitoRunner.class)
+@RunWith(ITRunner.class)
 @UseModules({ TestIndexModule.class })
 public abstract class AbstractIteratingQueryIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractIteratingQueryIT.class );

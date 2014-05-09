@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.time.StopWatch;
 
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
@@ -59,16 +60,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-@RunWith(JukitoRunner.class)
+@RunWith(ITRunner.class)
 @UseModules(TestGraphModule.class)
 public class GraphManagerStressTest {
     private static final Logger log = LoggerFactory.getLogger( GraphManagerStressTest.class );
 
     @Inject
     private GraphManagerFactory factory;
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
     @Inject
     @Rule

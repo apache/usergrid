@@ -27,6 +27,7 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -37,7 +38,7 @@ import rx.Observable;
  * Integration test that performs all calls immediately after writes without blocking.  Tests that our
  * view is immediately consistent to our users, even if we have yet to perform background processing
  */
-@RunWith(JukitoRunner.class)
+@RunWith(ITRunner.class)
 @UseModules({ TestGraphModule.class })
 public class ComittedGraphManagerIT extends GraphManagerIT {
 

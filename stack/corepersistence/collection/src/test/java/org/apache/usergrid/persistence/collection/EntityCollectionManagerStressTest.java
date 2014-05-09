@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -32,10 +31,11 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.time.StopWatch;
 
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -48,7 +48,7 @@ import com.google.inject.Inject;
 import static org.junit.Assert.assertNotNull;
 
 
-@RunWith(JukitoRunner.class)
+@RunWith(ITRunner.class)
 @UseModules(TestCollectionModule.class)
 public class EntityCollectionManagerStressTest {
     private static final Logger log = LoggerFactory.getLogger( 
@@ -57,10 +57,7 @@ public class EntityCollectionManagerStressTest {
     @Inject
     private EntityCollectionManagerFactory factory;
 
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
-
-    @Inject
+      @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
 

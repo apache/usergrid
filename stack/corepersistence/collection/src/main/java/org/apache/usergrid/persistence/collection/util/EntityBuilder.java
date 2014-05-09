@@ -19,9 +19,11 @@
 
 package org.apache.usergrid.persistence.collection.util;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;

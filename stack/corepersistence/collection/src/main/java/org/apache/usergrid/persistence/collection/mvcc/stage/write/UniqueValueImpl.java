@@ -17,11 +17,14 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
-import com.google.common.base.Preconditions;
+
 import java.util.UUID;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Represents a Unique Value of a field within a collection.

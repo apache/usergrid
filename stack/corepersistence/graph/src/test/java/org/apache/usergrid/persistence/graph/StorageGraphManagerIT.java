@@ -27,6 +27,7 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.CompleteListener;
@@ -48,7 +49,7 @@ import rx.Observable;
  * it to the permanent storage.  Tests that our view is immediately consistent to our users, even if we have yet to
  * perform background processing
  */
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( { TestGraphModule.class } )
 public class StorageGraphManagerIT extends GraphManagerIT {
 
