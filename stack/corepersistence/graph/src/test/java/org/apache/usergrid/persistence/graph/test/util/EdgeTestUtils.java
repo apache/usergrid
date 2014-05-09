@@ -71,6 +71,8 @@ public class EdgeTestUtils {
     }
 
 
+
+
     /**
      * Create an edge for testing
      */
@@ -84,8 +86,16 @@ public class EdgeTestUtils {
      */
     public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId,
                                          final UUID version ) {
-        return new SimpleMarkedEdge( sourceId, edgeType, targetId, version, false );
+        return createEdge( sourceId, edgeType, targetId, version, false );
     }
+
+    /**
+         * Create an edge with the specified params
+         */
+        public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId,
+                                             final UUID version, final boolean deleted ) {
+            return new SimpleMarkedEdge( sourceId, edgeType, targetId, version, deleted );
+        }
 
 
     /**
