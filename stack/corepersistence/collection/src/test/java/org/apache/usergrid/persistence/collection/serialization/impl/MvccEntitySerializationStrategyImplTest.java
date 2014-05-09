@@ -104,12 +104,6 @@ public class MvccEntitySerializationStrategyImplTest {
     }
 
 
-    @After
-    public void tearDown() {
-        provider.shutdown();
-    }
-
-
     @Test
     public void writeLoadDelete() throws ConnectionException {
 

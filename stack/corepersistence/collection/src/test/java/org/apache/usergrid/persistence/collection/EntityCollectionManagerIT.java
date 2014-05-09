@@ -52,9 +52,6 @@ public class EntityCollectionManagerIT {
     @Inject
     private EntityCollectionManagerFactory factory;
 
-    @Inject
-    private EventBus eventBus;
-
 
     @ClassRule
     public static CassandraRule rule = new CassandraRule();

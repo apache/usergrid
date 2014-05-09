@@ -50,7 +50,7 @@ public class CommonModule extends AbstractModule {
                 CassandraFig.class, ConsistencyFig.class) );
 
              // bind our keyspace to the AstyanaxKeyspaceProvider
-        bind( Keyspace.class ).toProvider( AstyanaxKeyspaceProvider.class );
+        bind( Keyspace.class ).toProvider( AstyanaxKeyspaceProvider.class ).asEagerSingleton();
 
         // bind our migration manager
         bind( MigrationManager.class ).to( MigrationManagerImpl.class );
