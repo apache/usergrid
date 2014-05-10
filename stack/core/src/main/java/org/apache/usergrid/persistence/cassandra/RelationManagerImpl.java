@@ -57,6 +57,7 @@ import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.apache.usergrid.persistence.entities.Group;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.geo.CollectionGeoSearch;
 import org.apache.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.apache.usergrid.persistence.geo.EntityLocationRef;
@@ -89,10 +90,8 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
-
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
-
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
@@ -1798,6 +1797,10 @@ public class RelationManagerImpl implements RelationManager {
 
         headEntity = em.validate( headEntity );
         connectedEntityRef = em.validate( connectedEntityRef );
+
+        if ( connectedEntityRef == null) {
+          throw new EntityNotFoundException("The UUID of the connected entity was not found");
+        }
 
         ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
