@@ -26,6 +26,7 @@ import org.apache.usergrid.chop.webapp.dao.ModuleDao;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
 import org.apache.usergrid.chop.webapp.view.chart.layout.ChartLayout;
 import org.apache.usergrid.chop.webapp.view.chart.layout.ChartLayoutNew;
+import org.apache.usergrid.chop.webapp.view.chart.layout.RunsChartLayoutNew;
 import org.apache.usergrid.chop.webapp.view.tree.ModuleSelectListener;
 import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
 import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
@@ -130,8 +131,8 @@ public class MainViewNew extends UI {
 
     private void showTab() {
         try {
-            ChartLayoutNew layout = new ChartLayoutNew( null );
-            //        AbsoluteLayout layout = snew AbsoluteLayout();
+//            AbsoluteLayout layout = new ChartLayoutNew( null );
+            AbsoluteLayout layout = new RunsChartLayoutNew( null );
             tabSheet.addTab( layout, "Chart Layout" );
         }
         catch ( Exception e ) {
