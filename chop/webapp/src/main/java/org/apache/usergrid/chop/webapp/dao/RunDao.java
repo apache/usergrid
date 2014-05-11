@@ -55,7 +55,6 @@ public class RunDao extends Dao {
 
     private static final int MAX_RESULT_SIZE = 10000;
 
-
     @Inject
     public RunDao( IElasticSearchClient elasticSearchClient ) {
         super( elasticSearchClient );
@@ -186,6 +185,9 @@ public class RunDao extends Dao {
 
     private static List<Run> toList( SearchResponse response ) {
         ArrayList<Run> list = new ArrayList<Run>();
+        if( response.getHits().getTotalHits() == 0 ) {
+            return list;
+        }
 
         for ( SearchHit hit : response.getHits().hits() ) {
             list.add( toRun( hit ) );

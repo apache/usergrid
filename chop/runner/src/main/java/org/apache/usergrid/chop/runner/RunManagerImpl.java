@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.usergrid.chop.api.*;
 import org.apache.usergrid.chop.spi.RunManager;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataMultiPart;
@@ -118,17 +120,21 @@ public class RunManagerImpl implements RunManager, RestParams {
         // get run status information
         WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
         resource = addQueryParameters( resource, project, runner );
-        String result = resource.path( coordinatorFig.getRunCompletedPath() )
+        ClientResponse result = resource.path( coordinatorFig.getRunCompletedPath() )
                                 .queryParam( RUNNER_HOSTNAME, runner.getHostname() )
                                 .queryParam( COMMIT_ID, project.getVcsVersion() )
                                 .queryParam( RUN_NUMBER, String.valueOf( runNumber ) )
                                 .queryParam( TEST_CLASS, testClass.getName() )
                                 .type( MediaType.APPLICATION_JSON )
-                                .get( String.class );
+                                .get( ClientResponse.class );
 
-        LOG.debug( "Got back result from run status get = {}", result );
+        if( result.getStatus() != Response.Status.CREATED.getStatusCode() ) {
+            LOG.error( "Could not get if run has completed status from coordinator, HTTP status: {}",
+                    result.getStatus() );
+            return false;
+        }
 
-        return Boolean.parseBoolean( result );
+        return result.getEntity( Boolean.class );
     }
 
 

@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.usergrid.chop.api.Project;
+import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.api.Signal;
 import org.apache.usergrid.chop.runner.IController;
 
@@ -39,14 +40,12 @@ import com.google.inject.Singleton;
 /** ... */
 @Singleton
 @Produces( MediaType.APPLICATION_JSON )
-@Path( StopResource.ENDPOINT )
+@Path( Runner.STOP_POST )
 public class StopResource extends SignalResource {
-    public static final String ENDPOINT = "/stop";
-
 
     @Inject
     public StopResource( IController controller, Project project ) {
-        super( controller, project, ENDPOINT, Signal.STOP );
+        super( controller, project, Runner.STOP_POST, Signal.STOP );
     }
 
 

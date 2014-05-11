@@ -26,10 +26,9 @@ import com.google.inject.Singleton;
 import org.apache.usergrid.chop.api.Module;
 import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.api.Runner;
+import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
 import org.apache.usergrid.chop.webapp.dao.ModuleDao;
-import org.apache.usergrid.chop.webapp.dao.RunnerDao;
 import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
-import org.elasticsearch.indices.IndexMissingException;
 import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +42,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 
 /**
@@ -56,14 +56,14 @@ import java.util.List;
 @Path( RunnerRegistryResource.ENDPOINT )
 public class RunnerRegistryResource extends TestableResource {
     public final static String ENDPOINT = "/runners";
-    private static final Logger LOG = LoggerFactory.getLogger( RunnerRegistryResource.class );
 
+    private static final Logger LOG = LoggerFactory.getLogger( RunnerRegistryResource.class );
 
     @Inject
     private ModuleDao moduleDao;
 
     @Inject
-    private RunnerDao runnerDao;
+    private RunnerCoordinator runnerCoordinator;
 
 
     public RunnerRegistryResource() {
@@ -83,12 +83,13 @@ public class RunnerRegistryResource extends TestableResource {
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
 
     ) throws Exception {
-        List<Runner> runnerList = Collections.emptyList();
+        Collection<Runner> runnerList = Collections.emptyList();
 
         if ( inTestMode( testMode ) ) {
             LOG.info( "Calling /runners/list in test mode ..." );
             return Response.ok( runnerList ).build();
         }
+        LOG.info( "Calling /runners/list" );
 
         Preconditions.checkNotNull( user, "The 'user' request parameter MUST NOT be null." );
         Preconditions.checkNotNull( artifactId, "The 'artifactId' request parameter MUST NOT be null." );
@@ -104,17 +105,9 @@ public class RunnerRegistryResource extends TestableResource {
             return Response.ok( runnerList ).build();
         }
 
-        LOG.info( "Calling /runners/list for commitId {} on module {}", commitId, moduleId );
+        runnerList = runnerCoordinator.getRunners( user, commitId, moduleId );
 
-        try {
-            runnerList = runnerDao.getRunners( user, commitId, inStore.getId() );
-        }
-        catch ( IndexMissingException e ) {
-            LOG.warn( "Got a missing index exception. Returning empty list of Runners." );
-        }
-
-        Runner[] runners = new Runner[ runnerList.size() ];
-        return Response.status( Response.Status.CREATED ).entity( runnerList.toArray( runners ) ).build();
+        return Response.status( Response.Status.CREATED ).entity( runnerList ).build();
     }
 
 
@@ -158,16 +151,14 @@ public class RunnerRegistryResource extends TestableResource {
             moduleDao.save( module );
         }
 
-        LOG.info( "Calling /runners/register with commitId = {} and runner = {}", commitId, runner );
-
-        if ( runnerDao.save( runner, user, commitId, moduleId ) ) {
-            LOG.info( "registered runner {} for commit {}", runner.getHostname(), commitId );
-            return Response.ok( true ).build();
+        boolean result = runnerCoordinator.register( user, commitId, moduleId, runner );
+        if ( result ) {
+            LOG.info( "Registered runner at {} for commit {}", runner.getUrl(), commitId );
         }
         else {
-            LOG.warn( "failed to register runner {}", runner.getHostname() );
-            return Response.ok( false ).build();
+            LOG.warn( "Failed to register runner at {}", runner.getUrl() );
         }
+        return Response.ok( result ).build();
     }
 
 
@@ -178,7 +169,8 @@ public class RunnerRegistryResource extends TestableResource {
             @QueryParam( RestParams.RUNNER_URL ) String runnerUrl,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
 
-    ) {
+                              ) {
+
         if ( inTestMode( testMode ) ) {
             LOG.info( "Calling /runners/unregister ..." );
             return Response.ok( false ).build();
@@ -187,19 +179,15 @@ public class RunnerRegistryResource extends TestableResource {
         Preconditions.checkNotNull( runnerUrl, "The 'runnerUrl' MUST NOT be null." );
 
         LOG.info( "Calling /runners/unregister ..." );
-        try {
-            if ( runnerDao.delete( runnerUrl ) ) {
-                LOG.info( "unregistered runner {}", runnerUrl );
-                return Response.ok( true ).build();
-            }
-            else {
-                LOG.warn( "failed to unregister runner {}", runnerUrl );
-                return Response.ok( false ).build();
-            }
+
+        boolean result = runnerCoordinator.unregister( runnerUrl );
+        if( result ) {
+            LOG.info( "Unregistered runner at {}", runnerUrl );
         }
-        catch ( IndexMissingException e ) {
-            LOG.warn( "Got missing index exception so returning false for unregister operation." );
-            return Response.ok( false ).build();
+        else {
+            LOG.warn( "Failed to unregister runner at {}", runnerUrl );
         }
+
+        return Response.ok( result ).build();
     }
 }

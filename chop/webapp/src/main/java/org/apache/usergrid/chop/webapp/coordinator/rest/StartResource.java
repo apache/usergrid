@@ -20,11 +20,19 @@
 package org.apache.usergrid.chop.webapp.coordinator.rest;
 
 
+import java.util.Collection;
+import java.util.Map;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import org.apache.usergrid.chop.api.RestParams;
+import org.apache.usergrid.chop.api.Runner;
+import org.apache.usergrid.chop.api.State;
 import org.apache.usergrid.chop.stack.SetupStackState;
+import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
 import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
+import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
 
 import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
@@ -48,8 +56,11 @@ import javax.ws.rs.core.Response;
 @Path( StartResource.ENDPOINT )
 public class StartResource extends TestableResource implements RestParams {
     public final static String ENDPOINT = "/start";
+
     private static final Logger LOG = LoggerFactory.getLogger( StartResource.class );
 
+    @Inject
+    private RunnerCoordinator runnerCoordinator;
 
     @Inject
     private StackCoordinator stackCoordinator;
@@ -74,15 +85,16 @@ public class StartResource extends TestableResource implements RestParams {
 
         if( inTestMode( testMode ) ) {
             LOG.info( "Calling /start in test mode ..." );
-            LOG.info( "  Commit Id: {}", commitId );
-            LOG.info( "  Group Id: {}", groupId );
-            LOG.info( "  Artifact Id: {}", artifactId );
-            LOG.info( "  Version: {}", version );
-            LOG.info( "  User: {}", user );
+
         }
         else {
             LOG.info( "Calling /start" );
         }
+        LOG.info( "  Commit Id: {}", commitId );
+        LOG.info( "  Group Id: {}", groupId );
+        LOG.info( "  Artifact Id: {}", artifactId );
+        LOG.info( "  Version: {}", version );
+        LOG.info( "  User: {}", user );
 
         // Check if the stack is set up first
         SetupStackState status = stackCoordinator.stackStatus( commitId, artifactId, groupId, version, user );
@@ -101,8 +113,69 @@ public class StartResource extends TestableResource implements RestParams {
                            .build();
         }
         /** SetupStackState.SetUp */
+        LOG.info( "Stack is set up, checking runner states..." );
 
-        // TODO start tests
+        /** Check state of all runners */
+        String moduleId = BasicModule.createId( groupId, artifactId, version );
+        Collection<Runner> runners = runnerCoordinator.getRunners( user, commitId, moduleId );
+        Map<Runner, State> states = runnerCoordinator.getStates( runners );
+
+        int notReady = 0;
+        StringBuilder sb = new StringBuilder();
+        sb.append( "Cannot start tests.\n" );
+        for ( Runner runner: runners ) {
+            State state = states.get( runner );
+            if( state != State.READY ) {
+                notReady++;
+                sb.append( "Runner at " )
+                  .append( runner.getUrl() )
+                  .append( " is in " )
+                  .append( state )
+                  .append( " state.\n" );
+            }
+        }
+        // Not all runners are ready to start
+        if( notReady > 0 ) {
+            sb.append( notReady )
+              .append( " out of " )
+              .append( runners.size() )
+              .append( " are not ready." );
+
+            return Response.status( Response.Status.OK )
+                           .entity( sb.toString() )
+                           .type( MediaType.APPLICATION_JSON )
+                           .build();
+        }
+
+        /** Sending start signal to runners */
+        LOG.info( "Runners are all ready, sending start signal..." );
+        states = runnerCoordinator.start( runners );
+
+        int notStarted = 0;
+        sb = new StringBuilder();
+        sb.append( "Could not start all tests.\n" );
+        for( Runner runner: runners ) {
+            State state = states.get( runner );
+            if( state != State.RUNNING ) {
+                notStarted++;
+                sb.append( "Runner at " )
+                  .append( runner.getUrl() )
+                  .append( " is in " )
+                  .append( state )
+                  .append( " state.\n" );
+            }
+        }
+        // Not all runners could be started
+        if( notStarted > 0 ) {
+            sb.append( notStarted )
+              .append( " out of " )
+              .append( " could not be started." );
+
+            return Response.status( Response.Status.OK )
+                           .entity( sb.toString() )
+                           .type( MediaType.APPLICATION_JSON )
+                           .build();
+        }
 
         return Response.status( Response.Status.CREATED )
                        .entity( "Started chop tests" )

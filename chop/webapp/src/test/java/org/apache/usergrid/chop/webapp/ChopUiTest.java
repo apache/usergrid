@@ -83,6 +83,13 @@ public class ChopUiTest {
         ChopUiTestUtils.testStoreResults( jetty.newTestParams().setLogger( LOG ) );
     }
 
+
+    @Test
+    public void testRunCompleted() {
+        ChopUiTestUtils.testRunCompleted( jetty.newTestParams().setLogger( LOG ) );
+    }
+
+
     @Test
     public void testSetup() {
         ChopUiTestUtils.testSetup( jetty.newTestParams().setLogger( LOG ) );

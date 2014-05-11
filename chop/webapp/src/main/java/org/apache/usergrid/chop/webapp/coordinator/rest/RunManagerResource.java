@@ -22,9 +22,9 @@ package org.apache.usergrid.chop.webapp.coordinator.rest;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -97,7 +97,7 @@ public class RunManagerResource extends TestableResource implements RestParams {
 
         if ( inTestMode( testMode ) ) {
             LOG.info( "Calling /run/next in test mode ..." );
-            return Response.ok( 0 ).build();
+            return Response.ok( 1 ).build();
         }
 
         LOG.info( "Calling /run/next ..." );
@@ -106,6 +106,12 @@ public class RunManagerResource extends TestableResource implements RestParams {
         try {
             List<Runner> runners = runnerDao.getRunners( username, commitId,
                     BasicModule.createId( groupId, artifactId, version ) );
+
+            LOG.info( "Commit id: {}", commitId );
+            LOG.info( "Got {} runners for user: {}", runners.size(), BasicModule.createId( groupId, artifactId, version ) );
+            for( Runner runner: runners ) {
+                LOG.info( "Runner {}", runner.getUrl() );
+            }
 
             next = runDao.getNextRunNumber( runners, commitId );
         }
@@ -126,12 +132,15 @@ public class RunManagerResource extends TestableResource implements RestParams {
     @GET
     @Path( "/completed" )
     @Consumes( MediaType.APPLICATION_JSON )
-    @Produces( MediaType.TEXT_PLAIN )
+    @Produces( MediaType.APPLICATION_JSON )
     public Response completed(
 
             @QueryParam( USERNAME ) String username,
             @QueryParam( RUNNER_HOSTNAME ) String runnerHost,
             @QueryParam( COMMIT_ID ) String commitId,
+            @QueryParam( MODULE_GROUPID ) String groupId,
+            @QueryParam( MODULE_ARTIFACTID ) String artifactId,
+            @QueryParam( MODULE_VERSION ) String version,
             @QueryParam( RUN_NUMBER ) Integer runNumber,
             @QueryParam( TEST_CLASS ) String testClass,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
@@ -143,18 +152,23 @@ public class RunManagerResource extends TestableResource implements RestParams {
             LOG.info( "Calling /run/completed in test mode ..." );
             LOG.info( "{} is {}", RUNNER_HOSTNAME, runnerHost );
             LOG.info( "{} is {}", COMMIT_ID, commitId );
+            LOG.info( "{} is {}", MODULE_GROUPID, groupId );
+            LOG.info( "{} is {}", MODULE_ARTIFACTID, artifactId );
+            LOG.info( "{} is {}", MODULE_VERSION, version );
             LOG.info( "{} is {}", RUN_NUMBER, runNumber );
             LOG.info( "{} is {}", TEST_CLASS, testClass );
 
-            return Response.status( Response.Status.CREATED ).entity( "TRUE" ).build();
+            return Response.status( Response.Status.CREATED ).entity( true ).build();
         }
-        else {
-            LOG.info( "/run/completed called ..." );
-        }
+        LOG.info( "/run/completed called ..." );
 
-        Map<String, Run> otherRuns = runDao.getMap( commitId, runNumber, testClass );
+        String moduleId = BasicModule.createId( groupId, artifactId, version );
+        int totalRunnerCount = runnerDao.getRunners( username, commitId, moduleId ).size();
+        Collection<Run> runs = runDao.getMap( commitId, runNumber, testClass ).values() ;
 
-        return Response.status( Response.Status.CREATED ).entity( "FALSE" ).build();
+        Boolean allFinished = runs.size() == totalRunnerCount;
+
+        return Response.status( Response.Status.CREATED ).entity( allFinished ).build();
     }
 
 
@@ -181,9 +195,7 @@ public class RunManagerResource extends TestableResource implements RestParams {
 
             return Response.status( Response.Status.CREATED ).entity( SUCCESSFUL_TEST_MESSAGE ).build();
         }
-        else {
-            LOG.info( "/run/store called ..." );
-        }
+        LOG.info( "/run/store called ..." );
 
         String message;
         JSONObject object = ( JSONObject ) new JSONParser().parse( new InputStreamReader( resultsFileInputStream ) );

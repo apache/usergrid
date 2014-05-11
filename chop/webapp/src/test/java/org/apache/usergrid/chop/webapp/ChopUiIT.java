@@ -80,6 +80,12 @@ public class ChopUiIT {
 
 
     @Test
+    public void testRunCompleted() {
+        ChopUiTestUtils.testRunCompleted( jetty.newTestParams().setLogger( LOG ) );
+    }
+
+
+    @Test
     public void testSetupStack() {
         ChopUiTestUtils.testSetup( jetty.newTestParams().setLogger( LOG ) );
     }
