@@ -59,7 +59,7 @@ public class RunResultDaoTest {
         LOG.info( "\n===RunResultDaoTest.getMap===\n" );
 
         // This should result in a Map with 1 item which is ( RUN_ID_5, AllRuns[4] )
-        Map<String, Run> runs = ESSuiteTest.runDao.getMap( ESSuiteTest.COMMIT_ID_2, 2, ESSuiteTest.TEST_NAME_2 );
+        Map<String, Run> runs = ESSuiteTest.runDao.getMap( ESSuiteTest.COMMIT_ID_1, 2, ESSuiteTest.TEST_NAME_2 );
         Run run = runs.get( ESSuiteTest.RUN_ID_5 );
         assertNotNull( run );
         assertEquals( ESSuiteTest.RUNNER_HOSTNAME_3, run.getRunner() );

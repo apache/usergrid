@@ -30,7 +30,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-import org.apache.usergrid.chop.api.BaseResult;
 import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.RestParams;
 
@@ -71,7 +70,7 @@ public class StartMojo extends MainMojo {
             throw new MojoExecutionException( e.getMessage() );
         }
 
-        /** Setup stack TODO use chop-client module to talk to the coordinator */
+        /** Start tests TODO use chop-client module to talk to the coordinator */
         DefaultClientConfig clientConfig = new DefaultClientConfig();
         Client client = Client.create( clientConfig );
         WebResource resource = client.resource( endpoint ).path( "/start" );

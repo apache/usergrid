@@ -161,6 +161,10 @@ public class RunnerDao extends Dao {
     }
 
 
+    /**
+     * @param runnerUrl    Runner with matching runnerUrl id will be deleted
+     * @return             Whether such a Runner had existed
+     */
     public boolean delete( String runnerUrl ) {
 
         DeleteResponse response = elasticSearchClient.getClient()

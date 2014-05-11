@@ -91,6 +91,9 @@ public class ESSuiteTest {
     public static final String RUN_ID_3 = UUID.randomUUID().toString();
     public static final String RUN_ID_4 = UUID.randomUUID().toString();
     public static final String RUN_ID_5 = UUID.randomUUID().toString();
+    public static final String RUN_ID_6 = UUID.randomUUID().toString();
+    public static final String RUN_ID_7 = UUID.randomUUID().toString();
+    public static final String RUN_ID_8 = UUID.randomUUID().toString();
     public static final RunnerGroup RUNNER_GROUP = new RunnerGroup( USER_1, COMMIT_ID_2, MODULE_ID_2 );
     public static final Long RUN_DURATION = 100000L;
     public static final Long RUN_AVG_TIME_1 = 1505L;
@@ -198,7 +201,7 @@ public class ESSuiteTest {
         startTime = new Date().getTime();
         run = new BasicRun(
                 RUN_ID_5,
-                COMMIT_ID_2, // commitId
+                COMMIT_ID_1, // commitId
                 RUNNER_HOSTNAME_3, // runner
                 2, // runNumber
                 TEST_NAME_2 // testName
@@ -207,6 +210,54 @@ public class ESSuiteTest {
         run.setStartTime( startTime );
         run.setStopTime( startTime + RUN_DURATION );
         run.setTotalTestsRun( 72 );
+        run.setChopType( "TimeChop" );
+        run.setSaturate( true );
+        runDao.save( run );
+
+        startTime = new Date().getTime();
+        run = new BasicRun(
+                RUN_ID_6,
+                COMMIT_ID_1, // commitId
+                RUNNER_HOSTNAME_1, // runner
+                2, // runNumber
+                TEST_NAME_2 // testName
+        );
+        run.setActualTime( RUN_DURATION );
+        run.setStartTime( startTime );
+        run.setStopTime( startTime + RUN_DURATION );
+        run.setTotalTestsRun( 122 );
+        run.setChopType( "TimeChop" );
+        run.setSaturate( false );
+        runDao.save( run );
+
+        startTime = new Date().getTime();
+        run = new BasicRun(
+                RUN_ID_7,
+                COMMIT_ID_1, // commitId
+                RUNNER_HOSTNAME_2, // runner
+                2, // runNumber
+                TEST_NAME_2 // testName
+        );
+        run.setActualTime( RUN_DURATION );
+        run.setStartTime( startTime );
+        run.setStopTime( startTime + RUN_DURATION );
+        run.setTotalTestsRun( 122 );
+        run.setChopType( "TimeChop" );
+        run.setSaturate( false );
+        runDao.save( run );
+
+        startTime = new Date().getTime();
+        run = new BasicRun(
+                RUN_ID_8,
+                COMMIT_ID_1, // commitId
+                RUNNER_HOSTNAME_3, // runner
+                1, // runNumber
+                TEST_NAME_2 // testName
+        );
+        run.setActualTime( RUN_DURATION );
+        run.setStartTime( startTime );
+        run.setStopTime( startTime + RUN_DURATION );
+        run.setTotalTestsRun( 60 );
         run.setChopType( "TimeChop" );
         run.setSaturate( true );
         runDao.save( run );

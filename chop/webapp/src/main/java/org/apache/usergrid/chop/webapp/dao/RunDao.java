@@ -20,8 +20,10 @@ package org.apache.usergrid.chop.webapp.dao;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +36,8 @@ import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.webapp.dao.model.BasicRun;
 import org.apache.usergrid.chop.webapp.elasticsearch.IElasticSearchClient;
 import org.apache.usergrid.chop.webapp.elasticsearch.Util;
+
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -41,8 +45,10 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.elasticsearch.index.query.QueryBuilders.inQuery;
 import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 
 
 /**
@@ -104,6 +110,22 @@ public class RunDao extends Dao {
 
 
     /**
+     *
+     * @param run
+     * @return
+     */
+    public boolean delete( Run run ) {
+        DeleteResponse response = elasticSearchClient.getClient()
+                .prepareDelete( DAO_INDEX_KEY, DAO_TYPE_KEY, run.getId() )
+                .setRefresh( true )
+                .execute()
+                .actionGet();
+
+        return response.isFound();
+    }
+
+
+    /**
      * @param runId Id of queried Run
      * @return      Run object or null if it doesn't exist
      */
@@ -153,6 +175,39 @@ public class RunDao extends Dao {
         }
 
         return runs;
+    }
+
+
+    /**
+     * Returns a map of all runs with matching commitId, runNumber, testName, and one of given runners' hostname.
+     * <p>
+     * <ul>
+     *     <li>Key field of the map is Run's id in elastic search</li>
+     *     <li>Value field of the map is the Run itself</li>
+     * </ul>
+     *
+     * @param commitId  commit id of the Run
+     * @param runNumber Run number to filter queried Runs
+     * @param testName  Test class name that resulting Run is about
+     * @param runners   A Run whose runner field is one of runners' hostname fields is a match
+     * @return          Map satisfying given parameters. The map is empty if there are no matching Runs.
+     */
+    public Map<String, Run> getMap( String commitId, int runNumber, String testName, Collection<Runner> runners ) {
+        Map<String, Run> map = getMap( commitId, runNumber, testName );
+        Map<String, Run> mapFilteredWithRunners = new HashMap<String, Run>();
+        for( String key : map.keySet() ) {
+            boolean matchesOne = false;
+            for( Runner runner: runners ) {
+                if( runner.getHostname().equals( map.get( key ).getRunner() ) ) {
+                    matchesOne = true;
+                    break;
+                }
+            }
+            if( matchesOne ) {
+                mapFilteredWithRunners.put( key, map.get( key ) );
+            }
+        }
+        return mapFilteredWithRunners;
     }
 
 
@@ -298,6 +353,26 @@ public class RunDao extends Dao {
 
 
     /**
+     * @param commitId  commit id of the Run
+     * @return          collection of runs for the given commitId
+     */
+    public Collection<Run> getRuns( String commitId ) {
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setQuery( termQuery( "commitId", commitId.toLowerCase() ) )
+                .setSize( MAX_RESULT_SIZE )
+                .execute()
+                .actionGet();
+
+        Collection<Run> runs = new LinkedList<Run>();
+
+        for ( SearchHit hit : response.getHits().hits() ) {
+            runs.add( toRun( hit ) );
+        }
+        return runs;
+    }
+
+
+    /**
      *
      * @param commits
      * @return
@@ -323,22 +398,21 @@ public class RunDao extends Dao {
 
 
     /**
+     * Gets the stored runs for the given commit Id
+     * and returns +1 of the maximum runNumber in all found runs.
+     * <p>
+     * If no runs for this commitId could be found, this automatically is 1.
      *
-     * @param runners
-     * @return
+     *
+     * @param commitId  commit id of the Run
+     * @return          next run number for the tests for this commitId
      */
-    public int getNextRunNumber( List<Runner> runners, String commitId ) {
-        if( runners.size() == 0 ) {
-            return 1;
-        }
-
+    public int getNextRunNumber( String commitId ) {
+        Collection<Run> runs = getRuns( commitId );
         int maxRunNumber = 0;
-        for( Runner runner: runners ) {
-            List<Run> runs = getRuns( runner.getHostname(), commitId );
-            for( Run run: runs ) {
-                if( run.getRunNumber() > maxRunNumber ) {
-                    maxRunNumber = run.getRunNumber();
-                }
+        for( Run run: runs ) {
+            if( run.getRunNumber() > maxRunNumber ) {
+                maxRunNumber = run.getRunNumber();
             }
         }
 

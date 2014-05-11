@@ -183,7 +183,7 @@ public class CoordinatedStack implements ICoordinatedStack {
 
 
     public static int calcHashCode( Stack stack, User user, Commit commit, Module module ) {
-        return new HashCodeBuilder( 101, 167 )
+        return Math.abs( new HashCodeBuilder( 101, 167 )
                 .append( stack.getId().toString() )
                 .append( '#' )
                 .append( user.getUsername() )
@@ -191,7 +191,7 @@ public class CoordinatedStack implements ICoordinatedStack {
                 .append( commit.getId() )
                 .append( '#' )
                 .append( module.getId() )
-                .toHashCode();
+                .toHashCode() );
     }
 
 

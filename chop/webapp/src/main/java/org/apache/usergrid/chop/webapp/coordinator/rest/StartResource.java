@@ -49,7 +49,7 @@ import javax.ws.rs.core.Response;
 
 
 /**
- * REST operation to setup the Stack under test.
+ * REST operation to start already set up tests.
  */
 @Singleton
 @Produces( MediaType.APPLICATION_JSON )
@@ -85,7 +85,6 @@ public class StartResource extends TestableResource implements RestParams {
 
         if( inTestMode( testMode ) ) {
             LOG.info( "Calling /start in test mode ..." );
-
         }
         else {
             LOG.info( "Calling /start" );
@@ -149,7 +148,7 @@ public class StartResource extends TestableResource implements RestParams {
 
         /** Sending start signal to runners */
         LOG.info( "Runners are all ready, sending start signal..." );
-        states = runnerCoordinator.start( runners );
+        states = runnerCoordinator.start( user, commitId, moduleId );
 
         int notStarted = 0;
         sb = new StringBuilder();
@@ -169,6 +168,7 @@ public class StartResource extends TestableResource implements RestParams {
         if( notStarted > 0 ) {
             sb.append( notStarted )
               .append( " out of " )
+              .append( runners.size() )
               .append( " could not be started." );
 
             return Response.status( Response.Status.OK )

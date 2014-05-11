@@ -26,6 +26,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -62,7 +64,7 @@ public class RunDaoTest {
             LOG.info( run.toString() );
         }
 
-        assertEquals( 5, list.size() );
+        assertEquals( 8, list.size() );
     }
 
 
@@ -74,18 +76,14 @@ public class RunDaoTest {
         // This should result in commits with { COMMIT_ID_2, COMMIT_ID_3 }
         List<Commit> commits = ESSuiteTest.commitDao.getByModule( ESSuiteTest.MODULE_ID_2 );
 
-        // This should result in 3 Runs with { RUN_ID_3, RUN_ID_4, RUN_ID_5 }
-        List<Run> list = ESSuiteTest.runDao.getList( commits, ESSuiteTest.TEST_NAME_2 );
+        // This should result in 2 Runs with { RUN_ID_1, RUN_ID_2 }
+        List<Run> list = ESSuiteTest.runDao.getList( commits, ESSuiteTest.TEST_NAME_1 );
 
-        assertEquals( 3, list.size() );
+        assertEquals( 2, list.size() );
 
         for ( Run run : list ) {
             LOG.info( run.toString() );
-            assertTrue(
-                    run.getId().equals( ESSuiteTest.RUN_ID_3 ) ||
-                    run.getId().equals( ESSuiteTest.RUN_ID_4 ) ||
-                    run.getId().equals( ESSuiteTest.RUN_ID_5 )
-                      );
+            assertTrue( run.getId().equals( ESSuiteTest.RUN_ID_1 ) ||  run.getId().equals( ESSuiteTest.RUN_ID_2 ) );
         }
     }
 
@@ -134,7 +132,7 @@ public class RunDaoTest {
         List<Runner> runners = ESSuiteTest.runnerDao.getRunners( ESSuiteTest.USER_1, ESSuiteTest.COMMIT_ID_2,
                 ESSuiteTest.MODULE_ID_2 );
 
-        int nextRunNumber = ESSuiteTest.runDao.getNextRunNumber( runners, ESSuiteTest.COMMIT_ID_2 );
+        int nextRunNumber = ESSuiteTest.runDao.getNextRunNumber( ESSuiteTest.COMMIT_ID_2 );
         assertEquals( 3, nextRunNumber );
     }
 
@@ -153,6 +151,37 @@ public class RunDaoTest {
             LOG.info( "{}: {}", runId, runs.get( runId ) );
             assertEquals( ESSuiteTest.RUN_ID_1, runId );
             assertEquals( ESSuiteTest.RUN_AVG_TIME_1, ( Long ) runs.get( runId ).getAvgTime() );
+        }
+    }
+
+
+    @Test
+    public void getMapWithRunners() {
+        LOG.info( "\n===RunDaoTest.getMapWithRunners===\n" );
+
+        Collection<Runner> twoRunners = new ArrayList<Runner>();
+        Collection<List<Runner>> runners = ESSuiteTest.runnerDao.getRunnersGrouped().values();
+        for( List<Runner> runnerList: runners ) {
+            for( Runner runner: runnerList ) {
+                if( runner.getHostname().equals( ESSuiteTest.RUNNER_HOSTNAME_1 ) ||
+                        runner.getHostname().equals( ESSuiteTest.RUNNER_HOSTNAME_2 ) ) {
+                    twoRunners.add( runner );
+                }
+            }
+        }
+
+        assertEquals( 2, twoRunners.size() );
+
+        // This should result in a Map with 2 items which are ( RUN_ID_6, AllRuns[5] ), ( RUN_ID_7, AllRuns[6] )
+        Map<String, Run> runs = ESSuiteTest.runDao.getMap( ESSuiteTest.COMMIT_ID_1, 2, ESSuiteTest.TEST_NAME_2,
+                twoRunners );
+
+        assertEquals( 2, runs.size() );
+
+        for( String runId : runs.keySet() ) {
+            LOG.info( "{}: {}", runId, runs.get( runId ) );
+            assertTrue( runId.equals( ESSuiteTest.RUN_ID_6 ) || runId.equals( ESSuiteTest.RUN_ID_7 ) );
+            assertEquals( 122, runs.get( runId ).getTotalTestsRun() );
         }
     }
 }

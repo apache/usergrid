@@ -104,16 +104,7 @@ public class RunManagerResource extends TestableResource implements RestParams {
         Preconditions.checkNotNull( commitId, "The commitId should not be null." );
 
         try {
-            List<Runner> runners = runnerDao.getRunners( username, commitId,
-                    BasicModule.createId( groupId, artifactId, version ) );
-
-            LOG.info( "Commit id: {}", commitId );
-            LOG.info( "Got {} runners for user: {}", runners.size(), BasicModule.createId( groupId, artifactId, version ) );
-            for( Runner runner: runners ) {
-                LOG.info( "Runner {}", runner.getUrl() );
-            }
-
-            next = runDao.getNextRunNumber( runners, commitId );
+            next = runDao.getNextRunNumber( commitId );
         }
         catch ( IndexMissingException e ) {
             LOG.warn( "Got an index missing exception while looking up the next run number." );
@@ -163,10 +154,10 @@ public class RunManagerResource extends TestableResource implements RestParams {
         LOG.info( "/run/completed called ..." );
 
         String moduleId = BasicModule.createId( groupId, artifactId, version );
-        int totalRunnerCount = runnerDao.getRunners( username, commitId, moduleId ).size();
-        Collection<Run> runs = runDao.getMap( commitId, runNumber, testClass ).values() ;
+        Collection<Runner> runners = runnerDao.getRunners( username, commitId, moduleId );
+        Collection<Run> runs = runDao.getMap( commitId, runNumber, testClass, runners ).values() ;
 
-        Boolean allFinished = runs.size() == totalRunnerCount;
+        Boolean allFinished = runs.size() == runners.size();
 
         return Response.status( Response.Status.CREATED ).entity( allFinished ).build();
     }

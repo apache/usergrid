@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -32,8 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.chop.api.BaseResult;
+import org.apache.usergrid.chop.api.Run;
 import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.api.State;
+import org.apache.usergrid.chop.webapp.dao.RunDao;
 import org.apache.usergrid.chop.webapp.dao.RunnerDao;
 
 import com.google.common.base.Preconditions;
@@ -55,17 +58,47 @@ public class RunnerCoordinator {
     @Inject
     private RunnerDao runnerDao;
 
+    @Inject
+    private RunDao runDao;
 
+    private Map<Runner, Integer> lastRunNumbers = new HashMap<Runner, Integer>();
+
+
+    /**
+     *
+     * @param username
+     * @param commitId
+     * @param moduleId
+     * @return          the registered runners belonging to given username, commitId and moduleId
+     */
     public Collection<Runner> getRunners( String username, String commitId, String moduleId ) {
         return runnerDao.getRunners( username, commitId, moduleId );
     }
 
 
+    /**
+     *
+     * @param username
+     * @param commitId
+     * @param moduleId
+     * @return
+     */
     public Map<Runner, State> getStates( String username, String commitId, String moduleId ) {
         return getStates( getRunners( username, commitId, moduleId ) );
     }
 
 
+    /**
+     * Gets the run State of all given runners as a map.
+     * <p>
+     * <ul>
+     *     <li>Key of map is the runner</li>
+     *     <li>Value field is the state of a runner, or null if state could not be retrieved</li>
+     * </ul>
+     *
+     * @param runners    Runners to get states
+     * @return           Map of all Runner, State pairs
+     */
     public Map<Runner, State> getStates( Collection<Runner> runners ) {
         Map<Runner, State> states = new HashMap<Runner, State>( runners.size() );
         for( Runner runner: runners ) {
@@ -78,7 +111,6 @@ public class RunnerCoordinator {
             if( ! response.getStatus() ) {
                 LOG.warn( "Could not get the state of Runner at {}", runner.getUrl() );
                 LOG.warn( response.getMessage() );
-                // TODO should we throw exception, return null?
                 states.put( runner, null );
             }
             else {
@@ -89,14 +121,29 @@ public class RunnerCoordinator {
     }
 
 
+    /**
+     *
+     * @param username
+     * @param commitId
+     * @param moduleId
+     * @return
+     */
     public Map<Runner, State> start( String username, String commitId, String moduleId ) {
-        return start( getRunners( username, commitId, moduleId ) );
+        return start( getRunners( username, commitId, moduleId ), runDao.getNextRunNumber( commitId ) );
     }
 
 
-    public Map<Runner, State> start( Collection<Runner> runners ) {
+    /**
+     * Starts the tests on given runners and puts them into RUNNING state, if indeed they were READY.
+     *
+     * @param runners   Runners that are going to run the tests
+     * @param runNumber Run number of upcoming tests, this should be get from Run storage
+     * @return          Map of resulting states of <code>runners</code>, after the operation
+     */
+    public Map<Runner, State> start( Collection<Runner> runners, int runNumber ) {
         Map<Runner, State> states = new HashMap<Runner, State>( runners.size() );
         for( Runner runner: runners ) {
+            lastRunNumbers.put( runner, runNumber );
             trustRunner( runner.getUrl() );
             DefaultClientConfig clientConfig = new DefaultClientConfig();
             Client client = Client.create( clientConfig );
@@ -116,11 +163,24 @@ public class RunnerCoordinator {
     }
 
 
+    /**
+     *
+     * @param username
+     * @param commitId
+     * @param moduleId
+     * @return
+     */
     public Map<Runner, State> stop( String username, String commitId, String moduleId ) {
         return stop( getRunners( username, commitId, moduleId ) );
     }
 
 
+    /**
+     * Stop the tests on given runners and puts them into STOPPED state, if indeed they were RUNNING.
+     *
+     * @param runners    Runners that are running the tests
+     * @return           Map of resulting states of <code>runners</code>, after the operation
+     */
     public Map<Runner, State> stop( Collection<Runner> runners ) {
         Map<Runner, State> states = new HashMap<Runner, State>( runners.size() );
         for( Runner runner: runners ) {
@@ -142,11 +202,24 @@ public class RunnerCoordinator {
     }
 
 
+    /**
+     *
+     * @param username
+     * @param commitId
+     * @param moduleId
+     * @return
+     */
     public Map<Runner, State> reset( String username, String commitId, String moduleId ) {
         return reset( getRunners( username, commitId, moduleId ) );
     }
 
 
+    /**
+     * Resets the given runners and puts them into READY state, if indeed they were STOPPED.
+     *
+     * @param runners   Runners to reset
+     * @return          Map of resulting states of <code>runners</code>, after the operation
+     */
     public Map<Runner, State> reset( Collection<Runner> runners ) {
         Map<Runner, State> states = new HashMap<Runner, State>( runners.size() );
         for( Runner runner: runners ) {
@@ -168,6 +241,39 @@ public class RunnerCoordinator {
     }
 
 
+    /**
+     * Removes incomplete set of Runs from storage, which are there due to Stopped tests.
+     * <p>
+     * This uses <code>lastRunNumbers</code> map to get the latest run number given runners were running.
+     * Start method puts the run number of upcoming tests to <code>lastRunNumbers</code> map,
+     * so if stopped, Runs with that run number in storage, if there are any, are deleted.
+     *
+     * @param runners    All runners that were running a particular chop test
+     * @param commitId   Commit Id that defines related test
+     */
+    public void trimIncompleteRuns( Collection<Runner> runners, String commitId ) {
+        for( Runner runner: runners ) {
+            Integer lastRunNumber = lastRunNumbers.get( runner );
+            List<Run> runs = runDao.getRuns( runner.getHostname(), commitId );
+            for( Run run: runs ) {
+                if( run.getRunNumber() == lastRunNumber ) {
+                    LOG.info( "Removing incomplete Run {}", run );
+                    runDao.delete( run );
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Registers given runner in storage, so that it belongs to given username, commitId and moduleId.
+     *
+     * @param username
+     * @param commitId
+     * @param moduleId
+     * @param runner
+     * @return          Whether the operation succeeded
+     */
     public boolean register( String username, String commitId, String moduleId, Runner runner ) {
         try {
             LOG.info( "Registering runner: {}", runner.getUrl() );
@@ -184,12 +290,23 @@ public class RunnerCoordinator {
     }
 
 
+    /**
+     * Removes the runner object with given runnerUrl
+     *
+     * @param runnerUrl Runner's url to unregister
+     * @return          Whether such a runner had existed in storage
+     */
     public boolean unregister( String runnerUrl ) {
         LOG.info( "Unregistering runner at {}", runnerUrl );
         return runnerDao.delete( runnerUrl );
     }
 
 
+    /**
+     * This is to resolve self signed uniform certificates in runners.
+     *
+     * @param runnerUrl    Runner's url to trust in SSL communications
+     */
     private void trustRunner( final String runnerUrl ) {
         final URI uri = URI.create( runnerUrl );
 
@@ -200,7 +317,6 @@ public class RunnerCoordinator {
         javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
             new javax.net.ssl.HostnameVerifier() {
                 public boolean verify( String hostname, javax.net.ssl.SSLSession sslSession) {
-                    LOG.info( "Verify called for hostname: {} and url: {}", hostname, runnerUrl );
                     return hostname.equals( uri.getHost() );
                 }
             }
