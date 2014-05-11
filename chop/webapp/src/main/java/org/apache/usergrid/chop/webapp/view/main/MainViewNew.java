@@ -25,6 +25,7 @@ import org.apache.usergrid.chop.api.Module;
 import org.apache.usergrid.chop.webapp.dao.ModuleDao;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
 import org.apache.usergrid.chop.webapp.view.tree.ModuleSelectListener;
+import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
 import org.apache.usergrid.chop.webapp.view.util.UIUtil;
 
 import com.vaadin.annotations.Title;
@@ -94,7 +95,7 @@ public class MainViewNew extends UI {
 
         button3.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
-                tabSheet.addTab( new AbsoluteLayout(), "Overview" );
+                UI.getCurrent().addWindow( new UserListWindow() );
             }
         } );
     }
@@ -143,7 +144,7 @@ public class MainViewNew extends UI {
     public static TreeTable getTree() {
 
         TreeTable treeTable = new TreeTable();
-        treeTable.setSelectable(true);
+        treeTable.setSelectable( true );
         treeTable.addContainerProperty( "Group", String.class, "" );
         treeTable.addContainerProperty( "Artifact", String.class, "" );
 
