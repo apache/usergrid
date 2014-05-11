@@ -59,7 +59,6 @@ public class UIUtil {
 
         Button button = new Button(caption);
         button.setWidth(width);
-        button.addStyleName("hello");
         layout.addComponent(button, position);
 
         return button;

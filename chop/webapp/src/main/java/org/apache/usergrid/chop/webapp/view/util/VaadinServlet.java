@@ -20,6 +20,7 @@ package org.apache.usergrid.chop.webapp.view.util;
 
 import com.google.inject.Singleton;
 import org.apache.usergrid.chop.webapp.view.main.MainView;
+import org.apache.usergrid.chop.webapp.view.main.MainViewNew;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -44,7 +45,7 @@ public class VaadinServlet extends com.vaadin.server.VaadinServlet {
     private static Hashtable<String, String> getInitParams() {
 
         Hashtable<String, String> ht = new Hashtable<String, String>();
-        ht.put("UI", MainView.class.getName());
+        ht.put("UI", MainViewNew.class.getName());
 
         return ht;
     }
