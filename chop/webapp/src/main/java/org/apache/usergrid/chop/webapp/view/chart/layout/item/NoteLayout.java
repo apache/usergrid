@@ -48,7 +48,7 @@ public class NoteLayout extends AbsoluteLayout {
     public NoteLayout() {
         init();
         addButtons();
-        textArea = UIUtil.addTextArea(this, "", "left: 0px; top: 35px;", "250px", "100px", true);
+        textArea = UIUtil.addTextArea(this, "", "left: 0px; top: 35px;", "180px", "100px", true);
     }
 
     private void init() {
