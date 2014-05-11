@@ -46,6 +46,7 @@ public class VaadinServlet extends com.vaadin.server.VaadinServlet {
 
         Hashtable<String, String> ht = new Hashtable<String, String>();
         ht.put("UI", MainViewNew.class.getName());
+//        ht.put("UI", MainView.class.getName());
 
         return ht;
     }

@@ -52,22 +52,22 @@ public class NoteLayout extends AbsoluteLayout {
     }
 
     private void init() {
-        setWidth("250px");
+        setWidth("180px");
         setHeight("250px");
     }
 
     private void addButtons() {
 
-        UIUtil.addLabel(this, "Note for selected run:", "left: 0px; top: 10px;", "120px");
+        UIUtil.addLabel(this, "Note:", "left: 0px; top: 10px;", "120px");
 
-        editButton = createButton("Edit", "left: 210px; top: 10px;", true);
+        editButton = createButton("Edit", "left: 140px; top: 10px;", true);
         editButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
                 edit();
             }
         });
 
-        saveButton = createButton("Save", "left: 180px; top: 10px;", false);
+        saveButton = createButton("Save", "left: 100px; top: 10px;", false);
         saveButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
                 save();
@@ -75,7 +75,7 @@ public class NoteLayout extends AbsoluteLayout {
             }
         });
 
-        cancelButton = createButton("Cancel", "left: 210px; top: 10px;", false);
+        cancelButton = createButton("Cancel", "left: 140px; top: 10px;", false);
         cancelButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
                 restoreText();

@@ -73,43 +73,49 @@ public class ModuleDao extends Dao {
     public Module get(String id) {
 
         SearchResponse response = elasticSearchClient.getClient()
-                .prepareSearch(DAO_INDEX_KEY)
-                .setTypes(DAO_TYPE_KEY)
-                .setQuery(termQuery("_id", id))
+                .prepareSearch( DAO_INDEX_KEY )
+                .setTypes( DAO_TYPE_KEY )
+                .setQuery( termQuery( "_id", id ) )
                 .execute()
                 .actionGet();
 
         SearchHit hits[] = response.getHits().hits();
 
-        return hits.length > 0 ? toModule(hits[0]) : null;
+        return hits.length > 0 ? toModule( hits[0] ) : null;
     }
 
 
-    private static Module toModule(SearchHit hit) {
+    private Module toModule(SearchHit hit) {
+
         Map<String, Object> json = hit.getSource();
+        LOG.debug( "json: {}", json );
 
         return new BasicModule(
-                Util.getString(json, "groupId"),
-                Util.getString(json, "artifactId"),
-                Util.getString(json, "version"),
-                Util.getString(json, "vcsRepoUrl"),
-                Util.getString(json, "testPackageBase")
+                Util.getString( json, "groupId" ),
+                Util.getString( json, "artifactId" ),
+                Util.getString( json, "version" ),
+                Util.getString( json, "vcsRepoUrl" ),
+                Util.getString( json, "testPackageBase" )
         );
     }
 
+
     public List<Module> getAll() {
 
-        SearchResponse response = elasticSearchClient.getClient()
-                .prepareSearch(DAO_INDEX_KEY)
-                .setTypes(DAO_TYPE_KEY)
-                .setSize(MAX_RESULT_SIZE)
+        SearchResponse response = elasticSearchClient
+                .getClient()
+                .prepareSearch( DAO_INDEX_KEY )
+                .setTypes( DAO_TYPE_KEY )
+                .setSize( MAX_RESULT_SIZE )
                 .execute()
                 .actionGet();
 
+        LOG.debug( "response: {}", response );
+
         ArrayList<Module> modules = new ArrayList<Module>();
 
-        for (SearchHit hit : response.getHits().hits()) {
-            modules.add(toModule(hit));
+        for ( SearchHit hit : response.getHits().hits() ) {
+            modules.add( toModule( hit ) );
         }
 
         return modules;

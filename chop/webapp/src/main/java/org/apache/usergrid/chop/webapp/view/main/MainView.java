@@ -18,6 +18,9 @@
  */
 package org.apache.usergrid.chop.webapp.view.main;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.vaadin.annotations.Title;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.AbsoluteLayout;
@@ -36,6 +39,8 @@ import org.apache.usergrid.chop.webapp.view.util.UIUtil;
 
 @Title("Judo Chop")
 public class MainView extends UI implements ChartLayoutContext, ModuleSelectListener {
+
+    private static Logger LOG = LoggerFactory.getLogger( MainView.class );
 
     private HorizontalSplitPanel splitPanel;
     private ChartLayout overviewLayout;
@@ -89,8 +94,9 @@ public class MainView extends UI implements ChartLayoutContext, ModuleSelectList
     }
 
     @Override
-    public void onModuleSelect(String moduleId) {
-        header.showModule(moduleId);
+    public void onModuleSelect( String moduleId ) {
+        LOG.info( "Selected module: {}", moduleId );
+        header.showModule( moduleId );
         show(overviewLayout, new Params(moduleId));
     }
 

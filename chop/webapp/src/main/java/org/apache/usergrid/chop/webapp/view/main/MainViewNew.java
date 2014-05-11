@@ -24,8 +24,11 @@ import java.util.List;
 import org.apache.usergrid.chop.api.Module;
 import org.apache.usergrid.chop.webapp.dao.ModuleDao;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
+import org.apache.usergrid.chop.webapp.view.chart.layout.ChartLayout;
+import org.apache.usergrid.chop.webapp.view.chart.layout.ChartLayoutNew;
 import org.apache.usergrid.chop.webapp.view.tree.ModuleSelectListener;
 import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
+import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
 import org.apache.usergrid.chop.webapp.view.util.UIUtil;
 
 import com.vaadin.annotations.Title;
@@ -47,6 +50,10 @@ import com.vaadin.ui.Window;
 @Title( "Judo Chop" )
 public class MainViewNew extends UI {
 
+
+    private TabSheet tabSheet;
+
+
     @Override
     protected void init( VaadinRequest request ) {
 
@@ -61,7 +68,7 @@ public class MainViewNew extends UI {
         verticalLayout.addComponent( absoluteLayout );
         verticalLayout.setComponentAlignment( absoluteLayout, Alignment.MIDDLE_CENTER );
 
-        final TabSheet tabSheet = new TabSheet();
+        tabSheet = new TabSheet();
         tabSheet.setHeight( "650px" );
 
         absoluteLayout.addComponent( tabSheet, "left: 0px; top: 50px;" );
@@ -71,33 +78,65 @@ public class MainViewNew extends UI {
         horizontalLayout.setHeight( "50px" );
         absoluteLayout.addComponent( horizontalLayout, "left: 250px; top: 0px;" );
 
-        Button button1 = new Button( "Modules" );
-        button1.setWidth( "150px" );
-        horizontalLayout.addComponent( button1 );
-        horizontalLayout.setComponentAlignment( button1, Alignment.MIDDLE_CENTER);
+        // -------------------------------------------------------------
 
-        button1.addClickListener( new Button.ClickListener() {
+        Button modulesButton = new Button( "Modules" );
+        modulesButton.setWidth( "150px" );
+        horizontalLayout.addComponent( modulesButton );
+        horizontalLayout.setComponentAlignment( modulesButton, Alignment.MIDDLE_CENTER);
+
+        modulesButton.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
                 showWindow();
             }
         } );
 
+        // -------------------------------------------------------------
 
-        Button button2 = new Button( "Runners" );
-        button2.setWidth( "150px" );
-        horizontalLayout.addComponent( button2 );
-        horizontalLayout.setComponentAlignment( button2, Alignment.MIDDLE_CENTER);
+        Button runnersButton = new Button( "Runners" );
+        runnersButton.setWidth( "150px" );
+        horizontalLayout.addComponent( runnersButton );
+        horizontalLayout.setComponentAlignment( runnersButton, Alignment.MIDDLE_CENTER);
 
-        Button button3 = new Button( "Users" );
-        button3.setWidth( "150px" );
-        horizontalLayout.addComponent( button3 );
-        horizontalLayout.setComponentAlignment( button3, Alignment.MIDDLE_CENTER);
+        runnersButton.addClickListener( new Button.ClickListener() {
+            public void buttonClick( Button.ClickEvent event ) {
+                showTab();
+            }
+        } );
 
-        button3.addClickListener( new Button.ClickListener() {
+
+        // -------------------------------------------------------------
+
+        Button usersButton = new Button( "Users" );
+        usersButton.setWidth( "150px" );
+        horizontalLayout.addComponent( usersButton );
+        horizontalLayout.setComponentAlignment( usersButton, Alignment.MIDDLE_CENTER);
+
+        usersButton.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
                 UI.getCurrent().addWindow( new UserListWindow() );
             }
         } );
+
+        loadScripts();
+    }
+
+
+    private void loadScripts() {
+        JavaScriptUtil.loadFile( "js/jquery.min.js" );
+        JavaScriptUtil.loadFile( "js/jquery.flot.min.js" );
+    }
+
+
+    private void showTab() {
+        try {
+            ChartLayoutNew layout = new ChartLayoutNew( null );
+            //        AbsoluteLayout layout = snew AbsoluteLayout();
+            tabSheet.addTab( layout, "Chart Layout" );
+        }
+        catch ( Exception e ) {
+            e.printStackTrace();
+        }
     }
 
 
