@@ -102,8 +102,10 @@ public class ModuleDao extends Dao {
     }
 
 
-    private static Module toModule( SearchHit hit ) {
+    private Module toModule( SearchHit hit ) {
+
         Map<String, Object> json = hit.getSource();
+        LOG.debug( "json: {}", json );
 
         return new BasicModule(
                 Util.getString( json, "groupId" ),
@@ -120,12 +122,15 @@ public class ModuleDao extends Dao {
      */
     public List<Module> getAll() {
 
-        SearchResponse response = elasticSearchClient.getClient()
+        SearchResponse response = elasticSearchClient
+                .getClient()
                 .prepareSearch( DAO_INDEX_KEY )
                 .setTypes( DAO_TYPE_KEY )
                 .setSize( MAX_RESULT_SIZE )
                 .execute()
                 .actionGet();
+
+        LOG.debug( "response: {}", response );
 
         ArrayList<Module> modules = new ArrayList<Module>();
 

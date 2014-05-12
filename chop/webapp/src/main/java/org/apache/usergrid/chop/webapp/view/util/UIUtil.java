@@ -23,6 +23,23 @@ import com.vaadin.ui.*;
 
 public class UIUtil {
 
+    public static ComboBox createCombo( String caption, Object values[] ) {
+
+        ComboBox combo = new ComboBox( caption );
+        combo.setTextInputAllowed( false );
+        combo.setNullSelectionAllowed( false );
+
+        populateCombo( combo, values );
+
+        return combo;
+    }
+
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     public static ComboBox addCombo(AbsoluteLayout layout, String caption, String position, String width, Object values[]) {
 
         ComboBox combo = new ComboBox(caption);
@@ -35,6 +52,7 @@ public class UIUtil {
 
         return combo;
     }
+
 
     public static void populateCombo(ComboBox combo, Object values[]) {
 
@@ -58,7 +76,7 @@ public class UIUtil {
     public static Button addButton(AbsoluteLayout layout, String caption, String position, String width) {
 
         Button button = new Button(caption);
-        button.setWidth(width);
+        button.setWidth( width );
         layout.addComponent(button, position);
 
         return button;
