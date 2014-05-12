@@ -43,7 +43,7 @@ public class RunnersWindow extends Window {
     private final RunnerDao runnerDao = InjectorFactory.getInstance(RunnerDao.class);
 
     // Use RunnerServiceMock for testing
-    private final RunnerService runnerService = InjectorFactory.getInstance(RunnerServiceImpl.class);
+    private final RunnerService runnerService = InjectorFactory.getInstance(RunnerServiceMock.class);
 
     private TextArea textArea;
 

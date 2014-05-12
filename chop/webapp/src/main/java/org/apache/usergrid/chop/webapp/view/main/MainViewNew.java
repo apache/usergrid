@@ -23,6 +23,7 @@ import org.apache.usergrid.chop.webapp.service.chart.Params;
 import org.apache.usergrid.chop.webapp.view.chart.layout.*;
 import org.apache.usergrid.chop.webapp.view.module.ModuleListWindow;
 import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
+import org.apache.usergrid.chop.webapp.view.runner.RunnersLayout;
 import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
 import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
 
@@ -85,7 +86,7 @@ public class MainViewNew extends UI implements ModuleSelectListener {
 
         addButton( mainLayout, 560, "Runners", new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
-//                showTab();
+                tabSheetManager.addTab( new RunnersLayout(), "Runners" );
             }
         });
 
