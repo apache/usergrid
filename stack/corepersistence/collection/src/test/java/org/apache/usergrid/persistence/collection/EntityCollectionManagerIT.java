@@ -119,7 +119,6 @@ public class EntityCollectionManagerIT {
         Entity returned = observable.toBlockingObservable().lastOrDefault( null );
 
         assertNotNull( "Returned has a uuid", returned.getId() );
-        assertNotNull( "Version exists" );
 
         oldEntity.getFields().remove( testField1  );
         oldEntity.setField( addedField );
@@ -127,10 +126,8 @@ public class EntityCollectionManagerIT {
 //TODO:merge in helper object. Then register it with the queue. Then call wait on the function.
         //TODO:refactor test to check we get partial entity back, then do a read to make sure entity is COMPLETE, not partial.
         observable = manager.update( oldEntity);
-       // managerListener = new EntityCollectionManagerListener( context,load, timeoutQueue);
 
-        returned = observable.toBlockingObservable().last();
-        //returned = observable.toBlockingObservable().lastOrDefault( null );
+        returned = observable.toBlockingObservable().lastOrDefault( null );
 
         assertNotNull( "Returned has a uuid", returned.getId() );
         assertEquals( oldEntity.getField( "testFud" ), returned.getField( "testFud" ) );
@@ -266,7 +263,7 @@ public class EntityCollectionManagerIT {
         createReturned.setField( new IntegerField( "counter", 2 ) );
 
         //wait for the write to complete
-        manager.write( createReturned ).toBlockingObservable().lastOrDefault( null );
+        Entity ents = manager.write( createReturned ).toBlockingObservable().lastOrDefault( null );
 
 
         loadObservable = manager.load( createReturned.getId() );

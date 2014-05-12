@@ -24,17 +24,21 @@ public class RepairUtil {
         if(results.size() == 1) {
             return results.get( 0 ).getEntity().get();
         }
+        //delete case
+        if(!results.get( 0 ).getEntity().isPresent()){
+            return null;
+        }
 
-        for(int i = results.size()-1; i >= 0 ; i --){
-            //checks closes instance of a complete entity.
-           if(results.get( i ).getStatus() == MvccEntity.Status.COMPLETE){
-                changeLogGenerator = new ChangeLogGeneratorImpl();
-               List<ChangeLogEntry> chgPersist = changeLogGenerator.getChangeLog(results.subList( i, results.size() )
-                       ,results.get( results.size()-1 ).getVersion()  );
+        for( int i = 0; i < results.size(); i++) {
+            if(results.get(i).getStatus() == MvccEntity.Status.COMPLETE){
+                    changeLogGenerator = new ChangeLogGeneratorImpl();
+                   List<ChangeLogEntry> chgPersist = changeLogGenerator.getChangeLog(results.subList( 0, i )
+                           ,results.get( i ).getVersion()  );
 
-               return entityRepair( chgPersist, results.subList( i+1,results.size() ),results.get( i ) );
-
-           }
+                   return entityRepair( chgPersist, results.subList( 0,i ),results.get( i ) );
+            }
+            else
+                continue;
         }
         return null;
     }
