@@ -59,7 +59,8 @@ public class IterationTracker extends Tracker {
 
     @Override
     public int getPercentCompleted() {
-        double percent = ( double ) getActualIterations() / ( double ) iterationChop.iterations();
+        double percent = ( double ) getActualIterations() /
+                ( ( double ) iterationChop.iterations() * iterationChop.threads() );
         return ( int ) Math.floor( percent * 100 );
     }
 
