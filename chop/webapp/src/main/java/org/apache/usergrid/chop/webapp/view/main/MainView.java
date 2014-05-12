@@ -32,8 +32,8 @@ import org.apache.usergrid.chop.webapp.service.chart.builder.IterationsChartBuil
 import org.apache.usergrid.chop.webapp.service.chart.builder.OverviewChartBuilder;
 import org.apache.usergrid.chop.webapp.service.chart.builder.RunsChartBuilder;
 import org.apache.usergrid.chop.webapp.view.chart.layout.*;
-import org.apache.usergrid.chop.webapp.view.tree.ModuleSelectListener;
-import org.apache.usergrid.chop.webapp.view.tree.ModuleTreeBuilder;
+import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
+import org.apache.usergrid.chop.webapp.view.module.ModuleTreeBuilder;
 import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
 import org.apache.usergrid.chop.webapp.view.util.UIUtil;
 

@@ -19,29 +19,20 @@
 package org.apache.usergrid.chop.webapp.view.main;
 
 
-import java.util.List;
-
-import org.apache.usergrid.chop.api.Module;
-import org.apache.usergrid.chop.webapp.dao.ModuleDao;
-import org.apache.usergrid.chop.webapp.service.InjectorFactory;
-import org.apache.usergrid.chop.webapp.view.chart.layout.ChartLayout;
-import org.apache.usergrid.chop.webapp.view.chart.layout.ChartLayoutNew;
+import org.apache.usergrid.chop.webapp.service.chart.Params;
+import org.apache.usergrid.chop.webapp.view.chart.layout.ChartLayoutContext;
 import org.apache.usergrid.chop.webapp.view.chart.layout.IterationsChartLayoutNew;
-import org.apache.usergrid.chop.webapp.view.chart.layout.RunsChartLayoutNew;
-import org.apache.usergrid.chop.webapp.view.tree.ModuleSelectListener;
+import org.apache.usergrid.chop.webapp.view.module.ModuleListWindow;
+import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
 import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
 import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
-import org.apache.usergrid.chop.webapp.view.util.UIUtil;
 
 import com.vaadin.annotations.Title;
 import com.vaadin.server.VaadinRequest;
-import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
@@ -50,10 +41,21 @@ import com.vaadin.ui.Window;
 
 
 @Title( "Judo Chop" )
-public class MainViewNew extends UI {
+public class MainViewNew extends UI implements ModuleSelectListener {
 
 
     private TabSheet tabSheet;
+
+
+    @Override
+    public void onModuleSelect( String moduleId ) {
+        System.out.println( moduleId );
+//        header.showModule( moduleId );
+//        show(overviewLayout, new Params(moduleId));
+    }
+
+
+
 
 
     @Override
@@ -89,7 +91,8 @@ public class MainViewNew extends UI {
 
         modulesButton.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
-                showWindow();
+//                showWindow();
+                UI.getCurrent().addWindow( new ModuleListWindow(MainViewNew.this) );
             }
         } );
 
@@ -139,70 +142,6 @@ public class MainViewNew extends UI {
         catch ( Exception e ) {
             e.printStackTrace();
         }
-    }
-
-
-    private static void showWindow() {
-
-        VerticalLayout verticalLayout = new VerticalLayout();
-        verticalLayout.setSizeFull();
-
-        // --------------------------------------------
-
-        TreeTable treeTable = getTree();
-        treeTable.setWidth( "100%" );
-        treeTable.setHeight( "420px" );
-        verticalLayout.addComponent( treeTable );
-        verticalLayout.setComponentAlignment( treeTable, Alignment.TOP_CENTER );
-
-
-        // --------------------------------------------
-
-        AbsoluteLayout absoluteLayout = new AbsoluteLayout();
-        absoluteLayout.setHeight( "50px" );
-        absoluteLayout.setWidth( "100%" );
-
-//        absoluteLayout.addComponent( new Button( "Create" ), "left: 10px; top: 15px;" );
-        absoluteLayout.addComponent( new Button( "Close" ), "left: 220px; top: 15px;" );
-
-        verticalLayout.addComponent( absoluteLayout );
-        verticalLayout.setComponentAlignment( absoluteLayout, Alignment.BOTTOM_CENTER );
-
-
-        // --------------------------------------------
-
-        Window window = new Window( "Modules" );
-        window.setModal( true );
-        window.setResizable( false );
-        window.setWidth( "300px" );
-        window.setHeight( "500px" );
-        window.setContent( verticalLayout );
-
-        UI.getCurrent().addWindow( window );
-    }
-
-
-    public static TreeTable getTree() {
-
-        TreeTable treeTable = new TreeTable();
-        treeTable.setSelectable( true );
-        treeTable.addContainerProperty( "Group", String.class, "" );
-        treeTable.addContainerProperty( "Artifact", String.class, "" );
-
-        addItems(treeTable);
-
-        return treeTable;
-    }
-
-    private static void addItems(TreeTable treeTable) {
-
-        treeTable.addItem( new Object[] { "org.apache.usergrid.chop", "chop-runner" }, "item1" );
-        treeTable.addItem( new Object[] { "1.0-SNAPSHOT", "" }, "item11" );
-        treeTable.setParent( "item11", "item1" );
-
-        treeTable.addItem( new Object[] { "org.apache.usergrid.chop", "chop-client" }, "item2" );
-        treeTable.addItem( new Object[] { "org.apache.usergrid", "collection" }, "item3" );
-        treeTable.addItem( new Object[] { "org.apache.usergrid.chop", "example" }, "item4" );
     }
 
 }
