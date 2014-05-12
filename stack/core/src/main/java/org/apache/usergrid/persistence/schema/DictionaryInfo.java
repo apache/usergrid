@@ -29,7 +29,6 @@ public class DictionaryInfo {
     private boolean publicVisible = true;
     private boolean includedInExport = true;
 
-
     public DictionaryInfo() {
     }
 

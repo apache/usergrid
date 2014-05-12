@@ -71,10 +71,10 @@ import org.apache.usergrid.persistence.query.tree.StringLiteral;
 import org.apache.usergrid.persistence.query.tree.WithinOperand;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 public class QueryProcessor {
 
@@ -197,7 +197,7 @@ public class QueryProcessor {
 
                 if ( startResultSet ) {
                     cursorCache.setNextCursor( allNode.getSlice().hashCode(),
-                            UUIDSerializer.get().toByteBuffer( startResult ) );
+                            ue.toByteBuffer( startResult ) );
                 }
 
                 rootNode = allNode;
@@ -624,10 +624,6 @@ public class QueryProcessor {
     private static class CountingStack<T> extends Stack<T> {
 
         private int count = 0;
-
-        /**
-         *
-         */
         private static final long serialVersionUID = 1L;
 
 

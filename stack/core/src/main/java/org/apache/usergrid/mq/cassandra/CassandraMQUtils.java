@@ -33,12 +33,6 @@ import org.apache.usergrid.utils.ConversionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.BytesArraySerializer;
-import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 
@@ -53,18 +47,12 @@ import static org.apache.usergrid.mq.QueuePosition.CONSUMER;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import static org.apache.usergrid.utils.ConversionUtils.object;
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class CassandraMQUtils {
 
     public static final Logger logger = LoggerFactory.getLogger( CassandraMQUtils.class );
-
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-    public static final BytesArraySerializer bae = new BytesArraySerializer();
-    public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
-    public static final LongSerializer le = new LongSerializer();
 
     /** Logger for batch operations */
     private static final Logger batch_logger =

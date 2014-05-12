@@ -107,8 +107,7 @@ public class CollectionInfo {
 
 
     public void setDictionariesIndexed( Set<String> dictionariesIndexed ) {
-        dictionariesIndexed = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
-        dictionariesIndexed.addAll( dictionariesIndexed );
+        this.dictionariesIndexed.addAll( dictionariesIndexed );
     }
 
 

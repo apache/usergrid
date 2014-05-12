@@ -83,9 +83,6 @@ import org.apache.usergrid.utils.MapUtils;
 
 import com.yammer.metrics.annotation.Metered;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -138,6 +135,7 @@ import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class RelationManagerImpl implements RelationManager {
@@ -149,11 +147,6 @@ public class RelationManagerImpl implements RelationManager {
     private UUID applicationId;
     private EntityRef headEntity;
     private IndexBucketLocator indexBucketLocator;
-
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-
 
     public RelationManagerImpl() {
     }
@@ -296,11 +289,18 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     @Metered(group = "core", name = "RelationManager_getCollectionIndexes")
     public Set<String> getCollectionIndexes( String collectionName ) throws Exception {
+        return getConnectionIndexes(key( headEntity.getUuid(), collectionName, Schema.DICTIONARY_INDEXES ));
+    }
 
-        // TODO TN, read all buckets here
+    public Set<String> getConnectionIndexes( ConnectionRefImpl connection ) throws Exception {
+        return getConnectionIndexes(key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ));
+    }
+
+
+    private Set<String> getConnectionIndexes( Object key ) throws Exception{
         List<HColumn<String, String>> results =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
-                        key( headEntity.getUuid(), collectionName, Schema.DICTIONARY_INDEXES ), se, se );
+                        key, se, se );
         Set<String> indexes = new TreeSet<String>();
         if ( results != null ) {
             for ( HColumn<String, String> column : results ) {
@@ -311,6 +311,7 @@ public class RelationManagerImpl implements RelationManager {
             }
         }
         return indexes;
+
     }
 
 
@@ -322,7 +323,7 @@ public class RelationManagerImpl implements RelationManager {
         // TODO TN get all buckets here
 
         List<HColumn<DynamicComposite, ByteBuffer>> containers = cass.getAllColumns( ko, ENTITY_COMPOSITE_DICTIONARIES,
-                key( headEntity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES ), EntityManagerFactoryImpl.dce, be );
+                key( headEntity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES ), dce, be );
         if ( containers != null ) {
             for ( HColumn<DynamicComposite, ByteBuffer> container : containers ) {
                 DynamicComposite composite = container.getName();
@@ -749,21 +750,6 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    public Set<String> getConnectionIndexes( ConnectionRefImpl connection ) throws Exception {
-        List<HColumn<String, String>> results =
-                cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
-                        key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ), se, se );
-        Set<String> indexes = new TreeSet<String>();
-        if ( results != null ) {
-            for ( HColumn<String, String> column : results ) {
-                String propertyName = column.getName();
-                if ( !propertyName.endsWith( ".keywords" ) ) {
-                    indexes.add( column.getName() );
-                }
-            }
-        }
-        return indexes;
-    }
 
 
     /**
