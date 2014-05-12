@@ -25,15 +25,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.apache.commons.lang.StringUtils;
-
 import org.apache.usergrid.chop.webapp.service.DataService;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
 import org.apache.usergrid.chop.webapp.service.chart.Chart;
 import org.apache.usergrid.chop.webapp.service.chart.Params;
 import org.apache.usergrid.chop.webapp.service.chart.Params.FailureType;
 import org.apache.usergrid.chop.webapp.service.chart.Params.Metric;
-import org.apache.usergrid.chop.webapp.service.chart.builder.OverviewChartBuilder;
+import org.apache.usergrid.chop.webapp.service.chart.builder.ChartBuilder;
 import org.apache.usergrid.chop.webapp.service.util.FileUtil;
 import org.apache.usergrid.chop.webapp.view.chart.format.Format;
 import org.apache.usergrid.chop.webapp.view.chart.layout.item.DetailsTable;
@@ -50,24 +48,36 @@ import com.vaadin.ui.JavaScriptFunction;
 
 public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction {
 
-    private DataService dataService = InjectorFactory.getInstance(DataService.class);
+    private DataService dataService = InjectorFactory.getInstance( DataService.class );
 
-    protected final Config config;
+    private final ChartBuilder chartBuilder;
+    private final String chartFile;
+    protected final Params params;
+
+    protected Button nextChartButton;
 
     protected ComboBox testNameCombo;
     protected ComboBox metricCombo;
     protected ComboBox percentileCombo;
     protected ComboBox failureCombo;
-    protected Button nextChartButton;
     protected DetailsTable detailsTable;
     protected NoteLayout noteLayout;
-    protected Params params;
 
-    public ChartLayoutNew( Config config ) {
-        this.config = config;
+
+    public ChartLayoutNew( ChartBuilder chartBuilder, String chartFile, String moduleId ) {
+        this.chartBuilder = chartBuilder;
+        this.chartFile = chartFile;
+        params = new Params(moduleId);
+
+        init();
+        loadChart();
+    }
+
+
+    private void init() {
         setSizeFull();
         addItems();
-        loadChart();
+        populateTestNames();
     }
 
 
@@ -75,19 +85,16 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
         addParamsItems();
         addChartItems();
         addDetailsItems();
-
-        populateTestNames();
     }
 
 
     protected void populateTestNames() {
-        Set<String> testNames = dataService.getTestNames( "1414303914" );
+        Set<String> testNames = dataService.getTestNames( params.getModuleId() );
         UIUtil.populateCombo( testNameCombo, testNames.toArray( new String[] { } ) );
     }
 
 
     private void addDetailsItems() {
-
         detailsTable = new DetailsTable();
         addComponent( detailsTable, "left: 1000px; top: 10px;" );
 
@@ -100,13 +107,15 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
 
         UIUtil.addLayout( this, "overviewChart", "left: 270px; top: 10px;", "720px", "550px" );
 
-        nextChartButton = new Button( "Next >>" );
-        addComponent( nextChartButton, "left: 610px; top: 570px;" );
+        nextChartButton = new Button( "..." );
+        nextChartButton.setVisible( false );
         nextChartButton.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
 
             }
         } );
+
+        addComponent( nextChartButton, "left: 580px; top: 570px;" );
     }
 
 
@@ -125,9 +134,19 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
         Button submitButton = new Button("Submit");
         submitButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
-
+                loadChart();
             }
         });
+
+        FormLayout formLayout = addFormLayout();
+        formLayout.addComponent( testNameCombo );
+        formLayout.addComponent( metricCombo );
+        formLayout.addComponent( percentileCombo );
+        formLayout.addComponent( failureCombo );
+        formLayout.addComponent( submitButton );
+    }
+
+    private FormLayout addFormLayout() {
 
         FormLayout formLayout = new FormLayout();
         formLayout.setWidth( "250px" );
@@ -135,26 +154,18 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
         formLayout.addStyleName( "outlined" );
         formLayout.setSpacing( true );
 
-        formLayout.addComponent( testNameCombo );
-        formLayout.addComponent( metricCombo );
-        formLayout.addComponent( percentileCombo );
-        formLayout.addComponent( failureCombo );
-        formLayout.addComponent( submitButton );
-
         addComponent( formLayout, "left: 10px; top: 10px;" );
 
+        return formLayout;
     }
 
 
     protected Params getParams() {
         return new Params(
-//                params.getModuleId(),
-                "1414303914",
+                params.getModuleId(),
                 (String) testNameCombo.getValue(),
-//                params.getCommitId(),
-                null,
-//                params.getRunNumber(),
-                0,
+                params.getCommitId(),
+                params.getRunNumber(),
                 (Metric) metricCombo.getValue(),
                 Integer.parseInt( ( String ) percentileCombo.getValue() ),
                 (FailureType) failureCombo.getValue()
@@ -164,18 +175,9 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
 
     public void loadChart() {
 
-        OverviewChartBuilder overviewChartBuilder = InjectorFactory.getInstance(OverviewChartBuilder.class);
-
-//        Params params = new Params("1414303914");
-        Params params = getParams();
-
         // BUG: If common.js is loaded separately its content is not visible later
-        String chartContent = FileUtil.getContent( "js/common.js" )
-//                + FileUtil.getContent( config.getChartFile() );
-                + FileUtil.getContent( "js/overview-chart.js" );
-
-//        Chart chart = config.getChartBuilder().getChart( params );
-        Chart chart = overviewChartBuilder.getChart( params );
+        String chartContent = FileUtil.getContent( "js/common.js" ) + FileUtil.getContent( chartFile );
+        Chart chart = chartBuilder.getChart( getParams() );
 
         chartContent = chartContent.replace( "$categories", Format.formatCategories( chart.getCategories() ) );
         chartContent = chartContent.replace( "$points", Format.formatPoints( chart.getSeries() ) );
@@ -186,22 +188,17 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
 
 
     @Override
-    public void call(JSONArray args) throws JSONException {
-        JSONObject json = args.getJSONObject(0);
-
-        String caption = "Commit: " + StringUtils.abbreviate( json.getString( "commitId" ), 10 );
-        nextChartButton.setCaption(caption);
-
-        pointClicked(json);
-    }
-
-    protected void pointClicked(JSONObject json) throws JSONException {
-//        params.setCommitId(json.optString("commitId"));
-//        params.setRunNumber(json.optInt("runNumber", 0));
-
-        detailsTable.setContent(json);
-//        noteLayout.load(params.getCommitId(), params.getRunNumber());
+    public void call( JSONArray args ) throws JSONException {
+        JSONObject json = args.getJSONObject( 0 );
+        pointClicked( json );
     }
 
 
+    protected void pointClicked( JSONObject json ) throws JSONException {
+        params.setCommitId( json.optString( "commitId" ) );
+        params.setRunNumber( json.optInt( "runNumber", 0 ) );
+
+        detailsTable.setContent( json );
+        noteLayout.load( params.getCommitId(), params.getRunNumber() );
+    }
 }

@@ -59,8 +59,15 @@ public class Util {
 
 
     public static long getLong( Map<String, Object> json, String key ) {
-        Long n = Longs.tryParse( json.get( key ).toString() );
-        return n != null ? n : 0;
+
+        long n = 0;
+        Object v = json.get( key );
+
+        if ( v != null ) {
+            n = Longs.tryParse( v.toString() );
+        }
+
+        return n;
     }
 
 

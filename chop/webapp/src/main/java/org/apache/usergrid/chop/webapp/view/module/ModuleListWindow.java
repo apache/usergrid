@@ -64,8 +64,7 @@ public class ModuleListWindow extends PopupWindow {
 
     private void onItemClick(ItemClickEvent event) {
 
-        String id = "1414303914"; // test
-//        String id = (String) event.getItemId();
+        String id = (String) event.getItemId();
         boolean isModuleVersion = !StringUtils.startsWith( id, PARENT_PREFIX );
 
         if (isModuleVersion) {

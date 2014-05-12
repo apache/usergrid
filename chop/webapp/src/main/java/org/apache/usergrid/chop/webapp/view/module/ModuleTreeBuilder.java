@@ -66,8 +66,8 @@ public class ModuleTreeBuilder {
         boolean isModuleVersion = !StringUtils.startsWith(id, PARENT_PREFIX);
 
         if (isModuleVersion) {
-//            listener.onModuleSelect(id);
-            listener.onModuleSelect("1414303914");
+            listener.onModuleSelect(id);
+//            listener.onModuleSelect("1414303914");
         }
     }
 

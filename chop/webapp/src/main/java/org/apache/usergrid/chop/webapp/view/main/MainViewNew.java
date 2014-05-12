@@ -19,9 +19,7 @@
 package org.apache.usergrid.chop.webapp.view.main;
 
 
-import org.apache.usergrid.chop.webapp.service.chart.Params;
-import org.apache.usergrid.chop.webapp.view.chart.layout.ChartLayoutContext;
-import org.apache.usergrid.chop.webapp.view.chart.layout.IterationsChartLayoutNew;
+import org.apache.usergrid.chop.webapp.view.chart.layout.*;
 import org.apache.usergrid.chop.webapp.view.module.ModuleListWindow;
 import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
 import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
@@ -32,96 +30,23 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
 
 
 @Title( "Judo Chop" )
 public class MainViewNew extends UI implements ModuleSelectListener {
 
-
     private TabSheet tabSheet;
-
-
-    @Override
-    public void onModuleSelect( String moduleId ) {
-        System.out.println( moduleId );
-//        header.showModule( moduleId );
-//        show(overviewLayout, new Params(moduleId));
-    }
-
-
-
 
 
     @Override
     protected void init( VaadinRequest request ) {
 
-        VerticalLayout verticalLayout = new VerticalLayout();
-        verticalLayout.setSizeFull();
-        setContent( verticalLayout );
-
-        AbsoluteLayout absoluteLayout = new AbsoluteLayout();
-        absoluteLayout.setWidth( "1200px" );
-        absoluteLayout.setHeight( "700px" );
-
-        verticalLayout.addComponent( absoluteLayout );
-        verticalLayout.setComponentAlignment( absoluteLayout, Alignment.MIDDLE_CENTER );
-
-        tabSheet = new TabSheet();
-        tabSheet.setHeight( "650px" );
-
-        absoluteLayout.addComponent( tabSheet, "left: 0px; top: 50px;" );
-
-        HorizontalLayout horizontalLayout = new HorizontalLayout();
-        horizontalLayout.setWidth( "500px" );
-        horizontalLayout.setHeight( "50px" );
-        absoluteLayout.addComponent( horizontalLayout, "left: 250px; top: 0px;" );
-
-        // -------------------------------------------------------------
-
-        Button modulesButton = new Button( "Modules" );
-        modulesButton.setWidth( "150px" );
-        horizontalLayout.addComponent( modulesButton );
-        horizontalLayout.setComponentAlignment( modulesButton, Alignment.MIDDLE_CENTER);
-
-        modulesButton.addClickListener( new Button.ClickListener() {
-            public void buttonClick( Button.ClickEvent event ) {
-//                showWindow();
-                UI.getCurrent().addWindow( new ModuleListWindow(MainViewNew.this) );
-            }
-        } );
-
-        // -------------------------------------------------------------
-
-        Button runnersButton = new Button( "Runners" );
-        runnersButton.setWidth( "150px" );
-        horizontalLayout.addComponent( runnersButton );
-        horizontalLayout.setComponentAlignment( runnersButton, Alignment.MIDDLE_CENTER);
-
-        runnersButton.addClickListener( new Button.ClickListener() {
-            public void buttonClick( Button.ClickEvent event ) {
-                showTab();
-            }
-        } );
-
-
-        // -------------------------------------------------------------
-
-        Button usersButton = new Button( "Users" );
-        usersButton.setWidth( "150px" );
-        horizontalLayout.addComponent( usersButton );
-        horizontalLayout.setComponentAlignment( usersButton, Alignment.MIDDLE_CENTER);
-
-        usersButton.addClickListener( new Button.ClickListener() {
-            public void buttonClick( Button.ClickEvent event ) {
-                UI.getCurrent().addWindow( new UserListWindow() );
-            }
-        } );
+        AbsoluteLayout mainLayout = addMainLayout();
+        addButtons( mainLayout );
+        addTabSheet( mainLayout );
 
         loadScripts();
     }
@@ -133,10 +58,75 @@ public class MainViewNew extends UI implements ModuleSelectListener {
     }
 
 
-    private void showTab() {
+    private AbsoluteLayout addMainLayout() {
+
+        AbsoluteLayout absoluteLayout = new AbsoluteLayout();
+        absoluteLayout.setWidth( "1200px" );
+        absoluteLayout.setHeight( "700px" );
+
+        VerticalLayout verticalLayout = new VerticalLayout();
+        verticalLayout.setSizeFull();
+        verticalLayout.addComponent( absoluteLayout );
+        verticalLayout.setComponentAlignment( absoluteLayout, Alignment.MIDDLE_CENTER );
+
+        setContent( verticalLayout );
+
+        return absoluteLayout;
+    }
+
+
+    private void addButtons( AbsoluteLayout mainLayout ) {
+
+        addButton( mainLayout, 450, "Modules", new Button.ClickListener() {
+            public void buttonClick( Button.ClickEvent event ) {
+                UI.getCurrent().addWindow( new ModuleListWindow( MainViewNew.this ) );
+            }
+        });
+
+        addButton( mainLayout, 560, "Runners", new Button.ClickListener() {
+            public void buttonClick( Button.ClickEvent event ) {
+//                showTab();
+            }
+        });
+
+        addButton( mainLayout, 670, "Users", new Button.ClickListener() {
+            public void buttonClick( Button.ClickEvent event ) {
+                UI.getCurrent().addWindow( new UserListWindow() );
+            }
+        });
+    }
+
+
+    private static void addButton( AbsoluteLayout mainLayout, int left, String caption, Button.ClickListener listener ) {
+
+        Button button = new Button( caption );
+        button.setWidth( "100px" );
+        button.addClickListener( listener );
+
+        mainLayout.addComponent( button, String.format( "left: %spx; top: 0px;", left ) );
+    }
+
+
+
+
+    private void addTabSheet( AbsoluteLayout mainLayout ) {
+        tabSheet = new TabSheet();
+        tabSheet.setHeight( "650px" );
+
+        mainLayout.addComponent( tabSheet, "left: 0px; top: 50px;" );
+    }
+
+
+    @Override
+    public void onModuleSelect( String moduleId ) {
+        showTab( moduleId );
+    }
+
+
+    private void showTab(String moduleId) {
         try {
-//            AbsoluteLayout layout = new ChartLayoutNew( null );
-            AbsoluteLayout layout = new IterationsChartLayoutNew( null );
+//            AbsoluteLayout layout = new ChartLayoutNew( moduleId );
+            AbsoluteLayout layout = new OverviewChartLayoutNew( moduleId );
             tabSheet.addTab( layout, "Chart Layout" );
         }
         catch ( Exception e ) {
