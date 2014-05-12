@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.chop.webapp.view.tree;
+package org.apache.usergrid.chop.webapp.view.module;
 
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
@@ -28,7 +28,13 @@ import org.apache.usergrid.chop.webapp.service.InjectorFactory;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 public class ModuleTreeBuilder {
+
+    private static Logger LOG = LoggerFactory.getLogger( ModuleTreeBuilder.class );
 
     private static final String PARENT_PREFIX = "parent:";
 
@@ -61,6 +67,7 @@ public class ModuleTreeBuilder {
 
         if (isModuleVersion) {
             listener.onModuleSelect(id);
+//            listener.onModuleSelect("1414303914");
         }
     }
 
@@ -76,11 +83,11 @@ public class ModuleTreeBuilder {
 
     private static void addItem(TreeTable treeTable, Module module) {
 
-        String parentId = String.format(PARENT_PREFIX + "%s-%s", module.getGroupId(), module.getArtifactId());
-        treeTable.addItem(new Object[]{module.getGroupId(), module.getArtifactId()}, parentId);
-        treeTable.addItem(new Object[]{module.getVersion(), ""}, module.getId());
+        String parentId = String.format( PARENT_PREFIX + "%s-%s", module.getGroupId(), module.getArtifactId() );
+        treeTable.addItem( new Object[] { module.getGroupId(), module.getArtifactId() }, parentId );
+        treeTable.addItem( new Object[] { module.getVersion(), "" }, module.getId() );
 
-        treeTable.setParent(module.getId(), parentId);
+        treeTable.setParent( module.getId(), parentId );
     }
 
 }

@@ -20,11 +20,16 @@
 package org.apache.usergrid.chop.webapp.coordinator.rest;
 
 
+import java.util.Collection;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.chop.api.RestParams;
+import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.stack.SetupStackState;
+import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
 import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
+import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
 
 import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
@@ -47,12 +52,16 @@ import javax.ws.rs.core.Response;
 @Produces( MediaType.APPLICATION_JSON )
 @Path( DestroyResource.ENDPOINT)
 public class DestroyResource extends TestableResource implements RestParams {
-    public final static String ENDPOINT = "/destroy";
-    private static final Logger LOG = LoggerFactory.getLogger( DestroyResource.class );
 
+    public final static String ENDPOINT = "/destroy";
+
+    private static final Logger LOG = LoggerFactory.getLogger( DestroyResource.class );
 
     @Inject
     private StackCoordinator stackCoordinator;
+
+    @Inject
+    private RunnerCoordinator runnerCoordinator;
 
 
     public DestroyResource() {
@@ -102,6 +111,17 @@ public class DestroyResource extends TestableResource implements RestParams {
         }
 
         /** SetupStackState.SetUp */
+
+        // Unregister runners first
+        String moduleId = BasicModule.createId( groupId, artifactId, version );
+        Collection<Runner> runners = runnerCoordinator.getRunners( user, commitId, moduleId );
+        for( Runner runner: runners ) {
+            if( ! runnerCoordinator.unregister( runner.getUrl() ) ) {
+                LOG.warn( "Could not unregister runner at {}.", runner.getUrl() );
+            }
+        }
+
+        // Destroy all stack instances and remove it from stack registry
         stackCoordinator.destroyStack( commitId, artifactId, groupId, version, user );
 
         return Response.status( Response.Status.CREATED )

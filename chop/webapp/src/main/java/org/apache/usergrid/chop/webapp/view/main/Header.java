@@ -68,7 +68,8 @@ public class Header extends AbsoluteLayout {
 
     void showModule(String moduleId) {
 
-        Module module = moduleDao.get(moduleId);
+        Module module = moduleDao.get( moduleId );
+
         String caption = String.format(
                 "<b>%s / %s / %s</b>",
                 module.getGroupId(),

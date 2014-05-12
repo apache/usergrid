@@ -29,14 +29,20 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang.NotImplementedException;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 
+/**
+ * Provider specific parameters persistence operations
+ */
 @Singleton
 public class ProviderParamsDao extends Dao {
 
@@ -47,26 +53,33 @@ public class ProviderParamsDao extends Dao {
 
 
     @Inject
-    public ProviderParamsDao(IElasticSearchClient e) {
-        super(e);
+    public ProviderParamsDao( IElasticSearchClient e ) {
+        super( e );
     }
 
 
-    public boolean save(final ProviderParams pp) throws Exception {
+    /**
+     * Saves provider params to elastic search and uses owning username as id.
+     *
+     * @param pp    Provider parameters to be saved
+     * @return      Whether the operation was successful
+     * @throws Exception
+     */
+    public boolean save( final ProviderParams pp ) throws IOException {
 
         IndexResponse response = elasticSearchClient.getClient()
-                .prepareIndex(DAO_INDEX_KEY, DAO_TYPE_KEY, pp.getUsername())
-                .setRefresh(true)
+                .prepareIndex( DAO_INDEX_KEY, DAO_TYPE_KEY, pp.getUsername() )
+                .setRefresh( true )
                 .setSource(
                         jsonBuilder()
                                 .startObject()
-                                .field("username", pp.getUsername())
-                                .field("instanceType", pp.getInstanceType())
-                                .field("accessKey", pp.getAccessKey())
-                                .field("secretKey", pp.getSecretKey())
-                                .field("imageId", pp.getImageId())
-                                .field("keyName", pp.getKeyName())
-                                .field("keys", pp.getKeys().toString())
+                                .field( "username", pp.getUsername() )
+                                .field( "instanceType", pp.getInstanceType() )
+                                .field( "accessKey", pp.getAccessKey() )
+                                .field( "secretKey", pp.getSecretKey() )
+                                .field( "imageId", pp.getImageId() )
+                                .field( "keyName", pp.getKeyName() )
+                                .field( "keys", pp.getKeys().toString() )
                 )
                 .execute()
                 .actionGet();
@@ -76,20 +89,23 @@ public class ProviderParamsDao extends Dao {
 
 
     /**
-     * Gets the ProviderParams that belongs to the given username
+     * Gets the ProviderParams that belongs to the given username.
+     *
+     * @param username  Owner of provider parameters
+     * @return
      */
-    public ProviderParams getByUser(String username) {
+    public ProviderParams getByUser( String username ) {
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setQuery(termQuery("_id", username))
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setQuery( termQuery( "_id", username ) )
                 .execute()
                 .actionGet();
 
-        LOG.debug("response: {}", response);
+        LOG.debug( "response: {}", response );
 
         SearchHit hits[] = response.getHits().hits();
 
-        return hits.length > 0 ? toProviderParams(hits[0]) : null;
+        return hits.length > 0 ? toProviderParams( hits[ 0 ] ) : null;
     }
 
 
@@ -98,12 +114,12 @@ public class ProviderParamsDao extends Dao {
         Map<String, Object> json = hit.getSource();
 
         BasicProviderParams params = new BasicProviderParams(
-                Util.getString(json, "username"),
-                Util.getString(json, "instanceType"),
-                Util.getString(json, "accessKey"),
-                Util.getString(json, "secretKey"),
-                Util.getString(json, "imageId"),
-                Util.getString(json, "keyName")
+                Util.getString( json, "username" ),
+                Util.getString( json, "instanceType" ),
+                Util.getString( json, "accessKey" ),
+                Util.getString( json, "secretKey" ),
+                Util.getString( json, "imageId" ),
+                Util.getString( json, "keyName" )
         );
 
         params.setKeys(Util.getMap(json, "keys"));
@@ -111,25 +127,36 @@ public class ProviderParamsDao extends Dao {
         return params;
     }
 
+
     /**
-     * Gets all ProviderParams
+     * @return Gets all ProviderParams stored in elastic search
      */
     public List<ProviderParams> getAll() {
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setSize(MAX_RESULT_SIZE)
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setSize( MAX_RESULT_SIZE )
                 .execute()
                 .actionGet();
 
-        LOG.debug("response: {}", response);
+        LOG.debug( "response: {}", response );
 
         SearchHit hits[] = response.getHits().hits();
         ArrayList<ProviderParams> list = new ArrayList<ProviderParams>();
 
-        for (SearchHit hit : hits) {
-            list.add(toProviderParams(hit));
+        for ( SearchHit hit : hits ) {
+            list.add( toProviderParams( hit ) );
         }
 
         return list;
+    }
+
+
+    /**
+     * @param username  Username owning the provider params to be deleted
+     * @return          whether or not provider params existed for given username
+     */
+    public boolean delete( String username ) {
+        // TODO to be implemented
+        throw new NotImplementedException( "ProviderParamsDao.delete has not yet been implemented" );
     }
 }

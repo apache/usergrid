@@ -19,7 +19,6 @@
 package org.apache.usergrid.chop.webapp.dao;
 
 import org.apache.usergrid.chop.api.Runner;
-import org.apache.usergrid.chop.webapp.dao.model.BasicRunner;
 import org.apache.usergrid.chop.webapp.dao.model.RunnerGroup;
 import org.apache.usergrid.chop.webapp.elasticsearch.ESSuiteTest;
 import org.junit.Test;
@@ -29,41 +28,26 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
 
 public class GroupedRunnersTest {
 
-    private static Logger LOG = LoggerFactory.getLogger(GroupedRunnersTest.class);
+    private static Logger LOG = LoggerFactory.getLogger( GroupedRunnersTest.class );
 
-    private static final RunnerGroup RUNNER_GROUP = new RunnerGroup("user", "commit", "module");
-
-    private static final BasicRunner RUNNER1 = new BasicRunner(
-            "172.168.0.1",
-            "runner.chop.com",
-            1001,
-            "https://runner.chop.com:1001",
-            "/tmp"
-    );
-
-    private static final BasicRunner RUNNER2 = new BasicRunner(
-            "172.168.0.1",
-            "runner.chop.com",
-            1002,
-            "https://runner.chop.com:1002",
-            "/tmp"
-    );
 
     @Test
-    public void test() throws Exception {
-        LOG.info("\n=== GroupedRunnersTest.test() ===\n");
-
-        ESSuiteTest.runnerDao.save( RUNNER1, RUNNER_GROUP.getUser(), RUNNER_GROUP.getCommitId(), RUNNER_GROUP.getModuleId() );
-        ESSuiteTest.runnerDao.save( RUNNER2, RUNNER_GROUP.getUser(), RUNNER_GROUP.getCommitId(), RUNNER_GROUP.getModuleId() );
+    public void testRunnersGrouped() throws Exception {
+        LOG.info( "\n=== GroupedRunnersTest.testRunnersGrouped() ===\n" );
 
         Map<RunnerGroup, List<Runner>> runnerGroups = ESSuiteTest.runnerDao.getRunnersGrouped();
-        List<Runner> runners = runnerGroups.get(RUNNER_GROUP);
+        List<Runner> runners = runnerGroups.get( ESSuiteTest.RUNNER_GROUP );
 
-        assertTrue(runners.size() == 2);
+        assertEquals( 1, runners.size() );
+
+        assertTrue( runners.get( 0 ).getIpv4Address().equals( ESSuiteTest.RUNNER_IPV4_1 ) );
+
     }
 
 }

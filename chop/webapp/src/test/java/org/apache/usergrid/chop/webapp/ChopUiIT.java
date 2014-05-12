@@ -74,14 +74,14 @@ public class ChopUiIT {
 
 
     @Test
-    public void testUploadSummary() {
-        ChopUiTestUtils.testUploadSummary( jetty.newTestParams().setLogger( LOG ) );
+    public void testUploadResults() throws Exception {
+        ChopUiTestUtils.testStoreResults( jetty.newTestParams().setLogger( LOG ) );
     }
 
 
     @Test
-    public void testUploadResults() throws Exception {
-        ChopUiTestUtils.testUploadResults( jetty.newTestParams().setLogger( LOG ) );
+    public void testRunCompleted() {
+        ChopUiTestUtils.testRunCompleted( jetty.newTestParams().setLogger( LOG ) );
     }
 
 

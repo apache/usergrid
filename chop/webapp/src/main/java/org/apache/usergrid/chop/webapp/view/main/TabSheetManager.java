@@ -16,8 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.chop.webapp.view.tree;
+package org.apache.usergrid.chop.webapp.view.main;
 
-public interface ModuleSelectListener {
-    public void onModuleSelect(String moduleId);
+
+import com.vaadin.ui.AbsoluteLayout;
+import com.vaadin.ui.TabSheet;
+
+
+public class TabSheetManager {
+
+    private final TabSheet tabSheet;
+
+    TabSheetManager( TabSheet tabSheet ) {
+        this.tabSheet = tabSheet;
+    }
+
+    public void addTab( AbsoluteLayout layout, String caption ) {
+        removeAll();
+        tabSheet.addTab( layout, caption );
+    }
+
+    public void removeAll() {
+        // BUG: Showing two charts doesn't work, thus we have to close others to display a new one.
+        tabSheet.removeAllComponents();
+    }
+
 }

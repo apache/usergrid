@@ -16,46 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.chop.api;
+package org.apache.usergrid.chop.webapp.view.module;
 
-
-import java.util.Date;
-
-
-/**
- * A specific commit of a Maven Module under test.
- */
-public interface Commit {
-
-
-    /**
-     * @return  commit id string
-     */
-    String getId();
-
-
-    /**
-     * Maven groupId, artifactId and version should be used to calculate this id.
-     *
-     * @return  Id that represents the module this commit is about.
-     */
-    String getModuleId();
-
-
-    /**
-     * @return  An md5 string calculated using commit id and timestamp of runner file creation time
-     */
-    String getMd5();
-
-
-    /**
-     * @return  Absolute file path of the runner.jar file
-     */
-    String getRunnerPath();
-
-
-    /**
-     * @return  Runner file creation time
-     */
-    Date getCreateTime();
+public interface ModuleSelectListener {
+    public void onModuleSelect(String moduleId);
 }
