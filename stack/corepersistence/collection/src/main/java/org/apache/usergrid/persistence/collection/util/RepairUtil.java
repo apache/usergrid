@@ -69,6 +69,10 @@ public class RepairUtil {
             }
         }
 
+        if(!completedEntity.getEntity().isPresent()){
+            return null;
+        }
+
         return completedEntity.getEntity().get();
     }
 }
