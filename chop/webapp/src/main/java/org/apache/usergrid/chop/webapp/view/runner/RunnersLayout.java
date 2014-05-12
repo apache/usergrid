@@ -53,7 +53,7 @@ public class RunnersLayout extends AbsoluteLayout {
     private final ModuleDao moduleDao = InjectorFactory.getInstance( ModuleDao.class );
 
     // Use RunnerServiceMock for testing
-    private final RunnerService runnerService = InjectorFactory.getInstance( RunnerServiceImpl.class );
+    private final RunnerService runnerService = InjectorFactory.getInstance( RunnerServiceMock.class );
 
     private final Accordion accordion = new Accordion();
 
@@ -118,14 +118,12 @@ public class RunnersLayout extends AbsoluteLayout {
     private void addRunnerToTable( Table table, Runner runner ) {
 
         State state = runnerService.getState(runner);
-        StatsSnapshot stats = runnerService.getStats(runner);
+        StatsSnapshot stats = state == State.RUNNING ? runnerService.getStats(runner) : null;
 
-        Object[] cells = new Object[] {
-                runner.getUrl(),
-                state.toString(),
-                stats.getPercentageComplete() + "%",
-                DATE_FORMAT.format( new Date( stats.getStartTime() ) )
-        };
+        String percentageComplete = stats != null ? stats.getPercentageComplete() + "%" : "";
+        String startTime = stats != null ? DATE_FORMAT.format( new Date( stats.getStartTime() ) ) : "";
+
+        Object[] cells = new Object[] { runner.getUrl(), state.toString(), percentageComplete, startTime };
 
         table.addItem( cells, runner.getUrl() );
     }

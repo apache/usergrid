@@ -60,7 +60,7 @@ public class TimeTracker extends Tracker {
     @Override
     public int getPercentCompleted() {
         double percent = ( double ) getActualTime() / ( double ) timeChop.time();
-        return ( int ) Math.floor( percent );
+        return ( int ) Math.floor( percent * 100 );
     }
 
 
