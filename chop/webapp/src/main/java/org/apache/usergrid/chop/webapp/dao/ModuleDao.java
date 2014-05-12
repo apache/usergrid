@@ -27,6 +27,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,10 @@ import java.util.Map;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
+
+/**
+ * Module persistence operations
+ */
 public class ModuleDao extends Dao {
 
     public static final String DAO_INDEX_KEY = "modules";
@@ -43,24 +48,31 @@ public class ModuleDao extends Dao {
 
 
     @Inject
-    public ModuleDao(IElasticSearchClient elasticSearchClient) {
-        super(elasticSearchClient);
+    public ModuleDao( IElasticSearchClient elasticSearchClient ) {
+        super( elasticSearchClient );
     }
 
 
-    public boolean save(Module module) throws Exception {
+    /**
+     * Saves module to elastic search
+     *
+     * @param module    Module to save
+     * @return          Whether or not the operation was successful
+     * @throws Exception
+     */
+    public boolean save( Module module ) throws IOException {
 
         IndexResponse response = elasticSearchClient.getClient()
-                .prepareIndex(DAO_INDEX_KEY, DAO_TYPE_KEY, module.getId())
-                .setRefresh(true)
+                .prepareIndex( DAO_INDEX_KEY, DAO_TYPE_KEY, module.getId() )
+                .setRefresh( true )
                 .setSource(
                         jsonBuilder()
                                 .startObject()
-                                .field("groupId", module.getGroupId())
-                                .field("artifactId", module.getArtifactId())
-                                .field("version", module.getVersion())
-                                .field("vcsRepoUrl", module.getVcsRepoUrl())
-                                .field("testPackageBase", module.getTestPackageBase())
+                                .field( "groupId", module.getGroupId() )
+                                .field( "artifactId", module.getArtifactId() )
+                                .field( "version", module.getVersion() )
+                                .field( "vcsRepoUrl", module.getVcsRepoUrl() )
+                                .field( "testPackageBase", module.getTestPackageBase() )
                                 .endObject()
                 )
                 .execute()
@@ -70,7 +82,12 @@ public class ModuleDao extends Dao {
     }
 
 
-    public Module get(String id) {
+    /**
+     *
+     * @param id    Module Id calculated using groupId, artifactId, version
+     * @return      Queried Module or null if it doesn't exist in elastic search
+     */
+    public Module get( String id ) {
 
         SearchResponse response = elasticSearchClient.getClient()
                 .prepareSearch( DAO_INDEX_KEY )
@@ -81,11 +98,11 @@ public class ModuleDao extends Dao {
 
         SearchHit hits[] = response.getHits().hits();
 
-        return hits.length > 0 ? toModule( hits[0] ) : null;
+        return hits.length > 0 ? toModule( hits[ 0 ] ) : null;
     }
 
 
-    private Module toModule(SearchHit hit) {
+    private Module toModule( SearchHit hit ) {
 
         Map<String, Object> json = hit.getSource();
         LOG.debug( "json: {}", json );
@@ -100,6 +117,9 @@ public class ModuleDao extends Dao {
     }
 
 
+    /**
+     * @return  All modules registered in elastic search
+     */
     public List<Module> getAll() {
 
         SearchResponse response = elasticSearchClient

@@ -73,14 +73,7 @@ public class Controller implements IController, Runnable {
         setRunManager( runManager );
 
         if ( state != State.INACTIVE ) {
-            /*
-             * The call to getNextRunNumber will return a number greater than or
-             * equal to 1. This is the next run number that should be used, however
-             * the runNumber is also incremented every time start is called. So
-             * we need to decrement this value by 1 in order not to skip run numbers.
-             */
-
-            runNumber = runManager.getNextRunNumber( project ) - 1;
+            runNumber = runManager.getNextRunNumber( project );
             otherRunners = registry.getRunners( me );
         }
     }
@@ -170,7 +163,8 @@ public class Controller implements IController, Runnable {
     @Override
     public void reset() {
         synchronized ( lock ) {
-            Preconditions.checkState( state.accepts( Signal.RESET, State.READY ), "Cannot reset the controller in state: " + state );
+            Preconditions.checkState( state.accepts( Signal.RESET, State.READY ),
+                    "Cannot reset the controller in state: " + state );
             state = state.next( Signal.RESET );
             currentDriver = null;
         }
@@ -181,7 +175,7 @@ public class Controller implements IController, Runnable {
     public void start() {
         synchronized ( lock ) {
             Preconditions.checkState( state.accepts( Signal.START ), "Cannot start the controller in state: " + state );
-            runNumber++;
+            runNumber = runManager.getNextRunNumber( project );
             state = state.next( Signal.START );
             new Thread( this ).start();
             lock.notifyAll();

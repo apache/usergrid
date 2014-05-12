@@ -53,34 +53,35 @@ class ChopUiTestUtils {
 
     private final static Map<String, String> WRONG_USER_PARAMS = new HashMap<String, String>() {
         {
-            put("user", "user");
-            put("pwd", "foo");
+            put( "user", "user" );
+            put( "pwd", "foo" );
         }
     };
 
     private final static Map<String, String> QUERY_PARAMS = new HashMap<String, String>() {
         {
-            put(RestParams.USERNAME, "user");
-            put(RestParams.PASSWORD, "pass");
-            put(RestParams.COMMIT_ID, UUID.randomUUID().toString());
-            put(RestParams.MODULE_VERSION, "2.0.0-SNAPSHOT");
-            put(RestParams.MODULE_ARTIFACTID, "chop-example");
-            put(RestParams.MODULE_GROUPID, "org.apache.usergrid.chop");
-            put(RestParams.TEST_PACKAGE, "org.apache.usergrid.chop.example");
+            put( RestParams.USERNAME, "user" );
+            put( RestParams.PASSWORD, "pass" );
+            put( RestParams.COMMIT_ID, UUID.randomUUID().toString() );
+            put( RestParams.MODULE_VERSION, "2.0.0-SNAPSHOT" );
+            put( RestParams.MODULE_ARTIFACTID, "chop-example" );
+            put( RestParams.MODULE_GROUPID, "org.apache.usergrid.chop" );
+            put( RestParams.VCS_REPO_URL, "git@github.com:usergrid/usergrid.git" );
+            put( RestParams.TEST_PACKAGE, "org.apache.usergrid.chop.example" );
         }
     };
 
 
-    static void testRunManagerNext(TestParams testParams) {
-        Integer next = testParams.addQueryParameters(QUERY_PARAMS)
-                .setEndpoint(RunManagerResource.ENDPOINT)
+    static void testRunManagerNext( TestParams testParams ) {
+        Integer next = testParams.addQueryParameters( QUERY_PARAMS )
+                .setEndpoint( RunManagerResource.ENDPOINT )
                 .newWebResource()
-                .path("/next")
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .accept(MediaType.APPLICATION_JSON)
-                .get(Integer.class);
+                .path( "/next" )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( Integer.class );
 
-        assertEquals(0, next.intValue());
+        assertEquals( 1, next.intValue() );
     }
 
 
@@ -322,26 +323,7 @@ class ChopUiTestUtils {
     }
 
 
-    static void testUploadSummary( TestParams testParams ) {
-
-        ClientResponse response = testParams.addQueryParameters( QUERY_PARAMS )
-                .setEndpoint( UploadResource.ENDPOINT )
-                .newWebResource()
-                .queryParam( RestParams.RUNNER_HOSTNAME, "localhost" )
-                .queryParam( RestParams.TEST_CLASS, ChopUiTestUtils.class.getName() )
-                .queryParam( RestParams.RUN_NUMBER, "1" )
-                .path( "/summary" )
-                .type( MediaType.APPLICATION_JSON )
-                .accept( MediaType.APPLICATION_JSON )
-                .post( ClientResponse.class );
-
-        assertEquals( Response.Status.CREATED.getStatusCode(), response.getStatus() );
-
-        assertEquals( UploadResource.SUCCESSFUL_TEST_MESSAGE, response.getEntity( String.class ) );
-    }
-
-
-    static void testUploadResults( TestParams testParams ) throws Exception {
+    static void testStoreResults( TestParams testParams ) throws Exception {
         FormDataMultiPart part = new FormDataMultiPart();
         File tmpFile = File.createTempFile("results", "tmp");
         FileInputStream in = new FileInputStream( tmpFile );
@@ -349,12 +331,12 @@ class ChopUiTestUtils {
         part.bodyPart( body );
 
         ClientResponse response = testParams.addQueryParameters( QUERY_PARAMS )
-                .setEndpoint( UploadResource.ENDPOINT )
+                .setEndpoint( RunManagerResource.ENDPOINT )
                 .newWebResource()
                 .queryParam( RestParams.RUNNER_HOSTNAME, "localhost" )
-                .queryParam( RestParams.TEST_CLASS, ChopUiTestUtils.class.getName() )
                 .queryParam( RestParams.RUN_ID, "112316437" )
-                .path( "/results" )
+                .queryParam( RestParams.RUN_NUMBER, "3" )
+                .path( "/store" )
                 .type( MediaType.MULTIPART_FORM_DATA_TYPE )
                 .accept( MediaType.APPLICATION_JSON )
                 .post( ClientResponse.class, part );
@@ -364,6 +346,24 @@ class ChopUiTestUtils {
         assertEquals( Response.Status.CREATED.getStatusCode(), response.getStatus() );
 
         assertEquals( UploadResource.SUCCESSFUL_TEST_MESSAGE, response.getEntity( String.class ) );
+    }
+
+
+    static void testRunCompleted( TestParams testParams ) {
+        ClientResponse response = testParams.addQueryParameters( QUERY_PARAMS )
+                .setEndpoint( RunManagerResource.ENDPOINT )
+                .newWebResource()
+                .queryParam( RestParams.RUNNER_HOSTNAME, "localhost" )
+                .queryParam( RestParams.RUN_NUMBER, "1" )
+                .queryParam( RestParams.TEST_CLASS, "org.apache.usergrid.chop.example.MechanicalWatchTest" )
+                .path( "/completed" )
+                .type( MediaType.APPLICATION_JSON )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( ClientResponse.class );
+
+        assertEquals( Response.Status.CREATED.getStatusCode(), response.getStatus() );
+
+        assertEquals( Boolean.TRUE, response.getEntity( Boolean.class ) );
     }
 
 

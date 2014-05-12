@@ -24,17 +24,41 @@ package org.apache.usergrid.chop.api;
  */
 public interface Module {
 
+    /**
+     * @return  A unique id calculated using all groupId, artifactId and version of this module
+     */
     String getId();
 
+
+    /**
+     * @return  groupId field of this Maven module
+     */
     String getGroupId();
 
+
+    /**
+     * @return  artifactId of this Maven module
+     */
     String getArtifactId();
 
+
+    /**
+     * @return  version of this Maven module
+     */
     String getVersion();
 
+
+    /**
+     * @return  Version control system repository's URL where this module's code is located.
+     *          Corresponds to remote.origin.url for git.
+     */
     String getVcsRepoUrl();
 
-    // Enum for vcs type later
 
+    /**
+     * @return  base package in this module that all chop annotated test classes are located.
+     */
     String getTestPackageBase();
+
+    // TODO Enum for vcs type later
 }

@@ -28,6 +28,8 @@ import org.safehaus.jettyjam.utils.TestMode;
 public abstract class TestableResource {
     public static final String TEST_PARAM = TestMode.TEST_MODE_PROPERTY;
 
+    public final static String SUCCESSFUL_TEST_MESSAGE = "Test parameters are OK";
+
     private final String endpoint;
 
 

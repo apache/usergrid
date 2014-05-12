@@ -23,6 +23,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.apache.usergrid.chop.api.Module;
 
+
+/**
+ * This represents the Maven Module under test.
+ */
 public class BasicModule implements Module {
 
     private String id;
@@ -33,6 +37,13 @@ public class BasicModule implements Module {
     private String testPackageBase;
 
 
+    /**
+     * @param groupId           groupId of this Maven module
+     * @param artifactId        artifactId of this Maven module
+     * @param version           version of this Maven module
+     * @param vcsRepoUrl        VCS repository's URL where this module's code is located
+     * @param testPackageBase   base package in this module that all chop annotated test classes are located
+     */
     public BasicModule( String groupId, String artifactId, String version, String vcsRepoUrl, String testPackageBase ) {
         id = createId( groupId, artifactId, version );
         this.groupId = groupId;
@@ -43,12 +54,26 @@ public class BasicModule implements Module {
     }
 
 
+    /**
+     * @return  A unique id calculated using all groupId, artifactId and version of this module
+     */
     @Override
     public String getId() {
         return id;
     }
 
 
+    /**
+     * Calculates a unique id using given groupId, artifactId and version of a module.
+     * <p>
+     * Makes sure the calculated hash code is not negative,
+     * so that a possible minus sign doesn't cause problems in elastic search.
+     *
+     * @param groupId       groupId of Maven module
+     * @param artifactId    artifactId of Maven module
+     * @param version       version of Maven module
+     * @return              unique for each different (groupId, arfifactId, version) set
+     */
     public static String createId( String groupId, String artifactId, String version ) {
         int hash = new HashCodeBuilder( 97, 239 )
                 .append( groupId )
@@ -62,30 +87,46 @@ public class BasicModule implements Module {
     }
 
 
+    /**
+     * @return  groupId of this Maven module
+     */
     @Override
     public String getGroupId() {
         return groupId;
     }
 
 
+    /**
+     * @return  artifactId of this Maven module
+     */
     @Override
     public String getArtifactId() {
         return artifactId;
     }
 
 
+    /**
+     * @return  version of this Maven module
+     */
     @Override
     public String getVersion() {
         return version;
     }
 
 
+    /**
+     * @return  Version control system repository's URL where this module's code is located.
+     *          Corresponds to remote.origin.url for git.
+     */
     @Override
     public String getVcsRepoUrl() {
         return vcsRepoUrl;
     }
 
 
+    /**
+     * @return  base package in this module that all chop annotated test classes are located.
+     */
     @Override
     public String getTestPackageBase() {
         return testPackageBase;
@@ -110,8 +151,8 @@ public class BasicModule implements Module {
         if( this == obj ) {
             return true;
         }
-        return obj != null &&
-                obj instanceof BasicModule &&
+        return ( obj != null ) &&
+                ( obj instanceof BasicModule ) &&
                 this.id.equals( ( ( BasicModule ) obj ).id  );
     }
 }
