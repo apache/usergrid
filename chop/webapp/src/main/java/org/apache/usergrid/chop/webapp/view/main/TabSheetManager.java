@@ -32,9 +32,13 @@ public class TabSheetManager {
     }
 
     public void addTab( AbsoluteLayout layout, String caption ) {
+        removeAll();
+        tabSheet.addTab( layout, caption );
+    }
+
+    public void removeAll() {
         // BUG: Showing two charts doesn't work, thus we have to close others to display a new one.
         tabSheet.removeAllComponents();
-        tabSheet.addTab( layout, caption );
     }
 
 }

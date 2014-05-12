@@ -98,10 +98,10 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
 
     private void addDetailsItems() {
         detailsTable = new DetailsTable();
-        addComponent( detailsTable, "left: 1000px; top: 25px;" );
+        addComponent( detailsTable, "left: 1010px; top: 25px;" );
 
         noteLayout = new NoteLayout();
-        addComponent( noteLayout, "left: 1000px; top: 400px;" );
+        addComponent( noteLayout, "left: 1010px; top: 400px;" );
     }
 
 

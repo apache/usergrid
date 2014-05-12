@@ -91,7 +91,7 @@ public class MainViewNew extends UI implements ModuleSelectListener {
 
         addButton( mainLayout, 670, "Users", new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
-                UI.getCurrent().addWindow( new UserListWindow() );
+                UI.getCurrent().addWindow( new UserListWindow( tabSheetManager ) );
             }
         });
     }
