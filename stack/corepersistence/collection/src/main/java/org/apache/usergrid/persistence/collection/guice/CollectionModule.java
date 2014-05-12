@@ -20,13 +20,13 @@ package org.apache.usergrid.persistence.collection.guice;
 
 import org.safehaus.guicyfig.GuicyFigModule;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerListener;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeoutQueue;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -94,7 +95,7 @@ public class CollectionModule extends AbstractModule {
     @Singleton
     @Inject
     @EntityUpdate
-    public AsyncProcessor<Entity> entityUpdate( @EntityUpdate final TimeoutQueue<Entity> queue,
+    public AsyncProcessor<CollectionIoEvent> entityUpdate( @EntityUpdate final TimeoutQueue<CollectionIoEvent> queue,
                                                        final ConsistencyFig consistencyFig ) {
         return new AsyncProcessorImpl<>( queue, consistencyFig );
     }
@@ -103,7 +104,7 @@ public class CollectionModule extends AbstractModule {
     @Inject
     @Singleton
     @EntityUpdate
-    public TimeoutQueue<Entity> entityUpdateQueue( final TimeService timeService ) {
+    public TimeoutQueue<CollectionIoEvent> entityUpdateQueue( final TimeService timeService ) {
         return new LocalTimeoutQueue<>( timeService );
     }
 
@@ -111,28 +112,26 @@ public class CollectionModule extends AbstractModule {
     /**
      * Create the provider for the node delete listener
      */
-    public static class EntityCollectionListenerProvider implements Provider<MessageListener<Entity, Entity>>  {
+    public static class EntityCollectionListenerProvider implements Provider<MessageListener<CollectionIoEvent<Id>,Entity>>  {
 
         private final Load load;
-        private final CollectionScope collectionScope;
         private final AsyncProcessor<Entity> entityUpdate;
 
 
 
         @Inject
         public EntityCollectionListenerProvider( final Load load,
-                                                 final CollectionScope collectionScope,
                                                  @EntityUpdate final AsyncProcessor<Entity> entityUpdate) {
 
             this.load = load;
-            this.collectionScope = collectionScope;
             this.entityUpdate = entityUpdate;
+
         }
 
 
         @Override
-        public MessageListener<Entity, Entity> get() {
-            return new EntityCollectionManagerListener(collectionScope,load,entityUpdate);
+        public MessageListener<CollectionIoEvent<Id>,Entity> get() {
+            return new EntityCollectionManagerListener(load,entityUpdate);
         }
     }
 }

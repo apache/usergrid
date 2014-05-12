@@ -26,11 +26,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerListener;
+import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
@@ -65,6 +67,19 @@ public class EntityCollectionManagerIT {
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
+    @Inject
+    public Load load;
+
+    @Inject
+    public CollectionScope context;
+
+//    @Inject
+//    public AsyncProcessor timeoutQueue;
+
+    @Inject
+    protected EntityCollectionManagerListener managerListener;
+
+
 
     @Test
     public void write() {
@@ -88,31 +103,44 @@ public class EntityCollectionManagerIT {
 
     @Test
     public void partialUpdate() {
+        StringField testField1 = new StringField("testField","value");
+        StringField addedField = new StringField( "testFud", "NEWPARTIALUPDATEZOMG" );
+
         CollectionScope context = new CollectionScopeImpl(
                 new SimpleId( "organization" ),  new SimpleId( "testUpdate" ), "testUpdate" );
 
-        Entity newEntity = new Entity( new SimpleId( "testUpdate" ) );
-        newEntity.setField( new StringField("testField","value") );
+        Entity oldEntity = new Entity( new SimpleId( "testUpdate" ) );
+        oldEntity.setField( new StringField( "testField", "value" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Observable<Entity> observable = manager.write( newEntity );
+        Observable<Entity> observable = manager.write( oldEntity );
 
         Entity returned = observable.toBlockingObservable().lastOrDefault( null );
 
         assertNotNull( "Returned has a uuid", returned.getId() );
         assertNotNull( "Version exists" );
 
-        newEntity.setField( new StringField("testFud","NEWPARTIALUPDATEZOMG") );
+        oldEntity.getFields().remove( testField1  );
+        oldEntity.setField( addedField );
 
-        observable = manager.update( newEntity.getId() );
+//TODO:merge in helper object. Then register it with the queue. Then call wait on the function.
+        //TODO:refactor test to check we get partial entity back, then do a read to make sure entity is COMPLETE, not partial.
+        observable = manager.update( oldEntity);
+       // managerListener = new EntityCollectionManagerListener( context,load, timeoutQueue);
 
-        returned = observable.toBlockingObservable().lastOrDefault( null );
+        returned = observable.toBlockingObservable().last();
+        //returned = observable.toBlockingObservable().lastOrDefault( null );
 
         assertNotNull( "Returned has a uuid", returned.getId() );
-        assertEquals( newEntity.getField( "testField" ),returned.getField( "testField" ) );
-        assertEquals( newEntity.getField( "testFud" ),returned.getField( "testFud" ) );
-        assertNotNull( "Version exists" );
+        assertEquals( oldEntity.getField( "testFud" ), returned.getField( "testFud" ) );
+
+        Observable<Entity> newEntityObs = manager.load( oldEntity.getId() );
+        Entity newEntity = newEntityObs.toBlockingObservable().last();
+
+        assertNotNull( "Returned has a uuid", returned.getId() );
+        assertEquals( addedField, newEntity.getField( "testFud" ));
+
 
     }
 
