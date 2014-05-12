@@ -77,10 +77,9 @@ public interface EntityIndex {
     /**
      * Find versions prior to this version
      * @param id entity id
-     * @param version find version <= this version
      * @param collScope CollectionScope of the entity
      */
-    Results getEntityVersions (Id id, UUID version,CollectionScope collScope);
+    Results getEntityVersions (Id id, CollectionScope collScope);
 
     /**
      * Force refresh of index (should be used for testing purposes only).

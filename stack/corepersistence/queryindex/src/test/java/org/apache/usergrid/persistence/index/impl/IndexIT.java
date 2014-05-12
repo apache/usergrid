@@ -351,8 +351,11 @@ public class IndexIT {
         em.update(user);
         em.refreshIndex();
 
+
+        CollectionScope scope = new CollectionScopeImpl(
+                orgScope.getOrganization(), appScope.getOwner(), "user" );
         EntityIndex ei = cif.createEntityIndex(orgScope, appScope);
-        ei.getEntityVersions(user.getId(),user.getVersion(),appScope);
+        ei.getEntityVersions(user.getId(), scope);
 
     }
 

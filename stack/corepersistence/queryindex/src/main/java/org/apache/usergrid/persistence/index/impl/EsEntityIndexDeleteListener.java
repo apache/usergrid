@@ -54,7 +54,7 @@ public class EsEntityIndexDeleteListener implements MvccDeleteMessageListener {
         return Observable.create(new ObservableIterator<MvccEntity>("deleteEsIndexVersions") {
             @Override
             protected Iterator<MvccEntity> getIterator() {
-                Results results= entityIndex.getEntityVersions(event.getData().getId(),event.getVersion(), event.getCollectionScope());
+                Results results= entityIndex.getEntityVersions(event.getData().getId(), event.getCollectionScope());
                 Iterator<MvccEntity> iterator = Collections.emptyListIterator();
                 if(results!=null) {
                     List<Entity> entities = results.getEntities();
@@ -72,7 +72,10 @@ public class EsEntityIndexDeleteListener implements MvccDeleteMessageListener {
                     @Override
                     public Observable<MvccEntity> call(List<MvccEntity> entities) {
                         for (MvccEntity entity : entities) {
-                            entityIndex.deindex(event.getCollectionScope(), entity.getEntity().get());
+                            //filter find entities <= current version
+                            if(entity.getVersion().timestamp() <= event.getVersion().timestamp()) {
+                                entityIndex.deindex(event.getCollectionScope(), entity.getEntity().get());
+                            }
                         }
                         return Observable.from(entities);
                     }

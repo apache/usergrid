@@ -271,7 +271,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         entityAsMap.put("updated", entity.getVersion().timestamp());
         entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, collScopeTypeName );
         entityAsMap.put(VERSION_FIELDNAME, entity.getVersion().timestamp() );
-        entityAsMap.put(ENTITYID_FIELDNAME, entity.getId().getUuid() );
+        entityAsMap.put(ENTITYID_FIELDNAME, entity.getId().getUuid());
 
 
         IndexRequestBuilder irb = client
@@ -597,10 +597,11 @@ public class EsEntityIndexImpl implements EntityIndex {
         deindex( createEntityConnectionScopeTypeName( sourceId, type ), target );
     }
 
+    //only gets one result
     @Override
-    public Results getEntityVersions(Id id, UUID version, CollectionScope collScope) {
-        Query query = Query.fromQL( ENTITYID_FIELDNAME+" = '"+id.getUuid()+"'" );
-        query.setLimit( serializationFig.getHistorySize() );
+    public Results getEntityVersions(Id id, CollectionScope collScope) {
+        Query query = new Query();
+        query.addEqualityFilter( ENTITYID_FIELDNAME,id.getUuid() );
         Results results = search(collScope,query);
         return results;
     }
