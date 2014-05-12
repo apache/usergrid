@@ -591,7 +591,7 @@
       <artifactId>lucene-core</artifactId>
       <groupId>org.apache.lucene</groupId>
       <type>jar</type>
-      <version>4.6.0</version>
+      <version>4.7.2</version>
     </dependency>
 
     <dependency>
