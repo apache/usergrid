@@ -18,66 +18,65 @@
  */
 package org.apache.usergrid.chop.webapp.view.chart.layout;
 
-import com.vaadin.data.Property;
-import com.vaadin.ui.ListSelect;
-import com.vaadin.ui.Notification;
-import org.apache.commons.lang.StringUtils;
-import org.apache.usergrid.chop.api.Run;
-import org.apache.usergrid.chop.webapp.dao.RunDao;
-import org.apache.usergrid.chop.webapp.service.InjectorFactory;
-import org.apache.usergrid.chop.webapp.service.chart.builder.ChartBuilder;
-import org.apache.usergrid.chop.webapp.view.main.Breadcrumb;
-import org.apache.usergrid.chop.webapp.view.util.UIUtil;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import org.apache.usergrid.chop.api.Run;
+import org.apache.usergrid.chop.webapp.dao.RunDao;
+import org.apache.usergrid.chop.webapp.service.InjectorFactory;
+import org.apache.usergrid.chop.webapp.service.chart.Params;
+import org.apache.usergrid.chop.webapp.service.chart.builder.RunsChartBuilder;
+import org.apache.usergrid.chop.webapp.view.main.TabSheetManager;
+import org.apache.usergrid.chop.webapp.view.util.UIUtil;
+
+import com.vaadin.data.Property;
+import com.vaadin.ui.AbsoluteLayout;
+import com.vaadin.ui.ListSelect;
+import com.vaadin.ui.Notification;
+
+
 public class RunsChartLayout extends ChartLayout {
 
-    private RunDao runDao = InjectorFactory.getInstance(RunDao.class);
+    private final RunDao runDao = InjectorFactory.getInstance(RunDao.class);
 
-    private Map<String, Run> runners = new HashMap<String, Run>();
+    private final Map<String, Run> runners = new HashMap<String, Run>();
     private ListSelect runnersListSelect;
 
-    public RunsChartLayout(ChartLayoutContext layoutContext, ChartBuilder chartBuilder, ChartLayout nextLayout, Breadcrumb breadcrumb) {
-        super(new Config(
-                layoutContext,
-                chartBuilder,
-                nextLayout,
-                "runsChart",
-                "js/runs-chart.js",
-                breadcrumb
-        ));
+    private final TabSheetManager tabSheetManager;
 
-        addNextChartButton();
+    public RunsChartLayout( Params params, TabSheetManager tabSheetManager ) {
+        super( InjectorFactory.getInstance( RunsChartBuilder.class ), "runsChart", "js/runs-chart.js", params );
+        this.tabSheetManager = tabSheetManager;
     }
 
+
     @Override
-    protected void addControls() {
-        addMainControls();
-        addSubControls(430);
-        super.addSubControls(600);
+    protected void addItems() {
+        super.addItems();
+        addRunnersList();
     }
 
-    @Override
-    protected void addSubControls(int startTop) {
 
-        String position = String.format("left: 750px; top: %spx;", startTop);
-        runnersListSelect = UIUtil.addListSelect(this, "Runners:", position, "250px");
+    protected void addRunnersList() {
+
+        runnersListSelect = UIUtil.addListSelect(this, "Runners:", "left: 10px; top: 300px;", "250px");
 
         runnersListSelect.addValueChangeListener(new Property.ValueChangeListener() {
             @Override
             public void valueChange(Property.ValueChangeEvent event) {
                 Object value = event.getProperty().getValue();
                 if (value != null) {
-                    showRunner(value.toString());
+                    showRunner( value.toString() );
                 }
             }
         });
     }
+
 
     private void showRunner(String runner) {
 
@@ -93,36 +92,39 @@ public class RunsChartLayout extends ChartLayout {
                 + "\n- threads: " + run.getThreads()
                 + "\n- totalTestsRun: " + run.getTotalTestsRun();
 
-        Notification.show(runner, text, Notification.Type.TRAY_NOTIFICATION);
+        Notification.show( runner, text, Notification.Type.TRAY_NOTIFICATION );
     }
+
 
     @Override
-    protected void pointClicked(JSONObject json) throws JSONException {
-        super.pointClicked(json);
-        handleRunNumber();
+    protected void pointClicked( JSONObject json ) throws JSONException {
+        super.pointClicked( json );
+        showRunners();
+
+        nextChartButton.setCaption( "Run: " +  params.getRunNumber() );
+        nextChartButton.setVisible( true );
     }
 
-    private void handleRunNumber() {
-        nextChartButton.setCaption("Run: " + params.getRunNumber());
-        showRunners();
-    }
 
     private void showRunners() {
 
         runnersListSelect.removeAllItems();
         runners.clear();
 
-        List<Run> runs = runDao.getList(params.getCommitId(), params.getRunNumber());
+        List<Run> runs = runDao.getList( params.getCommitId(), params.getRunNumber() );
 
-        for (Run run : runs) {
-            runnersListSelect.addItem(run.getRunner());
-            runners.put(run.getRunner(), run);
+        for ( Run run : runs ) {
+            runnersListSelect.addItem( run.getRunner() );
+            runners.put( run.getRunner(), run );
         }
     }
 
+
     @Override
-    protected void handleBreadcrumb() {
-        String caption = "Commit: " + StringUtils.abbreviate(params.getCommitId(), 10);
-        config.getBreadcrumb().setItem(this, caption, 1);
+    protected void nextChartButtonClicked() {
+        AbsoluteLayout layout = new IterationsChartLayout( getParams() );
+        tabSheetManager.addTab( layout, "Iterations Chart" );
     }
+
+
 }
