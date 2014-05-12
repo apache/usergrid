@@ -52,6 +52,7 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
 
     private final ChartBuilder chartBuilder;
     private final String chartFile;
+    private final String chartId;
     protected final Params params;
 
     protected Button nextChartButton;
@@ -64,10 +65,11 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
     protected NoteLayout noteLayout;
 
 
-    public ChartLayoutNew( ChartBuilder chartBuilder, String chartFile, String moduleId ) {
+    public ChartLayoutNew( ChartBuilder chartBuilder, String chartId, String chartFile, Params params ) {
         this.chartBuilder = chartBuilder;
+        this.chartId = chartId;
         this.chartFile = chartFile;
-        params = new Params(moduleId);
+        this.params = params;
 
         init();
         loadChart();
@@ -96,7 +98,7 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
 
     private void addDetailsItems() {
         detailsTable = new DetailsTable();
-        addComponent( detailsTable, "left: 1000px; top: 10px;" );
+        addComponent( detailsTable, "left: 1000px; top: 25px;" );
 
         noteLayout = new NoteLayout();
         addComponent( noteLayout, "left: 1000px; top: 400px;" );
@@ -105,19 +107,23 @@ public class ChartLayoutNew extends AbsoluteLayout implements JavaScriptFunction
 
     private void addChartItems() {
 
-        UIUtil.addLayout( this, "overviewChart", "left: 270px; top: 10px;", "720px", "550px" );
+        UIUtil.addLayout( this, chartId, "left: 270px; top: 20px;", "720px", "550px" );
 
         nextChartButton = new Button( "..." );
+        nextChartButton.setWidth( "150px" );
         nextChartButton.setVisible( false );
         nextChartButton.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
-
+                nextChartButtonClicked();
             }
         } );
 
-        addComponent( nextChartButton, "left: 580px; top: 570px;" );
+        addComponent( nextChartButton, "left: 565px; top: 580px;" );
     }
 
+    protected void nextChartButtonClicked() {
+
+    }
 
     protected void addParamsItems() {
 

@@ -31,7 +31,7 @@ public class DetailsTable extends Table {
 
 
     public DetailsTable() {
-        setWidth( "180px" );
+        setWidth( "250px" );
         setHeight( "350px" );
         addContainerProperty( "Details", String.class, null );
         addContainerProperty( "Value", String.class, null );

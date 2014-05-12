@@ -23,13 +23,20 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
+import org.apache.usergrid.chop.webapp.service.chart.Params;
 import org.apache.usergrid.chop.webapp.service.chart.builder.OverviewChartBuilder;
+import org.apache.usergrid.chop.webapp.view.main.TabSheetManager;
+
+import com.vaadin.ui.AbsoluteLayout;
 
 
 public class OverviewChartLayoutNew extends ChartLayoutNew {
 
-    public OverviewChartLayoutNew( String moduleId ) {
-        super( InjectorFactory.getInstance(OverviewChartBuilder.class), "js/overview-chart.js", moduleId );
+    private final TabSheetManager tabSheetManager;
+
+    public OverviewChartLayoutNew( Params params, TabSheetManager tabSheetManager ) {
+        super( InjectorFactory.getInstance( OverviewChartBuilder.class ), "overviewChart", "js/overview-chart.js", params );
+        this.tabSheetManager = tabSheetManager;
     }
 
 
@@ -40,6 +47,13 @@ public class OverviewChartLayoutNew extends ChartLayoutNew {
         String caption = "Commit: " + StringUtils.abbreviate( json.getString( "commitId" ), 10 );
         nextChartButton.setCaption( caption );
         nextChartButton.setVisible( true );
+    }
+
+
+    @Override
+    protected void nextChartButtonClicked() {
+        AbsoluteLayout layout = new RunsChartLayoutNew( getParams(), tabSheetManager );
+        tabSheetManager.addTab( layout, "Runs Chart" );
     }
 
 }

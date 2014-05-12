@@ -19,6 +19,7 @@
 package org.apache.usergrid.chop.webapp.view.main;
 
 
+import org.apache.usergrid.chop.webapp.service.chart.Params;
 import org.apache.usergrid.chop.webapp.view.chart.layout.*;
 import org.apache.usergrid.chop.webapp.view.module.ModuleListWindow;
 import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
@@ -38,8 +39,7 @@ import com.vaadin.ui.VerticalLayout;
 @Title( "Judo Chop" )
 public class MainViewNew extends UI implements ModuleSelectListener {
 
-    private TabSheet tabSheet;
-
+    private TabSheetManager tabSheetManager;
 
     @Override
     protected void init( VaadinRequest request ) {
@@ -61,7 +61,7 @@ public class MainViewNew extends UI implements ModuleSelectListener {
     private AbsoluteLayout addMainLayout() {
 
         AbsoluteLayout absoluteLayout = new AbsoluteLayout();
-        absoluteLayout.setWidth( "1200px" );
+        absoluteLayout.setWidth( "1300px" );
         absoluteLayout.setHeight( "700px" );
 
         VerticalLayout verticalLayout = new VerticalLayout();
@@ -107,31 +107,18 @@ public class MainViewNew extends UI implements ModuleSelectListener {
     }
 
 
-
-
     private void addTabSheet( AbsoluteLayout mainLayout ) {
-        tabSheet = new TabSheet();
+        TabSheet tabSheet = new TabSheet();
         tabSheet.setHeight( "650px" );
 
+        tabSheetManager = new TabSheetManager(tabSheet );
         mainLayout.addComponent( tabSheet, "left: 0px; top: 50px;" );
     }
 
 
     @Override
     public void onModuleSelect( String moduleId ) {
-        showTab( moduleId );
+        AbsoluteLayout layout = new OverviewChartLayoutNew( new Params(moduleId), tabSheetManager );
+        tabSheetManager.addTab( layout, "Overview Chart"  );
     }
-
-
-    private void showTab(String moduleId) {
-        try {
-//            AbsoluteLayout layout = new ChartLayoutNew( moduleId );
-            AbsoluteLayout layout = new OverviewChartLayoutNew( moduleId );
-            tabSheet.addTab( layout, "Chart Layout" );
-        }
-        catch ( Exception e ) {
-            e.printStackTrace();
-        }
-    }
-
 }
