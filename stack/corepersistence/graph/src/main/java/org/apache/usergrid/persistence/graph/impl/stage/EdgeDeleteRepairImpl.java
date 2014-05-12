@@ -92,16 +92,22 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
         return Observable.just( edge ).flatMap( new Func1<Edge, Observable<? extends MarkedEdge>>() {
             @Override
             public Observable<? extends MarkedEdge> call( final Edge edge ) {
-                final MutationBatch batch = keyspace.prepareMutationBatch();
+                final MutationBatch commitLogBatch = keyspace.prepareMutationBatch();
+                final MutationBatch storageBatch = keyspace.prepareMutationBatch();
 
-                Observable<MarkedEdge> commitLog = seekAndDelete( scope, edge, commitLogSerialization, batch );
-                Observable<MarkedEdge> storage = seekAndDelete( scope, edge, storageSerialization, batch );
+                Observable<MarkedEdge> commitLog = seekAndDelete( scope, edge, commitLogSerialization, commitLogBatch );
+                Observable<MarkedEdge> storage = seekAndDelete( scope, edge, storageSerialization, storageBatch );
 
                 return Observable.merge( commitLog, storage ).distinctUntilChanged().doOnCompleted( new Action0() {
                     @Override
                     public void call() {
+                        /**
+                         * We must remove the storage batch first, then the commit log.  Otherwise we run the risk
+                         * of removing delete marked edges from the commit log before storage, meaning edges would re-appear
+                         */
                         try {
-                            batch.execute();
+                            storageBatch.execute();
+                            commitLogBatch.execute();
                         }
                         catch ( ConnectionException e ) {
                             throw new RuntimeException( "Could not delete marked edge", e );

@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
@@ -70,6 +73,7 @@ import rx.schedulers.Schedulers;
  */
 public class GraphManagerImpl implements GraphManager {
 
+    private static final Logger LOG = LoggerFactory.getLogger( GraphManagerImpl.class );
 
     private final OrganizationScope scope;
 
@@ -142,6 +146,7 @@ public class GraphManagerImpl implements GraphManager {
                                 edgeWriteAsyncProcessor.setVerification(
                                         new EdgeEvent<>( scope, edge.getVersion(), edge ), getTimeout() );
 
+
                         final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
 
                         final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge );
@@ -149,6 +154,7 @@ public class GraphManagerImpl implements GraphManager {
                         mutation.mergeShallow( edgeMutation );
 
                         try {
+                            LOG.debug( "Writing edge {} to metadata and commit log", edge );
                             mutation.execute();
                         }
                         catch ( ConnectionException e ) {
@@ -182,6 +188,7 @@ public class GraphManagerImpl implements GraphManager {
 
 
                         try {
+                            LOG.debug( "Marking edge {} as deleted to commit log", edge );
                             edgeMutation.execute();
                         }
                         catch ( ConnectionException e ) {
@@ -215,6 +222,7 @@ public class GraphManagerImpl implements GraphManager {
 
 
                         try {
+                            LOG.debug( "Marking node {} as deleted to node mark", node );
                             nodeMutation.execute();
                         }
                         catch ( ConnectionException e ) {

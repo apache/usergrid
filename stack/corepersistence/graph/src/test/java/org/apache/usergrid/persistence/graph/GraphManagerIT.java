@@ -57,10 +57,6 @@ import static org.mockito.Mockito.when;
 public abstract class GraphManagerIT {
 
 
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
-
-
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
@@ -1000,6 +996,8 @@ public abstract class GraphManagerIT {
         Iterator<Edge> results = edges.toBlockingObservable().getIterator();
 
 
+        System.out.println("\n\n\n\n\n\n\n\n\n\n");
+
         assertEquals( "Edges correct", edge2, results.next() );
 
         assertEquals( "Edges correct", edge1, results.next() );
@@ -1008,7 +1006,11 @@ public abstract class GraphManagerIT {
 
         //now delete one of the edges
 
+        System.out.println("\n\n\n\n\n\n\n\n\n\n");
+
         gm.deleteEdge( edge1 ).toBlockingObservable().last();
+
+        System.out.println("\n\n\n\n\n\n\n\n\n\n");
 
 
         edges = gm.loadEdgesFromSource(
@@ -1022,9 +1024,13 @@ public abstract class GraphManagerIT {
 
         assertFalse( "No more edges", results.hasNext() );
 
+        System.out.println("\n\n\n\n\n\n\n\n\n\n");
+
         //now delete one of the edges
 
         gm.deleteEdge( edge2 ).toBlockingObservable().last();
+
+        System.out.println("\n\n\n\n\n\n\n\n\n\n");
 
         edges = gm.loadEdgesFromSource(
                 createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );

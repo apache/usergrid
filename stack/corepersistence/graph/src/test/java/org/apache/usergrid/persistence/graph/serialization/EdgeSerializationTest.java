@@ -31,9 +31,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -76,7 +76,6 @@ public abstract class EdgeSerializationTest {
     public MigrationManagerRule migrationManagerRule;
 
 
-
     protected EdgeSerialization serialization;
 
     @Inject
@@ -105,9 +104,9 @@ public abstract class EdgeSerializationTest {
 
     /**
      * Get the edge Serialization to use
-     * @return
      */
     protected abstract EdgeSerialization getSerialization();
+
 
     /**
      * Tests mixing 2 edge types between 2 nodes.  We should get results for the same source->destination with the 2
@@ -217,7 +216,7 @@ public abstract class EdgeSerializationTest {
         final Edge edgev2 = createEdge( sourceId, "edge1", targetId );
 
         //we shouldn't get this one back
-        final Edge diffTarget = createEdge(sourceId, "edge1", createId("newTarget"));
+        final Edge diffTarget = createEdge( sourceId, "edge1", createId( "newTarget" ) );
 
         assertTrue( "Edge version 1 has lower time uuid",
                 UUIDComparator.staticCompare( edgev1.getVersion(), edgev2.getVersion() ) < 0 );
@@ -689,12 +688,10 @@ public abstract class EdgeSerializationTest {
         verify( results, writeCount );
 
 
-
         //get them all from source
         results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, edgeType, lastMax, null ) );
 
         verify( results, writeCount );
-
 
 
         results = serialization.getEdgesFromSourceByTargetType( scope,
@@ -703,17 +700,74 @@ public abstract class EdgeSerializationTest {
         verify( results, writeCount );
 
 
-
         results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, edgeType, lastMax, null ) );
 
         verify( results, writeCount );
-
 
 
         results = serialization.getEdgesToTargetBySourceType( scope,
                 createSearchByEdgeAndId( targetId, edgeType, lastMax, sourceId.getType(), null ) );
 
         verify( results, writeCount );
+    }
+
+
+    /**
+     * Tests writing 2 edges quickly in succession, then returning them. Was failing for commitlog impl
+     */
+    @Test
+    public void successiveWriteReturnSource() throws ConnectionException {
+        final Edge edge1 = createEdge( "source", "edge", "target" );
+
+        final Id sourceId = edge1.getSourceNode();
+
+
+        final Edge edge2 = createEdge( sourceId, "edge", createId( "target2" ) );
+
+        serialization.writeEdge( scope, edge1 ).execute();
+        serialization.writeEdge( scope, edge2 ).execute();
+
+
+        UUID now = UUIDGenerator.newTimeUUID();
+
+        //get our edges out by name
+
+        Iterator<MarkedEdge> results =
+                serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, null ) );
+
+        assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
+        assertFalse( results.hasNext() );
+    }
+
+
+
+    /**
+     * Tests writing 2 edges quickly in succession, then returning them. Was failing for commitlog impl
+     */
+    @Test
+    public void successiveWriteReturnTarget() throws ConnectionException {
+        final Edge edge1 = createEdge( "source", "edge", "target" );
+
+        final Id targetId = edge1.getTargetNode();
+
+
+        final Edge edge2 = createEdge( createId("source"), "edge", targetId );
+
+        serialization.writeEdge( scope, edge1 ).execute();
+        serialization.writeEdge( scope, edge2 ).execute();
+
+
+        UUID now = UUIDGenerator.newTimeUUID();
+
+        //get our edges out by name
+
+        Iterator<MarkedEdge> results =
+                serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, null ) );
+
+        assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
+        assertFalse( results.hasNext() );
     }
 
 

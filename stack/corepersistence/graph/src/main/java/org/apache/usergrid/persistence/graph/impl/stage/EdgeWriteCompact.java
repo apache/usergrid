@@ -35,10 +35,11 @@ public interface EdgeWriteCompact {
 
     /**
      * Remove this edge from the commit log and move it into permanent storage
+     *
      * @param scope The scope to use
      * @param edge The last edge to move.
      *
      * @return An observable that emits the edge we've moved
      */
-    public Observable<MarkedEdge> compact( OrganizationScope scope, Edge edge );
+    public Observable<Integer> compact( OrganizationScope scope, Edge edge );
 }

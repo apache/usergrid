@@ -69,7 +69,6 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     private final NodeSerialization nodeSerialization;
     private final EdgeSerialization commitLogSerialization;
     private final EdgeSerialization storageSerialization;
-    private final MergedEdgeReader mergedEdgeReader;
     private final EdgeMetadataSerialization edgeMetadataSerialization;
     private final EdgeMetaRepair edgeMetaRepair;
     private final GraphFig graphFig;
@@ -85,8 +84,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                                final EdgeMetaRepair edgeMetaRepair, final GraphFig graphFig,
                                @NodeDelete final AsyncProcessor nodeDelete,
                                @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
-                               @StorageEdgeSerialization final EdgeSerialization storageSerialization,
-                               final MergedEdgeReader mergedEdgeReader, final Keyspace keyspace ) {
+                               @StorageEdgeSerialization final EdgeSerialization storageSerialization, final Keyspace keyspace ) {
 
 
         this.nodeSerialization = nodeSerialization;
@@ -95,7 +93,6 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeMetaRepair = edgeMetaRepair;
         this.graphFig = graphFig;
-        this.mergedEdgeReader = mergedEdgeReader;
         this.keyspace = keyspace;
 
         nodeDelete.addListener( this );

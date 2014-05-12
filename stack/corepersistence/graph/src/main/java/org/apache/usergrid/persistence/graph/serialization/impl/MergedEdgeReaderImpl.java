@@ -24,6 +24,9 @@ import java.util.Iterator;
 
 import javax.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.rx.OrderedMerge;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
@@ -40,7 +43,9 @@ import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Singleton;
 
 import rx.Observable;
+import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -49,9 +54,16 @@ import rx.functions.Func1;
 @Singleton
 public class MergedEdgeReaderImpl implements MergedEdgeReader {
 
+    private static final Logger LOG = LoggerFactory.getLogger( MergedEdgeReaderImpl.class );
+
+
+    public static final Log RX_LOG = new Log();
+
     private final EdgeSerialization commitLogSerialization;
     private final EdgeSerialization permanentSerialization;
     private final CassandraConfig cassandraConfig;
+
+
 
 
     @Inject
@@ -75,7 +87,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     protected Iterator<MarkedEdge> getIterator() {
                         return commitLogSerialization.getEdgesFromSource( scope, edgeType );
                     }
-                } );
+                } ).subscribeOn( Schedulers.io() );
 
 
         Observable<MarkedEdge> permanent =
@@ -84,11 +96,11 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     protected Iterator<MarkedEdge> getIterator() {
                         return permanentSerialization.getEdgesFromSource( scope, edgeType );
                     }
-                } );
+                } ).subscribeOn( Schedulers.io() );
 
         return OrderedMerge
                 .orderedMerge( SourceEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
-                        permanent ).distinctUntilChanged();
+                        permanent ).distinctUntilChanged().doOnNext( RX_LOG);
     }
 
 
@@ -101,7 +113,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     protected Iterator<MarkedEdge> getIterator() {
                         return commitLogSerialization.getEdgesFromSourceByTargetType( scope, edgeType );
                     }
-                } );
+                } ).subscribeOn( Schedulers.io() );
 
 
         Observable<MarkedEdge> permanent =
@@ -110,11 +122,11 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     protected Iterator<MarkedEdge> getIterator() {
                         return permanentSerialization.getEdgesFromSourceByTargetType( scope, edgeType );
                     }
-                } );
+                } ).subscribeOn( Schedulers.io() );
 
         return OrderedMerge
                 .orderedMerge( SourceEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
-                        permanent ).distinctUntilChanged();
+                        permanent ).distinctUntilChanged().doOnNext( RX_LOG);
     }
 
 
@@ -125,7 +137,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     protected Iterator<MarkedEdge> getIterator() {
                         return commitLogSerialization.getEdgesToTarget( scope, edgeType );
                     }
-                } );
+                } ).subscribeOn( Schedulers.io() );
 
 
         Observable<MarkedEdge> permanent =
@@ -134,11 +146,11 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     protected Iterator<MarkedEdge> getIterator() {
                         return permanentSerialization.getEdgesToTarget( scope, edgeType );
                     }
-                } );
+                } ).subscribeOn( Schedulers.io() );
 
         return OrderedMerge
                 .orderedMerge( TargetEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
-                        permanent ).distinctUntilChanged();
+                        permanent ).distinctUntilChanged().doOnNext( RX_LOG);
     }
 
 
@@ -150,7 +162,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     protected Iterator<MarkedEdge> getIterator() {
                         return commitLogSerialization.getEdgesToTargetBySourceType( scope, edgeType );
                     }
-                } );
+                } ).subscribeOn( Schedulers.io() );
 
 
         Observable<MarkedEdge> permanent =
@@ -159,11 +171,11 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     protected Iterator<MarkedEdge> getIterator() {
                         return permanentSerialization.getEdgesToTargetBySourceType( scope, edgeType );
                     }
-                } );
+                } ).subscribeOn( Schedulers.io() );
 
         return OrderedMerge
                 .orderedMerge( TargetEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
-                        permanent ).distinctUntilChanged();
+                        permanent ).distinctUntilChanged().doOnNext( RX_LOG);
     }
 
 
@@ -175,7 +187,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     protected Iterator<MarkedEdge> getIterator() {
                         return commitLogSerialization.getEdgeVersions( scope, search );
                     }
-                } );
+                } ).subscribeOn( Schedulers.io() );
 
 
         Observable<MarkedEdge> permanent =
@@ -184,11 +196,11 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     protected Iterator<MarkedEdge> getIterator() {
                         return permanentSerialization.getEdgeVersions( scope, search );
                     }
-                } );
+                } ).subscribeOn( Schedulers.io() );
 
         return OrderedMerge
                 .orderedMerge( EdgeVersionComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog, permanent )
-                .distinctUntilChanged();
+                .distinctUntilChanged().doOnNext( RX_LOG);
     }
 
 
@@ -303,5 +315,15 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
         }
 
         return 0;
+    }
+
+    private static class Log implements Action1<MarkedEdge>{
+
+
+
+        @Override
+        public void call( final MarkedEdge markedEdge ) {
+            LOG.debug( "Emitting edge {}", markedEdge );
+        }
     }
 }

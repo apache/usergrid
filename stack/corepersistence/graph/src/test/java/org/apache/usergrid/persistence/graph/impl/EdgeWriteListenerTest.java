@@ -46,6 +46,8 @@ import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompact;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompactImpl;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -410,8 +412,13 @@ public class EdgeWriteListenerTest {
 
         Keyspace keyspace = mock( Keyspace.class );
 
+
+        EdgeWriteCompact compact = new EdgeWriteCompactImpl( commitLog, storage, keyspace, graphFig );
+
+
+
         //now perform the listener execution, should only clean up to edge v2
-        EdgeWriteListener listener = new EdgeWriteListener( commitLog, storage, keyspace, edgeProcessor, graphFig );
+        EdgeWriteListener listener = new EdgeWriteListener( compact, edgeProcessor );
 
 
         /**
