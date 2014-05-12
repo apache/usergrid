@@ -153,7 +153,7 @@ public class ChopUiConfig extends GuiceServletContextListener {
         EsEmbedded es = new EsEmbedded(elasticSearchFig);
         es.start();
 
-        long pause = 1000;
+        long pause = 5000;
         LOG.info("Pausing for {} ms so embedded elasticsearch can complete initialization.", pause);
 
         TimeUtil.sleep(pause);
