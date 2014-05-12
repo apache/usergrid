@@ -53,7 +53,7 @@ public class RunnersLayout extends AbsoluteLayout {
     private final ModuleDao moduleDao = InjectorFactory.getInstance( ModuleDao.class );
 
     // Use RunnerServiceMock for testing
-    private final RunnerService runnerService = InjectorFactory.getInstance( RunnerServiceMock.class );
+    private final RunnerService runnerService = InjectorFactory.getInstance( RunnerServiceImpl.class );
 
     private final Accordion accordion = new Accordion();
 
