@@ -32,8 +32,8 @@ public class RepairUtil {
         for( int i = 0; i < results.size(); i++) {
             if(results.get(i).getStatus() == MvccEntity.Status.COMPLETE){
                     changeLogGenerator = new ChangeLogGeneratorImpl();
-                   List<ChangeLogEntry> chgPersist = changeLogGenerator.getChangeLog(results.subList( 0, i )
-                           ,results.get( i ).getVersion()  );
+                   List<ChangeLogEntry> chgPersist = changeLogGenerator.getChangeLog(results.subList( 0, i+1 )
+                           ,results.get( 0 ).getVersion()  );
 
                    return entityRepair( chgPersist, results.subList( 0,i ),results.get( i ) );
             }

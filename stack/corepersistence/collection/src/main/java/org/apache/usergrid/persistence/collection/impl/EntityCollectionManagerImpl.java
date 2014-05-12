@@ -69,10 +69,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private static final Logger log = LoggerFactory.getLogger(EntityCollectionManagerImpl.class);
 
-    @Inject
-    protected EntityCollectionManagerListener managerListener;
-
-
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
 
@@ -264,6 +260,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     @Override
     public Observable<Entity> update ( final Entity entity) {
 
+        log.debug( "Starting update process" );
+
         ObjectMapper objectMapper = new ObjectMapper(  );
 
         //do our input validation
@@ -363,17 +361,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         } ).map(writeCommit).doOnNext( new Action1<Entity>() {
             @Override
             public void call( final Entity entity ) {
-
+                log.debug( "sending entity to the queue" );
                 final AsynchronousMessage<Entity> event =
                         entityUpdate.setVerification( entity, 20);
                 //fork background processing here (start)
                 entityUpdate.start( event );
-//                try {
-//                    entityUpdate.wait();
-//                }
-//                catch ( InterruptedException e ) {
-//                    throw new RuntimeException( "waiting failed because ",e );
-//                }
 
                 //post-processing to come later. leave it empty for now.
             }

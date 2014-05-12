@@ -102,8 +102,9 @@ public class LoadTest  extends AbstractIdStageTest {
 
         final MvccEntity partialMvccEntity = TestEntityGenerator.fromEntityStatus( entity2, MvccEntity.Status.PARTIAL );
 
-        final List<MvccEntity> results = Lists.newArrayList( completeMvccEntity );
-        results.add( partialMvccEntity );
+        final List<MvccEntity> results = Lists.newArrayList( partialMvccEntity );
+        results.add( completeMvccEntity );
+
 
         //mock up returning a list of MvccEntities
         when( serializationStrategy.load( collection, entityId, loadVersion, 5 ) ).thenReturn( results);
@@ -150,8 +151,8 @@ public class LoadTest  extends AbstractIdStageTest {
 
         final MvccEntity partialMvccEntity = TestEntityGenerator.fromEntityStatus( entity2, MvccEntity.Status.PARTIAL );
 
-        final List<MvccEntity> results = Lists.newArrayList( completeMvccEntity );
-        results.add( partialMvccEntity );
+        final List<MvccEntity> results = Lists.newArrayList( partialMvccEntity );
+        results.add( completeMvccEntity );
 
         //mock up returning a list of MvccEntities
         when( serializationStrategy.load( collection, entityId, loadVersion, 5 ) ).thenReturn( results);
