@@ -30,7 +30,6 @@ import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeExc
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerListener;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -72,13 +71,6 @@ public class EntityCollectionManagerIT {
 
     @Inject
     public CollectionScope context;
-
-//    @Inject
-//    public AsyncProcessor timeoutQueue;
-
-    @Inject
-    protected EntityCollectionManagerListener managerListener;
-
 
 
     @Test

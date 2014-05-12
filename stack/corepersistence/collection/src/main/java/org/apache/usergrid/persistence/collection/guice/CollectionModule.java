@@ -26,10 +26,12 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerListener;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
+import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
@@ -88,6 +90,28 @@ public class CollectionModule extends AbstractModule {
         messageListenerMultibinder.addBinding().toProvider( EntityCollectionListenerProvider.class ).asEagerSingleton();
     }
 
+    @Provides
+    @Singleton
+    @Inject
+    @Write
+
+    public WriteStart write (MvccLogEntrySerializationStrategy logStrategy) {
+        final WriteStart writeStart = new WriteStart( logStrategy,0 );
+
+        return writeStart;
+    }
+
+    @Provides
+    @Singleton
+    @Inject
+    @WriteUpdate
+
+    public WriteStart writeUpdate (MvccLogEntrySerializationStrategy logStrategy) {
+        final WriteStart writeStart = new WriteStart( logStrategy,1 );
+
+        return writeStart;
+    }
+
     /**
      * Create the processor for edge deletes
      */
@@ -115,15 +139,21 @@ public class CollectionModule extends AbstractModule {
     public static class EntityCollectionListenerProvider implements Provider<MessageListener<CollectionIoEvent<Id>,Entity>>  {
 
         private final Load load;
+        private final WriteStart writeStart;
+        private final WriteStart writeUpdate;
         private final AsyncProcessor<Entity> entityUpdate;
 
 
 
         @Inject
         public EntityCollectionListenerProvider( final Load load,
+                                                 @Write final WriteStart writeStart,
+                                                 @WriteUpdate final WriteStart writeUpdate,
                                                  @EntityUpdate final AsyncProcessor<Entity> entityUpdate) {
 
             this.load = load;
+            this.writeStart = writeStart;
+            this.writeUpdate = writeUpdate;
             this.entityUpdate = entityUpdate;
 
         }
@@ -131,7 +161,7 @@ public class CollectionModule extends AbstractModule {
 
         @Override
         public MessageListener<CollectionIoEvent<Id>,Entity> get() {
-            return new EntityCollectionManagerListener(load,entityUpdate);
+            return new EntityCollectionManagerListener(load,writeStart,writeUpdate,entityUpdate);
         }
     }
 }

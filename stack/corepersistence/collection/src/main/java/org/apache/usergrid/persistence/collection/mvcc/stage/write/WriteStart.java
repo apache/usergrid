@@ -38,6 +38,10 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
     private final MvccLogEntrySerializationStrategy logStrategy;
 
+    MvccEntity.Status status;
+
+
+
 
 
     /**
@@ -49,12 +53,23 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
 
         this.logStrategy = logStrategy;
+        status = MvccEntity.Status.COMPLETE;
 //        if(status == null || MvccEntity.Status.COMPLETE == status){
 //            this.status = MvccEntity.Status.COMPLETE;
 //        }
 //        else
 //            this.status = MvccEntity.Status.PARTIAL;
 
+    }
+
+    @Inject
+    public WriteStart ( final MvccLogEntrySerializationStrategy logStrategy, int partialFlag) {
+        this.logStrategy = logStrategy;
+        if(partialFlag == 1){
+            status = MvccEntity.Status.PARTIAL;
+        }
+        else
+            status = MvccEntity.Status.COMPLETE;
     }
 
 

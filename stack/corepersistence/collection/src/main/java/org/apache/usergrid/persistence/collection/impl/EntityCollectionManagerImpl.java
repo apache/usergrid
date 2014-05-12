@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.guice.EntityUpdate;
+import org.apache.usergrid.persistence.collection.guice.Write;
+import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -33,7 +35,6 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UpdateStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
@@ -75,11 +76,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     //start stages
     private final WriteStart writeStart;
+    private final WriteStart writeUpdate;
     private final WriteUniqueVerify writeVerifyUnique;
     private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
     private final RollbackAction rollback;
-    private final UpdateStart updateStart;
 
     //load stages
     private final Load load;
@@ -94,13 +95,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     @Inject
     public EntityCollectionManagerImpl( 
-        final UUIDService uuidService, 
-        final WriteStart writeStart,
+        final UUIDService uuidService,
+        @Write final WriteStart writeStart,
+        @WriteUpdate final WriteStart writeUpdate,
         final WriteUniqueVerify writeVerifyUnique,
         final WriteOptimisticVerify writeOptimisticVerify,
         final WriteCommit writeCommit, 
         final RollbackAction rollback,
-        final UpdateStart updateStart,
         final Load load, 
         final MarkStart markStart,
         final MarkCommit markCommit,
@@ -112,11 +113,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         MvccValidationUtils.validateCollectionScope( collectionScope );
 
         this.writeStart = writeStart;
+        this.writeUpdate = writeUpdate;
         this.writeVerifyUnique = writeVerifyUnique;
         this.writeOptimisticVerify = writeOptimisticVerify;
         this.writeCommit = writeCommit;
         this.rollback = rollback;
-        this.updateStart = updateStart;
 
         this.load = load;
         this.markStart = markStart;
@@ -163,48 +164,50 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
         Observable<CollectionIoEvent<MvccEntity>> observable =
-            Observable.from( writeData ).subscribeOn( Schedulers.io() ).map( writeStart ).flatMap(
-                new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
+            Observable.from( writeData ).subscribeOn( Schedulers.io() ).map(writeStart).flatMap(
+                    new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
 
-                    @Override
-                    public Observable<CollectionIoEvent<MvccEntity>> call(
-                            final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+                        @Override
+                        public Observable<CollectionIoEvent<MvccEntity>> call(
+                                final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
 
-                        // do the unique and optimistic steps in parallel
+                            // do the unique and optimistic steps in parallel
 
-                        // unique function.  Since there can be more than 1 unique value in this 
-                        // entity the unique verify step itself is multiple parallel executions.
-                        // This is why we use "flatMap" instead of "map", which allows the
-                        // WriteVerifyUnique stage to execute multiple verification steps in 
-                        // parallel and zip the results
+                            // unique function.  Since there can be more than 1 unique value in this
+                            // entity the unique verify step itself is multiple parallel executions.
+                            // This is why we use "flatMap" instead of "map", which allows the
+                            // WriteVerifyUnique stage to execute multiple verification steps in
+                            // parallel and zip the results
 
-                        Observable<CollectionIoEvent<MvccEntity>> unique =
-                            Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                .flatMap( writeVerifyUnique);
+                            Observable<CollectionIoEvent<MvccEntity>> unique =
+                                    Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                              .flatMap( writeVerifyUnique );
 
 
-                        // optimistic verification
-                        Observable<CollectionIoEvent<MvccEntity>> optimistic =
-                            Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                .map( writeOptimisticVerify );
+                            // optimistic verification
+                            Observable<CollectionIoEvent<MvccEntity>> optimistic =
+                                    Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                              .map( writeOptimisticVerify );
 
-                        // zip the results
-                        // TODO: Should the zip only return errors here, and if errors are present, 
-                        // we throw during the zip phase?  I couldn't find "
+                            // zip the results
+                            // TODO: Should the zip only return errors here, and if errors are present,
+                            // we throw during the zip phase?  I couldn't find "
 
-                        return Observable.zip( unique, optimistic, new Func2<CollectionIoEvent<MvccEntity>,
-                                CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>>() {
+                            return Observable.zip( unique, optimistic,
+                                    new Func2<CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>,
+                                            CollectionIoEvent<MvccEntity>>() {
 
-                            @Override
-                            public CollectionIoEvent<MvccEntity> call(
-                                final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent,
-                                final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent2 ) {
+                                        @Override
+                                        public CollectionIoEvent<MvccEntity> call(
+                                                final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent,
+                                                final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent2 ) {
 
-                            return mvccEntityCollectionIoEvent;
-                           }
-                        });
+                                            return mvccEntityCollectionIoEvent;
+                                        }
+                                    } );
+                        }
                     }
-                });
+                                                                                                );
 
         // execute all validation stages concurrently.  Needs refactored when this is done.  
         // https://github.com/Netflix/RxJava/issues/627
@@ -260,6 +263,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     @Override
     public Observable<Entity> update ( final Entity entity) {
 
+
+
         log.debug( "Starting update process" );
 
         ObjectMapper objectMapper = new ObjectMapper(  );
@@ -297,7 +302,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
         Observable<CollectionIoEvent<MvccEntity>> observable =
-                Observable.from( writeData ).subscribeOn( Schedulers.io() ).map( updateStart ).flatMap(
+                Observable.from( writeData ).subscribeOn( Schedulers.io() ).map( writeUpdate ).flatMap(
                         new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
 
                             @Override
