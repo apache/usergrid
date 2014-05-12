@@ -20,6 +20,8 @@ package org.apache.usergrid.chop.webapp.view.user;
 
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -54,6 +56,7 @@ public class UserLayout extends AbsoluteLayout {
 
     private final Button saveButton = new Button( "Save" );
     private final Button deleteButton = new Button( "Delete" );
+    private final KeyListLayout keyListLayout = new KeyListLayout();
 
     private final TabSheetManager tabSheetManager;
     private final String username;
@@ -71,8 +74,11 @@ public class UserLayout extends AbsoluteLayout {
 
         if ( StringUtils.isEmpty( username ) ) {
             deleteButton.setVisible( false );
+            keyListLayout.setVisible( false );
             return;
         }
+
+        keyListLayout.loadKeys( username );
 
         User user = userDao.get( username );
         ProviderParams providerParams = providerParamsDao.getByUser( username );
@@ -88,6 +94,7 @@ public class UserLayout extends AbsoluteLayout {
 
 
     private void addItems() {
+
         FormLayout formLayout = addFormLayout();
         formLayout.addComponent( usernameField );
         formLayout.addComponent( passwordField );
@@ -97,6 +104,8 @@ public class UserLayout extends AbsoluteLayout {
         formLayout.addComponent( secretKeyField );
         formLayout.addComponent( keyPairNameField );
         formLayout.addComponent( addButtonLayout() );
+
+        addComponent( keyListLayout, "left: 650px; top: 50px;" );
     }
 
 
@@ -108,7 +117,7 @@ public class UserLayout extends AbsoluteLayout {
         formLayout.addStyleName( "outlined" );
         formLayout.setSpacing( true );
 
-        addComponent( formLayout, "left: 10px; top: 10px;" );
+        addComponent( formLayout, "left: 350px; top: 50px;" );
 
         return formLayout;
     }
@@ -178,9 +187,8 @@ public class UserLayout extends AbsoluteLayout {
 
         ProviderParams oldProviderParams = providerParamsDao.getByUser( username );
 
-        if ( oldProviderParams != null ) {
-            newProviderParams.setKeys( oldProviderParams.getKeys() );
-        }
+        Map<String, String> keys = oldProviderParams != null ? oldProviderParams.getKeys() : new HashMap<String, String>();
+        newProviderParams.setKeys( keys );
 
         providerParamsDao.save( newProviderParams );
         close();
