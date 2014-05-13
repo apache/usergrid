@@ -18,37 +18,42 @@
  */
 package org.apache.usergrid.chop.webapp.view.chart.layout;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.usergrid.chop.webapp.service.chart.builder.ChartBuilder;
-import org.apache.usergrid.chop.webapp.view.main.Breadcrumb;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.chop.webapp.service.InjectorFactory;
+import org.apache.usergrid.chop.webapp.service.chart.Params;
+import org.apache.usergrid.chop.webapp.service.chart.builder.OverviewChartBuilder;
+import org.apache.usergrid.chop.webapp.view.main.TabSheetManager;
+
+import com.vaadin.ui.AbsoluteLayout;
+
 
 public class OverviewChartLayout extends ChartLayout {
 
-    public OverviewChartLayout(ChartLayoutContext layoutContext, ChartBuilder chartBuilder, ChartLayout nextLayout, Breadcrumb breadcrumb) {
-        super(new Config(
-                layoutContext,
-                chartBuilder,
-                nextLayout,
-                "overviewChart",
-                "js/overview-chart.js",
-                breadcrumb
-        ));
+    private final TabSheetManager tabSheetManager;
 
-        addNextChartButton();
+    public OverviewChartLayout( Params params, TabSheetManager tabSheetManager ) {
+        super( InjectorFactory.getInstance( OverviewChartBuilder.class ), "overviewChart", "js/overview-chart.js", params );
+        this.tabSheetManager = tabSheetManager;
     }
+
 
     @Override
-    protected void pointClicked(JSONObject json) throws JSONException {
-        super.pointClicked(json);
+    protected void pointClicked( JSONObject json ) throws JSONException {
+        super.pointClicked( json );
 
-        String caption = "Commit: " + StringUtils.abbreviate(json.getString("commitId"), 10);
-        nextChartButton.setCaption(caption);
+        String caption = "Commit: " + StringUtils.abbreviate( json.getString( "commitId" ), 10 );
+        nextChartButton.setCaption( caption );
+        nextChartButton.setVisible( true );
     }
+
 
     @Override
-    protected void handleBreadcrumb() {
-        config.getBreadcrumb().setItem(this, "Overview", 0);
+    protected void nextChartButtonClicked() {
+        AbsoluteLayout layout = new RunsChartLayout( getParams(), tabSheetManager );
+        tabSheetManager.addTab( layout, "Runs Chart" );
     }
+
 }

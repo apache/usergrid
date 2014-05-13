@@ -62,12 +62,15 @@ public class KeyService {
         return new File(filePath);
     }
 
-    private void addKeyFile(String username, String keyPairName, String filePath) {
 
-        ProviderParams params = providerParamsDao.getByUser(username);
-        params.getKeys().put(keyPairName, filePath);
+    private void addKeyFile( String username, String keyPairName, String filePath ) {
 
-        save(params);
+        ProviderParams params = providerParamsDao.getByUser( username );
+
+        LOG.info( "{}", params );
+        params.getKeys().put( keyPairName, filePath );
+
+        save( params );
     }
 
     private void save(ProviderParams params) {

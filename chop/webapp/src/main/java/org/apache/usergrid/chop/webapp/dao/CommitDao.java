@@ -18,6 +18,13 @@
  */
 package org.apache.usergrid.chop.webapp.dao;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import com.google.inject.Inject;
 import org.apache.usergrid.chop.api.Commit;
 import org.apache.usergrid.chop.webapp.dao.model.BasicCommit;
@@ -27,11 +34,14 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 
-import java.util.*;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
+
+/**
+ * Commit persistence operations
+ */
 public class CommitDao extends Dao {
 
     public static final String DAO_INDEX_KEY = "modules";
@@ -41,22 +51,29 @@ public class CommitDao extends Dao {
 
 
     @Inject
-    public CommitDao(IElasticSearchClient elasticSearchClient) {
-        super(elasticSearchClient);
+    public CommitDao( IElasticSearchClient elasticSearchClient ) {
+        super( elasticSearchClient );
     }
 
 
-    public boolean save(Commit commit) throws Exception {
+    /**
+     * Saves commit to elastic search and uses commit id as index id.
+     *
+     * @param commit    Commit to save
+     * @return          Whether the operation was successful
+     * @throws Exception
+     */
+    public boolean save( Commit commit ) throws IOException {
 
         IndexResponse response = elasticSearchClient.getClient()
-                .prepareIndex("modules", "commit", commit.getId())
-                .setRefresh(true)
+                .prepareIndex( "modules", "commit", commit.getId() )
+                .setRefresh( true )
                 .setSource(
                         jsonBuilder()
                                 .startObject()
-                                .field("moduleId", commit.getModuleId())
-                                .field("md5", commit.getMd5())
-                                .field("createTime", commit.getCreateTime())
+                                .field( "moduleId", commit.getModuleId() )
+                                .field( "md5", commit.getMd5() )
+                                .field( "createTime", commit.getCreateTime() )
                                 .endObject()
                 )
                 .execute()
@@ -66,32 +83,40 @@ public class CommitDao extends Dao {
     }
 
 
-    public List<Commit> getByModule(String moduleId) {
-        LOG.debug("moduleId: {}", moduleId);
+    /**
+     * Gets all commits belonging to given module.
+     * <p>
+     * Commits, if any, in the returned list are ordered by createTime, older first.
+     *
+     * @param moduleId  Module id to filter returns
+     * @return          List of date ordered commits, belonging to given module
+     */
+    public List<Commit> getByModule( String moduleId ) {
+        LOG.debug( "moduleId: {}", moduleId );
 
-        SearchResponse response = getRequest(DAO_INDEX_KEY, DAO_TYPE_KEY)
-                .setQuery(termQuery("moduleId", moduleId))
-                .setSize(MAX_RESULT_SIZE)
+        SearchResponse response = getRequest( DAO_INDEX_KEY, DAO_TYPE_KEY )
+                .setQuery( termQuery( "moduleId", moduleId ) )
+                .setSize( MAX_RESULT_SIZE )
                 .execute().actionGet();
 
         TreeMap<Date, Commit> commitMap = new TreeMap<Date, Commit>();
 
-        for (SearchHit hit : response.getHits().hits()) {
+        for ( SearchHit hit : response.getHits().hits() ) {
             Map<String, Object> json = hit.getSource();
 
             BasicCommit commit = new BasicCommit(
                     hit.getId(),
-                    Util.getString(json, "moduleId"),
-                    Util.getString(json, "md5"),
-                    Util.toDate(Util.getString(json, "createTime")),
-                    Util.getString(json, "runnerPath")
+                    Util.getString( json, "moduleId" ),
+                    Util.getString( json, "md5" ),
+                    Util.toDate( Util.getString(json, "createTime" ) ),
+                    Util.getString( json, "runnerPath" )
             );
 
-            commitMap.put(commit.getCreateTime(), commit);
+            commitMap.put( commit.getCreateTime(), commit );
         }
 
-        ArrayList<Commit> commitList = new ArrayList<Commit>(commitMap.values());
-        LOG.debug("commits: {}", commitList.size());
+        ArrayList<Commit> commitList = new ArrayList<Commit>( commitMap.values() );
+        LOG.debug( "commits: {}", commitList.size() );
 
         return commitList;
     }

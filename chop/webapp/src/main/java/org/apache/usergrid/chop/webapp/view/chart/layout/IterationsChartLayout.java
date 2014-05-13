@@ -18,59 +18,54 @@
  */
 package org.apache.usergrid.chop.webapp.view.chart.layout;
 
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.themes.Reindeer;
-import org.apache.commons.lang.StringUtils;
-import org.apache.usergrid.chop.webapp.dao.RunResultDao;
-import org.apache.usergrid.chop.webapp.service.InjectorFactory;
-import org.apache.usergrid.chop.webapp.service.chart.Params;
-import org.apache.usergrid.chop.webapp.service.chart.builder.ChartBuilder;
-import org.apache.usergrid.chop.webapp.service.util.JsonUtil;
-import org.apache.usergrid.chop.webapp.view.main.Breadcrumb;
-import org.apache.usergrid.chop.webapp.view.util.UIUtil;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import org.apache.commons.lang.StringUtils;
+
+import org.apache.usergrid.chop.webapp.dao.RunDao;
+import org.apache.usergrid.chop.webapp.dao.RunResultDao;
+import org.apache.usergrid.chop.webapp.service.InjectorFactory;
+import org.apache.usergrid.chop.webapp.service.chart.Params;
+import org.apache.usergrid.chop.webapp.service.chart.builder.IterationsChartBuilder;
+import org.apache.usergrid.chop.webapp.service.util.JsonUtil;
+import org.apache.usergrid.chop.webapp.view.util.UIUtil;
+
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.themes.Reindeer;
+
 
 public class IterationsChartLayout extends ChartLayout {
 
     private RunResultDao runResultDao = InjectorFactory.getInstance(RunResultDao.class);
 
     private String runResultId;
-
     protected Button failuresButton;
+    protected Params params;
 
-    public IterationsChartLayout(ChartLayoutContext layoutContext, ChartBuilder chartBuilder, ChartLayout nextLayout, Breadcrumb breadcrumb) {
-        super(new Config(
-                layoutContext,
-                chartBuilder,
-                nextLayout,
-                "iterationsChart",
-                "js/iterations-chart.js",
-                breadcrumb
-        ));
+
+    public IterationsChartLayout( Params params ) {
+        super( InjectorFactory.getInstance( IterationsChartBuilder.class ), "iterationsChart", "js/iterations-chart.js",
+                params );
     }
 
+
     @Override
-    protected void addControls() {
-        addMainControls();
-        addSubControls(410);
-        super.addSubControls(430);
+    protected void addItems() {
+        super.addItems();
         addRunnersCheckboxes();
+        addFailuresButton();
     }
 
-    private void addRunnersCheckboxes() {
-        UIUtil.addLayout(this, "runnersCheckboxes", "left: 10px; top: 620px;", "720px", "200px");
-    }
 
-    @Override
-    protected void addSubControls(int startTop) {
+    protected void addFailuresButton() {
 
-        String position = String.format("left: 750px; top: %spx;", startTop);
-
-        failuresButton = UIUtil.addButton(this, "Show failures", position, "250px");
-        failuresButton.setStyleName(Reindeer.BUTTON_LINK);
+        failuresButton = UIUtil.addButton(this, "Show failures", "left: 1000px; top: 370px;", "180px");
+        failuresButton.setStyleName( Reindeer.BUTTON_LINK);
+        failuresButton.setVisible( false );
 
         failuresButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
@@ -79,46 +74,16 @@ public class IterationsChartLayout extends ChartLayout {
         });
     }
 
-    private void setControlsReadOnly(boolean readOnly) {
-        testNameCombo.setReadOnly(readOnly);
-        metricCombo.setReadOnly(readOnly);
-    }
-
-    private void doShow(Params params) {
-        setControlsReadOnly(false);
-        super.show(params);
-        setControlsReadOnly(true);
-    }
-
-    public void show(Params params) {
-        doShow(params);
-        noteLayout.load(params.getCommitId(), params.getRunNumber());
-        failuresButton.setVisible(false);
-    }
-
-    @Override
-    protected void pointClicked(JSONObject json) throws JSONException {
-        detailsTable.setContent(json);
-        handlePointClick(json);
-    }
-
-    private void handlePointClick(JSONObject json) {
-
-        runResultId = json.optString("id");
-        int failures = json.optInt("failures");
-
-        boolean buttonVisible = !StringUtils.isEmpty(runResultId) && failures > 0;
-        failuresButton.setVisible(buttonVisible);
-    }
 
     private void showFailures() {
 
         String failures = runResultDao.getFailures(runResultId);
-        JSONArray arr = JsonUtil.parseArray(failures);
+        JSONArray arr = JsonUtil.parseArray( failures );
         String messages = firstMessages(arr);
 
         Notification.show("Failures", messages, Notification.Type.TRAY_NOTIFICATION);
     }
+
 
     private String firstMessages(JSONArray arr) {
 
@@ -128,16 +93,28 @@ public class IterationsChartLayout extends ChartLayout {
         for (int i = 0; i < len; i++) {
             JSONObject json = JsonUtil.get(arr, i);
 
-            s += "* " + StringUtils.abbreviate(json.optString("message"), 200) + "\n"
+            s += "* " + StringUtils.abbreviate( json.optString( "message" ), 200 ) + "\n"
                     + StringUtils.abbreviate(json.optString("trace"), 500) + "\n\n";
         }
 
         return s;
     }
 
-    @Override
-    protected void handleBreadcrumb() {
-        String caption = "Run: " + params.getRunNumber();
-        config.getBreadcrumb().setItem(this, caption, 2);
+
+    private void addRunnersCheckboxes() {
+        UIUtil.addLayout(this, "runnersCheckboxes", "left: 10px; top: 300px;", "250px", "300px");
     }
+
+
+    @Override
+    protected void pointClicked( JSONObject json ) throws JSONException {
+        super.pointClicked( json );
+
+        runResultId = json.optString("id");
+        int failures = json.optInt("failures");
+
+        boolean buttonVisible = !StringUtils.isEmpty(runResultId) && failures > 0;
+        failuresButton.setVisible(buttonVisible);
+    }
+
 }

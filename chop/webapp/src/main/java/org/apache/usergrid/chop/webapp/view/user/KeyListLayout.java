@@ -61,20 +61,20 @@ public class KeyListLayout extends AbsoluteLayout implements Upload.Receiver, Up
     }
 
     void addTitleLabel() {
-        UIUtil.addLabel(this, "<b>Manage Keys</b>", "left: 0px; top: 50px;", "120px");
+        UIUtil.addLabel(this, "<b>Manage Keys</b>", "left: 0px; top: 10px;", "120px");
     }
 
     void addUploadControls() {
 
         keyNameField.setWidth("290px");
         keyNameField.setValue("key-pair-name");
-        addComponent(keyNameField, "left: 0px; top: 90px;");
+        addComponent(keyNameField, "left: 0px; top: 50px;");
 
         Upload upload = new Upload("", this);
         upload.setButtonCaption("Add");
         upload.addSucceededListener(this);
 
-        addComponent(upload, "left: 0px; top: 120px;");
+        addComponent(upload, "left: 0px; top: 80px;");
     }
 
     @Override
