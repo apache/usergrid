@@ -17,7 +17,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 public class RepairUtil {
 
 
-    public static  ChangeLogGenerator changeLogGenerator;
+    private static  ChangeLogGenerator changeLogGenerator;
 
     public static Entity repair(List<MvccEntity> results){
         //base case
@@ -46,26 +46,27 @@ public class RepairUtil {
     private static Entity entityRepair( List<ChangeLogEntry> changeLogEntryList, List<MvccEntity> results,
                                             MvccEntity completedEntity ) {
         int changeLogIndex = 0;
-        for(int index = 0; index < results.size();index++){
+        for ( MvccEntity result : results ) {
 
-            while(changeLogIndex != changeLogEntryList.size()){
+            while ( changeLogIndex != changeLogEntryList.size() ) {
 
                 ChangeLogEntry changeLogEntry = changeLogEntryList.get( changeLogIndex );
 
-                if(results.get( index ).getId().equals( changeLogEntry.getEntryId() )){
+                if ( result.getId().equals( changeLogEntry.getEntryId() ) ) {
 
                     ChangeLogEntry.ChangeType changeType = changeLogEntry.getChangeType();
 
-                    if(changeType.toString().equals("PROPERTY_DELETE")){
+                    if ( changeType.toString().equals( "PROPERTY_DELETE" ) ) {
                         completedEntity.getEntity().get().getFields().remove( changeLogEntry.getField() );
                     }
-                    else if(changeType.toString() .equals( "PROPERTY_WRITE" )){
+                    else if ( changeType.toString().equals( "PROPERTY_WRITE" ) ) {
                         completedEntity.getEntity().get().setField( changeLogEntry.getField() );
                     }
                     changeLogIndex++;
                 }
-                else
+                else {
                     break;
+                }
             }
         }
 

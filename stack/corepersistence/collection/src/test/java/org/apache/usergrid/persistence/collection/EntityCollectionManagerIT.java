@@ -292,4 +292,46 @@ public class EntityCollectionManagerIT {
 
     }
 
+    @Test
+    public void partialUpdateDelete() {
+        StringField testField1 = new StringField("testField","value");
+        StringField addedField = new StringField( "testFud", "NEWPARTIALUPDATEZOMG" );
+
+        CollectionScope context = new CollectionScopeImpl(
+                new SimpleId( "organization" ),  new SimpleId( "testUpdate" ), "testUpdate" );
+
+        Entity oldEntity = new Entity( new SimpleId( "testUpdate" ) );
+        oldEntity.setField( new StringField( "testField", "value" ) );
+
+        EntityCollectionManager manager = factory.createCollectionManager( context );
+
+        Observable<Entity> observable = manager.write( oldEntity );
+
+        Entity returned = observable.toBlockingObservable().lastOrDefault( null );
+
+        assertNotNull( "Returned has a uuid", returned.getId() );
+
+        oldEntity.getFields().remove( testField1  );
+        oldEntity.setField( addedField );
+
+        //Entity is deleted then updated right afterwards.
+        manager.delete( oldEntity.getId() );
+
+        observable = manager.update( oldEntity);
+
+        returned = observable.toBlockingObservable().lastOrDefault( null );
+
+        assertNotNull( "Returned has a uuid", returned.getId() );
+        assertEquals( oldEntity.getField( "testFud" ), returned.getField( "testFud" ) );
+
+        Observable<Entity> newEntityObs = manager.load( oldEntity.getId() );
+        Entity newEntity = newEntityObs.toBlockingObservable().last();
+
+        assertNotNull( "Returned has a uuid", returned.getId() );
+        assertEquals( addedField, newEntity.getField( "testFud" ));
+
+
+    }
+
+
 }
