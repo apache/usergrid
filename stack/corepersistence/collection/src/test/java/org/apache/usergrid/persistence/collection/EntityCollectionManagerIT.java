@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.collection;
 
 import org.jukito.UseModules;
 import org.junit.Assert;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,11 +28,11 @@ import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeExc
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
+import org.apache.usergrid.persistence.model.field.StringField;
 
 import com.google.inject.Inject;
 
@@ -254,4 +253,43 @@ public class EntityCollectionManagerIT {
         CollectionScope collectionScope3 = new CollectionScopeImpl( new SimpleId("organization2"), collectionScope1.getOwner(), collectionScope1.getName() );
         assertNotNull( collectionScope3 );
     }
+
+    @Test
+    public void partialUpdate() {
+        StringField testField1 = new StringField("testField","value");
+        StringField addedField = new StringField( "testFud", "NEWPARTIALUPDATEZOMG" );
+
+        CollectionScope context = new CollectionScopeImpl(
+                new SimpleId( "organization" ),  new SimpleId( "testUpdate" ), "testUpdate" );
+
+        Entity oldEntity = new Entity( new SimpleId( "testUpdate" ) );
+        oldEntity.setField( new StringField( "testField", "value" ) );
+
+        EntityCollectionManager manager = factory.createCollectionManager( context );
+
+        Observable<Entity> observable = manager.write( oldEntity );
+
+        Entity returned = observable.toBlockingObservable().lastOrDefault( null );
+
+        assertNotNull( "Returned has a uuid", returned.getId() );
+
+        oldEntity.getFields().remove( testField1  );
+        oldEntity.setField( addedField );
+
+        observable = manager.update( oldEntity);
+
+        returned = observable.toBlockingObservable().lastOrDefault( null );
+
+        assertNotNull( "Returned has a uuid", returned.getId() );
+        assertEquals( oldEntity.getField( "testFud" ), returned.getField( "testFud" ) );
+
+        Observable<Entity> newEntityObs = manager.load( oldEntity.getId() );
+        Entity newEntity = newEntityObs.toBlockingObservable().last();
+
+        assertNotNull( "Returned has a uuid", returned.getId() );
+        assertEquals( addedField, newEntity.getField( "testFud" ));
+
+
+    }
+
 }
