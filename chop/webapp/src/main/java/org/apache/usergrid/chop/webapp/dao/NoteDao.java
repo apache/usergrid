@@ -39,26 +39,24 @@ public class NoteDao extends Dao {
     public static final String DAO_INDEX_KEY = "modules";
     public static final String DAO_TYPE_KEY = "note";
 
-    private static final int MAX_RESULT_SIZE = 10000;
-
 
     @Inject
-    public NoteDao(IElasticSearchClient elasticSearchClient) {
-        super(elasticSearchClient);
+    public NoteDao( IElasticSearchClient elasticSearchClient ) {
+        super( elasticSearchClient );
     }
 
 
-    public boolean save(Note note) throws IOException {
+    public boolean save( Note note ) throws IOException {
 
         IndexResponse response = elasticSearchClient.getClient()
-                .prepareIndex(DAO_INDEX_KEY, DAO_TYPE_KEY, note.getId())
-                .setRefresh(true)
+                .prepareIndex( DAO_INDEX_KEY, DAO_TYPE_KEY, note.getId() )
+                .setRefresh( true )
                 .setSource(
                         jsonBuilder()
                                 .startObject()
-                                .field("commitId", note.getCommitId())
-                                .field("runNumber", note.getRunNumber())
-                                .field("text", note.getText())
+                                .field( "commitId", note.getCommitId() )
+                                .field( "runNumber", note.getRunNumber() )
+                                .field( "text", note.getText() )
                                 .endObject()
                 )
                 .execute()
@@ -68,31 +66,31 @@ public class NoteDao extends Dao {
     }
 
 
-    public Note get(String commitId, int runNumber) {
+    public Note get( String commitId, int runNumber ) {
 
         BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
-                .must(termQuery("commitId", commitId.toLowerCase()))
-                .must(termQuery("runNumber", runNumber));
+                .must( termQuery( "commitId", commitId.toLowerCase() ) )
+                .must( termQuery( "runNumber", runNumber ) );
 
         SearchResponse response = elasticSearchClient.getClient()
-                .prepareSearch(DAO_INDEX_KEY)
-                .setTypes(DAO_TYPE_KEY)
-                .setQuery(queryBuilder)
+                .prepareSearch( DAO_INDEX_KEY )
+                .setTypes( DAO_TYPE_KEY )
+                .setQuery( queryBuilder )
                 .execute()
                 .actionGet();
 
         SearchHit hits[] = response.getHits().getHits();
 
-        if (hits.length == 0) {
+        if ( hits.length == 0 ) {
             return null;
         }
 
-        Map<String, Object> json = hits[0].getSource();
+        Map<String, Object> json = hits[ 0 ].getSource();
 
         return new Note(
-                Util.getString(json, "moduleId"),
-                Util.getInt(json, "runNumber"),
-                Util.getString(json, "text")
+                Util.getString( json, "moduleId" ),
+                Util.getInt( json, "runNumber" ),
+                Util.getString( json, "text" )
         );
     }
 

@@ -27,13 +27,35 @@ import java.util.Date;
  */
 public interface Commit {
 
+
+    /**
+     * @return  commit id string
+     */
     String getId();
 
+
+    /**
+     * Maven groupId, artifactId and version should be used to calculate this id.
+     *
+     * @return  Id that represents the module this commit is about.
+     */
     String getModuleId();
 
+
+    /**
+     * @return  An md5 string calculated using commit id and timestamp of runner file creation time
+     */
     String getMd5();
 
+
+    /**
+     * @return  Absolute file path of the runner.jar file
+     */
     String getRunnerPath();
 
+
+    /**
+     * @return  Runner file creation time
+     */
     Date getCreateTime();
 }
