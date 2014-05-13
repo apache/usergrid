@@ -17,6 +17,7 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.netflix.astyanax.ColumnListMutation;
@@ -28,14 +29,13 @@ import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.util.RangeBuilder;
 import java.util.Collections;
 import org.apache.cassandra.db.marshal.BytesType;
-
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.serialization.impl.CollectionScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.migration.Migration;
-import org.apache.usergrid.persistence.collection.serialization.impl.CollectionScopedRowKeySerializer;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

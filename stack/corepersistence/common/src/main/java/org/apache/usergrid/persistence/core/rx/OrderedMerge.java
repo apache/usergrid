@@ -179,6 +179,7 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
                 //take as many elements as we can until we hit the completed case
                 while ( true ) {
                     InnerObserver<T> maxObserver = null;
+                    T max = null;
 
                     for ( InnerObserver<T> inner : innerSubscribers ) {
 
@@ -195,16 +196,17 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
                         /**
                          * Our current is null but we're not drained (I.E we haven't finished and completed consuming)
                          * This means the producer is slow, and we don't have a complete set to compare,
-                         * we can't produce
+                         * we can't produce.  Bail and try again on the next event.
                          */
                         if ( current == null ) {
                             return;
                         }
 
 
-                        if ( maxObserver == null || ( current != null
-                                && comparator.compare( current, maxObserver.peek() ) > 0 ) ) {
+                        if ( max == null || ( current != null
+                                && comparator.compare( current, max ) > 0 ) ) {
                             maxObserver = inner;
+                            max = current;
                         }
                     }
 

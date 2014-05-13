@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.time.StopWatch;
 
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
@@ -60,7 +61,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( TestGraphModule.class )
 @Ignore("Not for testing during build.  Kills embedded Cassandra")
 public class GraphManagerLoadTest {

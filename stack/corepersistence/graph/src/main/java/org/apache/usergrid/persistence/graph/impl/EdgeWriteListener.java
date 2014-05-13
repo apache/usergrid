@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.EdgeWrite;
+import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -48,10 +49,11 @@ import rx.functions.Func1;
 
 
 /**
- * Construct the asynchronous delete operation from the listener
+ * Construct the asynchronous delete operation from the listener.  This really shouldn't exist in graph per se, but
+ * rather as a part of the usergrid mechanism
  */
 @Singleton
-public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, EdgeEvent<Edge>> {
+public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, Integer> {
 
 
     private final EdgeSerialization commitLog;
@@ -62,8 +64,9 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, EdgeE
 
     @Inject
     public EdgeWriteListener( @CommitLogEdgeSerialization final EdgeSerialization commitLog,
-                              @CommitLogEdgeSerialization final EdgeSerialization permanentStorage, final Keyspace keyspace,
-                              @EdgeWrite final AsyncProcessor<EdgeEvent<Edge>> edgeWrite, final GraphFig graphFig ) {
+                              @StorageEdgeSerialization final EdgeSerialization permanentStorage,
+                              final Keyspace keyspace, @EdgeWrite final AsyncProcessor<EdgeEvent<Edge>> edgeWrite,
+                              final GraphFig graphFig ) {
 
 
         Preconditions.checkNotNull( commitLog, "commitLog is required" );
@@ -83,11 +86,11 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, EdgeE
 
 
     @Override
-    public Observable<EdgeEvent<Edge>> receive( final EdgeEvent<Edge> write ) {
+    public Observable<Integer> receive( final EdgeEvent<Edge> write ) {
 
         final Edge writtenEdge = write.getData();
         final OrganizationScope scope = write.getOrganizationScope();
-        final UUID now = UUIDGenerator.newTimeUUID();
+        final UUID writeVersion = write.getVersion();
 
         return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeVersions" ) {
             @Override
@@ -95,22 +98,13 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, EdgeE
                 //get our edge as it exists in the commit log
                 return commitLog.getEdgeVersions( scope,
                         new SimpleSearchByEdge( writtenEdge.getSourceNode(), writtenEdge.getType(),
-                                writtenEdge.getTargetNode(), now, null ) );
+                                writtenEdge.getTargetNode(), writeVersion, null ) );
             }
         } )
-                //only process until we get to an edge <= this version or complete.
-                .takeWhile( new Func1<MarkedEdge, Boolean>() {
-                    @Override
-                    public Boolean call( final MarkedEdge markedEdge ) {
-                        return UUIDComparator.staticCompare( writtenEdge.getVersion(), markedEdge.getVersion() ) < 0;
-                    }
-                } )
-
                         //buffer them, then execute mutations in batch
-                .buffer( graphFig.getScanPageSize() ).map( new Func1<List<MarkedEdge>, EdgeEvent<Edge>>() {
+                .buffer( graphFig.getScanPageSize() ).flatMap( new Func1<List<MarkedEdge>, Observable<MarkedEdge>>() {
                     @Override
-                    public EdgeEvent<Edge> call( final List<MarkedEdge> markedEdges ) {
-
+                    public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
 
                         final MutationBatch storageWriteBatch = keyspace.prepareMutationBatch();
                         final MutationBatch commitlogCleanBatch = keyspace.prepareMutationBatch();
@@ -143,8 +137,8 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, EdgeE
                             throw new RuntimeException( "unable to execute mutation", e );
                         }
 
-                        return write;
+                        return Observable.from( markedEdges );
                     }
-                } );
+                } ).count();
     }
 }

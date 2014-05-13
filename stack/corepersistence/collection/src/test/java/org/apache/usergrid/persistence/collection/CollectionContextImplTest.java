@@ -1,7 +1,6 @@
 package org.apache.usergrid.persistence.collection;
 
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,8 +13,6 @@ import static junit.framework.TestCase.assertEquals;
 
 
 /** @author tnine */
-@RunWith( JukitoRunner.class )
-@UseModules( TestCollectionModule.class )
 public class CollectionContextImplTest {
 
 

@@ -167,8 +167,10 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<Edge> deleteEdge( final Edge edge ) {
         EdgeUtils.validateEdge( edge );
 
-        return HystrixGraphObservable
-                .user( Observable.from( edge ).subscribeOn( Schedulers.io() ).map( new Func1<Edge, Edge>() {
+        return
+                HystrixGraphObservable
+                .user(
+                        Observable.from( edge ).subscribeOn( Schedulers.io() ).map( new Func1<Edge, Edge>() {
                     @Override
                     public Edge call( final Edge edge ) {
                         final MutationBatch edgeMutation = commitLogSerialization.markEdge( scope, edge );

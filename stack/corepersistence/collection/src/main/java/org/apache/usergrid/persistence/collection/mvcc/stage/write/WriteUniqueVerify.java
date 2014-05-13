@@ -17,6 +17,7 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
