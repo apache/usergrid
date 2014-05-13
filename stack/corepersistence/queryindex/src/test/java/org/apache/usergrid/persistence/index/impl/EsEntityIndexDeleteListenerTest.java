@@ -1,5 +1,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
+import com.netflix.astyanax.util.TimeUUIDUtils;
+import com.yammer.metrics.core.Clock;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
@@ -48,9 +50,12 @@ public class EsEntityIndexDeleteListenerTest {
     @Test
     public void delete(){
         CollectionScope scope = mock(CollectionScope.class);
-        UUID uuid = UUID.randomUUID();
+        UUID uuid = TimeUUIDUtils.getTimeUUID(10000L);
         Id entityId = new SimpleId(uuid,"test");
-        Entity entity = new Entity(entityId);
+        Entity entity = mock(Entity.class);
+        when(entity.getVersion()).thenReturn(uuid);
+        when(entity.getId()).thenReturn(entityId);
+
         Results results = mock(Results.class);
         List<Entity> entities = new ArrayList<>();
         entities.add(entity);
