@@ -20,9 +20,12 @@ package org.apache.usergrid.persistence.index.impl;
 
 import com.google.inject.Inject;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.util.EntityBuilder;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
@@ -42,7 +45,9 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
 import org.apache.usergrid.persistence.index.utils.JsonUtils;
+import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
@@ -78,7 +83,10 @@ public class IndexIT {
 
     @Inject
     public EntityCollectionManagerFactory cmf;
-    
+
+    @Inject
+    public EntityIndexFactory eif;
+
     @Inject
     public EntityIndexFactory cif;
 
@@ -328,37 +336,56 @@ public class IndexIT {
     }
 
     @Test
-    public void historySearch() throws Exception {
+    public void getEntityVersions() throws Exception {
 
         Id orgId = new SimpleId("organization");
         OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
         Id appId = new SimpleId("application");
-
         CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
-        EntityManagerFacade em = new EntityManagerFacade( orgScope, appScope, cmf, cif );
+        EntityIndex ei = cif.createEntityIndex(orgScope, appScope);
+        CollectionScope scope = new CollectionScopeImpl(
+                orgScope.getOrganization(), appScope.getOwner(), "user" );
 
         String middleName = "middleName" + UUIDUtils.newTimeUUID();
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put("username", "edanuff");
         properties.put("email", "ed@anuff.com");
         properties.put("middlename", middleName);
-        Entity user = em.create("user", properties);
+        Entity user = create(ei, scope, "user", properties);
         user.setField(new StringField("address1", "1782 address st"));
-        em.update(user);
+        update(ei, scope, user);
         user.setField(new StringField("address2", "apt 508"));
-        em.update(user);
+        update(ei, scope, user);
         user.setField(new StringField("address3", "apt 508"));
-        em.update(user);
-        em.refreshIndex();
+        update(ei, scope, user);
 
-
-        CollectionScope scope = new CollectionScopeImpl(
-                orgScope.getOrganization(), appScope.getOwner(), "user" );
-        EntityIndex ei = cif.createEntityIndex(orgScope, appScope);
-        ei.getEntityVersions(user.getId(), scope);
-
+        Results results = ei.getEntityVersions(user.getId(), scope);
+        List<Entity> entities = results.getEntities();
+        assertEquals(entities.size(),4);
+        assertEquals(entities.get(0).getId(), user.getId());
+        assertEquals(entities.get(3).getVersion(), user.getVersion());
     }
 
+    public Entity create(EntityIndex eci, CollectionScope scope, String type, Map<String, Object> properties ) {
+
+        EntityCollectionManager ecm = cmf.createCollectionManager(scope);
+        Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), type ));
+        entity = EntityBuilder.fromMap(scope.getName(), entity, properties);
+        entity.setField(new LongField("created", entity.getId().getUuid().timestamp()) );
+        entity.setField(new LongField("modified", entity.getId().getUuid().timestamp()) );
+        entity = ecm.write( entity ).toBlockingObservable().last();
+
+        eci.index( scope, entity );
+        return entity;
+    }
+
+    public void update(EntityIndex eci, CollectionScope scope, Entity entity ) {
+
+        EntityCollectionManager ecm = cmf.createCollectionManager(scope);
+        entity = ecm.write( entity ).toBlockingObservable().last();
+        eci.index( scope, entity );
+        eci.refresh();
+    }
 
 
 //    @Test

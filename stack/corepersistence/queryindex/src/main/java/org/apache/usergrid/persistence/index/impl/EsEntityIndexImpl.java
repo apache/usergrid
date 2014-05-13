@@ -105,8 +105,6 @@ public class EsEntityIndexImpl implements EntityIndex {
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
     public static final String GEO_SUFFIX = "_ug_geo";
     public static final String COLLECTION_SCOPE_FIELDNAME = "zzz__collectionscope__zzz";
-    public static final String VERSION_FIELDNAME = "zzz__entityversion__zzz";
-    public static final String ENTITYID_FIELDNAME = "zzz__entityid__zzz";
 
 
     public static final String DOC_ID_SEPARATOR = "|";
@@ -270,9 +268,6 @@ public class EsEntityIndexImpl implements EntityIndex {
         entityAsMap.put("created", entity.getId().getUuid().timestamp());
         entityAsMap.put("updated", entity.getVersion().timestamp());
         entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, collScopeTypeName );
-        entityAsMap.put(VERSION_FIELDNAME, entity.getVersion().timestamp() );
-        entityAsMap.put(ENTITYID_FIELDNAME, entity.getId().getUuid());
-
 
         IndexRequestBuilder irb = client
             .prepareIndex( indexName, connScopeTypeName, indexId)
@@ -321,8 +316,11 @@ public class EsEntityIndexImpl implements EntityIndex {
         return search( createCollectionScopeTypeName( collScope ), query);
     }
 
-
     public Results search( String typeName, Query query) {
+        return search(typeName,query,false);
+    }
+
+    public Results search( String typeName, Query query, Boolean allVersions) {
 
         QueryBuilder qb = query.createQueryBuilder();
 
@@ -392,7 +390,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             }
 
             UUID entityVersion = UUID.fromString(version);
-            if (entityVersion.compareTo(entity.getVersion()) == -1) {
+            if (!allVersions && entityVersion.compareTo(entity.getVersion()) == -1) {
                 log.debug("   Stale hit " + hit.getId());
 
             } else {
@@ -597,12 +595,11 @@ public class EsEntityIndexImpl implements EntityIndex {
         deindex( createEntityConnectionScopeTypeName( sourceId, type ), target );
     }
 
-    //only gets one result
     @Override
     public Results getEntityVersions(Id id, CollectionScope collScope) {
         Query query = new Query();
-        query.addEqualityFilter( ENTITYID_FIELDNAME,id.getUuid() );
-        Results results = search(collScope,query);
+        query.addIdentifier(id);
+        Results results = search(createCollectionScopeTypeName( collScope ),query,true);
         return results;
     }
 
