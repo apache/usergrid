@@ -41,9 +41,6 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
     MvccEntity.Status status;
 
 
-
-
-
     /**
      * Create a new stage with the current context
      */
@@ -51,14 +48,8 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
     public WriteStart( final MvccLogEntrySerializationStrategy logStrategy ) {
         Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
 
-
         this.logStrategy = logStrategy;
         status = MvccEntity.Status.COMPLETE;
-//        if(status == null || MvccEntity.Status.COMPLETE == status){
-//            this.status = MvccEntity.Status.COMPLETE;
-//        }
-//        else
-//            this.status = MvccEntity.Status.PARTIAL;
 
     }
 
