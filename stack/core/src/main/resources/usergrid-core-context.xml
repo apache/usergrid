@@ -114,7 +114,7 @@
     </bean>-->
 
 	<bean id="entityManagerFactory"
-		class="org.apache.usergrid.corepersistence.CpEntityManagerFactory">
+		class="org.apache.usergrid.corepersistence.CpEntityManagerFactory" scope="singleton">
     </bean>
 
     <bean id="queueManagerFactory"

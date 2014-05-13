@@ -103,7 +103,6 @@ public class Query {
 
     List<Operand> filterClauses = new ArrayList<Operand>();
 
-
     public Query() {
     }
 
@@ -732,17 +731,18 @@ public class Query {
     }
 
 
-    private void addClause( Operand equals ) {
-        filterClauses.add(equals);
+    private void addClause( Operand clause ) {
+        filterClauses.add(clause);
 
         if ( rootOperand == null ) {
-            rootOperand = equals;
+            rootOperand = clause;
             return;
         }
 
         AndOperand and = new AndOperand();
         and.addChild( rootOperand );
-        and.addChild( equals );
+        and.addChild( clause );
+
 
         // redirect the root to new && clause
         rootOperand = and;

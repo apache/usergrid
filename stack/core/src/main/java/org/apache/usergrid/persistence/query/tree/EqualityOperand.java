@@ -86,4 +86,9 @@ public abstract class EqualityOperand extends Operand {
     public Literal<?> getLiteral() {
         return ( Literal<?> ) this.children.get( 1 );
     }
+
+    @Override
+    public boolean isNil() {
+        return true;
+    }
 }

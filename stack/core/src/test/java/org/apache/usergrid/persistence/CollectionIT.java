@@ -44,6 +44,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 
 
 //@RunWith(JukitoRunner.class)
@@ -57,6 +58,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testSimpleCrud() throws Exception {
+
+        LOG.debug( "testSimpleCrud" );
 
         app.put( "username", "edanuff" );
         app.put( "email", "ed@anuff.com" );
@@ -74,6 +77,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testCollection() throws Exception {
+        LOG.debug( "testCollection" );
+
         app.put( "username", "edanuff" );
         app.put( "email", "ed@anuff.com" );
 
@@ -206,6 +211,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void userFirstNameSearch() throws Exception {
+        LOG.debug( "userFirstNameSearch" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "testFirstName" );
         assertNotNull( applicationId );
 
@@ -270,6 +277,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void userMiddleNameSearch() throws Exception {
+        LOG.debug( "userMiddleNameSearch" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "testMiddleName" );
         assertNotNull( applicationId );
 
@@ -304,6 +313,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void userLastNameSearch() throws Exception {
+        LOG.debug( "userLastNameSearch" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "testLastName" );
         assertNotNull( applicationId );
 
@@ -338,6 +349,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testGroups() throws Exception {
+        LOG.debug( "testGroups" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "testGroups" );
         assertNotNull( applicationId );
 
@@ -385,6 +398,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void groupNameSearch() throws Exception {
+        LOG.debug( "groupNameSearch" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "groupNameSearch" );
         assertNotNull( applicationId );
 
@@ -419,6 +434,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void groupTitleSearch() throws Exception {
+        LOG.debug( "groupTitleSearch" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "groupTitleSearch" );
         assertNotNull( applicationId );
 
@@ -453,6 +470,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testSubkeys() throws Exception {
+        LOG.debug( "testSubkeys" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testSubkeys" );
         assertNotNull( applicationId );
@@ -505,6 +523,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void emptyQuery() throws Exception {
+        LOG.debug( "emptyQuery" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "testEmptyQuery" );
         assertNotNull( applicationId );
 
@@ -549,6 +569,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void emptyQueryReverse() throws Exception {
+        LOG.debug( "emptyQueryReverse" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "testEmptyQueryReverse" );
         assertNotNull( applicationId );
 
@@ -594,6 +616,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void orQuery() throws Exception {
+        LOG.debug( "orQuery" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "orQuery" );
         assertNotNull( applicationId );
 
@@ -674,6 +698,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void andQuery() throws Exception {
+        LOG.debug( "andQuery" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "andQuery" );
         assertNotNull( applicationId );
 
@@ -736,6 +762,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void notQuery() throws Exception {
+        LOG.debug( "notQuery" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "notQuery" );
         assertNotNull( applicationId );
 
@@ -807,7 +835,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testKeywordsOrQuery() throws Exception {
-        LOG.info( "testKeywordsOrQuery" );
+        LOG.debug( "testKeywordsOrQuery" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testKeywordsOrQuery" );
         assertNotNull( applicationId );
@@ -841,7 +869,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testKeywordsAndQuery() throws Exception {
-        LOG.info( "testKeywordsOrQuery" );
+        LOG.debug( "testKeywordsOrQuery" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "testKeywordsAndQuery" );
         assertNotNull( applicationId );
@@ -878,7 +906,9 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void pagingAfterDelete() throws Exception {
+        LOG.debug( "pagingAfterDelete" );
 
+        
         UUID applicationId = setup.createApplication( "testOrganization", "pagingAfterDelete" );
         assertNotNull( applicationId );
 
@@ -947,6 +977,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void pagingLessThanWithCriteria() throws Exception {
+        LOG.debug( "pagingLessThanWithCriteria" );
+
 
         UUID applicationId = setup.createApplication( "testOrganization", "pagingLessThanWithCriteria" );
         assertNotNull( applicationId );
@@ -999,9 +1031,10 @@ public class CollectionIT extends AbstractCoreIT {
         assertNull( r.getCursor() );
     }
 
-
     @Test
     public void pagingGreaterThanWithCriteria() throws Exception {
+        LOG.debug( "pagingGreaterThanWithCriteria" );
+
 
         UUID applicationId = setup.createApplication( "testOrganization", "pagingGreaterThanWithCriteria" );
         assertNotNull( applicationId );
@@ -1024,9 +1057,9 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.refreshIndex();
 
-        Query query = new Query();
+        Query query = Query.fromQL("select * where index >= " + size / 2);
         query.setLimit( pageSize );
-        query.addFilter( "index >= " + size / 2 );
+        query.addSort(new Query.SortPredicate("index", Query.SortDirection.ASCENDING));
 
         Results r = null;
 
@@ -1056,6 +1089,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void pagingWithBoundsCriteria() throws Exception {
+        LOG.debug( "pagingWithBoundsCriteria" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "pagingWithBoundsCriteria" );
         assertNotNull( applicationId );
@@ -1078,10 +1112,9 @@ public class CollectionIT extends AbstractCoreIT {
 
         int pageSize = 10;
 
-        Query query = new Query();
+        Query query = Query.fromQL("select * where index >= 10 and index <= 29");
         query.setLimit( pageSize );
-        query.addFilter( "index >= 10" );
-        query.addFilter( "index <= 29" );
+        query.addSort(new Query.SortPredicate("index", Query.SortDirection.ASCENDING));
 
         Results r = null;
 
@@ -1111,6 +1144,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testPagingWithGetNextResults() throws Exception {
+        LOG.debug( "testPagingWithGetNextResults" );
 
         UUID applicationId = setup.createApplication( "testOrganization", "pagingWithBoundsCriteria2" );
         assertNotNull( applicationId );
@@ -1133,10 +1167,9 @@ public class CollectionIT extends AbstractCoreIT {
 
         int pageSize = 10;
 
-        Query query = new Query();
+        Query query = Query.fromQL("select * where index >= 10 and index <= 29");
         query.setLimit( pageSize );
-        query.addFilter( "index >= 10" );
-        query.addFilter( "index <= 29" );
+        query.addSort(new Query.SortPredicate("index", Query.SortDirection.ASCENDING));
 
         Results r = em.searchCollection( em.getApplicationRef(), "pages", query );
 
@@ -1161,6 +1194,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void subpropertyQuerying() throws Exception {
+        LOG.debug( "subpropertyQuerying" );
+
         Map<String, Object> root = new HashMap<String, Object>();
 
         Map<String, Object> subEntity = new HashMap<String, Object>();
@@ -1216,6 +1251,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void arrayQuerying() throws Exception {
+        LOG.debug( "arrayQuerying" );
+
 
         Map<String, Object> root = new HashMap<String, Object>();
 
@@ -1284,6 +1321,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void stringWithSpaces() throws Exception {
+        LOG.debug( "stringWithSpaces" );
+
         Map<String, Object> props = new HashMap<String, Object>();
 
         props.put( "myString", "My simple string" );
@@ -1311,6 +1350,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testSelectTerms() throws Exception {
+        LOG.debug( "testSelectTerms" );
+
 
         UUID applicationId = setup.createApplication( "testOrganization", "testSelectTerms" );
 
@@ -1342,6 +1383,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testRedefineTerms() throws Exception {
+        LOG.debug( "testRedefineTerms" );
+
 
         UUID applicationId = setup.createApplication( "testOrganization", "testRedefineTerms" );
 
@@ -1373,6 +1416,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testSelectEmailViaConnection() throws Exception {
+        LOG.debug( "testSelectEmailViaConnection" );
+
 
         UUID applicationId = setup.createApplication( "testOrganization", "testSelectEmail" );
 
@@ -1427,6 +1472,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testNotQueryAnd() throws Exception {
+        LOG.debug( "testNotQueryAnd" );
+
 
         UUID applicationId = setup.createApplication( "testOrganization", "testNotQueryAnd" );
 
@@ -1489,6 +1536,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void runtimeTypeCorrect() throws Exception {
+        LOG.debug( "runtimeTypeCorrect" );
+
 
         UUID applicationId = setup.createApplication( "testOrganization", "runtimeTypeCorrect" );
         assertNotNull( applicationId );
@@ -1528,6 +1577,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void badOrderByBadGrammarAsc() throws Exception {
+        LOG.debug( "badOrderByBadGrammarAsc" );
+
 
         UUID applicationId = setup.createApplication( "testOrganization", "badOrderByBadGrammarAsc" );
         assertNotNull( applicationId );
@@ -1560,6 +1611,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void badOrderByBadGrammarDesc() throws Exception {
+        LOG.debug( "badOrderByBadGrammarDesc" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "badOrderByBadGrammarDesc" );
         assertNotNull( applicationId );
 
@@ -1592,6 +1645,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void uuidIdentifierTest() throws Exception {
+        LOG.debug( "uuidIdentifierTest" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "uuidIdentifierTest" );
         assertNotNull( applicationId );
 
@@ -1624,6 +1679,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void nameIdentifierTest() throws Exception {
+        LOG.debug( "nameIdentifierTest" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "nameIdentifierTest" );
         assertNotNull( applicationId );
 
@@ -1658,6 +1715,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void emailIdentifierTest() throws Exception {
+        LOG.debug( "emailIdentifierTest" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "emailIdentifierTest" );
         assertNotNull( applicationId );
 
@@ -1693,6 +1752,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test(expected = DuplicateUniquePropertyExistsException.class)
     public void duplicateIdentifierTest() throws Exception {
+        LOG.debug( "duplicateIdentifierTest" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "duplicateIdentifierTest" );
         assertNotNull( applicationId );
 
@@ -1716,6 +1777,8 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test(expected = DuplicateUniquePropertyExistsException.class)
     public void duplicateNameTest() throws Exception {
+        LOG.debug( "duplicateNameTest" );
+
         UUID applicationId = setup.createApplication( "testOrganization", "duplicateNameTest" );
         assertNotNull( applicationId );
 

@@ -122,7 +122,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CpManagerCache managerCache;
 
 
-    public CpEntityManagerFactory() {}
+    public CpEntityManagerFactory() {
+        logger.debug("Creating a new CpEntityManagerFactory");
+    }
     
 
     public CpManagerCache getManagerCache() {

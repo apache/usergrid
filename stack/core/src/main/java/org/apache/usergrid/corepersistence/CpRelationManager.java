@@ -536,6 +536,8 @@ public class CpRelationManager implements RelationManager {
 
         Results results = Results.fromEntities( entities );
         results.setCursor(cpResults.getCursor());
+        results.setQueryProcessor( new CpQueryProcessor( em, headEntity, collName ) );
+
         return results;
     }
 

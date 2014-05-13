@@ -50,7 +50,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.time.StopWatch;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
@@ -58,7 +57,6 @@ import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -77,6 +75,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import java.util.Collections;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
@@ -140,14 +139,24 @@ public class EsEntityIndexImpl implements EntityIndex {
         this.refresh = config.isForcedRefresh();
         this.cursorTimeout = config.getQueryCursorTimeout();
 
+        //log.debug("Creating new EsEntityIndexImpl for: " + indexName);
+
         AdminClient admin = client.admin();
         try {
-            admin.indices().prepareCreate(indexName).execute().actionGet();
-            log.debug("Created new index: " + indexName);
+            CreateIndexResponse r = admin.indices().prepareCreate(indexName).execute().actionGet();
+            log.debug("Created new Index Name [{}] ACK=[{}]", indexName, r.isAcknowledged());
+
+            client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
+
+            try { 
+                // TODO: figure out what refresh above is not enough to ensure index is ready
+                Thread.sleep(500);
+            } catch (InterruptedException ex) {}
 
         } catch (IndexAlreadyExistsException ignored) {
             //log.debug("Keyspace already exists", ignored);
         } 
+
     }
 
     
@@ -623,7 +632,6 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     public void refresh() {
         client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
+        log.debug("Refreshed index: " + indexName);
     }
-
-
 }

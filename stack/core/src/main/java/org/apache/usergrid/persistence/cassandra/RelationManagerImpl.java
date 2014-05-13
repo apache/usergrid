@@ -1775,7 +1775,7 @@ public class RelationManagerImpl implements RelationManager {
 
         // we have something to search with, visit our tree and evaluate the
         // results
-        QueryProcessor qp = new QueryProcessor( query, collection, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, collection, em, factory );
         SearchCollectionVisitor visitor = new SearchCollectionVisitor( qp );
 
         return qp.getResults( visitor );
@@ -1969,7 +1969,7 @@ public class RelationManagerImpl implements RelationManager {
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
         SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, true );
 
         return qp.getResults( visitor );
@@ -2011,7 +2011,7 @@ public class RelationManagerImpl implements RelationManager {
                 new ConnectionRefImpl( new SimpleEntityRef( connectedEntityType, null ), connectionType, targetEntity );
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
         SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, false );
 
         return qp.getResults( visitor );
@@ -2050,7 +2050,7 @@ public class RelationManagerImpl implements RelationManager {
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
         SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, true );
 
         return qp.getResults( visitor );
@@ -2079,7 +2079,7 @@ public class RelationManagerImpl implements RelationManager {
         /**
          * @param queryProcessor
          */
-        public SearchCollectionVisitor( QueryProcessor queryProcessor ) {
+        public SearchCollectionVisitor( QueryProcessorImpl queryProcessor ) {
             super( queryProcessor );
             this.collection = queryProcessor.getCollectionInfo();
         }
@@ -2195,7 +2195,7 @@ public class RelationManagerImpl implements RelationManager {
          * @param outgoing The direction to search.  True if we should search from source->target edges.  False if we
          * should search from target<-source edges
          */
-        public SearchConnectionVisitor( QueryProcessor queryProcessor, ConnectionRefImpl connection,
+        public SearchConnectionVisitor( QueryProcessorImpl queryProcessor, ConnectionRefImpl connection,
                                         boolean outgoing ) {
             super( queryProcessor );
             this.connection = connection;

@@ -22,7 +22,7 @@ import java.util.Stack;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.cassandra.QueryProcessor;
+import org.apache.usergrid.persistence.cassandra.QueryProcessorImpl;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.apache.usergrid.persistence.query.ir.result.EmptyIterator;
@@ -50,7 +50,7 @@ public abstract class SearchVisitor implements NodeVisitor {
 
     protected final Query query;
 
-    protected final QueryProcessor queryProcessor;
+    protected final QueryProcessorImpl queryProcessor;
 
     protected final EntityManager em;
 
@@ -60,7 +60,7 @@ public abstract class SearchVisitor implements NodeVisitor {
     /**
      * @param queryProcessor
      */
-    public SearchVisitor( QueryProcessor queryProcessor ) {
+    public SearchVisitor( QueryProcessorImpl queryProcessor ) {
         this.query = queryProcessor.getQuery();
         this.queryProcessor = queryProcessor;
         this.em = queryProcessor.getEntityManager();

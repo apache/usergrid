@@ -99,7 +99,7 @@ public class CpEntityManager implements EntityManager {
     private UUID applicationId;
     private Application application;
     
-    private CpEntityManagerFactory emf = new CpEntityManagerFactory();
+    private CpEntityManagerFactory emf;
 
     private CpManagerCache managerCache;
 
