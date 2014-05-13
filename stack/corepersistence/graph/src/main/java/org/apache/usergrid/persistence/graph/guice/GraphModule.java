@@ -353,7 +353,7 @@ public class GraphModule extends AbstractModule {
      *
      * https://code.google.com/p/google-guice/issues/detail?id=216
      */
-    public static class EdgeWriteListenerProvider implements Provider<MessageListener<EdgeEvent<Edge>, EdgeEvent<Edge>>> {
+    public static class EdgeWriteListenerProvider implements Provider<MessageListener<EdgeEvent<Edge>, Integer>> {
 
         private final EdgeSerialization commitLog;
         private final EdgeSerialization permanentStorage;
@@ -377,7 +377,7 @@ public class GraphModule extends AbstractModule {
 
 
         @Override
-        public MessageListener<EdgeEvent<Edge>, EdgeEvent<Edge>> get() {
+        public MessageListener<EdgeEvent<Edge>, Integer> get() {
             return new EdgeWriteListener( commitLog, permanentStorage, keyspace, edgeWrite, graphFig );
         }
     }

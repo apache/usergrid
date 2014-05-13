@@ -24,6 +24,8 @@ import java.util.Iterator;
 
 import javax.inject.Inject;
 
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.core.rx.OrderedMerge;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
@@ -33,12 +35,12 @@ import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.core.rx.OrderedMerge;
 
+import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Singleton;
 
 import rx.Observable;
+import rx.functions.Func1;
 
 
 /**
@@ -85,8 +87,8 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                 } );
 
         return OrderedMerge
-                .orderedMerge( EdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog, permanent )
-                .distinctUntilChanged();
+                .orderedMerge( SourceEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
+                        permanent ).distinctUntilChanged();
     }
 
 
@@ -111,8 +113,8 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                 } );
 
         return OrderedMerge
-                .orderedMerge( EdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog, permanent )
-                .distinctUntilChanged();
+                .orderedMerge( SourceEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
+                        permanent ).distinctUntilChanged();
     }
 
 
@@ -135,8 +137,8 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                 } );
 
         return OrderedMerge
-                .orderedMerge( EdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog, permanent )
-                .distinctUntilChanged();
+                .orderedMerge( TargetEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
+                        permanent ).distinctUntilChanged();
     }
 
 
@@ -160,8 +162,8 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                 } );
 
         return OrderedMerge
-                .orderedMerge( EdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog, permanent )
-                .distinctUntilChanged();
+                .orderedMerge( TargetEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
+                        permanent ).distinctUntilChanged();
     }
 
 
@@ -185,53 +187,121 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                 } );
 
         return OrderedMerge
-                .orderedMerge( EdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog, permanent )
+                .orderedMerge( EdgeVersionComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog, permanent )
                 .distinctUntilChanged();
     }
 
 
-    private static final class EdgeComparator implements Comparator<MarkedEdge> {
-
-        private static final EdgeComparator INSTANCE = new EdgeComparator();
+    /**
+     * Edge comparator for comparing edgs.  Should order them by timeuuid, then non seek node, then deleted = true
+     * first
+     */
+    private static abstract class EdgeComparator implements Comparator<MarkedEdge> {
 
 
         @Override
         public int compare( final MarkedEdge o1, final MarkedEdge o2 ) {
 
-            int compare = o1.getSourceNode().compareTo( o2.getSourceNode() );
+
+            int compare = compareVersions( o1, o2 );
 
             if ( compare != 0 ) {
                 return compare;
             }
 
-            compare = o1.getType().compareTo( o2.getType() );
+            compare = compareId( o1, o2 );
 
             if ( compare != 0 ) {
                 return compare;
             }
 
-            compare = o1.getTargetNode().compareTo( o2.getTargetNode() );
-
-            if ( compare != 0 ) {
-                return compare;
-            }
-
-            if ( o1.isDeleted() ) {
-                //if o2 is deleted it's returned
-                if ( o2.isDeleted() ) {
-                    return 0;
-                }
-
-                //o2 is not deleted, so it should be "less" to be emitted first
-                return -1;
-            }
-
-            //o2 is deleted and o1 is not
-            if ( o2.isDeleted() ) {
-                return 1;
-            }
-
-            return 0;
+            return compareMarks( o1, o2 );
         }
+
+
+        protected abstract int compareId( final MarkedEdge o1, final MarkedEdge o2 );
+    }
+
+
+    /**
+     * Performs comparisons for read from source edges
+     */
+    public static final class SourceEdgeComparator extends EdgeComparator {
+
+        public static final SourceEdgeComparator INSTANCE = new SourceEdgeComparator();
+
+
+        @Override
+        protected int compareId( final MarkedEdge o1, final MarkedEdge o2 ) {
+            return o1.getTargetNode().compareTo( o2.getTargetNode() );
+        }
+    }
+
+
+    /**
+     * Performs comparisons for read from source edges
+     */
+    public static final class TargetEdgeComparator extends EdgeComparator {
+
+        public static final TargetEdgeComparator INSTANCE = new TargetEdgeComparator();
+
+
+        @Override
+        protected int compareId( final MarkedEdge o1, final MarkedEdge o2 ) {
+            return o1.getSourceNode().compareTo( o2.getSourceNode() );
+        }
+    }
+
+
+    /**
+     * Assumes that all edges are the same and only differ by version and marked
+     */
+    public static final class EdgeVersionComparator implements Comparator<MarkedEdge> {
+
+        public static final EdgeVersionComparator INSTANCE = new EdgeVersionComparator();
+
+        @Override
+        public int compare( final MarkedEdge o1, final MarkedEdge o2 ) {
+            int compare = compareVersions(o1, o2);
+
+            if ( compare != 0 ) {
+                return compare;
+            }
+
+            return compareMarks( o1, o2 );
+        }
+    }
+
+
+    /**
+     * Compare versions of the two edges.  The highest version will be considered "less" than a lower version since we
+     * want descending ordering
+     * @param o1
+     * @param o2
+     * @return
+     */
+    public static int compareVersions(final MarkedEdge o1, final MarkedEdge o2){
+        return UUIDComparator.staticCompare( o1.getVersion(), o2.getVersion() );
+    }
+    /**
+     * Compare the marks.  Since a marked of deleted is higher priority, it becomes a less than respnse
+     */
+    public static int compareMarks( final MarkedEdge o1, final MarkedEdge o2 ) {
+        if ( o1.isDeleted() ) {
+            //if o2 is deleted they're both deleted and equa
+            if ( o2.isDeleted() ) {
+                return 0;
+            }
+
+            //o2 is not deleted, so o1 should be "less" to be emitted first
+            return 1;
+        }
+
+        //o2 is deleted and o1 is not
+        if ( o2.isDeleted() ) {
+            return -1;
+        }
+
+        return 0;
     }
 }

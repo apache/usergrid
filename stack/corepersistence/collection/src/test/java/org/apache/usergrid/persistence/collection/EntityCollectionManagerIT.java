@@ -18,7 +18,6 @@
 package org.apache.usergrid.persistence.collection;
 
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -30,14 +29,12 @@ import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeExc
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.model.field.StringField;
 
-import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 
 import rx.Observable;
@@ -48,29 +45,16 @@ import static org.junit.Assert.assertNull;
 
 
 /** @author tnine */
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class EntityCollectionManagerIT {
     @Inject
     private EntityCollectionManagerFactory factory;
 
-    @Inject
-    private EventBus eventBus;
-
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
-
 
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
-
-    @Inject
-    public Load load;
-
-    @Inject
-    public CollectionScope context;
 
 
     @Test
@@ -93,45 +77,6 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Version exists" );
     }
 
-    @Test
-    public void partialUpdate() {
-        StringField testField1 = new StringField("testField","value");
-        StringField addedField = new StringField( "testFud", "NEWPARTIALUPDATEZOMG" );
-
-        CollectionScope context = new CollectionScopeImpl(
-                new SimpleId( "organization" ),  new SimpleId( "testUpdate" ), "testUpdate" );
-
-        Entity oldEntity = new Entity( new SimpleId( "testUpdate" ) );
-        oldEntity.setField( new StringField( "testField", "value" ) );
-
-        EntityCollectionManager manager = factory.createCollectionManager( context );
-
-        Observable<Entity> observable = manager.write( oldEntity );
-
-        Entity returned = observable.toBlockingObservable().lastOrDefault( null );
-
-        assertNotNull( "Returned has a uuid", returned.getId() );
-
-        oldEntity.getFields().remove( testField1  );
-        oldEntity.setField( addedField );
-
-//TODO:merge in helper object. Then register it with the queue. Then call wait on the function.
-        //TODO:refactor test to check we get partial entity back, then do a read to make sure entity is COMPLETE, not partial.
-        observable = manager.update( oldEntity);
-
-        returned = observable.toBlockingObservable().lastOrDefault( null );
-
-        assertNotNull( "Returned has a uuid", returned.getId() );
-        assertEquals( oldEntity.getField( "testFud" ), returned.getField( "testFud" ) );
-
-        Observable<Entity> newEntityObs = manager.load( oldEntity.getId() );
-        Entity newEntity = newEntityObs.toBlockingObservable().last();
-
-        assertNotNull( "Returned has a uuid", returned.getId() );
-        assertEquals( addedField, newEntity.getField( "testFud" ));
-
-
-    }
 
     @Test
     public void writeWithUniqueValues() {
@@ -255,7 +200,7 @@ public class EntityCollectionManagerIT {
         createReturned.setField( new IntegerField( "counter", 2 ) );
 
         //wait for the write to complete
-        Entity ents = manager.write( createReturned ).toBlockingObservable().lastOrDefault( null );
+        manager.write( createReturned ).toBlockingObservable().lastOrDefault( null );
 
 
         loadObservable = manager.load( createReturned.getId() );

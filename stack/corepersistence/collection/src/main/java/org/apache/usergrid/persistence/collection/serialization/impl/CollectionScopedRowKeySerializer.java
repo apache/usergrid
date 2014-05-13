@@ -17,9 +17,11 @@
  */
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
+
 import java.nio.ByteBuffer;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
@@ -29,7 +31,6 @@ import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 
 
 /**

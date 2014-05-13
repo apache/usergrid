@@ -61,7 +61,7 @@ import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 
 
-@RunWith(JukitoRunner.class)
+@RunWith(ITRunner.class)
 @UseModules({ TestIndexModule.class })
 public class CollectionIT {
     private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );

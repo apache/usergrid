@@ -18,7 +18,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -34,6 +33,7 @@ import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -49,12 +49,9 @@ import static org.junit.Assert.fail;
 /**
  * Simple integration test of uniqueness verification.
  */
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class WriteUniqueVerifyIT {
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
     @Inject
     @Rule

@@ -97,7 +97,7 @@ public class NodeShardApproximationTest {
 
 
         final int increments = 1000000;
-        final int workers = 100;
+        final int workers = Runtime.getRuntime().availableProcessors()*2;
 
         final Id id = createId( "test" );
         final String type = "type";

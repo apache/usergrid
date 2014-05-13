@@ -50,7 +50,7 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(JukitoRunner.class)
+@RunWith(ITRunner.class)
 @UseModules({ TestIndexModule.class })
 public class EntityConnectionIndexImplTest {
 

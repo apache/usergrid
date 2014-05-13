@@ -34,20 +34,13 @@ public class CassandraRule extends EnvironResource {
 
     private static boolean started = false;
 
-    private final CassandraFig cassandraFig;
-
 
     public CassandraRule() {
         super( Env.UNIT );
-
-        Injector injector = Guice.createInjector( new GuicyFigModule( CassandraFig.class ) );
-        cassandraFig = injector.getInstance( CassandraFig.class );
     }
 
 
-    public CassandraFig getCassandraFig() {
-        return cassandraFig;
-    }
+
 
 
     @Override
@@ -75,7 +68,7 @@ public class CassandraRule extends EnvironResource {
             try {
                 LOG.info( "Starting cassandra" );
 
-                cass = new EmbeddedCassandra( dataDir, "Usergrid", cassandraFig.getThriftPort(),
+                cass = new EmbeddedCassandra( dataDir, "Usergrid", 9160,
                         AvailablePortFinder.getNextAvailable() );
                 cass.start();
 

@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -20,7 +18,6 @@ import org.safehaus.guicyfig.Option;
 import org.safehaus.guicyfig.Overrides;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
@@ -31,6 +28,8 @@ import org.apache.usergrid.persistence.collection.serialization.SerializationFig
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.migration.MigrationManagerFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -58,7 +57,7 @@ import static org.mockito.Mockito.mock;
 
 /** @author tnine */
 @IterationChop( iterations = 1000, threads = 2 )
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class MvccEntitySerializationStrategyImplTest {
     /** Our RX I/O threads and this should have the same value */
@@ -67,10 +66,6 @@ public class MvccEntitySerializationStrategyImplTest {
 
     @Inject
     private MvccEntitySerializationStrategy serializationStrategy;
-
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
     @Inject
     AstyanaxKeyspaceProvider provider;
@@ -101,12 +96,6 @@ public class MvccEntitySerializationStrategyImplTest {
     @Before
     public void setup() {
         assertNotNull( cassandraFig );
-    }
-
-
-    @After
-    public void tearDown() {
-        provider.shutdown();
     }
 
 
