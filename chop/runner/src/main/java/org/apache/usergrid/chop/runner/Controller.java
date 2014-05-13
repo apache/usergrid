@@ -132,7 +132,7 @@ public class Controller implements IController, Runnable {
 
     @Override
     public StatsSnapshot getCurrentChopStats() {
-        return currentDriver.getChopStats();
+        return currentDriver != null ? currentDriver.getChopStats() : null;
     }
 
 
