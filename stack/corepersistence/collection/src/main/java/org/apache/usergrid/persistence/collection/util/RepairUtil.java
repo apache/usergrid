@@ -25,7 +25,7 @@ public class RepairUtil {
             return results.get( 0 ).getEntity().get();
         }
         //delete case
-        if(!results.get( 0 ).getEntity().isPresent()){
+        if(!results.get( 0 ).getEntity().isPresent() && results.get( 0 ).getStatus() == MvccEntity.Status.COMPLETE){
             return null;
         }
 
