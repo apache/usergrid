@@ -41,6 +41,8 @@ import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
 import org.apache.usergrid.persistence.index.query.tree.Equal;
 import org.apache.usergrid.persistence.index.query.tree.EqualityOperand;
 import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
@@ -48,8 +50,6 @@ import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.LessThan;
 import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.Operand;
-import org.apache.usergrid.persistence.index.query.tree.QueryFilterLexer;
-import org.apache.usergrid.persistence.index.query.tree.QueryFilterParser;
 import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import static org.apache.usergrid.persistence.index.utils.ClassUtils.cast;
 import org.apache.usergrid.persistence.index.utils.JsonUtils;
@@ -190,9 +190,9 @@ public class Query {
         }
 
         ANTLRStringStream in = new ANTLRStringStream( ql.trim() );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         CommonTokenStream tokens = new CommonTokenStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         try {
             Query q = parser.ql().query;
@@ -526,9 +526,9 @@ public class Query {
     public Query addFilter( String filter ) {
 
         ANTLRStringStream in = new ANTLRStringStream( filter );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
         Operand root = null;
 
         try {

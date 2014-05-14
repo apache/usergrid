@@ -113,8 +113,8 @@ public interface EntityManager {
             throws Exception;
 
     /**
-     * Validates that the entity exists in the datastore meaning that it exists and the type has been loaded if not
-     * already provided.
+     * Validates that the entity exists in the datastore meaning that it exists and the type has 
+     * been loaded if not already provided.
      *
      * @return an validated EntityRef or null.
      */
@@ -138,47 +138,22 @@ public interface EntityManager {
     public <A extends Entity> A get( UUID entityId, Class<A> entityClass ) throws Exception;
 
     /**
-     * Retrieves a set of Entities. Will return an Entity object containing all of the entity's name/value properties
-     * and properties. For large numbers of entities, retrieving the properties can have additional overhead, passing
-     * false for includeProperties can result in better performance.
-     * <p/>
-     * This method will be deprecated in future releases in favor of a version that supports paging.
-     *
-     * @param entityIds a list of entity UUIDs.
-     * @param resultsLevel whether to retrieve properties for the specified entities.
-     *
-     * @return a list of entity objects.
-     */
-    public Results get( Collection<UUID> entityIds, Results.Level resultsLevel ) throws Exception;
-
-    /**
-     * Retrieves a set of Entities. Will return an Entity object containing all of the entity's name/value properties
-     * and properties. For large numbers of entities, retrieving the properties can have additional overhead, passing
-     * false for includeProperties can result in better performance.
-     * <p/>
-     * This method will be deprecated in future releases in favor of a version that supports paging.
-     *
-     * @param entityIds a list of entity UUIDs.
-     *
-     * @return a list of entity objects.
-     */
-    public Results get( Collection<UUID> entityIds ) throws Exception;
-
-    /**
      * Retrieves a set of Entitues cast to the specified class type.
      *
      * @return a list of entity objects.
      */
-    public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, Results.Level resultsLevel )
-            throws Exception;
+    public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, 
+            Results.Level resultsLevel ) throws Exception;
 
     /**
      * Retrieves a set of Entities cast to the specified class type.
      *
      * @return a list of entity objects.
      */
-    public Results get( Collection<UUID> entityIds, String entityType, Class<? extends Entity> entityClass,
-                        Results.Level resultsLevel ) throws Exception;
+    public Results get( Collection<UUID> entityIds, String entityType, 
+        Class<? extends Entity> entityClass, Results.Level resultsLevel ) throws Exception;
+
+    public Results getEntities(List<UUID> ids, String type);
 
     /**
      * Updates the entity with the properties and values in the Entity Object.

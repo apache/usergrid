@@ -1,4 +1,4 @@
-grammar QueryFilter;
+grammar CpQueryFilter;
 //NOTES:  '^' denotes operator, all others in the string become operands
 
 options {
@@ -24,7 +24,7 @@ import org.apache.usergrid.persistence.index.query.Query.SortPredicate;
 	Query query = new Query();
 
   private static final Logger logger = LoggerFactory
-      .getLogger(QueryFilterLexer.class);
+      .getLogger(CpQueryFilterLexer.class);
 
 	@Override
 	public void emitErrorMessage(String msg) {
@@ -48,7 +48,7 @@ import org.apache.usergrid.persistence.index.exceptions.QueryTokenException;
 
 
   private static final Logger logger = LoggerFactory
-      .getLogger(QueryFilterLexer.class);
+      .getLogger(CpQueryFilterLexer.class);
 
 
 

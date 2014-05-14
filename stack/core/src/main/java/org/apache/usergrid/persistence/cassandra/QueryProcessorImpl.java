@@ -72,7 +72,6 @@ import org.apache.usergrid.persistence.query.tree.WithinOperand;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
-import static org.usergrid.persistence.cassandra.Serializers.ue;
 
 
 public class QueryProcessorImpl implements QueryProcessor {
@@ -196,7 +195,7 @@ public class QueryProcessorImpl implements QueryProcessor {
 
                 if ( startResultSet ) {
                     cursorCache.setNextCursor( allNode.getSlice().hashCode(),
-                            ue.toByteBuffer( startResult ) );
+                            Serializers.ue.toByteBuffer( startResult ) );
                 }
 
                 rootNode = allNode;
@@ -292,11 +291,12 @@ public class QueryProcessorImpl implements QueryProcessor {
             }
         }
         if (logger.isDebugEnabled()) {
-        	logger.debug("Getting result for query: [{}],  returning entityIds size: {}", getQuery(), entityIds.size());
+        	logger.debug("Getting result for query: [{}],  returning entityIds size: {}", 
+                    getQuery(), entityIds.size());
         }
 
         final ResultsLoader loader = loaderFactory.getResultsLoader( em, query, query.getResultsLevel() );
-        final Results results = loader.getResults( entityIds );
+        final Results results = loader.getResults( entityIds, query.getEntityType() );
 
         if ( results == null ) {
             return null;

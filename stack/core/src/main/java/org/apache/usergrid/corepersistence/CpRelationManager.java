@@ -306,6 +306,8 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(organizationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
+        // TODO: is this redundant for entities being added to collections
+        
         // index connection from head entity to member entity
         EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
         
@@ -701,6 +703,7 @@ public class CpRelationManager implements RelationManager {
         gm.writeEdge(edge).toBlockingObservable().last();
 
         // Index the new connection
+        // TODO: instead of applicationScope use scope : source->connectionType?
         EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
         ei.indexConnection(cpHeadEntity, connectionType, targetEntity, targetScope);
 
