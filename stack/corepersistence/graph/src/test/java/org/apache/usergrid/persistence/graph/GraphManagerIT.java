@@ -21,20 +21,17 @@ package org.apache.usergrid.persistence.graph;
 
 import java.util.Iterator;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 import org.jukito.All;
-import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -57,9 +54,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-@RunWith(JukitoRunner.class)
-@UseModules({ TestGraphModule.class })
-public class GraphManagerIT {
+public abstract class GraphManagerIT {
 
 
     @ClassRule
@@ -77,6 +72,14 @@ public class GraphManagerIT {
     protected OrganizationScope scope;
 
 
+    /**
+     * Get the helper for performing our tests
+     *
+     * @return The helper to use when writing/synchronizing tests
+     */
+    protected abstract GraphManager getHelper( GraphManager gm );
+
+
     @Before
     public void setup() {
         scope = mock( OrganizationScope.class );
@@ -91,20 +94,19 @@ public class GraphManagerIT {
 
 
     @Test
-    public void testWriteReadEdgeTypeSource() {
+    public void testWriteReadEdgeTypeSource() throws TimeoutException, InterruptedException {
 
-        GraphManager em = emf.createEdgeManager( scope );
-
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Edge edge = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
         SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadEdgesFromSource( search );
+        Observable<Edge> edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().last();
@@ -114,7 +116,7 @@ public class GraphManagerIT {
         //change edge type to be invalid, shouldn't get a result
         search = createSearchByEdge( edge.getSourceNode(), edge.getType() + "invalid", edge.getVersion(), null );
 
-        edges = em.loadEdgesFromSource( search );
+        edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -124,20 +126,19 @@ public class GraphManagerIT {
 
 
     @Test
-    public void testWriteReadEdgeTypeTarget() {
+    public void testWriteReadEdgeTypeTarget() throws TimeoutException, InterruptedException {
 
-        GraphManager em = emf.createEdgeManager( scope );
-
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Edge edge = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
         SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadEdgesToTarget( search );
+        Observable<Edge> edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -147,7 +148,7 @@ public class GraphManagerIT {
         //change edge type to be invalid, shouldn't get a result
         search = createSearchByEdge( edge.getTargetNode(), edge.getType() + "invalid", edge.getVersion(), null );
 
-        edges = em.loadEdgesToTarget( search );
+        edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -157,22 +158,21 @@ public class GraphManagerIT {
 
 
     @Test
-    public void testWriteReadEdgeTypeVersionSource() {
+    public void testWriteReadEdgeTypeVersionSource() throws TimeoutException, InterruptedException {
 
-        GraphManager em = emf.createEdgeManager( scope );
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         final UUID earlyVersion = UUIDGenerator.newTimeUUID();
 
-
         Edge edge = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
         SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadEdgesFromSource( search );
+        Observable<Edge> edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -182,7 +182,7 @@ public class GraphManagerIT {
         //now test with an earlier version, we shouldn't get the edge back
         search = createSearchByEdge( edge.getSourceNode(), edge.getType(), earlyVersion, null );
 
-        edges = em.loadEdgesFromSource( search );
+        edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -192,23 +192,22 @@ public class GraphManagerIT {
 
 
     @Test
-    public void testWriteReadEdgeTypeVersionTarget() {
+    public void testWriteReadEdgeTypeVersionTarget() throws TimeoutException, InterruptedException {
 
-        GraphManager em = emf.createEdgeManager( scope );
-
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         final UUID earlyVersion = UUIDGenerator.newTimeUUID();
 
 
         Edge edge = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
         SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadEdgesToTarget( search );
+        Observable<Edge> edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -218,7 +217,7 @@ public class GraphManagerIT {
         //change edge type to be invalid, shouldn't get a result
         search = createSearchByEdge( edge.getTargetNode(), edge.getType(), earlyVersion, null );
 
-        edges = em.loadEdgesToTarget( search );
+        edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -231,9 +230,9 @@ public class GraphManagerIT {
      * Tests that if multiple versions of an edge exist, only the distinct edges with a version <= max are returned
      */
     @Test
-    public void testWriteReadEdgeTypeVersionSourceDistinct() {
+    public void testWriteReadEdgeTypeVersionSourceDistinct() throws TimeoutException, InterruptedException {
 
-        GraphManager em = emf.createEdgeManager( scope );
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         final UUID earlyVersion = UUIDGenerator.newTimeUUID();
 
@@ -244,15 +243,15 @@ public class GraphManagerIT {
         final Id targetId = edge1.getTargetNode();
 
 
-        em.writeEdge( edge1 ).toBlockingObservable().last();
+        gm.writeEdge( edge1 ).toBlockingObservable().last();
 
         Edge edge2 = createEdge( sourceId, edge1.getType(), targetId );
 
-        em.writeEdge( edge2 ).toBlockingObservable().last();
+        gm.writeEdge( edge2 ).toBlockingObservable().last();
 
         Edge edge3 = createEdge( sourceId, edge1.getType(), targetId );
 
-        em.writeEdge( edge3 ).toBlockingObservable().last();
+        gm.writeEdge( edge3 ).toBlockingObservable().last();
 
 
         //now test retrieving it, we should only get edge3, since it's the latest
@@ -260,7 +259,7 @@ public class GraphManagerIT {
         SearchByEdgeType search =
                 createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getVersion(), null );
 
-        Observable<Edge> edges = em.loadEdgesFromSource( search );
+        Observable<Edge> edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Iterator<Edge> returned = edges.toBlockingObservable().getIterator();
@@ -273,7 +272,7 @@ public class GraphManagerIT {
         //now test with an earlier version, we shouldn't get the edge back
         search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge2.getVersion(), null );
 
-        edges = em.loadEdgesFromSource( search );
+        edges = gm.loadEdgesFromSource( search );
 
         returned = edges.toBlockingObservable().getIterator();
 
@@ -283,7 +282,7 @@ public class GraphManagerIT {
 
         search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getVersion(), null );
 
-        edges = em.loadEdgesFromSource( search );
+        edges = gm.loadEdgesFromSource( search );
 
         returned = edges.toBlockingObservable().getIterator();
 
@@ -293,7 +292,7 @@ public class GraphManagerIT {
 
         search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), earlyVersion, null );
 
-        edges = em.loadEdgesFromSource( search );
+        edges = gm.loadEdgesFromSource( search );
 
         returned = edges.toBlockingObservable().getIterator();
 
@@ -302,10 +301,12 @@ public class GraphManagerIT {
 
 
     @Test
-    public void testWriteReadEdgeTypeVersionTargetDistinct() {
+    public void testWriteReadEdgeTypeVersionTargetDistinct() throws TimeoutException, InterruptedException {
 
 
-        GraphManager em = emf.createEdgeManager( scope );
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        ;
+
 
         final UUID earlyVersion = UUIDGenerator.newTimeUUID();
 
@@ -316,15 +317,15 @@ public class GraphManagerIT {
         final Id targetId = edge1.getTargetNode();
 
 
-        em.writeEdge( edge1 ).toBlockingObservable().last();
+        gm.writeEdge( edge1 ).toBlockingObservable().last();
 
         Edge edge2 = createEdge( sourceId, edge1.getType(), targetId );
 
-        em.writeEdge( edge2 ).toBlockingObservable().last();
+        gm.writeEdge( edge2 ).toBlockingObservable().last();
 
         Edge edge3 = createEdge( sourceId, edge1.getType(), targetId );
 
-        em.writeEdge( edge3 ).toBlockingObservable().last();
+        gm.writeEdge( edge3 ).toBlockingObservable().last();
 
 
         //now test retrieving it, we should only get edge3, since it's the latest
@@ -332,7 +333,7 @@ public class GraphManagerIT {
         SearchByEdgeType search =
                 createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getVersion(), null );
 
-        Observable<Edge> edges = em.loadEdgesToTarget( search );
+        Observable<Edge> edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Iterator<Edge> returned = edges.toBlockingObservable().getIterator();
@@ -345,7 +346,7 @@ public class GraphManagerIT {
         //now test with an earlier version, we shouldn't get the edge back
         search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge2.getVersion(), null );
 
-        edges = em.loadEdgesToTarget( search );
+        edges = gm.loadEdgesToTarget( search );
 
         returned = edges.toBlockingObservable().getIterator();
 
@@ -355,7 +356,7 @@ public class GraphManagerIT {
 
         search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge1.getVersion(), null );
 
-        edges = em.loadEdgesToTarget( search );
+        edges = gm.loadEdgesToTarget( search );
 
         returned = edges.toBlockingObservable().getIterator();
 
@@ -365,7 +366,7 @@ public class GraphManagerIT {
 
         search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), earlyVersion, null );
 
-        edges = em.loadEdgesToTarget( search );
+        edges = gm.loadEdgesToTarget( search );
 
         returned = edges.toBlockingObservable().getIterator();
 
@@ -374,24 +375,23 @@ public class GraphManagerIT {
 
 
     @Test
-    public void testWriteReadEdgeTypePagingSource() {
+    public void testWriteReadEdgeTypePagingSource() throws TimeoutException, InterruptedException {
 
-        GraphManager em = emf.createEdgeManager( scope );
-
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
         final Id sourceId = createId( "source" );
 
 
         Edge edge1 = createEdge( sourceId, "test", createId( "target" ) );
 
-        em.writeEdge( edge1 ).toBlockingObservable().last();
+        gm.writeEdge( edge1 ).toBlockingObservable().last();
 
         Edge edge2 = createEdge( sourceId, "test", createId( "target" ) );
 
-        em.writeEdge( edge2 ).toBlockingObservable().last();
+        gm.writeEdge( edge2 ).toBlockingObservable().last();
 
         Edge edge3 = createEdge( sourceId, "test", createId( "target" ) );
 
-        em.writeEdge( edge3 ).toBlockingObservable().last();
+        gm.writeEdge( edge3 ).toBlockingObservable().last();
 
 
         //now test retrieving it
@@ -399,7 +399,7 @@ public class GraphManagerIT {
         SearchByEdgeType search =
                 createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getVersion(), null );
 
-        Observable<Edge> edges = em.loadEdgesFromSource( search );
+        Observable<Edge> edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Iterator<Edge> returned = edges.toBlockingObservable().getIterator();
@@ -417,7 +417,7 @@ public class GraphManagerIT {
         //still edge 3 is our max version, but we start with edge 2 as our last read
         search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getVersion(), edge2 );
 
-        edges = em.loadEdgesFromSource( search );
+        edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().getIterator();
@@ -432,22 +432,22 @@ public class GraphManagerIT {
     public void testWriteReadEdgeTypePagingTarget() {
 
 
-        GraphManager em = emf.createEdgeManager( scope );
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
 
         final Id targetId = createId( "target" );
 
         Edge edge1 = createEdge( createId( "source" ), "test", targetId );
 
-        em.writeEdge( edge1 ).toBlockingObservable().last();
+        gm.writeEdge( edge1 ).toBlockingObservable().last();
 
         Edge edge2 = createEdge( createId( "source" ), "test", targetId );
 
-        em.writeEdge( edge2 ).toBlockingObservable().last();
+        gm.writeEdge( edge2 ).toBlockingObservable().last();
 
         Edge edge3 = createEdge( createId( "source" ), "test", targetId );
 
-        em.writeEdge( edge3 ).toBlockingObservable().last();
+        gm.writeEdge( edge3 ).toBlockingObservable().last();
 
 
         //now test retrieving it
@@ -455,7 +455,7 @@ public class GraphManagerIT {
         SearchByEdgeType search =
                 createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getVersion(), null );
 
-        Observable<Edge> edges = em.loadEdgesToTarget( search );
+        Observable<Edge> edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Iterator<Edge> returned = edges.toBlockingObservable().getIterator();
@@ -473,7 +473,7 @@ public class GraphManagerIT {
 
         search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getVersion(), edge2 );
 
-        edges = em.loadEdgesToTarget( search );
+        edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().getIterator();
@@ -487,19 +487,19 @@ public class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypeTargetTypeSource() {
 
-        GraphManager em = emf.createEdgeManager( scope );
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
 
         Edge edge = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
         SearchByIdType search = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getVersion(),
                 edge.getTargetNode().getType(), null );
 
-        Observable<Edge> edges = em.loadEdgesFromSourceByType( search );
+        Observable<Edge> edges = gm.loadEdgesFromSourceByType( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -511,7 +511,7 @@ public class GraphManagerIT {
         search = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getVersion(),
                 edge.getTargetNode().getType() + "invalid", null );
 
-        edges = em.loadEdgesFromSourceByType( search );
+        edges = gm.loadEdgesFromSourceByType( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -523,19 +523,20 @@ public class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypeTargetTypeTarget() {
 
-        GraphManager em = emf.createEdgeManager( scope );
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+        ;
 
 
         Edge edge = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
         SearchByIdType search = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getVersion(),
                 edge.getSourceNode().getType(), null );
 
-        Observable<Edge> edges = em.loadEdgesToTargetByType( search );
+        Observable<Edge> edges = gm.loadEdgesToTargetByType( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -547,7 +548,7 @@ public class GraphManagerIT {
         search = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getVersion(),
                 edge.getSourceNode().getType() + "invalid", null );
 
-        edges = em.loadEdgesToTargetByType( search );
+        edges = gm.loadEdgesToTargetByType( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -559,19 +560,19 @@ public class GraphManagerIT {
     @Test
     public void testWriteReadEdgeDeleteSource() {
 
-        GraphManager em = emf.createEdgeManager( scope );
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
 
         Edge edge = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
 
         SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadEdgesFromSource( search );
+        Observable<Edge> edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -581,48 +582,48 @@ public class GraphManagerIT {
         SearchByIdType searchById = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getVersion(),
                 edge.getTargetNode().getType(), null );
 
-        edges = em.loadEdgesFromSourceByType( searchById );
+        edges = gm.loadEdgesFromSourceByType( searchById );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().single();
 
         assertEquals( "Correct edge returned", edge, returned );
 
-        final SearchByEdge searchByEdge = createGetByEdge(edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getVersion(), null);
+        final SearchByEdge searchByEdge =
+                createGetByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getVersion(), null );
 
-        returned = em.loadEdgeVersions(searchByEdge).toBlockingObservable().single();
+        returned = gm.loadEdgeVersions( searchByEdge ).toBlockingObservable().single();
 
 
         assertEquals( "Correct edge returned", edge, returned );
 
 
         //now delete it
-        returned = em.deleteEdge( edge ).toBlockingObservable().last();
+        returned = gm.deleteEdge( edge ).toBlockingObservable().last();
 
 
         assertEquals( "Correct edge returned", edge, returned );
 
 
         //now test retrieval, should be null
-        edges = em.loadEdgesFromSource( search );
+        edges = gm.loadEdgesFromSource( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
 
         assertNull( "No edge returned", returned );
-
 
 
         //no search by type, should be null as well
 
-        edges = em.loadEdgesFromSourceByType( searchById );
+        edges = gm.loadEdgesFromSourceByType( searchById );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
 
         assertNull( "No edge returned", returned );
 
-        returned = em.loadEdgeVersions(searchByEdge).toBlockingObservable().singleOrDefault(null);
+        returned = gm.loadEdgeVersions( searchByEdge ).toBlockingObservable().singleOrDefault( null );
 
         assertNull( "No edge returned", returned );
     }
@@ -631,19 +632,19 @@ public class GraphManagerIT {
     @Test
     public void testWriteReadEdgeDeleteTarget() {
 
-        GraphManager em = emf.createEdgeManager( scope );
+        GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
 
         Edge edge = createEdge( "source", "test", "target" );
 
-        em.writeEdge( edge ).toBlockingObservable().last();
+        gm.writeEdge( edge ).toBlockingObservable().last();
 
         //now test retrieving it
 
 
         SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getVersion(), null );
 
-        Observable<Edge> edges = em.loadEdgesToTarget( search );
+        Observable<Edge> edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         Edge returned = edges.toBlockingObservable().single();
@@ -653,7 +654,7 @@ public class GraphManagerIT {
         SearchByIdType searchById = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getVersion(),
                 edge.getSourceNode().getType(), null );
 
-        edges = em.loadEdgesToTargetByType( searchById );
+        edges = gm.loadEdgesToTargetByType( searchById );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().single();
@@ -662,10 +663,10 @@ public class GraphManagerIT {
 
 
         //now delete it
-        em.deleteEdge( edge ).toBlockingObservable().last();
+        gm.deleteEdge( edge ).toBlockingObservable().last();
 
         //now test retrieval, should be null
-        edges = em.loadEdgesToTarget( search );
+        edges = gm.loadEdgesToTarget( search );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -675,7 +676,7 @@ public class GraphManagerIT {
 
         //no search by type, should be null as well
 
-        edges = em.loadEdgesToTargetByType( searchById );
+        edges = gm.loadEdgesToTargetByType( searchById );
 
         //implicitly blows up if more than 1 is returned from "single"
         returned = edges.toBlockingObservable().singleOrDefault( null );
@@ -687,7 +688,7 @@ public class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypesSourceTypes() {
 
-        final GraphManager em = emf.createEdgeManager( scope );
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Id sourceId = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
@@ -695,21 +696,21 @@ public class GraphManagerIT {
 
         Edge testTargetEdge = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
         Edge testTarget2Edge = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
 
 
         Edge test2TargetEdge = createEdge( sourceId, "test2", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
         //get our 2 edge types
         Observable<String> edges =
-                em.getEdgeTypesFromSource( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
+                gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
 
 
         Iterator<String> results = edges.toBlockingObservable().getIterator();
@@ -724,7 +725,7 @@ public class GraphManagerIT {
 
         //now test sub edges
 
-        edges = em.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
+        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -736,7 +737,7 @@ public class GraphManagerIT {
         assertFalse( "No results", results.hasNext() );
 
         //now get types for test2
-        edges = em.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test2", null ) );
+        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test2", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -749,7 +750,7 @@ public class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypesTargetTypes() {
 
-        final GraphManager em = emf.createEdgeManager( scope );
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Id sourceId1 = new SimpleId( "source" );
         Id sourceId2 = new SimpleId( "source2" );
@@ -758,22 +759,22 @@ public class GraphManagerIT {
 
         Edge testTargetEdge = createEdge( sourceId1, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
         Edge testTarget2Edge = createEdge( sourceId2, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
 
 
         Edge test2TargetEdge = createEdge( sourceId1, "test2", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
         //get our 2 edge types
         final SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), null );
 
-        Observable<String> edges = em.getEdgeTypesToTarget( edgeTypes );
+        Observable<String> edges = gm.getEdgeTypesToTarget( edgeTypes );
 
 
         Iterator<String> results = edges.toBlockingObservable().getIterator();
@@ -788,7 +789,7 @@ public class GraphManagerIT {
 
         //now test sub edges
 
-        edges = em.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
+        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -800,7 +801,7 @@ public class GraphManagerIT {
 
 
         //now get types for test2
-        edges = em.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test2", null ) );
+        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test2", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -814,7 +815,7 @@ public class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypesSourceTypesPaging() {
 
-        final GraphManager em = emf.createEdgeManager( scope );
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Id sourceId1 = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
@@ -823,23 +824,23 @@ public class GraphManagerIT {
 
         Edge testTargetEdge = createEdge( sourceId1, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
         Edge testTargetEdge2 = createEdge( sourceId1, "test", targetId2, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge2 ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( testTargetEdge2 ).toBlockingObservable().singleOrDefault( null );
 
 
         Edge test2TargetEdge = createEdge( sourceId1, "test2", targetId2, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
         //get our 2 edge types
         SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null );
 
-        Observable<String> edges = em.getEdgeTypesFromSource( edgeTypes );
+        Observable<String> edges = gm.getEdgeTypesFromSource( edgeTypes );
 
 
         Iterator<String> results = edges.toBlockingObservable().getIterator();
@@ -853,7 +854,7 @@ public class GraphManagerIT {
 
         edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), "test" );
 
-        edges = em.getEdgeTypesFromSource( edgeTypes );
+        edges = gm.getEdgeTypesFromSource( edgeTypes );
 
 
         results = edges.toBlockingObservable().getIterator();
@@ -865,7 +866,7 @@ public class GraphManagerIT {
 
         //now test sub edges
 
-        edges = em.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
+        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -877,7 +878,7 @@ public class GraphManagerIT {
 
         //now get the next page
 
-        edges = em.getIdTypesFromSource(
+        edges = gm.getIdTypesFromSource(
                 new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", targetId1.getType() ) );
 
         results = edges.toBlockingObservable().getIterator();
@@ -892,7 +893,7 @@ public class GraphManagerIT {
     @Test
     public void testWriteReadEdgeTypesTargetTypesPaging() {
 
-        final GraphManager em = emf.createEdgeManager( scope );
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Id sourceId1 = new SimpleId( "source" );
         Id sourceId2 = new SimpleId( "source2" );
@@ -901,22 +902,22 @@ public class GraphManagerIT {
 
         Edge testTargetEdge = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
         Edge testTargetEdge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( testTargetEdge2 ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( testTargetEdge2 ).toBlockingObservable().singleOrDefault( null );
 
         Edge test2TargetEdge = createEdge( sourceId2, "test2", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
         //get our 2 edge types
         SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), null );
 
-        Observable<String> edges = em.getEdgeTypesToTarget( edgeTypes );
+        Observable<String> edges = gm.getEdgeTypesToTarget( edgeTypes );
 
 
         Iterator<String> results = edges.toBlockingObservable().getIterator();
@@ -932,7 +933,7 @@ public class GraphManagerIT {
 
         edgeTypes = new SimpleSearchEdgeType( testTargetEdge2.getTargetNode(), "test" );
 
-        edges = em.getEdgeTypesToTarget( edgeTypes );
+        edges = gm.getEdgeTypesToTarget( edgeTypes );
 
 
         results = edges.toBlockingObservable().getIterator();
@@ -945,7 +946,7 @@ public class GraphManagerIT {
 
         //now test sub edges
 
-        edges = em.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
+        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -958,7 +959,7 @@ public class GraphManagerIT {
 
         //now get the next page
 
-        edges = em.getIdTypesToTarget(
+        edges = gm.getIdTypesToTarget(
                 new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", sourceId1.getType() ) );
 
         results = edges.toBlockingObservable().getIterator();
@@ -973,7 +974,7 @@ public class GraphManagerIT {
     @Test
     public void testMarkSourceEdges() {
 
-        final GraphManager em = emf.createEdgeManager( scope );
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Id sourceId = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
@@ -981,18 +982,18 @@ public class GraphManagerIT {
 
         Edge edge1 = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
 
         Edge edge2 = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
 
 
         final UUID maxVersion = UUIDGenerator.newTimeUUID();
 
 
         //get our 2 edges
-        Observable<Edge> edges = em.loadEdgesFromSource(
+        Observable<Edge> edges = gm.loadEdgesFromSource(
                 createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
 
 
@@ -1007,10 +1008,10 @@ public class GraphManagerIT {
 
         //now delete one of the edges
 
-        em.deleteEdge( edge1 ).toBlockingObservable().last();
+        gm.deleteEdge( edge1 ).toBlockingObservable().last();
 
 
-        edges = em.loadEdgesFromSource(
+        edges = gm.loadEdgesFromSource(
                 createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
 
 
@@ -1023,9 +1024,9 @@ public class GraphManagerIT {
 
         //now delete one of the edges
 
-        em.deleteEdge( edge2 ).toBlockingObservable().last();
+        gm.deleteEdge( edge2 ).toBlockingObservable().last();
 
-        edges = em.loadEdgesFromSource(
+        edges = gm.loadEdgesFromSource(
                 createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
 
 
@@ -1042,7 +1043,7 @@ public class GraphManagerIT {
     @Test
     public void testMarkTargetEdges() {
 
-        final GraphManager em = emf.createEdgeManager( scope );
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Id sourceId1 = new SimpleId( "source" );
         Id sourceId2 = new SimpleId( "source2" );
@@ -1050,11 +1051,11 @@ public class GraphManagerIT {
 
         Edge edge1 = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge1 ).toBlockingObservable().last();
+        gm.writeEdge( edge1 ).toBlockingObservable().last();
 
         Edge edge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge2 ).toBlockingObservable().last();
+        gm.writeEdge( edge2 ).toBlockingObservable().last();
 
 
         final UUID maxVersion = UUIDGenerator.newTimeUUID();
@@ -1062,7 +1063,7 @@ public class GraphManagerIT {
 
         //get our 2 edges
         Observable<Edge> edges =
-                em.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
+                gm.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
 
 
         Iterator<Edge> results = edges.toBlockingObservable().getIterator();
@@ -1077,10 +1078,10 @@ public class GraphManagerIT {
 
         //now delete one of the edges
 
-        em.deleteEdge( edge1 ).toBlockingObservable().last();
+        gm.deleteEdge( edge1 ).toBlockingObservable().last();
 
 
-        edges = em.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
+        edges = gm.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
 
 
         results = edges.toBlockingObservable().getIterator();
@@ -1092,9 +1093,9 @@ public class GraphManagerIT {
 
         //now delete one of the edges
 
-        em.deleteEdge( edge2 ).toBlockingObservable().last();
+        gm.deleteEdge( edge2 ).toBlockingObservable().last();
 
-        edges = em.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
+        edges = gm.loadEdgesToTarget( createSearchByEdge( edge1.getTargetNode(), edge1.getType(), maxVersion, null ) );
 
 
         results = edges.toBlockingObservable().getIterator();
@@ -1110,7 +1111,7 @@ public class GraphManagerIT {
     @Test
     public void testMarkSourceEdgesType() {
 
-        final GraphManager em = emf.createEdgeManager( scope );
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Id sourceId = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
@@ -1118,18 +1119,18 @@ public class GraphManagerIT {
 
         Edge edge1 = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
 
         Edge edge2 = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
 
 
         final UUID maxVersion = UUIDGenerator.newTimeUUID();
 
 
         //get our 2 edges
-        Observable<Edge> edges = em.loadEdgesFromSourceByType(
+        Observable<Edge> edges = gm.loadEdgesFromSourceByType(
                 createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) );
 
 
@@ -1142,10 +1143,10 @@ public class GraphManagerIT {
 
         //now delete one of the edges
 
-        em.deleteEdge( edge1 ).toBlockingObservable().last();
+        gm.deleteEdge( edge1 ).toBlockingObservable().last();
 
 
-        edges = em.loadEdgesFromSourceByType(
+        edges = gm.loadEdgesFromSourceByType(
                 createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) );
 
         results = edges.toBlockingObservable().getIterator();
@@ -1154,7 +1155,7 @@ public class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
 
-        edges = em.loadEdgesFromSourceByType(
+        edges = gm.loadEdgesFromSourceByType(
                 createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId2.getType(), null ) );
 
 
@@ -1167,10 +1168,10 @@ public class GraphManagerIT {
 
         //now delete one of the edges
 
-        em.deleteEdge( edge2 ).toBlockingObservable().last();
+        gm.deleteEdge( edge2 ).toBlockingObservable().last();
 
 
-        edges = em.loadEdgesFromSourceByType(
+        edges = gm.loadEdgesFromSourceByType(
                 createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId2.getType(), null ) );
 
 
@@ -1188,7 +1189,7 @@ public class GraphManagerIT {
     @Test
     public void testMarkTargetEdgesType() {
 
-        final GraphManager em = emf.createEdgeManager( scope );
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Id sourceId1 = new SimpleId( "source" );
         Id sourceId2 = new SimpleId( "source2" );
@@ -1196,17 +1197,17 @@ public class GraphManagerIT {
 
         Edge edge1 = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge1 ).toBlockingObservable().last();
+        gm.writeEdge( edge1 ).toBlockingObservable().last();
 
         Edge edge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge2 ).toBlockingObservable().last();
+        gm.writeEdge( edge2 ).toBlockingObservable().last();
 
 
         final UUID maxVersion = UUIDGenerator.newTimeUUID();
 
         //get our 2 edges
-        Observable<Edge> edges = em.loadEdgesToTargetByType(
+        Observable<Edge> edges = gm.loadEdgesToTargetByType(
                 createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) );
 
 
@@ -1219,10 +1220,10 @@ public class GraphManagerIT {
 
         //now delete one of the edges
 
-        em.deleteEdge( edge1 ).toBlockingObservable().last();
+        gm.deleteEdge( edge1 ).toBlockingObservable().last();
 
 
-        edges = em.loadEdgesToTargetByType(
+        edges = gm.loadEdgesToTargetByType(
                 createSearchByEdgeAndId( edge1.getSourceNode(), edge1.getType(), maxVersion, sourceId1.getType(),
                         null ) );
 
@@ -1232,7 +1233,7 @@ public class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
 
-        edges = em.loadEdgesToTargetByType(
+        edges = gm.loadEdgesToTargetByType(
                 createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId2.getType(), null ) );
 
 
@@ -1245,10 +1246,10 @@ public class GraphManagerIT {
 
         //now delete one of the edges
 
-        em.deleteEdge( edge2 ).toBlockingObservable().last();
+        gm.deleteEdge( edge2 ).toBlockingObservable().last();
 
 
-        edges = em.loadEdgesToTargetByType(
+        edges = gm.loadEdgesToTargetByType(
                 createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId2.getType(), null ) );
 
 
@@ -1266,7 +1267,7 @@ public class GraphManagerIT {
     @Test
     public void markSourceNode() {
 
-        final GraphManager em = emf.createEdgeManager( scope );
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Id sourceId = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
@@ -1274,17 +1275,17 @@ public class GraphManagerIT {
 
         Edge edge1 = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
 
         Edge edge2 = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
 
 
         final UUID maxVersion = UUIDGenerator.newTimeUUID();
 
         Iterator<Edge> results =
-                em.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) )
+                gm.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) )
                   .toBlockingObservable().getIterator();
 
 
@@ -1296,7 +1297,7 @@ public class GraphManagerIT {
 
 
         //get our 2 edges
-        results = em.loadEdgesFromSourceByType(
+        results = gm.loadEdgesFromSourceByType(
                 createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) )
                     .toBlockingObservable().getIterator();
 
@@ -1306,7 +1307,7 @@ public class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
         //now delete one of the edges
-        results = em.loadEdgesFromSourceByType(
+        results = gm.loadEdgesFromSourceByType(
                 createSearchByEdgeAndId( sourceId, edge2.getType(), maxVersion, targetId2.getType(), null ) )
                     .toBlockingObservable().getIterator();
 
@@ -1316,19 +1317,19 @@ public class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
         //mark the source node
-        em.deleteNode( sourceId ).toBlockingObservable().last();
+        gm.deleteNode( sourceId ).toBlockingObservable().last();
 
 
         //now re-read, nothing should be there since they're marked
 
-        results = em.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) )
+        results = gm.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) )
                     .toBlockingObservable().getIterator();
 
         assertFalse( "No more edges", results.hasNext() );
 
 
         //get our 2 edges
-        results = em.loadEdgesFromSourceByType(
+        results = gm.loadEdgesFromSourceByType(
                 createSearchByEdgeAndId( sourceId, edge1.getType(), maxVersion, targetId1.getType(), null ) )
                     .toBlockingObservable().getIterator();
 
@@ -1336,7 +1337,7 @@ public class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
         //now delete one of the edges
-        results = em.loadEdgesFromSourceByType(
+        results = gm.loadEdgesFromSourceByType(
                 createSearchByEdgeAndId( sourceId, edge2.getType(), maxVersion, targetId2.getType(), null ) )
                     .toBlockingObservable().getIterator();
 
@@ -1348,7 +1349,7 @@ public class GraphManagerIT {
     @Test
     public void markTargetNode() {
 
-        final GraphManager em = emf.createEdgeManager( scope );
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
         Id sourceId1 = new SimpleId( "source" );
         Id sourceId2 = new SimpleId( "source2" );
@@ -1356,17 +1357,17 @@ public class GraphManagerIT {
 
         Edge edge1 = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
 
         Edge edge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
 
-        em.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
+        gm.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
 
 
         final UUID maxVersion = UUIDGenerator.newTimeUUID();
 
         Iterator<Edge> results =
-                em.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) )
+                gm.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) )
                   .toBlockingObservable().getIterator();
 
 
@@ -1378,7 +1379,7 @@ public class GraphManagerIT {
 
 
         //get our 2 edges
-        results = em.loadEdgesToTargetByType(
+        results = gm.loadEdgesToTargetByType(
                 createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) )
                     .toBlockingObservable().getIterator();
 
@@ -1388,7 +1389,7 @@ public class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
         //now delete one of the edges
-        results = em.loadEdgesToTargetByType(
+        results = gm.loadEdgesToTargetByType(
                 createSearchByEdgeAndId( targetId, edge2.getType(), maxVersion, sourceId2.getType(), null ) )
                     .toBlockingObservable().getIterator();
 
@@ -1398,19 +1399,19 @@ public class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
         //mark the source node
-        em.deleteNode( targetId ).toBlockingObservable().last();
+        gm.deleteNode( targetId ).toBlockingObservable().last();
 
 
         //now re-read, nothing should be there since they're marked
 
-        results = em.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) )
+        results = gm.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) )
                     .toBlockingObservable().getIterator();
 
         assertFalse( "No more edges", results.hasNext() );
 
 
         //get our 2 edges
-        results = em.loadEdgesToTargetByType(
+        results = gm.loadEdgesToTargetByType(
                 createSearchByEdgeAndId( targetId, edge1.getType(), maxVersion, sourceId1.getType(), null ) )
                     .toBlockingObservable().getIterator();
 
@@ -1418,7 +1419,7 @@ public class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
         //now delete one of the edges
-        results = em.loadEdgesToTargetByType(
+        results = gm.loadEdgesToTargetByType(
                 createSearchByEdgeAndId( targetId, edge2.getType(), maxVersion, sourceId2.getType(), null ) )
                     .toBlockingObservable().getIterator();
 
@@ -1427,7 +1428,7 @@ public class GraphManagerIT {
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void invalidEdgeTypesWrite( @All Edge edge ) {
         final GraphManager em = emf.createEdgeManager( scope );
 
@@ -1435,7 +1436,7 @@ public class GraphManagerIT {
     }
 
 
-    @Test(expected = NullPointerException.class)
+    @Test( expected = NullPointerException.class )
     public void invalidEdgeTypesDelete( @All Edge edge ) {
         final GraphManager em = emf.createEdgeManager( scope );
 

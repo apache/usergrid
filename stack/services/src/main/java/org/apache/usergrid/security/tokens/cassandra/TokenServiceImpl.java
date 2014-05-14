@@ -18,12 +18,7 @@ package org.apache.usergrid.security.tokens.cassandra;
 
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +39,6 @@ import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
@@ -75,6 +66,7 @@ import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.utils.MapUtils.hasKeys;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class TokenServiceImpl implements TokenService {
@@ -99,23 +91,23 @@ public class TokenServiceImpl implements TokenService {
 
     private static final String TOKEN_TYPE_ACCESS = "access";
 
-    private static final ByteBufferSerializer BUFF_SER = ByteBufferSerializer.get();
-    private static final StringSerializer STR_SER = StringSerializer.get();
 
-    private static final HashSet<String> TOKEN_PROPERTIES = new HashSet<String>();
+    private static final Set<String> TOKEN_PROPERTIES;
 
 
     static {
-        TOKEN_PROPERTIES.add( TOKEN_UUID );
-        TOKEN_PROPERTIES.add( TOKEN_TYPE );
-        TOKEN_PROPERTIES.add( TOKEN_CREATED );
-        TOKEN_PROPERTIES.add( TOKEN_ACCESSED );
-        TOKEN_PROPERTIES.add( TOKEN_INACTIVE );
-        TOKEN_PROPERTIES.add( TOKEN_PRINCIPAL_TYPE );
-        TOKEN_PROPERTIES.add( TOKEN_ENTITY );
-        TOKEN_PROPERTIES.add( TOKEN_APPLICATION );
-        TOKEN_PROPERTIES.add( TOKEN_STATE );
-        TOKEN_PROPERTIES.add( TOKEN_DURATION );
+        HashSet<String> set = new HashSet<String>();
+        set.add( TOKEN_UUID );
+        set.add( TOKEN_TYPE );
+        set.add( TOKEN_CREATED );
+        set.add( TOKEN_ACCESSED );
+        set.add( TOKEN_INACTIVE );
+        set.add( TOKEN_PRINCIPAL_TYPE );
+        set.add( TOKEN_ENTITY );
+        set.add( TOKEN_APPLICATION );
+        set.add( TOKEN_STATE );
+        set.add( TOKEN_DURATION );
+        TOKEN_PROPERTIES = Collections.unmodifiableSet(set);
     }
 
 
@@ -269,17 +261,17 @@ public class TokenServiceImpl implements TokenService {
 
         long maxTokenTtl = getMaxTtl( TokenCategory.getFromBase64String( token ), tokenInfo.getPrincipal() );
 
-        Mutator<UUID> batch = createMutator( cassandra.getSystemKeyspace(), UUIDSerializer.get() );
+        Mutator<UUID> batch = createMutator( cassandra.getSystemKeyspace(), ue );
 
         HColumn<String, Long> col =
                 createColumn( TOKEN_ACCESSED, now, calcTokenTime( tokenInfo.getExpiration( maxTokenTtl ) ),
-                        StringSerializer.get(), LongSerializer.get() );
+                        se, le );
         batch.addInsertion( uuid, TOKENS_CF, col );
 
         long inactive = now - tokenInfo.getAccessed();
         if ( inactive > tokenInfo.getInactive() ) {
             col = createColumn( TOKEN_INACTIVE, inactive, calcTokenTime( tokenInfo.getExpiration( maxTokenTtl ) ),
-                    StringSerializer.get(), LongSerializer.get() );
+                    se, le );
             batch.addInsertion( uuid, TOKENS_CF, col );
             tokenInfo.setInactive( inactive );
         }
@@ -334,7 +326,7 @@ public class TokenServiceImpl implements TokenService {
     public void removeTokens( AuthPrincipalInfo principal ) throws Exception {
         List<UUID> tokenIds = getTokenUUIDS( principal );
 
-        Mutator<ByteBuffer> batch = createMutator( cassandra.getSystemKeyspace(), BUFF_SER );
+        Mutator<ByteBuffer> batch = createMutator( cassandra.getSystemKeyspace(), be );
 
         for ( UUID tokenId : tokenIds ) {
             batch.addDeletion( bytebuffer( tokenId ), TOKENS_CF );
@@ -367,13 +359,13 @@ public class TokenServiceImpl implements TokenService {
 
         UUID tokenId = info.getUuid();
 
-        Mutator<ByteBuffer> batch = createMutator( cassandra.getSystemKeyspace(), BUFF_SER );
+        Mutator<ByteBuffer> batch = createMutator( cassandra.getSystemKeyspace(), be );
 
         // clean up the link in the principal -> token index if the principal is
         // on the token
         if ( info.getPrincipal() != null ) {
             batch.addDeletion( principalKey( info.getPrincipal() ), PRINCIPAL_TOKEN_CF, bytebuffer( tokenId ),
-                    BUFF_SER );
+                    be );
         }
 
         // remove the token from the tokens cf
@@ -388,8 +380,8 @@ public class TokenServiceImpl implements TokenService {
             throw new InvalidTokenException( "No token specified" );
         }
         Map<String, ByteBuffer> columns = getColumnMap( cassandra
-                .getColumns( cassandra.getSystemKeyspace(), TOKENS_CF, uuid, TOKEN_PROPERTIES, StringSerializer.get(),
-                        ByteBufferSerializer.get() ) );
+                .getColumns( cassandra.getSystemKeyspace(), TOKENS_CF, uuid, TOKEN_PROPERTIES, se,
+                        be ) );
         if ( !hasKeys( columns, REQUIRED_TOKEN_PROPERTIES ) ) {
             throw new InvalidTokenException( "Token not found in database" );
         }
@@ -425,22 +417,22 @@ public class TokenServiceImpl implements TokenService {
 
         Keyspace ko = cassandra.getSystemKeyspace();
 
-        Mutator<ByteBuffer> m = createMutator( ko, BUFF_SER );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
 
         int ttl = calcTokenTime( tokenInfo.getDuration() );
 
         m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_UUID, bytebuffer( tokenInfo.getUuid() ), ttl, STR_SER, BUFF_SER ) );
+                createColumn( TOKEN_UUID, bytebuffer( tokenInfo.getUuid() ), ttl, se, be ) );
         m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_TYPE, bytebuffer( tokenInfo.getType() ), ttl, STR_SER, BUFF_SER ) );
+                createColumn( TOKEN_TYPE, bytebuffer( tokenInfo.getType() ), ttl, se, be ) );
         m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_CREATED, bytebuffer( tokenInfo.getCreated() ), ttl, STR_SER, BUFF_SER ) );
+                createColumn( TOKEN_CREATED, bytebuffer( tokenInfo.getCreated() ), ttl, se, be ) );
         m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_ACCESSED, bytebuffer( tokenInfo.getAccessed() ), ttl, STR_SER, BUFF_SER ) );
+                createColumn( TOKEN_ACCESSED, bytebuffer( tokenInfo.getAccessed() ), ttl, se, be ) );
         m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_INACTIVE, bytebuffer( tokenInfo.getInactive() ), ttl, STR_SER, BUFF_SER ) );
+                createColumn( TOKEN_INACTIVE, bytebuffer( tokenInfo.getInactive() ), ttl, se, be ) );
         m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_DURATION, bytebuffer( tokenInfo.getDuration() ), ttl, STR_SER, BUFF_SER ) );
+                createColumn( TOKEN_DURATION, bytebuffer( tokenInfo.getDuration() ), ttl, se, be ) );
 
         if ( tokenInfo.getPrincipal() != null ) {
 
@@ -448,12 +440,12 @@ public class TokenServiceImpl implements TokenService {
 
             m.addInsertion( tokenUUID, TOKENS_CF,
                     createColumn( TOKEN_PRINCIPAL_TYPE, bytebuffer( principalInfo.getType().toString().toLowerCase() ),
-                            ttl, STR_SER, BUFF_SER ) );
+                            ttl, se, be ) );
             m.addInsertion( tokenUUID, TOKENS_CF,
-                    createColumn( TOKEN_ENTITY, bytebuffer( principalInfo.getUuid() ), ttl, STR_SER, BUFF_SER ) );
+                    createColumn( TOKEN_ENTITY, bytebuffer( principalInfo.getUuid() ), ttl, se, be ) );
             m.addInsertion( tokenUUID, TOKENS_CF,
-                    createColumn( TOKEN_APPLICATION, bytebuffer( principalInfo.getApplicationId() ), ttl, STR_SER,
-                            BUFF_SER ) );
+                    createColumn( TOKEN_APPLICATION, bytebuffer( principalInfo.getApplicationId() ), ttl, se,
+                            be ) );
 
       /*
        * write to the PRINCIPAL+TOKEN The format is as follow
@@ -462,13 +454,13 @@ public class TokenServiceImpl implements TokenService {
        */
 
             ByteBuffer rowKey = principalKey( principalInfo );
-            m.addInsertion( rowKey, PRINCIPAL_TOKEN_CF, createColumn( tokenUUID, HOLDER, ttl, BUFF_SER, BUFF_SER ) );
+            m.addInsertion( rowKey, PRINCIPAL_TOKEN_CF, createColumn( tokenUUID, HOLDER, ttl, be, be ) );
         }
 
         if ( tokenInfo.getState() != null ) {
             m.addInsertion( tokenUUID, TOKENS_CF,
-                    createColumn( TOKEN_STATE, JsonUtils.toByteBuffer( tokenInfo.getState() ), ttl, STR_SER,
-                            BUFF_SER ) );
+                    createColumn( TOKEN_STATE, JsonUtils.toByteBuffer( tokenInfo.getState() ), ttl, se,
+                            be ) );
         }
 
         m.execute();

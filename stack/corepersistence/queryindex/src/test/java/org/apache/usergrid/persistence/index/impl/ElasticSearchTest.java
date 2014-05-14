@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.get.GetResponse;
@@ -41,7 +42,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,11 +51,14 @@ import org.slf4j.LoggerFactory;
 /**
  * Elastic search experiments in the form of a test.
  */
-public class ElasticSearchTest {
+public class ElasticSearchTest extends BaseIT {
     private static final Logger log = LoggerFactory.getLogger( ElasticSearchTest.class );
 
-    @Rule
-    public ElasticSearchRule elasticSearchRule = new ElasticSearchRule();
+    @ClassRule
+    public static ElasticSearchRule es = new ElasticSearchRule();
+
+    @ClassRule
+    public static CassandraRule cass = new CassandraRule();
     
     @Test 
     public void testSimpleCrud() {
@@ -63,7 +67,7 @@ public class ElasticSearchTest {
         String collectionName = "testtype1";
         String id = RandomStringUtils.randomAlphanumeric(20 );
 
-        Client client = elasticSearchRule.getClient();
+        Client client = es.getClient();
 
         Map<String, Object> json = new HashMap<String, Object>();
         json.put( "user", "edward" );
@@ -98,15 +102,13 @@ public class ElasticSearchTest {
         client.prepareDelete(indexName, collectionName, id).execute().actionGet();
         getResponse = client.prepareGet( indexName, collectionName, id).get();
         assertFalse( getResponse.isExists() );
-
-        client.close();
     } 
 
 
     @Test
     public void testStringDoubleIndexDynamicMapping() throws IOException {
 
-        Client client = elasticSearchRule.getClient();
+        Client client = es.getClient();
 
         AdminClient admin = client.admin();
 
@@ -149,7 +151,6 @@ public class ElasticSearchTest {
         testQuery( client, index, type, 
             QueryBuilders.termQuery( "contact.email", "orrbyers@bittor.com" ), 1 );
 
-        client.close();
     }
 
     

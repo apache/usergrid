@@ -19,6 +19,7 @@
 
 package org.apache.usergrid.persistence.index;
 
+import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -38,27 +39,29 @@ public interface EntityIndex {
      * @param entity Entity to be indexed.
      */
     public void index( CollectionScope scope, Entity entity );
-    
 
     /**
      * Remove index of entity.
      * @param entity Entity to be removed from index. 
      */
     public void deindex( CollectionScope collScope, Entity entity );
-   
 
     /**
      * Execute query in Usergrid syntax.
      */
     public Results search( CollectionScope scope, Query query );
 
-
     /** 
      * Search within Connections of a specific Entity and Connection Type. 
      * @param query Represents Query created from Usergrid syntax query string.
      */
-    Results searchConnections( Entity source, String type, Query query  );
+    public Results searchConnections( Entity source, String type, Query query  );
 
+    /** 
+     * Search within Connections of a specific Entity and across specific types.
+     * @param query Represents Query created from Usergrid syntax query string.
+     */
+    public Results searchConnections( Entity source, List<String> types, Query query);
 
     /** 
      * Index a named and one-way Connection from a Source to a Target entity. 
@@ -66,7 +69,6 @@ public interface EntityIndex {
      * @param targetScope CollectionScope of the target Entity (e.g. beverages)
      */
     void indexConnection( Entity source, String type, Entity target, CollectionScope targetScope );   
-
 
     /** 
      * Delete single Connection from index. 
@@ -81,8 +83,10 @@ public interface EntityIndex {
      */
     Results getEntityVersions (Id id, CollectionScope collScope);
 
+
     /**
      * Force refresh of index (should be used for testing purposes only).
      */
     public void refresh();
+
 }

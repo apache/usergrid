@@ -46,7 +46,7 @@ public interface EntityManagerFactory {
      *
      * @param applicationId the application id
      *
-     * @return EntityDao for the specfied parameters
+     * @return EntityDao for the specified parameters
      */
     public abstract EntityManager getEntityManager( UUID applicationId );
 
@@ -106,4 +106,7 @@ public interface EntityManagerFactory {
     public abstract boolean setServiceProperty( String name, String value );
 
     public abstract boolean deleteServiceProperty( String name );
+
+    public UUID initializeApplication( 
+        String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
 }

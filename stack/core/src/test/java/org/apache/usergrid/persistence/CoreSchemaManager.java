@@ -22,9 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.SchemaManager;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.Setup;
 
 import me.prettyprint.hector.api.Cluster;
+import org.apache.usergrid.persistence.cassandra.Setup;
 
 
 /** @author zznate */

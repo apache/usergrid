@@ -17,13 +17,16 @@
 package org.apache.usergrid.persistence;
 
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import me.prettyprint.hector.api.mutation.Mutator;
 
 import org.apache.usergrid.persistence.Results.Level;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Role;
@@ -59,7 +62,7 @@ public interface EntityManager {
     /**
      * Creates an entity of the specified type attached to the specified application.
      *
-     * @param type the type of the entity to create.
+     * @param entityType the type of the entity to create.
      * @param properties property values to create in the new entity or null.
      *
      * @return the newly created entity object.
@@ -75,7 +78,7 @@ public interface EntityManager {
      * Creates an entity of the specified type attached to the specified application.
      *
      * @param importId the UUID to assign to the imported entity
-     * @param type the type of the entity to create.
+     * @param entityType the type of the entity to create.
      * @param properties property values to create in the new entity or null.
      *
      * @return the newly created entity object.
@@ -121,12 +124,12 @@ public interface EntityManager {
 
     public EntityRef getRef( UUID entityId ) throws Exception;
 
-    public Entity get( UUID entityId ) throws Exception;
+    public Entity get( UUID entityId, String type ) throws Exception;
 
     /**
      * Retrieves the entity for the specified entity reference.
      *
-     * @param entity an Entity reference
+     * @param entityRef an Entity reference
      *
      * @return an Entity object for the specified entity reference.
      */
@@ -142,7 +145,7 @@ public interface EntityManager {
      * This method will be deprecated in future releases in favor of a version that supports paging.
      *
      * @param entityIds a list of entity UUIDs.
-     * @param includeProperties whether to retrieve properties for the specified entities.
+     * @param resultsLevel whether to retrieve properties for the specified entities.
      *
      * @return a list of entity objects.
      */
@@ -156,7 +159,6 @@ public interface EntityManager {
      * This method will be deprecated in future releases in favor of a version that supports paging.
      *
      * @param entityIds a list of entity UUIDs.
-     * @param includeProperties whether to retrieve properties for the specified entities.
      *
      * @return a list of entity objects.
      */
@@ -188,7 +190,7 @@ public interface EntityManager {
     /**
      * Gets the value for a named entity property. Entity properties must be defined in the schema
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param propertyName the property name to retrieve.
      *
      * @return the value of the named property or null.
@@ -207,7 +209,7 @@ public interface EntityManager {
     /**
      * Gets the properties for the specified entity property.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      *
      * @return the property values.
      *
@@ -219,7 +221,7 @@ public interface EntityManager {
      * Sets the value for a named entity property. If the property is being index, the index is updated to remove the
      * old value and add the new value.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param propertyName the property to set.
      * @param propertyValue new value for property.
      *
@@ -240,7 +242,7 @@ public interface EntityManager {
     /**
      * Updates the properties for the specified entity.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param properties the properties
      *
      * @throws Exception the exception
@@ -253,7 +255,7 @@ public interface EntityManager {
      * Gets the values from an entity list property. Lists are a special type of entity property that can contain an
      * unordered set of non-duplicate values.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param dictionaryName the property list name to retrieve.
      *
      * @return the value of the named property or null.
@@ -266,7 +268,7 @@ public interface EntityManager {
      * Adds the specified value to the named entity list property. Lists are a special type of entity property that can
      * contain an unordered set of non-duplicate values.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param dictionaryName the property to set.
      * @param elementValue new value for property.
      *
@@ -291,7 +293,7 @@ public interface EntityManager {
      * Removes the specified value to the named entity list property. Lists are a special type of entity property that
      * can contain an unordered set of non-duplicate values.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param dictionaryName the property to set.
      * @param elementValue new value for property.
      *
@@ -305,7 +307,7 @@ public interface EntityManager {
     /**
      * Deletes the specified entity.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      *
      * @throws Exception the exception
      */
@@ -314,7 +316,7 @@ public interface EntityManager {
     /**
      * Gets the entities and collections that the specified entity is a member of.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      *
      * @return a map of entity references to set of collection names for the entities and collections that this entity
      *         is a member of.
@@ -336,7 +338,7 @@ public interface EntityManager {
      * Return true if the owner entity ref is an owner of the entity;
      *
      * @param owner The owner of the collection
-     * @param collectionName The collection name
+     * @param connectionName The collection name
      * @param entity The entity in the collection
      */
     public boolean isConnectionMember( EntityRef owner, String connectionName, EntityRef entity ) throws Exception;
@@ -346,7 +348,7 @@ public interface EntityManager {
      * Gets the collections for the specified entity. Collection for a given type are encoded in the schema, this method
      * loads the entity type and returns the collections from the schema.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      *
      * @return the collections for the entity type of the given entity.
      *
@@ -357,7 +359,7 @@ public interface EntityManager {
     /**
      * Gets a list of entities in the specified collection belonging to the specified entity.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param collectionName the collection name.
      * @param startResult the start result
      * @param count the count
@@ -376,9 +378,9 @@ public interface EntityManager {
     /**
      * Adds an entity to the specified collection belonging to the specified entity entity.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param collectionName the collection name.
-     * @param item an entity to be added to the collection.
+     * @param itemRef an entity to be added to the collection.
      *
      * @throws Exception the exception
      */
@@ -401,9 +403,9 @@ public interface EntityManager {
     /**
      * Removes an entity to the specified collection belonging to the specified entity.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param collectionName the collection name.
-     * @param item a entity to be removed from the collection.
+     * @param itemRef a entity to be removed from the collection.
      *
      * @throws Exception the exception
      */
@@ -419,10 +421,6 @@ public interface EntityManager {
     /**
      * Connect the specified entity to another entity with the specified connection type. Connections are directional
      * relationships that can be traversed in either direction.
-     *
-     * @param entity an entity reference
-     * @param connectionType type of connection to make.
-     * @param connectedEntity the entity to connect.
      *
      * @throws Exception the exception
      */
@@ -450,9 +448,6 @@ public interface EntityManager {
      * Disconnects two connected entities with the specified connection type. Connections are directional relationships
      * that can be traversed in either direction.
      *
-     * @param entity an entity reference
-     * @param connectionType type of connection to make.
-     * @param connectedEntity the entity to connect
      *
      * @throws Exception the exception
      */
@@ -466,7 +461,7 @@ public interface EntityManager {
      * Gets the entities of the specified type connected to the specified entity, optionally matching the specified
      * connection types and/or entity types. Returns a list of entity ids.
      *
-     * @param entity an entity reference
+     * @param entityId an entity reference
      * @param connectionType type of connection or null.
      * @param connectedEntityType type of entity or null.
      *
@@ -482,9 +477,9 @@ public interface EntityManager {
      * <p/>
      * e.g. "get users who have favorited this place"
      *
-     * @param entity an entity reference
+     * @param entityId an entity reference
      * @param connectionType type of connection or null.
-     * @param connectingEntityType type of entity or null.
+     * @param connectedEntityType type of entity or null.
      *
      * @return a list of entities connecting to this one.
      *
@@ -618,4 +613,80 @@ public interface EntityManager {
     public void grantGroupPermission( UUID groupId, String permission ) throws Exception;
 
     public void revokeGroupPermission( UUID groupId, String permission ) throws Exception;
+
+
+    <A extends Entity> A batchCreate(Mutator<ByteBuffer> m, String entityType, Class<A> entityClass, Map<String, Object> properties, UUID importId, UUID timestampUuid) throws Exception;
+
+    void batchCreateRole(Mutator<ByteBuffer> batch, UUID groupId, String roleName, String roleTitle, long inactivity, RoleRef roleRef, UUID timestampUuid) throws Exception;
+
+    /**
+     * Batch dictionary property.
+     *
+     * @param batch The batch to set the property into
+     * @param entity The entity that owns the property
+     * @param propertyName the property name
+     * @param propertyValue the property value
+     * @param timestampUuid The update timestamp as a uuid
+     *
+     * @return batch
+     *
+     * @throws Exception the exception
+     */
+    Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch, EntityRef entity, String propertyName, Object propertyValue, UUID timestampUuid) throws Exception;
+
+    Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch, EntityRef entity, String propertyName, Object propertyValue, boolean force, boolean noRead, UUID timestampUuid) throws Exception;
+
+    Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, Object elementCoValue, boolean removeFromDictionary, UUID timestampUuid) throws Exception;
+
+    /**
+     * Batch update set.
+     *
+     * @param batch the batch
+     * @param entity The owning entity
+     * @param dictionaryName the dictionary name
+     * @param elementValue the dictionary value
+     * @param removeFromDictionary True to delete from the dictionary
+     * @param timestampUuid the timestamp
+     *
+     * @return batch
+     *
+     * @throws Exception the exception
+     */
+    Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, boolean removeFromDictionary, UUID timestampUuid) throws Exception;
+
+    /**
+     * Batch update properties.
+     *
+     * @param batch the batch
+     * @param entity The owning entity reference
+     * @param properties the properties to set
+     * @param timestampUuid the timestamp of the update operation as a time uuid
+     *
+     * @return batch
+     *
+     * @throws Exception the exception
+     */
+    Mutator<ByteBuffer> batchUpdateProperties(Mutator<ByteBuffer> batch, EntityRef entity, Map<String, Object> properties, UUID timestampUuid) throws Exception;
+
+    Set<String> getDictionaryNames(EntityRef entity) throws Exception;
+
+    void insertEntity(String type, UUID entityId) throws Exception;
+
+    void deleteEntity(UUID entityId) throws Exception;
+
+    /** @return the applicationId */
+    UUID getApplicationId();
+
+    /** @return the indexBucketLocator */
+    IndexBucketLocator getIndexBucketLocator();
+
+    /** @return the cass */
+    CassandraService getCass();
+
+
+    // things added for Core Persistence
+
+    void refreshIndex();
+
+    public void init( EntityManagerFactory emf, UUID applicationId);
 }

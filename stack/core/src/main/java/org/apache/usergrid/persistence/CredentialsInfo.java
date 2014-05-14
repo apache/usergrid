@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -27,9 +28,12 @@ import org.codehaus.jackson.annotate.JsonAnySetter;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 
 @XmlRootElement
-public class CredentialsInfo implements Comparable<CredentialsInfo> {
+@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
+public class CredentialsInfo implements Comparable<CredentialsInfo>,Serializable {
 
     boolean recoverable;
     boolean encrypted;
@@ -166,7 +170,7 @@ public class CredentialsInfo implements Comparable<CredentialsInfo> {
 
     @Override
     public int compareTo( CredentialsInfo o ) {
-        if ( created == o.created ) {
+        if (created.equals(o.created)) {
             return 0;
         }
         if ( o.created == null ) {

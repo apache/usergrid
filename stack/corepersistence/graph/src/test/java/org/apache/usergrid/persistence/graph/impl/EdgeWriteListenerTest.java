@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -72,15 +73,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( { TestGraphModule.class } )
 public class EdgeWriteListenerTest {
 
     private static final Logger log = LoggerFactory.getLogger( NodeDeleteListenerTest.class );
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
-
 
     @Inject
     @Rule

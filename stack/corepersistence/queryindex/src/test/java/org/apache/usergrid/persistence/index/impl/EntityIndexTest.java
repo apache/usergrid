@@ -33,8 +33,8 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.util.EntityBuilder;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -46,7 +46,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
-import org.jukito.JukitoRunner;
+import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -58,14 +58,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@RunWith(JukitoRunner.class)
+@RunWith(ITRunner.class)
 @UseModules({ TestIndexModule.class })
-public class EntityIndexTest {
+public class EntityIndexTest extends BaseIT {
 
     private static final Logger log = LoggerFactory.getLogger( EntityIndexTest.class );
     
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
+
+    @Rule
+    public ElasticSearchRule elasticSearchRule = new ElasticSearchRule();
 
     @Inject
     @Rule
@@ -79,6 +82,8 @@ public class EntityIndexTest {
 
     @Test
     public void testIndex() throws IOException {
+
+        final int MAX_ENTITIES = 100;
 
         Id orgId = new SimpleId("organization");
         OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
@@ -101,14 +106,16 @@ public class EntityIndexTest {
             Map<String, Object> item = (Map<String, Object>)o;
 
             Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
-            entity = EntityBuilder.fromMap( scope.getName(), entity, item );
+            entity = EntityMapUtils.fromMap( entity, item );
             EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
 
             entity = entityManager.write( entity ).toBlockingObservable().last();
 
             entityIndex.index( scope, entity );
 
-            count++;
+            if ( count++ > MAX_ENTITIES ) {
+                break;
+            }
         }
         timer.stop();
         log.info( "Total time to index {} entries {}ms, average {}ms/entry", 
@@ -138,7 +145,7 @@ public class EntityIndexTest {
             put("topspeed", 215);
         }};
 
-        Entity entity = EntityBuilder.fromMap( scope.getName(), entityMap );
+        Entity entity = EntityMapUtils.fromMap( entityMap );
         EntityUtils.setId( entity, new SimpleId( "fastcar" ));
         entity = entityManager.write( entity ).toBlockingObservable().last();
         entityIndex.index( scope, entity );
@@ -146,7 +153,7 @@ public class EntityIndexTest {
         entityIndex.refresh();
 
         Results results = entityIndex.search( scope, Query.fromQL( "name contains 'Ferrari*'"));
-        assertEquals( 1, results.getEntities().size() );
+        assertEquals( 1, results.size() );
 
         entityManager.delete( entity.getId() );
         entityIndex.deindex( scope, entity );
@@ -154,7 +161,7 @@ public class EntityIndexTest {
         entityIndex.refresh();
 
         results = entityIndex.search( scope, Query.fromQL( "name contains 'Ferrari*'"));
-        assertEquals( 0, results.getEntities().size() );
+        assertEquals( 0, results.size() );
     }
    
    
@@ -168,9 +175,9 @@ public class EntityIndexTest {
         timer.stop();
 
         if ( num == 1 ) {
-            assertNotNull( results.getEntities().get(0) != null );
+            assertNotNull( results.getEntity() != null );
         } else {
-            assertEquals( num, results.getEntities().size() );
+            assertEquals( num, results.size() );
         }
         log.debug( "Query time {}ms", timer.getTime() );
     }
@@ -186,9 +193,9 @@ public class EntityIndexTest {
 
         testQuery( entityIndex, scope, "name contains 'Morgan'", 1);
 
-        testQuery( entityIndex, scope, "company > 'GeoLogix'", 564);
+        testQuery( entityIndex, scope, "company > 'GeoLogix'", 64);
 
-        testQuery( entityIndex, scope, "gender = 'female'", 433);
+        testQuery( entityIndex, scope, "gender = 'female'", 45);
 
         testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age > 39", 1);
 
@@ -214,10 +221,10 @@ public class EntityIndexTest {
             Map<String, Object> map1 = (Map<String, Object>)o;
 
             // convert map to entity
-            Entity entity1 = EntityBuilder.fromMap( "testscope", map1 );
+            Entity entity1 = EntityMapUtils.fromMap( map1 );
 
             // convert entity back to map
-            Map map2 = EsEntityIndexImpl.entityToMap( entity1 );
+            Map map2 = EntityMapUtils.toMap( entity1 );
 
             // the two maps should be the same except for six new system properties
             Map diff = Maps.difference( map1, map2 ).entriesDiffering();

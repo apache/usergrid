@@ -1,6 +1,24 @@
+/**
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ */
 'use strict';
 
-AppServices.Services.factory('ug', function (configuration, $rootScope,utility, $q, $http, $resource, $log,$location) {
+AppServices.Services.factory('ug', function (configuration, $rootScope,utility, $q, $http, $resource, $log, $analytics,$location) {
 
   var requestTimes = [],
     running = false,
@@ -8,7 +26,9 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
 
   function reportError(data,config){
     try {
-    
+      $analytics.eventTrack('error', {
+        category: 'App Services', label: data + ':' + config.url + ':' + (sessionStorage['apigee_uuid'] || 'na')
+      });
     } catch (e) {
       console.log(e)
     }
@@ -25,9 +45,8 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       this.client().set(prop,value);
 
     },
-    getUrls: function(){
+    getUrls: function(qs){
       var host = $location.host();
-      var qs = $location.search();
       var BASE_URL = '';
       var DATA_URL = '';
       var use_sso = false;
@@ -35,13 +54,13 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         case host === 'appservices.apigee.com' && location.pathname.indexOf('/dit') >= 0 :
           //DIT
           BASE_URL = 'https://accounts.jupiter.apigee.net';
-          DATA_URL = 'http://apigee-internal-prod.jupiter.apigee.net';
+          DATA_URL = 'https://apigee-internal-prod.jupiter.apigee.net';
           use_sso = true;
           break;
         case host === 'appservices.apigee.com' && location.pathname.indexOf('/mars') >= 0  :
           //staging
           BASE_URL = 'https://accounts.mars.apigee.net';
-          DATA_URL = 'http://apigee-internal-prod.mars.apigee.net';
+          DATA_URL = 'https://apigee-internal-prod.mars.apigee.net';
           use_sso = true;
           break;
         case host === 'appservices.apigee.com' :
@@ -497,7 +516,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     getIndexes: function (path) {
       var options = {
         method:'GET',
-        endpoint: path.split('/').concat('indexes').filter(function(bit){return bit && bit.length}).join('/') 
+        endpoint: path.split('/').concat('indexes').filter(function(bit){return bit && bit.length}).join('/')
       }
       this.client().request(options, function (err, data) {
         if (err) {
@@ -755,7 +774,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       this.client().request(options, function (err, data) {
         if (err) {
           console.error(data);
-          $rootScope.$broadcast('alert', 'error', 'error creating notifier.' );
+          $rootScope.$broadcast('alert', 'error', data.error_description  || 'error creating notifier');
         } else {
           $rootScope.$broadcast('alert', 'success', 'New notifier created successfully.');
           $rootScope.$broadcast('notifier-update');
@@ -1006,9 +1025,10 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       });
     },
     runShellQuery:function(method,path,payload){
+      var path = path.replace(/^\//, ''); //remove leading slash if it does
       var options = {
-        "verb": method,
-          "endpoint":path
+        "method": method,
+        "endpoint":path
       };
       if(payload){
         options["body"]=payload;
@@ -1147,7 +1167,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       };
 
       successCallback && $rootScope.$broadcast("ajax_loading", objectType);
-      var reqCount = currentRequests[uri] || 0; 
+      var reqCount = currentRequests[uri] || 0;
       if(self.averageRequestTimes > 5 && reqCount>1){
         setTimeout(function(){
           deferred.reject(new Error('query in progress'));

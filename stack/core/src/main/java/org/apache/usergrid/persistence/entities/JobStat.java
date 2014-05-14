@@ -49,11 +49,6 @@ public class JobStat extends TypedEntity {
     @EntityProperty(required = true, basic = true, indexed = true)
     private long duration;
 
-
-    /**
-     * @param jobName
-     * @param startTime
-     */
     public JobStat() {
     }
 
@@ -118,7 +113,7 @@ public class JobStat extends TypedEntity {
     /**
      * DON'T CALL THIS, USE THE INRECMENT METHOD!
      *
-     * @param failCount the failCount to set
+     * @param runCount the runCount to set
      */
     public void setRunCount( int runCount ) {
         this.runCount = runCount;

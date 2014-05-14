@@ -27,12 +27,7 @@ import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.BytesArraySerializer;
-import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class QueueManagerFactoryImpl implements QueueManagerFactory {
@@ -45,14 +40,6 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
     private CounterUtils counterUtils;
     private LockManager lockManager;
     private int lockTimeout;
-
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-    public static final BytesArraySerializer bae = new BytesArraySerializer();
-    public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
-    public static final LongSerializer le = new LongSerializer();
-
 
     /**
      * Must be constructed with a CassandraClientPool.

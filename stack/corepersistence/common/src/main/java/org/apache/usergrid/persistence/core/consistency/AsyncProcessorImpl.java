@@ -88,7 +88,7 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
         List<Observable<?>> observables = new ArrayList<Observable<?>>( listeners.size() );
 
         for ( MessageListener<T, ?> listener : listeners ) {
-            observables.add( HystrixGraphObservable.async( listener.receive( data ) ) );
+            observables.add( HystrixGraphObservable.async( listener.receive( data ) ).subscribeOn( Schedulers.io() ) );
         }
 
         LOG.debug( "About to start {} observables for event {}", listeners.size(), event );

@@ -145,13 +145,13 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         LOG.info( "Find all connections for cat A: " + catA.getUuid() );
 
-        testEntityConnections( applicationId, catA.getUuid(), 1 );
+        testEntityConnections( applicationId, catA.getUuid(), "cat", 1 );
 
         // List forward connections for award A
 
         LOG.info( "Find all connections for award A: " + awardA.getUuid() );
 
-        testEntityConnections( applicationId, awardA.getUuid(), 1 );
+        testEntityConnections( applicationId, awardA.getUuid(), "award", 1 );
 
         // Establish connection from award A to cat A
 
@@ -160,11 +160,11 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         // List forward connections for cat A
 
-        testEntityConnections( applicationId, catA.getUuid(), 1 );
+        testEntityConnections( applicationId, catA.getUuid(), "cat", 1 );
 
         // List forward connections for award A
 
-        testEntityConnections( applicationId, awardA.getUuid(), 2 );
+        testEntityConnections( applicationId, awardA.getUuid(), "award", 2 );
 
         // List all cats in application's cats collection
 
@@ -178,16 +178,16 @@ public class EntityConnectionsIT extends AbstractCoreIT {
     }
 
 
-    public Map<String, Map<String, List<UUID>>> testEntityConnections( UUID applicationId, UUID entityId,
-                                                                       int expectedCount ) throws Exception {
+    public Map<String, Map<String, List<UUID>>> testEntityConnections( 
+        UUID applicationId, UUID entityId, String entityType, int expectedCount ) throws Exception {
+
         LOG.info( "----------------------------------------------------" );
         LOG.info( "Checking connections for " + entityId.toString() );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        Entity en = em.get( entityId );
+        Entity en = em.get( entityId, entityType );
 
         Results results = em.getConnectedEntities( en.getUuid(), null, null, Results.Level.REFS );
-
 
         LOG.info( "----------------------------------------------------" );
         assertEquals( "Expected " + expectedCount + " connections", expectedCount, results.getConnections().size() );
@@ -196,19 +196,22 @@ public class EntityConnectionsIT extends AbstractCoreIT {
     }
 
 
-    public List<UUID> testApplicationCollections( UUID applicationId, String collectionName, int expectedCount )
-            throws Exception {
-        return testEntityCollections( applicationId, applicationId, collectionName, expectedCount );
+    public List<UUID> testApplicationCollections( 
+            UUID applicationId, String collectionName, int expectedCount ) throws Exception {
+
+        return testEntityCollections( 
+            applicationId, applicationId, "application", collectionName, expectedCount );
     }
 
 
-    public List<UUID> testEntityCollections( UUID applicationId, UUID entityId, String collectionName,
-                                             int expectedCount ) throws Exception {
+    public List<UUID> testEntityCollections( UUID applicationId, UUID entityId, String entityType, 
+            String collectionName, int expectedCount ) throws Exception {
+
         LOG.info( "----------------------------------------------------" );
         LOG.info( "Checking collection " + collectionName + " for " + entityId.toString() );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        Entity en = em.get( entityId );
+        Entity en = em.get( entityId, entityType );
 
         int i = 0;
         Results entities = em.getCollection( en, collectionName, null, 100, Results.Level.IDS, false );

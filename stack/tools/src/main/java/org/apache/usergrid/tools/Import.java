@@ -191,7 +191,7 @@ public class Import extends ToolBase {
         if ( dictionaries != null ) {
             EntityManager rootEm = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
-            Entity appEntity = rootEm.get( appId );
+            Entity appEntity = rootEm.get( appId, "application" );
 
 
             for ( Entry<String, Object> dictionary : dictionaries.entrySet() ) {
@@ -243,9 +243,9 @@ public class Import extends ToolBase {
                 continue;
             }
 
-            if ( em.get( uuid ) == null ) {
-                logger.error( "Holy hell, we wrote an entity and it's missing.  Entity Id was {} and type is {}", uuid,
-                        type );
+            if ( em.get( uuid, type ) == null ) {
+                logger.error( "Holy hell, we wrote an entity and it's missing.  "
+                        + "Entity Id was {} and type is {}", uuid, type );
                 System.exit( 1 );
             }
 

@@ -33,6 +33,8 @@ import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 
 import static junit.framework.Assert.assertNotNull;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 
 
 public class CoreApplication implements Application, TestRule {
@@ -120,12 +122,6 @@ public class CoreApplication implements Application, TestRule {
 
 
     @Override
-    public Entity get( UUID id ) throws Exception {
-        return em.get( id );
-    }
-
-
-    @Override
     public Statement apply( final Statement base, final Description description ) {
         return new Statement() {
             @Override
@@ -168,5 +164,21 @@ public class CoreApplication implements Application, TestRule {
 
     public QueueManager getQm() {
         return setup.getQmf().getQueueManager( getId() );
+    }
+
+    @Override
+    public void remove(Entity entity) throws Exception {
+        EntityRef ref = new SimpleEntityRef( entity.getType(), entity.getUuid() );
+        em.delete( ref );
+    }
+
+    @Override
+    public Entity get(UUID id, String type) throws Exception {
+        return em.get( id, type );
+    }
+
+    @Override
+    public void refreshIndex() {
+        em.refreshIndex();
     }
 }

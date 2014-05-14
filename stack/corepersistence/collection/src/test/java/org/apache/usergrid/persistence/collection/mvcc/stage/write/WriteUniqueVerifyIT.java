@@ -18,13 +18,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
-import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import com.google.inject.Inject;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -33,28 +27,26 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
-
-import com.google.inject.Inject;
-
+import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 
 /**
  * Simple integration test of uniqueness verification.
  */
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class WriteUniqueVerifyIT {
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
     @Inject
     @Rule
@@ -78,6 +70,9 @@ public class WriteUniqueVerifyIT {
         entity.setField(new IntegerField("top_speed_mph", 200));
         entityManager.write( entity ).toBlockingObservable().last();
 
+        Entity entityFetched = entityManager.load( entity.getId() ).toBlockingObservable().last();
+        entityFetched.setField( new StringField("foo", "bar"));
+
         // another enity that tries to use two unique values already taken by first
         final Entity entity2 = TestEntityGenerator.generateEntity();
         entity2.setField(new StringField("name", "Aston Martin Vanquish", true));
@@ -97,6 +92,43 @@ public class WriteUniqueVerifyIT {
         entity.setField( new IntegerField("top_speed_mph", 190) );
         entityManager.write( entity );
     }
+
+    @Test
+    public void testNoConflict1() {
+
+        final Id orgId = new SimpleId("WriteUniqueVerifyIT");
+        final Id appId = new SimpleId("testNoConflict");
+
+        final CollectionScope scope = new CollectionScopeImpl( appId, orgId, "fastcars" );
+        final EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
+
+        final Entity entity = TestEntityGenerator.generateEntity();
+        entity.setField(new StringField("name", "Porsche 911 GT3", true));
+        entity.setField(new StringField("identifier", "911gt3", true));
+        entity.setField(new IntegerField("top_speed_mph", 194));
+        entityManager.write( entity ).toBlockingObservable().last();
+
+        Entity entityFetched = entityManager.load( entity.getId() ).toBlockingObservable().last();
+        entityFetched.setField( new StringField("foo", "baz"));
+        entityManager.write( entityFetched ).toBlockingObservable().last();
+    }
+
+    @Test
+    public void testNoConflict2() {
+
+        final Id orgId = new SimpleId("WriteUniqueVerifyIT");
+        final Id appId = new SimpleId("testNoConflict");
+
+        final CollectionScope scope = new CollectionScopeImpl( appId, orgId, "fastcars" );
+        final EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
+
+        final Entity entity = TestEntityGenerator.generateEntity();
+        entity.setField(new StringField("name", "Alfa Romeo 8C Competizione", true));
+        entity.setField(new StringField("identifier", "ar8c", true));
+        entity.setField(new IntegerField("top_speed_mph", 182));
+        entityManager.write( entity ).toBlockingObservable().last();
+
+        entity.setField( new StringField("foo", "bar"));
+        entityManager.write( entity ).toBlockingObservable().last();
+    }
 }
-
-

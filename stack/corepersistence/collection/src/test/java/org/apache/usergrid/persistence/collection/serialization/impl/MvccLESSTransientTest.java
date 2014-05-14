@@ -3,7 +3,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.util.UUID;
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -14,7 +13,6 @@ import org.safehaus.guicyfig.Env;
 import org.safehaus.guicyfig.Option;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
@@ -23,6 +21,8 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNull;
 
 
 /** @author tnine */
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class MvccLESSTransientTest {
     @Inject
@@ -46,10 +46,6 @@ public class MvccLESSTransientTest {
 
     @Inject
     private MvccLogEntrySerializationStrategy logEntryStrategy;
-
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
 
     @Inject

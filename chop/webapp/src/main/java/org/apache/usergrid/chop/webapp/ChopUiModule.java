@@ -74,11 +74,10 @@ public class ChopUiModule extends ServletModule {
         bind( PropertiesResource.class ).asEagerSingleton();
         bind( RunnerCoordinator.class ).asEagerSingleton();
 
-        //bind shiro
         ShiroWebModule.bindGuiceFilter( binder() );
 
         // This should be before "/*" otherwise the vaadin servlet will not work
-        serve( "/VAADIN/*" ).with( VaadinServlet.class );
+        serve( "/VAADIN*" ).with( VaadinServlet.class );
 
         Map<String, String> params = new HashMap<String, String>();
         params.put( PACKAGES_KEY, getClass().getPackage().toString() );

@@ -29,6 +29,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.RootResource;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.apache.usergrid.exception.NotImplementedException;
@@ -80,7 +81,7 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @Path("{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    @Path(RootResource.APPLICATION_ID_PATH)
     public ApplicationResource getApplicationById( @PathParam("applicationId") String applicationIdStr )
             throws Exception {
 
@@ -98,7 +99,7 @@ public class OrganizationResource extends AbstractContextResource {
         if ( org_info != null ) {
             organizationId = org_info.getUuid();
         }
-        if ( applicationId == null || organizationId == null ) {
+        if (organizationId == null) {
             return null;
         }
         BiMap<UUID, String> apps = management.getApplicationsForOrganization( organizationId );
@@ -110,14 +111,14 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
-    @Path("applications/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    @Path("applications/"+ RootResource.APPLICATION_ID_PATH)
     public ApplicationResource getApplicationById2( @PathParam("applicationId") String applicationId )
             throws Exception {
         return getApplicationById( applicationId );
     }
 
 
-    @Path("apps/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    @Path("apps/"+RootResource.APPLICATION_ID_PATH)
     public ApplicationResource getApplicationById3( @PathParam("applicationId") String applicationId )
             throws Exception {
         return getApplicationById( applicationId );

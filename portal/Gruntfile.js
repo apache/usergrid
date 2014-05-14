@@ -1,54 +1,61 @@
-var packageJson = require('./package.json');
-var userGrid = require('./config.js');
-var  versionPath = packageJson.version;
-var menu = '<ul class="nav nav-list" menu="sideMenu">';
-userGrid.options.menuItems.forEach(function(menuItem){
-  menu += '<li class="option '+ (menuItem.active ? 'active' : '') + '" ng-cloak>';
-  menu += '<a data-ng-href="'+menuItem.path+'"><i class="pictogram">'+menuItem.pic+'</i>'+menuItem.title+'</a>';
-  menuItem.items && menuItem.items.forEach(function(subItem){
-    menu += '<ul class="nav nav-list">';
-    menu += '<li>';
-    menu += '<a data-ng-href="'+subItem.path+'"><i class="pictogram sub">'+subItem.pic+'</i>'+subItem.title+'</a>'
-    menu += '</li>';
-    menu += '</ul>';
-  });
-  menu += '</li>';
-});
-menu += '</ul>';
+/**
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
 
-var mainRefs = "",
-    devRefs = ""
-    ;
-userGrid.options.scriptReferences.main.forEach(function (current) {
-  mainRefs += "<script src='" + versionPath+'/'+ current + "'></script>";
-});
-userGrid.options.scriptReferences.dev.forEach(function (current) {
-  devRefs += "<script src='" + versionPath+'/'+ current + "'></script>";
-});
+ http://www.apache.org/licenses/LICENSE-2.0
 
-var cssRefs = "";
-userGrid.options.cssRefs.forEach(function(css){
-  cssRefs += '<link href="'+versionPath+'/'+css.src+'" rel="stylesheet" id="'+css.id+'"/>';
-});
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ */
+var bower = require('./bower.json');
 
+var distPath = 'dist/'+bower.name,
+  coveragePath = 'dist-cov/'+bower.name,
+  libsFile = 'js/libs/usergrid-libs.min.js',
+  devFile = 'js/usergrid-dev.min.js',
+  coverageDir = 'test/coverage/instrument/',
+  coverageFile = 'test/coverage/instrument/js/usergrid-coverage.min.js',
+  mainFile = 'js/usergrid.min.js',
+  templateFile = 'js/templates.js',
+  distName = bower.name,
+  licenseHeader =' /**\n \
+ Licensed to the Apache Software Foundation (ASF) under one\n \
+ or more contributor license agreements.  See the NOTICE file\n \
+ distributed with this work for additional information \n \
+ regarding copyright ownership.  The ASF licenses this file \n\
+ to you under the Apache License, Version 2.0 (the \n \
+ "License"); you may not use this file except in compliance \n \
+ with the License.  You may obtain a copy of the License at \n \
+  \n \
+ http://www.apache.org/licenses/LICENSE-2.0 \n \
+  \n \
+ Unless required by applicable law or agreed to in writing,\n \
+ software distributed under the License is distributed on an\n \
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY\n \
+ KIND, either express or implied.  See the License for the\n \
+ specific language governing permissions and limitations\n \
+ under the License.\n \
+ */\n';
 console.warn('to run e2e tests you need to have a running instance of webdriver, 1) npm install protractor -g -> 2) webdriver-manager start --standalone');
 module.exports = function (grunt) {
 
-  var distPath = 'dist/'+packageJson.packageName,
-      libsFile = 'js/libs/usergrid-libs.min.js',
-      devFile = 'js/usergrid-dev.min.js',
-      devFileIncludes= ['js/**/*.js','!js/libs/**/*.js', '!js/**/*.min.js'],
-      mainFile = 'js/usergrid.min.js',
-      templateFile = 'js/templates.js',
-      distName = packageJson.packageName
-      ;
+
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
     uglify: {
       options: {
-        banner: '/*! <%= pkg.name %>@<%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        banner: licenseHeader + '\n /*! <%= pkg.name %>@<%= pkg.version %>  */\n'
       },
       'usergrid-libs':{
         options: {
@@ -68,9 +75,13 @@ module.exports = function (grunt) {
             'js/libs/angular-1.2.5/angular-sanitize.min.js',
             'js/libs/usergrid.sdk.js',
             'js/libs/MD5.min.js',
+            'bower_components/angularitics/dist/angulartics.min.js',
+            'bower_components/angularitics/dist/angulartics-google-analytics.min.js',
             'js/libs/ui-bootstrap/ui-bootstrap-custom-tpls-0.3.0.min.js',
             'js/libs/jqueryui/jquery-ui-1.8.18.min.js',
-            'js/libs/jqueryui/date.min.js'
+            'js/libs/jqueryui/date.min.js',
+            'bower_components/intro.js/minified/intro.min.js',
+            'bower_components/angular-intro.js/src/angular-intro.js',
           ]
         }
       },
@@ -89,6 +100,37 @@ module.exports = function (grunt) {
             '!js/libs/**/*.js',
             '!'+mainFile,
             '!'+devFile
+          ]
+        }
+      },
+      'usergrid-coverage': {
+        options: {
+          mangle: false,
+          compress: false,
+          beautify: false,
+          wrap: false
+        },
+        files: {
+          'test/coverage/instrument/js/usergrid-coverage.min.js': [
+            coverageDir+'js/app.js',
+            coverageDir+'js/**/*.js',
+            'js/templates.js',
+            '!'+coverageDir+'js/config.js',
+            '!'+coverageDir+'js/libs/**/*.js',
+            '!'+coverageDir+''+mainFile,
+            '!'+coverageDir+'js/usergrid-coverage.min.js'
+          ]
+        }
+      },
+      'usergrid-coverage-min': {
+        options: {
+          mangle: false,
+          compress: {warnings:false},
+          beautify: false
+        },
+        files: {
+          'test/coverage/instrument/js/usergrid.min.js': [
+            coverageFile
           ]
         }
       },
@@ -151,6 +193,12 @@ module.exports = function (grunt) {
           base: ''
         }
       },
+      'e2e-coverage-chrome': {
+        options: {
+          port: 3006,
+          base: coveragePath
+        }
+      },
       'e2e-phantom': {
         options: {
           port: 3005,
@@ -176,6 +224,12 @@ module.exports = function (grunt) {
         runnerPort: 9999,
         singleRun: true,
         browsers: ['PhantomJS']
+      },
+      coverage: {
+        configFile: 'tests/karma-coverage.conf.js',
+        runnerPort: 9999,
+        singleRun: true,
+        browsers: ['PhantomJS']
       }
     },
     protractor: {
@@ -184,13 +238,13 @@ module.exports = function (grunt) {
         keepAlive: true, // If false, the grunt process stops when the test fails.
         noColor: false, // If true, protractor will not use colors in its output.
         args: {
-          baseUrl:'http://localhost:3005'
+          baseUrl:'http://localhost:3005/'
         }
       },
       phantom: {
         options: {
           args: {
-            baseUrl:'http://localhost:3005',
+            baseUrl:'http://localhost:3005/',
             // Arguments passed to the command
             'browser': 'phantomjs'
           }
@@ -199,7 +253,7 @@ module.exports = function (grunt) {
       chrome: {
         options: {
           args: {
-            baseUrl:'http://localhost:3006',
+            baseUrl:'http://localhost:3006/?noHelp=true',
             // Arguments passed to the command
             'browser': 'chrome'
           }
@@ -208,7 +262,7 @@ module.exports = function (grunt) {
       prod: {
         options: {
           args: {
-            baseUrl:'http://apigee.com/usergrid',
+            baseUrl:'http://apigee.com/usergrid/',
             // Arguments passed to the command
             browser: 'chrome',
             params:{
@@ -232,7 +286,7 @@ module.exports = function (grunt) {
       firefox: {
         options: {
           args: {
-            baseUrl:'http://localhost:3007',
+            baseUrl:'http://localhost:3007/',
             // Arguments passed to the command
             'browser': 'firefox'
           }
@@ -240,39 +294,39 @@ module.exports = function (grunt) {
       }
     },
     copy:{
-      versioned:{
+      coverage:{
         files:[
-          {src:['js/*.min.js','js/libs/**','css/**','img/**','bower_components/**'],dest:versionPath,expand:true}
+          {
+            src:['js/*.min.js','js/libs/**','sdk/**','archive/**','js/charts/*.json','css/**','img/**','js/libs/**','config.js','bower_components/**'],
+            dest:coveragePath,
+            expand:true
+          },
+          {
+            src:['js/*.min.js'],
+            dest:coveragePath,
+            cwd: coverageDir,
+            expand:true
+          }
         ]
       },
       main:{
         files:[
           // includes files within path
           {expand: true, src: ['*.html','config.js', '*.ico'], dest: distPath, filter: 'isFile'},
-          {expand: true, src: [versionPath+'/**','sdk/**','css/**','img/**' ,'archive/**','js/charts/*.json'], dest: distPath}
+          {expand: true, src: ['sdk/**','css/**','img/**' ,'archive/**','js/charts/*.json'], dest: distPath},
+          {expand: true, src: ['js/*.min.js','js/libs/**','css/**','img/**','bower_components/**'], dest: distPath}
 
         ]
       }
     },
-    compress: {
-      main: {
-        options: {
-          archive: 'dist/'+distName+'.'+packageJson.version+'.zip'
-        },
-        expand: true,
-        cwd: distPath+'/',
-        src: ['**/*'],
-        dest: distName+'.'+packageJson.version
-      }
-    },
     clean: {
-        build: ['dist/','js/*.min.js',templateFile,versionPath+'/']//'bower_components/',
+        build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile,'index.html','index-debug.html'],
+        coverage: ['reports/']
     },
     dom_munger: {
       main: {
         options: {
-          append:{selector:'body',html:mainRefs},
-          update: {selector:'#main-script',attribute:'src',value:versionPath+'/'+mainFile}
+          update: {selector:'#main-script',attribute:'src',value:mainFile}
 
         },
         src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
@@ -281,34 +335,18 @@ module.exports = function (grunt) {
       },
       dev: {
         options: {
-          append:{selector:'body',html:devRefs},
-          update: {selector:'#main-script',attribute:'src',value:versionPath+'/'+devFile}
+          update: {selector:'#main-script',attribute:'src',value:devFile}
         },
         src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
         dest: 'index-debug.html'  //update the dist/index.html (the src index.html is copied there)
       },
-      menu: {
+      coverage: {
         options: {
-          callback:function($){
-            $('#sideMenu').append(menu);
-            $('head').append(cssRefs);
-            var libs = $('#libScript');
-            for(var key in libs){
-              var elem = libs[key];
-              if(elem.attribs){
-                if (elem.attribs.src) {
-                  elem.attribs.src = versionPath + '/' + elem.attribs.src;
-                }
-                if (elem.attribs.href) {
-                  elem.attribs.href = versionPath + '/' + elem.attribs.href;
-                }
-              }
-            };
-          }
+          update: {selector:'#main-script',attribute:'src',value:'js/usergrid-coverage.min.js'}
         },
-        src: ['index.html','index-debug.html']  //update the dist/index.html (the src index.html is copied there)
+        src: 'index-template.html',  //update the dist/index.html (the src index.html is copied there)
+        dest: coveragePath+'/index.html'  //update the dist/index.html (the src index.html is copied there)
       }
-
     },
     bower: {
       install: {
@@ -316,6 +354,48 @@ module.exports = function (grunt) {
           cleanup:false,
           copy:false
         }
+      }
+    },
+    s3: {
+      options: {
+        key: process.env.AWS_KEY || 'noidea',
+        secret: process.env.AWS_SECRET || 'noidea',
+        bucket: 'appservices-deployments',
+        access: 'public-read',
+        headers: {
+          // Two Year cache policy (1000 * 60 * 60 * 24 * 730)
+          "Cache-Control": "max-age=630720000, public",
+          "Expires": new Date(Date.now() + 63072000000).toUTCString()
+        }
+      },
+      dev: {
+        // These options override the defaults
+        options: {
+          encodePaths: false,
+          maxOperations: 20
+        },
+        // Files to be uploaded.
+        upload: [
+          {
+            src: 'dist/'+bower.name+'.'+bower.version+'.zip',
+            dest: '/production-releases/dist/'+bower.name+'.'+bower.version+'.zip'
+          }
+        ]
+      }
+    },
+    instrument: {
+      files: 'js/**/*.js',
+      options: {
+        lazy: true,
+        basePath: coverageDir
+      }
+    },
+    makeReport: {
+      src: 'reports/**/*.json',
+      options: {
+        type: 'lcov',
+        dir: 'reports',
+        print: 'detail'
       }
     }
   });
@@ -325,7 +405,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
-  grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-angular-templates');
   grunt.loadNpmTasks('grunt-bower-task');
@@ -333,24 +412,31 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-protractor-runner');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-dom-munger');
+  grunt.loadNpmTasks('grunt-s3');
+  grunt.loadNpmTasks('grunt-istanbul');
 
   // Default task(s).
   grunt.registerTask('dev', ['connect:server', 'watch']);
 
   grunt.registerTask('validate', ['jshint', 'complexity']);
+  grunt.registerTask('report', ['build', 'coverage']);
 
-  grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','copy:versioned','karma:unit']);
+  grunt.registerTask('build-release', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy']);
+  grunt.registerTask('build', ['bower:install','ngtemplates', 'uglify','cssmin','dom_munger','karma:unit']);
+  grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','karma:unit']);
+  grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
 
-  grunt.registerTask('default', ['build','karma:unit']);
+  grunt.registerTask('default', ['build']);
 
   grunt.registerTask('e2e', ['connect:e2e-phantom','protractor:phantom']);
   grunt.registerTask('e2e-chrome', ['connect:e2e-chrome','protractor:chrome']);
+  grunt.registerTask('e2e-coverage', ['clean:coverage', 'connect:e2e-coverage','protractor:coverage']);
+  grunt.registerTask('e2e-coverage-chrome', ['clean:coverage', 'connect:e2e-coverage-chrome','protractor:chrome', 'makeReport']);
   grunt.registerTask('e2e-firefox', ['connect:e2e-firefox','protractor:firefox']);
   grunt.registerTask('e2e-prod', ['protractor:prod']);
   grunt.registerTask('e2e-mars', ['protractor:mars']);
 
 
-  grunt.registerTask('no-monitoring', ['build','clean:perf','karma:unit','compress']);
+  grunt.registerTask('no-monitoring', ['build','clean:perf','karma:unit']);
 
-  grunt.registerTask('build', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy','compress']);
 };

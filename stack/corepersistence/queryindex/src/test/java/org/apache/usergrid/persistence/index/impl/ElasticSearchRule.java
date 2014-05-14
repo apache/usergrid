@@ -25,37 +25,26 @@ import org.elasticsearch.client.Client;
 import org.safehaus.guicyfig.Env;
 import org.safehaus.guicyfig.EnvironResource;
 import org.safehaus.guicyfig.GuicyFigModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class ElasticSearchRule extends EnvironResource {
-    private static final Logger log = LoggerFactory.getLogger( ElasticSearchRule.class ); 
 
     private Client client;
 
-    private final IndexFig indexFig;
-
     public ElasticSearchRule() {
         super( Env.UNIT );
-        Injector injector = Guice.createInjector( new GuicyFigModule( IndexFig.class ) );
-        indexFig = injector.getInstance( IndexFig.class );
-
-        log.info("Embedded: " + indexFig.isEmbedded());
-        log.info("Limit: " + indexFig.getQueryLimitDefault());
-    }
-
-    @Override
-    protected void after() {
-        log.info("Stopping ElasticSearch");
     }
 
     @Override
     protected void before() throws Throwable {
-        client = EsProvider.getClient( indexFig );
     }
 
     public synchronized Client getClient() {
+        if ( client == null ) {
+            Injector injector = Guice.createInjector( new GuicyFigModule( IndexFig.class ) );
+            IndexFig indexFig = injector.getInstance( IndexFig.class );            
+            client = EsProvider.getClient( indexFig );
+        }
         return client;
     }
 }

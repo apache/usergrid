@@ -95,7 +95,7 @@ public class OrganizationsResourceIT extends AbstractRestIT {
             EntityManager em = setup.getEmf().getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
             User user = em.get( ui.getUuid(), User.class );
             assertEquals( "Test User", user.getName() );
-            assertEquals( "Apigee", ( String ) user.getProperty( "company" ) );
+            assertEquals( "Apigee", user.getProperty( "company" ));
 
             OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName( "test-org-1" );
             assertEquals( 5L, orgInfo.getProperties().get( "securityLevel" ) );
@@ -269,5 +269,37 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         }
 
         assertEquals( Status.NOT_IMPLEMENTED, status );
+    }
+
+    @Test
+    public void testCreateOrgUserAndReturnCorrectUsername() throws Exception {
+
+        String mgmtToken = superAdminToken();
+
+        Map<String, String> payload = hashMap( "username", "test-user-2" )
+            .map("name", "Test User 2")
+            .map("email", "test-user-2@mockserver.com")
+            .map( "password", "password" );
+
+        JsonNode node = resource().path( "/management/organizations/test-organization/users" )
+            .queryParam( "access_token", mgmtToken )
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON_TYPE )
+            .post( JsonNode.class, payload );
+
+        logNode( node );
+        assertNotNull( node );
+
+        String username = node.get( "data" ).get( "user" ).get( "username" ).asText();
+        String name = node.get( "data" ).get( "user" ).get( "name" ).asText();
+        String email = node.get( "data" ).get( "user" ).get( "email" ).asText();
+
+        assertNotNull( username );
+        assertNotNull( name );
+        assertNotNull( email );
+
+        assertEquals( "test-user-2", username );
+        assertEquals( "Test User 2", name );
+        assertEquals( "test-user-2@mockserver.com", email );
     }
 }

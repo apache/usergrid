@@ -50,7 +50,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.DynamicComposite;
@@ -68,6 +67,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_E
 import static org.apache.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -89,7 +89,6 @@ public class UniqueIndexCleanup extends ToolBase {
      */
     private static final int PAGE_SIZE = 100;
 
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
 
     private static final Logger logger = LoggerFactory.getLogger( UniqueIndexCleanup.class );
@@ -203,6 +202,8 @@ public class UniqueIndexCleanup extends ToolBase {
 
                     for ( ScanColumn col : ids ) {
                         final UUID id = col.getUUID();
+                        String type = getDefaultSchema().getCollectionType("application", collectionName);
+
                         boolean reIndex = false;
 
                         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -271,7 +272,7 @@ public class UniqueIndexCleanup extends ToolBase {
 
                             //force this entity to be updated
                             if ( reIndex ) {
-                                Entity entity = em.get( id );
+                                Entity entity = em.get( id, type );
 
                                 //entity may not exist, but we should have deleted rows from the index
                                 if ( entity == null ) {

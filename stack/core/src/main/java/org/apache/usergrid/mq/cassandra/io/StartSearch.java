@@ -31,11 +31,6 @@ import me.prettyprint.hector.api.Keyspace;
  */
 public class StartSearch extends NoTransactionSearch
 {
-
-    /**
-     * @param ko
-     * @param cassTimestamp
-     */
     public StartSearch( Keyspace ko )
     {
         super( ko );
@@ -52,8 +47,6 @@ public class StartSearch extends NoTransactionSearch
     protected SearchParam getParams( UUID queueId, UUID consumerId, QueueQuery query )
     {
         UUID lastMessageId = query.getLastMessageId();
-
-
         return new SearchParam( lastMessageId, false, lastMessageId != null, query.getLimit( DEFAULT_READ ) );
     }
 

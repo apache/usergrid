@@ -17,25 +17,11 @@
 package org.apache.usergrid.management.cassandra;
 
 
-import java.io.File;
-import java.io.FileReader;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.AsyncBlobStore;
-import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
-import org.jclouds.logging.log4j.config.Log4JLoggingModule;
-import org.jclouds.netty.config.NettyPayloadModule;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -47,24 +33,15 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.ServiceITSuite;
-import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.count.SimpleBatcher;
-import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.management.export.ExportJob;
-import org.apache.usergrid.management.export.ExportService;
-import org.apache.usergrid.management.export.S3Export;
-import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.entities.Export;
-import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.crypto.command.Md5HashCommand;
@@ -74,10 +51,6 @@ import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.Module;
-
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
@@ -86,19 +59,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-//import com.amazonaws.auth.AWSCredentials;
-//import com.amazonaws.auth.BasicAWSCredentials;
-//import com.amazonaws.services.s3.AmazonS3;
-//import com.amazonaws.services.s3.AmazonS3Client;
-//import com.amazonaws.services.s3.model.GetObjectRequest;
-//import com.amazonaws.services.s3.model.S3Object;
-
-
-
-/** @author zznate */
+/**
+ * @author zznate
+ */
 @Concurrent()
 public class ManagementServiceIT {
     private static final Logger LOG = LoggerFactory.getLogger( ManagementServiceIT.class );
@@ -513,7 +477,9 @@ public class ManagementServiceIT {
     }
 
 
-    /** Test we can change the password if it's hashed with sha1 */
+    /**
+     * Test we can change the password if it's hashed with sha1
+     */
     @Test
     public void testAdminPasswordChangeShaType() throws Exception {
         String username = "testAdminPasswordChangeShaType";
@@ -566,7 +532,9 @@ public class ManagementServiceIT {
     }
 
 
-    /** Test we can change the password if it's hashed with md5 then sha1 */
+    /**
+     * Test we can change the password if it's hashed with md5 then sha1
+     */
     @Test
     public void testAdminPasswordChangeMd5ShaType() throws Exception {
         String username = "testAdminPasswordChangeMd5ShaType";
@@ -667,7 +635,9 @@ public class ManagementServiceIT {
     }
 
 
-    /** Test we can change the password if it's hashed with sha1 */
+    /**
+     * Test we can change the password if it's hashed with sha1
+     */
     @Test
     public void testAppUserPasswordChangeShaType() throws Exception {
         String username = "tnine";
@@ -721,7 +691,9 @@ public class ManagementServiceIT {
     }
 
 
-    /** Test we can change the password if it's hashed with md5 then sha1 */
+    /**
+     * Test we can change the password if it's hashed with md5 then sha1
+     */
     @Test
     public void testAppUserPasswordChangeMd5ShaType() throws Exception {
         String username = "tnine";
@@ -780,307 +752,6 @@ public class ManagementServiceIT {
 
         assertEquals( userId, authedUser.getUuid() );
     }
-//
-//
-    //Tests to make sure we can call the job with mock data and it runs.
-    @Ignore //Connections won't save when run with maven, but on local builds it will.
-    public void testConnectionsOnCollectionExport() throws Exception {
-
-        File f = null;
-        int indexCon = 0;
-
-
-        try {
-            f = new File( "testFileConnections.json" );
-        }
-        catch ( Exception e ) {
-            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
-        }
-
-
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "testFileConnections.json" );
-
-        ExportService exportService = setup.getExportService();
-        HashMap<String, Object> payload = payloadBuilder();
-
-        payload.put( "organizationId",organization.getUuid() );
-        payload.put( "applicationId",applicationId );
-        payload.put("collectionName","users");
-
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        //intialize user object to be posted
-        Map<String, Object> userProperties = null;
-        Entity[] entity;
-        entity = new Entity[2];
-        //creates entities
-        for ( int i = 0; i < 2; i++ ) {
-            userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "meatIsGreat" + i );
-            userProperties.put( "email", "grey" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
-
-            entity[i] = em.create( "users", userProperties );
-        }
-        //creates connections
-        em.createConnection( em.getRef( entity[0].getUuid() ), "Vibrations", em.getRef( entity[1].getUuid() ) );
-        em.createConnection( em.getRef( entity[1].getUuid() ), "Vibrations", em.getRef( entity[0].getUuid() ) );
-
-        UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
-
-        //create and initialize jobData returned in JobExecution.
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
-
-        JobExecution jobExecution = mock( JobExecution.class );
-        when( jobExecution.getJobData() ).thenReturn( jobData );
-
-        exportService.doExport( jobExecution );
-
-        JSONParser parser = new JSONParser();
-
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-        //assertEquals(2, a.size() );
-
-        for(indexCon  = 0; indexCon < a.size(); indexCon++) {
-            JSONObject jObj = ( JSONObject ) a.get( indexCon );
-            JSONObject data = ( JSONObject ) jObj.get( "Metadata" );
-            String uuid = (String) data.get( "uuid" );
-            if ( entity[0].getUuid().toString().equals( uuid )) {
-                break;
-            }
-
-        }
-
-        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( indexCon );
-        org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );
-
-        assertNotNull( objConnections );
-
-        org.json.simple.JSONArray objVibrations = ( org.json.simple.JSONArray ) objConnections.get( "Vibrations" );
-
-        assertNotNull( objVibrations );
-
-        f.deleteOnExit();
-
-    }
-
-    @Test //Connections won't save when run with maven, but on local builds it will.
-    public void testConnectionsOnApplicationEndpoint() throws Exception {
-
-        File f = null;
-
-        try {
-            f = new File( "testConnectionsOnApplicationEndpoint.json" );
-        }
-        catch ( Exception e ) {
-            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
-        }
-
-
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "testConnectionsOnApplicationEndpoint.json" );
-
-        ExportService exportService = setup.getExportService();
-        HashMap<String, Object> payload = payloadBuilder();
-
-        payload.put("organizationId",organization.getUuid());
-        payload.put("applicationId",applicationId);
-
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        //intialize user object to be posted
-        Map<String, Object> userProperties = null;
-        Entity[] entity;
-        entity = new Entity[2];
-        //creates entities
-        for ( int i = 0; i < 2; i++ ) {
-            userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "billybob" + i );
-            userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
-
-            entity[i] = em.create( "users", userProperties );
-        }
-        //creates connections
-        em.createConnection( em.getRef( entity[0].getUuid() ), "Vibrations", em.getRef( entity[1].getUuid() ) );
-        em.createConnection( em.getRef( entity[1].getUuid() ), "Vibrations", em.getRef( entity[0].getUuid() ) );
-
-        UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
-
-        //create and initialize jobData returned in JobExecution.
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
-
-        JobExecution jobExecution = mock( JobExecution.class );
-        when( jobExecution.getJobData() ).thenReturn( jobData );
-
-        exportService.doExport( jobExecution );
-
-        JSONParser parser = new JSONParser();
-
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-        int indexApp = 0;
-
-        for(indexApp  = 0; indexApp < a.size(); indexApp++) {
-            JSONObject jObj = ( JSONObject ) a.get( indexApp );
-            JSONObject data = ( JSONObject ) jObj.get( "Metadata" );
-            String uuid = (String) data.get( "uuid" );
-            if ( entity[0].getUuid().toString().equals( uuid )) {
-                break;
-            }
-
-        }
-        if(indexApp >= a.size()) {
-            //what? How does this condition even get reached due to the above forloop
-            assert(false);
-        }
-
-        org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( indexApp );
-        org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );
-
-        assertNotNull( objConnections );
-
-        org.json.simple.JSONArray objVibrations = ( org.json.simple.JSONArray ) objConnections.get( "Vibrations" );
-
-        assertNotNull( objVibrations );
-
-        f.deleteOnExit();
-
-    }
-//
-////need to add tests for the other endpoint as well.
-    @Test
-    public void testValidityOfCollectionExport() throws Exception {
-
-        File f = null;
-
-        try {
-            f = new File( "fileValidity.json" );
-        }
-        catch ( Exception e ) {
-            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
-        }
-
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "fileValidity.json" );
-        ExportService exportService = setup.getExportService();
-        HashMap<String, Object> payload = payloadBuilder();
-
-        payload.put( "organizationId",organization.getUuid() );
-        payload.put( "applicationId",applicationId);
-        payload.put( "collectionName","users");
-
-        UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
-
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
-
-        JobExecution jobExecution = mock( JobExecution.class );
-        when( jobExecution.getJobData() ).thenReturn( jobData );
-
-        exportService.doExport( jobExecution );
-
-        JSONParser parser = new JSONParser();
-
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-
-        for ( int i = 0; i < a.size(); i++ ) {
-            org.json.simple.JSONObject entity = ( org.json.simple.JSONObject ) a.get( i );
-            org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
-            assertNotNull( entityData );
-        }
-        f.deleteOnExit();
-
-    }
-//
-    @Test
-    public void testValidityOfApplicationExport() throws Exception {
-
-        File f = null;
-
-        try {
-            f = new File( "testValidityOfApplicationExport.json" );
-        }
-        catch ( Exception e ) {
-            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
-        }
-
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename( "testValidityOfApplicationExport.json" );
-        ExportService exportService = setup.getExportService();
-        HashMap<String, Object> payload = payloadBuilder();
-
-        payload.put( "organizationId",organization.getUuid() );
-        payload.put( "applicationId",applicationId);
-
-        UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
-
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
-
-        JobExecution jobExecution = mock( JobExecution.class );
-        when( jobExecution.getJobData() ).thenReturn( jobData );
-
-        exportService.doExport( jobExecution );
-
-        JSONParser parser = new JSONParser();
-
-        org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-
-        for ( int i = 0; i < a.size(); i++ ) {
-            org.json.simple.JSONObject entity = ( org.json.simple.JSONObject ) a.get( i );
-            org.json.simple.JSONObject entityData = ( JSONObject ) entity.get( "Metadata" );
-            assertNotNull( entityData );
-        }
-        f.deleteOnExit();
-
-    }
-//
-    @Test
-    public void testExportOneOrgCollectionEndpoint() throws Exception {
-
-        File f = null;
-
-
-        try {
-            f = new File( "exportOneOrg.json" );
-        }
-        catch ( Exception e ) {
-            //consumed because this checks to see if the file exists. If it doesn't then don't do anything and carry on.
-        }
-        setup.getMgmtSvc()
-             .createOwnerAndOrganization( "noExport", "junkUserName", "junkRealName", "ugExport@usergrid.com",
-                     "123456789" );
-
-        S3Export s3Export = new MockS3ExportImpl();
-        s3Export.setFilename("exportOneOrg.json");
-        ExportService exportService = setup.getExportService();
-        HashMap<String, Object> payload = payloadBuilder();
-
-        payload.put( "organizationId",organization.getUuid() );
-        payload.put( "applicationId",applicationId);
-        payload.put( "collectionName","roles");
-
-        UUID exportUUID = exportService.schedule( payload );
-        exportService.setS3Export( s3Export );
-
-        JobData jobData = new JobData();
-        jobData.setProperty( "jobName", "exportJob" );
-        jobData.setProperty( "exportInfo", payload );
-        jobData.setProperty( "exportId", exportUUID );
-
-        JobExecution jobExecution = mock( JobExecution.class );
-        when( jobExecution.getJobData() ).thenReturn( jobData );
 
         exportService.doExport( jobExecution );
 
@@ -1427,7 +1098,7 @@ public class ManagementServiceIT {
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         //Exportem.get(entityExport);
-        Export exportEntity = ( Export ) em.get( entityExportUUID );
+        Export exportEntity = ( Export ) em.get( entityExportUUID, "export"); // TODO: correct type?
         assertNotNull( exportEntity );
         String derp = exportEntity.getState().name();
         assertEquals( "SCHEDULED", exportEntity.getState().name() );
@@ -1438,7 +1109,7 @@ public class ManagementServiceIT {
             //throw e;
             assert(false);
         }
-        exportEntity = ( Export ) em.get( entityExportUUID );
+        exportEntity = ( Export ) em.get( entityExportUUID, "export" ); // TODO: correct type?
         assertNotNull( exportEntity );
         assertEquals( "FINISHED", exportEntity.getState().name() );
     }

@@ -33,6 +33,7 @@
     </bsmodal>
 
     <div class="button-strip">
+      <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users add leave group buttons')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_groups_add_leave_buttons}}" tooltip-placement="left">(?)</a>
       <button class="btn btn-primary" ng-click="showModal('addUserToGroup')">Add to group</button>
       <button class="btn btn-primary" ng-disabled="!hasGroups || !valueSelected(userGroupsCollection._list)" ng-click="showModal('leaveGroup')">Leave group(s)</button>
     </div>
@@ -42,7 +43,7 @@
         <td>
           <input type="checkbox" ng-show="hasGroups" id="selectAllCheckBox" ng-model="userGroupsSelected" ng-click="selectAllEntities(userGroupsCollection._list,this,'userGroupsSelected')" >
         </td>
-        <td>Group Name</td>
+        <td>Group Name <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('add user group list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_groups_group_name}}" tooltip-placement="top">(?)</a></td>
         <td>Path</td>
       </tr>
       <tr class="zebraRows" ng-repeat="group in userGroupsCollection._list">
