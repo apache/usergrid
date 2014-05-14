@@ -45,7 +45,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.logBatchOperation;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class GeoIndexManager {

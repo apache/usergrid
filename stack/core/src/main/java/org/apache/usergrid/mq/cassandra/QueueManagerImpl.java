@@ -126,7 +126,7 @@ import static org.apache.usergrid.utils.MapUtils.emptyMapWithKeys;
 import static org.apache.usergrid.utils.NumberUtils.roundLong;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class QueueManagerImpl implements QueueManager {

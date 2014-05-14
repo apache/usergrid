@@ -47,7 +47,7 @@ import static org.apache.usergrid.mq.QueuePosition.CONSUMER;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import static org.apache.usergrid.utils.ConversionUtils.object;
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class CassandraMQUtils {

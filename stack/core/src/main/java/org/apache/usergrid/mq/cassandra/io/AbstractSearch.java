@@ -62,7 +62,7 @@ import static org.apache.usergrid.utils.NumberUtils.roundLong;
 import static org.apache.usergrid.utils.UUIDUtils.MAX_TIME_UUID;
 import static org.apache.usergrid.utils.UUIDUtils.MIN_TIME_UUID;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /** @author tnine */

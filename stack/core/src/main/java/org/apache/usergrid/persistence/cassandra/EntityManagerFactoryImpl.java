@@ -65,7 +65,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICA
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.RETRY_COUNT;
 import static org.apache.usergrid.utils.ConversionUtils.uuid;
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**

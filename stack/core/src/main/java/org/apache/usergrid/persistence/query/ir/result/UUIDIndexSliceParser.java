@@ -20,7 +20,7 @@ package org.apache.usergrid.persistence.query.ir.result;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * Parser for reading and writing secondary index composites

@@ -35,7 +35,7 @@ import org.apache.usergrid.persistence.geo.GeoIndexSearcher.SearchResults;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * Simple wrapper around list results until the geo library is updated so support iteration and set returns
