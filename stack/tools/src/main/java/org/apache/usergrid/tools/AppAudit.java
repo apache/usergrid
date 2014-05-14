@@ -46,8 +46,6 @@ import org.apache.commons.cli.Options;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-
 
 /**
  * This is a untiltiy to audit all available entity ids for existing target rows If an entity Id exists in the
@@ -63,7 +61,6 @@ public class AppAudit extends ToolBase {
      */
     private static final int PAGE_SIZE = 100;
 
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
     private static final Logger logger = LoggerFactory.getLogger( AppAudit.class );
 

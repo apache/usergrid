@@ -329,8 +329,9 @@ public class ConnectionRefImpl implements ConnectionRef {
     @Override
     public UUID getUuid() {
         if ( id == null ) {
+            List<ConnectedEntityRef> var = getPairedConnections();
             id = getId( getConnectingEntity(), getConnectedEntity(),
-                    getPairedConnections().toArray( new ConnectedEntityRef[0] ) );
+                    var.toArray(new ConnectedEntityRef[var.size()]));
         }
         return id;
     }
@@ -344,13 +345,13 @@ public class ConnectionRefImpl implements ConnectionRef {
 
     public UUID getIndexId() {
         return getIndexId( getConnectingEntity(), getConnectionType(), getConnectedEntityType(),
-                pairedConnections.toArray( new ConnectedEntityRef[0] ) );
+                pairedConnections.toArray(new ConnectedEntityRef[pairedConnections.size()]));
     }
 
 
     public UUID getConnectingIndexId() {
         return getIndexId( getConnectingEntity(), getConnectionType(), null,
-                pairedConnections.toArray( new ConnectedEntityRef[0] ) );
+                pairedConnections.toArray(new ConnectedEntityRef[pairedConnections.size()]));
     }
 
 
@@ -363,8 +364,9 @@ public class ConnectionRefImpl implements ConnectionRef {
     /** @return index ids */
     public UUID[] getIndexIds() {
 
+        List<ConnectedEntityRef> var = getPairedConnections();
         return getIndexIds( getConnectingEntity(), getConnectedEntity().getConnectionType(),
-                getConnectedEntity().getType(), getPairedConnections().toArray( new ConnectedEntityRef[0] ) );
+                getConnectedEntity().getType(), var.toArray(new ConnectedEntityRef[var.size()]));
     }
 
 

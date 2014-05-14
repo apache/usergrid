@@ -1,6 +1,6 @@
 var UsergridEventable	= function(){
-    throw Error("'UsergridEventable' is not intended to be invoked directly")
-}
+    throw Error("'UsergridEventable' is not intended to be invoked directly");
+};
 UsergridEventable.prototype	= {
     bind	: function(event, fn){
         this._events = this._events || {};
@@ -16,7 +16,7 @@ UsergridEventable.prototype	= {
         this._events = this._events || {};
         if( event in this._events === false  )	return;
         for(var i = 0; i < this._events[event].length; i++){
-            this._events[event][i].apply(this, Array.prototype.slice.call(arguments, 1))
+            this._events[event][i].apply(this, Array.prototype.slice.call(arguments, 1));
         }
     }
 };
@@ -30,4 +30,4 @@ UsergridEventable.mixin	= function(destObject){
         }
         destObject.prototype[props[i]]	= UsergridEventable.prototype[props[i]];
     }
-}
+};

@@ -18,6 +18,7 @@ describe('PageCtrl', function(){
         'ug':{
           getAppSettings:function(){}
         },
+        'help':{},
         'utility':{},
         '$rootScope':$rootScope,
         '$location':{

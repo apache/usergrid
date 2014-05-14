@@ -17,63 +17,31 @@ Use the admin portal for administrative operations, including:
 * View and modify your data, with full support for users, groups, and custom entities and collections.
 * Generate and access credentials for API access.
 
-##Navigating the admin portal
+##Deploying or Developing
 
-The admin portal interface displays a variety of pages that display information and enable you to perform management
-actions. These include:
+If you are just running the portal:
 
-* Account home
-* Application dashboard
-* Users
-* Groups
-* Roles
-* Activities
-* Collections
-* Analytics
-* Properties
-* Shell
+1. Install Node.js from http://nodejs.org/download/.
+2. From the root directory, run `./build.sh dev`.
+3. This will build and run a lightweight server. Naviate to http://localhost:3000
+4. If that doesn't work, in dist is a built copy and a file called rel-usergrid-portal.zip. Unzip and deploy to your favorite web server.
 
-You can display any of these pages by clicking its respective item in the left sidebar menu of the admin portal.
+If you are developing:
 
-###Account Home
-When you log in to the admin portal, you are presented with a home page for managing the applications and data for your organization.
+1. From the root directory, run `./build.sh dev`.
+2. To debug in the browser go to http://localhost:3000/index-debug.html; http://localhost:3000/ will point to the compressed files.
+3. If the libraries get out of sync, run `./build.sh` again and this will run "grunt build" in the background.
+4. If you then want to update bower and create a distributable copy, run "grunt build-release", check in all the built files to distribute via bower
 
-The home page displays:
+If you want to run the e2e tests:
 
-* Applications associated with the currently selected organization
-* Administrators that are part of that organization
-* API credentials for the organization
-* Activities performed recently by administrators
-* A menu for building, organizing, and managing application content
+- From the root directory, run `./build.sh e2e`.
 
-###Application dashboard
-The Application Dashboard shows a variety of statistical data for the selected application. You can see the activity level, the total number of entities, and other vital statistics for monitoring application health as well as quota limits.
+To version open a terminal and run 'npm version x.x.x' this will add a tag and increment the package.json.
 
-###Users
-The Users page lists the user entities created in the current application. You can add or delete users. You can also edit various properties of a user entity such as the user's name or address.
-
-###Groups
-The Groups page lists the groups created in the current application. You can add or delete groups. You can also edit some properties of a group such as the group's display name.
-
-###Roles
-The Roles page lists the roles defined for the current application. You can add or delete roles. You can also specify and update the permissions for a role.
-
-###Activities
-The Activities page lists the activities posted in an application. You can view when the activity was posted, who posted the activity, and the content of the activity. You can also search for activities by content or actor.
-
-###Collections
-The Collections page lists the collections created in the current application. You can also search for, add, update, or deleted collections.
-
-###Analytics
-Use this page to collect and analyze Usergrid usage data such as the number of times a particular collection has been accessed over a period of time.
-You can specify parameters for data collection, including what data points you'd like to collect, over what time period, and at what resolution.
-When you click the Generate button, the results are displayed in tabular form and graphically in the lower portion of the page.
-
-###Properties
-The Properties page lists the credentials (Client ID and Client Secret) for the current application. You can regenerate credentials for the application from this page.
-
-###Shell
-The Shell page gives you a simple way to get started using the Usergrid API. It provides a command-line environment within your web browser for trying out Usergrid API calls interactively.
+##Using a different api location
+1. You can use api from usergrid at any location by navigating to the portal and adding a querystring http://myurl/?api_url=http://someurl
+2. Another option is to change the Usergrid.overrideUrl in config.js
 
 ##Displaying API calls as cURL commands
 You can display the equivalent cURL syntax for each API call that is made through the Admin portal. The calls are displayed in the console area of any of the following browsers: Chrome, Internet Explorer (in the debugger), Firefox (in Firebug), and Safari.
@@ -85,30 +53,6 @@ More information on cURL can be found here:
 You can also use the Usergrid Command Line (ugc) for terminal access to the Usergrid API. ugc provides simplified access to Usergrid. For more about ugc, see the Usergrid repo:
 
 <https://github.com/usergrid/usergrid>
-
-##Deploying or Developing
-
-If you are just deploying:
-
-1. Install Node.js from http://nodejs.org/download/.
-2. Install Grunt with `sudo npm install grunt-cli -g`
-3. From the root directory, run `./build.sh`.
-4. This will create a directory in the root called dist. In dist is a zip file called appsvc-ui.zip. Unzip and deploy to your favorite web server.
-
-If you are developing:
-
-1. From the root directory, run `./build.sh`.
-2. To monitor and build the performance code => run `grunt --gruntfile Perf-Gruntfile.js dev;`. This will need to continue running in terminal as you are developing.
-3. To monitor and build the portal code base => run `grunt dev;`. This will open a browser with http://localhost:3000/index-debug.html.
-4. To debug in the browser go to http://localhost:3000/index-debug.html; http://localhost:3000/ will point to the compressed files.
-5. If the libraries get out of sync, run `./build.sh` again and this will run grunt build in the background.
-
-If you want to run the e2e tests:
-
-- From the root directory, run `./build.sh e2e`.
-
-
-To version open a terminal and run 'npm version x.x.x' this will add a tag and increment the package.json.
 
 ##Unit Tests
 [Unit Tests](UnitTests.md)

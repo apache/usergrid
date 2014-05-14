@@ -1,4 +1,23 @@
+/**
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ */
 'use strict';
+
 AppServices.Controllers.controller('ShellCtrl', ['ug', '$scope', '$log','$sce',
   function (ug, $scope, $log,$sce) {
 
@@ -8,7 +27,7 @@ AppServices.Controllers.controller('ShellCtrl', ['ug', '$scope', '$log','$sce',
         return ;
       }
       handleShellCommand($scope.shell.input);
-      $scope.shell.input ="";
+     // $scope.shell.input ="";
     };
 
     var handleShellCommand = function (s) {
@@ -80,10 +99,11 @@ AppServices.Controllers.controller('ShellCtrl', ['ug', '$scope', '$log','$sce',
 
     var  printLnToShell =  function (s) {
       if (!s) s = "&nbsp;";
+      $scope.shell.outputhidden = s;
       var html = '<div class="shell-output-line"><div class="shell-output-line-content">' + s + '</div></div>';
       html += ' ';
       var trustedHtml = $sce.trustAsHtml( html);
-      $scope.shell.output += trustedHtml.toString()
+      $scope.shell.output += trustedHtml.toString();
     }
 
     $scope.$on('shell-success',function(evt,data){

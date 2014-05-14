@@ -1,21 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010, 2011 Ed Anuff and Usergrid, all rights reserved.
- * http://www.usergrid.com
- * 
- * This file is part of Usergrid Core.
- * 
- * Usergrid Core is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
- * 
- * Usergrid Core is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along with
- * Usergrid Core. If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.usergrid.java.client.entities;
 
 
@@ -39,7 +37,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
  * An entity type for representing activity stream actions. These are similar to
  * the more generic message entity type except provide the necessary properties
  * for supporting activity stream implementations.
- * 
+ *
  * @see http://activitystrea.ms/specs/json/1.0/
  */
 public class Activity extends Entity {
@@ -145,16 +143,16 @@ public class Activity extends Entity {
         activity.setCategory(category);
         activity.setContent(content);
         activity.setTitle(title);
-        
+
         ActivityObject actor = new ActivityObject();
         actor.setObjectType("person");
-        
+
         if (user != null) {
             actor.setDisplayName(getStringProperty(user.properties, "name"));
             actor.setEntityType(user.getType());
             actor.setUuid(user.getUuid());
         }
-        
+
         activity.setActor(actor);
 
         ActivityObject obj = new ActivityObject();
@@ -195,7 +193,7 @@ public class Activity extends Entity {
     /*
      * @JsonSerialize(include = Inclusion.NON_NULL) public String getActorName()
      * { return actorName; }
-     * 
+     *
      * public void setActorName(String actorName) { this.actorName = actorName;
      * }
      */
@@ -238,19 +236,19 @@ public class Activity extends Entity {
     /*
      * @JsonSerialize(include = Inclusion.NON_NULL) public String
      * getObjectType() { return objectType; }
-     * 
+     *
      * public void setObjectType(String objectType) { this.objectType =
      * objectType; }
-     * 
+     *
      * @JsonSerialize(include = Inclusion.NON_NULL) public String
      * getObjectEntityType() { return objectEntityType; }
-     * 
+     *
      * public void setObjectEntityType(String objectEntityType) {
      * this.objectEntityType = objectEntityType; }
-     * 
+     *
      * @JsonSerialize(include = Inclusion.NON_NULL) public String
      * getObjectName() { return objectName; }
-     * 
+     *
      * public void setObjectName(String objectName) { this.objectName =
      * objectName; }
      */

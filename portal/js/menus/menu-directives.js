@@ -1,3 +1,22 @@
+/**
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ */
+
 'use strict';
 
 
@@ -17,6 +36,9 @@ AppServices.Directives.directive('menu', ['$location', '$rootScope', '$log', fun
       var menuContext, parentMenuItems, activeParentElement, menuItems, activeMenuElement, locationPath, subMenuContext;
 
       function setActiveElement(ele, locationPath, $rootScope, isParentClick) {
+        if(!ele){
+          return;
+        }
         ele.removeClass('active');
 
 
@@ -164,61 +186,68 @@ AppServices.Directives.directive('menu', ['$location', '$rootScope', '$log', fun
         //see if the url location is the same as the default active parent element
         if (locationPath !== '' && locationPath.indexOf(subMenuContext) === -1) {
           activeElements = setActiveElement(activeParentElement, locationPath, scope);
-          $rootScope[menuContext + 'Parent'] = activeElements.parentMenuItem;
-          $rootScope[menuContext + 'Menu'] = activeElements.menuitem;
+          if(activeElements){
+            $rootScope[menuContext + 'Parent'] = activeElements.parentMenuItem;
+            $rootScope[menuContext + 'Menu'] = activeElements.menuitem;
+          }
         } else {
           setActiveElement(activeParentElement, subMenuContext, scope);
         }
 
       }
       var bound = false;
+      setTimeout(setupMenuState,500);
       //need the listener here to detect location changes and keep the menu highlighted
       scope.$on('$routeChangeSuccess', function () {
-        setupMenuState();
-        if (!bound) {
-          bound = true;
-          //bind parent items to a click event
-          parentMenuItems.bind('click', function (cevent) {
-            //pull the previous selected menu item
-            var previousParentSelection = angular.element($rootScope[menuContext + 'Parent']),
-                targetPath = angular.element(cevent.currentTarget).find('> a')[0].href.split('#!')[1];
-            //first, when a top level menu is selected, remove any active children
-            previousParentSelection.find('.nav > li').removeClass('active');
-            //then, set the active
-            var activeElements = setActiveElement(previousParentSelection, targetPath, scope, true);
-            $rootScope[menuContext + 'Parent'] = activeElements.parentMenuItem;
-            $rootScope[menuContext + 'Menu'] = activeElements.menuitem;
+        setTimeout(function(){
+          setupMenuState();
+          if (!bound) {
+            bound = true;
+            //bind parent items to a click event
+            parentMenuItems.bind('click', function (cevent) {
+              //pull the previous selected menu item
+              var previousParentSelection = angular.element($rootScope[menuContext + 'Parent']),
+                  targetPath = angular.element(cevent.currentTarget).find('> a')[0].href.split('#!')[1];
+              //first, when a top level menu is selected, remove any active children
+              previousParentSelection.find('.nav > li').removeClass('active');
+              //then, set the active
+              var activeElements = setActiveElement(previousParentSelection, targetPath, scope, true);
+              $rootScope[menuContext + 'Parent'] = activeElements.parentMenuItem;
+              $rootScope[menuContext + 'Menu'] = activeElements.menuitem;
 
 
-            //broadcast so other elements can deactivate
-            scope.$broadcast('menu-selection');
+              //broadcast so other elements can deactivate
+              scope.$broadcast('menu-selection');
 
-          });
+            });
 
-          //bind all menu items to a click event
-          menuItems.bind('click', function (cevent) {
-            //pull the previous selected menu item
-            var previousMenuSelection = $rootScope[menuContext + 'Menu'],
-                targetElement = cevent.currentTarget;
+            //bind all menu items to a click event
+            menuItems.bind('click', function (cevent) {
+              //pull the previous selected menu item
+              var previousMenuSelection = $rootScope[menuContext + 'Menu'],
+                  targetElement = cevent.currentTarget;
 
-            if (previousMenuSelection !== targetElement) {
-              if (previousMenuSelection) {
-                angular.element(previousMenuSelection).removeClass('active')
-              } else {
-                //remove the default active element on case of first click
-                activeMenuElement.removeClass('active');
+              if (previousMenuSelection !== targetElement) {
+                if (previousMenuSelection) {
+                  angular.element(previousMenuSelection).removeClass('active')
+                } else {
+                  //remove the default active element on case of first click
+                  activeMenuElement.removeClass('active');
+                }
+
+                scope.$apply(function () {
+                  angular.element($rootScope[menuContext]).addClass('active');
+                })
+
+                $rootScope[menuContext + 'Menu'] = targetElement;
+                //remember where we were at when clicking to another parent menu item
+                angular.element($rootScope[menuContext + 'Parent']).find('a')[0].setAttribute('href', angular.element(cevent.currentTarget).find('a')[0].href)
               }
+            })
+          }
+        },500);
 
-              scope.$apply(function () {
-                angular.element($rootScope[menuContext]).addClass('active');
-              })
 
-              $rootScope[menuContext + 'Menu'] = targetElement;
-              //remember where we were at when clicking to another parent menu item
-              angular.element($rootScope[menuContext + 'Parent']).find('a')[0].setAttribute('href', angular.element(cevent.currentTarget).find('a')[0].href)
-            }
-          })
-        }
 
       });
 

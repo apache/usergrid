@@ -113,7 +113,7 @@ protected void onCreate(Bundle savedInstanceState) {
 	ApigeeClient apigeeClient = new ApigeeClient(ORGNAME,APPNAME,this.getBaseContext());
 
 	// hold onto the ApigeeClient instance in our application object.
-	yourApp = (YourApplication) getApplication;
+	YourApplication yourApp = (YourApplication) getApplication;
 	yourApp.setApigeeClient(apigeeClient);			
 }
 		</pre>

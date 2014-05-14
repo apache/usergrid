@@ -303,7 +303,7 @@ function makeNewDog(step) {
 		name:'Ralph'+_unique
 	}
 
-	client.createEntity(options, function (err, dog) {
+	client.createEntity(options, function (err, response, dog) {
 		if (err) {
 			error('dog not created');
 		} else {
@@ -414,7 +414,7 @@ function testDogsCollection(step) {
 		qs:{ql:'order by index'}
 	}
 
-	client.createCollection(options, function (err, dogs) {
+	client.createCollection(options, function (err, response, dogs) {
 		if (err) {
 			error('could not make collection');
 		} else {
@@ -519,7 +519,7 @@ function cleanupAllDogs(step){
 		qs:{limit:50} //limit statement set to 50
 	}
 
-	client.createCollection(options, function (err, dogs) {
+	client.createCollection(options, function (err, response, dogs) {
 		if (err) {
 			error('could not get all dogs');
 		} else {
@@ -574,7 +574,7 @@ function prepareDatabaseForNewUser(step) {
 
 function createUser(step) {
 	client.signup(_username, _password, _email, 'Marty McFly',
-		function (err, marty) {
+		function (err, response, marty) {
 			if (err){
 				error('user not created');
 				runner(step, marty);
@@ -608,7 +608,7 @@ function getExistingUser(step, marty) {
 		type:'users',
 		username:_username
 	}
-	client.getEntity(options, function(err, existingUser){
+	client.getEntity(options, function(err, response, existingUser){
 		if (err){
 			error('existing user not retrieved');
 		} else {
@@ -644,7 +644,7 @@ function loginUser(step, marty) {
 	username = _username;
 	password = _password;
 	client.login(username, password,
-		function (err) {
+		function (err, response, user) {
 			if (err) {
 				error('could not log user in');
 			} else {
@@ -659,6 +659,7 @@ function loginUser(step, marty) {
 				//Then make calls against the API.  For example, you can
 				//get the user entity this way:
 				client.getLoggedInUser(function(err, data, user) {
+					console.error(err, data, user);
 					if(err) {
 						error('could not get logged in user');
 					} else {
@@ -680,8 +681,9 @@ function loginUser(step, marty) {
 function changeUsersPassword(step, marty) {
 
 	marty.set('oldpassword', _password);
+	marty.set('password', _newpassword);
 	marty.set('newpassword', _newpassword);
-	marty.save(function(err){
+	marty.changePassword(function(err, response){
 		if (err){
 			error('user password not updated');
 		} else {
@@ -712,13 +714,13 @@ function reloginUser(step, marty) {
 	username = _username
 	password = _newpassword;
 	client.login(username, password,
-		function (err) {
-		if (err) {
-			error('could not relog user in');
-		} else {
-			success('user has been re-logged in');
-			runner(step, marty);
-		}
+		function (err, response, marty) {
+			if (err) {
+				error('could not relog user in');
+			} else {
+				success('user has been re-logged in');
+				runner(step, marty);
+			}
 		}
 	);
 }
@@ -741,7 +743,7 @@ function createDog(step, marty) {
 		breed:'mutt'
 	}
 
-	client.createEntity(options, function (err, dog) {
+	client.createEntity(options, function (err, response, dog) {
 		if (err) {
 			error('POST new dog by logged in user failed');
 		} else {
@@ -754,14 +756,14 @@ function createDog(step, marty) {
 
 function userLikesDog(step, marty, dog) {
 
-	marty.connect('likes', dog, function (err, data) {
+	marty.connect('likes', dog, function (err, response, data) {
 		if (err) {
 			error('connection not created');
 			runner(step, marty);
 		} else {
 
 			//call succeeded, so pull the connections back down
-			marty.getConnections('likes', function (err, data) {
+			marty.getConnections('likes', function (err, response, data) {
 				if (err) {
 						error('could not get connections');
 				} else {
@@ -842,7 +844,7 @@ function createExistingEntity(step, marty) {
 		name:'einstein'
 	}
 
-	client.createEntity(options, function (err, dog) {
+	client.createEntity(options, function (err, response, dog) {
 		if (err) {
 			error('Create new entity to use for existing entity failed');
 		} else {
@@ -858,38 +860,22 @@ function createExistingEntity(step, marty) {
 				name:'einstein',
 				breed:'mutt'
 			}
-			client.createEntity(options, function (err, newdog) {
+			client.createEntity(options, function (err, response, newdog) {
 				if (err) {
-					error('Create new entity to use for existing entity failed');
+					success('Create new entity to use for existing entity failed');
 				} else {
-					success('Create new entity to use for existing entity succeeded');
-
-					var newuuid = newdog.get('uuid');
-					if (newuuid === uuid) {
-						success('UUIDs of new and old entities match');
-					} else {
-						error('UUIDs of new and old entities do not match');
-					}
-
-					var breed = newdog.get('breed');
-					if (breed === 'mutt') {
-						success('attribute sucesfully set on new entity');
-					} else {
-						error('attribute not sucesfully set on new entity');
-					}
-
-					newdog.destroy(function(err){
-						if (err){
-							error('existing entity not deleted from database');
-						} else {
-							success('existing entity deleted from database');
-							dog = null; //blow away the local object
-							newdog = null; //blow away the local object
-							runner(step);
-						}
-					});
-
+					error('Create new entity to use for existing entity succeeded');
 				}
+				dog.destroy(function(err){
+					if (err){
+						error('existing entity not deleted from database');
+					} else {
+						success('existing entity deleted from database');
+						dog = null; //blow away the local object
+						newdog = null; //blow away the local object
+						runner(step);
+					}
+				});
 			});
 		}
 	});
@@ -903,7 +889,7 @@ function createNewEntityNoName(step, marty) {
    othervalue:"something else"
 	}
 
-	client.createEntity(options, function (err, entity) {
+	client.createEntity(options, function (err, response, entity) {
 		if (err) {
 			error('Create new entity with no name failed');
 		} else {
@@ -923,7 +909,7 @@ function cleanUpUsers(step){
     qs:{limit:50} //limit statement set to 50
   }
 
-  client.createCollection(options, function (err, users) {
+  client.createCollection(options, function (err, response, users) {
     if (err) {
       error('could not get all users');
     } else {
@@ -956,7 +942,7 @@ function cleanUpDogs(step){
       qs:{limit:50} //limit statement set to 50
     }
 
-    client.createCollection(options, function (err, dogs) {
+    client.createCollection(options, function (err, response, dogs) {
       if (err) {
         error('could not get all dogs');
       } else {

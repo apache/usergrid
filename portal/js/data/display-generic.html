@@ -14,7 +14,8 @@
     </fieldset>
 </bsmodal>
 
-<span  class="button-strip">
+<span class="button-strip">
+  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data entities list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_entities_list}}" tooltip-placement="left">(?)</a>
   <button class="btn btn-primary" ng-disabled="!valueSelected(queryCollection._list) || deleteLoading" ng-click="deleteEntitiesDialog()">{{deleteLoading ? loadingText : 'Delete Entity(s)'}}</button>
 </span>
 <table class="table table-striped collection-list">
@@ -38,7 +39,7 @@
     </td>
     <td ng-if="hasProperty('name')">{{entity._data.name}}</td>
     <td>{{entity._data.uuid}}</td>
-    <td><a href="javaScript:void(0)" ng-click="entitySelected[$index] = !entitySelected[$index];selectEntity(entity._data.uuid)">{{entitySelected[$index] ? 'Hide' : 'View'}} Details</a></td>
+    <td><a href="javaScript:void(0)" ng-click="entitySelected[$index] = !entitySelected[$index]; selectEntity(entity._data.uuid, entitySelected[$index]);">{{entitySelected[$index] ? 'Hide' : 'View'}} Details</a></td>
   </tr>
   <tr ng-if="entitySelected[$index]">
     <td colspan="5">
@@ -73,7 +74,7 @@
       </ul>
 
     <div class="control-group">
-      <h4 style="margin: 20px 0 20px 0">Edit Entity</h4>
+      <h4 style="margin: 20px 0 20px 0">Edit Entity <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data edit entity')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_edit_entity}}" tooltip-placement="right">(?)</a></h4>
       <div class="controls">
         <textarea ng-model="entity._json" class="span12" rows="12"></textarea>
         <br>

@@ -38,7 +38,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.mutation.Mutator;
@@ -49,6 +48,7 @@ import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNI
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -58,7 +58,6 @@ import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCo
  */
 public class EntityInsertBenchMark extends ToolBase {
 
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
     private static final Logger logger = LoggerFactory.getLogger( EntityInsertBenchMark.class );
 
@@ -206,7 +205,6 @@ public class EntityInsertBenchMark extends ToolBase {
 
 
         /**
-         * @param indexBucketLocator
          * @param mutator
          */
         public UniqueIndexer( Mutator<ByteBuffer> mutator ) {

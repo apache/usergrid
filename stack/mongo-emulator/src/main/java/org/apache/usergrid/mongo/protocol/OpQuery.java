@@ -71,7 +71,7 @@ public class OpQuery extends OpCrud {
     static Set<String> operators = new HashSet<String>();
 
 
-    {
+    static {
         operators.add( "all" );
         operators.add( "and" );
         operators.add( "elemMatch" );

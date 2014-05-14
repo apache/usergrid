@@ -1,4 +1,23 @@
+#!/usr/bin/env php
 <?php
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /**
  * @file
  * Allows CRUD operations on Usergrid Entities, including Users.
@@ -8,7 +27,7 @@
  * @since 26-Apr-2013
  */
 
-namespace Apigee\Usergrid;
+namespace Apache\Usergrid;
 
 class Entity {
 
@@ -269,16 +288,21 @@ class Entity {
 
     $endpoint = $connectorType . '/' . $connector . '/' . $connection . '/';
     $result=$this->client->get($endpoint, array());
-    $this->set($connection,array());
 
-    $length = count($result->entities);
-    for ($i = 0; i < $length; $i++) {
-      if ($result['entities'][i]['type'] == 'user') {
-        $this[$connection][$result['entities'][i]['username']] = $result['entities'][i];
+    $connected_entities = array();
+
+    $response_data = $result->get_data();
+    $length        = count($response_data['entities']);
+    
+    for ($i = 0; $i < $length; $i++) {
+      $tmp_entity = $response_data['entities'][$i];
+      if ($tmp_entity['type'] == 'user') {
+          $connected_entities[$tmp_entity['username']] = $tmp_entity;
       } else {
-        $this[$connection][$result['entities'][i]['name']] = $result['entities'][i];
+          $connected_entities[$tmp_entity['name']]     = $tmp_entity;
       }
     }
+    $this->set($connection, $connected_entities);
   }
 
   public function get_connecting($connection) {

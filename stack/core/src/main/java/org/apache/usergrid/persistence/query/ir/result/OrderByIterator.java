@@ -42,8 +42,7 @@ import org.apache.usergrid.persistence.query.ir.QuerySlice;
 
 import org.apache.commons.collections.comparators.ComparatorChain;
 
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
-
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * 1) Take a result set iterator as the child 2) Iterate only over candidates and create a cursor from the candidates
@@ -52,8 +51,6 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
  */
 
 public class OrderByIterator extends MergeIterator {
-
-    private static final UUIDSerializer UUID_SER = new UUIDSerializer();
 
     private static final String NAME_UUID = "uuid";
     private static final Logger logger = LoggerFactory.getLogger( OrderByIterator.class );
@@ -105,7 +102,7 @@ public class OrderByIterator extends MergeIterator {
         UUID minEntryId = null;
 
         if ( cursor != null ) {
-            minEntryId = UUID_SER.fromByteBuffer( cursor );
+            minEntryId = ue.fromByteBuffer( cursor );
         }
 
         entries = new SortedEntitySet( subSortCompare, em, secondaryFields, pageSize, minEntryId );
@@ -142,7 +139,7 @@ public class OrderByIterator extends MergeIterator {
     public void finalizeCursor( CursorCache cache, UUID lastValue ) {
         int sliceHash = slice.hashCode();
 
-        ByteBuffer bytes = UUID_SER.toByteBuffer( lastValue );
+        ByteBuffer bytes = ue.toByteBuffer( lastValue );
 
         if ( bytes == null ) {
             return;

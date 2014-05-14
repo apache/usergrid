@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.utils.JsonUtils;
+import org.springframework.util.Assert;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -499,12 +500,7 @@ public class Query {
             return this;
         }
 
-        if ( StringUtils.isNotEmpty( output ) ) {
-            mergeSelectResults = true;
-        }
-        else {
-            mergeSelectResults = false;
-        }
+        mergeSelectResults = StringUtils.isNotEmpty(output);
 
         if ( output == null ) {
             output = "";
@@ -1407,18 +1403,13 @@ public class Query {
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
         public FilterPredicate( String propertyName, Query.FilterOperator operator, Object value ) {
-            if ( propertyName == null ) {
-                throw new NullPointerException( "Property name was null" );
-            }
-            if ( operator == null ) {
-                throw new NullPointerException( "Operator was null" );
-            }
+            Assert.notNull(propertyName, "Property name was null");
+            Assert.notNull(operator, "Operator was null");
             if ( ( operator == Query.FilterOperator.IN ) || ( operator == Query.FilterOperator.WITHIN ) ) {
                 if ( ( !( value instanceof Collection ) ) && ( value instanceof Iterable ) ) {
                     List newValue = new ArrayList();
-                    for ( Iterator i$ = ( ( Iterable ) value ).iterator(); i$.hasNext(); ) {
-                        Object val = i$.next();
-                        newValue.add( val );
+                    for (Object val : ((Iterable) value)) {
+                        newValue.add(val);
                     }
                     value = newValue;
                 }

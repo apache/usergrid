@@ -51,6 +51,7 @@ exports.config = {
   // Spec patterns are relative to the location of this config.
   specs: [
     'protractor/*.spec.js',
+    'protractor/coverage/coverage.spec.js'
   ],
 
   // ----- Capabilities to be passed to the webdriver instance ----
@@ -79,7 +80,7 @@ exports.config = {
   //
   // A base URL for your application under test. Calls to protractor.get()
   // with relative paths will be prepended with this.
-  baseUrl: 'http://localhost:3000',
+  baseUrl: 'http://localhost:3000/',
 
 
   // Options to be passed to Jasmine-node.

@@ -16,13 +16,19 @@ Icon
 .Trashes
 /portal/performance/
 /portal/node_modules/
-/portal/dist
+/portal/dist/appsvc-ui.*.zip
+/portal/dist-cov/
 /portal/bower_components
 /portal/.idea
+/portal/2.0.**
+/portal/js/libs/*.js
+/portal/js/usergrid.min.js
+/portal/js/usergrid-dev.min.js
+/portal/test/coverage/instrument/js/usergrid-coverage.min.js
+/portal/test/coverage/instrument/js/usergrid.min.js
 /stack/corepersistence/priamcluster/aws.properties
 #Webstorm artifacts
 .idea/
-portal/2.0.**
 stack/corepersistence/collection/nbactions.xml
 stack/corepersistence/graph/nbactions.xml
 stack/corepersistence/model/nbactions.xml
@@ -41,3 +47,9 @@ portal/nbproject/private/private.xml
 portal/nbproject/project.properties
 portal/nbproject/project.xml
 aws.properties
+/portal/nbproject/private/
+/portal/js/templates.js
+/portal/index.html
+/portal/index-debug.html
+/portal/dist/usergrid-portal/
+/portal/dist/appsvc-ui/

@@ -20,6 +20,7 @@
 *  @author rod simpson (rod@apigee.com)
 */
 
+var inflection = require('inflection');
 var request = require('request');
 var Usergrid = {};
 Usergrid.USERGRID_SDK_VERSION = '0.10.07';
@@ -87,10 +88,11 @@ var AUTH_NONE = 'NONE';
         return this.logoutCallback(true, 'no_org_or_app_name_specified');
       }
     }
+    var uri;
     if (mQuery) {
-      var uri = this.URI + '/' + endpoint;
+      uri = this.URI + '/' + endpoint;
     } else {
-      var uri = this.URI + '/' + orgName + '/' + appName + '/' + endpoint;
+      uri = this.URI + '/' + orgName + '/' + appName + '/' + endpoint;
     }
 
     if (this.authType === AUTH_CLIENT_ID) {
@@ -111,6 +113,10 @@ var AUTH_NONE = 'NONE';
       qs: qs
     };
     request(callOptions, function (err, r, data) {
+
+      r.body = r.body || {};
+      data = data || {};
+
       if (self.buildCurl) {
         options.uri = r.request.uri.href;
         self.buildCurlCall(options);
@@ -123,6 +129,7 @@ var AUTH_NONE = 'NONE';
         callback(err, data);
       } else {
         err = true;
+        data.statusCode = r.statusCode;
         if ((r.error === 'auth_expired_session_token') ||
           (r.error === 'auth_missing_credentials')   ||
           (r.error == 'auth_unverified_oath')       ||
@@ -133,7 +140,7 @@ var AUTH_NONE = 'NONE';
           var error = r.body.error;
           var errorDesc = r.body.error_description;
           if (self.logging) {
-            console.log('Error (' + r.statusCode + ')(' + error + '): ' + errorDesc)
+            console.log('Error (' + r.statusCode + ')(' + error + '): ' + errorDesc);
           }
           //if the user has specified a logout callback:
           if (typeof(self.logoutCallback) === 'function') {
@@ -153,7 +160,7 @@ var AUTH_NONE = 'NONE';
         }
       }
     });
-  }
+  };
   /*
    *  function for building asset urls
    *
@@ -1064,17 +1071,17 @@ var AUTH_NONE = 'NONE';
   Usergrid.Entity.prototype.destroy = function (callback) {
     var self = this;
     var type = this.get('type');
-    if (isUUID(this.get('uuid'))) {
-      type += '/' + this.get('uuid');
-    } else {
+    var id = this.getEntityId(this);
+    if (!id) {
       if (typeof(callback) === 'function') {
-        var error = 'Error trying to delete object - no uuid specified.';
+        var error = 'Error trying to delete object - no uuid or name specified.';
         if (self._client.logging) {
           console.log(error);
         }
-        callback(true, error);
+        return callback(true, error);
       }
     }
+    type += '/' + this.get('uuid');
     var options = {
       method:'DELETE',
       endpoint:type
@@ -1160,17 +1167,7 @@ var AUTH_NONE = 'NONE';
   *
   */
   Usergrid.Entity.prototype.getEntityId = function (entity) {
-    var id = false;
-    if (isUUID(entity.get('uuid'))) {
-      id = entity.get('uuid');
-    } else {
-      if (type === 'users') {
-        id = entity.get('username');
-      } else if (entity.get('name')) {
-        id = entity.get('name');
-      }
-    }
-    return id;
+    return entity.get('uuid') || entity.get('username') || entity.get('name') || false;
   }
 
   /*
@@ -1179,17 +1176,19 @@ var AUTH_NONE = 'NONE';
   *  @method getConnections
   *  @public
   *  @param {string} connection
-  *  @param {object} entity
+  *  @param {opts} options (actually, just options.qs for now)
   *  @param {function} callback
   *  @return {callback} callback(err, data, connections)
   *
   */
-  Usergrid.Entity.prototype.getConnections = function (connection, callback) {
+  Usergrid.Entity.prototype.getConnections = function (connection, opts, callback) {
+
+    if (typeof(opts) == "function") { callback = opts; opts = undefined; }
 
     var self = this;
 
     //connector info
-    var connectorType = this.get('type');
+    var connectorType = inflection.pluralize(this.get('type'));
     var connector = this.getEntityId(this);
     if (!connector) {
       if (typeof(callback) === 'function') {
@@ -1207,9 +1206,10 @@ var AUTH_NONE = 'NONE';
       method:'GET',
       endpoint:endpoint
     };
+    if (opts && opts.qs) { options.qs = opts.qs; }
     this._client.request(options, function (err, data) {
       if (err && self._client.logging) {
-        console.log('entity could not be connected');
+        console.log('entity connections could not be retrieved');
       }
 
       self[connection] = {};
@@ -1220,7 +1220,7 @@ var AUTH_NONE = 'NONE';
         if (data.entities[i].type === 'user'){
           self[connection][data.entities[i].username] = data.entities[i];
         } else {
-          self[connection][data.entities[i].name] = data.entities[i]
+          self[connection][data.entities[i].name] = data.entities[i];
         }
       }
 
@@ -1475,6 +1475,36 @@ var AUTH_NONE = 'NONE';
       }
     });
   }
+
+/*
+ *  calls delete on the database w/ the passed query
+ *
+ *  @method delete
+ *  @param {opts} options containing query (include options.qs)
+ *  @param {function} callback
+ *  @return {callback} callback(err, data)
+ *
+ */
+Usergrid.Client.prototype.delete = function(opts, callback) {
+  if (typeof(opts) == "function") { callback = opts; opts = undefined; }
+
+  if (!opts.qs.q) { opts.qs.q = '*'; }
+
+  var options = {
+    method: 'DELETE',
+    endpoint: opts.type,
+    qs: opts.qs
+  };
+  var self = this;
+  this.request(options, function (err, data) {
+    if (err && self.logging) {
+      console.log('entities could not be deleted');
+    }
+    if (typeof(callback) === 'function') {
+      callback(err, data);
+    }
+  });
+};
 
   /*
   *  The Collection class models Usergrid Collections.  It essentially
@@ -2332,7 +2362,7 @@ Usergrid.Counter.prototype.reset=function(options, callback){
  * @returns {callback} callback(err, event)
  */
 Usergrid.Counter.prototype.getData=function(options, callback){
-  var start_time, 
+  var start_time,
       end_time,
       start=options.start||0,
       end=options.end||Date.now(),
@@ -2380,7 +2410,7 @@ Usergrid.Counter.prototype.getData=function(options, callback){
   params.push('resolution='+res)
   params.push('start_time='+String(start_time))
   params.push('end_time='+String(end_time))
-    
+
   var endpoint="counters?"+params.join('&');
   this._client.request({endpoint:endpoint}, function(err, data){
     if(data.counters && data.counters.length){
