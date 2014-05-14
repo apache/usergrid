@@ -39,3 +39,5 @@ stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/q
 /portal/index.html
 /portal/index-debug.html
 
+/portal/dist/usergrid-portal/
+/portal/dist/appsvc-ui/
