@@ -71,14 +71,14 @@ import org.apache.usergrid.persistence.query.tree.StringLiteral;
 import org.apache.usergrid.persistence.query.tree.WithinOperand;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
-
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.usergrid.persistence.cassandra.Serializers.ue;
 
 
 public class QueryProcessorImpl implements QueryProcessor {
 
-    private static final Logger logger = LoggerFactory.getLogger( QueryProcessorImpl.class );
+    public static final int PAGE_SIZE = 1000;
+    private static final Logger logger = LoggerFactory.getLogger( QueryProcessor.class );
 
     private static final Schema SCHEMA = getDefaultSchema();
 
@@ -107,13 +107,11 @@ public class QueryProcessorImpl implements QueryProcessor {
     }
 
 
-    @Override
     public Query getQuery() {
         return query;
     }
 
 
-    @Override
     public void setQuery( Query query ) {
         this.sorts = query.getSortPredicates();
         this.cursorCache = new CursorCache( query.getCursor() );
@@ -124,7 +122,6 @@ public class QueryProcessorImpl implements QueryProcessor {
     }
 
 
-    @Override
     public CollectionInfo getCollectionInfo() {
         return collectionInfo;
     }
@@ -199,7 +196,7 @@ public class QueryProcessorImpl implements QueryProcessor {
 
                 if ( startResultSet ) {
                     cursorCache.setNextCursor( allNode.getSlice().hashCode(),
-                            UUIDSerializer.get().toByteBuffer( startResult ) );
+                            ue.toByteBuffer( startResult ) );
                 }
 
                 rootNode = allNode;
@@ -215,17 +212,15 @@ public class QueryProcessorImpl implements QueryProcessor {
     }
 
 
-    @Override
     public QueryNode getFirstNode() {
         return rootNode;
     }
 
 
     /**
-     * Apply cursor position and sort order to this slice. This should only be invoke at 
-     * evaluation time to ensure that the IR tree has already been fully constructed
+     * Apply cursor position and sort order to this slice. This should only be invoke at evaluation time to ensure that
+     * the IR tree has already been fully constructed
      */
-    @Override
     public void applyCursorAndSort( QuerySlice slice ) {
         // apply the sort first, since this can change the hash code
         SortPredicate sort = getSort( slice.getPropertyName() );
@@ -252,7 +247,6 @@ public class QueryProcessorImpl implements QueryProcessor {
      * @param nodeId
      * @return
      */
-    @Override
     public ByteBuffer getCursorCache(int nodeId){
         return cursorCache.getCursorBytes( nodeId );
     }
@@ -269,7 +263,6 @@ public class QueryProcessorImpl implements QueryProcessor {
 
 
     /** Return the iterator results, ordered if required */
-    @Override
     public Results getResults( SearchVisitor visitor ) throws Exception {
         // if we have no order by just load the results
 
@@ -615,9 +608,7 @@ public class QueryProcessorImpl implements QueryProcessor {
 
         /** Create a new slice if one will be required within the context of this node */
         private void createNewSlice( Operand child ) {
-            if ( child instanceof EqualityOperand 
-                    || child instanceof AndOperand 
-                    || child instanceof ContainsOperand ) {
+            if ( child instanceof EqualityOperand || child instanceof AndOperand || child instanceof ContainsOperand ) {
                 newSliceNode();
             }
         }
@@ -632,10 +623,6 @@ public class QueryProcessorImpl implements QueryProcessor {
     private static class CountingStack<T> extends Stack<T> {
 
         private int count = 0;
-
-        /**
-         *
-         */
         private static final long serialVersionUID = 1L;
 
 
@@ -674,7 +661,6 @@ public class QueryProcessorImpl implements QueryProcessor {
 
 
     /** @return the pageSizeHint */
-    @Override
     public int getPageSizeHint( QueryNode node ) {
         /*****
          * DO NOT REMOVE THIS PIECE OF CODE!!!!!!!!!!!
@@ -717,15 +703,13 @@ public class QueryProcessorImpl implements QueryProcessor {
 
     private void checkIndexed( String propertyName ) throws NoIndexException {
 
-        if ( propertyName == null || propertyName.isEmpty() 
-                || ( !SCHEMA.isPropertyIndexed( entityType, propertyName )
+        if ( propertyName == null || propertyName.isEmpty() || ( !SCHEMA.isPropertyIndexed( entityType, propertyName )
                 && collectionInfo != null ) ) {
             throw new NoIndexException( entityType, propertyName );
         }
     }
 
 
-    @Override
     public EntityManager getEntityManager() {
         return em;
     }
