@@ -108,6 +108,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
     public static final String GEO_SUFFIX = "_ug_geo";
     public static final String COLLECTION_SCOPE_FIELDNAME = "zzz__collectionscope__zzz";
+    public static final String ENTITYID_FIELDNAME = "zzz__id__zzz";
 
 
     public static final String DOC_ID_SEPARATOR = "|";
@@ -298,6 +299,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
         entityAsMap.put("created", entity.getId().getUuid().timestamp());
         entityAsMap.put("updated", entity.getVersion().timestamp());
+        entityAsMap.put(ENTITYID_FIELDNAME,entity.getId().getUuid().toString());
 
         entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, targetScope ); 
 
@@ -648,8 +650,8 @@ public class EsEntityIndexImpl implements EntityIndex {
     @Override
     public Results getEntityVersions(Id id, CollectionScope collScope) {
         Query query = new Query();
-        //query.addEqualityFilter(id);
-        Results results = search(  collScope ,query);
+        query.addEqualityFilter(ENTITYID_FIELDNAME,id.getUuid().toString());
+        Results results = search( collScope ,query );
         return results;
     }
 

@@ -110,7 +110,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         logMutation.mergeShallow( entityMutation );
 
         //set up the post processing queue
-        final AsynchronousMessage<MvccEntityEvent<MvccEntity>> event = entityEventAsyncProcessor.setVerification( new MvccEntityEvent<MvccEntity>( collectionScope, version, entity ), getTimeout() );
+        final AsynchronousMessage<MvccEntityEvent<MvccEntity>> event = entityEventAsyncProcessor.setVerification( new MvccEntityEvent<MvccEntity>(collectionScope, version, entity ), getTimeout() );
 
         try {
             logMutation.execute();

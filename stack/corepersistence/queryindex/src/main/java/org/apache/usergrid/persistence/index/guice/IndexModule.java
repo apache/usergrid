@@ -68,22 +68,22 @@ public class IndexModule extends AbstractModule {
 
 
         private final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete;
-        private final EntityIndex entityIndex;
+        private final EntityIndexFactory entityIndexFactory;
         private final SerializationFig serializationFig;
 
 
         @Inject
-        public EsEntityIndexDeleteListenerProvider( final EntityIndex entityIndex,
+        public EsEntityIndexDeleteListenerProvider( final EntityIndexFactory entityIndexFactory,
                                                  @MvccEntityDelete final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete,
                                                  SerializationFig serializationFig) {
             this.entityDelete = entityDelete;
-            this.entityIndex = entityIndex;
+            this.entityIndexFactory = entityIndexFactory;
             this.serializationFig = serializationFig;
         }
 
         @Override
         public MvccDeleteMessageListener get() {
-            return new EsEntityIndexDeleteListener(entityIndex,entityDelete,serializationFig);
+            return new EsEntityIndexDeleteListener(entityIndexFactory,entityDelete,serializationFig);
         }
     }
 }

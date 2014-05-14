@@ -9,6 +9,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImp
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.Results;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -37,14 +38,16 @@ public class EsEntityIndexDeleteListenerTest {
     EntityIndex entityIndex;
     EsEntityIndexDeleteListener esEntityIndexDeleteListener;
     SerializationFig serializationFig;
+    private EntityIndexFactory eif;
 
     @Before
     public void setup(){
         this.entityIndex =  mock(EntityIndex.class);
         serializationFig = mock(SerializationFig.class);
+        this.eif = mock(EntityIndexFactory.class);
 
         AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete = mock(AsyncProcessor.class);
-        this.esEntityIndexDeleteListener = new EsEntityIndexDeleteListener(entityIndex,entityDelete,serializationFig);
+        this.esEntityIndexDeleteListener = new EsEntityIndexDeleteListener(eif,entityDelete,serializationFig);
     }
 
     @Test
@@ -55,6 +58,8 @@ public class EsEntityIndexDeleteListenerTest {
         Entity entity = mock(Entity.class);
         when(entity.getVersion()).thenReturn(uuid);
         when(entity.getId()).thenReturn(entityId);
+        when(eif.createEntityIndex(null,null)).thenReturn(entityIndex);
+
 
         Results results = mock(Results.class);
         List<Entity> entities = new ArrayList<>();

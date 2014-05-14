@@ -87,12 +87,17 @@ public class Results implements Iterable<Entity> {
 
     @JsonSerialize(include = Inclusion.NON_NULL)
     public List<Id> getIds() {
-        return Collections.unmodifiableList( ids );
+        return Collections.unmodifiableList(ids);
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
     public List<Entity> getEntities() {
+        return getEntities(false);
+    }
+
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<Entity> getEntities(Boolean takeAllVersions) {
 
         if ( entities == null ) {
 
@@ -110,7 +115,7 @@ public class Results implements Iterable<Entity> {
                 }
 
                 Entity entity = ecm.load( candidate.getEntityId() ).toBlockingObservable().last();
-                if ( candidate.getEntityVersion().compareTo(entity.getVersion()) == -1) {
+                if ( !takeAllVersions && candidate.getEntityVersion().compareTo(entity.getVersion()) == -1) {
                     log.debug("   Stale hit {} version {}", entity.getId(), entity.getVersion() );
                     continue;
                 }

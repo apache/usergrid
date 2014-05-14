@@ -19,7 +19,9 @@ package org.apache.usergrid.persistence.index.impl;
 
 import com.google.common.base.Optional;
 import org.apache.cassandra.cql3.CQL3Type;
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
@@ -27,6 +29,7 @@ import org.apache.usergrid.persistence.collection.serialization.SerializationFig
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.query.Results;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -38,19 +41,22 @@ import java.util.*;
 
 public class EsEntityIndexDeleteListener implements MvccDeleteMessageListener {
 
-    private final EntityIndex entityIndex;
     private final SerializationFig serializationFig;
+    private final EntityIndexFactory entityIndexFactory;
 
-    public EsEntityIndexDeleteListener(EntityIndex entityIndex,
+    public EsEntityIndexDeleteListener(EntityIndexFactory entityIndexFactory,
                                        @MvccEntityDelete final AsyncProcessor entityDelete,
                                        SerializationFig serializationFig) {
-        this.entityIndex = entityIndex;
+        this.entityIndexFactory = entityIndexFactory;
         this.serializationFig = serializationFig;
         entityDelete.addListener(this);
     }
 
     @Override
     public Observable<MvccEntity> receive(final MvccEntityEvent<MvccEntity> event) {
+        CollectionScope collectionScope = event.getCollectionScope();
+        CollectionScope appScope = new CollectionScopeImpl(collectionScope.getOrganization(),collectionScope.getOwner(),collectionScope.getName());
+        final EntityIndex entityIndex = entityIndexFactory.createEntityIndex(collectionScope,appScope);
         return Observable.create(new ObservableIterator<MvccEntity>("deleteEsIndexVersions") {
             @Override
             protected Iterator<MvccEntity> getIterator() {
