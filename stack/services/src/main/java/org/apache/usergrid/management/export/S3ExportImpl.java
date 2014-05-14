@@ -17,7 +17,7 @@
 package org.apache.usergrid.management.export;
 
 
-import java.io.InputStream;
+import java.io.File;
 import java.util.Map;
 import java.util.Properties;
 
@@ -47,7 +47,7 @@ public class S3ExportImpl implements S3Export {
     String fn;
 
     @Override
-    public void copyToS3( final InputStream inputStream, final Map<String,Object> exportInfo, String filename ) {
+    public void copyToS3( File ephemeral ,final Map<String,Object> exportInfo, String filename ) {
 
         fn = filename;
 
@@ -90,7 +90,7 @@ public class S3ExportImpl implements S3Export {
         try {
             AsyncBlobStore blobStore = context.getAsyncBlobStore();
             BlobBuilder blobBuilder =
-                    blobStore.blobBuilder( fn ).payload( inputStream ).calculateMD5().contentType( "text/plain" );
+                    blobStore.blobBuilder( fn ).payload( ephemeral ).calculateMD5().contentType( "application/json" );
 
 
             Blob blob = blobBuilder.build();
@@ -108,6 +108,4 @@ public class S3ExportImpl implements S3Export {
     @Override
     public String getFilename () {return fn;}
 
-    @Override
-    public void setFilename(String givenName) {fn = givenName;}
 }

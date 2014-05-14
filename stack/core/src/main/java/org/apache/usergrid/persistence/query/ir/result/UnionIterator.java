@@ -30,8 +30,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.cassandra.CursorCache;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
-
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * Simple iterator to perform Unions
@@ -41,9 +40,6 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
 public class UnionIterator extends MultiIterator {
 
     private static final ScanColumnComparator COMP = new ScanColumnComparator();
-
-    private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
-
 
     private SortedColumnList list;
 
@@ -63,7 +59,7 @@ public class UnionIterator extends MultiIterator {
         UUID parseMinUuid = null;
 
         if(minUuid != null)      {
-            parseMinUuid = UUID_SERIALIZER.fromByteBuffer( minUuid );
+            parseMinUuid = ue.fromByteBuffer( minUuid );
         }
 
         list = new SortedColumnList( pageSize, parseMinUuid );
@@ -114,7 +110,7 @@ public class UnionIterator extends MultiIterator {
     @Override
     public void finalizeCursor( CursorCache cache, UUID lastLoaded ) {
 
-        ByteBuffer buff = UUIDSerializer.get().toByteBuffer( lastLoaded );
+        ByteBuffer buff = ue.toByteBuffer( lastLoaded );
         cache.setNextCursor( id, buff );
         //get our scan column and put them in the cache
         //we finalize the cursor of the min

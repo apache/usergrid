@@ -18,101 +18,108 @@
  */
 package org.apache.usergrid.chop.webapp.view.main;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.chop.webapp.service.chart.Params;
+import org.apache.usergrid.chop.webapp.view.chart.layout.*;
+import org.apache.usergrid.chop.webapp.view.module.ModuleListWindow;
+import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
+import org.apache.usergrid.chop.webapp.view.runner.RunnersLayout;
+import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
+import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
 
 import com.vaadin.annotations.Title;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.AbsoluteLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.UI;
-import org.apache.usergrid.chop.webapp.service.InjectorFactory;
-import org.apache.usergrid.chop.webapp.service.chart.Params;
-import org.apache.usergrid.chop.webapp.service.chart.builder.IterationsChartBuilder;
-import org.apache.usergrid.chop.webapp.service.chart.builder.OverviewChartBuilder;
-import org.apache.usergrid.chop.webapp.service.chart.builder.RunsChartBuilder;
-import org.apache.usergrid.chop.webapp.view.chart.layout.*;
-import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
-import org.apache.usergrid.chop.webapp.view.module.ModuleTreeBuilder;
-import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
-import org.apache.usergrid.chop.webapp.view.util.UIUtil;
+import com.vaadin.ui.VerticalLayout;
 
-@Title("Judo Chop")
-public class MainView extends UI implements ChartLayoutContext, ModuleSelectListener {
 
-    private static Logger LOG = LoggerFactory.getLogger( MainView.class );
+@Title( "Judo Chop" )
+public class MainView extends UI implements ModuleSelectListener {
 
-    private HorizontalSplitPanel splitPanel;
-    private ChartLayout overviewLayout;
-
-    private Breadcrumb breadcrumb = new Breadcrumb(this);
-    private Header header = new Header();
-    private AbsoluteLayout mainLayout;
+    private TabSheetManager tabSheetManager;
 
     @Override
-    protected void init(VaadinRequest request) {
-        overviewLayout = initChartLayouts(this, breadcrumb);
-        initLayout();
+    protected void init( VaadinRequest request ) {
+
+        AbsoluteLayout mainLayout = addMainLayout();
+        addButtons( mainLayout );
+        addTabSheet( mainLayout );
+
         loadScripts();
     }
 
-    private static ChartLayout initChartLayouts(ChartLayoutContext layoutContext, Breadcrumb breadcrumb) {
-
-        IterationsChartBuilder iterationsChartBuilder = InjectorFactory.getInstance(IterationsChartBuilder.class);
-        RunsChartBuilder runsChartBuilder = InjectorFactory.getInstance(RunsChartBuilder.class);
-        OverviewChartBuilder overviewChartBuilder = InjectorFactory.getInstance(OverviewChartBuilder.class);
-
-        ChartLayout iterationsLayout = new IterationsChartLayout(layoutContext, iterationsChartBuilder, null, breadcrumb);
-        ChartLayout runsLayout = new RunsChartLayout(layoutContext, runsChartBuilder, iterationsLayout, breadcrumb);
-        return new OverviewChartLayout(layoutContext, overviewChartBuilder, runsLayout, breadcrumb);
-    }
-
-    private void initLayout() {
-
-        splitPanel = new HorizontalSplitPanel();
-        splitPanel.setSplitPosition(20);
-        splitPanel.setFirstComponent(ModuleTreeBuilder.getTree(this));
-        splitPanel.setSecondComponent(initMainContainer());
-
-        setContent(splitPanel);
-    }
-
-    private AbsoluteLayout initMainContainer() {
-
-        AbsoluteLayout container = new AbsoluteLayout();
-        container.addComponent(header, "left: 0px; top: 0px;");
-        container.addComponent(breadcrumb, "left: 0px; top: 30px;");
-
-        mainLayout = UIUtil.addLayout(container, "", "left: 0px; top: 60px;", "1000px", "1000px");
-
-        return container;
-    }
 
     private void loadScripts() {
-        JavaScriptUtil.loadFile("js/jquery.min.js");
-        JavaScriptUtil.loadFile("js/jquery.flot.min.js");
+        JavaScriptUtil.loadFile( "js/jquery.min.js" );
+        JavaScriptUtil.loadFile( "js/jquery.flot.min.js" );
     }
+
+
+    private AbsoluteLayout addMainLayout() {
+
+        AbsoluteLayout absoluteLayout = new AbsoluteLayout();
+        absoluteLayout.setWidth( "1300px" );
+        absoluteLayout.setHeight( "700px" );
+
+        VerticalLayout verticalLayout = new VerticalLayout();
+        verticalLayout.setSizeFull();
+        verticalLayout.addComponent( absoluteLayout );
+        verticalLayout.setComponentAlignment( absoluteLayout, Alignment.MIDDLE_CENTER );
+
+        setContent( verticalLayout );
+
+        return absoluteLayout;
+    }
+
+
+    private void addButtons( AbsoluteLayout mainLayout ) {
+
+        addButton( mainLayout, 450, "Modules", new Button.ClickListener() {
+            public void buttonClick( Button.ClickEvent event ) {
+                UI.getCurrent().addWindow( new ModuleListWindow( MainView.this ) );
+            }
+        });
+
+        addButton( mainLayout, 560, "Runners", new Button.ClickListener() {
+            public void buttonClick( Button.ClickEvent event ) {
+                tabSheetManager.addTab( new RunnersLayout(), "Runners" );
+            }
+        });
+
+        addButton( mainLayout, 670, "Users", new Button.ClickListener() {
+            public void buttonClick( Button.ClickEvent event ) {
+                UI.getCurrent().addWindow( new UserListWindow( tabSheetManager ) );
+            }
+        });
+    }
+
+
+    private static void addButton( AbsoluteLayout mainLayout, int left, String caption, Button.ClickListener listener ) {
+
+        Button button = new Button( caption );
+        button.setWidth( "100px" );
+        button.addClickListener( listener );
+
+        mainLayout.addComponent( button, String.format( "left: %spx; top: 0px;", left ) );
+    }
+
+
+    private void addTabSheet( AbsoluteLayout mainLayout ) {
+        TabSheet tabSheet = new TabSheet();
+        tabSheet.setHeight( "650px" );
+
+        tabSheetManager = new TabSheetManager(tabSheet );
+        mainLayout.addComponent( tabSheet, "left: 0px; top: 50px;" );
+    }
+
 
     @Override
     public void onModuleSelect( String moduleId ) {
-        LOG.info( "Selected module: {}", moduleId );
-        header.showModule( moduleId );
-        show(overviewLayout, new Params(moduleId));
-    }
-
-    private void setChartLayout(ChartLayout chartLayout) {
-        mainLayout.removeAllComponents();
-        mainLayout.addComponent(chartLayout);
-    }
-
-    @Override
-    public void show(ChartLayout chartLayout, Params params) {
-        setChartLayout(chartLayout);
-        chartLayout.show(params);
-    }
-
-    void show(ChartLayout chartLayout) {
-        setChartLayout(chartLayout);
-        chartLayout.loadChart();
+        AbsoluteLayout layout = new OverviewChartLayout( new Params(moduleId), tabSheetManager );
+        tabSheetManager.addTab( layout, "Overview Chart"  );
     }
 }

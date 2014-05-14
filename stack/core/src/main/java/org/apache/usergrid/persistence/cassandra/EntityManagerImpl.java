@@ -88,10 +88,6 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.yammer.metrics.annotation.Metered;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.CounterRow;
@@ -172,6 +168,7 @@ import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -203,12 +200,6 @@ public class EntityManagerImpl implements EntityManager {
     private CounterUtils counterUtils;
 
     private boolean skipAggregateCounters;
-
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-    public static final LongSerializer le = new LongSerializer();
-
 
     public EntityManagerImpl() {
     }
@@ -761,13 +752,16 @@ public class EntityManagerImpl implements EntityManager {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
-        UUID itemId = UUIDUtils.newTimeUUID();
+        UUID itemId = null;
 
         if ( is_application ) {
             itemId = applicationId;
         }
         if ( importId != null ) {
             itemId = importId;
+        }
+        if (itemId == null) {
+            itemId = UUIDUtils.newTimeUUID();
         }
         boolean emptyPropertyMap = false;
         if ( properties == null ) {
@@ -922,7 +916,7 @@ public class EntityManagerImpl implements EntityManager {
 
     private void incrementEntityCollection( String collection_name, long cassandraTimestamp ) {
         try {
-            incrementAggregateCounters( null, null, null, new String( APPLICATION_COLLECTION + collection_name ),
+            incrementAggregateCounters( null, null, null, APPLICATION_COLLECTION + collection_name,
                     ONE_COUNT, cassandraTimestamp );
         }
         catch ( Exception e ) {
@@ -1037,9 +1031,7 @@ public class EntityManagerImpl implements EntityManager {
             column_names.add( PROPERTY_TYPE );
             column_names.add( PROPERTY_UUID );
 
-            for ( String propertyName : propertyNames ) {
-                column_names.add( propertyName );
-            }
+            Collections.addAll(column_names, propertyNames);
 
             results = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, key( entityId ),
                     column_names, se, be );
@@ -2259,14 +2251,14 @@ public class EntityManagerImpl implements EntityManager {
 
         if ( roleNames != null ) {
             nameResults = getDictionaryElementValues( getApplicationRef(), DICTIONARY_ROLENAMES,
-                    roleNames.toArray( new String[0] ) );
+                    roleNames.toArray(new String[roleNames.size()]));
         }
         else {
             nameResults = cast( getDictionaryAsMap( getApplicationRef(), DICTIONARY_ROLENAMES ) );
             roleNames = nameResults.keySet();
         }
         Map<String, Object> timeResults = getDictionaryElementValues( getApplicationRef(), DICTIONARY_ROLETIMES,
-                roleNames.toArray( new String[0] ) );
+                roleNames.toArray(new String[roleNames.size()]));
 
         for ( String roleName : roleNames ) {
 

@@ -30,7 +30,6 @@ import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.geo.GeocellManager;
 import org.apache.usergrid.persistence.geo.model.Point;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -47,6 +46,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.logBatchOperation;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class GeoIndexManager {
@@ -87,8 +87,8 @@ public class GeoIndexManager {
         logBatchOperation( "Insert", ENTITY_INDEX, key, columnName, columnValue, ts );
 
         HColumn<ByteBuffer, ByteBuffer> column =
-                createColumn( columnName.serialize(), columnValue.serialize(), ts, ByteBufferSerializer.get(),
-                        ByteBufferSerializer.get() );
+                createColumn( columnName.serialize(), columnValue.serialize(), ts, be,
+                        be );
         m.addInsertion( bytebuffer( key ), ENTITY_INDEX.toString(), column );
 
         return m;
@@ -171,7 +171,7 @@ public class GeoIndexManager {
 
         logBatchOperation( "Delete", ENTITY_INDEX, key, columnName, null, ts );
 
-        m.addDeletion( bytebuffer( key ), ENTITY_INDEX.toString(), columnName.serialize(), ByteBufferSerializer.get(),
+        m.addDeletion( bytebuffer( key ), ENTITY_INDEX.toString(), columnName.serialize(), be,
                 ts + 1 );
 
         return m;
@@ -210,19 +210,19 @@ public class GeoIndexManager {
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         m.addDeletion( bytebuffer( property_index_key ), ENTITY_INDEX.toString(), columnName,
-                ByteBufferSerializer.get(), timestamp );
+                be, timestamp );
 
         // composite(property_value,connected_entity_id,connection_type,entry_timestamp)
         m.addDeletion( bytebuffer( entity_type_prop_index_key ), ENTITY_INDEX.toString(), columnName,
-                ByteBufferSerializer.get(), timestamp );
+                be, timestamp );
 
         // composite(property_value,connected_entity_id,entity_type,entry_timestamp)
         m.addDeletion( bytebuffer( connection_type_prop_index_key ), ENTITY_INDEX.toString(), columnName,
-                ByteBufferSerializer.get(), timestamp );
+                be, timestamp );
 
         // composite(property_value,connected_entity_id,entry_timestamp)
         m.addDeletion( bytebuffer( connection_type_and_entity_type_prop_index_key ), ENTITY_INDEX.toString(),
-                columnName, ByteBufferSerializer.get(), timestamp );
+                columnName, be, timestamp );
 
         return m;
     }
@@ -277,7 +277,7 @@ public class GeoIndexManager {
                                                 String propertyName, EntityLocationRef location ) {
 
         Keyspace ko = cass.getApplicationKeyspace( em.getApplicationId() );
-        Mutator<ByteBuffer> m = createMutator( ko, ByteBufferSerializer.get() );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
 
         batchStoreLocationInCollectionIndex( m, em.getIndexBucketLocator(), em.getApplicationId(),
                 key( owner.getUuid(), collectionName, propertyName ), owner.getUuid(), location );
@@ -315,7 +315,7 @@ public class GeoIndexManager {
                                                    EntityLocationRef location ) {
 
         Keyspace ko = cass.getApplicationKeyspace( em.getApplicationId() );
-        Mutator<ByteBuffer> m = createMutator( ko, ByteBufferSerializer.get() );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
 
         batchRemoveLocationFromCollectionIndex( m, em.getIndexBucketLocator(), em.getApplicationId(),
                 key( owner.getUuid(), collectionName, propertyName ), location );

@@ -37,11 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.count.Batcher;
 import org.apache.usergrid.count.common.Count;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.PrefixedSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.beans.HCounterColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 
@@ -54,16 +50,12 @@ import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DIC
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class CounterUtils {
 
     public static final Logger logger = LoggerFactory.getLogger( CounterUtils.class );
-
-    public static final LongSerializer le = new LongSerializer();
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
 
     private String counterType = "o";
 
@@ -311,7 +303,7 @@ public class CounterUtils {
         if ( "n".equals( counterType ) || "p".equals( counterType ) ) {
             // create and add Count
             PrefixedSerializer ps =
-                    new PrefixedSerializer( applicationId, UUIDSerializer.get(), StringSerializer.get() );
+                    new PrefixedSerializer( applicationId, ue, se );
             batcher.add(
                     new Count( APPLICATION_AGGREGATE_COUNTERS.toString(), ps.toByteBuffer( key ), column, value ) );
         }
@@ -352,7 +344,7 @@ public class CounterUtils {
             m.addCounter( bytebuffer( entityId ), ENTITY_COUNTERS.toString(), c );
         }
         if ( "n".equals( counterType ) || "p".equals( counterType ) ) {
-            PrefixedSerializer ps = new PrefixedSerializer( applicationId, UUIDSerializer.get(), UUIDSerializer.get() );
+            PrefixedSerializer ps = new PrefixedSerializer( applicationId, ue, ue );
             batcher.add( new Count( ENTITY_COUNTERS.toString(), ps.toByteBuffer( entityId ), name, value ) );
         }
         return m;
@@ -374,7 +366,7 @@ public class CounterUtils {
             m.addCounter( keybytes, QueuesCF.COUNTERS.toString(), c );
         }
         if ( "n".equals( counterType ) || "p".equals( counterType ) ) {
-            PrefixedSerializer ps = new PrefixedSerializer( applicationId, UUIDSerializer.get(), UUIDSerializer.get() );
+            PrefixedSerializer ps = new PrefixedSerializer( applicationId, ue, ue );
             batcher.add( new Count( QueuesCF.COUNTERS.toString(), ps.toByteBuffer( queueId ), name, value ) );
         }
         return m;

@@ -65,12 +65,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 
 import com.fasterxml.uuid.UUIDComparator;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.BytesArraySerializer;
-import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.ColumnSlice;
@@ -132,6 +126,7 @@ import static org.apache.usergrid.utils.MapUtils.emptyMapWithKeys;
 import static org.apache.usergrid.utils.NumberUtils.roundLong;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class QueueManagerImpl implements QueueManager {
@@ -153,12 +148,6 @@ public class QueueManagerImpl implements QueueManager {
     private LockManager lockManager;
     private int lockTimeout;
 
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-    public static final BytesArraySerializer bae = new BytesArraySerializer();
-    public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
-    public static final LongSerializer le = new LongSerializer();
 
 
     public QueueManagerImpl() {

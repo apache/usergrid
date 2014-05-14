@@ -19,9 +19,11 @@ package org.apache.usergrid.services;
 
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -80,4 +82,29 @@ public class ConnectionsServiceIT extends AbstractServiceIT {
         app.put( "email", "conn-user3@apigee.com" );
         app.testRequest( ServiceAction.POST, 1, "users", "conn-user1", "manages", "user" );
     }
+
+    @Test
+    public void testNonExistentEntity() throws Exception {
+
+      app.put( "name", "foo" );
+      Entity foo = app.testRequest( ServiceAction.POST, 1, "foos" ).getEntity();
+      assertNotNull( foo );
+
+      app.clear();
+
+      app.put( "name", "bar" );
+      Entity bar = app.testRequest( ServiceAction.POST, 1, "bars" ).getEntity();
+      assertNotNull( bar );
+
+      //POST users/conn-user1/user2/UUID
+      app.testRequest( ServiceAction.POST, 1, "foos", "foo", "bars", bar.getUuid() ); // should succeed
+
+      try {
+        //POST users/conn-user1/user2/bar
+        app.testRequest( ServiceAction.POST, 1, "foos", "foo", "bars", "bar" );
+        Assert.fail();
+      } catch (EntityNotFoundException e) {
+        // ok
+      }
+  }
 }

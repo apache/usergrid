@@ -185,7 +185,7 @@ public class ServiceInfo {
         }
 
         String eType = determineType( collections, first, last - 1 );
-        if ( eType != "entity" ) {
+        if (!eType.equals("entity")) {
             return "/entities:" + eType + "/*/" + collections[last];
         }
 

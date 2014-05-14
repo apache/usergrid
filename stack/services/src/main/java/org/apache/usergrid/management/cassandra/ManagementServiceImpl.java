@@ -1247,12 +1247,11 @@ public class ManagementServiceImpl implements ManagementService {
         if ( verify( MANAGEMENT_APPLICATION_ID, user.getUuid(), password ) ) {
             userInfo = getUserInfo( MANAGEMENT_APPLICATION_ID, user );
 
-            boolean userIsSuperAdmin =
-                    StringUtils.equals( getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ), userInfo.getEmail() );
-            boolean testUserEnabled = getBooleanProperty( PROPERTIES_SETUP_TEST_ACCOUNT );
+            boolean userIsSuperAdmin = properties.getSuperUser().isEnabled() && properties.getSuperUser().getEmail().equals(userInfo.getEmail());
 
-            boolean userIsTestUser = !testUserEnabled ? false :
-                    StringUtils.equals(getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ), userInfo.getEmail());
+            boolean testUserEnabled = parseBoolean( properties.getProperty( PROPERTIES_SETUP_TEST_ACCOUNT ) );
+            boolean userIsTestUser = testUserEnabled && properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL)
+                    .equals(userInfo.getEmail());
 
             if ( !userIsSuperAdmin && !userIsTestUser ) {
 
@@ -2460,8 +2459,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean registration_requires_admin_approval = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         REGISTRATION_REQUIRES_ADMIN_APPROVAL );
-        return registration_requires_admin_approval != null ? registration_requires_admin_approval.booleanValue() :
-               false;
+        return registration_requires_admin_approval != null && registration_requires_admin_approval.booleanValue();
     }
 
 
@@ -2471,8 +2469,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean registration_requires_email_confirmation = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         REGISTRATION_REQUIRES_EMAIL_CONFIRMATION );
-        return registration_requires_email_confirmation != null ?
-               registration_requires_email_confirmation.booleanValue() : false;
+        return registration_requires_email_confirmation != null && registration_requires_email_confirmation.booleanValue();
     }
 
 
@@ -2481,7 +2478,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean notify_admin_of_new_users = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         NOTIFY_ADMIN_OF_NEW_USERS );
-        return notify_admin_of_new_users != null ? notify_admin_of_new_users.booleanValue() : false;
+        return notify_admin_of_new_users != null && notify_admin_of_new_users.booleanValue();
     }
 
 

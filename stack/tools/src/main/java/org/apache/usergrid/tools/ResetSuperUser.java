@@ -27,7 +27,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_EMAIL;
@@ -48,7 +47,6 @@ public class ResetSuperUser extends ToolBase {
      */
     private static final int PAGE_SIZE = 100;
 
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
     private static final Logger logger = LoggerFactory.getLogger( ResetSuperUser.class );
 

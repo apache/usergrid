@@ -30,11 +30,11 @@ import java.util.Date;
 public class RunnerServiceMock implements RunnerService {
 
     public State getState(Runner runner) {
-        return State.INACTIVE;
+        return State.RUNNING;
     }
 
     @Override
-    public StatsSnapshot getStats(Runner runner) {
+    public StatsSnapshot getStats( Runner runner ) {
         return new StatsSnapshot( 5L, 333L, 111L, 222L, true, new Date().getTime(), 50 );
     }
 }
