@@ -67,7 +67,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_E
 import static org.apache.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**

@@ -68,7 +68,7 @@ import static org.apache.usergrid.utils.JsonUtils.toJsonNode;
 import static org.apache.usergrid.utils.StringUtils.replaceAll;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /** @author edanuff */
 public class CassandraPersistenceUtils {

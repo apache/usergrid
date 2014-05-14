@@ -50,7 +50,7 @@ import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DIC
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class CounterUtils {

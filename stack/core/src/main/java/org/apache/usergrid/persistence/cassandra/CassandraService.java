@@ -83,7 +83,7 @@ import static org.apache.usergrid.utils.ConversionUtils.bytebuffers;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.asMap;
 import static org.apache.usergrid.utils.MapUtils.filter;
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class CassandraService {

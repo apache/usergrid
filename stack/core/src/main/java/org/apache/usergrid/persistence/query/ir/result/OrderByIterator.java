@@ -42,7 +42,7 @@ import org.apache.usergrid.persistence.query.ir.QuerySlice;
 
 import org.apache.commons.collections.comparators.ComparatorChain;
 
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * 1) Take a result set iterator as the child 2) Iterate only over candidates and create a cursor from the candidates

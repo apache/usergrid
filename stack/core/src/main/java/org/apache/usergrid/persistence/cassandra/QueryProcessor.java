@@ -74,7 +74,7 @@ import org.apache.usergrid.persistence.schema.CollectionInfo;
 
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 public class QueryProcessor {
 

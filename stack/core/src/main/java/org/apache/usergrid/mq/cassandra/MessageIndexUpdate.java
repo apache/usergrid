@@ -40,7 +40,7 @@ import static org.apache.usergrid.mq.cassandra.QueuesCF.QUEUE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.IndexUtils.getKeyValueList;
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class MessageIndexUpdate {
