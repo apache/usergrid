@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.Schema;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
@@ -76,6 +77,7 @@ import rx.Observable;
 public class CpRelationManager implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
+    public static String COLLECTION_SUFFIX = "zzzcollectionzzz";
 
     private CpEntityManagerFactory emf;
     
@@ -93,7 +95,6 @@ public class CpRelationManager implements RelationManager {
     private CollectionScope applicationScope;
     private CollectionScope headEntityScope;
 
-    public static String COLLECTION_SUFFIX = "zzzcollectionzzz"; 
 
 
     public CpRelationManager() {}
@@ -521,24 +522,7 @@ public class CpRelationManager implements RelationManager {
         org.apache.usergrid.persistence.index.query.Results cpResults = 
             ei.searchConnections(cpHeadEntity, collName + COLLECTION_SUFFIX, cpQuery );
 
-        List<Entity> entities = new ArrayList<Entity>();
-
-        for ( org.apache.usergrid.persistence.model.entity.Entity e : cpResults.getEntities() ) {
-
-            Entity entity = EntityFactory.newEntity(
-                e.getId().getUuid(), e.getField("type").getValue().toString() );
-
-            Map<String, Object> entityMap = EntityMapUtils.toMap( e );
-            entity.addProperties( entityMap ); 
-            entities.add( entity );
-
-        }
-
-        Results results = Results.fromEntities( entities );
-        results.setCursor(cpResults.getCursor());
-        results.setQueryProcessor( new CpQueryProcessor( em, headEntity, collName ) );
-
-        return results;
+        return buildResults( query , cpResults, collName );
     }
 
 
@@ -846,25 +830,8 @@ public class CpRelationManager implements RelationManager {
         org.apache.usergrid.persistence.index.query.Results cpResults = 
             ei.searchConnections(cpHeadEntity, connectionTypes, cpQuery );
 
-        if ( cpResults.isEmpty() ) {
-            Results results = new Results();
-            return results;
-        }
-
-        List<Entity> entities = new ArrayList<Entity>();
-
-        for ( org.apache.usergrid.persistence.model.entity.Entity e : cpResults.getEntities() ) {
-
-            Entity entity = EntityFactory.newEntity(
-                e.getId().getUuid(), e.getField("type").getValue().toString() );
-
-            Map<String, Object> entityMap = EntityMapUtils.toMap( e );
-            entity.addProperties( entityMap ); 
-            entities.add( entity );
-
-        }
-
-        return Results.fromEntities( entities );
+        // TODO: is the collName parameter correct here?
+        return buildResults( query , cpResults, connectionTypes.get(0) );
     }
 
     @Override
@@ -892,5 +859,52 @@ public class CpRelationManager implements RelationManager {
         }
         return entity;
     }
+
+
+    private Results buildResults(Query query, org.apache.usergrid.persistence.index.query.Results cpResults, String collName ) {
+
+        Results results = null;
+
+        if ( query.getLevel().equals( Level.IDS )) {
+            
+            // TODO: replace this with List<Id> someday
+            List<UUID> ids = new ArrayList<UUID>();
+            for ( Id id : cpResults.getIds()) {
+                ids.add( id.getUuid() );
+            }
+            results = Results.fromIdList( ids );
+
+        } else if ( query.getLevel().equals( Level.REFS )) {
+
+            List<EntityRef> entityRefs = new ArrayList<EntityRef>();
+            for ( Id id : cpResults.getIds()) {
+                entityRefs.add( new SimpleEntityRef( id.getType(), id.getUuid() ));
+            } 
+            results = Results.fromRefList(entityRefs);
+
+        } else {
+
+            List<Entity> entities = new ArrayList<Entity>();
+            for ( org.apache.usergrid.persistence.model.entity.Entity e : cpResults.getEntities() ) {
+
+                Entity entity = EntityFactory.newEntity(
+                        e.getId().getUuid(), e.getField("type").getValue().toString() );
+                
+                Map<String, Object> entityMap = EntityMapUtils.toMap( e );
+                entity.addProperties( entityMap ); 
+                entities.add( entity );
+
+            }
+
+            results = Results.fromEntities( entities );
+        }
+
+        results.setCursor( cpResults.getCursor() );
+        results.setQueryProcessor( new CpQueryProcessor(em, headEntity, collName));
+
+        return results;
+    }
+
+
 
 }

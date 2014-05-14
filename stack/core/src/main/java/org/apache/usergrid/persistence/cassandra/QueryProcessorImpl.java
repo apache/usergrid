@@ -222,8 +222,8 @@ public class QueryProcessorImpl implements QueryProcessor {
 
 
     /**
-     * Apply cursor position and sort order to this slice. This should only be invoke at evaluation time to ensure that
-     * the IR tree has already been fully constructed
+     * Apply cursor position and sort order to this slice. This should only be invoke at 
+     * evaluation time to ensure that the IR tree has already been fully constructed
      */
     @Override
     public void applyCursorAndSort( QuerySlice slice ) {
@@ -615,7 +615,9 @@ public class QueryProcessorImpl implements QueryProcessor {
 
         /** Create a new slice if one will be required within the context of this node */
         private void createNewSlice( Operand child ) {
-            if ( child instanceof EqualityOperand || child instanceof AndOperand || child instanceof ContainsOperand ) {
+            if ( child instanceof EqualityOperand 
+                    || child instanceof AndOperand 
+                    || child instanceof ContainsOperand ) {
                 newSliceNode();
             }
         }
@@ -715,7 +717,8 @@ public class QueryProcessorImpl implements QueryProcessor {
 
     private void checkIndexed( String propertyName ) throws NoIndexException {
 
-        if ( propertyName == null || propertyName.isEmpty() || ( !SCHEMA.isPropertyIndexed( entityType, propertyName )
+        if ( propertyName == null || propertyName.isEmpty() 
+                || ( !SCHEMA.isPropertyIndexed( entityType, propertyName )
                 && collectionInfo != null ) ) {
             throw new NoIndexException( entityType, propertyName );
         }

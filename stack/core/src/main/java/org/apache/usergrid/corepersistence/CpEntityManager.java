@@ -196,12 +196,6 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Entity get( UUID entityId ) throws Exception {
-        throw new UnsupportedOperationException("Cannot get entity by UUID alone"); 
-    }
-
-
-    @Override
     public Entity get( UUID entityId, String type ) throws Exception {
 
         Id id = new SimpleId( entityId, type );

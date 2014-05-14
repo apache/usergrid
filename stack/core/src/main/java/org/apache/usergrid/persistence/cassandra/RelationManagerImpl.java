@@ -872,13 +872,13 @@ public class RelationManagerImpl implements RelationManager {
 
     @SuppressWarnings("unchecked")
     @Metered(group = "core", name = "RelationManager_batchUpdateEntityConnection")
-    public Mutator<ByteBuffer> batchUpdateEntityConnection( Mutator<ByteBuffer> batch, boolean disconnect,
-                                                            ConnectionRefImpl connection, UUID timestampUuid )
-            throws Exception {
+    public Mutator<ByteBuffer> batchUpdateEntityConnection( Mutator<ByteBuffer> batch, 
+        boolean disconnect, ConnectionRefImpl connection, UUID timestampUuid ) throws Exception {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
-        Entity connectedEntity = em.get( connection.getConnectedEntityId() );
+        Entity connectedEntity = em.get( 
+                connection.getConnectedEntityId(), connection.getConnectedEntityType() );
 
         if ( connectedEntity == null ) {
             return batch;

@@ -1376,9 +1376,12 @@ public class ManagementServiceImpl implements ManagementService {
 
     public Entity getEntityFromPrincipal( AuthPrincipalInfo principal ) throws Exception {
 
-        EntityManager em = emf.getEntityManager(
-                principal.getApplicationId() != null ? principal.getApplicationId() : MANAGEMENT_APPLICATION_ID );
-        Entity entity = em.get( principal.getUuid() );
+        EntityManager em = emf.getEntityManager( 
+            principal.getApplicationId() != null 
+                ? principal.getApplicationId() : MANAGEMENT_APPLICATION_ID );
+
+        Entity entity = em.get( principal.getUuid(), principal.getType().getEntityType() );
+
         return entity;
     }
 
@@ -1746,7 +1749,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-        Entity entity = em.get( applicationId );
+        Entity entity = em.get( applicationId, "application" );
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );
@@ -2834,14 +2837,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     private CredentialsInfo readCreds( UUID appId, UUID ownerId, String key ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
-        Entity owner = em.get( ownerId );
+        Entity owner = em.get( ownerId, "user" );
         return ( CredentialsInfo ) em.getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, key );
     }
 
 
     private Set<CredentialsInfo> readUserPasswordHistory( UUID appId, UUID ownerId ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
-        Entity owner = em.get( ownerId );
+        Entity owner = em.get( ownerId, "user" );
         return ( Set<CredentialsInfo> ) em
                 .getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, USER_PASSWORD_HISTORY );
     }

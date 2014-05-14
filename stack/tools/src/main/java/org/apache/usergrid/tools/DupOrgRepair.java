@@ -225,7 +225,7 @@ public class DupOrgRepair extends ExportingToolBase {
                         appIdToKeep.equals( app.getValue() ) ? targetApps.get( app.getKey() ) : app.getValue();
 
                 // get the existing target entity
-                Entity appEntity = em.get( appIdToChange );
+                Entity appEntity = em.get( appIdToChange, "application" );
 
                 if ( appEntity != null ) {
 

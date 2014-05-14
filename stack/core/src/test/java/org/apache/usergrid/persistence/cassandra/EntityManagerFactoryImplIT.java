@@ -123,7 +123,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         i = 0;
         for ( Entity entity : things ) {
 
-            Entity thing = em.get( entity.getUuid() );
+            Entity thing = em.get( entity.getUuid(), "thing" );
             assertNotNull( "thing should not be null", thing );
             assertFalse( "thing id not valid", thing.getUuid().equals( new UUID( 0, 0 ) ) );
             assertEquals( "name not expected value", "thing" + i, thing.getProperty( "name" ) );
@@ -135,7 +135,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         for ( Entity entity : things ) {
             ids.add( entity.getUuid() );
 
-            Entity en = em.get( entity.getUuid() );
+            Entity en = em.get( entity.getUuid(), "thing" );
             String type = en.getType();
             assertEquals( "type not expected value", "thing", type );
 

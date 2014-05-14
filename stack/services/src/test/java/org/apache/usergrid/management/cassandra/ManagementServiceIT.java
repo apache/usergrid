@@ -1427,7 +1427,7 @@ public class ManagementServiceIT {
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
         //Exportem.get(entityExport);
-        Export exportEntity = ( Export ) em.get( entityExportUUID );
+        Export exportEntity = ( Export ) em.get( entityExportUUID, "export"); // TODO: correct type?
         assertNotNull( exportEntity );
         String derp = exportEntity.getState().name();
         assertEquals( "SCHEDULED", exportEntity.getState().name() );
@@ -1438,7 +1438,7 @@ public class ManagementServiceIT {
             //throw e;
             assert(false);
         }
-        exportEntity = ( Export ) em.get( entityExportUUID );
+        exportEntity = ( Export ) em.get( entityExportUUID, "export" ); // TODO: correct type?
         assertNotNull( exportEntity );
         assertEquals( "FINISHED", exportEntity.getState().name() );
     }

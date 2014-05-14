@@ -122,12 +122,6 @@ public class CoreApplication implements Application, TestRule {
 
 
     @Override
-    public Entity get( UUID id ) throws Exception {
-        return em.get( id );
-    }
-
-
-    @Override
     public Statement apply( final Statement base, final Description description ) {
         return new Statement() {
             @Override

@@ -31,6 +31,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
+import static org.apache.usergrid.AbstractCoreIT.setup;
+import org.apache.usergrid.Application;
+import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.entities.Group;
@@ -42,6 +45,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import org.junit.Rule;
 
 
 @Concurrent()
@@ -136,7 +140,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         i = 0;
         for ( Entity entity : things ) {
 
-            Entity thing = em.get( entity.getUuid() );
+            Entity thing = em.get( entity.getUuid(), "thing");
             assertNotNull( "thing should not be null", thing );
             assertFalse( "thing id not valid", thing.getUuid().equals( new UUID( 0, 0 ) ) );
             assertEquals( "name not expected value", "thing" + i, thing.getProperty( "name" ) );
@@ -148,7 +152,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         for ( Entity entity : things ) {
             ids.add( entity.getUuid() );
 
-            Entity en = em.get( entity.getUuid() );
+            Entity en = em.get( entity.getUuid(), "thing" );
             String type = en.getType();
             assertEquals( "type not expected value", "thing", type );
 
@@ -235,7 +239,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "name", "testprop" );
         Entity thing = em.create( "thing", properties );
 
-        Entity entity = em.get( thing.getUuid() );
+        Entity entity = em.get( thing.getUuid(), "thing" );
         assertNotNull( "entity should not be null", entity );
         em.setProperty( entity, "alpha", 1 );
         em.setProperty( entity, "beta", 2 );
@@ -352,7 +356,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "name", "testprop" );
         Entity thing = em.create( "thing", properties );
 
-        Entity entity = em.get( thing.getUuid() );
+        Entity entity = em.get( thing.getUuid(), "thing" );
         assertNotNull( "entity should not be null", entity );
 
         Map<String, Object> json = new LinkedHashMap<String, Object>();
@@ -471,7 +475,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "email", "test@foo.bar" );
         Entity created = em.create( "user", properties );
 
-        Entity returned = em.get( created.getUuid() );
+        Entity returned = em.get( created.getUuid(), "user" );
 
         assertNotNull( created );
         assertNotNull( returned );
@@ -496,13 +500,13 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "name", "one" );
         Entity saved = em.create( "thing", properties );
 
-        Entity thingOne = em.get( saved.getUuid() );
+        Entity thingOne = em.get( saved.getUuid(), "thing" );
         assertNotNull( "entity should not be null", thingOne );
         assertEquals( "one", thingOne.getProperty( "name" ).toString() );
 
         em.setProperty( thingOne, "name", "two", true );
 
-        Entity thingTwo = em.get( saved.getUuid() );
+        Entity thingTwo = em.get( saved.getUuid(), "thing" );
 
         assertEquals( "two", thingTwo.getProperty( "name" ) );
     }
@@ -522,7 +526,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         userProps.put( "email", "test@foo.bar" );
         Entity createdUser = em.create( "user", userProps );
 
-        Entity returnedUser = em.get( createdUser.getUuid() );
+        Entity returnedUser = em.get( createdUser.getUuid(), "user" );
 
         assertNotNull( createdUser );
         assertNotNull( returnedUser );
@@ -534,7 +538,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         userProps2.put( "email", "test2@foo.bar" );
         Entity createdUser2 = em.create( "user", userProps2 );
 
-        Entity returnedUser2 = em.get( createdUser2.getUuid() );
+        Entity returnedUser2 = em.get( createdUser2.getUuid(), "user" );
 
         assertNotNull( createdUser2 );
         assertNotNull( returnedUser2 );
@@ -546,7 +550,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         Entity createdDevice = em.createItemInCollection( createdUser, "devices", "device", device );
 
-        Entity returnedDevice = em.get( createdDevice.getUuid() );
+        Entity returnedDevice = em.get( createdDevice.getUuid() , "device");
 
         assertNotNull( createdDevice );
         assertNotNull( returnedDevice );

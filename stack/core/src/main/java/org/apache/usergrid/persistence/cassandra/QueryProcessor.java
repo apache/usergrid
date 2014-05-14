@@ -30,8 +30,8 @@ public interface QueryProcessor {
     int PAGE_SIZE = 1000;
 
     /**
-     * Apply cursor position and sort order to this slice. This should only be invoke at evaluation time to ensure that
-     * the IR tree has already been fully constructed
+     * Apply cursor position and sort order to this slice. This should only be invoke 
+     * at evaluation time to ensure that the IR tree has already been fully constructed
      */
     void applyCursorAndSort(QuerySlice slice);
 

@@ -1800,12 +1800,6 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public Entity get( UUID entityid ) throws Exception {
-        return getEntity( entityid, null );
-    }
-
-
-    @Override
     public EntityRef getRef( UUID entityId ) throws Exception {
         String entityType = getEntityType( entityId );
         if ( entityType == null ) {
@@ -2868,7 +2862,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public Entity get(UUID entityId, String type) throws Exception {
-        return get(entityId);
+        return get( new SimpleEntityRef( type, entityId ));
     }
 
     @Override

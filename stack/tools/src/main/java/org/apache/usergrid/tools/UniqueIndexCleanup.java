@@ -203,6 +203,8 @@ public class UniqueIndexCleanup extends ToolBase {
 
                     for ( ScanColumn col : ids ) {
                         final UUID id = col.getUUID();
+                        String type = getDefaultSchema().getCollectionType("application", collectionName);
+
                         boolean reIndex = false;
 
                         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -271,7 +273,7 @@ public class UniqueIndexCleanup extends ToolBase {
 
                             //force this entity to be updated
                             if ( reIndex ) {
-                                Entity entity = em.get( id );
+                                Entity entity = em.get( id, type );
 
                                 //entity may not exist, but we should have deleted rows from the index
                                 if ( entity == null ) {

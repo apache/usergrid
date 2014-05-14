@@ -57,7 +57,7 @@ public class AbstractCollectionService extends AbstractService {
         if ( !isRootService() ) {
             return null;
         }
-        Entity entity = em.get( uuid );
+        Entity entity = em.get( uuid, this.getEntityType() );
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -91,7 +91,7 @@ public class AbstractCollectionService extends AbstractService {
         EntityRef entity = null;
 
         if ( !context.moreParameters() ) {
-            entity = em.get( id );
+            entity = em.get( id, this.getEntityType() );
 
             entity = importEntity( context, ( Entity ) entity );
         }
@@ -270,7 +270,7 @@ public class AbstractCollectionService extends AbstractService {
 
         checkPermissionsForEntity( context, id );
 
-        Entity item = em.get( id );
+        Entity item = em.get( id, this.getEntityType() );
         if ( item != null ) {
             validateEntityType( item, id );
             updateEntity( context, item, context.getPayload() );
@@ -416,7 +416,7 @@ public class AbstractCollectionService extends AbstractService {
         }
         checkPermissionsForEntity( context, id );
 
-        Entity entity = em.get( id );
+        Entity entity = em.get( id, this.getEntityType() );
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -468,7 +468,7 @@ public class AbstractCollectionService extends AbstractService {
             return getItemById( context, id );
         }
 
-        Entity item = em.get( id );
+        Entity item = em.get( id, this.getEntityType() );
         if ( item == null ) {
             throw new ServiceResourceNotFoundException( context );
         }

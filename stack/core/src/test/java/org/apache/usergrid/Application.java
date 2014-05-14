@@ -105,9 +105,6 @@ public interface Application extends TestRule {
      *
      * @throws Exception if anything goes wrong accessing the entity
      */
-    @Deprecated
-    Entity get( UUID id ) throws Exception;
-
     Entity get( UUID id, String type ) throws Exception;
 
     /**
