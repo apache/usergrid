@@ -27,7 +27,7 @@ import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class QueueManagerFactoryImpl implements QueueManagerFactory {

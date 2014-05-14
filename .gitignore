@@ -54,3 +54,7 @@ usergrid-UNIT.properties
 /portal/index-debug.html
 /portal/dist/usergrid-portal/
 /portal/dist/appsvc-ui/
+/portal/nbproject/project.properties
+/portal/nbproject/project.xml
+/stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/QueryFilterParser.java
+/stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/QueryFilterLexer.java

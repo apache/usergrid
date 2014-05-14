@@ -30,7 +30,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.cassandra.CursorCache;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * Simple iterator to perform Unions

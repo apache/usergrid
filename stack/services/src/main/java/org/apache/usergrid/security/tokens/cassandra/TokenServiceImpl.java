@@ -66,7 +66,7 @@ import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.utils.MapUtils.hasKeys;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
-import static org.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class TokenServiceImpl implements TokenService {
