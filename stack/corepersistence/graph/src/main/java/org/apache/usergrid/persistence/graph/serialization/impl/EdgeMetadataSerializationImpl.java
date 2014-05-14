@@ -41,7 +41,7 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
-import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.StringColumnParser;
@@ -334,7 +334,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
         final RangeBuilder rangeBuilder =
-                new RangeBuilder().setLimit( cassandraConfig.getScanPageSize() ).setStart( search.getLast().or( "" ) );
+                new RangeBuilder().setLimit( graphFig.getScanPageSize() ).setStart( search.getLast().or( "" ) );
 
         RowQuery<ScopedRowKey<OrganizationScope, Id>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
@@ -370,7 +370,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
         //resume from the last if specified.  Also set the range
         final ByteBufferRange searchRange =
-                new RangeBuilder().setLimit( cassandraConfig.getScanPageSize() ).setStart( search.getLast().or( "" ) )
+                new RangeBuilder().setLimit( graphFig.getScanPageSize() ).setStart( search.getLast().or( "" ) )
                                   .build();
 
         RowQuery<ScopedRowKey<OrganizationScope, EdgeIdTypeKey>, String> query =

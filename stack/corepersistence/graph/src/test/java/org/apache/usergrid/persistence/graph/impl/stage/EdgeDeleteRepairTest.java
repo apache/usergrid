@@ -201,4 +201,13 @@ public class EdgeDeleteRepairTest {
 
         assertFalse( itr.hasNext() );
     }
+
+
+    /**
+     * If the edge is NOT marked as deleted in the commit log, then we don't want to
+     */
+    @Test
+    public void notDeletedInCommitLog(){
+
+    }
 }

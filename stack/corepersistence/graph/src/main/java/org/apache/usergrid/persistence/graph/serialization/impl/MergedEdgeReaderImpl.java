@@ -30,13 +30,14 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.rx.OrderedMerge;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 
 import com.fasterxml.uuid.UUIDComparator;
@@ -44,7 +45,6 @@ import com.google.inject.Singleton;
 
 import rx.Observable;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 
@@ -61,7 +61,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
 
     private final EdgeSerialization commitLogSerialization;
     private final EdgeSerialization permanentSerialization;
-    private final CassandraConfig cassandraConfig;
+    private final GraphFig graphFig;
 
 
 
@@ -69,10 +69,10 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
     @Inject
     public MergedEdgeReaderImpl( @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
                                  @StorageEdgeSerialization final EdgeSerialization permanentSerialization,
-                                 final CassandraConfig cassandraConfig ) {
+                                 final GraphFig graphFig) {
         this.commitLogSerialization = commitLogSerialization;
         this.permanentSerialization = permanentSerialization;
-        this.cassandraConfig = cassandraConfig;
+        this.graphFig = graphFig;
     }
 
 
@@ -95,11 +95,12 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                     @Override
                     protected Iterator<MarkedEdge> getIterator() {
                         return permanentSerialization.getEdgesFromSource( scope, edgeType );
+//                        return Collections.emptyIterator();
                     }
                 } ).subscribeOn( Schedulers.io() );
 
         return OrderedMerge
-                .orderedMerge( SourceEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
+                .orderedMerge( SourceEdgeComparator.INSTANCE, graphFig.getScanPageSize() / 2, commitLog,
                         permanent ).distinctUntilChanged().doOnNext( RX_LOG);
     }
 
@@ -125,7 +126,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                 } ).subscribeOn( Schedulers.io() );
 
         return OrderedMerge
-                .orderedMerge( SourceEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
+                .orderedMerge( SourceEdgeComparator.INSTANCE, graphFig.getScanPageSize() / 2, commitLog,
                         permanent ).distinctUntilChanged().doOnNext( RX_LOG);
     }
 
@@ -149,7 +150,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                 } ).subscribeOn( Schedulers.io() );
 
         return OrderedMerge
-                .orderedMerge( TargetEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
+                .orderedMerge( TargetEdgeComparator.INSTANCE, graphFig.getScanPageSize() / 2, commitLog,
                         permanent ).distinctUntilChanged().doOnNext( RX_LOG);
     }
 
@@ -174,7 +175,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                 } ).subscribeOn( Schedulers.io() );
 
         return OrderedMerge
-                .orderedMerge( TargetEdgeComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog,
+                .orderedMerge( TargetEdgeComparator.INSTANCE, graphFig.getScanPageSize() / 2, commitLog,
                         permanent ).distinctUntilChanged().doOnNext( RX_LOG);
     }
 
@@ -199,7 +200,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                 } ).subscribeOn( Schedulers.io() );
 
         return OrderedMerge
-                .orderedMerge( EdgeVersionComparator.INSTANCE, cassandraConfig.getScanPageSize() / 2, commitLog, permanent )
+                .orderedMerge( EdgeVersionComparator.INSTANCE, graphFig.getScanPageSize() / 2, commitLog, permanent )
                 .distinctUntilChanged().doOnNext( RX_LOG);
     }
 

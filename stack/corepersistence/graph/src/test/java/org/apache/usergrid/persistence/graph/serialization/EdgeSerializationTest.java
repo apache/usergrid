@@ -19,8 +19,10 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -46,6 +48,8 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.ColumnFamily;
+import com.netflix.astyanax.serializers.StringSerializer;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createGetByEdge;
@@ -770,6 +774,21 @@ public abstract class EdgeSerializationTest {
         assertFalse( results.hasNext() );
     }
 
+    @Test
+    public void testColumnTimestamps() throws ConnectionException {
+        MutationBatch batch = keyspace.prepareMutationBatch();
+
+        ColumnFamily cf = new ColumnFamily<String, String>( "test", StringSerializer.get(), StringSerializer.get() );
+
+        keyspace.createColumnFamily( cf, new HashMap<String, Object>()  );
+
+        batch.withRow(cf, "test").putColumn( "test", true );
+
+        batch.execute();
+
+
+        keyspace.
+    }
 
     private void verify( Iterator<MarkedEdge> results, int expectedCount ) {
         int count = 0;
