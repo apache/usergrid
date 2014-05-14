@@ -1069,8 +1069,8 @@ public class EntityManagerImpl implements EntityManager {
         Map<String, Object> results = null;
 
         // if (entityType == null) {
-        results = deserializeEntityProperties(
-                cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, entity_key ) );
+        results = deserializeEntityProperties( cass.getAllColumns( 
+                cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, entity_key ) );
         // } else {
         // Set<String> columnNames = Schema.getPropertyNames(entityType);
         // results = getColumns(getApplicationKeyspace(applicationId),
@@ -1078,7 +1078,8 @@ public class EntityManagerImpl implements EntityManager {
         // }
 
         if ( results == null ) {
-            logger.warn( "getEntity(): No properties found for entity {}, probably doesn't exist...", entityId );
+            logger.warn( "getEntity(): No properties found for entity {}, "
+                    + "probably doesn't exist...", entityId );
             return null;
         }
 
@@ -1087,7 +1088,8 @@ public class EntityManagerImpl implements EntityManager {
 
         if ( !entityId.equals( id ) ) {
 
-            logger.error( "Expected entity id {}, found {}. Returning null entity", new Object[]{entityId, id, new Throwable()} );
+            logger.error( "Expected entity id {}, found {}. Returning null entity", 
+                    new Object[]{entityId, id, new Throwable()} );
             return null;
         }
 
@@ -1109,7 +1111,8 @@ public class EntityManagerImpl implements EntityManager {
      * @throws Exception the exception
      */
     @Metered( group = "core", name = "EntityManager_getEntities" )
-    public <A extends Entity> List<A> getEntities( Collection<UUID> entityIds, Class<A> entityClass ) throws Exception {
+    public <A extends Entity> List<A> getEntities( 
+            Collection<UUID> entityIds, Class<A> entityClass ) throws Exception {
 
         List<A> entities = new ArrayList<A>();
 
@@ -1122,8 +1125,8 @@ public class EntityManagerImpl implements EntityManager {
         Rows<UUID, String, ByteBuffer> results = null;
 
         // if (entityType == null) {
-        results =
-                cass.getRows( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, entityIds, ue, se, be );
+        results = cass.getRows( cass.getApplicationKeyspace( applicationId ), 
+                ENTITY_PROPERTIES, entityIds, ue, se, be );
         // } else {
         // Set<String> columnNames = Schema.getPropertyNames(entityType);
         // results = getRows(getApplicationKeyspace(applicationId),
@@ -1136,7 +1139,8 @@ public class EntityManagerImpl implements EntityManager {
                 Map<String, Object> properties = deserializeEntityProperties( results.getByKey( key ) );
 
                 if ( properties == null ) {
-                    logger.error( "Error deserializing entity with key {} entity probaby doesn't exist, where did this key come from?", key );
+                    logger.error( "Error deserializing entity with key {} entity probaby "
+                            + "doesn't exist, where did this key come from?", key );
                     continue;
                 }
 
@@ -1828,31 +1832,16 @@ public class EntityManagerImpl implements EntityManager {
             e = ( A ) getEntity( entityId, ( Class<Entity> ) entityClass );
         }
         catch ( ClassCastException e1 ) {
-            logger.error( "Unable to get typed entity: {} of class {}", new Object[] {entityId, entityClass.getCanonicalName(), e1} );
+            logger.error( "Unable to get typed entity: {} of class {}", 
+                    new Object[] {entityId, entityClass.getCanonicalName(), e1} );
         }
         return e;
     }
 
 
     @Override
-    public Results get( Collection<UUID> entityIds, Results.Level resultsLevel ) throws Exception {
-        List<? extends Entity> results = getEntities( entityIds, null );
-        return Results.fromEntities( results );
-    }
-
-
-    /* (non-Javadoc)
-   * @see org.apache.usergrid.persistence.EntityManager#get(java.util.Collection)
-   */
-    @Override
-    public Results get( Collection<UUID> entityIds ) throws Exception {
-        return fromEntities( getEntities( entityIds, null ) );
-    }
-
-
-    @Override
-    public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, Results.Level resultsLevel )
-            throws Exception {
+    public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, 
+            Results.Level resultsLevel ) throws Exception {
         return fromEntities( getEntities( entityIds, entityClass ) );
     }
 
@@ -1869,15 +1858,15 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    public Results loadEntities( Results results, Results.Level resultsLevel, Map<UUID, UUID> associatedMap, int count )
-            throws Exception {
+    public Results loadEntities( Results results, Results.Level resultsLevel, 
+            Map<UUID, UUID> associatedMap, int count ) throws Exception {
 
         results = results.trim( count );
         if ( resultsLevel.ordinal() <= results.getLevel().ordinal() ) {
             return results;
         }
 
-        results.setEntities( getEntities( results.getIds(), null ) );
+        results.setEntities( getEntities( results.getIds(), (Class)null ) );
 
         if ( resultsLevel == Results.Level.LINKED_PROPERTIES ) {
             List<Entity> entities = results.getEntities();
@@ -1895,7 +1884,9 @@ public class EntityManagerImpl implements EntityManager {
                     }
                 }
             }
-            List<DynamicEntity> linked = getEntities( new ArrayList<UUID>( associatedIds.values() ), null );
+            List<DynamicEntity> linked = getEntities( 
+                    new ArrayList<UUID>( associatedIds.values() ), (Class)null );
+
             for ( DynamicEntity l : linked ) {
                 Map<String, Object> p = l.getDynamicProperties();
                 if ( ( p != null ) && ( p.size() > 0 ) ) {
@@ -2862,5 +2853,26 @@ public class EntityManagerImpl implements EntityManager {
         // no action necessary
     }
 
+    @Override
+    public Results getEntities(List<UUID> ids, String type) {
+
+        ArrayList<Entity> entities = new ArrayList<Entity>();
+
+        for ( UUID uuid : ids ) {
+            EntityRef ref = new SimpleEntityRef( type, uuid );
+            Entity entity = null; 
+            try {
+                entity = get( ref );
+            } catch (Exception ex) {
+                logger.warn("Entity {}/{} not found", uuid, type);
+            }
+
+            if ( entity != null) {
+                entities.add( entity );
+            }
+        }
+
+        return Results.fromEntities( entities );
+    }
 
 }

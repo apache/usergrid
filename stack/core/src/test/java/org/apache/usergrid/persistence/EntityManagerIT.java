@@ -165,7 +165,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         }
 
         i = 0;
-        Results results = em.get( ids, Results.Level.CORE_PROPERTIES );
+        Results results = em.getEntities( ids, "thing" );
         for ( Entity thing : results ) {
             assertNotNull( "thing should not be null", thing );
 
@@ -241,9 +241,9 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         Entity entity = em.get( thing.getUuid(), "thing" );
         assertNotNull( "entity should not be null", entity );
-        em.setProperty( entity, "alpha", 1 );
-        em.setProperty( entity, "beta", 2 );
-        em.setProperty( entity, "gamma", 3 );
+        em.setProperty( entity, "alpha", 1L );
+        em.setProperty( entity, "beta", 2L );
+        em.setProperty( entity, "gamma", 3L );
 
         Map<String, Object> props = em.getProperties( entity );
         assertNotNull( "properties should not be null", props );

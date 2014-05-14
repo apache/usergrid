@@ -148,7 +148,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         }
 
         i = 0;
-        Results results = em.get( ids, Results.Level.CORE_PROPERTIES );
+        Results results = em.getEntities( ids, "thing" );
         for ( Entity thing : results ) {
             assertNotNull( "thing should not be null", thing );
 
