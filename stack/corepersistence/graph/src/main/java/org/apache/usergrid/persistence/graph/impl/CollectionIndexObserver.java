@@ -57,7 +57,7 @@ public class CollectionIndexObserver{
 //         *
 //         * We're essentially mapping a tree structure in to a graph edge
 //         */
-//        Edge edge = new SimpleMarkedEdge( scope.getOwner(), scope.getName(), entity.getId(), entity.getVersion(), false );
+//        Edge edge = new SimpleMarkedEdge( scope.getOwner(), scope.getName(), entity.getId(), entity.getTimestamp(), false );
 //
 //        //entity exists, write the edge
 //        if(entity.getEntity().isPresent()){

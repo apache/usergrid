@@ -215,6 +215,8 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
                         return;
                     }
 
+                    log.trace( "Max element is item {}", max );
+
                     subscriber.onNext( maxObserver.pop() );
                 }
             }

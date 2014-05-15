@@ -24,40 +24,32 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
-import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
-import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
-import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.functions.Func4;
+import rx.functions.Func2;
 
 
 /**
  * Construct the asynchronous delete operation from the listener
  */
 @Singleton
-public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, EdgeEvent<Edge>> {
+public class EdgeDeleteListener implements MessageListener<EdgeEvent<MarkedEdge>, EdgeEvent<MarkedEdge>> {
 
 
-    private final EdgeMetadataSerialization edgeMetadataSerialization;
-    private final GraphManagerFactory graphManagerFactory;
-    private final Keyspace keyspace;
-    private final GraphFig graphFig;
+    private final EdgeDeleteRepair edgeDeleteRepair;
+    private final EdgeMetaRepair edgeMetaRepair;
 
 
     @Inject
+<<<<<<< HEAD
     public EdgeDeleteListener(  final EdgeMetadataSerialization edgeMetadataSerialization,
                                 final GraphManagerFactory graphManagerFactory, final Keyspace keyspace,
                                 @EdgeDelete final AsyncProcessor edgeDelete, final GraphFig graphFig ) {
@@ -65,17 +57,25 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
         this.graphManagerFactory = graphManagerFactory;
         this.keyspace = keyspace;
         this.graphFig = graphFig;
+=======
+    public EdgeDeleteListener( @EdgeDelete final AsyncProcessor edgeDelete, final EdgeDeleteRepair edgeDeleteRepair,
+                               final EdgeMetaRepair edgeMetaRepair ) {
+
+        this.edgeDeleteRepair = edgeDeleteRepair;
+        this.edgeMetaRepair = edgeMetaRepair;
+>>>>>>> 74f95ac4c39c6d2e48dcee56d45a5b69d9b4ea5e
 
         edgeDelete.addListener( this );
     }
 
 
     @Override
-    public Observable<EdgeEvent<Edge>> receive( final EdgeEvent<Edge> delete ) {
+    public Observable<EdgeEvent<MarkedEdge>> receive( final EdgeEvent<MarkedEdge> delete ) {
 
-        final Edge edge = delete.getData();
+        final MarkedEdge edge = delete.getData();
         final OrganizationScope scope = delete.getOrganizationScope();
         final UUID maxVersion = edge.getVersion();
+<<<<<<< HEAD
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( scope );
 
 
@@ -197,5 +197,37 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                 return delete;
             }
         } );
+=======
+
+        return edgeDeleteRepair.repair( scope, edge, delete.getTimestamp() )
+
+                               .flatMap( new Func1<MarkedEdge, Observable<Integer>>() {
+                                   @Override
+                                   public Observable<Integer> call( final MarkedEdge markedEdge ) {
+                                       Observable<Integer> sourceDelete = edgeMetaRepair
+                                               .repairSources( scope, edge.getSourceNode(), edge.getType(),
+                                                       maxVersion );
+
+                                       Observable<Integer> targetDelete = edgeMetaRepair
+                                               .repairTargets( scope, edge.getTargetNode(), edge.getType(),
+                                                       maxVersion );
+
+                                       return Observable.zip( sourceDelete, targetDelete,
+                                               new Func2<Integer, Integer, Integer>() {
+                                                   @Override
+                                                   public Integer call( final Integer sourceCount,
+                                                                        final Integer targetCount ) {
+                                                       return sourceCount + targetCount;
+                                                   }
+                                               } );
+                                   }
+                               } ).map( new Func1<Integer, EdgeEvent<MarkedEdge>>() {
+
+                    @Override
+                    public EdgeEvent<MarkedEdge> call( final Integer integer ) {
+                        return delete;
+                    }
+                } );
+>>>>>>> 74f95ac4c39c6d2e48dcee56d45a5b69d9b4ea5e
     }
 }

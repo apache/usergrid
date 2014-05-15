@@ -16,14 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.serialization.impl;
+package org.apache.usergrid.persistence.core.astyanax;
 
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,33 +38,27 @@ public class CassandraConfigImpl implements CassandraConfig {
 
     private ConsistencyLevel readCl;
     private ConsistencyLevel writeCl;
-    private int pageSize;
 
 
     @Inject
-    public CassandraConfigImpl( final GraphFig graphFig ) {
+    public CassandraConfigImpl( final CassandraFig cassandraFig ) {
 
-        this.readCl = ConsistencyLevel.valueOf( graphFig.getReadCL() );
+        this.readCl = ConsistencyLevel.valueOf( cassandraFig.getReadCL() );
 
-        this.writeCl = ConsistencyLevel.valueOf( graphFig.getWriteCL() );
+        this.writeCl = ConsistencyLevel.valueOf( cassandraFig.getWriteCL() );
 
-        this.pageSize = graphFig.getScanPageSize();
 
         //add the listeners to update the values
-        graphFig.addPropertyChangeListener( new PropertyChangeListener() {
+        cassandraFig.addPropertyChangeListener( new PropertyChangeListener() {
             @Override
             public void propertyChange( final PropertyChangeEvent evt ) {
                 final String propName = evt.getPropertyName();
 
-                if ( GraphFig.SCAN_PAGE_SIZE.equals( propName ) ) {
-                    pageSize = ( Integer ) evt.getNewValue();
-                }
-
-                else if ( GraphFig.READ_CL.equals( propName ) ) {
+                if ( CassandraFig.READ_CL.equals( propName ) ) {
                     readCl = ConsistencyLevel.valueOf( evt.getNewValue().toString() );
                 }
 
-                else if ( GraphFig.WRITE_CL.equals( propName ) ) {
+                else if ( CassandraFig.WRITE_CL.equals( propName ) ) {
                     writeCl = ConsistencyLevel.valueOf( evt.getNewValue().toString() );
                 }
             }
@@ -86,8 +78,4 @@ public class CassandraConfigImpl implements CassandraConfig {
     }
 
 
-    @Override
-    public int getScanPageSize() {
-        return pageSize;
-    }
 }

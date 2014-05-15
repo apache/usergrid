@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.graph.serialization;
+package org.apache.usergrid.persistence.core.astyanax;
 
 
 import com.netflix.astyanax.model.ConsistencyLevel;
@@ -24,9 +24,5 @@ public interface CassandraConfig {
      */
     public ConsistencyLevel getWriteCL();
 
-    /**
-     * Get the currently configured page size
-     * @return
-     */
-    public int getScanPageSize();
+
 }

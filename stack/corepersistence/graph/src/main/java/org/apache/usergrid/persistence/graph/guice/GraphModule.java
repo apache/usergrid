@@ -31,10 +31,10 @@ import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
 import org.apache.usergrid.persistence.core.consistency.TimeoutQueue;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.migration.Migration;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.EdgeDeleteListener;
 import org.apache.usergrid.persistence.graph.impl.EdgeEvent;
 import org.apache.usergrid.persistence.graph.impl.EdgeWriteListener;
@@ -44,11 +44,12 @@ import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepairImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepairImpl;
-import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompact;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompactImpl;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.CassandraConfigImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
@@ -95,8 +96,6 @@ public class GraphModule extends AbstractModule {
         bind( EdgeMetadataSerialization.class ).to( EdgeMetadataSerializationImpl.class );
         bind( NodeSerialization.class ).to( NodeSerializationImpl.class );
 
-
-        bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
         bind( TimeService.class ).to( TimeServiceImpl.class );
 
         // create a guice factory for getting our collection manager
@@ -124,6 +123,7 @@ public class GraphModule extends AbstractModule {
         //Repair/cleanup classes.
         bind( EdgeMetaRepair.class ).to( EdgeMetaRepairImpl.class );
         bind( EdgeDeleteRepair.class ).to( EdgeDeleteRepairImpl.class );
+        bind( EdgeWriteCompact.class ).to( EdgeWriteCompactImpl.class );
 
 
         /**
@@ -205,7 +205,7 @@ public class GraphModule extends AbstractModule {
     @Singleton
     @Inject
     @EdgeDelete
-    public AsyncProcessor<EdgeEvent<Edge>> edgeDelete( @EdgeDelete final TimeoutQueue<EdgeEvent<Edge>> queue,
+    public AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDelete( @EdgeDelete final TimeoutQueue<EdgeEvent<MarkedEdge>> queue,
                                                        final ConsistencyFig consistencyFig ) {
         return new AsyncProcessorImpl<>( queue, consistencyFig );
     }
@@ -215,7 +215,7 @@ public class GraphModule extends AbstractModule {
     @Inject
     @Singleton
     @EdgeDelete
-    public TimeoutQueue<EdgeEvent<Edge>> edgeDeleteQueue( final TimeService timeService ) {
+    public TimeoutQueue<EdgeEvent<MarkedEdge>> edgeDeleteQueue( final TimeService timeService ) {
         return new LocalTimeoutQueue<>( timeService );
     }
 
@@ -224,34 +224,28 @@ public class GraphModule extends AbstractModule {
      * Create the provider for the node delete listener
      */
     public static class EdgeDeleteListenerProvider
-            implements Provider<MessageListener<EdgeEvent<Edge>, EdgeEvent<Edge>>> {
+            implements Provider<MessageListener<EdgeEvent<MarkedEdge>, EdgeEvent<MarkedEdge>>> {
 
 
-        private final EdgeMetadataSerialization edgeMetadataSerialization;
-        private final GraphManagerFactory graphManagerFactory;
-        private final Keyspace keyspace;
-        private final AsyncProcessor<EdgeEvent<Edge>> edgeDelete;
-        private final GraphFig graphFig;
+        private final EdgeDeleteRepair edgeDeleteRepair;
+        private final EdgeMetaRepair edgeMetaRepair;
+        final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDelete;
 
 
         @Inject
-        public EdgeDeleteListenerProvider( final EdgeMetadataSerialization edgeMetadataSerialization,
-                                           final GraphManagerFactory graphManagerFactory, final Keyspace keyspace,
-                                           @EdgeDelete final AsyncProcessor<EdgeEvent<Edge>> edgeDelete,
-                                           final GraphFig graphFig ) {
+        public EdgeDeleteListenerProvider(
+                                           @EdgeDelete final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDelete,
+                                           final EdgeDeleteRepair edgeDeleteRepair, final EdgeMetaRepair edgeMetaRepair) {
 
-            this.edgeMetadataSerialization = edgeMetadataSerialization;
-            this.graphManagerFactory = graphManagerFactory;
-            this.keyspace = keyspace;
+            this.edgeDeleteRepair = edgeDeleteRepair;
             this.edgeDelete = edgeDelete;
-            this.graphFig = graphFig;
+            this.edgeMetaRepair = edgeMetaRepair;
         }
 
 
         @Override
-        public MessageListener<EdgeEvent<Edge>, EdgeEvent<Edge>> get() {
-            return new EdgeDeleteListener( edgeMetadataSerialization, graphManagerFactory, keyspace, edgeDelete,
-                    graphFig );
+        public MessageListener<EdgeEvent<MarkedEdge>, EdgeEvent<MarkedEdge>> get() {
+            return new EdgeDeleteListener( edgeDelete, edgeDeleteRepair, edgeMetaRepair );
         }
     }
 
@@ -301,8 +295,8 @@ public class GraphModule extends AbstractModule {
                                            final GraphFig graphFig,
                                            @NodeDelete final AsyncProcessor<EdgeEvent<Id>> nodeDelete,
                                            @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
-                                           @StorageEdgeSerialization final EdgeSerialization storageSerialization,
-                                           final MergedEdgeReader mergedEdgeReader, final Keyspace keyspace ) {
+                                           @StorageEdgeSerialization final EdgeSerialization storageSerialization, final MergedEdgeReader mergedEdgeReader,
+                                           final Keyspace keyspace ) {
 
             this.nodeSerialization = nodeSerialization;
             this.edgeMetadataSerialization = edgeMetadataSerialization;
@@ -331,7 +325,7 @@ public class GraphModule extends AbstractModule {
     @Singleton
     @Inject
     @EdgeWrite
-    public AsyncProcessor<EdgeEvent<Edge>> edgeWrite( @EdgeWrite final TimeoutQueue<EdgeEvent<Edge>> queue,
+    public AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite( @EdgeWrite final TimeoutQueue<EdgeEvent<MarkedEdge>> queue,
                                                       final ConsistencyFig consistencyFig ) {
         return new AsyncProcessorImpl<>( queue, consistencyFig );
     }
@@ -341,7 +335,7 @@ public class GraphModule extends AbstractModule {
     @Singleton
     @Inject
     @EdgeWrite
-    public TimeoutQueue<EdgeEvent<Edge>> edgeWriteQueue( final TimeService timeService ) {
+    public TimeoutQueue<EdgeEvent<MarkedEdge>> edgeWriteQueue( final TimeService timeService ) {
         return new LocalTimeoutQueue<>( timeService );
     }
 
@@ -353,32 +347,23 @@ public class GraphModule extends AbstractModule {
      *
      * https://code.google.com/p/google-guice/issues/detail?id=216
      */
-    public static class EdgeWriteListenerProvider implements Provider<MessageListener<EdgeEvent<Edge>, Integer>> {
+    public static class EdgeWriteListenerProvider implements Provider<MessageListener<EdgeEvent<MarkedEdge>, Integer>> {
 
-        private final EdgeSerialization commitLog;
-        private final EdgeSerialization permanentStorage;
-        private final Keyspace keyspace;
-        private final AsyncProcessor<EdgeEvent<Edge>> edgeWrite;
-        private final GraphFig graphFig;
+        private final EdgeWriteCompact edgeWriteCompact;
+        private final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite;
 
 
         @Inject
-        public EdgeWriteListenerProvider( @CommitLogEdgeSerialization final EdgeSerialization commitLog,
-                                       @StorageEdgeSerialization final EdgeSerialization permanentStorage,
-                                       final Keyspace keyspace,
-                                       @EdgeWrite final AsyncProcessor<EdgeEvent<Edge>> edgeWrite,
-                                       final GraphFig graphFig ) {
-            this.commitLog = commitLog;
-            this.permanentStorage = permanentStorage;
-            this.keyspace = keyspace;
+        public EdgeWriteListenerProvider( final EdgeWriteCompact edgeWriteCompact,
+                                       @EdgeWrite final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite ) {
+            this.edgeWriteCompact = edgeWriteCompact;
             this.edgeWrite = edgeWrite;
-            this.graphFig = graphFig;
         }
 
 
         @Override
-        public MessageListener<EdgeEvent<Edge>, Integer> get() {
-            return new EdgeWriteListener( commitLog, permanentStorage, keyspace, edgeWrite, graphFig );
+        public MessageListener<EdgeEvent<MarkedEdge>, Integer> get() {
+            return new EdgeWriteListener( edgeWriteCompact, edgeWrite);
         }
     }
 }

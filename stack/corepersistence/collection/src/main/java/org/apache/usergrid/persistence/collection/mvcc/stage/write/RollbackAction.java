@@ -32,8 +32,8 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Scheduler;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
-import rx.util.functions.Action1;
 
 
 /**

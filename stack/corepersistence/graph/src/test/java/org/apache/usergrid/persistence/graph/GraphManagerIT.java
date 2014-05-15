@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.graph;
 
 
+import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -29,6 +30,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.apache.cassandra.db.marshal.UUIDType;
+
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
@@ -38,7 +41,9 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
+import com.netflix.astyanax.serializers.UUIDSerializer;
 
 import rx.Observable;
 
@@ -50,15 +55,12 @@ import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.crea
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
 public abstract class GraphManagerIT {
-
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
 
     @Inject
@@ -602,8 +604,6 @@ public abstract class GraphManagerIT {
         returned = gm.deleteEdge( edge ).toBlockingObservable().last();
 
 
-        assertEquals( "Correct edge returned", edge, returned );
-
 
         //now test retrieval, should be null
         edges = gm.loadEdgesFromSource( search );
@@ -972,7 +972,7 @@ public abstract class GraphManagerIT {
 
 
     @Test
-    public void testMarkSourceEdges() {
+    public void testMarkSourceEdges() throws InterruptedException {
 
         final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
@@ -992,6 +992,20 @@ public abstract class GraphManagerIT {
         final UUID maxVersion = UUIDGenerator.newTimeUUID();
 
 
+
+        assertTrue( UUIDComparator.staticCompare( maxVersion, edge2.getVersion() ) > 0);
+        assertTrue( UUIDComparator.staticCompare( maxVersion, edge1.getVersion() ) > 0);
+
+        ByteBuffer edge1Buff = UUIDSerializer.get().toByteBuffer( edge1.getVersion() );
+        ByteBuffer edge2Buff = UUIDSerializer.get().toByteBuffer( edge2.getVersion() );
+        ByteBuffer maxBuff = UUIDSerializer.get().toByteBuffer( maxVersion );
+
+
+
+        assertTrue( UUIDType.instance.compare( maxBuff.duplicate(), edge1Buff.duplicate() ) > 0);
+        assertTrue( UUIDType.instance.compare( maxBuff.duplicate(), edge2Buff.duplicate() ) > 0);
+
+
         //get our 2 edges
         Observable<Edge> edges = gm.loadEdgesFromSource(
                 createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
@@ -999,6 +1013,8 @@ public abstract class GraphManagerIT {
 
         Iterator<Edge> results = edges.toBlockingObservable().getIterator();
 
+
+        System.out.println("\n\n\n\n\n\n\n\n\n\n");
 
         assertEquals( "Edges correct", edge2, results.next() );
 
@@ -1008,7 +1024,11 @@ public abstract class GraphManagerIT {
 
         //now delete one of the edges
 
+        System.out.println("\n\n\n\n\n\n\n\n\n\n");
+
         gm.deleteEdge( edge1 ).toBlockingObservable().last();
+
+        System.out.println("\n\n\n\n\n\n\n\n\n\n");
 
 
         edges = gm.loadEdgesFromSource(
@@ -1022,9 +1042,13 @@ public abstract class GraphManagerIT {
 
         assertFalse( "No more edges", results.hasNext() );
 
+        System.out.println("\n\n\n\n\n\n\n\n\n\n");
+
         //now delete one of the edges
 
         gm.deleteEdge( edge2 ).toBlockingObservable().last();
+
+        System.out.println("\n\n\n\n\n\n\n\n\n\n");
 
         edges = gm.loadEdgesFromSource(
                 createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
@@ -1485,7 +1509,7 @@ public abstract class GraphManagerIT {
     //            when( edge.getSourceNode() ).thenReturn( sourceId );
     //            when( edge.getType() ).thenReturn( type );
     //            when( edge.getTargetNode() ).thenReturn( targetId );
-    //            when( edge.getVersion() ).thenReturn( version );
+    //            when( edge.getTimestamp() ).thenReturn( version );
     //
     //            return edge;
     //        }

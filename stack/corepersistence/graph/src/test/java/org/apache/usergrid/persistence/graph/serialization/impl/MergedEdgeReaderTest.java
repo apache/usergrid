@@ -26,10 +26,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
-import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -53,7 +54,7 @@ import static org.mockito.Mockito.when;
 public class MergedEdgeReaderTest {
 
     protected OrganizationScope scope;
-    protected CassandraConfig config;
+    protected GraphFig config;
 
 
     @Before
@@ -68,7 +69,7 @@ public class MergedEdgeReaderTest {
         when( scope.getOrganization() ).thenReturn( orgId );
 
 
-        config = mock( CassandraConfig.class );
+        config = mock( GraphFig.class );
         when( config.getScanPageSize() ).thenReturn( 1000 );
     }
 
