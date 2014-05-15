@@ -63,6 +63,7 @@ import org.apache.usergrid.persistence.entities.JobData;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -142,8 +143,12 @@ public class ExportServiceIT {
             entity[i] = em.create( "users", userProperties );
         }
         //creates connections
-        em.createConnection( em.getRef( entity[0].getUuid() ), "Vibrations", em.getRef( entity[1].getUuid() ) );
-        em.createConnection( em.getRef( entity[1].getUuid() ), "Vibrations", em.getRef( entity[0].getUuid() ) );
+        em.createConnection( 
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ), "Vibrations", 
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ) );
+        em.createConnection( 
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ), "Vibrations", 
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ) );
 
         UUID exportUUID = exportService.schedule( payload );
 
@@ -217,8 +222,12 @@ public class ExportServiceIT {
             entity[i] = em.create( "users", userProperties );
         }
         //creates connections
-        em.createConnection( em.getRef( entity[0].getUuid() ), "Vibrations", em.getRef( entity[1].getUuid() ) );
-        em.createConnection( em.getRef( entity[1].getUuid() ), "Vibrations", em.getRef( entity[0].getUuid() ) );
+        em.createConnection( 
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid())), "Vibrations", 
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid())) );
+        em.createConnection( 
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid())), "Vibrations", 
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid())) );
 
         UUID exportUUID = exportService.schedule( payload );
 

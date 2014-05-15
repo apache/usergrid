@@ -1379,7 +1379,8 @@ public class ManagementServiceImpl implements ManagementService {
             principal.getApplicationId() != null 
                 ? principal.getApplicationId() : MANAGEMENT_APPLICATION_ID );
 
-        Entity entity = em.get( principal.getUuid(), principal.getType().getEntityType() );
+        Entity entity = em.get( new SimpleEntityRef( 
+                principal.getType().getEntityType(), principal.getUuid()));
 
         return entity;
     }
@@ -1748,7 +1749,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-        Entity entity = em.get( applicationId, "application" );
+        Entity entity = em.get( new SimpleEntityRef( "applicationId", applicationId ));
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );
@@ -2834,14 +2835,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     private CredentialsInfo readCreds( UUID appId, UUID ownerId, String key ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
-        Entity owner = em.get( ownerId, "user" );
+        Entity owner = em.get( new SimpleEntityRef("user", ownerId ));
         return ( CredentialsInfo ) em.getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, key );
     }
 
 
     private Set<CredentialsInfo> readUserPasswordHistory( UUID appId, UUID ownerId ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
-        Entity owner = em.get( ownerId, "user" );
+        Entity owner = em.get( new SimpleEntityRef("user", ownerId ));
         return ( Set<CredentialsInfo> ) em
                 .getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, USER_PASSWORD_HISTORY );
     }
