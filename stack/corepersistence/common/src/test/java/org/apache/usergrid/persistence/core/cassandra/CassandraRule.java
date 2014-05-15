@@ -1,24 +1,20 @@
 package org.apache.usergrid.persistence.core.cassandra;
 
 
+import com.google.common.io.Files;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.netflix.astyanax.test.EmbeddedCassandra;
 import java.io.File;
 import java.io.IOException;
-
+import org.apache.cassandra.io.util.FileUtils;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
 import org.safehaus.guicyfig.Env;
 import org.safehaus.guicyfig.EnvironResource;
 import org.safehaus.guicyfig.GuicyFigModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.cassandra.io.util.FileUtils;
-
-import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
-
-import com.google.common.io.Files;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.netflix.astyanax.test.EmbeddedCassandra;
 
 
 /**
@@ -34,17 +30,21 @@ public class CassandraRule extends EnvironResource {
 
     private static boolean started = false;
 
+    private final CassandraFig cassandraFig;
+
 
     public CassandraRule() {
         super( Env.UNIT );
+        Injector injector = Guice.createInjector( new GuicyFigModule( CassandraFig.class ) );
+        cassandraFig = injector.getInstance( CassandraFig.class );
     }
-
-
-
-
 
     @Override
     protected void before() throws Throwable {
+
+        if ( !cassandraFig.isEmbedded()) {
+            LOG.info("Using external Cassandra"); 
+        }
 
         if ( started ) {
             return;

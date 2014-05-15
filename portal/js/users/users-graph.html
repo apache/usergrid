@@ -24,10 +24,11 @@
 
 
     <div class="button-strip">
+      <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users follow user')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_graph_follow_user}}" tooltip-placement="left">(?)</a> 
       <button class="btn btn-primary" ng-click="showModal('followUser')">Follow User</button>
     </div>
     <br>
-    <h4>Following</h4>
+      <h4>Following <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users following list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_graph_following}}" tooltip-placement="right">(?)</a></h4>
     <table class="table table-striped">
       <tbody>
       <tr class="table-header">
@@ -45,7 +46,7 @@
       </tbody>
     </table>
 
-    <h4>Followers</h4>
+      <h4>Followers <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users followers list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_graph_followers}}" tooltip-placement="right">(?)</a></h4>
     <table class="table table-striped">
       <tbody>
       <tr class="table-header">

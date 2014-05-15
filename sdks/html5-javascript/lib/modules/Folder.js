@@ -1,4 +1,23 @@
 /*
+ *Licensed to the Apache Software Foundation (ASF) under one
+ *or more contributor license agreements.  See the NOTICE file
+ *distributed with this work for additional information
+ *regarding copyright ownership.  The ASF licenses this file
+ *to you under the Apache License, Version 2.0 (the
+ *"License"); you may not use this file except in compliance
+ *with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+
+ *Unless required by applicable law or agreed to in writing,
+ *software distributed under the License is distributed on an
+ *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *KIND, either express or implied.  See the License for the
+ *specific language governing permissions and limitations
+ *under the License.
+ */
+
+/*
  *  A class to model a Usergrid folder.
  *
  *  @constructor
@@ -12,18 +31,20 @@ Usergrid.Folder = function(options, callback) {
 	self._client = options.client;
 	self._data = options.data || {};
 	self._data.type = "folders";
-	var missingData = ["name", "owner", "path"].some(function(required) { return !(required in self._data)});
-	if(missingData){
-		return doCallback(callback, [true, new UsergridError("Invalid asset data: 'name', 'owner', and 'path' are required properties.")], self);
+	var missingData = ["name", "owner", "path"].some(function(required) {
+		return !(required in self._data);
+	});
+	if (missingData) {
+		return doCallback(callback, [new UsergridInvalidArgumentError("Invalid asset data: 'name', 'owner', and 'path' are required properties."), null, self], self);
 	}
-	self.save(function(err, data) {
+	self.save(function(err, response) {
 		if (err) {
-			doCallback(callback, [true, new UsergridError(data)], self);
+			doCallback(callback, [new UsergridError(response), response, self], self);
 		} else {
-			if (data && data.entities && data.entities.length){
-				self.set(data.entities[0]);
+			if (response && response.entities && response.entities.length) {
+				self.set(response.entities[0]);
 			}
-			doCallback(callback, [false, self], self);
+			doCallback(callback, [null, response, self], self);
 		}
 	});
 };
@@ -47,17 +68,17 @@ Usergrid.Folder.prototype.fetch = function(callback) {
 		console.log("self", self.get());
 		console.log("data", data);
 		if (!err) {
-			self.getAssets(function(err, data) {
+			self.getAssets(function(err, response) {
 				if (err) {
-					doCallback(callback, [true, new UsergridError(data)], self);
+					doCallback(callback, [new UsergridError(response), resonse, self], self);
 				} else {
 					doCallback(callback, [null, self], self);
 				}
 			});
 		} else {
-			doCallback(callback, [true, new UsergridError(data)], self)
+			doCallback(callback, [null, data, self], self);
 		}
-	})
+	});
 };
 /*
  *  Add an asset to the folder.
@@ -93,7 +114,7 @@ Usergrid.Folder.prototype.addAsset = function(options, callback) {
 		if (asset && asset instanceof Usergrid.Entity) {
 			asset.fetch(function(err, data) {
 				if (err) {
-					doCallback(callback, [err, new UsergridError(data)], self)
+					doCallback(callback, [new UsergridError(data), data, self], self);
 				} else {
 					var endpoint = ["folders", self.get("uuid"), "assets", asset.get("uuid")].join('/');
 					var options = {
@@ -102,13 +123,11 @@ Usergrid.Folder.prototype.addAsset = function(options, callback) {
 					};
 					self._client.request(options, callback);
 				}
-			})
+			});
 		}
 	} else {
 		//nothing to add
-		doCallback(callback, [true, {
-			error_description: "No asset specified"
-		}], self)
+		doCallback(callback, [new UsergridInvalidArgumentError("No asset specified"), null, self], self);
 	}
 };
 
@@ -145,13 +164,17 @@ Usergrid.Folder.prototype.removeAsset = function(options, callback) {
 			self._client.request({
 				method: 'DELETE',
 				endpoint: endpoint
-			}, callback);
+			}, function(err, response) {
+				if (err) {
+					doCallback(callback, [new UsergridError(response), response, self], self);
+				} else {
+					doCallback(callback, [null, response, self], self);
+				}
+			});
 		}
 	} else {
 		//nothing to add
-		doCallback(callback, [true, {
-			error_description: "No asset specified"
-		}], self)
+		doCallback(callback, [new UsergridInvalidArgumentError("No asset specified"), null, self], self);
 	}
 };
 

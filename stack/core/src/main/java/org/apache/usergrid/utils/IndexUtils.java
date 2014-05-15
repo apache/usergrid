@@ -29,11 +29,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.logging.Level;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.Version;
 
 import static org.apache.usergrid.utils.ClassUtils.cast;
@@ -203,15 +204,23 @@ public class IndexUtils {
 
 
     public static List<String> keywords( String source ) {
-        TokenStream ts = analyzer.tokenStream( "keywords", new StringReader( source ) );
         List<String> keywords = new ArrayList<String>();
+        TokenStream ts = null;
         try {
+            ts = analyzer.tokenStream( "keywords", new StringReader( source ) );
+            ts.reset();
             while ( ts.incrementToken() ) {
-                keywords.add( ts.getAttribute( TermAttribute.class ).term() );
+                keywords.add( ts.getAttribute( CharTermAttribute.class ).toString() );
             }
+            ts.end();
         }
         catch ( IOException e ) {
             LOG.error( "Error getting keywords ", e );
+        }
+        finally {
+            try {
+                 ts.close();
+            } catch (IOException ignored) {}
         }
         return keywords;
     }

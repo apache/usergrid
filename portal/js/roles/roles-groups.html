@@ -32,6 +32,7 @@
 
   <div class="users-section">
     <div class="button-strip">
+      <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('group add user button')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_groups_add_group}}" tooltip-placement="left">(?)</a>
         <button class="btn btn-primary" ng-click="showModal('addRoleToGroup')">Add Group to Role</button>
         <button class="btn btn-primary"  ng-disabled="!hasGroups || !valueSelected(rolesCollection.groups._list)" ng-click="showModal('removeGroupFromRole')">Remove Group(s) from Role</button>
     </div>

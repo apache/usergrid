@@ -22,7 +22,7 @@ package org.apache.usergrid.chop.api;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * A run of a specific version of a Maven Module under test.
+ * A run of a specific version of a Maven Module test class under test.
  */
 public interface Run {
 

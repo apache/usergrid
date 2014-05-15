@@ -17,8 +17,10 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -32,6 +34,8 @@ import org.apache.usergrid.utils.JsonUtils;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 @Concurrent()
@@ -130,5 +134,90 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         assertEquals( credentials.getEncrypted(), returned.getEncrypted() );
         assertEquals( credentials.getRecoverable(), returned.getRecoverable() );
         assertArrayEquals( credentials.getCryptoChain(), returned.getCryptoChain() );
+    }
+
+    @Test
+    public void testRemoveFromDictionary() throws Exception {
+        LOG.info( "EntityDictionaryIT.testRemoveFromDictionary" );
+
+        Application.OAuthProvider provider = new Application.OAuthProvider();
+        provider.setClientId( "123456789012.apps.googleusercontent.com" );
+        provider.setClientSecret( "abcdefghijklmnopqrstuvwx" );
+        provider.setRedirectUris( "https://www.example.com/oauth2callback" );
+        provider.setJavaScriptOrigins( "https://www.example.com" );
+        provider.setAuthorizationEndpointUrl( "https://accounts.google.com/o/oauth2/auth" );
+        provider.setAccessTokenEndpointUrl( "https://accounts.google.com/o/oauth2/token" );
+        provider.setVersion( "2.0" );
+
+        LOG.info( "EntityDictionaryIT.testApplicationDictionaries" );
+
+        UUID applicationId = setup.createApplication( "testOrganization", "testRemoveFromDictionary" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+        em.addToDictionary( em.getApplicationRef(), "oauthproviders", "google", provider );
+
+        Object o = em.getDictionaryElementValue( em.getApplicationRef(), "oauthproviders", "google" );
+
+        assertNotNull( o );
+
+        em.removeFromDictionary( em.getApplicationRef(),"oauthproviders","google" );
+
+        o = em.getDictionaryElementValue( em.getApplicationRef(), "oauthproviders", "google" );
+        assertNull( o );
+
+
+    }
+
+    @Test
+    public void testGetDictionaries() throws Exception {
+        LOG.info( "EntityDictionaryIT.testGetDictionaries" );
+
+
+        Application.OAuthProvider provider = new Application.OAuthProvider();
+        provider.setClientId( "123456789012.apps.googleusercontent.com" );
+        provider.setClientSecret( "abcdefghijklmnopqrstuvwx" );
+        provider.setRedirectUris( "https://www.example.com/oauth2callback" );
+        provider.setJavaScriptOrigins( "https://www.example.com" );
+        provider.setAuthorizationEndpointUrl( "https://accounts.google.com/o/oauth2/auth" );
+        provider.setAccessTokenEndpointUrl( "https://accounts.google.com/o/oauth2/token" );
+        provider.setVersion( "2.0" );
+
+        UUID applicationId = setup.createApplication( "testOrganization", "testGetDictionaries" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+        em.addToDictionary( em.getApplicationRef(), "oauthproviders", "google", provider );
+
+        Object o = em.getDictionaryElementValue( em.getApplicationRef(), "oauthproviders", "google" );
+
+        assertNotNull( o );
+        Set<String> set = em.getDictionaryNames( em.getApplicationRef() );
+
+        assertTrue( set.contains( "oauthproviders" ) );
+
+    }
+    @Test
+    public void testAddMapToDictionaries() throws Exception {
+        LOG.info( "EntityDictionaryIT.testAddMapToDictionaries" );
+
+        Map<String,Object> testMap = new HashMap<String,Object>();
+        UUID applicationId = setup.createApplication( "testOrganization", "testAddMapToDictionaries" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+        testMap.put( "testName","testval" );
+
+        em.addMapToDictionary( em.getApplicationRef(), "testProvider",testMap );
+
+        Object o = em.getDictionaryElementValue( em.getApplicationRef(), "testProvider","testName" );
+        assertEquals("testval" , o.toString() );
+
     }
 }

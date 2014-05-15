@@ -57,6 +57,7 @@ import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.apache.usergrid.persistence.entities.Group;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.geo.CollectionGeoSearch;
 import org.apache.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.apache.usergrid.persistence.geo.EntityLocationRef;
@@ -82,18 +83,14 @@ import org.apache.usergrid.utils.MapUtils;
 
 import com.yammer.metrics.annotation.Metered;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
-
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
-
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import org.apache.usergrid.persistence.EntityManager;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
@@ -139,28 +136,24 @@ import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class RelationManagerImpl implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( RelationManagerImpl.class );
 
-    private EntityManagerImpl em;
+    private EntityManager em;
     private CassandraService cass;
     private UUID applicationId;
     private EntityRef headEntity;
     private IndexBucketLocator indexBucketLocator;
 
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-
-
     public RelationManagerImpl() {
     }
 
 
-    public RelationManagerImpl init( EntityManagerImpl em, CassandraService cass, UUID applicationId,
+    public RelationManagerImpl init( EntityManager em, CassandraService cass, UUID applicationId,
                                      EntityRef headEntity, IndexBucketLocator indexBucketLocator ) {
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -297,11 +290,18 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     @Metered(group = "core", name = "RelationManager_getCollectionIndexes")
     public Set<String> getCollectionIndexes( String collectionName ) throws Exception {
+        return getConnectionIndexes(key( headEntity.getUuid(), collectionName, Schema.DICTIONARY_INDEXES ));
+    }
 
-        // TODO TN, read all buckets here
+    public Set<String> getConnectionIndexes( ConnectionRefImpl connection ) throws Exception {
+        return getConnectionIndexes(key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ));
+    }
+
+
+    private Set<String> getConnectionIndexes( Object key ) throws Exception{
         List<HColumn<String, String>> results =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
-                        key( headEntity.getUuid(), collectionName, Schema.DICTIONARY_INDEXES ), se, se );
+                        key, se, se );
         Set<String> indexes = new TreeSet<String>();
         if ( results != null ) {
             for ( HColumn<String, String> column : results ) {
@@ -312,6 +312,7 @@ public class RelationManagerImpl implements RelationManager {
             }
         }
         return indexes;
+
     }
 
 
@@ -323,7 +324,7 @@ public class RelationManagerImpl implements RelationManager {
         // TODO TN get all buckets here
 
         List<HColumn<DynamicComposite, ByteBuffer>> containers = cass.getAllColumns( ko, ENTITY_COMPOSITE_DICTIONARIES,
-                key( headEntity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES ), EntityManagerFactoryImpl.dce, be );
+                key( headEntity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES ), dce, be );
         if ( containers != null ) {
             for ( HColumn<DynamicComposite, ByteBuffer> container : containers ) {
                 DynamicComposite composite = container.getName();
@@ -569,7 +570,9 @@ public class RelationManagerImpl implements RelationManager {
 
         if ( !headEntity.getType().equalsIgnoreCase( TYPE_APPLICATION ) && !Schema
                 .isAssociatedEntityType( entity.getType() ) ) {
-            em.deleteEntity( new SimpleCollectionRef( headEntity, collectionName, entity ).getUuid() );
+
+            CollectionRef cref = new SimpleCollectionRef( headEntity, collectionName, entity ); 
+            em.delete( new SimpleEntityRef( cref.getType(), cref.getUuid() ) );
         }
 
         return batch;
@@ -750,21 +753,6 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    public Set<String> getConnectionIndexes( ConnectionRefImpl connection ) throws Exception {
-        List<HColumn<String, String>> results =
-                cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
-                        key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ), se, se );
-        Set<String> indexes = new TreeSet<String>();
-        if ( results != null ) {
-            for ( HColumn<String, String> column : results ) {
-                String propertyName = column.getName();
-                if ( !propertyName.endsWith( ".keywords" ) ) {
-                    indexes.add( column.getName() );
-                }
-            }
-        }
-        return indexes;
-    }
 
 
     /**
@@ -871,13 +859,13 @@ public class RelationManagerImpl implements RelationManager {
 
     @SuppressWarnings("unchecked")
     @Metered(group = "core", name = "RelationManager_batchUpdateEntityConnection")
-    public Mutator<ByteBuffer> batchUpdateEntityConnection( Mutator<ByteBuffer> batch, boolean disconnect,
-                                                            ConnectionRefImpl connection, UUID timestampUuid )
-            throws Exception {
+    public Mutator<ByteBuffer> batchUpdateEntityConnection( Mutator<ByteBuffer> batch, 
+        boolean disconnect, ConnectionRefImpl connection, UUID timestampUuid ) throws Exception {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
-        Entity connectedEntity = em.get( connection.getConnectedEntityId() );
+        Entity connectedEntity = em.get( new SimpleEntityRef( 
+                connection.getConnectedEntityType(), connection.getConnectedEntityId()) );
 
         if ( connectedEntity == null ) {
             return batch;
@@ -1073,7 +1061,8 @@ public class RelationManagerImpl implements RelationManager {
 
         ConnectionRefImpl loopback = connection.getConnectionToConnectionEntity();
         if ( !disconnect ) {
-            em.insertEntity( CONNECTION_ENTITY_CONNECTION_TYPE, loopback.getConnectedEntityId() );
+            em.insertEntity( new SimpleEntityRef( 
+                    CONNECTION_ENTITY_CONNECTION_TYPE, loopback.getConnectedEntityId() ) );
         }
 
         batchUpdateEntityConnection( batch, disconnect, loopback, timestampUuid );
@@ -1774,7 +1763,7 @@ public class RelationManagerImpl implements RelationManager {
 
         // we have something to search with, visit our tree and evaluate the
         // results
-        QueryProcessor qp = new QueryProcessor( query, collection, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, collection, em, factory );
         SearchCollectionVisitor visitor = new SearchCollectionVisitor( qp );
 
         return qp.getResults( visitor );
@@ -1798,6 +1787,10 @@ public class RelationManagerImpl implements RelationManager {
 
         headEntity = em.validate( headEntity );
         connectedEntityRef = em.validate( connectedEntityRef );
+
+        if ( connectedEntityRef == null) {
+          throw new EntityNotFoundException("The UUID of the connected entity was not found");
+        }
 
         ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
@@ -1968,7 +1961,7 @@ public class RelationManagerImpl implements RelationManager {
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
         SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, true );
 
         return qp.getResults( visitor );
@@ -2010,7 +2003,7 @@ public class RelationManagerImpl implements RelationManager {
                 new ConnectionRefImpl( new SimpleEntityRef( connectedEntityType, null ), connectionType, targetEntity );
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
         SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, false );
 
         return qp.getResults( visitor );
@@ -2049,7 +2042,7 @@ public class RelationManagerImpl implements RelationManager {
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
         SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, true );
 
         return qp.getResults( visitor );
@@ -2078,7 +2071,7 @@ public class RelationManagerImpl implements RelationManager {
         /**
          * @param queryProcessor
          */
-        public SearchCollectionVisitor( QueryProcessor queryProcessor ) {
+        public SearchCollectionVisitor( QueryProcessorImpl queryProcessor ) {
             super( queryProcessor );
             this.collection = queryProcessor.getCollectionInfo();
         }
@@ -2128,7 +2121,6 @@ public class RelationManagerImpl implements RelationManager {
             if ( slice.hasCursor() ) {
                 startId = UUID_PARSER.parse( slice.getCursor() ).getUUID();
             }
-
 
             IndexScanner indexScanner = cass.getIdList( cass.getApplicationKeyspace( applicationId ),
                     key( headEntity.getUuid(), DICTIONARY_COLLECTIONS, collectionName ), startId, null,
@@ -2194,7 +2186,7 @@ public class RelationManagerImpl implements RelationManager {
          * @param outgoing The direction to search.  True if we should search from source->target edges.  False if we
          * should search from target<-source edges
          */
-        public SearchConnectionVisitor( QueryProcessor queryProcessor, ConnectionRefImpl connection,
+        public SearchConnectionVisitor( QueryProcessorImpl queryProcessor, ConnectionRefImpl connection,
                                         boolean outgoing ) {
             super( queryProcessor );
             this.connection = connection;
@@ -2268,7 +2260,7 @@ public class RelationManagerImpl implements RelationManager {
             }
 
 
-            boolean skipFirst = node.isForceKeepFirst() ? false : slice.hasCursor();
+            boolean skipFirst = !node.isForceKeepFirst() && slice.hasCursor();
 
             UUID entityIdToUse;
 

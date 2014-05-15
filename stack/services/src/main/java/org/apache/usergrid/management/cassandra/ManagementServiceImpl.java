@@ -1247,12 +1247,11 @@ public class ManagementServiceImpl implements ManagementService {
         if ( verify( MANAGEMENT_APPLICATION_ID, user.getUuid(), password ) ) {
             userInfo = getUserInfo( MANAGEMENT_APPLICATION_ID, user );
 
-            boolean userIsSuperAdmin =
-                    StringUtils.equals( getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ), userInfo.getEmail() );
-            boolean testUserEnabled = getBooleanProperty( PROPERTIES_SETUP_TEST_ACCOUNT );
+            boolean userIsSuperAdmin = properties.getSuperUser().isEnabled() && properties.getSuperUser().getEmail().equals(userInfo.getEmail());
 
-            boolean userIsTestUser = !testUserEnabled ? false :
-                    StringUtils.equals(getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ), userInfo.getEmail());
+            boolean testUserEnabled = parseBoolean( properties.getProperty( PROPERTIES_SETUP_TEST_ACCOUNT ) );
+            boolean userIsTestUser = testUserEnabled && properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL)
+                    .equals(userInfo.getEmail());
 
             if ( !userIsSuperAdmin && !userIsTestUser ) {
 
@@ -1376,9 +1375,13 @@ public class ManagementServiceImpl implements ManagementService {
 
     public Entity getEntityFromPrincipal( AuthPrincipalInfo principal ) throws Exception {
 
-        EntityManager em = emf.getEntityManager(
-                principal.getApplicationId() != null ? principal.getApplicationId() : MANAGEMENT_APPLICATION_ID );
-        Entity entity = em.get( principal.getUuid() );
+        EntityManager em = emf.getEntityManager( 
+            principal.getApplicationId() != null 
+                ? principal.getApplicationId() : MANAGEMENT_APPLICATION_ID );
+
+        Entity entity = em.get( new SimpleEntityRef( 
+                principal.getType().getEntityType(), principal.getUuid()));
+
         return entity;
     }
 
@@ -1746,7 +1749,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-        Entity entity = em.get( applicationId );
+        Entity entity = em.get( new SimpleEntityRef( "applicationId", applicationId ));
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );
@@ -2457,8 +2460,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean registration_requires_admin_approval = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         REGISTRATION_REQUIRES_ADMIN_APPROVAL );
-        return registration_requires_admin_approval != null ? registration_requires_admin_approval.booleanValue() :
-               false;
+        return registration_requires_admin_approval != null && registration_requires_admin_approval.booleanValue();
     }
 
 
@@ -2468,8 +2470,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean registration_requires_email_confirmation = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         REGISTRATION_REQUIRES_EMAIL_CONFIRMATION );
-        return registration_requires_email_confirmation != null ?
-               registration_requires_email_confirmation.booleanValue() : false;
+        return registration_requires_email_confirmation != null && registration_requires_email_confirmation.booleanValue();
     }
 
 
@@ -2478,7 +2479,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean notify_admin_of_new_users = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         NOTIFY_ADMIN_OF_NEW_USERS );
-        return notify_admin_of_new_users != null ? notify_admin_of_new_users.booleanValue() : false;
+        return notify_admin_of_new_users != null && notify_admin_of_new_users.booleanValue();
     }
 
 
@@ -2834,14 +2835,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     private CredentialsInfo readCreds( UUID appId, UUID ownerId, String key ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
-        Entity owner = em.get( ownerId );
+        Entity owner = em.get( new SimpleEntityRef("user", ownerId ));
         return ( CredentialsInfo ) em.getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, key );
     }
 
 
     private Set<CredentialsInfo> readUserPasswordHistory( UUID appId, UUID ownerId ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
-        Entity owner = em.get( ownerId );
+        Entity owner = em.get( new SimpleEntityRef("user", ownerId ));
         return ( Set<CredentialsInfo> ) em
                 .getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, USER_PASSWORD_HISTORY );
     }

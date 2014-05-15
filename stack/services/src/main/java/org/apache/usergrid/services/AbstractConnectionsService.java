@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.ServiceParameter.NameParameter;
 import org.apache.usergrid.services.ServiceParameter.QueryParameter;
@@ -193,12 +194,12 @@ public class AbstractConnectionsService extends AbstractService {
         EntityRef entity = null;
 
         if ( !context.moreParameters() ) {
-            entity = em.get( id );
+            entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
 
             entity = importEntity( context, ( Entity ) entity );
         }
         else {
-            entity = em.getRef( id );
+            entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
         }
 
         if ( entity == null ) {
@@ -330,7 +331,7 @@ public class AbstractConnectionsService extends AbstractService {
             return getItemById( context, id );
         }
 
-        Entity entity = em.get( id );
+        Entity entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -390,7 +391,7 @@ public class AbstractConnectionsService extends AbstractService {
 
         checkPermissionsForEntity( context, id );
 
-        Entity item = em.get( id );
+        Entity item = em.get( new SimpleEntityRef( this.getEntityType(), id) );
         if ( item != null ) {
             updateEntity( context, item, context.getPayload() );
             item = importEntity( context, item );
@@ -440,7 +441,7 @@ public class AbstractConnectionsService extends AbstractService {
             return getItemById( context, id );
         }
 
-        Entity entity = em.get( id );
+        Entity entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }

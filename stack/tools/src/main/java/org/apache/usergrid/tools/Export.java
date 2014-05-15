@@ -46,6 +46,7 @@ import org.apache.usergrid.utils.JsonUtils;
 import org.apache.commons.cli.CommandLine;
 
 import com.google.common.collect.BiMap;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 
 
 public class Export extends ExportingToolBase {
@@ -127,7 +128,7 @@ public class Export extends ExportingToolBase {
             // load the dictionary
             EntityManager rootEm = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
 
-            Entity appEntity = rootEm.get( application.getKey() );
+            Entity appEntity = rootEm.get( new SimpleEntityRef( "application", application.getKey()));
 
             Map<String, Object> dictionaries = new HashMap<String, Object>();
 
@@ -145,7 +146,7 @@ public class Export extends ExportingToolBase {
             EntityManager em = emf.getEntityManager( application.getKey() );
 
             // Get application
-            Entity nsEntity = em.get( application.getKey() );
+            Entity nsEntity = em.get( new SimpleEntityRef( "application", application.getKey()));
 
             Set<String> collections = em.getApplicationCollections();
 

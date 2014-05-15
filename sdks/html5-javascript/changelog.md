@@ -1,4 +1,18 @@
 ##Change log
+###0.11.0
+- Removed 'getOnExist' flag from createEntity and createGroup. Handling of duplicate entity errors is now the responsibility of the client.
+- Usergrid.Group.prototype.fetch returns self instead of group list
+- Usergrid.Client.prototype.createGroup updated to new callback format
+- Usergrid.Client.prototype.createEntity updated to new callback format
+- Usergrid.Client.prototype.getEntity updated to new callback format
+- Usergrid.Collection instantiation no longer fetches the collection automatically, this no longer takes a callback
+- Usergrid.Entity.prototype.save no longer handles password changes
+- Usergrid.Entity.prototype.changePassword added to handle password requests
+- Usergrid.Counter no longer needs a callback
+- Usergrid.Asset.prototype.download sets appropriate mime type for content
+- Usergrid.Asset.prototype.upload implemented retry interval to mitigate errors when an asset has not fully propagated
+ 
+ 
 ###0.10.8
 - Added support for Events and Counters
 - Added support for Folders and Assets

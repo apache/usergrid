@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import org.antlr.runtime.ANTLRStringStream;
@@ -40,9 +39,10 @@ import static org.apache.commons.lang.StringUtils.split;
 import org.apache.usergrid.persistence.index.exceptions.PersistenceException;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
-import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
 import org.apache.usergrid.persistence.index.query.tree.Equal;
 import org.apache.usergrid.persistence.index.query.tree.EqualityOperand;
 import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
@@ -50,8 +50,6 @@ import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.LessThan;
 import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.Operand;
-import org.apache.usergrid.persistence.index.query.tree.QueryFilterLexer;
-import org.apache.usergrid.persistence.index.query.tree.QueryFilterParser;
 import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import static org.apache.usergrid.persistence.index.utils.ClassUtils.cast;
 import org.apache.usergrid.persistence.index.utils.JsonUtils;
@@ -96,9 +94,10 @@ public class Query {
     private Long startTime;
     private Long finishTime;
     private boolean pad;
-    private List<Id> identifiers;
     private String collection;
     private String ql;
+
+    private List<Operand> filterClauses = new ArrayList<Operand>();
 
 
     public Query() {
@@ -124,7 +123,6 @@ public class Query {
             finishTime = q.finishTime;
             pad = q.pad;
             rootOperand = q.rootOperand;
-            identifiers = q.identifiers != null ? new ArrayList<Id>( q.identifiers ) : null;
             collection = q.collection;
         }
     }
@@ -192,9 +190,9 @@ public class Query {
         }
 
         ANTLRStringStream in = new ANTLRStringStream( ql.trim() );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         CommonTokenStream tokens = new CommonTokenStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         try {
             Query q = parser.ql().query;
@@ -237,7 +235,7 @@ public class Query {
             Map<String, List<String>> params ) throws QueryParseException {
 
         Query q = null;
-        List<Id> identifiers = null;
+//        List<Id> identifiers = null;
 
         String ql = Query.queryStrFrom( params );
         String type = first( params.get( "type" ) );
@@ -252,17 +250,17 @@ public class Query {
 
         Boolean pad = firstBoolean( params.get( "pad" ) );
 
-        for ( Entry<String, List<String>> param : params.entrySet() ) {
-            Id identifier = null;
-            if ( ( param.getValue() == null ) || ( param.getValue().size() == 0 ) ) {
-                if ( identifier != null ) {
-                    if ( identifiers == null ) {
-                        identifiers = new ArrayList<Id>();
-                    }
-                    identifiers.add( identifier );
-                }
-            }
-        }
+//        for ( Entry<String, List<String>> param : params.entrySet() ) {
+//            Id identifier = null;
+//            if ( ( param.getValue() == null ) || ( param.getValue().size() == 0 ) ) {
+//                if ( identifier != null ) {
+//                    if ( identifiers == null ) {
+//                        identifiers = new ArrayList<Id>();
+//                    }
+//                    identifiers.add( identifier );
+//                }
+//            }
+//        }
 
         if ( ql != null ) {
             q = Query.fromQL( decode( ql ) );
@@ -330,11 +328,6 @@ public class Query {
             q.setPad( pad );
         }
 
-        if ( identifiers != null ) {
-            q = newQueryIfNull( q );
-            q.setIdentifiers( identifiers );
-        }
-
         if ( reversed != null ) {
             q = newQueryIfNull( q );
             q.setReversed( reversed );
@@ -359,15 +352,10 @@ public class Query {
     }
 
 
-    public static Query fromId( Id id ) {
-        Query q = new Query();
-        q.addIdentifier( id );
-        return q;
-    }
-
     public boolean hasQueryPredicates() {
         return rootOperand != null;
     }
+
 
     public Query addSort( SortPredicate sort ) {
         if ( sort == null ) {
@@ -538,9 +526,9 @@ public class Query {
     public Query addFilter( String filter ) {
 
         ANTLRStringStream in = new ANTLRStringStream( filter );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
         Operand root = null;
 
         try {
@@ -789,20 +777,6 @@ public class Query {
         this.pad = pad;
     }
 
-
-    public void addIdentifier( Id id ) {
-        if ( identifiers == null ) {
-            identifiers = new ArrayList<Id>();
-        }
-        identifiers.add( id );
-    }
-
-
-    void setIdentifiers( List<Id> identifiers ) {
-        this.identifiers = identifiers;
-    }
-
-
     @Override
     public String toString() {
         if ( ql != null ) {
@@ -978,11 +952,6 @@ public class Query {
 
     public void setQl( String ql ) {
         this.ql = ql;
-    }
-
-
-    public List<Id> getIdentifiers() {
-        return identifiers;
     }
 
 

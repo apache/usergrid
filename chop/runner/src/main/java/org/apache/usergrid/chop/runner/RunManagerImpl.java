@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.usergrid.chop.api.*;
 import org.apache.usergrid.chop.spi.RunManager;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataMultiPart;
@@ -92,16 +94,6 @@ public class RunManagerImpl implements RunManager, RestParams {
                        final Class<?> testClass ) throws FileNotFoundException, MalformedURLException {
         Preconditions.checkNotNull( summary, "The summary argument cannot be null." );
 
-        // post the summary information
-        WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
-        resource = addQueryParameters( resource, project, me );
-        String result = resource.path( coordinatorFig.getUploadSummaryPath() )
-                                .queryParam( TEST_CLASS, testClass.getName() )
-                                .queryParam( RUN_NUMBER, "" + summary.getRunNumber() )
-                                .type( MediaType.APPLICATION_JSON ).post( String.class, summary );
-
-        LOG.debug( "Got back result from summary post = {}", result );
-
         // upload the results file
         InputStream in = new FileInputStream( resultsFile );
         FormDataMultiPart part = new FormDataMultiPart();
@@ -110,14 +102,15 @@ public class RunManagerImpl implements RunManager, RestParams {
         FormDataBodyPart body = new FormDataBodyPart( CONTENT, in, MediaType.APPLICATION_OCTET_STREAM_TYPE );
         part.bodyPart( body );
 
-        resource = Client.create().resource( coordinatorFig.getEndpoint() );
+        WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
         resource = addQueryParameters( resource, project, me );
-        result = resource.path( coordinatorFig.getUploadResultsPath() )
-                         .queryParam( TEST_CLASS, testClass.getName() )
+        String result = resource.path( coordinatorFig.getStoreResultsPath() )
                          .queryParam( RUN_ID, summary.getRunId() )
-                         .type( MediaType.MULTIPART_FORM_DATA_TYPE ).post( String.class, part );
+                         .queryParam( RUN_NUMBER, "" + summary.getRunNumber() )
+                         .type( MediaType.MULTIPART_FORM_DATA_TYPE )
+                         .post( String.class, part );
 
-        LOG.debug( "Got back result from results file upload = {}", result );
+        LOG.debug( "Got back result from results file store = {}", result );
     }
 
 
@@ -127,16 +120,21 @@ public class RunManagerImpl implements RunManager, RestParams {
         // get run status information
         WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
         resource = addQueryParameters( resource, project, runner );
-        String result = resource.path( coordinatorFig.getRunCompletedPath() )
+        ClientResponse result = resource.path( coordinatorFig.getRunCompletedPath() )
                                 .queryParam( RUNNER_HOSTNAME, runner.getHostname() )
                                 .queryParam( COMMIT_ID, project.getVcsVersion() )
                                 .queryParam( RUN_NUMBER, String.valueOf( runNumber ) )
                                 .queryParam( TEST_CLASS, testClass.getName() )
-                                .type( MediaType.TEXT_PLAIN ).get( String.class );
+                                .type( MediaType.APPLICATION_JSON )
+                                .get( ClientResponse.class );
 
-        LOG.debug( "Got back result from run status get = {}", result );
+        if( result.getStatus() != Response.Status.CREATED.getStatusCode() ) {
+            LOG.error( "Could not get if run has completed status from coordinator, HTTP status: {}",
+                    result.getStatus() );
+            return false;
+        }
 
-        return Boolean.parseBoolean( result );
+        return result.getEntity( Boolean.class );
     }
 
 
@@ -145,7 +143,8 @@ public class RunManagerImpl implements RunManager, RestParams {
         WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
         resource = addQueryParameters( resource, project, me );
         Integer result = resource.path( coordinatorFig.getRunNextPath() )
-                                .type( MediaType.APPLICATION_JSON_TYPE ).get( Integer.class );
+                                 .type( MediaType.APPLICATION_JSON_TYPE )
+                                 .get( Integer.class );
 
         LOG.debug( "Got back result from next run number get = {}", result );
 

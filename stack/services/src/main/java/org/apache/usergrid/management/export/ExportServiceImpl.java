@@ -17,26 +17,24 @@
 package org.apache.usergrid.management.export;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
@@ -49,6 +47,8 @@ import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.JobData;
 
 import com.google.common.collect.BiMap;
+
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 /**
@@ -71,33 +71,32 @@ public class ExportServiceImpl implements ExportService {
     private ManagementService managementService;
 
     //Maximum amount of entities retrieved in a single go.
-    public static final int MAX_ENTITY_FETCH = 100000;
+    public static final int MAX_ENTITY_FETCH = 1000;
 
     //Amount of time that has passed before sending another heart beat in millis
     public static final int TIMESTAMP_DELTA = 5000;
 
     private JsonFactory jsonFactory = new JsonFactory();
 
-    private S3Export s3Export;
-
 
     @Override
-    public UUID schedule( final Map<String,Object> config ) throws Exception {
+    public UUID schedule( final Map<String, Object> config ) throws Exception {
+        ApplicationInfo defaultExportApp = null;
 
         if ( config == null ) {
             logger.error( "export information cannot be null" );
             return null;
         }
 
-        if ( config.get( "applicationId" ) == null ) {
-            logger.error( "application information from export info could not be found" );
-            return null;
-        }
-
         EntityManager em = null;
         try {
-            em = emf.getEntityManager( ( UUID ) config.get("applicationId") );
-        }catch (Exception e) {
+            em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+            Set<String> collections = em.getApplicationCollections();
+            if ( !collections.contains( "exports" ) ) {
+                em.createApplicationCollection( "exports" );
+            }
+        }
+        catch ( Exception e ) {
             logger.error( "application doesn't exist within the current context" );
             return null;
         }
@@ -105,9 +104,10 @@ public class ExportServiceImpl implements ExportService {
         Export export = new Export();
 
         //update state
-        try{
+        try {
             export = em.create( export );
-        }catch(Exception e) {
+        }
+        catch ( Exception e ) {
             logger.error( "Export entity creation failed" );
             return null;
         }
@@ -134,25 +134,19 @@ public class ExportServiceImpl implements ExportService {
 
 
     /**
-     * Query Entity Manager for the string state of the Export Entity.
-     * This corresponds to the GET /export
+     * Query Entity Manager for the string state of the Export Entity. This corresponds to the GET /export
+     *
      * @return String
      */
     @Override
-    public String getState( final UUID appId, final UUID uuid ) throws Exception {
+    public String getState( final UUID uuid ) throws Exception {
 
-        //get application entity manager
-        if(appId == null) {
-            logger.error( "Application context cannot be found." );
-            return "Application context cannot be found.";
-        }
-
-        if(uuid == null) {
+        if ( uuid == null ) {
             logger.error( "UUID passed in cannot be null." );
             return "UUID passed in cannot be null";
         }
 
-        EntityManager rootEm = emf.getEntityManager( appId );
+        EntityManager rootEm = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
         //retrieve the export entity.
         Export export = rootEm.get( uuid, Export.class );
@@ -166,45 +160,115 @@ public class ExportServiceImpl implements ExportService {
 
 
     @Override
-    public void doExport( final JobExecution jobExecution ) throws Exception {
-        Map<String,Object> config = ( Map<String, Object> ) jobExecution.getJobData().getProperty( "exportInfo" );
+    public String getErrorMessage( final UUID appId, final UUID uuid ) throws Exception {
 
-        if (config  == null) {
+        //get application entity manager
+        if ( appId == null ) {
+            logger.error( "Application context cannot be found." );
+            return "Application context cannot be found.";
+        }
+
+        if ( uuid == null ) {
+            logger.error( "UUID passed in cannot be null." );
+            return "UUID passed in cannot be null";
+        }
+
+        EntityManager rootEm = emf.getEntityManager( appId );
+
+        //retrieve the export entity.
+        Export export = rootEm.get( uuid, Export.class );
+
+        if ( export == null ) {
+            logger.error( "no entity with that uuid was found" );
+            return "No Such Element found";
+        }
+        return export.getErrorMessage();
+    }
+
+
+    @Override
+    public void doExport( final JobExecution jobExecution ) throws Exception {
+        Map<String, Object> config = ( Map<String, Object> ) jobExecution.getJobData().getProperty( "exportInfo" );
+        Object s3PlaceHolder = jobExecution.getJobData().getProperty( "s3Export" );
+        S3Export s3Export = null;
+
+        if ( config == null ) {
             logger.error( "Export Information passed through is null" );
             return;
         }
         //get the entity manager for the application, and the entity that this Export corresponds to.
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        if(config.get( "applicationId" ) == null) {
-            logger.error( "Export Information application uuid is null" );
-            return;
-        }
-        EntityManager em = emf.getEntityManager( ( UUID ) config.get("applicationId") );
+
+        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
         Export export = em.get( exportId, Export.class );
 
         //update the entity state to show that the job has officially started.
         export.setState( Export.State.STARTED );
         em.update( export );
+        try {
+            if ( s3PlaceHolder != null ) {
+                s3Export = ( S3Export ) s3PlaceHolder;
+            }
+            else {
+                s3Export = new S3ExportImpl();
+            }
+        }
+        catch ( Exception e ) {
+            logger.error( "S3Export doesn't exist" );
+            export.setErrorMessage( e.getMessage() );
+            export.setState( Export.State.FAILED );
+            em.update( export );
+            return;
+        }
 
-        if ( config.get("collectionName") == null) {
-            //exports all the applications for a given organization.
-
-            if(config.get( "organizationId" ) == null){
-                logger.error( "No organization could be found" );
+        if ( config.get( "organizationId" ) == null ) {
+            logger.error( "No organization could be found" );
+            export.setState( Export.State.FAILED );
+            em.update( export );
+            return;
+        }
+        else if ( config.get( "applicationId" ) == null ) {
+            //exports All the applications from an organization
+            try {
+                exportApplicationsFromOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution, s3Export );
+            }
+            catch ( Exception e ) {
+                export.setErrorMessage( e.getMessage() );
                 export.setState( Export.State.FAILED );
                 em.update( export );
                 return;
             }
-           exportApplicationsForOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution );
-
+        }
+        else if ( config.get( "collectionName" ) == null ) {
+            //exports an Application from a single organization
+            try {
+                exportApplicationFromOrg( ( UUID ) config.get( "organizationId" ),
+                        ( UUID ) config.get( "applicationId" ), config, jobExecution, s3Export );
+            }
+            catch ( Exception e ) {
+                export.setErrorMessage( e.getMessage() );
+                export.setState( Export.State.FAILED );
+                em.update( export );
+                return;
+            }
         }
         else {
             try {
-                //exports all the applications for a single organization
-                exportApplicationForOrg( ( UUID ) config.get( "organizationId" ), config, jobExecution );
+                //exports a single collection from an app org combo
+                try {
+                    exportCollectionFromOrgApp( ( UUID ) config.get( "applicationId" ), config, jobExecution,
+                            s3Export );
+                }
+                catch ( Exception e ) {
+                    export.setErrorMessage( e.getMessage() );
+                    export.setState( Export.State.FAILED );
+                    em.update( export );
+                    return;
+                }
             }
             catch ( Exception e ) {
                 //if for any reason the backing up fails, then update the entity with a failed state.
+                export.setErrorMessage( e.getMessage() );
                 export.setState( Export.State.FAILED );
                 em.update( export );
                 return;
@@ -213,7 +277,6 @@ public class ExportServiceImpl implements ExportService {
         export.setState( Export.State.FINISHED );
         em.update( export );
     }
-
 
 
     public SchedulerService getSch() {
@@ -246,168 +309,99 @@ public class ExportServiceImpl implements ExportService {
         this.managementService = managementService;
     }
 
+
+    public Export getExportEntity( final JobExecution jobExecution ) throws Exception {
+
+        UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
+        EntityManager exportManager = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+
+        return exportManager.get( exportId, Export.class );
+    }
+
+
     /**
-     * Exports all applications for the given organization.
-     * @param organizationUUID
-     * @param config
-     * @param jobExecution
-     * @throws Exception
+     * Exports All Applications from an Organization
      */
-    private void exportApplicationsForOrg( UUID organizationUUID, final Map<String,Object> config,
-                                           final JobExecution jobExecution ) throws Exception {
+    private void exportApplicationsFromOrg( UUID organizationUUID, final Map<String, Object> config,
+                                            final JobExecution jobExecution, S3Export s3Export ) throws Exception {
 
         //retrieves export entity
-        UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        EntityManager exportManager = emf.getEntityManager( ( UUID ) config.get( "applicationId" ) );
-        Export export = exportManager.get( exportId, Export.class );
+        Export export = getExportEntity( jobExecution );
+        String appFileName = null;
 
-        //sets up a output stream for s3 backup.
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        // Loop through the applications per organization
         BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
+
         for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
 
-            logger.info( application.getValue() + " : " + application.getKey() );
-
-            String appFileName = prepareOutputFileName( "application", application.getValue() );
-
-            JsonGenerator jg = getJsonGenerator( baos );
-
-            EntityManager em = emf.getEntityManager( application.getKey() );
-
-            jg.writeStartArray();
-
-            Map<String, Object> metadata = em.getApplicationCollectionMetadata();
-            long starting_time = System.currentTimeMillis();
-
-            // Loop through the collections. This is the only way to loop
-            // through the entities in the application (former namespace).
-            //could support queries, just need to implement that in the rest endpoint.
-            for ( String collectionName : metadata.keySet() ) {
-                if(collectionName.equals( "exports" )) {
-                    continue;
-                }
-                //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
-
-                if ( (config.get( "collectionName" ) == null)||collectionName.equals( config.get( "collectionName" ) ) ) {
-                    //Query entity manager for the entities in a collection
-                    Query query = new Query();
-                    query.setLimit( MAX_ENTITY_FETCH );
-                    query.setResultsLevel( Results.Level.ALL_PROPERTIES );
-                    Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
-
-                    //pages through the query and backs up all results.
-                    PagingResultsIterator itr = new PagingResultsIterator( entities );
-                    for ( Object e : itr ) {
-                        starting_time = checkTimeDelta( starting_time, jobExecution );
-                        Entity entity = ( Entity ) e;
-                        jg.writeStartObject();
-                        jg.writeFieldName( "Metadata" );
-                        jg.writeObject(entity );
-                        saveCollectionMembers( jg, em, ( String ) config.get( "collectionName" ), entity );
-                        jg.writeEndObject();
-                    }
-                }
+            if ( application.getValue().equals(
+                    managementService.getOrganizationByUuid( organizationUUID ).getName() + "/exports" ) ) {
+                continue;
             }
 
-            // Close writer and file for this application.
-            jg.writeEndArray();
-            jg.close();
-            baos.flush();
-            baos.close();
+            appFileName = prepareOutputFileName( "application", application.getValue(), null );
 
-            //sets up the Inputstream for copying the method to s3.
-            InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-            try {
-                s3Export.copyToS3( is, config, appFileName );
-            }
-            catch ( Exception e ) {
-                export.setState( Export.State.FAILED );
-                return;
-            }
+            File ephemeral = collectionExportAndQuery( application.getKey(), config, export, jobExecution );
+
+            fileTransfer( export, appFileName, ephemeral, config, s3Export );
         }
     }
 
-    //might be confusing, but uses the /s/ inclusion or exclusion nomenclature.
-    private void exportApplicationForOrg( UUID organizationUUID, final Map<String,Object> config,
-                                           final JobExecution jobExecution ) throws Exception {
+
+    public void fileTransfer( Export export, String appFileName, File ephemeral, Map<String, Object> config,
+                              S3Export s3Export ) {
+        try {
+            s3Export.copyToS3( ephemeral, config, appFileName );
+
+        }
+        catch ( Exception e ) {
+            export.setErrorMessage( e.getMessage() );
+            export.setState( Export.State.FAILED );
+            return;
+        }
+    }
+
+
+    /**
+     * Exports a specific applications from an organization
+     */
+    private void exportApplicationFromOrg( UUID organizationUUID, UUID applicationId, final Map<String, Object> config,
+                                           final JobExecution jobExecution, S3Export s3Export ) throws Exception {
 
         //retrieves export entity
-        UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        EntityManager exportManager = emf.getEntityManager( (UUID) config.get("applicationId") );
-        Export export = exportManager.get( exportId, Export.class );
+        Export export = getExportEntity( jobExecution );
 
-        //sets up a output stream for s3 backup.
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ApplicationInfo application = managementService.getApplicationInfo( applicationId );
+        String appFileName = prepareOutputFileName( "application", application.getName(), null );
 
-        // Loop through the applications per organization
-        BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
-        for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
+        File ephemeral = collectionExportAndQuery( applicationId, config, export, jobExecution );
 
-            logger.info( application.getValue() + " : " + application.getKey() );
+        fileTransfer( export, appFileName, ephemeral, config, s3Export );
+    }
 
-            String appFileName = prepareOutputFileName( "application", application.getValue() );
 
-            JsonGenerator jg = getJsonGenerator( baos );
+    /**
+     * Exports a specific collection from an org-app combo.
+     */
+    //might be confusing, but uses the /s/ inclusion or exclusion nomenclature.
+    private void exportCollectionFromOrgApp( UUID applicationUUID, final Map<String, Object> config,
+                                             final JobExecution jobExecution, S3Export s3Export ) throws Exception {
 
-            EntityManager em = emf.getEntityManager( application.getKey() );
+        //retrieves export entity
+        Export export = getExportEntity( jobExecution );
+        ApplicationInfo application = managementService.getApplicationInfo( applicationUUID );
 
-            jg.writeStartArray();
+        String appFileName = prepareOutputFileName( "application", application.getName(),
+                ( String ) config.get( "collectionName" ) );
 
-            Map<String, Object> metadata = em.getApplicationCollectionMetadata();
-            long starting_time = System.currentTimeMillis();
 
-            // Loop through the collections. This is the only way to loop
-            // through the entities in the application (former namespace).
-            //could support queries, just need to implement that in the rest endpoint.
-            for ( String collectionName : metadata.keySet() ) {
-                //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
-                if ( collectionName.equals( (String) config.get("collectionName")) ) {
-                    //Query entity manager for the entities in a collection
-                    Query query = new Query();
-                    query.setLimit( MAX_ENTITY_FETCH );
-                    query.setResultsLevel( Results.Level.ALL_PROPERTIES );
-                    Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
+        File ephemeral = collectionExportAndQuery( applicationUUID, config, export, jobExecution );
 
-                    //pages through the query and backs up all results.
-                    PagingResultsIterator itr = new PagingResultsIterator( entities );
-                    for ( Object e : itr ) {
-                        starting_time = checkTimeDelta( starting_time, jobExecution );
-                        Entity entity = ( Entity ) e;
-                        jg.writeStartObject();
-                        jg.writeFieldName( "Metadata" );
-                        jg.writeObject(entity );
-                        saveCollectionMembers( jg, em, ( String ) config.get( "collectionName" ), entity );
-                        jg.writeEndObject();
-                    }
-                }
-            }
-
-            // Close writer and file for this application.
-            jg.writeEndArray();
-            jg.close();
-            baos.flush();
-            baos.close();
-
-            //sets up the Inputstream for copying the method to s3.
-            InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-            try {
-                s3Export.copyToS3( is, config, appFileName );
-            }
-            catch ( Exception e ) {
-                export.setState( Export.State.FAILED );
-                return;
-            }
-        }
+        fileTransfer( export, appFileName, ephemeral, config, s3Export );
     }
 
 
     /**
      * Regulates how long to wait until the next heartbeat.
-     * @param startingTime
-     * @param jobExecution
-     * @return
      */
     public long checkTimeDelta( long startingTime, final JobExecution jobExecution ) {
 
@@ -529,19 +523,13 @@ public class ExportServiceImpl implements ExportService {
     }
 
 
-    protected JsonGenerator getJsonGenerator( ByteArrayOutputStream out ) throws IOException {
+    protected JsonGenerator getJsonGenerator( File ephermal ) throws IOException {
         //TODO:shouldn't the below be UTF-16?
-        //PrintWriter out = new PrintWriter( outFile, "UTF-8" );
 
-        JsonGenerator jg = jsonFactory.createJsonGenerator( out );
+        JsonGenerator jg = jsonFactory.createJsonGenerator( ephermal, JsonEncoding.UTF8 );
         jg.setPrettyPrinter( new DefaultPrettyPrinter() );
         jg.setCodec( new ObjectMapper() );
         return jg;
-    }
-
-
-    protected File createOutputFile( String type, String name ) {
-        return new File( prepareOutputFileName( type, name ) );
     }
 
 
@@ -550,10 +538,14 @@ public class ExportServiceImpl implements ExportService {
      *
      * @return the file name concatenated with the type and the name of the collection
      */
-    protected String prepareOutputFileName( String type, String name ) {
+    protected String prepareOutputFileName( String type, String name, String CollectionName ) {
         StringBuilder str = new StringBuilder();
         str.append( name );
         str.append( "." );
+        if ( CollectionName != null ) {
+            str.append( CollectionName );
+            str.append( "." );
+        }
         str.append( System.currentTimeMillis() );
         str.append( ".json" );
 
@@ -563,7 +555,69 @@ public class ExportServiceImpl implements ExportService {
     }
 
 
-    @Autowired
-    @Override
-    public void setS3Export( S3Export s3Export ) { this.s3Export = s3Export; }
+    /**
+     * handles the query and export of collections
+     */
+    //TODO:Needs further refactoring.
+    protected File collectionExportAndQuery( UUID applicationUUID, final Map<String, Object> config, Export export,
+                                             final JobExecution jobExecution ) throws Exception {
+
+        EntityManager em = emf.getEntityManager( applicationUUID );
+        Map<String, Object> metadata = em.getApplicationCollectionMetadata();
+        long starting_time = System.currentTimeMillis();
+        File ephemeral = new File( "tempExport" + UUID.randomUUID() );
+        ephemeral.deleteOnExit();
+
+
+        JsonGenerator jg = getJsonGenerator( ephemeral );
+
+        jg.writeStartArray();
+
+        for ( String collectionName : metadata.keySet() ) {
+            if ( collectionName.equals( "exports" ) ) {
+                continue;
+            }
+            //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
+
+            if ( ( config.get( "collectionName" ) == null ) || collectionName
+                    .equals( config.get( "collectionName" ) ) ) {
+                //Query entity manager for the entities in a collection
+                Query query = null;
+                if ( config.get( "query" ) == null ) {
+                    query = new Query();
+                }
+                else {
+                    try {
+                        query = Query.fromQL( ( String ) config.get( "query" ) );
+                    }
+                    catch ( Exception e ) {
+                        export.setErrorMessage( e.getMessage() );
+                    }
+                }
+                query.setLimit( MAX_ENTITY_FETCH );
+                query.setResultsLevel( Results.Level.ALL_PROPERTIES );
+                query.setCollection( collectionName );
+
+                Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
+
+                //pages through the query and backs up all results.
+                PagingResultsIterator itr = new PagingResultsIterator( entities );
+                for ( Object e : itr ) {
+                    starting_time = checkTimeDelta( starting_time, jobExecution );
+                    Entity entity = ( Entity ) e;
+                    jg.writeStartObject();
+                    jg.writeFieldName( "Metadata" );
+                    jg.writeObject( entity );
+                    saveCollectionMembers( jg, em, ( String ) config.get( "collectionName" ), entity );
+                    jg.writeEndObject();
+                    jg.flush();
+                }
+            }
+        }
+        jg.writeEndArray();
+        jg.flush();
+        jg.close();
+
+        return ephemeral;
+    }
 }

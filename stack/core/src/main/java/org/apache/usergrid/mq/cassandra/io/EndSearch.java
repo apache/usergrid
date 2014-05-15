@@ -32,20 +32,10 @@ import me.prettyprint.hector.api.Keyspace;
 public class EndSearch extends NoTransactionSearch
 {
 
-    /**
-     * @param ko
-     * @param cassTimestamp
-     */
     public EndSearch( Keyspace ko )
     {
         super( ko );
-    } /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.usergrid.mq.cassandra.io.NoTransaction#getParams(java.util.UUID,
-     * java.util.UUID, org.apache.usergrid.mq.QueueQuery)
-     */
-
+    }
 
     @Override
     protected SearchParam getParams( UUID queueId, UUID consumerId, QueueQuery query )

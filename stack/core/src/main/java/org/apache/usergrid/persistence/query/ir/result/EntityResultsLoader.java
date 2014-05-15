@@ -41,7 +41,7 @@ public class EntityResultsLoader implements ResultsLoader {
      * @see org.apache.usergrid.persistence.query.ir.result.ResultsLoader#getResults(java.util.List)
      */
     @Override
-    public Results getResults( List<ScanColumn> entityIds ) throws Exception {
-        return em.get( ScanColumnTransformer.getIds( entityIds ) );
+    public Results getResults( List<ScanColumn> entityIds, String type ) throws Exception {
+        return em.getEntities( ScanColumnTransformer.getIds( entityIds ), type );
     }
 }

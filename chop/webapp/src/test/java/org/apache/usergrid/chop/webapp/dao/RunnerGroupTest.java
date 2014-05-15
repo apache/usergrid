@@ -27,66 +27,69 @@ import java.util.HashSet;
 
 import static org.junit.Assert.*;
 
+
 public class RunnerGroupTest {
 
-    private static Logger LOG = LoggerFactory.getLogger(RunnerGroupTest.class);
+    private static Logger LOG = LoggerFactory.getLogger( RunnerGroupTest.class );
+
 
     @Test
     public void testEqualsAndHashCode() {
-        LOG.info("\n=== RunnerGroupTest.testEqualsAndHashcode() ===\n");
+        LOG.info( "\n=== RunnerGroupTest.testEqualsAndHashcode() ===\n" );
 
-        RunnerGroup runnerGroup1 = new RunnerGroup("user", "commit", "module");
-        RunnerGroup runnerGroup2 = new RunnerGroup("user", "commit", "module");
-        RunnerGroup runnerGroup3 = new RunnerGroup("user1", "commit", "module");
+        RunnerGroup runnerGroup1 = new RunnerGroup( "user", "commit", "module" );
+        RunnerGroup runnerGroup2 = new RunnerGroup( "user", "commit", "module" );
+        RunnerGroup runnerGroup3 = new RunnerGroup( "user1", "commit", "module" );
 
-        assertEquals(runnerGroup1, runnerGroup2);
-        assertEquals(runnerGroup1.hashCode(), runnerGroup2.hashCode());
+        assertEquals( runnerGroup1, runnerGroup2 );
+        assertEquals( runnerGroup1.hashCode(), runnerGroup2.hashCode() );
 
-        assertNotEquals(runnerGroup1, runnerGroup3);
-        assertNotEquals(runnerGroup1.hashCode(), runnerGroup3.hashCode());
+        assertNotEquals( runnerGroup1, runnerGroup3 );
+        assertNotEquals( runnerGroup1.hashCode(), runnerGroup3.hashCode() );
     }
+
 
     @Test
     public void testWithCollections() {
-        LOG.info("\n=== RunnerGroupTest.testWithCollections() ===\n");
+        LOG.info( "\n=== RunnerGroupTest.testWithCollections() ===\n" );
 
-        RunnerGroup runnerGroup1 = new RunnerGroup("user", "commit", "module");
-        RunnerGroup runnerGroup2 = new RunnerGroup("user", "commit", "module");
-        RunnerGroup runnerGroup3 = new RunnerGroup("user1", "commit", "module");
+        RunnerGroup runnerGroup1 = new RunnerGroup( "user", "commit", "module" );
+        RunnerGroup runnerGroup2 = new RunnerGroup( "user", "commit", "module" );
+        RunnerGroup runnerGroup3 = new RunnerGroup( "user1", "commit", "module" );
         HashSet<RunnerGroup> set = new HashSet<RunnerGroup>();
 
-        set.add(runnerGroup1);
-        set.add(runnerGroup2);
-        assertEquals(set.size(), 1);
-        assertTrue(set.contains(runnerGroup1));
-        assertTrue(set.contains(runnerGroup2));
+        set.add( runnerGroup1 );
+        set.add( runnerGroup2 );
+        assertEquals( set.size(), 1 );
+        assertTrue( set.contains( runnerGroup1 ) );
+        assertTrue( set.contains( runnerGroup2 ) );
 
-        set.add(runnerGroup3);
-        assertEquals(set.size(), 2);
-        assertTrue(set.contains(runnerGroup3));
+        set.add( runnerGroup3 );
+        assertEquals( set.size(), 2 );
+        assertTrue(set.contains( runnerGroup3 ) );
 
-        set.remove(runnerGroup3);
-        assertTrue(!set.contains(runnerGroup3));
+        set.remove( runnerGroup3 );
+        assertTrue( ! set.contains( runnerGroup3 ) );
     }
+
 
     @Test
     public void testId() {
-        LOG.info("\n=== RunnerGroupTest.testId() ===\n");
+        LOG.info( "\n=== RunnerGroupTest.testId() ===\n" );
 
-        RunnerGroup runnerGroup = new RunnerGroup("user1", "", "");
-
-        assertTrue(runnerGroup.hashCode() < 0);
+        RunnerGroup runnerGroup = new RunnerGroup( "user1", "", "" );
 
         // Make sure the id doesn't contain the dash. The dash can cause issues in ES search.
-        assertTrue(!runnerGroup.getId().contains("-"));
+        assertTrue( ! runnerGroup.getId().contains( "-" ) );
     }
+
 
     @Test
     public void testNull() {
-        LOG.info("\n=== RunnerGroupTest.testNull() ===\n");
+        LOG.info( "\n=== RunnerGroupTest.testNull() ===\n" );
 
-        assertTrue(new RunnerGroup("user", "", "").isNull());
-        assertTrue(new RunnerGroup("", "commit", "").isNull());
-        assertTrue(new RunnerGroup("", "", "module").isNull());
+        assertTrue( new RunnerGroup( "user", "", "" ).isNull() );
+        assertTrue( new RunnerGroup( "", "commit", "" ).isNull() );
+        assertTrue( new RunnerGroup( "", "", "module" ).isNull() );
     }
 }

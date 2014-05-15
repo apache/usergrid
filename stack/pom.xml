@@ -437,12 +437,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-core</artifactId>
-        <version>3.0.3</version>
-      </dependency>
-
-      <dependency>
         <groupId>org.apache.cassandra</groupId>
         <artifactId>cassandra-thrift</artifactId>
         <version>${cassandra-version}</version>
@@ -881,8 +875,8 @@
       <dependency>
         <groupId>net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
-        <!-- we'd like to use 0.0.8 but it is not in Maven Central -->
-        <version>0.0.7</version>
+        <!-- included as local dependency -->
+        <version>0.0.8</version>
       </dependency>
 
       <dependency>
@@ -1122,12 +1116,6 @@
       <dependency>
         <groupId>org.apache.tomcat</groupId>
         <artifactId>tomcat-jasper-el</artifactId>
-        <version>${tomcat-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.tomcat</groupId>
-        <artifactId>tomcat-jsp-api</artifactId>
         <version>${tomcat-version}</version>
       </dependency>
 
@@ -1812,13 +1800,14 @@
                     <exclude>**/README.md</exclude>
                     <exclude>**/CHANGES.txt</exclude>
                     <exclude>**/*.json</exclude>
-                    <exclude>**/*.properties</exclude>
+                    <exclude>**/*.log</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
                     <exclude>**/.gitignore</exclude>
                     <exclude>**/.idea/**</exclude>
                     <exclude>**/*.iml</exclude>
+                    <exclude>**/*.log</exclude>
                     <exclude>**/nbactions.xml</exclude>
                     <exclude>**/nb-configuration.xml</exclude>
                     <exclude>**/.classpath/**</exclude>
@@ -1848,6 +1837,7 @@
 
                     <!-- TODO: need to add headers to many files in corepersistence -->
                     <exclude>**/corepersistence/**</exclude>
+                    <exclude>**/awscluster/**</exclude>
 
                 </excludes>
             </configuration>
@@ -1858,8 +1848,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.7</source>
+          <target>1.7</target>
           <optimize>true</optimize>
           <showDeprecation>true</showDeprecation>
           <debug>true</debug>
@@ -1890,7 +1880,7 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>1.6.0</version>
+                  <version>1.7.0</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
                   <version>[3.0,)</version>

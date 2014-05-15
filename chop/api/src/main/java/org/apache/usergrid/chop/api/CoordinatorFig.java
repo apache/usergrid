@@ -37,18 +37,11 @@ public interface CoordinatorFig extends GuicyFig {
     String getUploadPath();
 
 
-    String UPLOAD_RESULTS_PATH = "coordinator.endpoint.upload.results";
-    String UPLOAD_RESULTS_PATH_DEFAULT = "/upload/results";
-    @Key( UPLOAD_RESULTS_PATH )
-    @Default( UPLOAD_RESULTS_PATH_DEFAULT )
-    String getUploadResultsPath();
-
-
-    String UPLOAD_SUMMARY_PATH = "coordinator.endpoint.upload.summary";
-    String UPLOAD_SUMMARY_PATH_DEFAULT = "/upload/summary";
-    @Key( UPLOAD_SUMMARY_PATH )
-    @Default( UPLOAD_SUMMARY_PATH_DEFAULT )
-    String getUploadSummaryPath();
+    String STORE_RESULTS_PATH = "coordinator.endpoint.store.results";
+    String STORE_RESULTS_PATH_DEFAULT = "/run/store";
+    @Key( STORE_RESULTS_PATH )
+    @Default( STORE_RESULTS_PATH_DEFAULT )
+    String getStoreResultsPath();
 
 
     String RUN_STATUS_PATH = "coordinator.endpoint.run.status";

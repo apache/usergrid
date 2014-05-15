@@ -66,7 +66,11 @@ public interface CassandraFig extends GuicyFig {
 
     @Key("cassandra.discovery")
     @Default( "RING_DESCRIBE" )
-    String getDiscoveryType();
+    String getDiscoveryType();    
+    
+    @Key("cassandra.embedded")
+    @Default( "false" )
+    boolean isEmbedded();
 
 
     @Default("CL_QUORUM")

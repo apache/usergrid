@@ -62,6 +62,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.model.entity.Entity;
 
 import rx.Observable;
 import rx.functions.Func1;
@@ -124,9 +125,7 @@ public class GraphManagerImpl implements GraphManager {
         this.graphFig = graphFig;
         this.consistencyFig = consistencyFig;
 
-
         this.edgeDeleteAsyncProcessor = edgeDelete;
-
 
         this.nodeDeleteAsyncProcessor = nodeDelete;
 

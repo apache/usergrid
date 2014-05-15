@@ -25,11 +25,34 @@ module.exports = function(grunt) {
         "uglify": {
             "unminified": {
                 "options": {
-                    "banner": "/*! <%= meta.package.name %>@<%= meta.package.version %> <%= grunt.template.today('yyyy-mm-dd') %> */\n",
+                    "banner": "/*! \n\
+ *Licensed to the Apache Software Foundation (ASF) under one\n\
+ *or more contributor license agreements.  See the NOTICE file\n\
+ *distributed with this work for additional information\n\
+ *regarding copyright ownership.  The ASF licenses this file\n\
+ *to you under the Apache License, Version 2.0 (the\n\
+ *\"License\"); you may not use this file except in compliance\n\
+ *with the License.  You may obtain a copy of the License at\n\
+ *\n\
+ *  http://www.apache.org/licenses/LICENSE-2.0\n\
+ * \n\
+ *Unless required by applicable law or agreed to in writing,\n\
+ *software distributed under the License is distributed on an\n\
+ *\"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY\n\
+ *KIND, either express or implied.  See the License for the\n\
+ *specific language governing permissions and limitations\n\
+ *under the License.\n\
+ * \n\
+ * \n\
+ * <%= meta.package.name %>@<%= meta.package.version %> <%= grunt.template.today('yyyy-mm-dd') %> \n\
+ */\n",
                     "mangle": false,
                     "compress": false,
                     "beautify": true,
-                    "preserveComments": "all"
+                    "preserveComments": function(node, comment){
+                        //console.log((node.parent_scope!==undefined&&comment.value.indexOf('*Licensed to the Apache Software Foundation')===-1)?"has parent":comment.value);
+                        return comment.type==='comment2'&&comment.value.indexOf('*Licensed to the Apache Software Foundation')===-1;
+                    }
                 },
                 "files": {
                     "usergrid.js": files
@@ -37,7 +60,27 @@ module.exports = function(grunt) {
             },
             "minified": {
                 "options": {
-                    "banner": "/*! <%= meta.package.name %>@<%= meta.package.version %> <%= grunt.template.today('yyyy-mm-dd') %> */\n",
+                    "banner": "/*! \n\
+ *Licensed to the Apache Software Foundation (ASF) under one\n\
+ *or more contributor license agreements.  See the NOTICE file\n\
+ *distributed with this work for additional information\n\
+ *regarding copyright ownership.  The ASF licenses this file\n\
+ *to you under the Apache License, Version 2.0 (the\n\
+ *\"License\"); you may not use this file except in compliance\n\
+ *with the License.  You may obtain a copy of the License at\n\
+ *\n\
+ *  http://www.apache.org/licenses/LICENSE-2.0\n\
+ * \n\
+ *Unless required by applicable law or agreed to in writing,\n\
+ *software distributed under the License is distributed on an\n\
+ *\"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY\n\
+ *KIND, either express or implied.  See the License for the\n\
+ *specific language governing permissions and limitations\n\
+ *under the License.\n\
+ * \n\
+ * \n\
+ * <%= meta.package.name %>@<%= meta.package.version %> <%= grunt.template.today('yyyy-mm-dd') %> \n\
+ */\n",
                     "mangle": false,
                     "compress": true,
                     "beautify": false,

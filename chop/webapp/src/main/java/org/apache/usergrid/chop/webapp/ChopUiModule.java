@@ -25,6 +25,7 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import org.apache.shiro.guice.web.ShiroWebModule;
 import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.store.amazon.AmazonModule;
+import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
 import org.apache.usergrid.chop.webapp.coordinator.rest.*;
 import org.apache.usergrid.chop.webapp.elasticsearch.ElasticSearchClient;
 import org.apache.usergrid.chop.webapp.elasticsearch.ElasticSearchFig;
@@ -71,12 +72,12 @@ public class ChopUiModule extends ServletModule {
         bind( TestGetResource.class ).asEagerSingleton();
         bind( AuthResource.class ).asEagerSingleton();
         bind( PropertiesResource.class ).asEagerSingleton();
+        bind( RunnerCoordinator.class ).asEagerSingleton();
 
-        //bind shiro
         ShiroWebModule.bindGuiceFilter( binder() );
 
         // This should be before "/*" otherwise the vaadin servlet will not work
-        serve( "/VAADIN/*" ).with( VaadinServlet.class );
+        serve( "/VAADIN*" ).with( VaadinServlet.class );
 
         Map<String, String> params = new HashMap<String, String>();
         params.put( PACKAGES_KEY, getClass().getPackage().toString() );

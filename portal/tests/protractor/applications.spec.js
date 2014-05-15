@@ -10,7 +10,7 @@ describe('Test Applications Dropdown', function () {
 
   describe('Test Application Switching',function(){
     it('should navigate to sandbox.',function(){
-      browser.driver.get(browser.baseUrl+'/#!/app-overview/summary');
+      browser.driver.get(browser.baseUrl+'#!/app-overview/summary');
       browser.wait(function(){
         return element(by.id('app-overview-title')).getText().then(function(text){
           return text===appName2.toUpperCase();

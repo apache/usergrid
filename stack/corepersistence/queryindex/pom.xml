@@ -141,6 +141,13 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- common stuff, logging, etc.-->
 
         <dependency>
@@ -173,7 +180,7 @@
 
       <dependency>
           <groupId>org.apache.usergrid</groupId>
-          <artifactId>core</artifactId>
+          <artifactId>common</artifactId>
           <version>${project.version}</version>
           <classifier>tests</classifier>
           <scope>test</scope>

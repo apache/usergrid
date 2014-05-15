@@ -19,6 +19,7 @@
 package org.apache.usergrid.chop.webapp.view.util;
 
 import com.google.inject.Singleton;
+
 import org.apache.usergrid.chop.webapp.view.main.MainView;
 
 import javax.servlet.ServletConfig;
