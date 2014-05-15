@@ -418,6 +418,15 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
             this.edge = edge;
             this.edgeSerialization = edgeSerialization;
         }
+
+
+        @Override
+        public String toString() {
+            return "SourceAwareMarkedEdge{" +
+                    "edge=" + edge +
+                    ", edgeSerialization=" + edgeSerialization +
+                    '}';
+        }
     }
 
 

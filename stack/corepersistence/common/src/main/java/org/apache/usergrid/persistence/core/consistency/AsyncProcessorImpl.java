@@ -68,7 +68,7 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
 
         //we purposefully use a new thread.  We don't want to use one of the I/O threads to run this task
         //in the event the scheduler is full, we'll end up rejecting the reschedule of this task
-        Schedulers.newThread().schedulePeriodically( new TimeoutTask<T>( this, consistencyFig ), consistencyFig.getTaskLoopTime(),
+        Schedulers.newThread().createWorker().schedulePeriodically( new TimeoutTask<T>( this, consistencyFig ), consistencyFig.getTaskLoopTime(),
                 consistencyFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
     }
 

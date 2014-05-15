@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.core.consistency;
 import java.util.Iterator;
 
 import rx.Scheduler;
+import rx.functions.Action0;
 import rx.functions.Action1;
 
 
@@ -29,7 +30,7 @@ import rx.functions.Action1;
  *
  *
  */
-public class TimeoutTask<T> implements Action1<Scheduler.Inner> {
+public class TimeoutTask<T> implements Action0 {
 
     private final AsyncProcessor<T> processor;
     private final ConsistencyFig graphFig;
@@ -41,14 +42,25 @@ public class TimeoutTask<T> implements Action1<Scheduler.Inner> {
     }
 
 
+
+
+    /**
+     * Get the timeouts
+     * @return
+     */
+    private Iterator<AsynchronousMessage<T>> getTimeouts() {
+        return processor.getTimeouts( graphFig.getTimeoutReadSize(), graphFig.getRepairTimeout() * 2 ).iterator();
+    }
+
+
     @Override
-    public void call( final Scheduler.Inner inner ) {
+    public void call() {
 
         /**
          * We purposefully loop through a tight loop.  If we have anything to process, we need to do so
          * Once we run out of items to process, this thread will sleep and the timer will fire
          */
-        while(!inner.isUnsubscribed() && graphFig.getTimeoutReadSize() > 0) {
+        while(graphFig.getTimeoutReadSize() > 0) {
 
             Iterator<AsynchronousMessage<T>> timeouts = getTimeouts();
 
@@ -64,14 +76,5 @@ public class TimeoutTask<T> implements Action1<Scheduler.Inner> {
             }
 
         }
-    }
-
-
-    /**
-     * Get the timeouts
-     * @return
-     */
-    private Iterator<AsynchronousMessage<T>> getTimeouts() {
-        return processor.getTimeouts( graphFig.getTimeoutReadSize(), graphFig.getRepairTimeout() * 2 ).iterator();
     }
 }

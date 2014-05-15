@@ -49,37 +49,37 @@ public class CassandraRule extends EnvironResource {
         if ( started ) {
             return;
         }
-
-        synchronized ( mutex ) {
-
-            //second into mutex
-            if(started){
-                return;
-            }
-
-            File dataDir = Files.createTempDir();
-            dataDir.deleteOnExit();
-
-            //cleanup before we run, shouldn't be necessary, but had the directory exist during JVM kill
-            if( dataDir.exists() ) {
-                FileUtils.deleteRecursive( dataDir );
-            }
-
-            try {
-                LOG.info( "Starting cassandra" );
-
-                cass = new EmbeddedCassandra( dataDir, "Usergrid", 9160,
-                        AvailablePortFinder.getNextAvailable() );
-                cass.start();
-
-                LOG.info( "Cassandra boostrapped" );
-
-                started = true;
-            }
-            catch ( IOException e ) {
-                throw new RuntimeException( "Unable to start cassandra", e );
-            }
-        }
+//
+//        synchronized ( mutex ) {
+//
+//            //second into mutex
+//            if(started){
+//                return;
+//            }
+//
+//            File dataDir = Files.createTempDir();
+//            dataDir.deleteOnExit();
+//
+//            //cleanup before we run, shouldn't be necessary, but had the directory exist during JVM kill
+//            if( dataDir.exists() ) {
+//                FileUtils.deleteRecursive( dataDir );
+//            }
+//
+//            try {
+//                LOG.info( "Starting cassandra" );
+//
+//                cass = new EmbeddedCassandra( dataDir, "Usergrid", 9160,
+//                        AvailablePortFinder.getNextAvailable() );
+//                cass.start();
+//
+//                LOG.info( "Cassandra boostrapped" );
+//
+//                started = true;
+//            }
+//            catch ( IOException e ) {
+//                throw new RuntimeException( "Unable to start cassandra", e );
+//            }
+//        }
     }
 
 

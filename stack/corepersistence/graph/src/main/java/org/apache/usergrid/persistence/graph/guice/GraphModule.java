@@ -284,6 +284,7 @@ public class GraphModule extends AbstractModule {
         private final AsyncProcessor<EdgeEvent<Id>> nodeDelete;
         private final EdgeSerialization commitLogSerialization;
         private final EdgeSerialization storageSerialization;
+        private final MergedEdgeReader mergedEdgeReader;
         private final Keyspace keyspace;
 
 
@@ -294,7 +295,8 @@ public class GraphModule extends AbstractModule {
                                            final GraphFig graphFig,
                                            @NodeDelete final AsyncProcessor<EdgeEvent<Id>> nodeDelete,
                                            @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
-                                           @StorageEdgeSerialization final EdgeSerialization storageSerialization,final Keyspace keyspace ) {
+                                           @StorageEdgeSerialization final EdgeSerialization storageSerialization, final MergedEdgeReader mergedEdgeReader,
+                                           final Keyspace keyspace ) {
 
             this.nodeSerialization = nodeSerialization;
             this.edgeMetadataSerialization = edgeMetadataSerialization;
@@ -303,6 +305,7 @@ public class GraphModule extends AbstractModule {
             this.nodeDelete = nodeDelete;
             this.commitLogSerialization = commitLogSerialization;
             this.storageSerialization = storageSerialization;
+            this.mergedEdgeReader = mergedEdgeReader;
             this.keyspace = keyspace;
         }
 
@@ -310,7 +313,7 @@ public class GraphModule extends AbstractModule {
         @Override
         public MessageListener<EdgeEvent<Id>, Integer> get() {
             return new NodeDeleteListener( nodeSerialization, edgeMetadataSerialization, edgeMetaRepair, graphFig,
-                    nodeDelete, commitLogSerialization, storageSerialization, keyspace );
+                    nodeDelete, commitLogSerialization, storageSerialization, mergedEdgeReader, keyspace );
         }
     }
 
