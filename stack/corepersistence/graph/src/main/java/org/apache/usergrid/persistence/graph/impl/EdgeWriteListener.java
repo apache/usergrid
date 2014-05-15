@@ -76,6 +76,6 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<MarkedEdge>,
 
     @Override
     public Observable<Integer> receive( final EdgeEvent<MarkedEdge> write ) {
-       return edgeWriteCompact.compact( write.getOrganizationScope(), write.getData() );
+       return edgeWriteCompact.compact( write.getOrganizationScope(), write.getData(), write.getTimestamp() );
     }
 }

@@ -141,16 +141,20 @@ public class EdgeDeleteListenerTest {
         MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId );
 
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3 ).execute();
+        final UUID timestamp = UUIDGenerator.newTimeUUID();
 
-        storageEdgeSerialization.writeEdge( scope, edgeV1 ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV2 ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV3 ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+
+        storageEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
 
 
-        EdgeEvent<MarkedEdge> edgeDeleteEvent = new EdgeEvent<>( scope, edgeV3.getVersion(), edgeV3 );
+
+
+        EdgeEvent<MarkedEdge> edgeDeleteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
 
         //now perform the listener execution
         EdgeEvent<MarkedEdge> returned = edgeDeleteListener.receive( edgeDeleteEvent ).toBlockingObservable().single();
@@ -278,13 +282,15 @@ public class EdgeDeleteListenerTest {
         MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId );
 
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3 ).execute();
+        final UUID timestamp = UUIDGenerator.newTimeUUID();
 
-        storageEdgeSerialization.writeEdge( scope, edgeV1 ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV2 ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV3 ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+
+        storageEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edgeV1 ).execute();
         edgeMetadataSerialization.writeEdge( scope, edgeV2 ).execute();
@@ -293,17 +299,17 @@ public class EdgeDeleteListenerTest {
 
         //now perform the listener execution, should only clean up to edge v2
         EdgeEvent<MarkedEdge> returned =
-                edgeDeleteListener.receive( new EdgeEvent<>( scope, edgeV2.getVersion(), edgeV2 ) )
+                edgeDeleteListener.receive( new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV2 ) )
                                   .toBlockingObservable().single();
 
         assertEquals( edgeV2, returned.getData() );
 
-        returned = edgeDeleteListener.receive( new EdgeEvent<>( scope, edgeV1.getVersion(), edgeV1 ) )
+        returned = edgeDeleteListener.receive( new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV1 ) )
                                      .toBlockingObservable().single();
 
         assertEquals( edgeV1, returned.getData() );
 
-        returned = edgeDeleteListener.receive( new EdgeEvent<>( scope, edgeV3.getVersion(), edgeV3 ) )
+        returned = edgeDeleteListener.receive( new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 ) )
                                      .toBlockingObservable().single();
 
         assertEquals( edgeV3, returned.getData() );

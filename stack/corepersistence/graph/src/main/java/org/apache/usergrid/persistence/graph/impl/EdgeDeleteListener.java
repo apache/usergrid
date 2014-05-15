@@ -24,7 +24,6 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
@@ -67,7 +66,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<MarkedEdge>
         final OrganizationScope scope = delete.getOrganizationScope();
         final UUID maxVersion = edge.getVersion();
 
-        return edgeDeleteRepair.repair( scope, edge )
+        return edgeDeleteRepair.repair( scope, edge, delete.getTimestamp() )
 
                                .flatMap( new Func1<MarkedEdge, Observable<Integer>>() {
                                    @Override

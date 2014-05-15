@@ -78,7 +78,7 @@ public class EdgeWriteCompactImpl implements EdgeWriteCompact {
        }
 
     @Override
-    public Observable<Integer> compact( final OrganizationScope scope, final MarkedEdge edge ) {
+    public Observable<Integer> compact( final OrganizationScope scope, final MarkedEdge edge, final UUID timestamp ) {
         final Edge writtenEdge = edge;
 
               final UUID writeVersion = edge.getVersion();
@@ -106,10 +106,10 @@ public class EdgeWriteCompactImpl implements EdgeWriteCompact {
                                   LOG.debug( "Buffering edge {} to permanent storage and removing from commitlog", edge );
 
                                   //batch the write
-                                  storageWriteBatch.mergeShallow( permanentStorage.writeEdge( scope, edge ) );
+                                  storageWriteBatch.mergeShallow( permanentStorage.writeEdge( scope, edge, timestamp ) );
 
                                   //batch the cleanup
-                                  commitlogCleanBatch.mergeShallow( commitLog.deleteEdge( scope, edge ) );
+                                  commitlogCleanBatch.mergeShallow( commitLog.deleteEdge( scope, edge, timestamp ) );
                               }
 
 

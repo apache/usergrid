@@ -182,13 +182,14 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     @Override
-    public MutationBatch writeEdge( final OrganizationScope scope, final MarkedEdge markedEdge ) {
+    public MutationBatch writeEdge( final OrganizationScope scope, final MarkedEdge markedEdge, final UUID timestamp ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateEdge( markedEdge );
+        ValidationUtils.verifyTimeUuid( timestamp, "timestamp" );
 
 
         final MutationBatch batch =
-                keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
+                keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() ).withTimestamp( timestamp.timestamp() );
 
         final boolean isDeleted = markedEdge.isDeleted();
 
@@ -220,15 +221,17 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     @Override
-    public MutationBatch deleteEdge( final OrganizationScope scope, final MarkedEdge edge ) {
+    public MutationBatch deleteEdge( final OrganizationScope scope, final MarkedEdge markedEdge, final UUID timestamp ) {
         ValidationUtils.validateOrganizationScope( scope );
-        EdgeUtils.validateEdge( edge );
+        EdgeUtils.validateEdge( markedEdge );
+        ValidationUtils.verifyTimeUuid( timestamp, "timestamp" );
+
 
         final MutationBatch batch =
-                keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
+                keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() ).withTimestamp( timestamp.timestamp() );
 
 
-        doWrite( scope, edge, new RowOp<RowKey>() {
+        doWrite( scope, markedEdge, new RowOp<RowKey>() {
             @Override
             public void writeEdge( final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> columnFamily,
                                    final RowKey rowKey, final DirectedEdge edge ) {

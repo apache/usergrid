@@ -1509,7 +1509,7 @@ public abstract class GraphManagerIT {
     //            when( edge.getSourceNode() ).thenReturn( sourceId );
     //            when( edge.getType() ).thenReturn( type );
     //            when( edge.getTargetNode() ).thenReturn( targetId );
-    //            when( edge.getVersion() ).thenReturn( version );
+    //            when( edge.getTimestamp() ).thenReturn( version );
     //
     //            return edge;
     //        }

@@ -126,7 +126,7 @@ public class EdgeMetaRepairTest {
     public void cleanTargetSingleEdge() throws ConnectionException {
         MarkedEdge edge = createEdge( "source", "test", "target" );
 
-        storageEdgeSerialization.writeEdge( scope, edge ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge ).execute();
 
@@ -137,7 +137,7 @@ public class EdgeMetaRepairTest {
 
         //now delete the edge
 
-        storageEdgeSerialization.deleteEdge( scope, edge ).execute();
+        storageEdgeSerialization.deleteEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
         value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getVersion() )
                               .toBlockingObservable().single();
@@ -167,19 +167,19 @@ public class EdgeMetaRepairTest {
         MarkedEdge edge1 = createEdge( createId( "source1" ), "test", targetId );
 
 
-        storageEdgeSerialization.writeEdge( scope, edge1 ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge1, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge1 ).execute();
 
         MarkedEdge edge2 = createEdge( createId( "source2" ), "test", targetId );
 
-        storageEdgeSerialization.writeEdge( scope, edge2 ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge2 ).execute();
 
         MarkedEdge edge3 = createEdge( createId( "source3" ), "test", targetId );
 
-        storageEdgeSerialization.writeEdge( scope, edge3 ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge3, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge3 ).execute();
 
@@ -193,21 +193,21 @@ public class EdgeMetaRepairTest {
 
         //now delete the edge
 
-        storageEdgeSerialization.deleteEdge( scope, edge1 ).execute();
+        storageEdgeSerialization.deleteEdge( scope, edge1, UUIDGenerator.newTimeUUID() ).execute();
 
         value = edgeMetaRepair.repairTargets( scope, edge1.getTargetNode(), edge1.getType(), cleanupVersion )
                               .toBlockingObservable().single();
 
         assertEquals( "No subtypes removed, edges exist", 2, value );
 
-        storageEdgeSerialization.deleteEdge( scope, edge2 ).execute();
+        storageEdgeSerialization.deleteEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
         value = edgeMetaRepair.repairTargets( scope, edge1.getTargetNode(), edge1.getType(), cleanupVersion )
                               .toBlockingObservable().single();
 
         assertEquals( "No subtypes removed, edges exist", 1, value );
 
-        storageEdgeSerialization.deleteEdge( scope, edge3 ).execute();
+        storageEdgeSerialization.deleteEdge( scope, edge3, UUIDGenerator.newTimeUUID() ).execute();
 
         value = edgeMetaRepair.repairTargets( scope, edge1.getTargetNode(), edge1.getType(), cleanupVersion )
                               .toBlockingObservable().single();
@@ -244,7 +244,7 @@ public class EdgeMetaRepairTest {
         for ( int i = 0; i < size; i++ ) {
             MarkedEdge edge = createEdge( createId( "source" + i ), edgeType, targetId );
 
-            storageEdgeSerialization.writeEdge( scope, edge ).execute();
+            storageEdgeSerialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
             edgeMetadataSerialization.writeEdge( scope, edge ).execute();
 
@@ -262,7 +262,7 @@ public class EdgeMetaRepairTest {
         //now delete the edge
 
         for ( MarkedEdge created : writtenEdges ) {
-            storageEdgeSerialization.deleteEdge( scope, created ).execute();
+            storageEdgeSerialization.deleteEdge( scope, created, UUIDGenerator.newTimeUUID() ).execute();
         }
 
 
@@ -289,7 +289,7 @@ public class EdgeMetaRepairTest {
     public void cleanSourceSingleEdge() throws ConnectionException {
         MarkedEdge edge = createEdge( "source", "test", "target" );
 
-        storageEdgeSerialization.writeEdge( scope, edge ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge ).execute();
 
@@ -300,7 +300,7 @@ public class EdgeMetaRepairTest {
 
         //now delete the edge
 
-        storageEdgeSerialization.deleteEdge( scope, edge ).execute();
+        storageEdgeSerialization.deleteEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
         value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getVersion() )
                               .toBlockingObservable().single();
@@ -330,19 +330,19 @@ public class EdgeMetaRepairTest {
         MarkedEdge edge1 = createEdge( sourceId, "test", createId( "target1" ) );
 
 
-        storageEdgeSerialization.writeEdge( scope, edge1 ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge1, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge1 ).execute();
 
         MarkedEdge edge2 = createEdge( sourceId, "test", createId( "target2" ) );
 
-        storageEdgeSerialization.writeEdge( scope, edge2 ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
-        edgeMetadataSerialization.writeEdge( scope, edge2 ).execute();
+        edgeMetadataSerialization.writeEdge( scope, edge2).execute();
 
         MarkedEdge edge3 = createEdge( sourceId, "test", createId( "target3" ) );
 
-        storageEdgeSerialization.writeEdge( scope, edge3 ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge3, UUIDGenerator.newTimeUUID() ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edge3 ).execute();
 
@@ -356,21 +356,21 @@ public class EdgeMetaRepairTest {
 
         //now delete the edge
 
-        storageEdgeSerialization.deleteEdge( scope, edge1 ).execute();
+        storageEdgeSerialization.deleteEdge( scope, edge1, UUIDGenerator.newTimeUUID() ).execute();
 
         value = edgeMetaRepair.repairSources( scope, edge1.getSourceNode(), edge1.getType(), cleanupVersion )
                               .toBlockingObservable().single();
 
         assertEquals( "No subtypes removed, edges exist", 2, value );
 
-        storageEdgeSerialization.deleteEdge( scope, edge2 ).execute();
+        storageEdgeSerialization.deleteEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
         value = edgeMetaRepair.repairSources( scope, edge1.getSourceNode(), edge1.getType(), cleanupVersion )
                               .toBlockingObservable().single();
 
         assertEquals( "No subtypes removed, edges exist", 1, value );
 
-        storageEdgeSerialization.deleteEdge( scope, edge3 ).execute();
+        storageEdgeSerialization.deleteEdge( scope, edge3, UUIDGenerator.newTimeUUID() ).execute();
 
         value = edgeMetaRepair.repairSources( scope, edge1.getSourceNode(), edge1.getType(), cleanupVersion )
                               .toBlockingObservable().single();
@@ -408,7 +408,7 @@ public class EdgeMetaRepairTest {
         for ( int i = 0; i < size; i++ ) {
             MarkedEdge edge = createEdge( sourceId, edgeType, createId( "target" + i ) );
 
-            storageEdgeSerialization.writeEdge( scope, edge ).execute();
+            storageEdgeSerialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
             edgeMetadataSerialization.writeEdge( scope, edge ).execute();
 
@@ -426,7 +426,7 @@ public class EdgeMetaRepairTest {
         //now delete the edge
 
         for ( MarkedEdge created : writtenEdges ) {
-            storageEdgeSerialization.deleteEdge( scope, created ).execute();
+            storageEdgeSerialization.deleteEdge( scope, created, UUIDGenerator.newTimeUUID() ).execute();
         }
 
 

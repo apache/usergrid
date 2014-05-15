@@ -111,7 +111,7 @@ public class EdgeSerializationChopTest {
 
         final MarkedEdge edge = createEdge( sourceId, "edge", targetId );
 
-        serialization.writeEdge( scope, edge ).execute();
+        serialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
 
         UUID now = UUIDGenerator.newTimeUUID();

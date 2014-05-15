@@ -114,17 +114,16 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
 
         final Id node = edgeEvent.getData();
         final OrganizationScope scope = edgeEvent.getOrganizationScope();
-        final UUID version = edgeEvent.getVersion();
 
 
         return Observable.from( node )
 
                 //delete source and targets in parallel and merge them into a single observable
-                .flatMap( new Func1<Id, Observable<MarkedEdge>>() {
+                .flatMap( new Func1<Id, Observable<Integer>>() {
                     @Override
-                    public Observable<MarkedEdge> call( final Id node ) {
+                    public Observable<Integer> call( final Id node ) {
 
-                        Optional<UUID> maxVersion = nodeSerialization.getMaxVersion( scope, node );
+                        final Optional<UUID> maxVersion = nodeSerialization.getMaxVersion( scope, node );
 
                         LOG.debug( "Node with id {} has max version of {}", node, maxVersion.orNull() );
 
@@ -133,27 +132,28 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                             return Observable.empty();
                         }
 
+                        maxVersion.get();
 
-                        return doDeletes( node, scope, maxVersion.get() );
+                        //do all the delete, then when done, delete the node
+                        return doDeletes( node, scope, maxVersion.get() ).count()
+                                //if nothing is ever emitted, emit 0 so that we know no operations took place.
+                                // Finally remove
+                                // the
+                                // target node in the mark
+                               .doOnCompleted( new Action0() {
+                                    @Override
+                                    public void call() {
+                                        try {
+                                            nodeSerialization.delete( scope, node, maxVersion.get() ).execute();
+                                        }
+                                        catch ( ConnectionException e ) {
+                                            throw new RuntimeException( "Unable to delete marked graph node " + node,
+                                                    e );
+                                        }
+                                    }
+                                } );
                     }
-                } )
-
-
-                .count()
-                        //if nothing is ever emitted, emit 0 so that we know no operations took place. Finally remove
-                        // the
-                        // target node in the mark
-                .defaultIfEmpty( 0 ).doOnCompleted( new Action0() {
-                    @Override
-                    public void call() {
-                        try {
-                            nodeSerialization.delete( scope, node, version ).execute();
-                        }
-                        catch ( ConnectionException e ) {
-                            throw new RuntimeException( "Unable to delete marked graph node " + node, e );
-                        }
-                    }
-                } );
+                } ).defaultIfEmpty( 0 );
     }
 
 
@@ -211,8 +211,10 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
 
                             //delete the newest edge <= the version on the node delete
 
-                            batch.mergeShallow( commitLogSerialization.deleteEdge( scope, edge ) );
-                            batch.mergeShallow( storageSerialization.deleteEdge( scope, edge ) );
+                            //we use the version specified on the delete purposefully.  If these edges are re-written
+                            //at a greater time we want them to exit
+                            batch.mergeShallow( commitLogSerialization.deleteEdge( scope, edge, version ) );
+                            batch.mergeShallow( storageSerialization.deleteEdge( scope, edge, version ) );
 
                             sourceNodes.add( new TargetPair( edge.getSourceNode(), edge.getType() ) );
                             targetNodes.add( new TargetPair( edge.getTargetNode(), edge.getType() ) );
@@ -259,7 +261,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
 
 
                         //run both the source/target edge type cleanup, then proceed
-                        return Observable.merge( sourceMetaCleanup, targetMetaCleanup ).lastOrDefault(null)
+                        return Observable.merge( sourceMetaCleanup, targetMetaCleanup ).lastOrDefault( null )
                                          .flatMap( new Func1<Integer, Observable<MarkedEdge>>() {
                                              @Override
                                              public Observable<MarkedEdge> call( final Integer integer ) {

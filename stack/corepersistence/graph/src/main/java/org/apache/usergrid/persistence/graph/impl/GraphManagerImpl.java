@@ -143,15 +143,21 @@ public class GraphManagerImpl implements GraphManager {
                 .user( Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
                     @Override
                     public Edge call( final MarkedEdge edge ) {
-                        final AsynchronousMessage<EdgeEvent<MarkedEdge>> event = edgeWriteAsyncProcessor
-                                .setVerification( new EdgeEvent<>( scope, edge.getVersion(), edge ), getTimeout() );
+
+                        final UUID timestamp = UUIDGenerator.newTimeUUID();
+
 
 
                         final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
 
-                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge );
+                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge, timestamp );
 
                         mutation.mergeShallow( edgeMutation );
+
+                        final AsynchronousMessage<EdgeEvent<MarkedEdge>> event = edgeWriteAsyncProcessor
+                                                       .setVerification( new EdgeEvent<>( scope, timestamp, edge ), getTimeout() );
+
+
 
                         try {
                             LOG.debug( "Writing edge {} to metadata and commit log", edge );
@@ -183,11 +189,15 @@ public class GraphManagerImpl implements GraphManager {
                         Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
                     @Override
                     public Edge call( final MarkedEdge edge ) {
-                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge );
+
+                        final UUID timestamp = UUIDGenerator.newTimeUUID();
+
+
+                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge, timestamp );
 
                         final AsynchronousMessage<EdgeEvent<MarkedEdge>> event =
                                 edgeDeleteAsyncProcessor.setVerification(
-                                        new EdgeEvent<>( scope, edge.getVersion(), edge ), getTimeout() );
+                                        new EdgeEvent<>( scope, timestamp, edge ), getTimeout() );
 
 
                         try {

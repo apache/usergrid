@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 
 
 import java.util.Iterator;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +84,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
     }
 
 
-    public Observable<MarkedEdge> repair( final OrganizationScope scope, final MarkedEdge edge ) {
+    public Observable<MarkedEdge> repair( final OrganizationScope scope, final MarkedEdge edge, final UUID timestamp ) {
 
 
         //merge source and target then deal with the distinct values
@@ -104,14 +105,14 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
                                     //remove from storage
                                     try {
-                                        storageSerialization.deleteEdge( scope, edge ).execute();
+                                        storageSerialization.deleteEdge( scope, edge, timestamp ).execute();
                                     }
                                     catch ( ConnectionException e ) {
                                         throw new RuntimeException("Unable to remove edge from storage", e );
                                     }
 
                                     try {
-                                        commitLogSerialization.deleteEdge( scope, edge ).execute();
+                                        commitLogSerialization.deleteEdge( scope, edge, timestamp ).execute();
                                     }
                                     catch ( ConnectionException e ) {
                                         throw new RuntimeException("Unable to remove edge from commitlog", e );

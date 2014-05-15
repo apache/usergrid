@@ -106,7 +106,7 @@ public class EdgeDeleteRepairTest {
     public void noEdges() {
         MarkedEdge edge = createEdge( "source", "test", "target" );
 
-        Iterator<MarkedEdge> edges = edgeDeleteRepair.repair( scope, edge ).toBlockingObservable().getIterator();
+        Iterator<MarkedEdge> edges = edgeDeleteRepair.repair( scope, edge, UUIDGenerator.newTimeUUID() ).toBlockingObservable().getIterator();
 
         assertFalse( "No edges cleaned", edges.hasNext() );
     }
@@ -125,17 +125,18 @@ public class EdgeDeleteRepairTest {
 
 
         final MarkedEdge edge1 = createMarkedEdge( sourceId, edgeType, targetId );
-        commitLogEdgeSerialization.writeEdge( scope, edge1 ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edge1,  UUIDGenerator.newTimeUUID() ).execute();
+
         //write it as non deleted to storage
         final MarkedEdge edge1NotDeleted =
                 createEdge( edge1.getSourceNode(), edgeType, edge1.getTargetNode(), edge1.getVersion(), false );
 
-        storageEdgeSerialization.writeEdge( scope, edge1NotDeleted ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge1NotDeleted,  UUIDGenerator.newTimeUUID() ).execute();
 
 
         final MarkedEdge edge2 = createEdge( sourceId, edgeType, targetId );
-        commitLogEdgeSerialization.writeEdge( scope, edge2 ).execute();
-        storageEdgeSerialization.writeEdge( scope, edge2 ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
         //now repair delete the first edge
 
@@ -153,7 +154,7 @@ public class EdgeDeleteRepairTest {
         assertEquals( edge1NotDeleted, itr.next() );
         assertFalse( itr.hasNext() );
 
-        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1 ).toBlockingObservable().single();
+        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1, UUIDGenerator.newTimeUUID() ).toBlockingObservable().single();
 
         assertEquals( edge1, deleted );
 

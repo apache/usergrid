@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.graph.serialization;
 
 
 import java.util.Iterator;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.migration.Migration;
@@ -45,7 +46,7 @@ public interface EdgeSerialization extends Migration {
      * @param scope The org scope of the graph
      * @param edge The edge to write
      */
-    MutationBatch writeEdge( OrganizationScope scope, MarkedEdge edge );
+    MutationBatch writeEdge( OrganizationScope scope, MarkedEdge edge, UUID timestamp );
 
     /**
      * EdgeWrite both the source -->target edge and the target<--- source edge into the mutation
@@ -53,7 +54,7 @@ public interface EdgeSerialization extends Migration {
      * @param scope The org scope of the graph
      * @param edge The edge to write
      */
-    MutationBatch deleteEdge( OrganizationScope scope, MarkedEdge edge );
+    MutationBatch deleteEdge( OrganizationScope scope, MarkedEdge edge, UUID timestamp );
 
 
     /**

@@ -138,12 +138,14 @@ public class EdgeWriteListenerTest {
         MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId );
         MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId );
 
+        final UUID timestamp = UUIDGenerator.newTimeUUID();
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3 ).execute();
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, edgeV3.getVersion(), edgeV3 );
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+
+        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
 
         //now perform the listener execution
         Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
@@ -268,11 +270,12 @@ public class EdgeWriteListenerTest {
         MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId );
 
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3 ).execute();
+        final UUID timestamp = UUIDGenerator.newTimeUUID();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, edgeV2.getVersion(), edgeV2 );
+        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV2 );
 
         //now perform the listener execution, should only clean up to edge v2
         Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
