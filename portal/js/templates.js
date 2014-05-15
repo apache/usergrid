@@ -1982,6 +1982,7 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
   $templateCache.put('profile/organizations.html',
     "<div class=\"content-page\"   ng-controller=\"OrgCtrl\">\n" +
     "\n" +
+    "<page-title title=\" Organizations\" icon=\"&#128362;\"></page-title>\n" +
     "\n" +
     "\n" +
     "  <bsmodal id=\"newOrganization\"\n" +
@@ -2055,7 +2056,9 @@ angular.module('appservices').run(['$templateCache', function($templateCache) {
 
 
   $templateCache.put('profile/profile.html',
+    "\n" +
     "<div class=\"content-page\" ng-controller=\"ProfileCtrl\">\n" +
+    "<page-title title=\" Profile\" icon=\"&#59170\"></page-title>\n" +
     "\n" +
     "  <div id=\"account-panels\">\n" +
     "    <div class=\"panel-content\">\n" +
