@@ -54,7 +54,6 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
-import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -121,8 +120,9 @@ public class EntityIndexTest extends BaseIT {
             Map<String, Object> item = (Map<String, Object>) o;
 
             Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
-            entity = EntityMapUtils.fromMap(entity, item);
-            EntityUtils.setVersion(entity, UUIDGenerator.newTimeUUID());
+
+            entity = EntityIndexMapUtils.fromMap( entity, item );
+            EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
 
             entity = entityManager.write(entity).toBlockingObservable().last();
 
@@ -160,10 +160,11 @@ public class EntityIndexTest extends BaseIT {
             put("topspeed", 215);
         }};
 
-        Entity entity = EntityMapUtils.fromMap(entityMap);
-        EntityUtils.setId(entity, new SimpleId("fastcar"));
-        entity = entityManager.write(entity).toBlockingObservable().last();
-        entityIndex.index(scope, entity);
+
+        Entity entity = EntityIndexMapUtils.fromMap( entityMap );
+        EntityUtils.setId( entity, new SimpleId( "fastcar" ));
+        entity = entityManager.write( entity ).toBlockingObservable().last();
+        entityIndex.index( scope, entity );
 
         entityIndex.refresh();
 
@@ -237,10 +238,11 @@ public class EntityIndexTest extends BaseIT {
             Map<String, Object> map1 = (Map<String, Object>) o;
 
             // convert map to entity
-            Entity entity1 = EntityMapUtils.fromMap(map1);
+
+            Entity entity1 = EntityIndexMapUtils.fromMap( map1 );
 
             // convert entity back to map
-            Map map2 = EntityMapUtils.toMap(entity1);
+            Map map2 = EntityIndexMapUtils.toMap( entity1 );
 
             // the two maps should be the same except for six new system properties
             Map diff = Maps.difference(map1, map2).entriesDiffering();
@@ -272,7 +274,7 @@ public class EntityIndexTest extends BaseIT {
             put("middlename", middleName);
         }};
 
-        Entity user = EntityMapUtils.fromMap(entityMap);
+        Entity user = EntityIndexMapUtils.fromMap(entityMap);
         EntityUtils.setId(user, new SimpleId("edanuff"));
         user = entityManager.write(user).toBlockingObservable().last();
         entityIndex.index(scope, user);
@@ -316,7 +318,7 @@ public class EntityIndexTest extends BaseIT {
             put("middlename", middleName);
         }};
 
-        Entity user = EntityMapUtils.fromMap(entityMap);
+        Entity user = EntityIndexMapUtils.fromMap(entityMap);
         EntityUtils.setId(user, new SimpleId("edanuff"));
         user = em.write(user).toBlockingObservable().last();
         ei.index(scope, user);

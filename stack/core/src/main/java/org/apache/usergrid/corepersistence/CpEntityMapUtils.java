@@ -55,7 +55,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  * Utilities for converting entities to/from maps suitable for Core Persistence.
  * Aware of unique properties via Schema.
  */
-public class CpEntityMapUtils {
+class CpEntityMapUtils {
     public static com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind
             .ObjectMapper(  );
 
@@ -243,8 +243,7 @@ public class CpEntityMapUtils {
                 entityMap.put( field.getName(), toMap(eo)); // recursion
 
             } else if (f instanceof StringField) {
-                // index in lower case because Usergrid queries are case insensitive
-                entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
+                entityMap.put(field.getName(), ((String) field.getValue()));
 
             } else if (f instanceof LocationField) {
                 LocationField locField = (LocationField) f;

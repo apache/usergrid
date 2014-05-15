@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
@@ -57,7 +58,7 @@ public class AbstractCollectionService extends AbstractService {
         if ( !isRootService() ) {
             return null;
         }
-        Entity entity = em.get( uuid, this.getEntityType() );
+        Entity entity = em.get( new SimpleEntityRef( this.getEntityType(), uuid));
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -91,12 +92,12 @@ public class AbstractCollectionService extends AbstractService {
         EntityRef entity = null;
 
         if ( !context.moreParameters() ) {
-            entity = em.get( id, this.getEntityType() );
+            entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
 
             entity = importEntity( context, ( Entity ) entity );
         }
         else {
-            entity = em.getRef( id );
+            entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
         }
 
         if ( entity == null ) {
@@ -270,7 +271,7 @@ public class AbstractCollectionService extends AbstractService {
 
         checkPermissionsForEntity( context, id );
 
-        Entity item = em.get( id, this.getEntityType() );
+        Entity item = em.get( new SimpleEntityRef( this.getEntityType(), id));
         if ( item != null ) {
             validateEntityType( item, id );
             updateEntity( context, item, context.getPayload() );
@@ -416,7 +417,7 @@ public class AbstractCollectionService extends AbstractService {
         }
         checkPermissionsForEntity( context, id );
 
-        Entity entity = em.get( id, this.getEntityType() );
+        Entity entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -468,7 +469,7 @@ public class AbstractCollectionService extends AbstractService {
             return getItemById( context, id );
         }
 
-        Entity item = em.get( id, this.getEntityType() );
+        Entity item = em.get( new SimpleEntityRef( this.getEntityType(), id) );
         if ( item == null ) {
             throw new ServiceResourceNotFoundException( context );
         }

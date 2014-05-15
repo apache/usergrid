@@ -185,7 +185,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         LOG.info( "Checking connections for " + entityId.toString() );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        Entity en = em.get( entityId, entityType );
+        Entity en = em.get( new SimpleEntityRef( entityType, entityId));
 
         Results results = em.getConnectedEntities( en.getUuid(), null, null, Results.Level.REFS );
 
@@ -211,7 +211,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         LOG.info( "Checking collection " + collectionName + " for " + entityId.toString() );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        Entity en = em.get( entityId, entityType );
+        Entity en = em.get( new SimpleEntityRef( entityType, entityId ));
 
         int i = 0;
         Results entities = em.getCollection( en, collectionName, null, 100, Results.Level.IDS, false );

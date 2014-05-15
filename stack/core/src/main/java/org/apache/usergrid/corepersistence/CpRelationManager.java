@@ -56,7 +56,6 @@ import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -864,7 +863,8 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    private Results buildResults(Query query, org.apache.usergrid.persistence.index.query.Results cpResults, String collName ) {
+    private Results buildResults(Query query, 
+        org.apache.usergrid.persistence.index.query.Results cpResults, String collName ) {
 
         Results results = null;
 
@@ -893,7 +893,7 @@ public class CpRelationManager implements RelationManager {
                 Entity entity = EntityFactory.newEntity(
                         e.getId().getUuid(), e.getField("type").getValue().toString() );
                 
-                Map<String, Object> entityMap = EntityMapUtils.toMap( e );
+                Map<String, Object> entityMap = CpEntityMapUtils.toMap( e );
                 entity.addProperties( entityMap ); 
                 entities.add( entity );
 

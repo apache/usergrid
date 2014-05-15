@@ -17,7 +17,7 @@
  */
 
 
-package org.apache.usergrid.persistence.index.utils;
+package org.apache.usergrid.persistence.index.impl;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -55,7 +55,7 @@ import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.ANALY
 import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.GEO_SUFFIX;
 
 
-public class EntityMapUtils {
+class EntityIndexMapUtils {
 
     static ObjectMapper objectMapper = new ObjectMapper(  );
 
