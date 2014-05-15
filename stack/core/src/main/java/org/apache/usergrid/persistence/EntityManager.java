@@ -120,12 +120,6 @@ public interface EntityManager {
      */
     public EntityRef validate( EntityRef entityRef ) throws Exception;
 
-    public String getType( UUID entityId ) throws Exception;
-
-    public EntityRef getRef( UUID entityId ) throws Exception;
-
-    public Entity get( UUID entityId, String type ) throws Exception;
-
     /**
      * Retrieves the entity for the specified entity reference.
      *
@@ -538,14 +532,14 @@ public interface EntityManager {
 
     public Results getUsersInGroupRole( UUID groupId, String roleName, Results.Level level ) throws Exception;
 
-    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, String counterName,
-                                            long value );
+    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, 
+            String counterName, long value );
 
-    public Results getAggregateCounters( UUID userId, UUID groupId, String category, String counterName,
-                                         CounterResolution resolution, long start, long finish, boolean pad );
+    public Results getAggregateCounters( UUID userId, UUID groupId, String category, 
+            String counterName, CounterResolution resolution, long start, long finish, boolean pad );
 
-    public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category, String counterName,
-                                         CounterResolution resolution, long start, long finish, boolean pad );
+    public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category, 
+            String counterName, CounterResolution resolution, long start, long finish, boolean pad );
 
     public Results getAggregateCounters( Query query ) throws Exception;
 
@@ -559,10 +553,11 @@ public interface EntityManager {
 
     public Map<String, Long> getApplicationCounters() throws Exception;
 
-    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, Map<String, Long> counters );
+    public void incrementAggregateCounters( 
+            UUID userId, UUID groupId, String category, Map<String, Long> counters );
 
-    public boolean isPropertyValueUniqueForEntity( String entityType, String propertyName, Object propertyValue )
-            throws Exception;
+    public boolean isPropertyValueUniqueForEntity( 
+            String entityType, String propertyName, Object propertyValue ) throws Exception;
 
     public <A extends Entity> A get( EntityRef entityRef, Class<A> entityClass ) throws Exception;
 
@@ -590,9 +585,12 @@ public interface EntityManager {
     public void revokeGroupPermission( UUID groupId, String permission ) throws Exception;
 
 
-    <A extends Entity> A batchCreate(Mutator<ByteBuffer> m, String entityType, Class<A> entityClass, Map<String, Object> properties, UUID importId, UUID timestampUuid) throws Exception;
+    <A extends Entity> A batchCreate(Mutator<ByteBuffer> m, String entityType, 
+            Class<A> entityClass, Map<String, Object> properties, 
+            UUID importId, UUID timestampUuid) throws Exception;
 
-    void batchCreateRole(Mutator<ByteBuffer> batch, UUID groupId, String roleName, String roleTitle, long inactivity, RoleRef roleRef, UUID timestampUuid) throws Exception;
+    void batchCreateRole(Mutator<ByteBuffer> batch, UUID groupId, String roleName, 
+            String roleTitle, long inactivity, RoleRef roleRef, UUID timestampUuid) throws Exception;
 
     /**
      * Batch dictionary property.
@@ -607,11 +605,16 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch, EntityRef entity, String propertyName, Object propertyValue, UUID timestampUuid) throws Exception;
+    Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch, EntityRef entity, 
+            String propertyName, Object propertyValue, UUID timestampUuid) throws Exception;
 
-    Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch, EntityRef entity, String propertyName, Object propertyValue, boolean force, boolean noRead, UUID timestampUuid) throws Exception;
+    Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch, EntityRef entity, 
+            String propertyName, Object propertyValue, boolean force, boolean noRead, 
+            UUID timestampUuid) throws Exception;
 
-    Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, Object elementCoValue, boolean removeFromDictionary, UUID timestampUuid) throws Exception;
+    Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch, EntityRef entity, 
+            String dictionaryName, Object elementValue, Object elementCoValue, 
+            boolean removeFromDictionary, UUID timestampUuid) throws Exception;
 
     /**
      * Batch update set.
@@ -627,7 +630,9 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, boolean removeFromDictionary, UUID timestampUuid) throws Exception;
+    Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch, EntityRef entity, 
+            String dictionaryName, Object elementValue, 
+            boolean removeFromDictionary, UUID timestampUuid) throws Exception;
 
     /**
      * Batch update properties.
@@ -641,13 +646,12 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    Mutator<ByteBuffer> batchUpdateProperties(Mutator<ByteBuffer> batch, EntityRef entity, Map<String, Object> properties, UUID timestampUuid) throws Exception;
+    Mutator<ByteBuffer> batchUpdateProperties(Mutator<ByteBuffer> batch, 
+            EntityRef entity, Map<String, Object> properties, UUID timestampUuid) throws Exception;
 
     Set<String> getDictionaryNames(EntityRef entity) throws Exception;
 
-    void insertEntity(String type, UUID entityId) throws Exception;
-
-    void deleteEntity(UUID entityId) throws Exception;
+    void insertEntity( EntityRef ref ) throws Exception;
 
     /** @return the applicationId */
     UUID getApplicationId();

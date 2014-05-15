@@ -35,7 +35,6 @@ import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Results;
-import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -85,7 +84,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         // create a muffin
         CollectionScope muffinScope = new CollectionScopeImpl( appId, orgId, "muffins" );
         Entity muffin = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), muffinScope.getName()));
-        muffin = EntityMapUtils.fromMap( muffin, new HashMap<String, Object>() {{
+        muffin = EntityIndexMapUtils.fromMap( muffin, new HashMap<String, Object>() {{
             put("size", "Large");
             put("flavor", "Blueberry");
         }} );
@@ -96,7 +95,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         // create a person who likes muffins
         CollectionScope peopleScope = new CollectionScopeImpl( appId, orgId, "people" );
         Entity person = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), peopleScope.getName()));
-        person = EntityMapUtils.fromMap( person, new HashMap<String, Object>() {{
+        person = EntityIndexMapUtils.fromMap( person, new HashMap<String, Object>() {{
             put("name", "Dave");
             put("hometown", "Chapel Hill");
         }} );

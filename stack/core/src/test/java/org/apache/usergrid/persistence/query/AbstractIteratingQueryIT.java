@@ -1246,6 +1246,7 @@ public abstract class AbstractIteratingQueryIT {
 
         @Override
         public Results getResults( Query query ) throws Exception {
+            app.getEm().refreshIndex();
             return app.getEm().searchCollection( app.getEm().getApplicationRef(), "tests", query );
         }
     }
@@ -1292,6 +1293,7 @@ public abstract class AbstractIteratingQueryIT {
          */
         @Override
         public Results getResults( Query query ) throws Exception {
+            app.getEm().refreshIndex();
             query.setConnectionType( CONNECTION );
             query.setEntityType( "test" );
             return app.getEm().searchConnectedEntities( rootEntity, query );

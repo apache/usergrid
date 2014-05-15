@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.cassandra.util.TraceTag;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
@@ -123,7 +124,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         i = 0;
         for ( Entity entity : things ) {
 
-            Entity thing = em.get( entity.getUuid(), "thing" );
+            Entity thing = em.get( new SimpleEntityRef("thing", entity.getUuid()));
             assertNotNull( "thing should not be null", thing );
             assertFalse( "thing id not valid", thing.getUuid().equals( new UUID( 0, 0 ) ) );
             assertEquals( "name not expected value", "thing" + i, thing.getProperty( "name" ) );
@@ -135,7 +136,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         for ( Entity entity : things ) {
             ids.add( entity.getUuid() );
 
-            Entity en = em.get( entity.getUuid(), "thing" );
+            Entity en = em.get( new SimpleEntityRef("thing", entity.getUuid()));
             String type = en.getType();
             assertEquals( "type not expected value", "thing", type );
 

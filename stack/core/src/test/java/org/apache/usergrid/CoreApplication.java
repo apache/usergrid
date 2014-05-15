@@ -166,19 +166,34 @@ public class CoreApplication implements Application, TestRule {
         return setup.getQmf().getQueueManager( getId() );
     }
 
+    
     @Override
     public void remove(Entity entity) throws Exception {
-        EntityRef ref = new SimpleEntityRef( entity.getType(), entity.getUuid() );
-        em.delete( ref );
+        em.delete( entity );
     }
 
+    
     @Override
-    public Entity get(UUID id, String type) throws Exception {
-        return em.get( id, type );
+    public void remove(EntityRef entityRef) throws Exception {
+        em.delete( entityRef );
     }
+
+    
+    @Override
+    public Entity get( EntityRef entityRef ) throws Exception {
+        return em.get( entityRef );
+    }
+    
+
+    @Override
+    public Entity get( UUID id, String type ) throws Exception {
+        return em.get( new SimpleEntityRef( type, id ) );
+    }
+
 
     @Override
     public void refreshIndex() {
         em.refreshIndex();
     }
+
 }

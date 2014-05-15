@@ -267,7 +267,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public void updateApplication( Map<String, Object> properties ) throws Exception {
-        this.updateProperties( applicationId, properties );
+        this.updateProperties( applicationId, "application", properties );
         this.application = get( applicationId, Application.class );
     }
 
@@ -956,7 +956,10 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Metered( group = "core", name = "EntityManager_insertEntity" )
-    public void insertEntity( String type, UUID entityId ) throws Exception {
+    public void insertEntity( EntityRef entityRef ) throws Exception {
+
+        String type = entityRef.getType();
+        UUID entityId = entityRef.getUuid();
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -1383,12 +1386,10 @@ public class EntityManagerImpl implements EntityManager {
      * @throws Exception the exception
      */
     @Metered( group = "core", name = "EntityManager_updateProperties" )
-    public void updateProperties( UUID entityId, Map<String, Object> properties ) throws Exception {
+    public void updateProperties( 
+            UUID entityId, String type, Map<String, Object> properties ) throws Exception {
 
-        EntityRef entity = getRef( entityId );
-        if ( entity == null ) {
-            return;
-        }
+        EntityRef entity = new SimpleEntityRef( type, entityId );
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -1403,14 +1404,11 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Metered( group = "core", name = "EntityManager_deleteEntity" )
-    public void deleteEntity( UUID entityId ) throws Exception {
+    public void deleteEntity( UUID entityId, String type ) throws Exception {
 
         logger.info( "deleteEntity {} of application {}", entityId, applicationId );
 
-        EntityRef entity = getRef( entityId );
-        if ( entity == null ) {
-            return;
-        }
+        EntityRef entity = new SimpleEntityRef( type, entityId );
 
         logger.info( "deleteEntity: {} is of type {}", entityId, entity.getType() );
 
@@ -1477,7 +1475,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
-        deleteEntity( entityRef.getUuid() );
+        deleteEntity( entityRef.getUuid(), entityRef.getType() );
     }
 
 
@@ -1763,7 +1761,7 @@ public class EntityManagerImpl implements EntityManager {
             UUID entityId = entityRef.getUuid();
             String entityType = entityRef.getType();
             try {
-                entityRef = getRef( entityRef.getUuid() );
+                get( entityRef ).getType(); 
             }
             catch ( Exception e ) {
                 logger.error( "Unable to load entity: {}", new Object[] {entityRef.getUuid(), e} );
@@ -1781,28 +1779,11 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    @Override
-    public String getType( UUID entityid ) throws Exception {
-        return getEntityType( entityid );
-    }
-
-
     public String getType( EntityRef entity ) throws Exception {
         if ( entity.getType() != null ) {
             return entity.getType();
         }
         return getEntityType( entity.getUuid() );
-    }
-
-
-    @Override
-    public EntityRef getRef( UUID entityId ) throws Exception {
-        String entityType = getEntityType( entityId );
-        if ( entityType == null ) {
-            logger.warn( "Unable to get type for entity: {} ", new Object[] { entityId, new Exception()} );
-            return null;
-        }
-        return ref( entityType, entityId );
     }
 
 
@@ -1907,7 +1888,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public void update( Entity entity ) throws Exception {
-        updateProperties( entity.getUuid(), entity.getProperties() );
+        updateProperties( entity.getUuid(), entity.getType(), entity.getProperties() );
     }
 
 
@@ -2017,7 +1998,7 @@ public class EntityManagerImpl implements EntityManager {
     public void updateProperties( EntityRef entityRef, Map<String, Object> properties ) throws Exception {
         entityRef = validate( entityRef );
         properties = getDefaultSchema().cleanUpdatedProperties( entityRef.getType(), properties, false );
-        updateProperties( entityRef.getUuid(), properties );
+        updateProperties( entityRef.getUuid(), entityRef.getType(), properties );
     }
 
 
@@ -2035,7 +2016,7 @@ public class EntityManagerImpl implements EntityManager {
             return;
         }
 
-        EntityRef entity = getRef( entityRef.getUuid() );
+        EntityRef entity = get( entityRef );
 
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
@@ -2055,7 +2036,7 @@ public class EntityManagerImpl implements EntityManager {
             return;
         }
 
-        EntityRef entity = getRef( entityRef.getUuid() );
+        EntityRef entity = get( entityRef );
 
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
@@ -2076,7 +2057,7 @@ public class EntityManagerImpl implements EntityManager {
             return;
         }
 
-        EntityRef entity = getRef( entityRef.getUuid() );
+        EntityRef entity = get( entityRef );
 
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
@@ -2098,7 +2079,7 @@ public class EntityManagerImpl implements EntityManager {
             return;
         }
 
-        EntityRef entity = getRef( entityRef.getUuid() );
+        EntityRef entity = get( entityRef );
 
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
@@ -2841,11 +2822,6 @@ public class EntityManagerImpl implements EntityManager {
     public void revokeGroupPermission( UUID groupId, String permission ) throws Exception {
         permission = permission.toLowerCase();
         removeFromDictionary( groupRef( groupId ), DICTIONARY_PERMISSIONS, permission );
-    }
-
-    @Override
-    public Entity get(UUID entityId, String type) throws Exception {
-        return get( new SimpleEntityRef( type, entityId ));
     }
 
     @Override

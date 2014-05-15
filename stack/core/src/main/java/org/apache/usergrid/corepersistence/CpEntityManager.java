@@ -71,7 +71,6 @@ import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.utils.EntityMapUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -198,10 +197,10 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Entity get( UUID entityId, String type ) throws Exception {
+    public Entity get( EntityRef entityRef ) throws Exception {
 
-        Id id = new SimpleId( entityId, type );
-        String collectionName = Schema.defaultCollectionName( type );
+        Id id = new SimpleId(  entityRef.getUuid(), entityRef.getType() );
+        String collectionName = Schema.defaultCollectionName( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
             applicationScope.getOrganization(), 
@@ -220,18 +219,12 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        Entity entity = new DynamicEntity( type, cpEntity.getId().getUuid() );
+        Entity entity = new DynamicEntity( entityRef.getType(), cpEntity.getId().getUuid() );
         entity.setUuid( cpEntity.getId().getUuid() );
         Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
         entity.addProperties( entityMap );
 
         return entity; 
-    }
-
-
-    @Override
-    public Entity get(EntityRef entityRef) throws Exception {
-        return get( entityRef.getUuid(), entityRef.getType() );
     }
 
 
@@ -336,7 +329,7 @@ public class CpEntityManager implements EntityManager {
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
             ecm.load( entityId ).toBlockingObservable().last();
         
-        cpEntity = EntityMapUtils.fromMap( cpEntity, entity.getProperties() );
+        cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
 
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
         ei.index( collectionScope, cpEntity );
@@ -385,7 +378,7 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public void delete(EntityRef entityRef) throws Exception {
+    public void delete( EntityRef entityRef ) throws Exception {
 
         String collectionName = Schema.defaultCollectionName( entityRef.getType() );
 
@@ -546,16 +539,6 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public String getType(UUID entityId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
-    }
-
-    @Override
-    public EntityRef getRef(UUID entityId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
-    }
-
-    @Override
     public Object getProperty(
             EntityRef entityRef, String propertyName) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
@@ -703,7 +686,7 @@ public class CpEntityManager implements EntityManager {
             elementValue = new byte[0];
         }
 
-        Entity entity = get(entityRef.getUuid(), entityRef.getType());
+        Entity entity = get( entityRef );
 
         if (!(elementName instanceof String)) {
             throw new IllegalArgumentException("Element name must be a string");
@@ -745,7 +728,7 @@ public class CpEntityManager implements EntityManager {
             return;
         }
 
-        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+        Entity entity = get(entityRef);
 
         entity.getDynamicProperties().put( dictionaryName,elementValues );
         update( entity );
@@ -755,7 +738,7 @@ public class CpEntityManager implements EntityManager {
     public Map<Object, Object> getDictionaryAsMap(
             EntityRef entityRef, String dictionaryName) throws Exception {
 
-        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+        Entity entity = get( entityRef );
         Map<Object,Object> dictionary = ( TreeMap) entity.getProperty( dictionaryName );
 
         return dictionary;
@@ -765,7 +748,7 @@ public class CpEntityManager implements EntityManager {
     public Object getDictionaryElementValue(
             EntityRef entityRef, String dictionaryName, String elementName) throws Exception {
 
-        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+        Entity entity = get(entityRef);
         Map<String,Object> dictionary = ( Map<String, Object> ) entity.getProperty( dictionaryName );
 
         return dictionary.get( elementName );
@@ -778,7 +761,7 @@ public class CpEntityManager implements EntityManager {
             return;
         }
 
-        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+        Entity entity = get(entityRef);
 
         if ( !(elementName instanceof String) ) {
             throw new IllegalArgumentException( "Element name must be a string" );
@@ -796,7 +779,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Set<String> getDictionaries(EntityRef entityRef) throws Exception {
-        Entity entity = get(entityRef.getUuid(),entityRef.getType());
+        Entity entity = get(entityRef);
 
         return entity.getProperties().keySet();
 
@@ -860,10 +843,10 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Entity createItemInCollection(
-            EntityRef entityRef, String collectionName, String itemType, 
-            Map<String, Object> properties) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public Entity createItemInCollection( EntityRef entityRef, 
+            String collectionName, String itemType, Map<String, Object> props) throws Exception {
+
+        return getRelationManager( entityRef ).createItemInCollection(collectionName, itemType, props);
     }
 
     @Override
@@ -1269,7 +1252,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public <A extends Entity> A batchCreate(
-            Mutator<ByteBuffer> m, 
+            Mutator<ByteBuffer> ignored, 
             String entityType, 
             Class<A> entityClass, 
             Map<String, Object> properties, 
@@ -1368,16 +1351,16 @@ public class CpEntityManager implements EntityManager {
 
         if ( importId != null ) {
             if ( properties.get( PROPERTY_CREATED ) == null ) {
-                properties.put( PROPERTY_CREATED, timestamp / 1000 );
+                properties.put( PROPERTY_CREATED, (long)(timestamp / 1000) );
             }
 
             if ( properties.get( PROPERTY_MODIFIED ) == null ) {
-                properties.put( PROPERTY_MODIFIED, timestamp / 1000 );
+                properties.put( PROPERTY_MODIFIED, (long)(timestamp / 1000) );
             }
         }
         else {
-            properties.put( PROPERTY_CREATED, timestamp / 1000 );
-            properties.put( PROPERTY_MODIFIED, timestamp / 1000 );
+            properties.put( PROPERTY_CREATED, (long)(timestamp / 1000) );
+            properties.put( PROPERTY_MODIFIED, (long)(timestamp / 1000) );
         }
 
         // special case timestamp and published properties
@@ -1387,7 +1370,7 @@ public class CpEntityManager implements EntityManager {
         if ( properties.containsKey( PROPERTY_TIMESTAMP ) ) {
             long ts = getLong( properties.get( PROPERTY_TIMESTAMP ) );
             if ( ts <= 0 ) {
-                properties.put( PROPERTY_TIMESTAMP, timestamp / 1000 );
+                properties.put( PROPERTY_TIMESTAMP, (long)(timestamp / 1000) );
             }
         }
 
@@ -1451,6 +1434,7 @@ public class CpEntityManager implements EntityManager {
     public void batchCreateRole(
             Mutator<ByteBuffer> batch, UUID groupId, String roleName, String roleTitle, 
             long inactivity, RoleRef roleRef, UUID timestampUuid) throws Exception {
+        
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
@@ -1458,6 +1442,7 @@ public class CpEntityManager implements EntityManager {
     public Mutator<ByteBuffer> batchSetProperty(
             Mutator<ByteBuffer> batch, EntityRef entity, String propertyName, Object propertyValue, 
             UUID timestampUuid) throws Exception {
+
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
@@ -1465,6 +1450,7 @@ public class CpEntityManager implements EntityManager {
     public Mutator<ByteBuffer> batchSetProperty(
             Mutator<ByteBuffer> batch, EntityRef entity, String propertyName, Object propertyValue, 
             boolean force, boolean noRead, UUID timestampUuid) throws Exception {
+        
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
@@ -1481,45 +1467,47 @@ public class CpEntityManager implements EntityManager {
     public Mutator<ByteBuffer> batchUpdateDictionary(
             Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, 
             boolean removeFromDictionary, UUID timestampUuid) throws Exception {
-        return batchUpdateDictionary( batch, entity, dictionaryName, elementValue, null, removeFromDictionary,
-                timestampUuid );
+
+        return batchUpdateDictionary( batch, entity, dictionaryName, elementValue, null, 
+                removeFromDictionary, timestampUuid );
     }
 
     @Override
     public Mutator<ByteBuffer> batchUpdateProperties(
             Mutator<ByteBuffer> batch, EntityRef entity, Map<String, Object> properties, 
             UUID timestampUuid) throws Exception {
+        
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     //TODO: ask what the difference is.
     @Override
     public Set<String> getDictionaryNames(EntityRef entity) throws Exception {
+
         return getDictionaries( entity );
     }
 
     @Override
-    public void insertEntity(String type, UUID entityId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
-    }
+    public void insertEntity( EntityRef ref ) throws Exception {
 
-    @Override
-    public void deleteEntity(UUID entityId) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
     @Override
     public UUID getApplicationId() {
+
         return applicationId;
     }
 
     @Override
     public IndexBucketLocator getIndexBucketLocator() {
+
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
     @Override
     public CassandraService getCass() {
+
         throw new UnsupportedOperationException("Not supported yet."); 
     }
   
@@ -1554,6 +1542,7 @@ public class CpEntityManager implements EntityManager {
 
         return cpEntity;
     }
+
 }
 
 

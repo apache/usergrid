@@ -290,9 +290,13 @@ public class EsEntityIndexImpl implements EntityIndex {
         }
 
         Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
-        entityAsMap.put("created", entity.getId().getUuid().timestamp());
-        entityAsMap.put("updated", entity.getVersion().timestamp());
+
+        // needed to retrieve entity via collection module
         entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, targetScope ); 
+
+        // let caller add these fields if needed
+        // entityAsMap.put("created", entity.getId().getUuid().timestamp();
+        // entityAsMap.put("updated", entity.getVersion().timestamp());
 
         log.debug("Indexing entity: " + entityAsMap);
 

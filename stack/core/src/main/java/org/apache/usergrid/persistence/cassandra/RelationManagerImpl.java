@@ -570,7 +570,9 @@ public class RelationManagerImpl implements RelationManager {
 
         if ( !headEntity.getType().equalsIgnoreCase( TYPE_APPLICATION ) && !Schema
                 .isAssociatedEntityType( entity.getType() ) ) {
-            em.deleteEntity( new SimpleCollectionRef( headEntity, collectionName, entity ).getUuid() );
+
+            CollectionRef cref = new SimpleCollectionRef( headEntity, collectionName, entity ); 
+            em.delete( new SimpleEntityRef( cref.getType(), cref.getUuid() ) );
         }
 
         return batch;
@@ -862,8 +864,8 @@ public class RelationManagerImpl implements RelationManager {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
-        Entity connectedEntity = em.get( 
-                connection.getConnectedEntityId(), connection.getConnectedEntityType() );
+        Entity connectedEntity = em.get( new SimpleEntityRef( 
+                connection.getConnectedEntityType(), connection.getConnectedEntityId()) );
 
         if ( connectedEntity == null ) {
             return batch;
@@ -1059,7 +1061,8 @@ public class RelationManagerImpl implements RelationManager {
 
         ConnectionRefImpl loopback = connection.getConnectionToConnectionEntity();
         if ( !disconnect ) {
-            em.insertEntity( CONNECTION_ENTITY_CONNECTION_TYPE, loopback.getConnectedEntityId() );
+            em.insertEntity( new SimpleEntityRef( 
+                    CONNECTION_ENTITY_CONNECTION_TYPE, loopback.getConnectedEntityId() ) );
         }
 
         batchUpdateEntityConnection( batch, disconnect, loopback, timestampUuid );
