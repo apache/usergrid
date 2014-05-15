@@ -1,0 +1,6 @@
+MANIFEST
+Makefile.PL
+lib/Usergrid/Client.pm
+META.yml
+META.json
+t/01_init.t
