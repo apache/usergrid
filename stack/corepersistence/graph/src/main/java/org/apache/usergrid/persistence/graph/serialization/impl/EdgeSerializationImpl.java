@@ -182,20 +182,22 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     @Override
-    public MutationBatch writeEdge( final OrganizationScope scope, final Edge edge ) {
+    public MutationBatch writeEdge( final OrganizationScope scope, final MarkedEdge markedEdge ) {
         ValidationUtils.validateOrganizationScope( scope );
-        EdgeUtils.validateEdge( edge );
+        EdgeUtils.validateEdge( markedEdge );
 
 
         final MutationBatch batch =
                 keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
 
+        final boolean isDeleted = markedEdge.isDeleted();
 
-        doWrite( scope, edge, new RowOp<RowKey>() {
+
+        doWrite( scope, markedEdge, new RowOp<RowKey>() {
             @Override
             public void writeEdge( final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> columnFamily,
                                    final RowKey rowKey, final DirectedEdge edge ) {
-                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( edge, false );
+                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( edge, isDeleted );
             }
 
 
@@ -208,7 +210,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
             @Override
             public void writeVersion( final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID> columnFamily,
                                       final EdgeRowKey rowKey, final UUID version ) {
-                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( version, false );
+                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( version, isDeleted );
             }
         } );
 
@@ -218,42 +220,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
     @Override
-    public MutationBatch markEdge( final OrganizationScope scope, final Edge edge ) {
-        ValidationUtils.validateOrganizationScope( scope );
-        EdgeUtils.validateEdge( edge );
-
-        final MutationBatch batch =
-                keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
-
-
-        doWrite( scope, edge, new RowOp<RowKey>() {
-            @Override
-            public void writeEdge( final MultiTennantColumnFamily<OrganizationScope, RowKey, DirectedEdge> columnFamily,
-                                   final RowKey rowKey, final DirectedEdge edge ) {
-                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( edge, true );
-            }
-
-
-            @Override
-            public void countEdge( final Id rowId, final long shardId, final String... types ) {
-                //no op
-            }
-
-
-            @Override
-            public void writeVersion( final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, UUID> columnFamily,
-                                      final EdgeRowKey rowKey, final UUID version ) {
-                batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( version, true );
-            }
-        } );
-
-
-        return batch;
-    }
-
-
-    @Override
-    public MutationBatch deleteEdge( final OrganizationScope scope, final Edge edge ) {
+    public MutationBatch deleteEdge( final OrganizationScope scope, final MarkedEdge edge ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateEdge( edge );
 
@@ -294,7 +261,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
      * @param edge The edge to write
      * @param op The row operation to invoke
      */
-    private void doWrite( final OrganizationScope scope, final Edge edge, final RowOp op ) {
+    private void doWrite( final OrganizationScope scope, final MarkedEdge edge, final RowOp op ) {
         ValidationUtils.validateOrganizationScope( scope );
         EdgeUtils.validateEdge( edge );
 

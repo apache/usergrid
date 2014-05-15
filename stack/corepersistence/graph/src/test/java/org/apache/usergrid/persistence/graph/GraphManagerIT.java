@@ -604,8 +604,6 @@ public abstract class GraphManagerIT {
         returned = gm.deleteEdge( edge ).toBlockingObservable().last();
 
 
-        assertEquals( "Correct edge returned", edge, returned );
-
 
         //now test retrieval, should be null
         edges = gm.loadEdgesFromSource( search );

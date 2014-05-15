@@ -41,5 +41,5 @@ public interface EdgeDeleteRepair {
      * @return An observable that emits every version of the edge we delete.  Note that it may emit duplicates
      * since this is a streaming API.
      */
-    public Observable<MarkedEdge> repair( OrganizationScope scope, Edge edge );
+    public Observable<MarkedEdge> repair( OrganizationScope scope, MarkedEdge edge );
 }

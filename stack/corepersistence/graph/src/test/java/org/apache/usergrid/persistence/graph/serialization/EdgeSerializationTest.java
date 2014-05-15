@@ -19,10 +19,8 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -48,12 +46,11 @@ import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.ColumnFamily;
-import com.netflix.astyanax.serializers.StringSerializer;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createGetByEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createMarkedEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdgeAndId;
 import static org.junit.Assert.assertEquals;
@@ -118,13 +115,13 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void mixedEdgeTypes() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge1", "target" );
+        final MarkedEdge edge1 = createEdge( "source", "edge1", "target" );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId = edge1.getTargetNode();
 
 
-        final Edge edge2 = createEdge( sourceId, "edge2", targetId );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge2", targetId );
 
         serialization.writeEdge( scope, edge1 ).execute();
         serialization.writeEdge( scope, edge2 ).execute();
@@ -164,13 +161,13 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void testPaging() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge", "target" );
+        final MarkedEdge edge1 = createEdge( "source", "edge", "target" );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId = edge1.getTargetNode();
 
 
-        final Edge edge2 = createEdge( sourceId, "edge", targetId );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", targetId );
 
 
         serialization.writeEdge( scope, edge1 ).execute();
@@ -211,22 +208,22 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void directEdgeGets() throws ConnectionException {
-        final Edge edgev1 = createEdge( "source", "edge1", "target" );
+        final MarkedEdge edgev1 = createEdge( "source", "edge1", "target" );
 
         final Id sourceId = edgev1.getSourceNode();
         final Id targetId = edgev1.getTargetNode();
 
 
-        final Edge edgev2 = createEdge( sourceId, "edge1", targetId );
+        final MarkedEdge edgev2 = createEdge( sourceId, "edge1", targetId );
 
         //we shouldn't get this one back
-        final Edge diffTarget = createEdge( sourceId, "edge1", createId( "newTarget" ) );
+        final MarkedEdge diffTarget = createEdge( sourceId, "edge1", createId( "newTarget" ) );
 
         assertTrue( "Edge version 1 has lower time uuid",
                 UUIDComparator.staticCompare( edgev1.getVersion(), edgev2.getVersion() ) < 0 );
 
         //create edge type 2 to ensure we don't get it in results
-        final Edge edgeType2V1 = createEdge( sourceId, "edge2", targetId );
+        final MarkedEdge edgeType2V1 = createEdge( sourceId, "edge2", targetId );
 
         serialization.writeEdge( scope, edgev1 ).execute();
         serialization.writeEdge( scope, edgev2 ).execute();
@@ -262,13 +259,13 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void mixedIdTypes() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge", "target" );
+        final MarkedEdge edge1 = createEdge( "source", "edge", "target" );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target2" ) );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target2" ) );
 
         final Id targetId2 = edge2.getTargetNode();
 
@@ -313,13 +310,13 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void idTypesPaging() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge", "target" );
+        final MarkedEdge edge1 = createEdge( "source", "edge", "target" );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
 
         final Id targetId2 = edge2.getTargetNode();
 
@@ -369,13 +366,13 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void delete() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge", "target" );
+        final MarkedEdge edge1 = createEdge( "source", "edge", "target" );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
 
         final Id targetId2 = edge2.getTargetNode();
 
@@ -474,13 +471,13 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void mark() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge", "target" );
+        final MarkedEdge edge1 = createEdge( "source", "edge", "target" );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
 
         final Id targetId2 = edge2.getTargetNode();
 
@@ -534,8 +531,15 @@ public abstract class EdgeSerializationTest {
 
         //now we've validated everything exists, lets blitz the data and ensure it's removed
 
-        serialization.markEdge( scope, edge1 ).execute();
-        serialization.markEdge( scope, edge2 ).execute();
+        final MarkedEdge mark1 =
+                createEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(), edge1.getVersion(), true );
+
+        final MarkedEdge mark2 =
+                createEdge( edge2.getSourceNode(), edge2.getType(), edge2.getTargetNode(), edge2.getVersion(), true );
+
+
+        serialization.writeEdge( scope, mark1 ).execute();
+        serialization.writeEdge( scope, mark2 ).execute();
 
 
         results = serialization.getEdgesFromSourceByTargetType( scope,
@@ -544,13 +548,13 @@ public abstract class EdgeSerializationTest {
 
         MarkedEdge edge = results.next();
 
-        assertEquals( edge2, edge );
+        assertEquals( mark2, edge );
         assertTrue( edge.isDeleted() );
 
 
         edge = results.next();
 
-        assertEquals( edge1, edge );
+        assertEquals( mark1, edge );
         assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
@@ -560,12 +564,12 @@ public abstract class EdgeSerializationTest {
 
         edge = results.next();
 
-        assertEquals( edge2, edge );
+        assertEquals( mark2, edge );
         assertTrue( edge.isDeleted() );
 
         edge = results.next();
 
-        assertEquals( edge1, edge );
+        assertEquals( mark1, edge );
         assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
@@ -577,7 +581,7 @@ public abstract class EdgeSerializationTest {
 
         edge = results.next();
 
-        assertEquals( edge1, edge );
+        assertEquals( mark1, edge );
         assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
@@ -587,7 +591,7 @@ public abstract class EdgeSerializationTest {
 
         edge = results.next();
 
-        assertEquals( edge2, edge );
+        assertEquals( mark2, edge );
         assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
@@ -598,7 +602,7 @@ public abstract class EdgeSerializationTest {
 
         edge = results.next();
 
-        assertEquals( edge1, edge );
+        assertEquals( mark1, edge );
         assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
@@ -608,7 +612,7 @@ public abstract class EdgeSerializationTest {
 
         edge = results.next();
 
-        assertEquals( edge2, edge );
+        assertEquals( mark2, edge );
         assertTrue( edge.isDeleted() );
 
         assertFalse( results.hasNext() );
@@ -632,7 +636,7 @@ public abstract class EdgeSerializationTest {
 
 
         for ( int i = 0; i < size; i++ ) {
-            final Edge edge = createEdge( sourceId, type, createId( "target" ) );
+            final MarkedEdge edge = createEdge( sourceId, type, createId( "target" ) );
 
             serialization.writeEdge( scope, edge ).execute();
             edges.add( edge );
@@ -675,7 +679,7 @@ public abstract class EdgeSerializationTest {
 
         for ( int i = 0; i < writeCount; i++ ) {
 
-            final Edge edge = createEdge( sourceId, edgeType, targetId );
+            final MarkedEdge edge = createEdge( sourceId, edgeType, targetId );
 
             lastMax = edge.getVersion();
 
@@ -721,15 +725,12 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void successiveWriteReturnSource() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge", "target" );
+        final MarkedEdge edge1 = createMarkedEdge( "source", "edge", "target" );
 
         final Id sourceId = edge1.getSourceNode();
 
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target2" ) );
-
         serialization.writeEdge( scope, edge1 ).execute();
-        serialization.writeEdge( scope, edge2 ).execute();
 
 
         UUID now = UUIDGenerator.newTimeUUID();
@@ -739,11 +740,34 @@ public abstract class EdgeSerializationTest {
         Iterator<MarkedEdge> results =
                 serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, null ) );
 
-        assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
+        assertFalse( results.hasNext() );
+
+        Iterator<MarkedEdge> versions = serialization
+                .getEdgeVersions( scope, createGetByEdge( sourceId, "edge", edge1.getTargetNode(), now, null ) );
+
+
+        assertEquals( edge1, versions.next() );
+        assertFalse( versions.hasNext() );
+
+
+        serialization.deleteEdge( scope, edge1 ).execute();
+
+        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, null ) );
+
+        assertFalse( results.hasNext() );
+
+
+        serialization.writeEdge( scope, edge1 ).execute();
+
+
+        //get our edges out by name
+
+        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, null ) );
+
         assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
     }
-
 
 
     /**
@@ -751,15 +775,12 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void successiveWriteReturnTarget() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge", "target" );
+        final MarkedEdge edge1 = createMarkedEdge( "source", "edge", "target" );
 
         final Id targetId = edge1.getTargetNode();
 
 
-        final Edge edge2 = createEdge( createId("source"), "edge", targetId );
-
         serialization.writeEdge( scope, edge1 ).execute();
-        serialization.writeEdge( scope, edge2 ).execute();
 
 
         UUID now = UUIDGenerator.newTimeUUID();
@@ -769,26 +790,50 @@ public abstract class EdgeSerializationTest {
         Iterator<MarkedEdge> results =
                 serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, null ) );
 
-        assertEquals( edge2, results.next() );
+        assertEquals( edge1, results.next() );
+        assertFalse( results.hasNext() );
+
+        Iterator<MarkedEdge> versions = serialization.getEdgeVersions( scope,
+                createGetByEdge( edge1.getSourceNode(), "edge", edge1.getTargetNode(), now, null ) );
+
+
+        assertEquals( edge1, versions.next() );
+        assertFalse( versions.hasNext() );
+
+
+        serialization.deleteEdge( scope, edge1 ).execute();
+
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, null ) );
+
+        assertFalse( results.hasNext() );
+
+        serialization.writeEdge( scope, edge1 ).execute();
+
+
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, "edge", now, null ) );
+
         assertEquals( edge1, results.next() );
         assertFalse( results.hasNext() );
     }
 
+
     @Test
     public void testColumnTimestamps() throws ConnectionException {
-        MutationBatch batch = keyspace.prepareMutationBatch();
-
-        ColumnFamily cf = new ColumnFamily<String, String>( "test", StringSerializer.get(), StringSerializer.get() );
-
-        keyspace.createColumnFamily( cf, new HashMap<String, Object>()  );
-
-        batch.withRow(cf, "test").putColumn( "test", true );
-
-        batch.execute();
-
-
-        keyspace.
+        //        MutationBatch batch = keyspace.prepareMutationBatch();
+        //
+        //        ColumnFamily cf = new ColumnFamily<String, String>( "test", StringSerializer.get(),
+        // StringSerializer.get() );
+        //
+        //        keyspace.createColumnFamily( cf, new HashMap<String, Object>()  );
+        //
+        //        batch.withRow(cf, "test").putColumn( "test", true );
+        //
+        //        batch.execute();
+        //
+        //
+        //        keyspace.
     }
+
 
     private void verify( Iterator<MarkedEdge> results, int expectedCount ) {
         int count = 0;

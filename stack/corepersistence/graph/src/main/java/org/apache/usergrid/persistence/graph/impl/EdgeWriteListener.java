@@ -54,14 +54,14 @@ import rx.functions.Func1;
  * rather as a part of the usergrid mechanism
  */
 @Singleton
-public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, Integer> {
+public class EdgeWriteListener implements MessageListener<EdgeEvent<MarkedEdge>, Integer> {
 
 
     private final EdgeWriteCompact edgeWriteCompact;
 
 
     @Inject
-    public EdgeWriteListener( final EdgeWriteCompact edgeWriteCompact, @EdgeWrite final AsyncProcessor<EdgeEvent<Edge>> edgeWrite) {
+    public EdgeWriteListener( final EdgeWriteCompact edgeWriteCompact, @EdgeWrite final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite) {
 
 
         Preconditions.checkNotNull( edgeWriteCompact, "edgeWriteCompact is required" );
@@ -75,7 +75,7 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<Edge>, Integ
 
 
     @Override
-    public Observable<Integer> receive( final EdgeEvent<Edge> write ) {
+    public Observable<Integer> receive( final EdgeEvent<MarkedEdge> write ) {
        return edgeWriteCompact.compact( write.getOrganizationScope(), write.getData() );
     }
 }

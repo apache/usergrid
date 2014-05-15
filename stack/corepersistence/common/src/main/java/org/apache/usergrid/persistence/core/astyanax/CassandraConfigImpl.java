@@ -16,15 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.serialization.impl;
+package org.apache.usergrid.persistence.core.astyanax;
 
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
-import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

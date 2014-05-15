@@ -56,7 +56,7 @@ public class StorageGraphManagerIT extends GraphManagerIT {
 
     @Inject
     @EdgeDelete
-    protected AsyncProcessor<EdgeEvent<Edge>> edgeDelete;
+    protected AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDelete;
 
 
     @Inject
@@ -65,7 +65,7 @@ public class StorageGraphManagerIT extends GraphManagerIT {
 
     @Inject
     @EdgeWrite
-    public AsyncProcessor<EdgeEvent<Edge>> edgeWrite;
+    public AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite;
 
 
     @Override
@@ -74,16 +74,16 @@ public class StorageGraphManagerIT extends GraphManagerIT {
 
         final ComittedGraphTestHelper helper = new ComittedGraphTestHelper( gm );
 
-        edgeDelete.addCompleteListener( new CompleteListener<EdgeEvent<Edge>>() {
+        edgeDelete.addCompleteListener( new CompleteListener<EdgeEvent<MarkedEdge>>() {
             @Override
-            public void onComplete( final AsynchronousMessage<EdgeEvent<Edge>> event ) {
+            public void onComplete( final AsynchronousMessage<EdgeEvent<MarkedEdge>> event ) {
                 helper.complete();
             }
         } );
 
-        edgeDelete.addErrorListener( new ErrorListener<EdgeEvent<Edge>>() {
+        edgeDelete.addErrorListener( new ErrorListener<EdgeEvent<MarkedEdge>>() {
             @Override
-            public void onError( final AsynchronousMessage<EdgeEvent<Edge>> event, final Throwable t ) {
+            public void onError( final AsynchronousMessage<EdgeEvent<MarkedEdge>> event, final Throwable t ) {
                 helper.complete();
                 helper.error();
             }
@@ -104,16 +104,16 @@ public class StorageGraphManagerIT extends GraphManagerIT {
             }
         } );
 
-        edgeWrite.addCompleteListener( new CompleteListener<EdgeEvent<Edge>>() {
+        edgeWrite.addCompleteListener( new CompleteListener<EdgeEvent<MarkedEdge>>() {
             @Override
-            public void onComplete( final AsynchronousMessage<EdgeEvent<Edge>> event ) {
+            public void onComplete( final AsynchronousMessage<EdgeEvent<MarkedEdge>> event ) {
                 helper.complete();
             }
         } );
 
-        edgeWrite.addErrorListener( new ErrorListener<EdgeEvent<Edge>>() {
+        edgeWrite.addErrorListener( new ErrorListener<EdgeEvent<MarkedEdge>>() {
             @Override
-            public void onError( final AsynchronousMessage<EdgeEvent<Edge>> event, final Throwable t ) {
+            public void onError( final AsynchronousMessage<EdgeEvent<MarkedEdge>> event, final Throwable t ) {
                 helper.complete();
                 helper.error();
             }

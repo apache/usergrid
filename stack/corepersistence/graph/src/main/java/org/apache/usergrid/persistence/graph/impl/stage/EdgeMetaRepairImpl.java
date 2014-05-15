@@ -62,9 +62,9 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( EdgeMetaRepairImpl.class );
+    private static final Log RX_LOG = new Log();
+
     private final EdgeMetadataSerialization edgeMetadataSerialization;
-
-
     private final Keyspace keyspace;
     private final GraphFig graphFig;
     private final MergedEdgeReader mergedEdgeReader;
@@ -136,8 +136,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
                             Observable<Integer> search =
                                     //load each edge in it's own thread
-                                    serialization.loadEdges( scope, node, edgeType, subType, version )
-                                                 .subscribeOn( Schedulers.io() ).take( 1 ).count()
+                                    serialization.loadEdges( scope, node, edgeType, subType, version ).doOnNext( RX_LOG ).take( 1 ).count()
                                                  .doOnNext( new Action1<Integer>() {
 
                                                      @Override
@@ -345,4 +344,16 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
             return edgeMetadataSerialization.removeEdgeTypeFromSource( scope, nodeId, type, version );
         }
     };
+
+
+
+    private static class Log implements Action1<MarkedEdge> {
+
+
+        @Override
+        public void call( final MarkedEdge markedEdge ) {
+            LOG.debug( "Emitting edge {}", markedEdge );
+        }
+    }
+
 }

@@ -41,5 +41,5 @@ public interface EdgeWriteCompact {
      *
      * @return An observable that emits the edge we've moved
      */
-    public Observable<Integer> compact( OrganizationScope scope, Edge edge );
+    public Observable<Integer> compact( OrganizationScope scope, MarkedEdge edge );
 }

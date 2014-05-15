@@ -85,8 +85,8 @@ public class GraphManagerImpl implements GraphManager {
 
     private final NodeSerialization nodeSerialization;
 
-    private final AsyncProcessor<EdgeEvent<Edge>> edgeDeleteAsyncProcessor;
-    private final AsyncProcessor<EdgeEvent<Edge>> edgeWriteAsyncProcessor;
+    private final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDeleteAsyncProcessor;
+    private final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWriteAsyncProcessor;
     private final AsyncProcessor<EdgeEvent<Id>> nodeDeleteAsyncProcessor;
 
     private final GraphFig graphFig;
@@ -97,9 +97,9 @@ public class GraphManagerImpl implements GraphManager {
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                              @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
                              final NodeSerialization nodeSerialization, final GraphFig graphFig,
-                             @EdgeDelete final AsyncProcessor<EdgeEvent<Edge>> edgeDelete,
+                             @EdgeDelete final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDelete,
                              @NodeDelete final AsyncProcessor<EdgeEvent<Id>> nodeDelete,
-                             @EdgeWrite final AsyncProcessor<EdgeEvent<Edge>> edgeWrite,
+                             @EdgeWrite final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite,
                              @Assisted final OrganizationScope scope, final MergedEdgeReader mergedEdgeReader,
                              final ConsistencyFig consistencyFig ) {
 
@@ -138,13 +138,14 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<Edge> writeEdge( final Edge edge ) {
         EdgeUtils.validateEdge( edge );
 
+        final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
+
         return HystrixGraphObservable
-                .user( Observable.from( edge ).subscribeOn( Schedulers.io() ).map( new Func1<Edge, Edge>() {
+                .user( Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
                     @Override
-                    public Edge call( final Edge edge ) {
-                        final AsynchronousMessage<EdgeEvent<Edge>> event =
-                                edgeWriteAsyncProcessor.setVerification(
-                                        new EdgeEvent<>( scope, edge.getVersion(), edge ), getTimeout() );
+                    public Edge call( final MarkedEdge edge ) {
+                        final AsynchronousMessage<EdgeEvent<MarkedEdge>> event = edgeWriteAsyncProcessor
+                                .setVerification( new EdgeEvent<>( scope, edge.getVersion(), edge ), getTimeout() );
 
 
                         final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
@@ -174,15 +175,18 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<Edge> deleteEdge( final Edge edge ) {
         EdgeUtils.validateEdge( edge );
 
+        final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
+
+
         return
                 HystrixGraphObservable
                 .user(
-                        Observable.from( edge ).subscribeOn( Schedulers.io() ).map( new Func1<Edge, Edge>() {
+                        Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
                     @Override
-                    public Edge call( final Edge edge ) {
-                        final MutationBatch edgeMutation = commitLogSerialization.markEdge( scope, edge );
+                    public Edge call( final MarkedEdge edge ) {
+                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge );
 
-                        final AsynchronousMessage<EdgeEvent<Edge>> event =
+                        final AsynchronousMessage<EdgeEvent<MarkedEdge>> event =
                                 edgeDeleteAsyncProcessor.setVerification(
                                         new EdgeEvent<>( scope, edge.getVersion(), edge ), getTimeout() );
 

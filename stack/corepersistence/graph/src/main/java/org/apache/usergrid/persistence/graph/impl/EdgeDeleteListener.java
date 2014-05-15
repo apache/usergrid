@@ -42,7 +42,7 @@ import rx.functions.Func2;
  * Construct the asynchronous delete operation from the listener
  */
 @Singleton
-public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, EdgeEvent<Edge>> {
+public class EdgeDeleteListener implements MessageListener<EdgeEvent<MarkedEdge>, EdgeEvent<MarkedEdge>> {
 
 
     private final EdgeDeleteRepair edgeDeleteRepair;
@@ -61,9 +61,9 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
 
 
     @Override
-    public Observable<EdgeEvent<Edge>> receive( final EdgeEvent<Edge> delete ) {
+    public Observable<EdgeEvent<MarkedEdge>> receive( final EdgeEvent<MarkedEdge> delete ) {
 
-        final Edge edge = delete.getData();
+        final MarkedEdge edge = delete.getData();
         final OrganizationScope scope = delete.getOrganizationScope();
         final UUID maxVersion = edge.getVersion();
 
@@ -89,10 +89,10 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<Edge>, Edge
                                                    }
                                                } );
                                    }
-                               } ).map( new Func1<Integer, EdgeEvent<Edge>>() {
+                               } ).map( new Func1<Integer, EdgeEvent<MarkedEdge>>() {
 
                     @Override
-                    public EdgeEvent<Edge> call( final Integer integer ) {
+                    public EdgeEvent<MarkedEdge> call( final Integer integer ) {
                         return delete;
                     }
                 } );

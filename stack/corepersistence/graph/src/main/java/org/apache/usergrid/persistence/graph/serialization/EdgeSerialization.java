@@ -45,16 +45,7 @@ public interface EdgeSerialization extends Migration {
      * @param scope The org scope of the graph
      * @param edge The edge to write
      */
-    MutationBatch writeEdge( OrganizationScope scope, Edge edge );
-
-
-    /**
-     * Mark this edge for deletion
-     * @param scope
-     * @param edge
-     * @return
-     */
-    MutationBatch markEdge( OrganizationScope scope, Edge edge);
+    MutationBatch writeEdge( OrganizationScope scope, MarkedEdge edge );
 
     /**
      * EdgeWrite both the source -->target edge and the target<--- source edge into the mutation
@@ -62,7 +53,7 @@ public interface EdgeSerialization extends Migration {
      * @param scope The org scope of the graph
      * @param edge The edge to write
      */
-    MutationBatch deleteEdge( OrganizationScope scope, Edge edge );
+    MutationBatch deleteEdge( OrganizationScope scope, MarkedEdge edge );
 
 
     /**

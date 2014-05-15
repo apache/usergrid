@@ -109,7 +109,7 @@ public class EdgeSerializationChopTest {
         final Id targetId = createId( "target" );
 
 
-        final Edge edge = createEdge( sourceId, "edge", targetId );
+        final MarkedEdge edge = createEdge( sourceId, "edge", targetId );
 
         serialization.writeEdge( scope, edge ).execute();
 

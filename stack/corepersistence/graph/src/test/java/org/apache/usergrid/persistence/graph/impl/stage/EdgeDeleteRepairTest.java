@@ -107,7 +107,7 @@ public class EdgeDeleteRepairTest {
      */
     @Test
     public void noEdges() {
-        Edge edge = createEdge( "source", "test", "target" );
+        MarkedEdge edge = createEdge( "source", "test", "target" );
 
         Iterator<MarkedEdge> edges = edgeDeleteRepair.repair( scope, edge ).toBlockingObservable().getIterator();
 
@@ -140,10 +140,10 @@ public class EdgeDeleteRepairTest {
         final String edgeType = "edge";
 
 
-        final Edge edge1 = createEdge( sourceId, edgeType, targetId );
+        final MarkedEdge edge1 = createEdge( sourceId, edgeType, targetId );
         edgeSerialization.writeEdge( scope, edge1 ).execute();
 
-        final Edge edge2 = createEdge( sourceId, edgeType, targetId );
+        final MarkedEdge edge2 = createEdge( sourceId, edgeType, targetId );
         edgeSerialization.writeEdge( scope, edge2 ).execute();
 
         //now repair delete the first edge
@@ -173,11 +173,11 @@ public class EdgeDeleteRepairTest {
         final String edgeType = "edge";
 
 
-        final Edge edge1 = createEdge( sourceId, edgeType, targetId );
+        final MarkedEdge edge1 = createEdge( sourceId, edgeType, targetId );
         commitLogEdgeSerialization.writeEdge( scope, edge1 ).execute();
         storageEdgeSerialization.writeEdge( scope, edge1 ).execute();
 
-        final Edge edge2 = createEdge( sourceId, edgeType, targetId );
+        final MarkedEdge edge2 = createEdge( sourceId, edgeType, targetId );
         commitLogEdgeSerialization.writeEdge( scope, edge2 ).execute();
         storageEdgeSerialization.writeEdge( scope, edge2 ).execute();
 

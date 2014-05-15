@@ -78,7 +78,7 @@ public class EdgeWriteCompactImpl implements EdgeWriteCompact {
        }
 
     @Override
-    public Observable<Integer> compact( final OrganizationScope scope, final Edge edge ) {
+    public Observable<Integer> compact( final OrganizationScope scope, final MarkedEdge edge ) {
         final Edge writtenEdge = edge;
 
               final UUID writeVersion = edge.getVersion();
