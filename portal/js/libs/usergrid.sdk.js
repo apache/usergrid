@@ -30,6 +30,7 @@ window.console.log = window.console.log || function() {};
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
 Usergrid.SDK_VERSION = '0.10.07';
+Usergrid.browser = Usergrid.browser || {};
 
 Usergrid.Client = function(options,url) {
   //usergrid enpoint
@@ -102,7 +103,8 @@ Usergrid.Client.prototype.request = function (options, callback) {
   if (developerkey) {
     qs.key = developerkey;  
   }
-  var isIE9 = $.browser.msie && $.browser.version <= 9;
+
+  var isIE9 = Usergrid.browser.isIE9 = $.browser.msie && $.browser.version <= 9;
   
   (isIE9) && (method === 'PUT' || method === 'DELETE') && (function(){ qs['method_override'] = method;})();
   
@@ -241,7 +243,7 @@ Usergrid.Client.prototype.createGroup = function(options, callback) {
 
   var group = new Usergrid.Group(options);
   group.fetch(function(err, data){
-    var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
+    var okToSave = (err && ('service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error || Usergrid.browser.isIE9)) || (!err && getOnExist);
     if (okToSave) {
       group.save(function(err, data){
         if (typeof(callback) === 'function') {
@@ -290,7 +292,7 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
   var entity = new Usergrid.Entity(options);
   entity.fetch(function(err, data) {
     //if the fetch doesn't find what we are looking for, or there is no error, do a save
-    if ('service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) {
+    if (Usergrid.browser.isIE9 || 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) {
 
       entity.set(options.data); //add the data again just in case
       entity.save(function(err, data) {
