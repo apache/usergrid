@@ -30,6 +30,7 @@ window.console.log = window.console.log || function() {};
 window.Usergrid = window.Usergrid || {};
 Usergrid = Usergrid || {};
 Usergrid.SDK_VERSION = '0.10.07';
+Usergrid.browser = Usergrid.browser || {};
 
 Usergrid.Client = function(options,url) {
   //usergrid enpoint
@@ -100,8 +101,13 @@ Usergrid.Client.prototype.request = function (options, callback) {
   }
   var developerkey=self.get("developerkey");
   if (developerkey) {
-    qs.key = developerkey;
+    qs.key = developerkey;  
   }
+
+  var isIE9 = Usergrid.browser.isIE9 = $.browser.msie && $.browser.version <= 9;
+  
+  (isIE9) && (method === 'PUT' || method === 'DELETE') && (function(){ qs['method_override'] = method;})();
+  
   //append params to the path
   var encoded_params = encodeParams(qs);
   if (encoded_params) {
@@ -110,13 +116,23 @@ Usergrid.Client.prototype.request = function (options, callback) {
   //stringify the body object
   body = options.formData ? null : JSON.stringify(body);
   //so far so good, so run the query
-  var xhr = new XMLHttpRequest();
-  xhr.open(method, uri, true);
-  //add content type = json if there is a json payload
-  if (!options.formData) {
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.setRequestHeader("Accept", "application/json");
+  //*** ie9 hack
+  var xhr;
+  //check to see if ie9 - if so, convert delete and put calls to a POST
+  if (isIE9) { //XDomainRequest
+    xhr = new XDomainRequest();
+    (method === 'PUT' || method === 'DELETE') && (function() { method = 'POST';})();
+    xhr.open(method, uri);
+  }else{
+    xhr = new XMLHttpRequest();
+    xhr.open(method, uri, true);
+    //add content type = json if there is a json payload
+    if (!options.formData) {
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.setRequestHeader("Accept", "application/json");
+    }
   }
+  xhr.isIE9 = isIE9;
   // Handle response.
   xhr.onerror = function(response) {
     self._end = new Date().getTime();
@@ -152,7 +168,7 @@ Usergrid.Client.prototype.request = function (options, callback) {
       xhr.status = xhr.status === 200 ? 400 : xhr.status;
       console.error(e);
     }
-    if (xhr.status != 200) {
+    if (!xhr.isIE9 && xhr.status != 200) {
       //there was an api error
       var error = response.error;
       var error_description = response.error_description;
@@ -222,12 +238,12 @@ Usergrid.Client.prototype.createGroup = function(options, callback) {
   var options = {
     path: options.path,
     client: this,
-    data:options
+    data:options 
   }
 
   var group = new Usergrid.Group(options);
   group.fetch(function(err, data){
-    var okToSave = (err && 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) || (!err && getOnExist);
+    var okToSave = (err && ('service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error || Usergrid.browser.isIE9)) || (!err && getOnExist);
     if (okToSave) {
       group.save(function(err, data){
         if (typeof(callback) === 'function') {
@@ -276,7 +292,7 @@ Usergrid.Client.prototype.createEntity = function (options, callback) {
   var entity = new Usergrid.Entity(options);
   entity.fetch(function(err, data) {
     //if the fetch doesn't find what we are looking for, or there is no error, do a save
-    if ('service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) {
+    if (Usergrid.browser.isIE9 || 'service_resource_not_found' === data.error || 'no_name_specified' === data.error || 'null_pointer' === data.error) {
 
       entity.set(options.data); //add the data again just in case
       entity.save(function(err, data) {
