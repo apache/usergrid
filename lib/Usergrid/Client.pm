@@ -18,16 +18,89 @@
 #
 
 package Usergrid::Client;
+
 use Moose;
+use JSON;
+use REST::Client;
+use URI::Template;
 
 our $VERSION = '0.1';
 
-has 'orgName' => (is => 'rw');
-has 'appName' => (is => 'rw');
+has 'organization'  => ( is => 'rw', isa => 'Str');
+has 'application'   => ( is => 'rw', isa => 'Str');
+has 'api_url'       => ( is => 'rw', isa => 'Str');
 
-sub login {
-  return 1;
+has 'username'      => ( is => 'rw', isa => 'Str'); 
+has 'password'      => ( is => 'rw', isa => 'Str'); 
+
+our $json = JSON->new->allow_nonref;
+
+our $admin_token;
+our $user_token;
+
+sub req ($$\%) {
+  my $self = shift;
+  my $resource = shift;
+  my $request = shift;
+
+  my $json_req = $json->encode($request);
+
+  my $client = REST::Client->new();
+  $client->setHost($self->api_url);
+  $client->POST($resource, $json_req);
+  my $response = $client->responseContent();
+
+  return $json->decode($response);
 }
+
+sub admin_login($$$) {
+  my ($self, $username, $password) = @_;
+
+  my %request = (
+    grant_type=>"password",
+    username=>$username,
+    password=>$password);
+
+  $admin_token = $self->req('/management/token', \%request);
+
+  return $admin_token;
+}
+
+sub app_user_login($$$) {
+  my ($self, $username, $password) = @_;
+
+  my %request = (
+    grant_type=>"password",
+    username=>$username,
+    password=>$password
+  );
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/token')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application
+  );
+
+  $user_token = $self->req($uri, \%request);
+
+  return $user_token;
+}
+
+sub create($$\%) {
+  my ($self, $collection, $data) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$collection
+  );
+
+  return $self->req($uri, $data);
+}
+
 
 1;
 

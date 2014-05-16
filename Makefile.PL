@@ -12,7 +12,9 @@ WriteMakefile(
   NAME => 'Usergrid-Client',
   VERSION_FROM => 'lib/Usergrid/Client.pm',
   PREREQ_PM => {
-    'Moose' => '2.00'
+    'Moose' => 0,
+    'JSON' => 0,
+    'REST::Client' => 0
   },
   BUILD_REQUIRES => {
     'Test::More' => '0.98'

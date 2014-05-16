@@ -1,4 +1,4 @@
-# Usergrid::Client - Perl SDK for Apache Usergrid
+# Usergrid Perl Client
 
 Usergrid::Client provides a modular object oriented interface to
 Apache Usergrid's REST API.
@@ -6,9 +6,13 @@ Apache Usergrid's REST API.
 ## Installation
 
 ### Prerequisites
-Usergrid::Client depends on Moose which can be installed from CPAN:
+Usergrid::Client depends on the following modules which can be installed
+from CPAN as shown below:
 
     $ sudo cpan install Moose
+    $ sudo cpan install JSON
+    $ sudo cpan install REST::Client
+    $ sudo cpan install URI::Template
 
 ### Build and install
 
