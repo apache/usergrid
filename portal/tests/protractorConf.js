@@ -70,7 +70,7 @@ exports.config = {
       user: 'sfeldman+apijeep@apigee.com',
       password: 'P@ssw0rd1'
     },
-    orgName:'apijeeps',
+    orgName:'sfeldmanapijeep',
     appName1:'website',
     appName2:'mobile',
     useSso:false
