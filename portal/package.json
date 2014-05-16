@@ -1,6 +1,6 @@
 {
   "name": "usergrid",
-  "version": "2.0.11",
+  "version": "2.0.12",
   "packageName": "appsvc-ui",
   "description": "full usergrid portal",
   "main": "./scripts/web-server.js",
