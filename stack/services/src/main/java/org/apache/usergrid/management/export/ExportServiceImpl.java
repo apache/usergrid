@@ -48,8 +48,6 @@ import org.apache.usergrid.persistence.entities.JobData;
 
 import com.google.common.collect.BiMap;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-
 
 /**
  * Need to refactor out the mutliple orgs being take , need to factor out the multiple apps it will just be the one app
@@ -90,7 +88,7 @@ public class ExportServiceImpl implements ExportService {
 
         EntityManager em = null;
         try {
-            em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+            em = emf.getEntityManager( emf.getManagementAppId() );
             Set<String> collections = em.getApplicationCollections();
             if ( !collections.contains( "exports" ) ) {
                 em.createApplicationCollection( "exports" );
@@ -146,7 +144,7 @@ public class ExportServiceImpl implements ExportService {
             return "UUID passed in cannot be null";
         }
 
-        EntityManager rootEm = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
         //retrieve the export entity.
         Export export = rootEm.get( uuid, Export.class );
@@ -199,7 +197,7 @@ public class ExportServiceImpl implements ExportService {
         //get the entity manager for the application, and the entity that this Export corresponds to.
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
         Export export = em.get( exportId, Export.class );
 
         //update the entity state to show that the job has officially started.
@@ -313,7 +311,7 @@ public class ExportServiceImpl implements ExportService {
     public Export getExportEntity( final JobExecution jobExecution ) throws Exception {
 
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        EntityManager exportManager = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager exportManager = emf.getEntityManager( emf.getManagementAppId() );
 
         return exportManager.get( exportId, Export.class );
     }

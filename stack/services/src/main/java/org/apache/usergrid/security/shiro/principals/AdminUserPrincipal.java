@@ -17,14 +17,12 @@
 package org.apache.usergrid.security.shiro.principals;
 
 
+import java.util.UUID;
 import org.apache.usergrid.management.UserInfo;
-
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-
 
 public class AdminUserPrincipal extends UserPrincipal {
 
-    public AdminUserPrincipal( UserInfo user ) {
-        super( MANAGEMENT_APPLICATION_ID, user );
+    public AdminUserPrincipal( UUID managementAppId, UserInfo user ) {
+        super( managementAppId, user );
     }
 }

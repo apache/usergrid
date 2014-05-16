@@ -126,7 +126,7 @@ public class Export extends ExportingToolBase {
             JsonGenerator jg = getJsonGenerator( createOutputFile( "application", application.getValue() ) );
 
             // load the dictionary
-            EntityManager rootEm = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
             Entity appEntity = rootEm.get( new SimpleEntityRef( "application", application.getKey()));
 

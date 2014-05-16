@@ -105,17 +105,20 @@
         <property name="defaultWriteConsistencyLevel" value="${cassandra.writecl}"/>
     </bean>
 	
-
-<!--	<bean id="entityManagerFactory"
+	<bean id="entityManagerFactory"
+		class="org.apache.usergrid.corepersistence.CpEntityManagerFactory" scope="singleton">
+		<constructor-arg ref="cassandraService" />
+        <constructor-arg ref="counterUtils"/>
+        <constructor-arg value="${usergrid.counter.skipAggregate}"/>
+    </bean>
+<!--
+    <bean id="entityManagerFactory"
 		class="org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
 		<constructor-arg ref="cassandraService" />
         <constructor-arg ref="counterUtils"/>
         <constructor-arg value="${usergrid.counter.skipAggregate}"/>
-    </bean>-->
-
-	<bean id="entityManagerFactory"
-		class="org.apache.usergrid.corepersistence.CpEntityManagerFactory" scope="singleton">
     </bean>
+-->
 
     <bean id="queueManagerFactory"
           class="org.apache.usergrid.mq.cassandra.QueueManagerFactoryImpl">
@@ -161,9 +164,15 @@
     <bean id="mailUtils" class="org.apache.usergrid.utils.MailUtils" />
 
     <bean id="entityManager" class="org.apache.usergrid.corepersistence.CpEntityManager" scope="prototype"/>
-<!--    <bean id="entityManager" class="org.apache.usergrid.corepersistence.HybridEntityManager" scope="prototype"/>-->
+<!--
+    <bean id="entityManager" 
+        class="org.apache.usergrid.cassandra.EntityManagerImpl" 
+        scope="prototype"/>
 
-    <bean id="relationManager" class="org.apache.usergrid.persistence.cassandra.RelationManagerImpl" scope="prototype"/>
+    <bean id="relationManager" 
+        class="org.apache.usergrid.persistence.cassandra.RelationManagerImpl" 
+        scope="prototype"/>
+-->
 
     <bean id="traceTagAspect" class="org.apache.usergrid.persistence.cassandra.util.TraceTagAspect"/>
 
@@ -183,7 +192,7 @@
     <!-- Scheduler Settings from removed Scheduler Module's app context -->
     <!-- ============================================================== -->
 
-<!--    <bean id="jobSchedulerBackgroundService" class="org.apache.usergrid.batch.service.JobSchedulerService">
+    <bean id="jobSchedulerBackgroundService" class="org.apache.usergrid.batch.service.JobSchedulerService">
       <property name="jobFactory" ref="jobFactory" />
       <property name="jobAccessor" ref="schedulerService" />
       <property name="workerSize" value="${usergrid.scheduler.job.workers}" />
@@ -198,8 +207,7 @@
 
     <bean id="jobFactory" class="org.apache.usergrid.batch.UsergridJobFactory" />
 
-     scan all job classes 
     <context:component-scan base-package="org.apache.usergrid.batch.job" />
-    <context:annotation-config />-->
+    <context:annotation-config />
 
 </beans>

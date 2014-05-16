@@ -81,7 +81,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
         if ( USE_DEFAULT_DOMAIN ) {
-            return CassandraService.DEFAULT_APPLICATION_ID;
+            return emf.getDefaultAppId();
         }
         return emf.createApplication( organizationName, applicationName );
     }

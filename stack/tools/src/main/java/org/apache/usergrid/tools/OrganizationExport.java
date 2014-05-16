@@ -35,8 +35,6 @@ import org.apache.commons.cli.Options;
 
 import au.com.bytecode.opencsv.CSVWriter;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-
 
 /**
  * Tools class which dumps metrics for tracking Usergrid developer adoption and high-level application usage.
@@ -127,7 +125,7 @@ public class OrganizationExport extends ExportingToolBase {
 
     private Results getOrganizations( Query query ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
         return em.searchCollection( em.getApplicationRef(), "groups", query );
     }
 }

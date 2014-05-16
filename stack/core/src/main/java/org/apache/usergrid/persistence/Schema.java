@@ -111,6 +111,7 @@ public class Schema {
     public static final String PROPERTY_CREATED = "created";
     public static final String PROPERTY_CONFIRMED = "confirmed";
     public static final String PROPERTY_DISABLED = "disabled";
+    public static final String PROPERTY_ADMIN = "admin";
     public static final String PROPERTY_UUID = "uuid";
     public static final String PROPERTY_EMAIL = "email";
     public static final String PROPERTY_ITEM = "item";

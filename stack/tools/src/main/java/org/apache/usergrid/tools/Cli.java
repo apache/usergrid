@@ -45,8 +45,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
-
 
 public class Cli extends ToolBase {
 
@@ -84,7 +82,7 @@ public class Cli extends ToolBase {
     public void handleInput() throws QueryParseException {
         BufferedReader d = new BufferedReader( new InputStreamReader( System.in ) );
 
-        UUID applicationId = DEFAULT_APPLICATION_ID;
+        UUID applicationId = emf.getDefaultAppId();
 
         while ( true ) {
             System.out.println();
@@ -111,7 +109,7 @@ public class Cli extends ToolBase {
                     }
                 }
                 if ( applicationId == null ) {
-                    applicationId = DEFAULT_APPLICATION_ID;
+                    applicationId = emf.getDefaultAppId();
                 }
                 System.out.println( "Using application " + applicationId );
                 continue;

@@ -147,7 +147,7 @@ public class ServiceManager {
 
     /** Return true if our current applicationId is the managment Id */
     public boolean isMangementApplication() {
-        return CassandraService.MANAGEMENT_APPLICATION_ID.equals( getApplicationId() );
+        return smf.getManagementAppId().equals( getApplicationId() );
     }
 
 

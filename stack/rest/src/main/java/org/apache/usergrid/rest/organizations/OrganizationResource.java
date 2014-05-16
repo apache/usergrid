@@ -47,9 +47,6 @@ import org.apache.shiro.authz.UnauthorizedException;
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.json.JSONWithPadding;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-
-
 @Component("org.apache.usergrid.rest.organizations.OrganizationResource")
 @Scope("prototype")
 @Produces({
@@ -73,7 +70,7 @@ public class OrganizationResource extends AbstractContextResource {
 
 
     private ApplicationResource appResourceFor( UUID applicationId ) throws Exception {
-        if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) && !SubjectUtils.isServiceAdmin() ) {
+        if ( applicationId.equals( emf.getManagementAppId() ) && !SubjectUtils.isServiceAdmin() ) {
             throw new UnauthorizedException();
         }
 

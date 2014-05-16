@@ -61,6 +61,8 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         //we shouldn't have run the last time, we should have counted down to it
         assertEquals( 1, job.getLatchCount() );
 
+        scheduler.refreshIndex();
+
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 
         // we should have only marked this as run fail+1 times

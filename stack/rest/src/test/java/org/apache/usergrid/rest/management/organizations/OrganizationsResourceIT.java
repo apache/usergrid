@@ -92,7 +92,7 @@ public class OrganizationsResourceIT extends AbstractRestIT {
             logNode( node );
 
             UserInfo ui = setup.getMgmtSvc().getAdminUserByEmail( "test-user-1@mockserver.com" );
-            EntityManager em = setup.getEmf().getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
             User user = em.get( ui.getUuid(), User.class );
             assertEquals( "Test User", user.getName() );
             assertEquals( "Apigee", user.getProperty( "company" ));

@@ -112,11 +112,11 @@ public class AppAudit extends ToolBase {
         Set<String> collectionOrgs = new HashSet<String>( allOrgs );
         Set<String> aliasedOrgs = new HashSet<String>( allOrgs );
 
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
 
         // search for all orgs
 
-        EntityRef rootAppRef = new SimpleEntityRef( "application", CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityRef rootAppRef = new SimpleEntityRef( "application", emf.getManagementAppId() );
 
         Query query = new Query();
         query.setLimit( PAGE_SIZE );

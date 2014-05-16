@@ -97,7 +97,7 @@ public class DupOrgRepair extends ExportingToolBase {
 
         logger.info( "Starting crawl of all admins" );
 
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
         Application app = em.getApplication();
 
         // search for all orgs
@@ -199,7 +199,7 @@ public class DupOrgRepair extends ExportingToolBase {
         }
 
         // get the root entity manager
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
 
         // Add the apps to the org
         Map<String, UUID> sourceApps = ( Map<String, UUID> ) sourceOrg.get( "applications" );
