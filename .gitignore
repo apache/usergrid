@@ -45,3 +45,4 @@ stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/q
 /portal/nbproject/project.xml
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/QueryFilterParser.java
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/QueryFilterLexer.java
+portal/js/templates.js
