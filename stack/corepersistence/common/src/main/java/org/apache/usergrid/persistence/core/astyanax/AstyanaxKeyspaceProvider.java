@@ -42,11 +42,13 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
  * @author tnine
  */
 public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
-    private final CassandraFig cassandraConfig;
+    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
 
 
     @Inject
-    public AstyanaxKeyspaceProvider( final CassandraFig cassandraConfig ) {
+    public AstyanaxKeyspaceProvider( final CassandraFig cassandraFig, final CassandraConfig cassandraConfig) {
+        this.cassandraFig = cassandraFig;
         this.cassandraConfig = cassandraConfig;
     }
 
@@ -55,19 +57,21 @@ public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
     public Keyspace get() {
 
         AstyanaxConfiguration config = new AstyanaxConfigurationImpl()
-                .setDiscoveryType( NodeDiscoveryType.valueOf( cassandraConfig.getDiscoveryType() ) )
-                .setTargetCassandraVersion( cassandraConfig.getVersion() );
+                .setDiscoveryType( NodeDiscoveryType.valueOf( cassandraFig.getDiscoveryType() ) )
+                .setTargetCassandraVersion( cassandraFig.getVersion() )
+                .setDefaultReadConsistencyLevel( cassandraConfig.getReadCL() )
+                .setDefaultWriteConsistencyLevel( cassandraConfig.getWriteCL() );
 
         ConnectionPoolConfiguration connectionPoolConfiguration =
                 new ConnectionPoolConfigurationImpl( "UsergridConnectionPool" )
-                        .setPort( cassandraConfig.getThriftPort() )
-                        .setMaxConnsPerHost( cassandraConfig.getConnections() )
-                        .setSeeds( cassandraConfig.getHosts() )
-                        .setSocketTimeout( cassandraConfig.getTimeout() );
+                        .setPort( cassandraFig.getThriftPort() )
+                        .setMaxConnsPerHost( cassandraFig.getConnections() )
+                        .setSeeds( cassandraFig.getHosts() )
+                        .setSocketTimeout( cassandraFig.getTimeout() );
 
         AstyanaxContext<Keyspace> context =
-                new AstyanaxContext.Builder().forCluster( cassandraConfig.getClusterName() )
-                        .forKeyspace( cassandraConfig.getKeyspaceName() )
+                new AstyanaxContext.Builder().forCluster( cassandraFig.getClusterName() )
+                        .forKeyspace( cassandraFig.getKeyspaceName() )
 
                         /*
                          * TODO tnine Filter this by adding a host supplier.  We will get token discovery from cassandra
@@ -83,6 +87,7 @@ public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
                         .buildKeyspace( ThriftFamilyFactory.getInstance() );
 
         context.start();
+
 
         return context.getClient();
     }

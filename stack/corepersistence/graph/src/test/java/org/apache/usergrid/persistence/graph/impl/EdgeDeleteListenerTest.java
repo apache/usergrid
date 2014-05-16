@@ -1,20 +1,22 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *  * Licensed to the Apache Software Foundation (ASF) under one
+ *  * or more contributor license agreements.  See the NOTICE file
+ *  * distributed with this work for additional information
+ *  * regarding copyright ownership.  The ASF licenses this file
+ *  * to you under the Apache License, Version 2.0 (the
+ *  * "License"); you may not use this file except in compliance
+ *  * with the License.  You may obtain a copy of the License at
+ *  *
+ *  *    http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing,
+ *  * software distributed under the License is distributed on an
+ *  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  * KIND, either express or implied.  See the License for the
+ *  * specific language governing permissions and limitations
+ *  * under the License.
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
  */
 package org.apache.usergrid.persistence.graph.impl;
 
@@ -23,10 +25,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,11 +34,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -59,17 +57,19 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
+import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createMarkedEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createGetByEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdgeAndId;
+import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchEdge;
+import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchIdType;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -78,7 +78,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith( ITRunner.class )
 @UseModules( { TestGraphModule.class } )
-public class EdgeWriteListenerTest {
+public class EdgeDeleteListenerTest {
 
     private static final Logger log = LoggerFactory.getLogger( NodeDeleteListenerTest.class );
 
@@ -86,9 +86,11 @@ public class EdgeWriteListenerTest {
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
+    @Inject
+    protected EdgeMetadataSerialization edgeMetadataSerialization;
 
     @Inject
-    protected EdgeWriteListener edgeWriteListener;
+    protected EdgeDeleteListener edgeDeleteListener;
 
     @Inject
     @CommitLogEdgeSerialization
@@ -125,7 +127,7 @@ public class EdgeWriteListenerTest {
 
 
     @Test
-    public void testWriteIT() throws ConnectionException {
+    public void testDeleteIT() throws ConnectionException {
 
         //write several versions to the commit log
 
@@ -134,23 +136,30 @@ public class EdgeWriteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV2 = createMarkedEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId );
+
 
         final UUID timestamp = UUIDGenerator.newTimeUUID();
 
-
         commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
         commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
+        storageEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+
+
+
+
+        EdgeEvent<MarkedEdge> edgeDeleteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
 
         //now perform the listener execution
-        Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
+        EdgeEvent<MarkedEdge> returned = edgeDeleteListener.receive( edgeDeleteEvent ).toBlockingObservable().single();
 
-        assertEquals( 3, returned.intValue() );
+        assertEquals( edgeV3, returned.getData() );
 
         //now validate there's nothing in the commit log.
         UUID now = UUIDGenerator.newTimeUUID();
@@ -166,21 +175,24 @@ public class EdgeWriteListenerTest {
         Iterator<MarkedEdge> edges = commitLogEdgeSerialization
                 .getEdgeVersions( scope, createGetByEdge( sourceId, edgeType, targetId, now, null ) );
 
+        assertEquals( edgeV2, edges.next() );
+        assertEquals( edgeV1, edges.next() );
+        assertFalse( edges.hasNext() );
 
-        /**
-         * Search from source
-         */
-        assertFalse( "No edges exist", edges.hasNext() );
 
         edges = commitLogEdgeSerialization
                 .getEdgesFromSource( scope, createSearchByEdge( sourceId, edgeType, now, null ) );
 
-        assertFalse( "No edges exist", edges.hasNext() );
+        assertEquals( edgeV2, edges.next() );
+        assertEquals( edgeV1, edges.next() );
+        assertFalse( edges.hasNext() );
 
         edges = commitLogEdgeSerialization.getEdgesFromSourceByTargetType( scope,
                 createSearchByEdgeAndId( sourceId, edgeType, now, targetId.getType(), null ) );
 
-        assertFalse( "No edges exist", edges.hasNext() );
+        assertEquals( edgeV2, edges.next() );
+        assertEquals( edgeV1, edges.next() );
+        assertFalse( edges.hasNext() );
 
         /**
          * Search to target
@@ -190,12 +202,16 @@ public class EdgeWriteListenerTest {
         edges = commitLogEdgeSerialization
                 .getEdgesToTarget( scope, createSearchByEdge( targetId, edgeType, now, null ) );
 
-        assertFalse( "No edges exist", edges.hasNext() );
+        assertEquals( edgeV2, edges.next() );
+        assertEquals( edgeV1, edges.next() );
+        assertFalse( edges.hasNext() );
 
         edges = commitLogEdgeSerialization.getEdgesToTargetBySourceType( scope,
                 createSearchByEdgeAndId( targetId, edgeType, now, sourceId.getType(), null ) );
 
-        assertFalse( "No edges exist", edges.hasNext() );
+        assertEquals( edgeV2, edges.next() );
+        assertEquals( edgeV1, edges.next() );
+        assertFalse( edges.hasNext() );
 
         /**
          * Ensure all the edges exist in the permanent storage
@@ -208,19 +224,15 @@ public class EdgeWriteListenerTest {
         edges = storageEdgeSerialization
                 .getEdgeVersions( scope, createGetByEdge( sourceId, edgeType, targetId, now, null ) );
 
-
-        /**
-         * Search from source
-         */
-        assertEquals( edgeV3, edges.next() );
         assertEquals( edgeV2, edges.next() );
         assertEquals( edgeV1, edges.next() );
         assertFalse( edges.hasNext() );
 
+
         edges = storageEdgeSerialization
                 .getEdgesFromSource( scope, createSearchByEdge( sourceId, edgeType, now, null ) );
 
-        assertEquals( edgeV3, edges.next() );
+
         assertEquals( edgeV2, edges.next() );
         assertEquals( edgeV1, edges.next() );
         assertFalse( edges.hasNext() );
@@ -228,7 +240,7 @@ public class EdgeWriteListenerTest {
         edges = storageEdgeSerialization.getEdgesFromSourceByTargetType( scope,
                 createSearchByEdgeAndId( sourceId, edgeType, now, targetId.getType(), null ) );
 
-        assertEquals( edgeV3, edges.next() );
+
         assertEquals( edgeV2, edges.next() );
         assertEquals( edgeV1, edges.next() );
         assertFalse( edges.hasNext() );
@@ -240,7 +252,7 @@ public class EdgeWriteListenerTest {
 
         edges = storageEdgeSerialization.getEdgesToTarget( scope, createSearchByEdge( targetId, edgeType, now, null ) );
 
-        assertEquals( edgeV3, edges.next() );
+
         assertEquals( edgeV2, edges.next() );
         assertEquals( edgeV1, edges.next() );
         assertFalse( edges.hasNext() );
@@ -248,7 +260,7 @@ public class EdgeWriteListenerTest {
         edges = storageEdgeSerialization.getEdgesToTargetBySourceType( scope,
                 createSearchByEdgeAndId( targetId, edgeType, now, sourceId.getType(), null ) );
 
-        assertEquals( edgeV3, edges.next() );
+
         assertEquals( edgeV2, edges.next() );
         assertEquals( edgeV1, edges.next() );
         assertFalse( edges.hasNext() );
@@ -256,7 +268,7 @@ public class EdgeWriteListenerTest {
 
 
     @Test
-    public void testWritePreviousVersionIT() throws ConnectionException {
+    public void testDeleteAllIT() throws ConnectionException {
 
         //write several versions to the commit log
 
@@ -265,22 +277,43 @@ public class EdgeWriteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV2 = createMarkedEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId );
 
 
         final UUID timestamp = UUIDGenerator.newTimeUUID();
+
         commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
         commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
         commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV2 );
+        storageEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+
+        edgeMetadataSerialization.writeEdge( scope, edgeV1 ).execute();
+        edgeMetadataSerialization.writeEdge( scope, edgeV2 ).execute();
+        edgeMetadataSerialization.writeEdge( scope, edgeV3 ).execute();
+
 
         //now perform the listener execution, should only clean up to edge v2
-        Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
+        EdgeEvent<MarkedEdge> returned =
+                edgeDeleteListener.receive( new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV2 ) )
+                                  .toBlockingObservable().single();
 
-        assertEquals( 2, returned.intValue() );
+        assertEquals( edgeV2, returned.getData() );
+
+        returned = edgeDeleteListener.receive( new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV1 ) )
+                                     .toBlockingObservable().single();
+
+        assertEquals( edgeV1, returned.getData() );
+
+        returned = edgeDeleteListener.receive( new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 ) )
+                                     .toBlockingObservable().single();
+
+        assertEquals( edgeV3, returned.getData() );
+
 
         //now validate there's nothing in the commit log.
         UUID now = UUIDGenerator.newTimeUUID();
@@ -300,20 +333,36 @@ public class EdgeWriteListenerTest {
         /**
          * Search from source
          */
-        assertEquals( edgeV3, edges.next() );
+
         assertFalse( edges.hasNext() );
+
 
         edges = commitLogEdgeSerialization
                 .getEdgesFromSource( scope, createSearchByEdge( sourceId, edgeType, now, null ) );
 
-        assertEquals( edgeV3, edges.next() );
         assertFalse( edges.hasNext() );
+
+
+        Iterator<String> edgeTypes =
+                edgeMetadataSerialization.getEdgeTypesFromSource( scope, createSearchEdge( sourceId, null ) );
+
+        assertFalse( edgeTypes.hasNext() );
+
+
+
 
         edges = commitLogEdgeSerialization.getEdgesFromSourceByTargetType( scope,
                 createSearchByEdgeAndId( sourceId, edgeType, now, targetId.getType(), null ) );
 
-        assertEquals( edgeV3, edges.next() );
         assertFalse( edges.hasNext() );
+
+        edgeTypes = edgeMetadataSerialization
+                .getEdgeTypesFromSource( scope, createSearchIdType( sourceId, edgeType, null ) );
+
+        assertFalse( edgeTypes.hasNext() );
+
+
+
 
         /**
          * Search to target
@@ -323,17 +372,29 @@ public class EdgeWriteListenerTest {
         edges = commitLogEdgeSerialization
                 .getEdgesToTarget( scope, createSearchByEdge( targetId, edgeType, now, null ) );
 
-        assertEquals( edgeV3, edges.next() );
+
         assertFalse( edges.hasNext() );
+
+
+        edgeTypes =
+                        edgeMetadataSerialization.getEdgeTypesFromSource( scope, createSearchEdge( targetId, null ) );
+
+                assertFalse( edgeTypes.hasNext() );
+
 
         edges = commitLogEdgeSerialization.getEdgesToTargetBySourceType( scope,
                 createSearchByEdgeAndId( targetId, edgeType, now, sourceId.getType(), null ) );
 
-        assertEquals( edgeV3, edges.next() );
+
         assertFalse( edges.hasNext() );
 
+        edgeTypes = edgeMetadataSerialization
+                       .getEdgeTypesFromSource( scope, createSearchIdType( targetId, edgeType, null ) );
+
+               assertFalse( edgeTypes.hasNext() );
+
         /**
-         * Ensure all the edges exist in the permanent storage
+         * Ensure none of the edges exist in the permanent storage
          */
 
         /**
@@ -348,24 +409,19 @@ public class EdgeWriteListenerTest {
          * Search from source
          */
 
-        assertEquals( edgeV2, edges.next() );
-        assertEquals( edgeV1, edges.next() );
+
         assertFalse( edges.hasNext() );
 
         edges = storageEdgeSerialization
                 .getEdgesFromSource( scope, createSearchByEdge( sourceId, edgeType, now, null ) );
 
 
-        assertEquals( edgeV2, edges.next() );
-        assertEquals( edgeV1, edges.next() );
         assertFalse( edges.hasNext() );
 
         edges = storageEdgeSerialization.getEdgesFromSourceByTargetType( scope,
                 createSearchByEdgeAndId( sourceId, edgeType, now, targetId.getType(), null ) );
 
 
-        assertEquals( edgeV2, edges.next() );
-        assertEquals( edgeV1, edges.next() );
         assertFalse( edges.hasNext() );
 
         /**
@@ -376,17 +432,16 @@ public class EdgeWriteListenerTest {
         edges = storageEdgeSerialization.getEdgesToTarget( scope, createSearchByEdge( targetId, edgeType, now, null ) );
 
 
-        assertEquals( edgeV2, edges.next() );
-        assertEquals( edgeV1, edges.next() );
         assertFalse( edges.hasNext() );
 
         edges = storageEdgeSerialization.getEdgesToTargetBySourceType( scope,
                 createSearchByEdgeAndId( targetId, edgeType, now, sourceId.getType(), null ) );
 
 
-        assertEquals( edgeV2, edges.next() );
-        assertEquals( edgeV1, edges.next() );
         assertFalse( edges.hasNext() );
+
+        //test there's no edge metadata
+
     }
 
 
@@ -404,7 +459,7 @@ public class EdgeWriteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId );
 
         EdgeSerialization commitLog = mock( EdgeSerialization.class );
         EdgeSerialization storage = mock( EdgeSerialization.class );
@@ -420,7 +475,6 @@ public class EdgeWriteListenerTest {
         EdgeWriteCompact compact = new EdgeWriteCompactImpl( commitLog, storage, keyspace, graphFig );
 
 
-
         //now perform the listener execution, should only clean up to edge v2
         EdgeWriteListener listener = new EdgeWriteListener( compact, edgeProcessor );
 
@@ -428,7 +482,7 @@ public class EdgeWriteListenerTest {
         /**
          * Mock up returning a single edge
          */
-        when( commitLog.getEdgeVersions( same(scope), any( SearchByEdge.class ) ) ).thenReturn( Collections
+        when( commitLog.getEdgeVersions( same( scope ), any( SearchByEdge.class ) ) ).thenReturn( Collections
                 .singletonList( createEdge( edgeV1.getSourceNode(), edgeV1.getType(), edgeV1.getTargetNode(),
                         edgeV1.getVersion() ) ).iterator() );
 
@@ -447,22 +501,19 @@ public class EdgeWriteListenerTest {
         RuntimeException exception = new RuntimeException( "Something nasty happened when mutating" );
 
 
-       when( storageBatch.execute() ).thenThrow( exception );
-
+        when( storageBatch.execute() ).thenThrow( exception );
 
 
         try {
-           listener.receive( edgeWriteEvent ).toBlockingObservable().single();
+            listener.receive( edgeWriteEvent ).toBlockingObservable().single();
             fail( "I should have thrown an exception" );
         }
         catch ( RuntimeException re ) {
-            assertSame(exception, re);
+            assertSame( exception, re );
         }
 
 
-
         //verify we never remove from the commit log
-        verify(commitLogBatch, never()).execute();
-
+        verify( commitLogBatch, never() ).execute();
     }
 }

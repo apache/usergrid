@@ -41,7 +41,7 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
-import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.StringColumnParser;
@@ -136,18 +136,20 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         EdgeUtils.validateEdge( edge );
 
 
-        MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() );
+
 
         final Id source = edge.getSourceNode();
         final Id target = edge.getTargetNode();
         final String edgeType = edge.getType();
         final long timestamp = CassUtils.getTimestamp( edge.getVersion() );
 
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() ).withTimestamp( timestamp );
+
 
         //add source->target edge type to meta data
         final ScopedRowKey<OrganizationScope, Id> sourceKey = new ScopedRowKey<OrganizationScope, Id>( scope, source );
 
-        batch.withRow( CF_SOURCE_EDGE_TYPES, sourceKey ).setTimestamp( timestamp ).putColumn( edgeType, HOLDER );
+        batch.withRow( CF_SOURCE_EDGE_TYPES, sourceKey ).putColumn( edgeType, HOLDER );
 
 
         //write source->target edge type and id type to meta data
@@ -156,7 +158,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope, tk );
 
 
-        batch.withRow( CF_SOURCE_EDGE_ID_TYPES, sourceTypeKey ).setTimestamp( timestamp )
+        batch.withRow( CF_SOURCE_EDGE_ID_TYPES, sourceTypeKey )
              .putColumn( target.getType(), HOLDER );
 
 
@@ -164,7 +166,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         final ScopedRowKey<OrganizationScope, Id> targetKey = new ScopedRowKey<OrganizationScope, Id>( scope, target );
 
 
-        batch.withRow( CF_TARGET_EDGE_TYPES, targetKey ).setTimestamp( timestamp ).putColumn( edgeType, HOLDER );
+        batch.withRow( CF_TARGET_EDGE_TYPES, targetKey ).putColumn( edgeType, HOLDER );
 
 
         //write target<--source edge type and id type to meta data
@@ -172,7 +174,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( target, edgeType ) );
 
 
-        batch.withRow( CF_TARGET_EDGE_ID_TYPES, targetTypeKey ).setTimestamp( timestamp )
+        batch.withRow( CF_TARGET_EDGE_ID_TYPES, targetTypeKey )
              .putColumn( source.getType(), HOLDER );
 
 
@@ -254,9 +256,9 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         final ScopedRowKey<OrganizationScope, Id> rowKey = new ScopedRowKey<OrganizationScope, Id>( scope, rowKeyId );
 
 
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( timestamp );
 
-        batch.withRow( cf, rowKey ).setTimestamp( timestamp ).deleteColumn( edgeType );
+        batch.withRow( cf, rowKey ).deleteColumn( edgeType );
 
         return batch;
     }
@@ -278,10 +280,12 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                                         final String edgeType, final UUID version,
                                         final MultiTennantColumnFamily<OrganizationScope, EdgeIdTypeKey, String> cf ) {
 
-        MutationBatch batch = keyspace.prepareMutationBatch();
 
 
         final long timestamp = CassUtils.getTimestamp( version );
+
+        final   MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( timestamp );
+
 
 
         //write target<--source edge type and id type to meta data
@@ -289,7 +293,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 new ScopedRowKey<OrganizationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( rowId, edgeType ) );
 
 
-        batch.withRow( cf, rowKey ).setTimestamp( timestamp ).deleteColumn( idType );
+        batch.withRow( cf, rowKey ).deleteColumn( idType );
 
         return batch;
     }
@@ -334,7 +338,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
         final RangeBuilder rangeBuilder =
-                new RangeBuilder().setLimit( cassandraConfig.getScanPageSize() ).setStart( search.getLast().or( "" ) );
+                new RangeBuilder().setLimit( graphFig.getScanPageSize() ).setStart( search.getLast().or( "" ) );
 
         RowQuery<ScopedRowKey<OrganizationScope, Id>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
@@ -370,7 +374,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
         //resume from the last if specified.  Also set the range
         final ByteBufferRange searchRange =
-                new RangeBuilder().setLimit( cassandraConfig.getScanPageSize() ).setStart( search.getLast().or( "" ) )
+                new RangeBuilder().setLimit( graphFig.getScanPageSize() ).setStart( search.getLast().or( "" ) )
                                   .build();
 
         RowQuery<ScopedRowKey<OrganizationScope, EdgeIdTypeKey>, String> query =

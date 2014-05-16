@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.graph.impl;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -42,6 +43,10 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
     }
 
 
+    public SimpleMarkedEdge(final Edge edge, final boolean deleted){
+        this(edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getVersion(), deleted);
+    }
+
 
     @Override
     public boolean isDeleted() {
@@ -49,11 +54,35 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
     }
 
 
-    /**
-     * We purposefully don't implement hashcode or equals.  The only additional field is deleted.  We don't want to compare
-     * edge equality based on deleted true/false, since this does not define relevant indexing information for a marked edge
-     *
-     */
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof SimpleMarkedEdge ) ) {
+            return false;
+        }
+        if ( !super.equals( o ) ) {
+            return false;
+        }
+
+        final SimpleMarkedEdge that = ( SimpleMarkedEdge ) o;
+
+        if ( deleted != that.deleted ) {
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + ( deleted ? 1 : 0 );
+        return result;
+    }
 
 
     @Override

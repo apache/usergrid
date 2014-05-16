@@ -48,7 +48,7 @@ public class EdgeEvent<T> implements Serializable {
     }
 
 
-    public UUID getVersion() {
+    public UUID getTimestamp() {
         return version;
     }
 
