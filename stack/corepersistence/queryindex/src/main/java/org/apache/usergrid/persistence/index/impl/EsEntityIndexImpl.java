@@ -52,13 +52,13 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Results;
+import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -73,7 +73,7 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import java.util.Collections;
+
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 
@@ -90,8 +90,9 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     private final String indexName;
 
-    private final OrganizationScope orgScope;
-    private final CollectionScope appScope;
+    private final String indexType;
+
+    private final IndexScope indexScope;
 
     private final Client client;
 
@@ -105,7 +106,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
     public static final String GEO_SUFFIX = "_ug_geo";
-    public static final String COLLECTION_SCOPE_FIELDNAME = "zzz__collectionscope__zzz";
+//    public static final String COLLECTION_SCOPE_FIELDNAME = "zzz__collectionscope__zzz";
 
     public static final String DOC_ID_SEPARATOR = "|";
     public static final String DOC_ID_SEPARATOR_SPLITTER = "\\|";
@@ -119,28 +120,27 @@ public class EsEntityIndexImpl implements EntityIndex {
        
     @Inject
     public EsEntityIndexImpl(
-            @Assisted final OrganizationScope orgScope, 
-            @Assisted final CollectionScope appScope,
+            @Assisted final IndexScope indexScope,
             IndexFig config,
             EsProvider provider,
             EntityCollectionManagerFactory factory) {
-        
-        ValidationUtils.validateOrganizationScope( orgScope );
-        MvccValidationUtils.validateCollectionScope( appScope );
 
-        this.orgScope = orgScope;
-        this.appScope = appScope;
+        IndexValidationUtils.validateIndexScope( indexScope );
+
+        this.indexScope = indexScope;
 
         this.client = provider.getClient();
         this.ecmFactory = factory;
 
-        this.indexName = createIndexName( config.getIndexPrefix(), orgScope, appScope );
+        this.indexName = createIndexName( config.getIndexPrefix(), indexScope);
+        this.indexType = createCollectionScopeTypeName( indexScope );
 
         this.refresh = config.isForcedRefresh();
         this.cursorTimeout = config.getQueryCursorTimeout();
 
         //log.debug("Creating new EsEntityIndexImpl for: " + indexName);
 
+        //TODO, this will get used heavily, can we lazy repair instead of checking every time we instantiate this?
         AdminClient admin = client.admin();
         try {
             CreateIndexResponse r = admin.indices().prepareCreate(indexName).execute().actionGet();
@@ -148,14 +148,14 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
 
-            try { 
+            try {
                 // TODO: figure out what refresh above is not enough to ensure index is ready
                 Thread.sleep(500);
             } catch (InterruptedException ex) {}
 
         } catch (IndexAlreadyExistsException ignored) {
             //log.debug("Keyspace already exists", ignored);
-        } 
+        }
 
     }
 
@@ -187,8 +187,8 @@ public class EsEntityIndexImpl implements EntityIndex {
                 }
 
                 log.debug("Created new type mapping");
-                log.debug("   Scope organization: " + orgScope.getOrganization());
-                log.debug("   Scope application: " + appScope.getOwner());
+                log.debug("   Scope applciation: " + indexScope.getApplication());
+                log.debug("   Scope owner: " + indexScope.getOwner());
                 log.debug("   Type name: " + typeName );
 
             } catch (IOException ex) {
@@ -199,24 +199,39 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
 
+    /**
+     * Create the index name based on our prefix+appUUID+AppType
+     * @param prefix
+     * @param indexScope
+     * @return
+     */
     private String createIndexName( 
-            String prefix, OrganizationScope orgScope, CollectionScope appScope ) {
+            String prefix, IndexScope indexScope) {
         StringBuilder sb = new StringBuilder();
         String sep = INDEX_NAME_SEPARATOR;
         sb.append( prefix ).append(sep);
-        sb.append( orgScope.getOrganization().getUuid() ).append(sep);
-        sb.append( orgScope.getOrganization().getType() ).append(sep);
-        sb.append( appScope.getOwner().getUuid() ).append(sep);
-        sb.append( appScope.getOwner().getType() );
+        sb.append( indexScope.getApplication().getUuid() ).append(sep);
+        sb.append( indexScope.getApplication().getType() ).append(sep);
         return sb.toString();
     }
 
-    
+
+    /**
+     * Create the index doc from the given entity
+     * @param entity
+     * @return
+     */
     private String createIndexDocId(Entity entity) {
         return createIndexDocId(entity.getId(), entity.getVersion());
     }
 
-    
+
+    /**
+     * Create the doc Id. This is the entitie's type + uuid + version
+     * @param entityId
+     * @param version
+     * @return
+     */
     private String createIndexDocId(Id entityId, UUID version) {
         StringBuilder sb = new StringBuilder();
         String sep = DOC_ID_SEPARATOR;
@@ -227,124 +242,82 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
 
-    public static String createCollectionScopeTypeName( CollectionScope scope ) {
-        StringBuilder sb = new StringBuilder();
-        String sep = DOC_TYPE_SEPARATOR;
-        sb.append( scope.getName()                   ).append(sep);
-        sb.append( scope.getOwner().getUuid()        ).append(sep);
-        sb.append( scope.getOwner().getType()        ).append(sep);
-        sb.append( scope.getOrganization().getUuid() ).append(sep);
-        sb.append( scope.getOrganization().getType() );
-        return sb.toString();
-    }
-
-
-    private String createEntityConnectionScopeTypeName( Id entityId, String type ) {
-        StringBuilder sb = new StringBuilder();
-        String sep = DOC_TYPE_SEPARATOR;
-        sb.append( entityId.getUuid() ).append(sep);
-        sb.append( entityId.getType() ).append(sep);
-        sb.append( type );
-        return sb.toString();
-    }
-
-    
-    @Override
-    public void index( CollectionScope collScope, Entity entity ) {
-
-        String collScopeTypeName = createCollectionScopeTypeName( collScope ); 
-        index( collScopeTypeName, collScopeTypeName, entity ); 
-    }
-
-    
-    @Override
-    public void indexConnection( 
-        Entity source, String type, Entity target, CollectionScope targetScope ) {
-
-        index( createEntityConnectionScopeTypeName( source.getId(), type), 
-               createCollectionScopeTypeName( targetScope ), 
-               target );
-    }
-
     /**
-     * Index entity into either a collection scope or an entity/connection-type scope.
-     * @param estype      Elastic Search Type into which Entity will be indexed.
-     * @param targetScope CollectionScope from which to fetch Entity.
-     * @param entity      Entity to be indexed.
+     * Create our sub scope.  This is the ownerUUID + type
+     * @param scope
+     * @return
      */
-    private void index( String estype, String targetScope, Entity entity ) {
+    private static String createCollectionScopeTypeName( IndexScope scope ) {
+        StringBuilder sb = new StringBuilder();
+        String sep = DOC_TYPE_SEPARATOR;
+        sb.append( scope.getApplication().getUuid() ).append(sep);
+        sb.append( scope.getApplication().getType() );
+        return sb.toString();
+    }
+
+
+    
+    @Override
+    public void index( Entity entity ) {
 
         log.debug("Indexing entity:  " + entity.getId().toString());
-        log.debug("    Index Name:   " + this.indexName);
-        log.debug("    ES Type:      " + estype);
-        log.debug("    Target Scope: " + targetScope);
-        
-        ValidationUtils.verifyEntityWrite(entity);
+                log.debug("    Index Name:   " + this.indexName);
+                log.debug("    ES Type:      " + this.indexType);
 
-        initType( estype );
+                ValidationUtils.verifyEntityWrite(entity);
 
-        StopWatch timer = null;
-        if ( log.isDebugEnabled() ) {
-            timer = new StopWatch();
-            timer.start();
-        }
+                initType( indexType );
 
-        Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
+                StopWatch timer = null;
+                if ( log.isDebugEnabled() ) {
+                    timer = new StopWatch();
+                    timer.start();
+                }
 
-        // needed to retrieve entity via collection module
-        entityAsMap.put(COLLECTION_SCOPE_FIELDNAME, targetScope ); 
+                Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
 
-        // let caller add these fields if needed
-        // entityAsMap.put("created", entity.getId().getUuid().timestamp();
-        // entityAsMap.put("updated", entity.getVersion().timestamp());
 
-        log.debug("Indexing entity: " + entityAsMap);
 
-        String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
+                // let caller add these fields if needed
+                // entityAsMap.put("created", entity.getId().getUuid().timestamp();
+                // entityAsMap.put("updated", entity.getVersion().timestamp());
 
-        IndexRequestBuilder irb = client
-            .prepareIndex( indexName, estype, indexId)
-            .setSource(entityAsMap)
-            .setRefresh(refresh);
+                log.debug("Indexing entity: " + entityAsMap);
 
-        irb.execute().actionGet();
+                String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
 
-        //log.debug("Indexed Entity with index id " + indexId);
+                IndexRequestBuilder irb = client
+                    .prepareIndex( indexName, this.indexType, indexId)
+                    .setSource(entityAsMap)
+                    .setRefresh(refresh);
 
-        if ( log.isDebugEnabled() ) {
-            timer.stop();
-            double average = averageIndexTime.get();
-            if ( !averageIndexTime.compareAndSet( 0, timer.getTime() ) ) {
-                averageIndexTime.compareAndSet( average, (average + timer.getTime()) / 2.0 );
-            }
-            long count = indexedCount.addAndGet(1);
-            if ( count % 1000 == 0 ) {
-               log.debug("Indexed {} entities, average time {}ms", count, averageIndexTime.get() ); 
-            }
-        }
+                irb.execute().actionGet();
+
+                //log.debug("Indexed Entity with index id " + indexId);
+
+                if ( log.isDebugEnabled() ) {
+                    timer.stop();
+                    double average = averageIndexTime.get();
+                    if ( !averageIndexTime.compareAndSet( 0, timer.getTime() ) ) {
+                        averageIndexTime.compareAndSet( average, (average + timer.getTime()) / 2.0 );
+                    }
+                    long count = indexedCount.addAndGet(1);
+                    if ( count % 1000 == 0 ) {
+                       log.debug("Indexed {} entities, average time {}ms", count, averageIndexTime.get() );
+                    }
+                }
     }
 
 
     @Override
-    public void deindex( CollectionScope collScope, Entity entity ) {
+    public void deindex( Entity entity ) {
         
-        deindex( createCollectionScopeTypeName( collScope ), entity );     
-    }
 
-
-    @Override
-    public void deindexConnection( Id sourceId, String type, Entity target ) {
-
-        deindex( createEntityConnectionScopeTypeName( sourceId, type ), target );
-    }
-
-
-    public void deindex( String typeName, Entity entity ) {
 
         String indexId = createIndexDocId( entity.getId(), entity.getVersion() );
 
         client
-            .prepareDelete( indexName, typeName, indexId )
+            .prepareDelete( indexName, indexType, indexId )
             .setRefresh( refresh )
             .execute().actionGet();
 
@@ -353,38 +326,13 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
     @Override
-    public Results searchConnections( Entity source, String type, Query query ) {
-
-        String connType = createEntityConnectionScopeTypeName( source.getId(), type ); 
-        return search( Collections.singletonList(connType), query );
-    }
-
-
-    @Override
-    public Results search( CollectionScope collScope, Query query) {
-
-        String collType = createCollectionScopeTypeName( collScope );
-        return search( Collections.singletonList(collType), query);
-    }
-
-
-    @Override
-    public Results searchConnections(Entity source, List<String> types, Query query) {
-        List<String> connTypes = new ArrayList<String>();
-        for ( String type : types ) {
-            connTypes.add( createEntityConnectionScopeTypeName(source.getId(), type));
-        }
-        return search( connTypes, query );
-    }
-
-
-    public Results search( List<String> estype, Query query) {
+    public CandidateResults search(Query query) {
 
         QueryBuilder qb = query.createQueryBuilder();
         
         log.debug("Search");
         log.debug("    Index Name: " + this.indexName);
-        log.debug("    ES Type:    " + estype);
+        log.debug("    ES Type:    " + this.indexType);
         log.debug("    Query:      " + qb.toString().replace("\n", " ") );
         
             
@@ -393,7 +341,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
             SearchRequestBuilder srb = client.prepareSearch(indexName)
-                .setTypes( estype.toArray( new String[estype.size()] ))
+                .setTypes( indexType )
                 .setScroll( cursorTimeout + "m" )
                 .setQuery( qb );
 
@@ -443,20 +391,20 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             Id entityId = new SimpleId(UUID.fromString(id), type);
 
-            String scopeString = hit.getSource().get( COLLECTION_SCOPE_FIELDNAME ).toString();
+//            String scopeString = hit.getSource().get( COLLECTION_SCOPE_FIELDNAME ).toString();
             candidates.add(
                 new CandidateResult( 
-                    entityId, UUID.fromString(version), getCollectionScope(scopeString) ));
+                    entityId, UUID.fromString(version) ));
         }
 
-        Results results = new Results( query, candidates, ecmFactory );
+        CandidateResults candidateResults = new CandidateResults( query, candidates );
 
         if ( candidates.size() == query.getLimit() ) {
-            results.setCursor(searchResponse.getScrollId());
+            candidateResults.setCursor(searchResponse.getScrollId());
             log.debug("   Cursor = " + searchResponse.getScrollId() );
         }
 
-        return results;
+        return candidateResults;
     }
 
 
@@ -481,7 +429,7 @@ public class EsEntityIndexImpl implements EntityIndex {
      * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each
      * StringField.
      */
-    public static Map entityToMap(EntityObject entity) {
+    private static Map entityToMap(EntityObject entity) {
 
         Map<String, Object> entityMap = new HashMap<String, Object>();
 

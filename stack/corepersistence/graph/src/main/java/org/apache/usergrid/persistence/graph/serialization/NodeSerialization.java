@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -46,7 +46,7 @@ public interface NodeSerialization extends Migration {
      * @param node The node to mark
      * @param version The version to mark for deletion
      */
-    MutationBatch mark( OrganizationScope scope, Id node, UUID version );
+    MutationBatch mark( ApplicationScope scope, Id node, UUID version );
 
 
     /**
@@ -55,7 +55,7 @@ public interface NodeSerialization extends Migration {
      * @param node
      * @return
      */
-    MutationBatch delete( OrganizationScope scope, Id node, UUID version );
+    MutationBatch delete( ApplicationScope scope, Id node, UUID version );
 
     /**
      * Get the maximum version of a node marked for deletion.  If the node has no mark
@@ -64,7 +64,7 @@ public interface NodeSerialization extends Migration {
      * @param nodeId The node id
      * @return The optional uuid.  If none is present, the node is not currently marked
      */
-    Optional<UUID> getMaxVersion(OrganizationScope scope, Id nodeId);
+    Optional<UUID> getMaxVersion(ApplicationScope scope, Id nodeId);
 
     /**
      * Return a map with all max versions from the specified nodeIds.  If no max version is present
@@ -74,5 +74,5 @@ public interface NodeSerialization extends Migration {
      * @param edges The collection of edges we need to check against.  Both the source and target Id's will be added
      * @return A map of all marked Id's, with the mark version as the value
      */
-    Map<Id, UUID> getMaxVersions(OrganizationScope scope, Collection<? extends Edge> edges);
+    Map<Id, UUID> getMaxVersions(ApplicationScope scope, Collection<? extends Edge> edges);
 }

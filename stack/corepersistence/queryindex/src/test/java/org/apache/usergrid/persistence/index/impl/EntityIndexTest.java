@@ -35,17 +35,16 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Results;
+import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -84,14 +83,14 @@ public class EntityIndexTest extends BaseIT {
 
         final int MAX_ENTITIES = 100;
 
-        Id orgId = new SimpleId("organization");
-        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
         Id appId = new SimpleId("application");
-        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "contacts" );
 
-        EntityIndex entityIndex = cif.createEntityIndex(orgScope, appScope );
-        EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
+        IndexScope indexScope = new IndexScopeImpl( appId, appId,  "things" );
+        CollectionScope collectionScope = new CollectionScopeImpl( appId, appId, "things" );
+
+
+        EntityIndex entityIndex = cif.createEntityIndex( indexScope );
+        EntityCollectionManager entityManager = cmf.createCollectionManager( collectionScope );
 
         InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
         ObjectMapper mapper = new ObjectMapper();
@@ -104,13 +103,13 @@ public class EntityIndexTest extends BaseIT {
 
             Map<String, Object> item = (Map<String, Object>)o;
 
-            Entity entity = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), scope.getName()));
+            Entity entity = new Entity(collectionScope.getName());
             entity = EntityIndexMapUtils.fromMap( entity, item );
             EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
 
             entity = entityManager.write( entity ).toBlockingObservable().last();
 
-            entityIndex.index( scope, entity );
+            entityIndex.index( entity );
 
             if ( count++ > MAX_ENTITIES ) {
                 break;
@@ -122,21 +121,20 @@ public class EntityIndexTest extends BaseIT {
 
         entityIndex.refresh();
 
-        testQueries( entityIndex, scope );
+        testQueries( entityIndex );
     }
 
     
     @Test 
     public void testDeindex() {
 
-        Id orgId = new SimpleId("organization");
-        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
-        Id appId = new SimpleId("application");
-        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
-        CollectionScope scope = new CollectionScopeImpl( appId, orgId, "fastcars" );
 
-        EntityIndex entityIndex = cif.createEntityIndex(orgScope, appScope );
-        EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
+        Id appId = new SimpleId("application");
+        CollectionScope collectionScope = new CollectionScopeImpl( appId, appId, "fastcars" );
+        IndexScope indexScope = new IndexScopeImpl( appId, appId, "fastcars" );
+
+        EntityIndex entityIndex = cif.createEntityIndex( indexScope );
+        EntityCollectionManager entityManager = cmf.createCollectionManager( collectionScope );
 
         Map entityMap = new HashMap() {{
             put("name", "Ferrari 212 Inter");
@@ -147,64 +145,64 @@ public class EntityIndexTest extends BaseIT {
         Entity entity = EntityIndexMapUtils.fromMap( entityMap );
         EntityUtils.setId( entity, new SimpleId( "fastcar" ));
         entity = entityManager.write( entity ).toBlockingObservable().last();
-        entityIndex.index( scope, entity );
+        entityIndex.index( entity );
 
         entityIndex.refresh();
 
-        Results results = entityIndex.search( scope, Query.fromQL( "name contains 'Ferrari*'"));
-        assertEquals( 1, results.size() );
+        CandidateResults candidateResults = entityIndex.search( Query.fromQL( "name contains 'Ferrari*'"));
+        assertEquals( 1, candidateResults.size() );
 
         entityManager.delete( entity.getId() );
-        entityIndex.deindex( scope, entity );
+        entityIndex.deindex(  entity );
 
         entityIndex.refresh();
 
-        results = entityIndex.search( scope, Query.fromQL( "name contains 'Ferrari*'"));
-        assertEquals( 0, results.size() );
+        candidateResults = entityIndex.search( Query.fromQL( "name contains 'Ferrari*'"));
+        assertEquals( 0, candidateResults.size() );
     }
    
    
-    private void testQuery( EntityIndex entityIndex, CollectionScope scope, String queryString, int num ) {
+    private void testQuery( EntityIndex entityIndex, String queryString, int num ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
         Query query = Query.fromQL( queryString );
         query.setLimit( 1000 );
-        Results results = entityIndex.search( scope, query );
+        CandidateResults candidateResults = entityIndex.search( query );
         timer.stop();
 
         if ( num == 1 ) {
-            assertNotNull( results.getEntity() != null );
+            assertNotNull( candidateResults.get(0) != null );
         } else {
-            assertEquals( num, results.size() );
+            assertEquals( num, candidateResults.size() );
         }
         log.debug( "Query time {}ms", timer.getTime() );
     }
 
 
-    private void testQueries( EntityIndex entityIndex, CollectionScope scope ) {
+    private void testQueries( EntityIndex entityIndex) {
 
-        testQuery( entityIndex, scope, "name = 'Morgan Pierce'", 1);
+        testQuery( entityIndex, "name = 'Morgan Pierce'", 1);
 
-        testQuery( entityIndex, scope, "name = 'morgan pierce'", 1);
+        testQuery( entityIndex, "name = 'morgan pierce'", 1);
 
-        testQuery( entityIndex, scope, "name = 'Morgan'", 0);
+        testQuery( entityIndex, "name = 'Morgan'", 0);
 
-        testQuery( entityIndex, scope, "name contains 'Morgan'", 1);
+        testQuery( entityIndex, "name contains 'Morgan'", 1);
 
-        testQuery( entityIndex, scope, "company > 'GeoLogix'", 64);
+        testQuery( entityIndex, "company > 'GeoLogix'", 64);
 
-        testQuery( entityIndex, scope, "gender = 'female'", 45);
+        testQuery( entityIndex, "gender = 'female'", 45);
 
-        testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age > 39", 1);
+        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 39", 1);
 
-        testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age > 39 and age < 41", 1);
+        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 39 and age < 41", 1);
 
-        testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age > 40", 0);
+        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 40", 0);
 
-        testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age >= 40", 1);
+        testQuery( entityIndex, "name = 'Minerva Harrell' and age >= 40", 1);
 
-        testQuery( entityIndex, scope, "name = 'Minerva Harrell' and age <= 40", 1);
+        testQuery( entityIndex, "name = 'Minerva Harrell' and age <= 40", 1);
     }
 
        

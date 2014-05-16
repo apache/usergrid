@@ -27,7 +27,7 @@ import java.util.List;
 import org.apache.commons.collections4.iterators.PushbackIterator;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
@@ -67,7 +67,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
     @Override
-    public Iterator<Long> getShards( final OrganizationScope scope, final Id nodeId, Optional<Long> maxShardId, final String... edgeTypes ) {
+    public Iterator<Long> getShards( final ApplicationScope scope, final Id nodeId, Optional<Long> maxShardId, final String... edgeTypes ) {
 
         final Iterator<Long> existingShards =
                 edgeShardSerialization.getEdgeMetaData( scope, nodeId, maxShardId, edgeTypes );
@@ -138,7 +138,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
     @Override
-    public boolean auditMaxShard( final OrganizationScope scope, final Id nodeId, final String... edgeType ) {
+    public boolean auditMaxShard( final ApplicationScope scope, final Id nodeId, final String... edgeType ) {
 
         final long now =  timeService.getCurrentTime() ;
 

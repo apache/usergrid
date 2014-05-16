@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.mvcc.entity;
+package org.apache.usergrid.persistence.index.utils;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.index.IndexScope;
 
 import com.google.common.base.Preconditions;
 
@@ -29,45 +30,20 @@ import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyId
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyString;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyTimeUuid;
 
+
 /**
  * Validation Utilities for collection
  */
-public class MvccValidationUtils {
-
-
-    /**
-     * Verify the version is correct.  Also verifies the contained entity
-     */
-    public static void verifyMvccEntityWithEntity( MvccEntity entity ) {
-
-
-        Preconditions.checkNotNull( entity.getEntity().isPresent(), "Entity is required" );
-        verifyMvccEntityOptionalEntity( entity );
-    }
-
-    /**
-        * Verify the version is correct.  Does not verify the contained entity of it is null
-        */
-       public static void verifyMvccEntityOptionalEntity( MvccEntity entity ) {
-
-
-           verifyIdentity( entity.getId() );
-
-           verifyTimeUuid( entity.getVersion(), "version" );
-
-           if ( entity.getEntity().isPresent() ) {
-               verifyEntityWrite( entity.getEntity().orNull() );
-           }
-       }
+public class IndexValidationUtils {
 
 
 
     /**
      * Validate the collection scope
      */
-    public static void validateCollectionScope( final CollectionScope scope ) {
+    public static void validateIndexScope( final IndexScope scope ) {
 
-        Preconditions.checkNotNull( scope, "collection scope is required" );
+        Preconditions.checkNotNull( scope, "Index scope is required" );
 
         verifyIdentity( scope.getOwner() );
 

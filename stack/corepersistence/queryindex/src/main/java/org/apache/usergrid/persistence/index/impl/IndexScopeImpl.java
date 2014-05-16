@@ -16,46 +16,43 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl;
+package org.apache.usergrid.persistence.index.impl;
 
 
-import java.io.Serializable;
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-
-
-/**
- * Get the edge event in the organizational scope
- *
- */
-public class EdgeEvent<T> implements Serializable {
-
-    private final ApplicationScope applicationScope;
-    private final T data;
-    private final UUID version;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
-    public EdgeEvent( final ApplicationScope applicationScope, final UUID version, final T data ) {
-        this.applicationScope = applicationScope;
-        this.data = data;
-        this.version = version;
+public class IndexScopeImpl implements IndexScope {
+    private final Id appId;
+    private final Id ownerId;
+    private final String type;
+
+
+    public IndexScopeImpl( final Id appId, final Id ownerId, final String type ) {
+        this.appId = appId;
+        this.ownerId = ownerId;
+        this.type = type;
+
+        IndexValidationUtils.validateIndexScope( this );
     }
 
 
-    public ApplicationScope getApplicationScope() {
-        return applicationScope;
+    @Override
+    public String getName() {
+        return  type;
     }
 
 
-    public UUID getTimestamp() {
-        return version;
+    @Override
+    public Id getOwner() {
+        return ownerId;
     }
 
 
-    public T getData() {
-        return data;
+    @Override
+    public Id getApplication() {
+        return appId;
     }
-
-
 }

@@ -20,7 +20,7 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -45,7 +45,7 @@ public interface EdgeShardCounterSerialization extends Migration{
      * @param shardId The shard Id to use
      * @param types The types to write to.  Can be edge type, or edgeType+id type
      */
-    public MutationBatch writeMetaDataLog( OrganizationScope scope, Id nodeId, long shardId, long count, String... types );
+    public MutationBatch writeMetaDataLog( ApplicationScope scope, Id nodeId, long shardId, long count, String... types );
 
 
     /**
@@ -56,7 +56,7 @@ public interface EdgeShardCounterSerialization extends Migration{
      * @param types
      * @return
      */
-    public long getCount(OrganizationScope scope, Id nodeId, long shardId, String... types);
+    public long getCount(ApplicationScope scope, Id nodeId, long shardId, String... types);
 
 
 

@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -40,7 +40,7 @@ public interface NodeShardCache {
      * @param version The time to select the slice for.
      * @param edgeType
      */
-    public long getSlice(final OrganizationScope scope, final Id nodeId, final UUID version, final String... edgeType);
+    public long getSlice(final ApplicationScope scope, final Id nodeId, final UUID version, final String... edgeType);
 
     /**
      * Get an iterator of all versions <= the version
@@ -50,7 +50,7 @@ public interface NodeShardCache {
      * @param edgeType
      * @return
      */
-    public Iterator<Long> getVersions(final OrganizationScope scope, final Id nodeId, final UUID maxVersion, final String... edgeType);
+    public Iterator<Long> getVersions(final ApplicationScope scope, final Id nodeId, final UUID maxVersion, final String... edgeType);
 
 
     /**
@@ -61,5 +61,5 @@ public interface NodeShardCache {
      * @param count
      * @return The new local cached count
      */
-    public long increment(final OrganizationScope scope, final Id nodeId, final long shard, final long count, final String... edgeTypes);
+    public long increment(final ApplicationScope scope, final Id nodeId, final long shard, final long count, final String... edgeTypes);
 }
