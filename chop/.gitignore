@@ -4,3 +4,4 @@ jssecacerts
 *.log
 .idea
 s101plugin.state
+.clover

@@ -92,7 +92,6 @@
 
     <aws.version>1.7.6</aws.version>
     <stax.version>1.2.0</stax.version>
-    <xerces.version>2.11.0</xerces.version>
     <jukito.version>1.3</jukito.version>
     <junit.version>4.11</junit.version>
     <log4j.version>1.2.17</log4j.version>
@@ -263,6 +262,12 @@
         <groupId>org.safehaus.guicyfig</groupId>
         <artifactId>guicyfig</artifactId>
         <version>${guicyfig.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -284,12 +289,6 @@
       </dependency>
 
       <dependency>
-        <groupId>xerces</groupId>
-        <artifactId>xercesImpl</artifactId>
-        <version>${xerces.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.google.inject</groupId>
         <artifactId>guice</artifactId>
         <version>${guice.version}</version>
@@ -299,6 +298,12 @@
         <groupId>com.sun.jersey</groupId>
         <artifactId>jersey-json</artifactId>
         <version>${jersey.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.xml.stream</groupId>
+            <artifactId>stax-api</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -431,6 +436,12 @@
         <groupId>org.reflections</groupId>
         <artifactId>reflections</artifactId>
         <version>${reflections.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
