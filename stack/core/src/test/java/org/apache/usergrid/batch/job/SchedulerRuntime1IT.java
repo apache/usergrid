@@ -48,6 +48,8 @@ public class SchedulerRuntime1IT extends AbstractSchedulerRuntimeIT {
             scheduler.createJob( "countdownLatch", System.currentTimeMillis(), new JobData() );
         }
 
+        scheduler.refreshIndex();
+
         // previously: 
         // now wait until everything fires or no jobs complete in #waitTime seconds
         // boolean waited = getJobListener().blockTilDone( getCount(),  waitTime);
@@ -55,13 +57,15 @@ public class SchedulerRuntime1IT extends AbstractSchedulerRuntimeIT {
         // now: note that the waitForCount only wait for job execution. 
         // It does NOT wait for job Completion
         boolean waited = counterJob.waitForCount(waitTime, TimeUnit.MILLISECONDS);
-        assertTrue( "Failed to run " + getCount() + " number of jobs. Waited " + waitTime 
-                + " seconds.", waited );
+        assertTrue( "Failed to run " 
+                + getCount() + " number of jobs. Waited " + waitTime + " ms.", waited );
         
         // previously:
         // assertTrue( getJobListener().getSuccessCount() + " successful jobs ran, expected " 
         // + getCount(), getCount() == getJobListener().getSuccessCount() );
         
+        scheduler.refreshIndex();
+
         // now:
         // blockTilDone look into the JobListener hook and blocked until jobs are completed.
         // TODO : need a retry count so it doesn't reblock forever

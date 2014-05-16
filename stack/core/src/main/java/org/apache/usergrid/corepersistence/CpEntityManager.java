@@ -256,7 +256,7 @@ public class CpEntityManager implements EntityManager {
      */
     public <A extends Entity> A getEntity( UUID entityId, Class<A> entityClass ) throws Exception {
 
-        String type = entityClass.getSimpleName().toLowerCase(); 
+        String type = getDefaultSchema().getEntityType( entityClass );
 
         Id id = new SimpleId( entityId, type );
         String collectionName = Schema.defaultCollectionName( type );

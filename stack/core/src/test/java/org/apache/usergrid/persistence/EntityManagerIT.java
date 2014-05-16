@@ -283,6 +283,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         em.delete( thing );
         LOG.info( "Entity deleted" );
 
+        em.refreshIndex();
+
         // now search by username, no results should be returned
 
         Results r =
@@ -310,9 +312,13 @@ public class EntityManagerIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         LOG.info( "Entity created" );
 
+        em.refreshIndex();
+
         LOG.info( "Starting entity delete" );
         em.delete( user );
         LOG.info( "Entity deleted" );
+
+        em.refreshIndex();
 
         // now search by username, no results should be returned
 
@@ -330,6 +336,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "Starting entity create" );
         user = em.create( "user", properties );
         LOG.info( "Entity created" );
+
+        em.refreshIndex();
 
         r = em.searchCollection( em.getApplicationRef(), "users", new Query().addEqualityFilter( "username", name ) );
 
