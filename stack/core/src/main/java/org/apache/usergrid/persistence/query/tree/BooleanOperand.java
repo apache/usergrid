@@ -28,11 +28,6 @@ import org.antlr.runtime.Token;
  */
 public abstract class BooleanOperand extends Operand {
 
-
-    /**
-     * @param property
-     * @param literal
-     */
     public BooleanOperand( Token t ) {
         super( t );
     }

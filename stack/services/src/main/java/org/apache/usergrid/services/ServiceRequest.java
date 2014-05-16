@@ -325,7 +325,7 @@ public class ServiceRequest {
                 String q = p.toString();
                 if ( isNotBlank( q ) ) {
                     try {
-                        sb.append( "ql=" + URLEncoder.encode( q, "UTF-8" ) );
+                        sb.append("ql=").append(URLEncoder.encode(q, "UTF-8"));
                     }
                     catch ( UnsupportedEncodingException e ) {
                         logger.error( "Unable to encode url", e );
@@ -337,14 +337,14 @@ public class ServiceRequest {
                     if ( has_prev_param ) {
                         sb.append( '&' );
                     }
-                    sb.append( "limit=" + limit );
+                    sb.append("limit=").append(limit);
                     has_prev_param = true;
                 }
                 if ( p.getQuery().getStartResult() != null ) {
                     if ( has_prev_param ) {
                         sb.append( '&' );
                     }
-                    sb.append( "start=" + p.getQuery().getStartResult() );
+                    sb.append("start=").append(p.getQuery().getStartResult());
                     has_prev_param = true;
                 }
             }

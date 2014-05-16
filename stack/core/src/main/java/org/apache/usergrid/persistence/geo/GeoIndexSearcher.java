@@ -40,9 +40,6 @@ import org.apache.usergrid.persistence.geo.model.Tuple;
 
 import org.apache.commons.lang.StringUtils;
 
-import me.prettyprint.cassandra.serializers.DoubleSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -51,7 +48,7 @@ import static org.apache.usergrid.persistence.Schema.DICTIONARY_GEOCELL;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.utils.CompositeUtils.setEqualityFlag;
-
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 public abstract class GeoIndexSearcher {
 
@@ -69,15 +66,6 @@ public abstract class GeoIndexSearcher {
     protected final IndexBucketLocator locator;
     protected final CassandraService cass;
 
-
-    /**
-     * @param entityManager
-     * @param pageSize
-     * @param headEntity
-     * @param searchPoint
-     * @param propertyName
-     * @param distance
-     */
     public GeoIndexSearcher( EntityManager entityManager, IndexBucketLocator locator, CassandraService cass ) {
         this.em = entityManager;
         this.locator = locator;
@@ -178,15 +166,15 @@ public abstract class GeoIndexSearcher {
 
                     DynamicComposite composite = DynamicComposite.fromByteBuffer( column.getName() );
 
-                    UUID uuid = composite.get( 0, UUIDSerializer.get() );
+                    UUID uuid = composite.get( 0, ue );
 
                     lastReturned = uuid;
 
-                    String type = composite.get( 1, StringSerializer.get() );
-                    UUID timestampUuid = composite.get( 2, UUIDSerializer.get() );
+                    String type = composite.get( 1, se );
+                    UUID timestampUuid = composite.get( 2, ue );
                     composite = DynamicComposite.fromByteBuffer( column.getValue() );
-                    Double latitude = composite.get( 0, DoubleSerializer.get() );
-                    Double longitude = composite.get( 1, DoubleSerializer.get() );
+                    Double latitude = composite.get( 0, de );
+                    Double longitude = composite.get( 1, de );
 
                     EntityLocationRef entityLocation =
                             new EntityLocationRef( type, uuid, timestampUuid, latitude, longitude );
@@ -254,9 +242,7 @@ public abstract class GeoIndexSearcher {
                     // final check - top level tiles
                     curGeocells.clear();
                     String[] items = "0123456789abcdef".split( "(?!^)" );
-                    for ( String item : items ) {
-                        curGeocells.add( item );
-                    }
+                    Collections.addAll(curGeocells, items);
                     done = true;
                 }
                 else {
@@ -276,17 +262,17 @@ public abstract class GeoIndexSearcher {
                 // Get adjacent in one direction.
                 // TODO(romannurik): Watch for +/- 90 degree latitude edge case
                 // geocells.
-                for ( int i = 0; i < sortedEdgesDistances.size(); i++ ) {
+                for (Tuple<int[], Double> sortedEdgesDistance : sortedEdgesDistances) {
 
-                    int nearestEdge[] = sortedEdgesDistances.get( i ).getFirst();
-                    String edge = GeocellUtils.adjacent( curGeocells.get( 0 ), nearestEdge );
+                    int nearestEdge[] = sortedEdgesDistance.getFirst();
+                    String edge = GeocellUtils.adjacent(curGeocells.get(0), nearestEdge);
 
                     // we're at the edge of the world, search in a different direction
-                    if ( edge == null ) {
+                    if (edge == null) {
                         continue;
                     }
 
-                    curGeocells.add( edge );
+                    curGeocells.add(edge);
                     break;
                 }
             }
@@ -374,7 +360,7 @@ public abstract class GeoIndexSearcher {
 
         /**
          * @param entityLocations
-         * @param curGeocells
+         * @param lastSearchedGeoCells
          */
         public SearchResults( List<EntityLocationRef> entityLocations, List<String> lastSearchedGeoCells ) {
             this.entityLocations = entityLocations;

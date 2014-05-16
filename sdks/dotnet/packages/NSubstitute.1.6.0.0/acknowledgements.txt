@@ -1,11 +1,32 @@
-The aim of this file is to acknowledge the software projects that have been used to create NSubstitute, particularly those distributed as Open Source Software. They have been invaluable in helping us produce this software.
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+The aim of this file is to acknowledge the software projects that have been 
+used to create NSubstitute, particularly those distributed as Open Source 
+Software. They have been invaluable in helping us produce this software.
 
 # Software distributed with/compiled into NSubstitute
 
 ## Castle.Core
-NSubstitute is built on the Castle.Core library, particularly Castle.DynamicProxy which is used for generating proxies for types and intercepting calls made to them so that NSubstitute can record them. 
+NSubstitute is built on the Castle.Core library, particularly Castle.DynamicProxy 
+which is used for generating proxies for types and intercepting calls 
+made to them so that NSubstitute can record them. 
 
-Castle.Core is maintained by the Castle Project [http://www.castleproject.org/] and is released under the Apache License, Version 2.0 [http://www.apache.org/licenses/LICENSE-2.0.html].
+Castle.Core is maintained by the Castle Project [http://www.castleproject.org/] 
+and is released under the Apache License, Version 2.0 
+[http://www.apache.org/licenses/LICENSE-2.0.html].
 
 # Software used to help build NSubstitute
 

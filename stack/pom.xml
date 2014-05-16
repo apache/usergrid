@@ -838,8 +838,8 @@
       <dependency>
         <groupId>net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
-        <!-- we'd like to use 0.0.8 but it is not in Maven Central -->
-        <version>0.0.7</version>
+        <!-- included as local dependency -->
+        <version>0.0.8</version>
       </dependency>
 
       <dependency>
@@ -1079,12 +1079,6 @@
       <dependency>
         <groupId>org.apache.tomcat</groupId>
         <artifactId>tomcat-jasper-el</artifactId>
-        <version>${tomcat-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.tomcat</groupId>
-        <artifactId>tomcat-jsp-api</artifactId>
         <version>${tomcat-version}</version>
       </dependency>
 
@@ -1769,6 +1763,7 @@
                     <exclude>**/README.md</exclude>
                     <exclude>**/CHANGES.txt</exclude>
                     <exclude>**/*.json</exclude>
+                    <exclude>**/*.log</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
@@ -1798,7 +1793,9 @@
                     <exclude>**/*.asc</exclude>
                     <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
+		    <exclude>**/awscluster/**</exclude>
                     <exclude>**/aws.properties</exclude>
+                    <exclude>**/usergrid-custom.properties</exclude>
 
                 </excludes>
             </configuration>

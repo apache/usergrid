@@ -9,25 +9,16 @@ Solution is composed of following projects:
 * Usergrid.Sdk.IntegrationTests - this is the integration test project.
 
 ## Comments and Questions
-Please feel free to send your comments/suggestions/questions to:
-
-  @TODO
+Please feel free to send your comments/suggestions/questions one of the
+several communication platforms. 
+<http://usergrid.incubator.apache.org/community/>
     
 ## Overview
-The .NET SDK is provided by [Apigee](http://apigee.com) and is available as an open-source project on github.  We welcome your contributions and suggestions. The repository is located [here][RepositoryLocation].
+We welcome your contributions and suggestions. The repository is located [here][RepositoryLocation].
 
 You can download this package here:
 
-* Download as a [zip file][ZipFileLocation]
-* Download as a [tar.gz file][TarGzFileLocation]
-
-To find out more about Apigee App Services, see:
-
-<http://apigee.com/about/developers>
-
-To view the Apigee App Services documentation, see:
-
-<http://apigee.com/docs/app_services>
+* Download as a development [zip file][ZipFileLocation] SNAPSHOT
 
 ## Installing
 Usergrid .NET SDK can be installed via:
@@ -65,31 +56,29 @@ In order to run the integration tests, do the following:
 * Tests have been implemented using NUnit, so you can use any NUnit runner to run the tests.
 
 ## Authentication
-Usergrid Authentication is explained in [Usergrid Documentation](http://apigee.com/docs/usergrid/content/authentication-and-access-usergrid).
+Usergrid Authentication is explained in [Usergrid Documentation](http://usergrid.incubator.apache.org/docs/).
 
 You can access your Usergrid data using following credentials:
 
 ### Organization API Credentials
-You can find your organisation's credentials on the "Org Overview" page of the [Admin Portal](http://apigee.com/usergrid). Once you located your organisation credentials, you can pass them to the Login method instance:
+You can find your organisation's credentials on the "Org Overview" page of the [Admin Portal](https://github.com/usergrid/usergrid/tree/master/portal). Once you located your organisation credentials, you can pass them to the Login method instance:
 
 	client.Login("clientId", "clientSecret", AuthType.Organization);
 
 ### Application Credentials
-You can find an application's credentials on the "App Settings" page of the [Admin Portal](http://apigee.com/usergrid). Once you located your application credentials, you can pass them to the Login method:
+You can find an application's credentials on the "App Settings" page of the [Admin Portal](https://github.com/usergrid/usergrid/tree/master/portal). Once you located your application credentials, you can pass them to the Login method:
 
 	client.Login("applicationId", "applicationSecret", AuthType.Application);
 	
 ### Admin and User Credentials
-You can find a list of all admin users on the "Org Overview" page of the [Admin Portal](http://apigee.com/usergrid). 
+You can find a list of all admin users on the "Org Overview" page of the [Admin Portal](https://github.com/usergrid/usergrid/tree/master/portal). 
 
 You can pass the credentials of a user (admin or normal user) to the Login method:
 
 	client.Login("userLoginId", "userSecret", AuthType.User);
 
 ## Entities and Collections
-Usergrid stores its data as "Entities" in "Collections".  Entities are essentially JSON objects and Collections are just like folders for storing these objects. You can learn more about Entities and Collections in the App Services docs:
-
-<http://apigee.com/docs/usergrid/content/data-model>
+Usergrid stores its data as "Entities" in "Collections".  Entities are essentially JSON objects and Collections are just like folders for storing these objects. You can learn more about Entities and Collections in the App Services docs.
 
 ### Entities
 ```
@@ -310,8 +299,8 @@ Integration tests are in [NotificationTests.cs][], and you can read about the pu
 [DeviceTests.cs]: @TODO
 [Connection]: @TODO
 [ConnectionTests.cs]: @TODO
-[RepositoryLocation]: @TODO
-[ZipFileLocation]: @TODO
+[RepositoryLocation]: https://github.com/usergrid/usergrid
+[ZipFileLocation]: https://github.com/usergrid/usergrid/archive/master.zip
 [TarGzFileLocation]: @TODO
 [EntityCrudTests.cs]: @TODO
 

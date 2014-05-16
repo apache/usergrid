@@ -3,7 +3,7 @@ Detailed instructions follow but if you just want a quick example of how to get 
 
 The file is located in this repository:
 
-	http://github.com/apigee/usergrid-php-sdk/examples/quick_start/index.php
+	https://github.com/usergrid/usergrid/blob/master/sdks/php/examples/quick_start/index.php
 	
 
 ```html
@@ -12,7 +12,7 @@ The file is located in this repository:
 include '../autoloader.inc.php';
 
 //initialize the SDK
-$client = new Apigee\Usergrid\Client('yourorgname','sandbox');
+$client = new Apache\Usergrid\Client('yourorgname','sandbox');
 
 //reading data
 $books = $client->get_collection('books');
@@ -40,7 +40,7 @@ Current Version: **0.0.1**
 
 See change log:
 
-<https://github.com/apigee/usergrid-php-sdk/blob/master/changelog.md>
+<https://github.com/usergrid/usergrid/blob/master/sdks/php/changelog.md>
 
 **About this version:**
 
@@ -49,42 +49,26 @@ This is the initial release of this SDK. It is functionally complete with some t
 This SDK is open source, and we welcome any contributions!  
 
 ##Comments / Questions
-Please feel free to send comments or questions:
-
-	twitter: @rockerston
-	email: rod at apigee.com
-
-Or just open github issues.  I truly want to know what you think, and will address all suggestions / comments / concerns.
-
-Thank you!
-
-Rod
-
+Please feel free to send comments or questions to the various
+community communication channels
+<http://usergrid.incubator.apache.org/community/>
 
 ##Overview
 This open source SDK simplifies writing PHP applications that connect to App Services. The repo is located here:
 
-<https://github.com/apigee/usergrid-php-sdk>
+<https://github.com/usergrid/usergrid/tree/master/sdks/php>
 
-You can download this package here:
+You can download the release artfacts via the Apache Mirroring newtwork.
 
-* Download as a zip file: <https://github.com/apigee/usergrid-php-sdk/archive/master.zip>
-* Download as a tar.gz file: <https://github.com/apigee/usergrid-php-sdk/archive/master.tar.gz>
+A wealth of Usergrid documentation can be found on the site
 
-
-To find out more about Apigee App Services, see:
-
-<http://apigee.com/about/developers>
-
-To view the Apigee App Services documentation, see:
-
-<http://apigee.com/docs/app_services>
+<http://usergrid.incubator.apache.org/docs/>
 
 
 ##About the samples
 This SDK comes with several samples to get you started.  They are located in this repo here:
 
-<https://github.com/apigee/usergrid-php-sdk/tree/master/examples>
+<https://github.com/usergrid/usergrid/tree/master/sdks/php/examples>
 
 The quick start shows how to get a basic file constructed.  The tests directory has the test code that is used to create this readme file.  **Note:** Ignore the //@han and //@solo comments - they are delimiters for the code parsing app we use to generate the readme.
 
@@ -95,11 +79,11 @@ Download this repo, then add it to the root of your PHP project.
 Once you have the the PHP SDK included in your directory tree, get started by including the SDK:
 
 	 include '../autoloader.inc.php';
-	 usergrid_autoload('Apigee\\Usergrid\\Client');
+	 usergrid_autoload('Apache\\Usergrid\\Client');
 
 Then, start the client, which is the main object for connecting to the SDK.
 
-	 $client = new Apigee\Usergrid\Client('1hotrod','sandbox');
+	 $client = new Apache\Usergrid\Client('1hotrod','sandbox');
 
 Once you have a client created, you will be able to use it to create Entities and Collections, the building blocks of the Usergrid API.
 
@@ -376,8 +360,6 @@ To use make calls using system level credentials, simply set the auth type and s
 ## Contributing
 We welcome your enhancements!
 
-Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Javascript SDK is open source and licensed under the Apache License, Version 2.0.
-
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Added some feature'`)
@@ -385,16 +367,17 @@ Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Ja
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed)
 
 ##More information
-For more information on Apigee App Services, visit <http://apigee.com/about/developers>.
+For more information on Usergrid, visit <http://usergrid.incubator.apache.org>.
 
 ## Copyright
-Copyright 2013 Apigee Corporation
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-<http://www.apache.org/licenses/LICENSE-2.0>
+     http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,

@@ -86,8 +86,8 @@ angular.module('appservices', ['ngRoute',
   'appservices.controllers',
   'appservices.max',
   'angular-intro',
-]).config(['$routeProvider', '$locationProvider', '$sceDelegateProvider', '$analyticsProvider',
-  function($routeProvider, $locationProvider, $sceDelegateProvider, $analyticsProvider) {
+]).config(['$routeProvider', '$locationProvider', '$sceDelegateProvider', '$analyticsProvider', '$httpProvider',
+  function($routeProvider, $locationProvider, $sceDelegateProvider, $analyticsProvider, $httpProvider) {
     $routeProvider
       .when('/org-overview', {
         templateUrl: 'org-overview/org-overview.html',
@@ -193,17 +193,13 @@ angular.module('appservices', ['ngRoute',
         templateUrl: 'data/shell.html',
         controller: 'ShellCtrl'
       })
-      .when('/profile/organizations', {
+      .when('/organizations', {
         templateUrl: 'profile/organizations.html',
         controller: 'OrgCtrl'
       })
-      .when('/profile/profile', {
+      .when('/profile', {
         templateUrl: 'profile/profile.html',
         controller: 'ProfileCtrl'
-      })
-      .when('/profile', {
-        templateUrl: 'profile/account.html',
-        controller: 'AccountCtrl'
       })
       .when('/activities', {
         templateUrl: 'activities/activities.html',
@@ -237,6 +233,8 @@ angular.module('appservices', ['ngRoute',
 
     $analyticsProvider.virtualPageviews(false);
     $analyticsProvider.firstPageview(false);
+
+    $httpProvider.defaults.useXDomain = true;    
 
   }
 ]);

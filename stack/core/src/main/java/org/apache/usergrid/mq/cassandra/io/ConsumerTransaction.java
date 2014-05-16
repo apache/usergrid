@@ -49,7 +49,7 @@ import static org.apache.usergrid.mq.cassandra.CassandraMQUtils.getConsumerId;
 import static org.apache.usergrid.mq.cassandra.CassandraMQUtils.getQueueClientTransactionKey;
 import static org.apache.usergrid.mq.cassandra.CassandraMQUtils.getQueueId;
 import static org.apache.usergrid.mq.cassandra.QueuesCF.CONSUMER_QUEUE_TIMEOUTS;
-
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * Reads from the queue and starts a transaction

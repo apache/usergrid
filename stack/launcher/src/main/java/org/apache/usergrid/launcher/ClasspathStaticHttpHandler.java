@@ -62,6 +62,8 @@ package org.apache.usergrid.launcher;
  */
 
 
+import org.springframework.core.io.Resource;
+
 /**
  * Modified version of the StaticHttpHandler to serve resources from the classpath.
  * <p/>
@@ -246,13 +248,12 @@ public class ClasspathStaticHttpHandler extends org.glassfish.grizzly.http.serve
 
         org.springframework.core.io.Resource resource = null;
 
-        for ( int i = 0; i < fileFolders.length; i++ ) {
-            final org.springframework.core.io.Resource webDir = fileFolders[i];
+        for (final Resource webDir : fileFolders) {
             // local file
-            resource = webDir.createRelative( uri );
+            resource = webDir.createRelative(uri);
             final boolean exists = resource.exists();
 
-            if ( exists ) {
+            if (exists) {
                 found = true;
                 break;
             }

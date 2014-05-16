@@ -67,7 +67,7 @@ exports.config = {
   },
   params: {
     login: {
-      user: 'sfeldman+apijeeps@apigee.com',
+      user: 'sfeldman+apijeep@apigee.com',
       password: 'P@ssw0rd1'
     },
     orgName:'apijeeps',

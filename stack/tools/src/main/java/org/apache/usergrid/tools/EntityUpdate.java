@@ -37,7 +37,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 
 
 /**
@@ -86,9 +85,6 @@ public class EntityUpdate extends ToolBase {
      *
      */
     private static final int PAGE_SIZE = 100;
-
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-
     private static final Logger logger = LoggerFactory.getLogger( EntityUpdate.class );
 
 

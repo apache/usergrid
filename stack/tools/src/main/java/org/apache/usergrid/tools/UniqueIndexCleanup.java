@@ -50,7 +50,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.DynamicComposite;
@@ -68,6 +67,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_E
 import static org.apache.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -89,7 +89,6 @@ public class UniqueIndexCleanup extends ToolBase {
      */
     private static final int PAGE_SIZE = 100;
 
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
 
     private static final Logger logger = LoggerFactory.getLogger( UniqueIndexCleanup.class );
