@@ -104,19 +104,22 @@ public class Job implements Callable<ResponseInfo> {
             channel = session.openChannel( "exec" );
             ( ( ChannelExec ) channel ).setCommand( command.getCommand() );
             channel.connect();
-            BufferedReader reader = new BufferedReader( new InputStreamReader( channel.getInputStream() ) );
 
-            while ( ( message = reader.readLine() ) != null ) {
+            BufferedReader inputReader = new BufferedReader( new InputStreamReader( channel.getInputStream() ) );
+            BufferedReader errorReader = new BufferedReader( new InputStreamReader(
+                    ( ( ChannelExec ) channel ).getErrStream() ) );
+
+            while ( ( message = inputReader.readLine() ) != null ) {
                 response.addMessage( message );
+                LOG.info( "SSH command response: {}", message );
             }
-            reader.close();
-
-            reader = new BufferedReader( new InputStreamReader( ( ( ChannelExec ) channel ).getErrStream() ) );
-
-            while ( ( message = reader.readLine() ) != null ) {
+            while ( ( message = errorReader.readLine() ) != null ) {
                 response.addErrorMessage( message );
+                LOG.info( "Error in ssh command: {}", message );
             }
-            reader.close();
+
+            inputReader.close();
+            errorReader.close();
         }
         catch ( Exception e ) {
             message = "Error while sending ssh command to " + value.getPublicIpAddress();
