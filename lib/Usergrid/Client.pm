@@ -24,6 +24,8 @@ use JSON;
 use REST::Client;
 use URI::Template;
 
+use namespace::autoclean;
+
 our $VERSION = '0.1';
 
 has 'organization'  => ( is => 'rw', isa => 'Str');
@@ -38,16 +40,37 @@ our $json = JSON->new->allow_nonref;
 our $admin_token;
 our $user_token;
 
-sub req ($$\%) {
-  my $self = shift;
-  my $resource = shift;
-  my $request = shift;
+sub DELETE_request ($$$) {
+  my ($self, $token, $resource) = @_;
+
+  my $client = REST::Client->new();
+  $client->setHost($self->api_url);
+
+  if (defined $token) {
+    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
+  }
+
+  $client->DELETE($resource);
+
+  my $response = $client->responseContent();
+
+  return $json->decode($response);
+}
+
+sub POST_request ($$$\%) {
+  my ($self, $token, $resource, $request) = @_;
 
   my $json_req = $json->encode($request);
 
   my $client = REST::Client->new();
   $client->setHost($self->api_url);
+
+  if (defined $token) {
+    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
+  }
+
   $client->POST($resource, $json_req);
+
   my $response = $client->responseContent();
 
   return $json->decode($response);
@@ -61,7 +84,7 @@ sub admin_login($$$) {
     username=>$username,
     password=>$password);
 
-  $admin_token = $self->req('/management/token', \%request);
+  $admin_token = $self->POST_request(undef, '/management/token', \%request);
 
   return $admin_token;
 }
@@ -82,7 +105,7 @@ sub app_user_login($$$) {
       application=>$self->application
   );
 
-  $user_token = $self->req($uri, \%request);
+  $user_token = $self->POST_request(undef, $uri, \%request);
 
   return $user_token;
 }
@@ -98,9 +121,25 @@ sub create($$\%) {
       collection=>$collection
   );
 
-  return $self->req($uri, $data);
+  return $self->POST_request(undef, $uri, $data);
 }
 
+sub delete($$$) {
+  my ($self, $collection, $uuid) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{uuid}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$collection,
+      uuid=>$uuid
+  );
+
+  return $self->DELETE_request($user_token, $uri);
+}
+
+__PACKAGE__->meta->make_immutable;
 
 1;
 
