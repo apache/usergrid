@@ -108,7 +108,7 @@ __END__
 
 =head1 NAME
 
-Usergrid::Client - Usergrid Client SDK
+Usergrid::Client - Usergrid Perl Client
 
 =head1 SYNOPSIS
 

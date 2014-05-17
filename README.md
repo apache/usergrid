@@ -16,6 +16,13 @@ from CPAN as shown below:
 
 ### Build and install
 
+    $ perl Build.PL
+    $ ./Build
+    $ ./Build test
+    $ sudo ./Build install
+
+### For legacy users on older versions of Perl
+
     $ perl Makefile.PL
     $ make
     $ make test
@@ -24,6 +31,18 @@ from CPAN as shown below:
 ## Usage
 
 ### Getting started
+
+### Developers
+
+Test coverage reporting requires Devel::Cover module which can be
+installed from CPAN as shown:
+
+    $ sudo cpan install Devel::Cover
+
+For generating reports on test coverage:
+    $ ./Build testcover
+
+The generated report artifacts are located in cover_db/.
 
 ## Release notes
 

@@ -1,3 +1,6 @@
+Build.PL
+LICENSE
+README.md
 MANIFEST
 Makefile.PL
 lib/Usergrid/Client.pm

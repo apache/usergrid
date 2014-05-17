@@ -3,7 +3,9 @@ use warnings;
 
 use Test::More tests => 4;
 
-use_ok 'Usergrid::Client';
+BEGIN {
+  use_ok 'Usergrid::Client' || print "Bail out!\n";
+}
 
 my $client = Usergrid::Client->new(
   organization => 'test-organization',
