@@ -57,6 +57,27 @@ sub DELETE_request ($$$) {
   return $json->decode($response);
 }
 
+sub GET_request ($$$) {
+  my ($self, $token, $resource) = @_;
+
+  my $client = REST::Client->new();
+  $client->setHost($self->api_url);
+
+  if (defined $token) {
+    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
+  }
+
+  $client->GET($resource);
+
+  my $response = $client->responseContent();
+
+  my $json_resp = $json->decode($response);
+
+  return undef if ($client->responseCode() eq "404");
+
+  return $json_resp;
+}
+
 sub POST_request ($$$\%) {
   my ($self, $token, $resource, $request) = @_;
 
@@ -121,7 +142,22 @@ sub create($$\%) {
       collection=>$collection
   );
 
-  return $self->POST_request(undef, $uri, $data);
+  return $self->POST_request($user_token, $uri, $data);
+}
+
+sub retrieve_by_id($$) {
+  my ($self, $collection, $id) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{id}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$collection,
+      id=>$id
+  );
+
+  return $self->GET_request($user_token, $uri);
 }
 
 sub delete($$$) {

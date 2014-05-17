@@ -40,6 +40,7 @@ installed from CPAN as shown:
     $ sudo cpan install Devel::Cover
 
 For generating reports on test coverage:
+
     $ ./Build testcover
 
 The generated report artifacts are located in cover_db/.
