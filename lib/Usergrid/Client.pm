@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -13,89 +12,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# Author: Anuradha Weeraman (anuradha@cpan.org)
-#
 
 package Usergrid::Client;
 
 use Moose;
-use JSON;
-use REST::Client;
-use URI::Template;
 
 use namespace::autoclean;
 
-our $VERSION = '0.1';
+extends 'Usergrid::Core';
 
-has 'organization'  => ( is => 'rw', isa => 'Str');
-has 'application'   => ( is => 'rw', isa => 'Str');
-has 'api_url'       => ( is => 'rw', isa => 'Str');
-
-has 'username'      => ( is => 'rw', isa => 'Str'); 
-has 'password'      => ( is => 'rw', isa => 'Str'); 
-
-our $json = JSON->new->allow_nonref;
-
-our $admin_token;
-our $user_token;
-
-sub DELETE_request ($$$) {
-  my ($self, $token, $resource) = @_;
-
-  my $client = REST::Client->new();
-  $client->setHost($self->api_url);
-
-  if (defined $token) {
-    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
-  }
-
-  $client->DELETE($resource);
-
-  my $response = $client->responseContent();
-
-  return $json->decode($response);
-}
-
-sub GET_request ($$$) {
-  my ($self, $token, $resource) = @_;
-
-  my $client = REST::Client->new();
-  $client->setHost($self->api_url);
-
-  if (defined $token) {
-    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
-  }
-
-  $client->GET($resource);
-
-  my $response = $client->responseContent();
-
-  my $json_resp = $json->decode($response);
-
-  return undef if ($client->responseCode() eq "404");
-
-  return $json_resp;
-}
-
-sub POST_request ($$$\%) {
-  my ($self, $token, $resource, $request) = @_;
-
-  my $json_req = $json->encode($request);
-
-  my $client = REST::Client->new();
-  $client->setHost($self->api_url);
-
-  if (defined $token) {
-    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
-  }
-
-  $client->POST($resource, $json_req);
-
-  my $response = $client->responseContent();
-
-  return $json->decode($response);
-}
+with (
+  'Usergrid::Entity',
+  'Usergrid::Collection'
+);
 
 sub admin_login($$$) {
   my ($self, $username, $password) = @_;
@@ -105,12 +34,14 @@ sub admin_login($$$) {
     username=>$username,
     password=>$password);
 
-  $admin_token = $self->POST_request(undef, '/management/token', \%request);
+  my $token = $self->POST(undef, '/management/token', \%request);
 
-  return $admin_token;
+  $self->user_token($token);
+
+  return $self->user_token;
 }
 
-sub app_user_login($$$) {
+sub login($$$) {
   my ($self, $username, $password) = @_;
 
   my %request = (
@@ -126,53 +57,11 @@ sub app_user_login($$$) {
       application=>$self->application
   );
 
-  $user_token = $self->POST_request(undef, $uri, \%request);
+  my $token = $self->POST(undef, $uri, \%request);
 
-  return $user_token;
-}
+  $self->user_token($token);
 
-sub create($$\%) {
-  my ($self, $collection, $data) = @_;
-
-  my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}')
-    ->process(
-      organization=>$self->organization,
-      application=>$self->application,
-      collection=>$collection
-  );
-
-  return $self->POST_request($user_token, $uri, $data);
-}
-
-sub retrieve_by_id($$) {
-  my ($self, $collection, $id) = @_;
-
-  my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}/{id}')
-    ->process(
-      organization=>$self->organization,
-      application=>$self->application,
-      collection=>$collection,
-      id=>$id
-  );
-
-  return $self->GET_request($user_token, $uri);
-}
-
-sub delete($$$) {
-  my ($self, $collection, $uuid) = @_;
-
-  my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}/{uuid}')
-    ->process(
-      organization=>$self->organization,
-      application=>$self->application,
-      collection=>$collection,
-      uuid=>$uuid
-  );
-
-  return $self->DELETE_request($user_token, $uri);
+  return $self->user_token;
 }
 
 __PACKAGE__->meta->make_immutable;
