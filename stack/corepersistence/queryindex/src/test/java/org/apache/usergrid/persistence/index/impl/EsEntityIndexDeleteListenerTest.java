@@ -1,7 +1,6 @@
 package org.apache.usergrid.persistence.index.impl;
 
 import com.netflix.astyanax.util.TimeUUIDUtils;
-import com.yammer.metrics.core.Clock;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -9,14 +8,12 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEve
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.scope.EntityVersion;
+import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.index.query.EntityResults;
-import org.apache.usergrid.persistence.index.query.Results;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;

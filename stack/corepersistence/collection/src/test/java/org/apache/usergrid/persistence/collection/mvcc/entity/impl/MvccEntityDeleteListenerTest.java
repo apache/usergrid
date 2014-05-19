@@ -27,7 +27,7 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationSt
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.scope.EntityVersion;
+import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;

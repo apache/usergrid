@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.core.scope;
+package org.apache.usergrid.persistence.core.entity;
 
 import org.apache.usergrid.persistence.model.entity.Id;
 

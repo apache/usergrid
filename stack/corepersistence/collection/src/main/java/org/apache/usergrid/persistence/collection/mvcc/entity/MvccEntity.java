@@ -19,11 +19,8 @@
 package org.apache.usergrid.persistence.collection.mvcc.entity;
 
 
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.core.scope.EntityVersion;
+import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 

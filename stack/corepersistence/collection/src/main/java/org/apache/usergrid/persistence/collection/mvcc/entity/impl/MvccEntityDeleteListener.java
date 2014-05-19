@@ -28,7 +28,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.core.scope.EntityVersion;
+import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
