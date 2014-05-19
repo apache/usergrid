@@ -28,12 +28,14 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.core.scope.EntityVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -59,7 +61,7 @@ public class MvccEntityDeleteListener implements MvccDeleteMessageListener {
     }
 
     @Override
-    public Observable<MvccEntity> receive(final MvccEntityEvent<MvccEntity> entityEvent) {
+    public Observable<EntityVersion> receive(final MvccEntityEvent<MvccEntity> entityEvent) {
         final MvccEntity entity = entityEvent.getData();
          return Observable.create( new ObservableIterator<MvccEntity>( "deleteEntities" ) {
                 @Override
@@ -69,12 +71,14 @@ public class MvccEntityDeleteListener implements MvccDeleteMessageListener {
                 }
             } ).subscribeOn(Schedulers.io())
                 .buffer(serializationFig.getBufferSize())
-                .flatMap(new Func1<List<MvccEntity>, Observable<MvccEntity>>() {
+                .flatMap(new Func1<List<MvccEntity>, Observable<EntityVersion>>() {
                     @Override
-                    public Observable<MvccEntity> call(List<MvccEntity> mvccEntities) {
+                    public Observable<EntityVersion> call(List<MvccEntity> mvccEntities) {
                         MutationBatch mutationBatch = keyspace.prepareMutationBatch();
+                        List<EntityVersion> versions = new ArrayList<>();
                         //actually delete the edge from both the commit log and
                         for (MvccEntity mvccEntity : mvccEntities) {
+                            versions.add(mvccEntity);
                             mutationBatch.mergeShallow(entityMetadataSerialization.delete(entityEvent.getCollectionScope(), mvccEntity.getId(), mvccEntity.getVersion()));
                         }
                         try {
@@ -82,7 +86,7 @@ public class MvccEntityDeleteListener implements MvccDeleteMessageListener {
                         } catch (ConnectionException e) {
                             throw new RuntimeException("Unable to execute mutation", e);
                         }
-                        return Observable.from(mvccEntities);
+                        return Observable.from(versions);
                     }
                 });
     }

@@ -20,16 +20,22 @@ package org.apache.usergrid.persistence.index.impl;
 import com.google.common.base.Optional;
 import org.apache.cassandra.cql3.CQL3Type;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.core.scope.EntityVersion;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.query.EntityResults;
 import org.apache.usergrid.persistence.index.query.Results;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -43,47 +49,43 @@ public class EsEntityIndexDeleteListener implements MvccDeleteMessageListener {
 
     private final SerializationFig serializationFig;
     private final EntityIndexFactory entityIndexFactory;
+    private final EntityCollectionManager entityCollectionManager;
 
     public EsEntityIndexDeleteListener(EntityIndexFactory entityIndexFactory,
                                        @MvccEntityDelete final AsyncProcessor entityDelete,
-                                       SerializationFig serializationFig) {
+                                       SerializationFig serializationFig,
+                                       EntityCollectionManager collectionManager) {
         this.entityIndexFactory = entityIndexFactory;
         this.serializationFig = serializationFig;
+        this.entityCollectionManager = collectionManager;
         entityDelete.addListener(this);
     }
 
     @Override
-    public Observable<MvccEntity> receive(final MvccEntityEvent<MvccEntity> event) {
+    public Observable<EntityVersion> receive(final MvccEntityEvent<MvccEntity> event) {
         CollectionScope collectionScope = event.getCollectionScope();
-        CollectionScope appScope = new CollectionScopeImpl(collectionScope.getOrganization(),collectionScope.getOwner(),collectionScope.getName());
-        final EntityIndex entityIndex = entityIndexFactory.createEntityIndex(collectionScope,appScope);
-        return Observable.create(new ObservableIterator<MvccEntity>("deleteEsIndexVersions") {
+        IndexScope indexScope = new IndexScopeImpl(collectionScope.getApplication(),collectionScope.getOwner(),collectionScope.getName());
+        final EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexScope);
+        return Observable.create(new ObservableIterator<CandidateResult>("deleteEsIndexVersions") {
             @Override
-            protected Iterator<MvccEntity> getIterator() {
-                Results results= entityIndex.getEntityVersions(event.getData().getId(), event.getCollectionScope());
-                Iterator<MvccEntity> iterator = Collections.emptyListIterator();
-                if(results!=null) {
-                    List<Entity> entities = results.getEntities();
-                    List<MvccEntity> mvccEntities = new ArrayList<>();
-                    for (Entity entity : entities) {
-                        mvccEntities.add( new EsMvccEntityImpl(entity));
-                    }
-                    iterator = mvccEntities.iterator();
-                }
-                return iterator;
+            protected Iterator<CandidateResult> getIterator() {
+                CandidateResults results = entityIndex.getEntityVersions(event.getData().getId());
+                return results.iterator();
             }
         }).subscribeOn(Schedulers.io())
                 .buffer(serializationFig.getBufferSize())
-                .flatMap(new Func1<List<MvccEntity>, Observable<MvccEntity>>() {
+                .flatMap( new Func1<List<CandidateResult>, Observable<? extends EntityVersion>>() {
                     @Override
-                    public Observable<MvccEntity> call(List<MvccEntity> entities) {
-                        for (MvccEntity entity : entities) {
+                    public Observable<? extends EntityVersion> call(List<CandidateResult> candidateResults) {
+                        List<EntityVersion> versions = new ArrayList<>();
+                        for (CandidateResult entity : candidateResults) {
                             //filter find entities <= current version
                             if(entity.getVersion().timestamp() <= event.getVersion().timestamp()) {
-                                entityIndex.deindex(event.getCollectionScope(), entity.getEntity().get());
+                                versions.add(entity);
+                                entityIndex.deindex(entity.getId(),entity.getVersion());
                             }
                         }
-                        return Observable.from(entities);
+                        return Observable.from(versions);
                     }
                 });
     }

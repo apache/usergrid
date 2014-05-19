@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.index.guice;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -70,20 +71,23 @@ public class IndexModule extends AbstractModule {
         private final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete;
         private final EntityIndexFactory entityIndexFactory;
         private final SerializationFig serializationFig;
+        private final EntityCollectionManager collectionManager;
 
 
         @Inject
         public EsEntityIndexDeleteListenerProvider( final EntityIndexFactory entityIndexFactory,
                                                  @MvccEntityDelete final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete,
-                                                 SerializationFig serializationFig) {
+                                                 SerializationFig serializationFig,
+                                                 EntityCollectionManager collectionManager) {
             this.entityDelete = entityDelete;
             this.entityIndexFactory = entityIndexFactory;
             this.serializationFig = serializationFig;
+            this.collectionManager = collectionManager;
         }
 
         @Override
         public MvccDeleteMessageListener get() {
-            return new EsEntityIndexDeleteListener(entityIndexFactory,entityDelete,serializationFig);
+            return new EsEntityIndexDeleteListener(entityIndexFactory,entityDelete,serializationFig,collectionManager);
         }
     }
 }

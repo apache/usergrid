@@ -75,12 +75,12 @@ public class EntityResults implements Iterable<Entity>, Iterator<Entity> {
             CandidateResult candidate = itr.next();
 
             //our candidate is > our max, we can't use it
-            if( UUIDUtils.compare( candidate.getEntityVersion(), maxVersion ) > 0){
+            if( UUIDUtils.compare( candidate.getVersion(), maxVersion ) > 0){
                 continue;
             }
 
             //our candidate was too new, ignore it
-            next = ecm.load( candidate.getEntityId() ).toBlockingObservable().single();
+            next = ecm.load( candidate.getId() ).toBlockingObservable().single();
         }
     }
 

@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 
 import java.io.Serializable;
 import java.util.UUID;

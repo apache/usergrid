@@ -315,20 +315,30 @@ public class EsEntityIndexImpl implements EntityIndex {
                 }
     }
 
-
     @Override
-    public void deindex( Entity entity ) {
-        
+    public void deindex( final Id id, final UUID version) {
 
 
-        String indexId = createIndexDocId( entity.getId(), entity.getVersion() );
+        String indexId = createIndexDocId( id, version );
 
         client
-            .prepareDelete( indexName, indexType, indexId )
-            .setRefresh( refresh )
-            .execute().actionGet();
+                .prepareDelete( indexName, indexType, indexId )
+                .setRefresh( refresh )
+                .execute().actionGet();
 
         log.debug("Deindexed Entity with index id " + indexId);
+    }
+    @Override
+    public void deindex( Entity entity ) {
+
+        deindex( entity.getId(), entity.getVersion() );
+    }
+
+    @Override
+    public void deindex( CandidateResult entity ) {
+
+        deindex( entity.getId(), entity.getVersion() );
+
     }
 
 

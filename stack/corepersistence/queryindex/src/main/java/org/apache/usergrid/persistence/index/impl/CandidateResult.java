@@ -19,10 +19,11 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.util.UUID;
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.core.scope.EntityVersion;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public class CandidateResult {
+public class CandidateResult implements EntityVersion {
     private final Id entityId;
     private final UUID entityVersion;
 
@@ -31,13 +32,13 @@ public class CandidateResult {
         this.entityVersion = entityVersion;
     }
 
-    public Id getEntityId() {
-        return entityId;
-    }
-
-    public UUID getEntityVersion() {
+    @Override
+    public UUID getVersion() {
         return entityVersion;
     }
 
-    
+    @Override
+    public Id getId() {
+        return entityId;
+    }
 }

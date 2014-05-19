@@ -59,7 +59,7 @@ public class Results implements Iterable<Entity> {
         this.candidates = candidates;
         this.ecmf = ecmf;
         for ( CandidateResult candidate : candidates ) {
-            ids.add( candidate.getEntityId() );
+            ids.add( candidate.getId() );
         }
     }
 
@@ -107,8 +107,8 @@ public class Results implements Iterable<Entity> {
 
             for ( CandidateResult candidate : candidates ) {
 
-                Entity entity = ecm.load( candidate.getEntityId() ).toBlockingObservable().last();
-                if ( !takeAllVersions && candidate.getEntityVersion().compareTo(entity.getVersion()) == -1) {
+                Entity entity = ecm.load( candidate.getId() ).toBlockingObservable().last();
+                if ( !takeAllVersions && candidate.getVersion().compareTo(entity.getVersion()) == -1) {
                     log.debug("   Stale hit {} version {}", entity.getId(), entity.getVersion() );
                     continue;
                 }

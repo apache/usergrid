@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationSt
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.scope.EntityVersion;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
@@ -88,8 +89,8 @@ public class MvccEntityDeleteListenerTest {
         when(mvccEntitySerializationStrategy.delete(scope,entityId,id)).thenReturn(batch);
         when(mvccEntitySerializationStrategy.loadHistory(scope,entityId,id,serializationFig.getHistorySize())).thenReturn(entityList.iterator());
 
-        Observable<MvccEntity> observable = listener.receive(entityEvent);
-        MvccEntity entityEventReturned = observable.toBlockingObservable().last();
-        assertEquals(entity,entityEventReturned);
+        Observable<EntityVersion> observable = listener.receive(entityEvent);
+        EntityVersion entityEventReturned = observable.toBlockingObservable().last();
+        assertEquals(entity.getVersion(),entityEventReturned.getVersion());
     }
 }
