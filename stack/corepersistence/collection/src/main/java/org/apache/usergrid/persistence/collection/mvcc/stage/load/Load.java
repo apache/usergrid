@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.load;
 
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -80,15 +81,16 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         //generate  a version that represents now
         final UUID versionMax = uuidService.newTimeUUID();
 
-        List<MvccEntity> results = entitySerializationStrategy.load( 
+        Iterator<MvccEntity> results = entitySerializationStrategy.load(
                 collectionScope, entityId, versionMax, 1 );
 
         //nothing to do, we didn't get a result back
-        if ( results.size() != 1 ) {
+        if ( !results.hasNext() ) {
             return null;
         }
 
-        final Optional<Entity> targetVersion = results.get( 0 ).getEntity();
+        MvccEntity mvccEntity = results.next();
+        final Optional<Entity> targetVersion = mvccEntity.getEntity();
 
         //this entity has been marked as cleared.  
         //The version exists, but does not have entity data

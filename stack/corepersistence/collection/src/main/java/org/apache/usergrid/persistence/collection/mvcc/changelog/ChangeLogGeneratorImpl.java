@@ -18,11 +18,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -38,36 +34,37 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
 
     /**
      * See parent comment
-     * {@link ChangeLogGenerator#getChangeLog(org.apache.usergrid.persistence.model.entity.Id, java.util.List, java.util.UUID)}
+     * {@link ChangeLogGenerator#getChangeLog(java.util.Iterator<org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity>, java.util.UUID)}
      * @param mvccEntities
      */
     @Override
-    public List<ChangeLogEntry> getChangeLog( List<MvccEntity> mvccEntities, UUID minVersion ) {
+    public List<ChangeLogEntry> getChangeLog( Iterator<MvccEntity> mvccEntities, UUID minVersion ) {
 
         Map<String, ChangeLogEntry> writeMap = new HashMap<String, ChangeLogEntry>();
         Map<String, ChangeLogEntry> deleteMap = new HashMap<String, ChangeLogEntry>();
         List<ChangeLogEntry> changeLog = new ArrayList<ChangeLogEntry>();
         Entity keeper = null;
 
-        for ( MvccEntity mvccEntity : mvccEntities ) {
+        List<Entity> entityList = new ArrayList<>();
+        while(mvccEntities.hasNext()) {
+            MvccEntity mvccEntity = mvccEntities.next();
 
             Entity entity = mvccEntity.getEntity().get();
+            entityList.add(entity);
+            int compare = UUIDComparator.staticCompare(mvccEntity.getVersion(), minVersion);
 
-            int compare = UUIDComparator.staticCompare( mvccEntity.getVersion(), minVersion );
-
-            if ( compare == 0 ) {
+            if (compare == 0) {
                 keeper = entity;
             }
         }
 
-        // TODO: what about cleared entities, all fields deleted but entity still there.
-        // i.e. the optional entity will be delete
+        for (Entity entity : entityList) {
 
-        for (MvccEntity mvccEntity : mvccEntities) {
+            int compare = UUIDComparator.staticCompare(entity.getVersion(), minVersion);
 
-            Entity entity = mvccEntity.getEntity().get();
-            int compare = UUIDComparator.staticCompare(mvccEntity.getVersion(), minVersion);
 
+            // TODO: what about cleared entities, all fields deleted but entity still there.
+            // i.e. the optional entity will be delete
             if (compare < 0) { // less than minVersion
 
                 for (Field field : entity.getFields()) {
@@ -82,11 +79,11 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
                         ChangeLogEntry cle = deleteMap.get(key);
                         if (cle == null) {
                             cle = new ChangeLogEntry(
-                                    entity.getId(), mvccEntity.getVersion(),
+                                    entity.getId(), entity.getVersion(),
                                     ChangeLogEntry.ChangeType.PROPERTY_DELETE, field);
                             changeLog.add(cle);
                         } else {
-                            cle.addVersion(mvccEntity.getVersion());
+                            cle.addVersion(entity.getVersion());
                         }
                     }
                 }
@@ -99,12 +96,12 @@ public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
                     ChangeLogEntry cle = writeMap.get(key);
                     if (cle == null) {
                         cle = new ChangeLogEntry(
-                                entity.getId(), mvccEntity.getVersion(),
+                                entity.getId(), entity.getVersion(),
                                 ChangeLogEntry.ChangeType.PROPERTY_WRITE, field);
                         writeMap.put(key, cle);
                         changeLog.add(cle);
                     } else {
-                        cle.addVersion(mvccEntity.getVersion());
+                        cle.addVersion(entity.getVersion());
                     }
                 }
             }

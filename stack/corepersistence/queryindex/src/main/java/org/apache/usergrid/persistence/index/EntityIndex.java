@@ -19,9 +19,13 @@
 
 package org.apache.usergrid.persistence.index;
 
+import org.apache.usergrid.persistence.index.impl.CandidateResult;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.model.entity.Id;
+
+import java.util.UUID;
 
 
 /**
@@ -42,13 +46,29 @@ public interface EntityIndex {
     public void deindex( Entity entity );
 
     /**
+     * Remove index of entity.
+     * @param result CandidateResult to be removed from index.
+     */
+    public void deindex( CandidateResult result );
+
+    /**
+     * Remove index of entity.
+     * @param id Id to be removed from index.
+     * @param version Version to be removed from index.
+     */
+    public void deindex( Id id, UUID version);
+
+    /**
      * Execute query in Usergrid syntax.
      */
+
     public CandidateResults search( Query query );
 
     /**
      * Force refresh of index (should be used for testing purposes only).
      */
     public void refresh();
+
+    public CandidateResults getEntityVersions(Id id);
 
 }

@@ -37,9 +37,9 @@ import com.google.inject.Inject;
 
 import rx.Observable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import java.util.UUID;
+
+import static org.junit.Assert.*;
 
 
 /** @author tnine */
@@ -150,6 +150,8 @@ public class EntityCollectionManagerIT {
 
         assertNotNull( "Id was assigned", createReturned.getId() );
 
+        UUID version = createReturned.getVersion();
+
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
         Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
@@ -163,7 +165,7 @@ public class EntityCollectionManagerIT {
         //load may return null, use last or default
         loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
 
-        assertNull( "Entity was deleted", loadReturned );
+        assertNull("Entity was deleted",loadReturned );
     }
 
 

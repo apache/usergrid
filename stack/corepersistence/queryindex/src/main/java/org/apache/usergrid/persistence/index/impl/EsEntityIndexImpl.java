@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -95,6 +96,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     private final IndexScope indexScope;
 
     private final Client client;
+    private final SerializationFig serializationFig;
 
     protected EntityCollectionManagerFactory ecmFactory;
 
@@ -106,7 +108,9 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
     public static final String GEO_SUFFIX = "_ug_geo";
+
 //    public static final String COLLECTION_SCOPE_FIELDNAME = "zzz__collectionscope__zzz";
+    public static final String ENTITYID_FIELDNAME = "zzz_entityid_zzz";
 
     public static final String DOC_ID_SEPARATOR = "|";
     public static final String DOC_ID_SEPARATOR_SPLITTER = "\\|";
@@ -123,7 +127,9 @@ public class EsEntityIndexImpl implements EntityIndex {
             @Assisted final IndexScope indexScope,
             IndexFig config,
             EsProvider provider,
-            EntityCollectionManagerFactory factory) {
+            EntityCollectionManagerFactory factory,
+            SerializationFig serializationFig
+    ) {
 
         IndexValidationUtils.validateIndexScope( indexScope );
 
@@ -134,6 +140,8 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         this.indexName = createIndexName( config.getIndexPrefix(), indexScope);
         this.indexType = createCollectionScopeTypeName( indexScope );
+
+        this.serializationFig = serializationFig;
 
         this.refresh = config.isForcedRefresh();
         this.cursorTimeout = config.getQueryCursorTimeout();
@@ -275,8 +283,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                 }
 
                 Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
-
-
+        entityAsMap.put(ENTITYID_FIELDNAME,entity.getId().getUuid().toString());
 
                 // let caller add these fields if needed
                 // entityAsMap.put("created", entity.getId().getUuid().timestamp();
@@ -308,20 +315,30 @@ public class EsEntityIndexImpl implements EntityIndex {
                 }
     }
 
-
     @Override
-    public void deindex( Entity entity ) {
-        
+    public void deindex( final Id id, final UUID version) {
 
 
-        String indexId = createIndexDocId( entity.getId(), entity.getVersion() );
+        String indexId = createIndexDocId( id, version );
 
         client
-            .prepareDelete( indexName, indexType, indexId )
-            .setRefresh( refresh )
-            .execute().actionGet();
+                .prepareDelete( indexName, indexType, indexId )
+                .setRefresh( refresh )
+                .execute().actionGet();
 
         log.debug("Deindexed Entity with index id " + indexId);
+    }
+    @Override
+    public void deindex( Entity entity ) {
+
+        deindex( entity.getId(), entity.getVersion() );
+    }
+
+    @Override
+    public void deindex( CandidateResult entity ) {
+
+        deindex( entity.getId(), entity.getVersion() );
+
     }
 
 
@@ -390,6 +407,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             String version = idparts[2];
 
             Id entityId = new SimpleId(UUID.fromString(id), type);
+
 
 //            String scopeString = hit.getSource().get( COLLECTION_SCOPE_FIELDNAME ).toString();
             candidates.add(
@@ -586,4 +604,13 @@ public class EsEntityIndexImpl implements EntityIndex {
         client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
         log.debug("Refreshed index: " + indexName);
     }
+
+    @Override
+    public CandidateResults getEntityVersions(Id id) {
+        Query query = new Query();
+        query.addEqualityFilter(ENTITYID_FIELDNAME,id.getUuid().toString());
+        CandidateResults results = search( query );
+        return results;
+    }
+
 }

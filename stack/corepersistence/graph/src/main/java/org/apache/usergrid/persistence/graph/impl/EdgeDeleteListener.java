@@ -66,6 +66,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<MarkedEdge>
         final ApplicationScope scope = delete.getApplicationScope();
         final UUID maxVersion = edge.getVersion();
 
+
         return edgeDeleteRepair.repair( scope, edge, delete.getTimestamp() )
 
                                .flatMap( new Func1<MarkedEdge, Observable<Integer>>() {
