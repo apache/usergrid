@@ -118,6 +118,8 @@ public class ESSuiteTest {
         LOG.info( "Setting up sample data for elasticsearch Dao tests..." );
 
         Injector injector = Guice.createInjector( new ChopUiModule() );
+        IElasticSearchClient esClient = injector.getInstance(IElasticSearchClient.class);
+        esClient.start();
 
         setupUsers( injector );
         setupModules( injector );

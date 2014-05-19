@@ -27,6 +27,7 @@ import com.netflix.config.ConfigurationManager;
 import org.apache.commons.cli.CommandLine;
 import org.apache.shiro.guice.aop.ShiroAopModule;
 import org.apache.usergrid.chop.webapp.dao.SetupDao;
+import org.apache.usergrid.chop.webapp.elasticsearch.ElasticSearchClient;
 import org.apache.usergrid.chop.webapp.elasticsearch.ElasticSearchFig;
 import org.apache.usergrid.chop.webapp.elasticsearch.EsEmbedded;
 import org.apache.usergrid.chop.webapp.elasticsearch.IElasticSearchClient;
@@ -107,6 +108,16 @@ public class ChopUiConfig extends GuiceServletContextListener {
                 if (cl.hasOption('e')) {
                     startEmbeddedES(elasticSearchFig);
                 }
+                if( cl.hasOption( 'c' ) ) {
+                    String serverHostPort = cl.getOptionValue( 'c' );
+                    int seperatorIndex = serverHostPort.indexOf(":");
+                    String serverHost = serverHostPort.substring(0,seperatorIndex);
+                    String serverPort = serverHostPort.substring(seperatorIndex+1,serverHostPort.length());
+
+                    LOG.info( "The -c option is given, replacing host with {} and port with {}", serverHost, serverPort );
+                    elasticSearchFig.bypass( ElasticSearchFig.SERVERS_KEY, serverHost );
+                    elasticSearchFig.bypass( ElasticSearchFig.PORT_KEY, serverPort );
+                }
             } else {
                 LOG.warn("ChopUi not started via Launcher - no command line argument processing will take place.");
             }
@@ -165,6 +176,7 @@ public class ChopUiConfig extends GuiceServletContextListener {
         LOG.info("Setting up the storage...");
 
         IElasticSearchClient esClient = getInjector().getInstance(IElasticSearchClient.class);
+        esClient.start();
         SetupDao setupDao = getInjector().getInstance(SetupDao.class);
 
         LOG.info("esClient: {}", esClient);
