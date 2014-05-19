@@ -844,7 +844,7 @@ public class CpRelationManager implements RelationManager {
     
     private CpRelationManager getRelationManager( EntityRef headEntity ) {
         CpRelationManager rmi = new CpRelationManager();
-        rmi.init( em, null, applicationId, headEntity, null);
+        rmi.init( em, emf, applicationId, headEntity, null);
         return rmi;
     }
 

@@ -167,10 +167,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     public void setup() throws Exception {
-        SetupImpl setup = getSetup();
-
-        setup.setup();
-
+        Setup setup = getSetup();
+        setup.init();
 
         if ( cass.getPropertiesMap() != null ) {
             updateServiceProperties( cass.getPropertiesMap() );

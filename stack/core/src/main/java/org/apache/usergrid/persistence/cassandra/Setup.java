@@ -24,13 +24,6 @@ public interface Setup {
 
     void init() throws Exception;
 
-    /**
-     * Initialize.
-     *
-     * @throws Exception the exception
-     */
-    void setup() throws Exception;
-
     public void setupSystemKeyspace() throws Exception;
 
     public void setupStaticKeyspace() throws Exception;

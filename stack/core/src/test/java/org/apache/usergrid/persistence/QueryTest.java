@@ -189,7 +189,7 @@ public class QueryTest {
     }
 
 
-    @Test
+    @Test @Ignore // not needed for Core Persistence
     public void testFromJson() throws QueryParseException {
         String s = "{\"filter\":\"a contains 'ed'\"}";
         Query q = Query.fromJsonString( s );
