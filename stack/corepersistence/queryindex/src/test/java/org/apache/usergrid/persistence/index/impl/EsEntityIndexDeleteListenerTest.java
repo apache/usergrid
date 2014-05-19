@@ -12,6 +12,7 @@ import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.scope.EntityVersion;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.EntityResults;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -61,24 +63,28 @@ public class EsEntityIndexDeleteListenerTest {
         CollectionScope scope = mock(CollectionScope.class);
         UUID uuid = TimeUUIDUtils.getTimeUUID(10000L);
         Id entityId = new SimpleId(uuid,"test");
-        Entity entity = mock(Entity.class);
+        CandidateResult entity = mock(CandidateResult.class);
         when(entity.getVersion()).thenReturn(uuid);
         when(entity.getId()).thenReturn(entityId);
-        when(eif.createEntityIndex(null)).thenReturn(entityIndex);
-
+        when(scope.getOwner()).thenReturn(entityId);
+        when(scope.getName()).thenReturn("test");
+        when(scope.getApplication()).thenReturn(entityId);
+        when(eif.createEntityIndex(any(IndexScope.class))).thenReturn(entityIndex);
 
         CandidateResults results = mock(CandidateResults.class);
-        Iterator<Entity> entities = mock(Iterator.class);
-        when(entities.hasNext()).thenReturn(true);
-        when(entities.next()).thenReturn(entity);
+        List<CandidateResult> resultsList  = new ArrayList<>();
+        resultsList.add(entity);
+        Iterator<CandidateResult> entities = resultsList.iterator();
+
+        when(results.iterator()).thenReturn(entities);
         when(serializationFig.getBufferSize()).thenReturn(10);
         when(serializationFig.getHistorySize()).thenReturn(20);
         when(entityIndex.getEntityVersions(entityId)).thenReturn(results);
-        MvccEntity mvccEntity = new MvccEntityImpl(entityId,uuid, MvccEntity.Status.COMPLETE,entity);
+        MvccEntity mvccEntity = new MvccEntityImpl(entityId,uuid, MvccEntity.Status.COMPLETE,mock(Entity.class));
         MvccEntityEvent<MvccEntity> event = new MvccEntityEvent<MvccEntity>(scope,uuid,mvccEntity);
         Observable<EntityVersion> o = esEntityIndexDeleteListener.receive(event);
         EntityVersion testEntity = o.toBlockingObservable().last();
         assertEquals(testEntity.getId(),mvccEntity.getId());
-        verify(entityIndex).deindex(entity);
+        verify(entityIndex).deindex(entity.getId(),entity.getVersion());
     }
 }
