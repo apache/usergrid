@@ -31,6 +31,7 @@
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr3-maven-plugin</artifactId>
+                <version>${antlr.version}</version>
                 <executions>
                     <execution>
                         <configuration>
@@ -101,22 +102,6 @@
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
             <version>${elasticsearch.version}</version>
-            <exclusions>
-                <!-- Cassandra wants ANTLR 3.2 -->
-                <exclusion>
-                    <artifactId>antlr-runtime</artifactId>
-                    <groupId>org.antlr</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- Cassandra wants ANTLR 3.2 -->
-
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr-runtime</artifactId>
-            <version>3.2</version>
-            <type>jar</type>
         </dependency>
 
         <!-- Test dependencies  -->

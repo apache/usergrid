@@ -71,8 +71,6 @@ import com.yammer.metrics.core.Summarizable;
 import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.stats.Snapshot;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-
 
 /** @author ed@anuff.com */
 @Path("/")
@@ -231,7 +229,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
 
     private ApplicationResource appResourceFor( UUID applicationId ) throws Exception {
-        if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
+        if ( applicationId.equals( emf.getManagementAppId() ) ) {
             throw new UnauthorizedException();
         }
 

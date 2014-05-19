@@ -395,4 +395,18 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         this.counterUtils = counterUtils;
     }
 
+
+    static final UUID MANAGEMENT_APPLICATION_ID = new UUID( 0, 1 );
+    static final UUID DEFAULT_APPLICATION_ID = new UUID( 0, 16 );
+
+    @Override
+    public UUID getManagementAppId() {
+        return MANAGEMENT_APPLICATION_ID;
+    }
+
+    @Override
+    public UUID getDefaultAppId() {
+        return DEFAULT_APPLICATION_ID; 
+    }
+
 }

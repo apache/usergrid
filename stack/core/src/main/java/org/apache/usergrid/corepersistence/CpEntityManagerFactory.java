@@ -32,6 +32,8 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -121,9 +123,22 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private CpManagerCache managerCache;
 
+    CassandraService cass;
+    CounterUtils counterUtils;
 
-    public CpEntityManagerFactory() {
-        logger.debug("Creating a new CpEntityManagerFactory");
+    private boolean skipAggregateCounters;
+
+
+    public CpEntityManagerFactory( 
+            CassandraService cass, CounterUtils counterUtils, boolean skipAggregateCounters ) {
+
+        this.cass = cass;
+        this.counterUtils = counterUtils;
+        this.skipAggregateCounters = skipAggregateCounters;
+        if ( skipAggregateCounters ) {
+            logger.warn( "NOTE: Counters have been disabled by configuration..." );
+        }
+        logger.debug("Created a new CpEntityManagerFactory");
     }
     
 
@@ -214,6 +229,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         if ( lookupApplication( appName ) != null ) {
             throw new ApplicationAlreadyExistsException( appName );
         }
+
+        getSetup().setupApplicationKeyspace( applicationId, appName );
 
         UUID orgUuid = lookupOrganization( organizationName );
         if ( orgUuid == null ) {
@@ -471,5 +488,29 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public void setManagerCache(CpManagerCache managerCache) {
         this.managerCache = managerCache;
     }
+
+    static UUID MANAGEMENT_APPLICATION_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
+    static UUID DEFAULT_APPLICATION_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
+
+    @Override
+    public UUID getManagementAppId() {
+        return MANAGEMENT_APPLICATION_ID;
+    }
+
+    @Override
+    public UUID getDefaultAppId() {
+        return DEFAULT_APPLICATION_ID; 
+    }
+
+    
+    /**
+     * Gets the setup.
+     *
+     * @return Setup helper
+     */
+    public CpSetup getSetup() {
+        return new CpSetup( this, cass );
+    }
+
 
 }

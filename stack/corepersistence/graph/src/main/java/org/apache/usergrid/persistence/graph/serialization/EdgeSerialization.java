@@ -23,9 +23,8 @@ package org.apache.usergrid.persistence.graph.serialization;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.migration.Migration;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
@@ -46,7 +45,7 @@ public interface EdgeSerialization extends Migration {
      * @param scope The org scope of the graph
      * @param edge The edge to write
      */
-    MutationBatch writeEdge( OrganizationScope scope, MarkedEdge edge, UUID timestamp );
+    MutationBatch writeEdge( ApplicationScope scope, MarkedEdge edge, UUID timestamp );
 
     /**
      * EdgeWrite both the source -->target edge and the target<--- source edge into the mutation
@@ -54,7 +53,7 @@ public interface EdgeSerialization extends Migration {
      * @param scope The org scope of the graph
      * @param edge The edge to write
      */
-    MutationBatch deleteEdge( OrganizationScope scope, MarkedEdge edge, UUID timestamp );
+    MutationBatch deleteEdge( ApplicationScope scope, MarkedEdge edge, UUID timestamp );
 
 
     /**
@@ -63,7 +62,7 @@ public interface EdgeSerialization extends Migration {
      * @param search
      * @return
      */
-    Iterator<MarkedEdge> getEdgeVersions( OrganizationScope scope, SearchByEdge search );
+    Iterator<MarkedEdge> getEdgeVersions( ApplicationScope scope, SearchByEdge search );
 
     /**
      * Get an iterator of all edges by edge type originating from source node
@@ -71,7 +70,7 @@ public interface EdgeSerialization extends Migration {
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<MarkedEdge> getEdgesFromSource( OrganizationScope scope, SearchByEdgeType edgeType );
+    Iterator<MarkedEdge> getEdgesFromSource( ApplicationScope scope, SearchByEdgeType edgeType );
 
 
     /**
@@ -80,7 +79,7 @@ public interface EdgeSerialization extends Migration {
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<MarkedEdge> getEdgesFromSourceByTargetType( OrganizationScope scope, SearchByIdType edgeType );
+    Iterator<MarkedEdge> getEdgesFromSourceByTargetType( ApplicationScope scope, SearchByIdType edgeType );
 
     /**
      * Get an iterator of all edges by edge type pointing to the target node.  Returns all versions
@@ -88,7 +87,7 @@ public interface EdgeSerialization extends Migration {
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<MarkedEdge> getEdgesToTarget( OrganizationScope scope, SearchByEdgeType edgeType );
+    Iterator<MarkedEdge> getEdgesToTarget( ApplicationScope scope, SearchByEdgeType edgeType );
 
 
     /**
@@ -98,5 +97,5 @@ public interface EdgeSerialization extends Migration {
      * @param scope The org scope of the graph
      * @param edgeType The search edge
      */
-    Iterator<MarkedEdge> getEdgesToTargetBySourceType( OrganizationScope scope, SearchByIdType edgeType );
+    Iterator<MarkedEdge> getEdgesToTargetBySourceType( ApplicationScope scope, SearchByIdType edgeType );
 }

@@ -16,43 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
+
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
-/**
- * Provides indexing of Entities within a scope.
- */
-public interface EntityIndex {
-
-    /** 
-     * Create index for Entity
-     * @param entity Entity to be indexed.
-     */
-    public void index(  Entity entity );
+public interface IndexScope extends ApplicationScope {
 
     /**
-     * Remove index of entity.
-     * @param entity Entity to be removed from index. 
+     * @return The name of the index. If you use pluralization for you names vs types,
+     * you must keep the consistent or you will be unable to load data
      */
-    public void deindex( Entity entity );
+    public String getName();
+
 
     /**
-     * Execute query in Usergrid syntax.
+     * @return A uuid that is unique to this context.  It can be any uuid (time uuid preferred). Can be an application id
+     * if this is indexed in a collection, or the collection owner.  In a graph structure, this will be the source
+     * node in the graph
      */
-
-    public CandidateResults search( Query query );
-
-    /**
-     * Force refresh of index (should be used for testing purposes only).
-     */
-    public void refresh();
-
-    public CandidateResults getEntityVersions(Id id);
-
+    public Id getOwner();
 }

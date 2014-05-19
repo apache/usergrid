@@ -25,10 +25,10 @@ import org.apache.usergrid.persistence.model.entity.Id;
 /**
  * A scope used for organizations
  */
-public interface OrganizationScope {
+public interface ApplicationScope {
 
     /**
-     * Get an organization scope
+     * Get an Application scope
      */
-    Id getOrganization();
+    Id getApplication();
 }

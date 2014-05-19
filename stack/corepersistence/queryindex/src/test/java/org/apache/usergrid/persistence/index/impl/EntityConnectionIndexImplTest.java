@@ -17,31 +17,11 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
-import com.google.inject.Inject;
+
 import java.io.IOException;
 import java.util.HashMap;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.guice.TestIndexModule;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Results;
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
 import org.jukito.UseModules;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,12 +29,38 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(ITRunner.class)
-@UseModules({ TestIndexModule.class })
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.guice.TestIndexModule;
+import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.query.EntityResults;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
+import com.google.inject.Inject;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+
+@RunWith( ITRunner.class )
+@UseModules( { TestIndexModule.class } )
 public class EntityConnectionIndexImplTest extends BaseIT {
 
     private static final Logger log = LoggerFactory.getLogger( EntityConnectionIndexImplTest.class );
-    
+
     @ClassRule
     public static ElasticSearchRule es = new ElasticSearchRule();
 
@@ -64,40 +70,38 @@ public class EntityConnectionIndexImplTest extends BaseIT {
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
-        
+
     @Inject
-    public EntityIndexFactory ecif;    
+    public EntityIndexFactory ecif;
 
     @Inject
     public EntityCollectionManagerFactory ecmf;
 
-    
+
     @Test
-    public void testBasicOperation() throws IOException { 
+    public void testBasicOperation() throws IOException {
 
-        Id orgId = new SimpleId("organization");
-        OrganizationScope orgScope = new OrganizationScopeImpl( orgId );
-
-        Id appId = new SimpleId("application");
-        CollectionScope appScope = new CollectionScopeImpl( orgId, appId, "test-app" );
+        Id appId = new SimpleId( "application" );
 
         // create a muffin
-        CollectionScope muffinScope = new CollectionScopeImpl( appId, orgId, "muffins" );
-        Entity muffin = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), muffinScope.getName()));
+        CollectionScope muffinScope = new CollectionScopeImpl( appId, appId, "muffins" );
+        Entity muffin = new Entity( new SimpleId( UUIDGenerator.newTimeUUID(), muffinScope.getName() ) );
+
         muffin = EntityIndexMapUtils.fromMap( muffin, new HashMap<String, Object>() {{
-            put("size", "Large");
-            put("flavor", "Blueberry");
+            put( "size", "Large" );
+            put( "flavor", "Blueberry" );
         }} );
         EntityUtils.setVersion( muffin, UUIDGenerator.newTimeUUID() );
         EntityCollectionManager muffinMgr = ecmf.createCollectionManager( muffinScope );
         muffin = muffinMgr.write( muffin ).toBlockingObservable().last();
 
+
         // create a person who likes muffins
-        CollectionScope peopleScope = new CollectionScopeImpl( appId, orgId, "people" );
-        Entity person = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), peopleScope.getName()));
+        CollectionScope peopleScope = new CollectionScopeImpl( appId, appId, "people" );
+        Entity person = new Entity( new SimpleId( UUIDGenerator.newTimeUUID(), peopleScope.getName() ) );
         person = EntityIndexMapUtils.fromMap( person, new HashMap<String, Object>() {{
-            put("name", "Dave");
-            put("hometown", "Chapel Hill");
+            put( "name", "Dave" );
+            put( "hometown", "Chapel Hill" );
         }} );
         EntityUtils.setVersion( person, UUIDGenerator.newTimeUUID() );
         EntityCollectionManager peopleMgr = ecmf.createCollectionManager( peopleScope );
@@ -107,14 +111,23 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         assertNotNull( person.getId().getUuid() );
 
         // index connection of "person Dave likes Large Blueberry muffin"
-        EntityIndex personLikesIndex = ecif.createEntityIndex( orgScope, appScope );
-        personLikesIndex.indexConnection( person, "likes", muffin, muffinScope );
+
+        IndexScope scope = new IndexScopeImpl( appId, person.getId(), "likes" );
+
+        EntityIndex personLikesIndex = ecif.createEntityIndex( scope );
+        personLikesIndex.index( muffin );
 
         personLikesIndex.refresh();
 
         // now, let's search for things that Dave likes
-        Results likes = personLikesIndex.searchConnections( person, "likes", Query.fromQL( "select *"));
+        CandidateResults likes = personLikesIndex.search( Query.fromQL( "select *" ) );
         assertEquals( 1, likes.size() );
-        assertEquals( "Blueberry", likes.getEntities().get(0).getField("flavor").getValue() );
+
+
+        //cause retrieval from cassandra
+        EntityResults entityResults = new EntityResults( likes, muffinMgr, UUIDGenerator.newTimeUUID() );
+
+
+        assertEquals( "Blueberry", entityResults.next().getField( "flavor" ).getValue() );
     }
 }

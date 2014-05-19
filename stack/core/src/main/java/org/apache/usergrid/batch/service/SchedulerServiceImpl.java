@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.PostConstruct;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.JobExecution.Status;
@@ -39,7 +38,6 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.entities.JobStat;
 import org.apache.usergrid.persistence.exceptions.TransactionNotFoundException;
@@ -49,28 +47,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-
-
 /**
- * Should be referenced by services as a SchedulerService instance. Only the internal job runtime should refer to this
- * as a JobAccessor
+ * Should be referenced by services as a SchedulerService instance. Only the internal job 
+ * runtime should refer to this as a JobAccessor
  */
 public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobRuntimeService {
 
-    /**
-     *
-     */
     private static final String STATS_ID = "statsId";
 
-    /**
-     *
-     */
     private static final String JOB_ID = "jobId";
 
-    /**
-     *
-     */
     private static final String JOB_NAME = "jobName";
 
     private static final Logger LOG = LoggerFactory.getLogger( SchedulerServiceImpl.class );
@@ -110,8 +96,8 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
         try {
             jobData.setJobName( jobName );
-            JobData job = em.create( jobData );
-            JobStat stat = em.create( new JobStat( jobName, job.getUuid() ) );
+            JobData job = getEm().create( jobData );
+            JobStat stat = getEm().create( new JobStat( jobName, job.getUuid() ) );
 
             scheduleJob( jobName, fireTime, job.getUuid(), stat.getUuid() );
 
@@ -136,7 +122,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
         message.setProperty( JOB_ID, jobDataId );
         message.setProperty( STATS_ID, jobStatId );
 
-        qm.postToQueue( jobQueueName, message );
+        getQm().postToQueue( jobQueueName, message );
     }
 
 
@@ -154,7 +140,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
          */
         try {
             LOG.debug( "deleteJob {}", jobId );
-            em.delete( new SimpleEntityRef( "jobData", jobId ) );
+            getEm().delete( new SimpleEntityRef( "jobData", jobId ) );
         }
         catch ( Exception e ) {
             throw new JobRuntimeException( e );
@@ -173,7 +159,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
         query.setTimeout( jobTimeout );
         query.setLimit( size );
 
-        QueueResults jobs = qm.getFromQueue( jobQueueName, query );
+        QueueResults jobs = getQm().getFromQueue( jobQueueName, query );
 
         List<JobDescriptor> results = new ArrayList<JobDescriptor>( jobs.size() );
 
@@ -184,9 +170,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
             String jobName = job.getStringProperty( JOB_NAME );
 
             try {
-                JobData data = em.get( jobUuid, JobData.class );
+                JobData data = getEm().get( jobUuid, JobData.class );
 
-                JobStat stats = em.get( statsUuid, JobStat.class );
+                JobStat stats = getEm().get( statsUuid, JobStat.class );
 
                 /**
                  * no job data, which is required even if empty to signal the job should
@@ -195,14 +181,14 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                 if ( data == null || stats == null ) {
                     LOG.info( "Received job with data id '{}' from the queue, but no data was found.  Dropping job",
                             jobUuid );
-                    qm.deleteTransaction( jobQueueName, job.getTransaction(), null );
+                    getQm().deleteTransaction( jobQueueName, job.getTransaction(), null );
 
                     if ( data != null ) {
-                        em.delete( data );
+                        getEm().delete( data );
                     }
 
                     if ( stats != null ) {
-                        em.delete( stats );
+                        getEm().delete( stats );
                     }
 
                     continue;
@@ -230,7 +216,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
         try {
             // @TODO - what's the point to this sychronized block on an argument?
             synchronized ( execution ) {
-                UUID newId = qm.renewTransaction( jobQueueName, execution.getTransactionId(),
+                UUID newId = getQm().renewTransaction( jobQueueName, execution.getTransactionId(),
                         new QueueQuery().withTimeout( delay ) );
 
                 execution.setTransactionId( newId );
@@ -285,27 +271,27 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
             // we're done. Mark the transaction as complete and delete the job info
             if ( jobStatus == Status.COMPLETED ) {
                 LOG.info( "Job {} is complete id: {}", data.getJobName(), bulkJobExecution.getTransactionId() );
-                qm.deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
+                getQm().deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
                 LOG.debug( "delete job data {}", data.getUuid() );
-                em.delete( data );
+                getEm().delete( data );
             }
 
             // the job failed too many times. Delete the transaction to prevent it
             // running again and save it for querying later
             else if ( jobStatus == Status.DEAD ) {
                 LOG.warn( "Job {} is dead.  Removing", data.getJobName() );
-                qm.deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
-                em.update( data );
+                getQm().deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
+                getEm().update( data );
             }
 
             // update the job for the next run
             else {
-                em.update( data );
+                getEm().update( data );
             }
 
             LOG.info( "Updating stats for job {}", data.getJobName() );
 
-            em.update( stat );
+            getEm().update( stat );
         }
         catch ( Exception e ) {
             // should never happen
@@ -327,7 +313,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
             query = new Query();
         }
 
-        return em.searchCollection( em.getApplicationRef(), "job_data", query );
+        return getEm().searchCollection( getEm().getApplicationRef(), "job_data", query );
     }
 
 
@@ -348,9 +334,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
             // if it's a dead status, it's failed too many times, just kill the job
             if ( execution.getStatus() == Status.DEAD ) {
-                qm.deleteTransaction( jobQueueName, execution.getTransactionId(), null );
-                em.update( data );
-                em.update( stat );
+                getQm().deleteTransaction( jobQueueName, execution.getTransactionId(), null );
+                getEm().update( data );
+                getEm().update( stat );
                 return;
             }
 
@@ -358,12 +344,12 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
             scheduleJob( execution.getJobName(), System.currentTimeMillis() + delay, data.getUuid(), stat.getUuid() );
 
             // delete the pending transaction
-            qm.deleteTransaction( jobQueueName, execution.getTransactionId(), null );
+            getQm().deleteTransaction( jobQueueName, execution.getTransactionId(), null );
 
             // update the data for the next run
 
-            em.update( data );
-            em.update( stat );
+            getEm().update( data );
+            getEm().update( stat );
         }
         catch ( Exception e ) {
             // should never happen
@@ -377,7 +363,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
      */
     @Override
     public JobStat getStatsForJob( String jobName, UUID jobId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
 
 
         Query query = new Query();
@@ -394,18 +380,10 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
     }
 
 
-    @PostConstruct
-    public void init() {
-        qm = qmf.getQueueManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-        em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-    }
-
-
     /** @param qmf the qmf to set */
     @Autowired
     public void setQmf( QueueManagerFactory qmf ) {
         this.qmf = qmf;
-        this.qm = qmf.getQueueManager( CassandraService.MANAGEMENT_APPLICATION_ID );
     }
 
 
@@ -413,7 +391,6 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
     @Autowired
     public void setEmf( EntityManagerFactory emf ) {
         this.emf = emf;
-        this.em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
     }
 
 
@@ -426,5 +403,24 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
     /** @param timeout the timeout to set */
     public void setJobTimeout( long timeout ) {
         this.jobTimeout = timeout;
+    }
+
+    public QueueManager getQm() {
+        if ( qm == null ) {
+            this.qm = qmf.getQueueManager( emf.getManagementAppId());
+        }
+        return qm;
+    }
+
+    public EntityManager getEm() {
+        if ( em == null  ) {
+            this.em = emf.getEntityManager( emf.getManagementAppId());
+        }
+        return em;
+    }
+
+    @Override
+    public void refreshIndex() {
+        getEm().refreshIndex();
     }
 }

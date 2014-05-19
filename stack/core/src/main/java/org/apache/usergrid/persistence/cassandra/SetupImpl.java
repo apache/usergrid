@@ -30,10 +30,8 @@ import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefin
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_ORGANIZATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PRINCIPAL_TOKEN_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.STATIC_APPLICATION_KEYSPACE;
@@ -90,11 +88,11 @@ public class SetupImpl implements Setup {
 
     public void createDefaultApplications() throws Exception {
         // TODO unique check?
-        ( ( EntityManagerFactoryImpl ) emf )
-                .initializeApplication( DEFAULT_ORGANIZATION, DEFAULT_APPLICATION_ID, DEFAULT_APPLICATION, null );
+        ( ( EntityManagerFactoryImpl ) emf ).initializeApplication( 
+                DEFAULT_ORGANIZATION, emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
 
-        ( ( EntityManagerFactoryImpl ) emf )
-                .initializeApplication( DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION_ID, MANAGEMENT_APPLICATION, null );
+        ( ( EntityManagerFactoryImpl ) emf ).initializeApplication( 
+                DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
     }
 
 
@@ -195,9 +193,12 @@ public class SetupImpl implements Setup {
 
 
     static class SystemDefaults {
-        private static final Application managementApp = new Application( MANAGEMENT_APPLICATION_ID );
-        private static final Application defaultApp = new Application( DEFAULT_APPLICATION_ID );
 
+        private static final Application managementApp = 
+                new Application( EntityManagerFactoryImpl.MANAGEMENT_APPLICATION_ID);
+
+        private static final Application defaultApp = 
+                new Application( EntityManagerFactoryImpl.DEFAULT_APPLICATION_ID);
 
         static {
             managementApp.setName( MANAGEMENT_APPLICATION );

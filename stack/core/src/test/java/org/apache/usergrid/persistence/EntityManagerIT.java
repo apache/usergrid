@@ -42,7 +42,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 @Concurrent()
@@ -74,8 +73,8 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         user = em.get( user );
         assertNotNull( user );
-        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username" ) );
-        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
+        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
+        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ));
 
         EntityRef userRef = em.getAlias( applicationId, "user", "edanuff" );
         assertNotNull( userRef );
@@ -91,8 +90,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( 1, results.size() );
         user = results.getEntity();
         assertNotNull( user );
-        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username" ) );
-        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
+        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
+        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email"));
 
         LOG.info( "user.username: " + user.getProperty( "username" ) );
         LOG.info( "user.email: " + user.getProperty( "email" ) );
@@ -103,8 +102,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( 1, results.size() );
         user = results.getEntity();
         assertNotNull( user );
-        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username" ) );
-        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
+        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
+        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email"));
 
         LOG.info( "user.username: " + user.getProperty( "username" ) );
         LOG.info( "user.email: " + user.getProperty( "email" ) );
@@ -284,6 +283,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         em.delete( thing );
         LOG.info( "Entity deleted" );
 
+        em.refreshIndex();
+
         // now search by username, no results should be returned
 
         Results r =
@@ -311,9 +312,13 @@ public class EntityManagerIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         LOG.info( "Entity created" );
 
+        em.refreshIndex();
+
         LOG.info( "Starting entity delete" );
         em.delete( user );
         LOG.info( "Entity deleted" );
+
+        em.refreshIndex();
 
         // now search by username, no results should be returned
 
@@ -331,6 +336,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "Starting entity create" );
         user = em.create( "user", properties );
         LOG.info( "Entity created" );
+
+        em.refreshIndex();
 
         r = em.searchCollection( em.getApplicationRef(), "users", new Query().addEqualityFilter( "username", name ) );
 
@@ -379,7 +386,7 @@ public class EntityManagerIT extends AbstractCoreIT {
     @Ignore("There is a concurrency issue due to counters not being thread safe: see USERGRID-1753")
     public void testEntityCounters() throws Exception {
         LOG.info( "EntityManagerIT#testEntityCounters" );
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         Group organizationEntity = new Group();
         organizationEntity.setPath( "testCounterOrg" );
@@ -401,8 +408,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "email", "ed@anuff.com" );
         Entity user = em.create( "user", properties );
 
-        em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
-        Map<String, Long> counts = em.getEntityCounters( MANAGEMENT_APPLICATION_ID );
+        em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
+        Map<String, Long> counts = em.getEntityCounters( setup.getEmf().getManagementAppId() );
         LOG.info( "Entity counters: {}", counts );
         assertNotNull( counts );
         assertEquals( 4, counts.size() );

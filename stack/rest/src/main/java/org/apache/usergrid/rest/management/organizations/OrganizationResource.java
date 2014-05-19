@@ -346,7 +346,7 @@ public class OrganizationResource extends AbstractContextResource {
 
         Export entity;
         try {
-            entity = smf.getServiceManager( CassandraService.MANAGEMENT_APPLICATION_ID ).getEntityManager()
+            entity = smf.getServiceManager( emf.getManagementAppId() ).getEntityManager()
                         .get( exportEntityUUIDStr, Export.class );
         }
         catch ( Exception e ) { //this might not be a bad request and needs better error checking

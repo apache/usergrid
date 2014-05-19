@@ -19,7 +19,7 @@
 package org.apache.usergrid.persistence.core.astyanax;
 
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.google.common.base.Preconditions;
 
@@ -30,7 +30,7 @@ import com.google.common.base.Preconditions;
  *
  * @author tnine
  */
-public class ScopedRowKey<S extends OrganizationScope, K> {
+public class ScopedRowKey<S extends ApplicationScope, K> {
 
     private final S scope;
 
@@ -104,7 +104,7 @@ public class ScopedRowKey<S extends OrganizationScope, K> {
     /**
      * Utility function to generate a new key from the scope
      */
-    public static <S extends OrganizationScope, K> ScopedRowKey<S, K> fromKey( final S scope, K key ) {
+    public static <S extends ApplicationScope, K> ScopedRowKey<S, K> fromKey( final S scope, K key ) {
         return new ScopedRowKey<S, K>( scope, key );
     }
 }

@@ -109,4 +109,8 @@ public interface EntityManagerFactory {
 
     public UUID initializeApplication( 
         String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
+            
+    public UUID getManagementAppId();
+
+    public UUID getDefaultAppId();
 }

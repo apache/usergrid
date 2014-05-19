@@ -19,7 +19,7 @@
 package org.apache.usergrid.persistence.graph.serialization.impl;
 
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
@@ -44,7 +44,7 @@ public interface MergedEdgeReader {
      * @param edgeType
      * @return
      */
-    public Observable<MarkedEdge> getEdgesFromSource( final OrganizationScope scope, final SearchByEdgeType edgeType );
+    public Observable<MarkedEdge> getEdgesFromSource( final ApplicationScope scope, final SearchByEdgeType edgeType );
 
 
     /**
@@ -54,7 +54,7 @@ public interface MergedEdgeReader {
      * @param edgeType
      * @return
      */
-    public Observable<MarkedEdge> getEdgesFromSourceByTargetType( final OrganizationScope scope,
+    public Observable<MarkedEdge> getEdgesFromSourceByTargetType( final ApplicationScope scope,
                                                                   final SearchByIdType edgeType );
 
 
@@ -67,7 +67,7 @@ public interface MergedEdgeReader {
      * @param edgeType
      * @return
      */
-    public Observable<MarkedEdge> getEdgesToTarget( final OrganizationScope scope, final SearchByEdgeType edgeType );
+    public Observable<MarkedEdge> getEdgesToTarget( final ApplicationScope scope, final SearchByEdgeType edgeType );
 
     /**
         * Get edges from the source by target time for both the commit log and permanent storage.  Merge them into a single
@@ -76,7 +76,7 @@ public interface MergedEdgeReader {
         * @param edgeType
         * @return
         */
-    public Observable<MarkedEdge> getEdgesToTargetBySourceType( final OrganizationScope scope,
+    public Observable<MarkedEdge> getEdgesToTargetBySourceType( final ApplicationScope scope,
                                                                 final SearchByIdType edgeType );
 
     /**
@@ -85,6 +85,6 @@ public interface MergedEdgeReader {
      * @param search
      * @return
      */
-    public Observable<MarkedEdge> getEdgeVersions( OrganizationScope scope, SearchByEdge search );
+    public Observable<MarkedEdge> getEdgeVersions( ApplicationScope scope, SearchByEdge search );
 
 }

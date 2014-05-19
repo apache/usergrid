@@ -104,15 +104,8 @@ public class Results implements Iterable<Entity> {
             entities = new ArrayList<Entity>();
 
             EntityCollectionManager ecm = null;
-            CollectionScope lastScope = null;
 
             for ( CandidateResult candidate : candidates ) {
-
-                if ( !candidate.getCollectionScope().equals(lastScope)) {
-                    // new scope means we need new manager
-                    ecm = ecmf.createCollectionManager( candidate.getCollectionScope() );
-                    lastScope = candidate.getCollectionScope();
-                }
 
                 Entity entity = ecm.load( candidate.getEntityId() ).toBlockingObservable().last();
                 if ( !takeAllVersions && candidate.getEntityVersion().compareTo(entity.getVersion()) == -1) {

@@ -60,3 +60,4 @@ usergrid-UNIT.properties
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/QueryFilterLexer.java
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/CpQueryFilterLexer.java
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/CpQueryFilterParser.java
+/stack/corepersistence/queryindex/src/main/java/CpQueryFilter.tokens

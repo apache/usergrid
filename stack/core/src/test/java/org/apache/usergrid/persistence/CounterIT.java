@@ -38,7 +38,6 @@ import org.apache.usergrid.count.SimpleBatcher;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 @Concurrent()
@@ -178,7 +177,7 @@ public class CounterIT extends AbstractCoreIT {
 
     @Test
     public void testCommunityCounters() throws Exception {
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         Group organizationEntity = new Group();
         organizationEntity.setPath( "tst-counter" );

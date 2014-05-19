@@ -52,7 +52,6 @@ import org.apache.commons.io.filefilter.PrefixFileFilter;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import org.apache.usergrid.persistence.SimpleEntityRef;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 public class Import extends ToolBase {
@@ -190,7 +189,7 @@ public class Import extends ToolBase {
                 ( Map<String, Object> ) application.getMetadata( "dictionaries" );
 
         if ( dictionaries != null ) {
-            EntityManager rootEm = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+            EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
             Entity appEntity = rootEm.get( new SimpleEntityRef( "application", appId ));
 

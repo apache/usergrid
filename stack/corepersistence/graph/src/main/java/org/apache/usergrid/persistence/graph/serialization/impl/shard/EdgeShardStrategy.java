@@ -23,7 +23,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -32,13 +32,13 @@ public interface EdgeShardStrategy {
     /**
      * Get the shard key used for writing this shard.  CUD operations should use this
      */
-    public long getWriteShard(final OrganizationScope scope, final Id rowKeyId, final  UUID version, final String... types );
+    public long getWriteShard(final ApplicationScope scope, final Id rowKeyId, final  UUID version, final String... types );
 
 
     /**
      * Get the iterator of all shards for this entity
      */
-    public Iterator<Long> getReadShards(final OrganizationScope scope,final  Id rowKeyId, final UUID maxVersion,final  String... types );
+    public Iterator<Long> getReadShards(final ApplicationScope scope,final  Id rowKeyId, final UUID maxVersion,final  String... types );
 
     /**
      * Increment our count meta data by the passed value.  Can be a positive or a negative number.
@@ -50,7 +50,7 @@ public interface EdgeShardStrategy {
      * @param types
      * @return
      */
-    public void increment(final OrganizationScope scope,final  Id rowKeyId, long shardId, long count ,final  String... types );
+    public void increment(final ApplicationScope scope,final  Id rowKeyId, long shardId, long count ,final  String... types );
 
 
     /**

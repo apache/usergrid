@@ -25,12 +25,10 @@ import org.apache.usergrid.persistence.model.entity.Id;
 public class CandidateResult {
     private final Id entityId;
     private final UUID entityVersion;
-    private final CollectionScope scope;
 
-    public CandidateResult( Id entityId, UUID entityVersion, CollectionScope scope ) {
+    public CandidateResult( Id entityId, UUID entityVersion ) {
         this.entityId = entityId;
         this.entityVersion = entityVersion;
-        this.scope = scope;
     }
 
     public Id getEntityId() {
@@ -41,8 +39,5 @@ public class CandidateResult {
         return entityVersion;
     }
 
-    public CollectionScope getCollectionScope() {
-        return scope;
-    }
     
 }

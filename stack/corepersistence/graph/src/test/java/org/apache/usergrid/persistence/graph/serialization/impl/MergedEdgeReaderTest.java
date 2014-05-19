@@ -25,12 +25,11 @@ import java.util.Iterator;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -53,20 +52,20 @@ import static org.mockito.Mockito.when;
  */
 public class MergedEdgeReaderTest {
 
-    protected OrganizationScope scope;
+    protected ApplicationScope scope;
     protected GraphFig config;
 
 
     @Before
     public void setup() {
-        scope = mock( OrganizationScope.class );
+        scope = mock( ApplicationScope.class );
 
         Id orgId = mock( Id.class );
 
         when( orgId.getType() ).thenReturn( "organization" );
         when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
 
-        when( scope.getOrganization() ).thenReturn( orgId );
+        when( scope.getApplication() ).thenReturn( orgId );
 
 
         config = mock( GraphFig.class );

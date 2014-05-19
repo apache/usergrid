@@ -21,6 +21,8 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +85,7 @@ import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 
 
 /**
@@ -253,7 +256,7 @@ public class CpEntityManager implements EntityManager {
      */
     public <A extends Entity> A getEntity( UUID entityId, Class<A> entityClass ) throws Exception {
 
-        String type = entityClass.getSimpleName().toLowerCase(); 
+        String type = getDefaultSchema().getEntityType( entityClass );
 
         Id id = new SimpleId( entityId, type );
         String collectionName = Schema.defaultCollectionName( type );
@@ -510,26 +513,61 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public EntityRef getAlias(String aliasType, String alias) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return getAlias( applicationId, aliasType, alias );
     }
 
     @Override
     public EntityRef getAlias(
-            UUID ownerId, String collectionName, String aliasValue) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+            UUID ownerId, String collectionType, String aliasValue) throws Exception {
+
+        Assert.notNull( ownerId, "ownerId is required" );
+        Assert.notNull( collectionType, "collectionType is required" );
+        Assert.notNull( aliasValue, "aliasValue is required" );
+
+        Map<String, EntityRef> results = getAlias( 
+             ownerId, collectionType, Collections.singletonList( aliasValue ) );
+
+        if ( results == null || results.size() == 0 ) {
+            return null;
+        }
+
+        // add a warn statement so we can see if we have data migration issues.
+        // TODO When we get an event system, trigger a repair if this is detected
+        if ( results.size() > 1 ) {
+            logger.warn("More than 1 entity with Owner id '{}' of type '{}' and alias '{}' exists. "
+                    + " This is a duplicate alias, and needs audited", 
+                    new Object[] { ownerId, collectionType, aliasValue } );
+        }
+
+        return results.get( aliasValue );
     }
 
     @Override
     public Map<String, EntityRef> getAlias(
             String aliasType, List<String> aliases) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getAlias( applicationId, aliasType, aliases );
     }
 
     @Override
     public Map<String, EntityRef> getAlias(
-            UUID ownerId, String collectionName, List<String> aliases) throws Exception {
-        
-        throw new UnsupportedOperationException("Not supported yet."); 
+            UUID ownerId, String collName, List<String> aliases) throws Exception {
+
+        Assert.notNull( ownerId, "ownerId is required" );
+        Assert.notNull( collName, "collectionName is required" );
+        Assert.notEmpty( aliases, "aliases are required" );
+
+        String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
+
+        Map<String, EntityRef> results = new HashMap<String, EntityRef>();
+
+//        for ( String alias : aliases ) {
+//            for ( UUID id : getUUIDsForUniqueProperty( ownerId, collName, propertyName, alias)) {
+//                results.put( alias, new SimpleEntityRef( collName, id ) );
+//            }
+//        }
+
+        return results;
     }
 
     @Override
@@ -1542,6 +1580,7 @@ public class CpEntityManager implements EntityManager {
 
         return cpEntity;
     }
+
 
 }
 

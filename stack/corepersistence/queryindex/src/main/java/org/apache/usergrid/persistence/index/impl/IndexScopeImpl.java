@@ -16,43 +16,43 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.usergrid.persistence.index.impl;
 
-package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
-/**
- * Provides indexing of Entities within a scope.
- */
-public interface EntityIndex {
+public class IndexScopeImpl implements IndexScope {
+    private final Id appId;
+    private final Id ownerId;
+    private final String type;
 
-    /** 
-     * Create index for Entity
-     * @param entity Entity to be indexed.
-     */
-    public void index(  Entity entity );
 
-    /**
-     * Remove index of entity.
-     * @param entity Entity to be removed from index. 
-     */
-    public void deindex( Entity entity );
+    public IndexScopeImpl( final Id appId, final Id ownerId, final String type ) {
+        this.appId = appId;
+        this.ownerId = ownerId;
+        this.type = type;
 
-    /**
-     * Execute query in Usergrid syntax.
-     */
+        IndexValidationUtils.validateIndexScope( this );
+    }
 
-    public CandidateResults search( Query query );
 
-    /**
-     * Force refresh of index (should be used for testing purposes only).
-     */
-    public void refresh();
+    @Override
+    public String getName() {
+        return  type;
+    }
 
-    public CandidateResults getEntityVersions(Id id);
 
+    @Override
+    public Id getOwner() {
+        return ownerId;
+    }
+
+
+    @Override
+    public Id getApplication() {
+        return appId;
+    }
 }

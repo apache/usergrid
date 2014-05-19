@@ -52,8 +52,8 @@ import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
+import static org.apache.usergrid.management.EmailFlowIT.setup;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -93,13 +93,13 @@ public class ManagementServiceIT {
     @Test
     public void testGetTokenForPrincipalAdmin() throws Exception {
         String token = ( ( ManagementServiceImpl ) setup.getMgmtSvc() )
-                .getTokenForPrincipal( TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+                .getTokenForPrincipal( TokenCategory.ACCESS, null, setup.getEmf().getManagementAppId(),
                         AuthPrincipalType.ADMIN_USER, adminUser.getUuid(), 0 );
         // ^ same as:
         // managementService.getAccessTokenForAdminUser(user.getUuid());
         assertNotNull( token );
         token = ( ( ManagementServiceImpl ) setup.getMgmtSvc() )
-                .getTokenForPrincipal( TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+                .getTokenForPrincipal( TokenCategory.ACCESS, null, setup.getEmf().getManagementAppId(),
                         AuthPrincipalType.APPLICATION_USER, adminUser.getUuid(), 0 );
         // This works because ManagementService#getSecret takes the same code
         // path
@@ -124,7 +124,7 @@ public class ManagementServiceIT {
 
         assertNotNull( user );
         String token = ( ( ManagementServiceImpl ) setup.getMgmtSvc() )
-                .getTokenForPrincipal( TokenCategory.ACCESS, null, MANAGEMENT_APPLICATION_ID,
+                .getTokenForPrincipal( TokenCategory.ACCESS, null, setup.getEmf().getManagementAppId(),
                         AuthPrincipalType.APPLICATION_USER, user.getUuid(), 0 );
         assertNotNull( token );
     }
@@ -139,7 +139,7 @@ public class ManagementServiceIT {
 
         setup.getMgmtSvc().countAdminUserAction( adminUser, "login" );
 
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         Map<String, Long> counts = em.getApplicationCounters();
         LOG.info( JsonUtils.mapToJsonString( counts ) );
@@ -227,7 +227,7 @@ public class ManagementServiceIT {
         properties.put( "username", "test" + uuid );
         properties.put( "email", String.format( "test%s@anuff.com", uuid ) );
 
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         Entity entity = em.create( "user", properties );
 
@@ -490,7 +490,7 @@ public class ManagementServiceIT {
         user.setActivated( true );
         user.setUsername( username );
 
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         User storedUser = em.create( user );
 
@@ -504,7 +504,7 @@ public class ManagementServiceIT {
 
 
         Sha1HashCommand command = new Sha1HashCommand();
-        byte[] hashed = command.hash( password.getBytes( "UTF-8" ), info, userId, MANAGEMENT_APPLICATION_ID );
+        byte[] hashed = command.hash( password.getBytes( "UTF-8" ), info, userId, setup.getEmf().getManagementAppId() );
 
         info.setSecret( encodeBase64URLSafeString( hashed ) );
         info.setCipher( command.getName() );
@@ -515,18 +515,18 @@ public class ManagementServiceIT {
 
         //verify authorization works
         User authedUser =
-                setup.getMgmtSvc().verifyAppUserPasswordCredentials( MANAGEMENT_APPLICATION_ID, username, password );
+                setup.getMgmtSvc().verifyAppUserPasswordCredentials( setup.getEmf().getManagementAppId(), username, password );
 
         assertEquals( userId, authedUser.getUuid() );
 
         //test we can change the password
         String newPassword = "test2";
 
-        setup.getMgmtSvc().setAppUserPassword( MANAGEMENT_APPLICATION_ID, userId, password, newPassword );
+        setup.getMgmtSvc().setAppUserPassword( setup.getEmf().getManagementAppId(), userId, password, newPassword );
 
         //verify authorization works
         authedUser =
-                setup.getMgmtSvc().verifyAppUserPasswordCredentials( MANAGEMENT_APPLICATION_ID, username, newPassword );
+                setup.getMgmtSvc().verifyAppUserPasswordCredentials( setup.getEmf().getManagementAppId(), username, newPassword );
 
         assertEquals( userId, authedUser.getUuid() );
     }
@@ -545,7 +545,7 @@ public class ManagementServiceIT {
         user.setActivated( true );
         user.setUsername( username );
 
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         User storedUser = em.create( user );
 
@@ -564,8 +564,8 @@ public class ManagementServiceIT {
 
         Sha1HashCommand sha1 = new Sha1HashCommand();
 
-        byte[] hashed = md5.hash( password.getBytes( "UTF-8" ), info, userId, MANAGEMENT_APPLICATION_ID );
-        hashed = sha1.hash( hashed, info, userId, MANAGEMENT_APPLICATION_ID );
+        byte[] hashed = md5.hash( password.getBytes( "UTF-8" ), info, userId, setup.getEmf().getManagementAppId() );
+        hashed = sha1.hash( hashed, info, userId, setup.getEmf().getManagementAppId() );
 
         info.setSecret( encodeBase64URLSafeString( hashed ) );
         //set the final cipher to sha1
@@ -579,18 +579,18 @@ public class ManagementServiceIT {
 
         //verify authorization works
         User authedUser =
-                setup.getMgmtSvc().verifyAppUserPasswordCredentials( MANAGEMENT_APPLICATION_ID, username, password );
+                setup.getMgmtSvc().verifyAppUserPasswordCredentials( setup.getEmf().getManagementAppId(), username, password );
 
         assertEquals( userId, authedUser.getUuid() );
 
         //test we can change the password
         String newPassword = "test2";
 
-        setup.getMgmtSvc().setAppUserPassword( MANAGEMENT_APPLICATION_ID, userId, password, newPassword );
+        setup.getMgmtSvc().setAppUserPassword( setup.getEmf().getManagementAppId(), userId, password, newPassword );
 
         //verify authorization works
         authedUser =
-                setup.getMgmtSvc().verifyAppUserPasswordCredentials( MANAGEMENT_APPLICATION_ID, username, newPassword );
+                setup.getMgmtSvc().verifyAppUserPasswordCredentials( setup.getEmf().getManagementAppId(), username, newPassword );
 
         assertEquals( userId, authedUser.getUuid() );
     }

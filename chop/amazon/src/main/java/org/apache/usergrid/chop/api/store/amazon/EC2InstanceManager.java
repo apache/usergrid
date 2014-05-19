@@ -22,6 +22,7 @@ package org.apache.usergrid.chop.api.store.amazon;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -106,21 +107,27 @@ public class EC2InstanceManager implements InstanceManager {
     @Override
     public LaunchResult launchCluster( ICoordinatedStack stack, ICoordinatedCluster cluster, int timeout ) {
 
-        RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
+        RunInstancesResult runInstancesResult = null;
+        try {
+            RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
 
-        runInstancesRequest.withImageId( cluster.getInstanceSpec().getImageId() )
-                           .withInstanceType( cluster.getInstanceSpec().getType() )
-                           .withMinCount( cluster.getSize() )
-                           .withMaxCount( cluster.getSize() )
-                           .withKeyName( cluster.getInstanceSpec().getKeyName() )
-                           .withSecurityGroups( stack.getIpRuleSet().getName() );
+            runInstancesRequest.withImageId( cluster.getInstanceSpec().getImageId() )
+                               .withInstanceType( cluster.getInstanceSpec().getType() )
+                               .withMinCount( cluster.getSize() ).withMaxCount( cluster.getSize() )
+                               .withKeyName( cluster.getInstanceSpec().getKeyName() )
+                               .withSecurityGroups( stack.getIpRuleSet().getName() );
 
-        if( stack.getDataCenter() != null && ! stack.getDataCenter().isEmpty() ) {
-            runInstancesRequest = runInstancesRequest.withPlacement( new Placement( stack.getDataCenter() ) );
-            client.setEndpoint( AmazonUtils.getEndpoint( stack.getDataCenter() ) );
+            if ( stack.getDataCenter() != null && !stack.getDataCenter().isEmpty() ) {
+                runInstancesRequest = runInstancesRequest.withPlacement( new Placement( stack.getDataCenter() ) );
+                client.setEndpoint( AmazonUtils.getEndpoint( stack.getDataCenter() ) );
+            }
+
+            runInstancesResult = client.runInstances( runInstancesRequest );
         }
-
-        RunInstancesResult runInstancesResult = client.runInstances( runInstancesRequest) ;
+        catch ( Exception e ) {
+            LOG.error( "Error while launching cluster instances.", e );
+            return new EC2LaunchResult( cluster.getInstanceSpec(), Collections.EMPTY_LIST );
+        }
 
         LOG.info( "Created instances, setting the names now..." );
 
@@ -185,21 +192,26 @@ public class EC2InstanceManager implements InstanceManager {
      */
     @Override
     public LaunchResult launchRunners( ICoordinatedStack stack, InstanceSpec spec, int timeout ) {
-        RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
 
-        runInstancesRequest.withImageId( spec.getImageId() )
-                           .withInstanceType( spec.getType() )
-                           .withMinCount( stack.getRunnerCount() )
-                           .withMaxCount( stack.getRunnerCount() )
-                           .withKeyName( spec.getKeyName() )
-                           .withSecurityGroups( stack.getIpRuleSet().getName() );
+        RunInstancesResult runInstancesResult = null;
+        try {
+            RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
 
-        if( stack.getDataCenter() != null && ! stack.getDataCenter().isEmpty() ) {
-            runInstancesRequest = runInstancesRequest.withPlacement( new Placement( stack.getDataCenter() ) );
-            client.setEndpoint( AmazonUtils.getEndpoint( stack.getDataCenter() ) );
+            runInstancesRequest.withImageId( spec.getImageId() ).withInstanceType( spec.getType() )
+                               .withMinCount( stack.getRunnerCount() ).withMaxCount( stack.getRunnerCount() )
+                               .withKeyName( spec.getKeyName() ).withSecurityGroups( stack.getIpRuleSet().getName() );
+
+            if ( stack.getDataCenter() != null && !stack.getDataCenter().isEmpty() ) {
+                runInstancesRequest = runInstancesRequest.withPlacement( new Placement( stack.getDataCenter() ) );
+                client.setEndpoint( AmazonUtils.getEndpoint( stack.getDataCenter() ) );
+            }
+
+            runInstancesResult = client.runInstances( runInstancesRequest );
         }
-
-        RunInstancesResult runInstancesResult = client.runInstances( runInstancesRequest) ;
+        catch ( Exception e ) {
+            LOG.error( "Error while launching runner instances.", e );
+            return new EC2LaunchResult( spec, Collections.EMPTY_LIST );
+        }
 
         LOG.info( "Created instances, setting the names now..." );
 
@@ -318,7 +330,14 @@ public class EC2InstanceManager implements InstanceManager {
 
         }
 
-        DescribeInstancesResult result = client.describeInstances( request );
+        DescribeInstancesResult result = null;
+        try {
+            result = client.describeInstances( request );
+        }
+        catch ( Exception e ) {
+            LOG.error( "Error while getting instance information from AWS.", e );
+            return Collections.EMPTY_LIST;
+        }
 
         for ( Reservation reservation : result.getReservations() ) {
             for ( com.amazonaws.services.ec2.model.Instance in : reservation.getInstances() ) {
@@ -347,7 +366,14 @@ public class EC2InstanceManager implements InstanceManager {
         DescribeInstancesRequest request = new DescribeInstancesRequest();
         request = request.withInstanceIds( instanceIds );
 
-        DescribeInstancesResult result = client.describeInstances( request );
+        DescribeInstancesResult result = null;
+        try {
+            result = client.describeInstances( request );
+        }
+        catch ( Exception e ) {
+            LOG.error( "Error while getting instance information from AWS.", e );
+            return Collections.EMPTY_LIST;
+        }
 
         for ( Reservation reservation : result.getReservations() ) {
             for ( com.amazonaws.services.ec2.model.Instance in : reservation.getInstances() ) {

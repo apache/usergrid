@@ -239,6 +239,10 @@
           <artifactId>snappy-java</artifactId>
           <groupId>org.xerial.snappy</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>antlr</artifactId>
+          <groupId>org.antlr</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
 
@@ -409,11 +413,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.antlr</groupId>
-      <artifactId>antlr-runtime</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
     </dependency>
@@ -495,6 +494,16 @@
 	    <artifactId>collection</artifactId>
 	    <version>2.0.0-SNAPSHOT</version>
 	    <type>jar</type>
+      <exclusions>
+        <exclusion>
+          <artifactId>antlr</artifactId>
+          <groupId>org.antlr</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>antlr</artifactId>
+          <groupId>antlr</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>

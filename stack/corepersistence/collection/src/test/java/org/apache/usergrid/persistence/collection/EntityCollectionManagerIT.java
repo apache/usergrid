@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.collection;
 
 import org.jukito.UseModules;
 import org.junit.Assert;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,7 +28,6 @@ import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeExc
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -243,7 +241,7 @@ public class EntityCollectionManagerIT {
 
 
         //now make sure we can't load it from another scope, using the same org
-        CollectionScope collectionScope2 = new CollectionScopeImpl(collectionScope1.getOrganization(),  new SimpleId("test2"), collectionScope1.getName());
+        CollectionScope collectionScope2 = new CollectionScopeImpl(collectionScope1.getApplication(),  new SimpleId("test2"), collectionScope1.getName());
 
         EntityCollectionManager manager2 = factory.createCollectionManager( collectionScope2 );
 

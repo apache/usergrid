@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.graph.impl;
 import java.io.Serializable;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
 /**
@@ -31,20 +31,20 @@ import org.apache.usergrid.persistence.core.scope.OrganizationScope;
  */
 public class EdgeEvent<T> implements Serializable {
 
-    private final OrganizationScope organizationScope;
+    private final ApplicationScope applicationScope;
     private final T data;
     private final UUID version;
 
 
-    public EdgeEvent( final OrganizationScope organizationScope, final UUID version, final T data ) {
-        this.organizationScope = organizationScope;
+    public EdgeEvent( final ApplicationScope applicationScope, final UUID version, final T data ) {
+        this.applicationScope = applicationScope;
         this.data = data;
         this.version = version;
     }
 
 
-    public OrganizationScope getOrganizationScope() {
-        return organizationScope;
+    public ApplicationScope getApplicationScope() {
+        return applicationScope;
     }
 
 
