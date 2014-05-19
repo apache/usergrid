@@ -53,9 +53,6 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.jukito.UseModules;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -63,6 +60,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 
 @RunWith(ITRunner.class)
@@ -348,7 +347,7 @@ public class EntityIndexTest extends BaseIT {
         query.addEqualityFilter( "username", "edanuff" );
         CandidateResults r = ei.search(  query );
 
-        assertTrue(r.size() == 0);
+        assertFalse(r.iterator().hasNext());
     }
 }
 
