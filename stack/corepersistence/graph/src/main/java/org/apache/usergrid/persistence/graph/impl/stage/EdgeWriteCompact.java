@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.graph.impl.stage;
 
 
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -35,10 +37,13 @@ public interface EdgeWriteCompact {
 
     /**
      * Remove this edge from the commit log and move it into permanent storage
+     *
      * @param scope The scope to use
      * @param edge The last edge to move.
+     * @param timestamp The timestamp of this operation
+     *
      *
      * @return An observable that emits the edge we've moved
      */
-    public Observable<MarkedEdge> compact( OrganizationScope scope, Edge edge );
+    public Observable<Integer> compact( OrganizationScope scope, MarkedEdge edge, UUID timestamp );
 }

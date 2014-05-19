@@ -88,10 +88,6 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.yammer.metrics.annotation.Metered;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.CounterRow;
@@ -116,6 +112,7 @@ import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.locking.LockHelper.getUniqueUpdateLock;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import static org.apache.usergrid.persistence.Results.Level.REFS;
 import static org.apache.usergrid.persistence.Results.fromEntities;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
@@ -171,6 +168,7 @@ import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -203,18 +201,20 @@ public class EntityManagerImpl implements EntityManager {
 
     private boolean skipAggregateCounters;
 
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-    public static final LongSerializer le = new LongSerializer();
-
-
     public EntityManagerImpl() {
     }
 
 
-    public EntityManagerImpl init( EntityManagerFactoryImpl emf, CassandraService cass, CounterUtils counterUtils,
-                                   UUID applicationId, boolean skipAggregateCounters ) {
+    @Override
+    public void init(EntityManagerFactory emf, UUID applicationId) {
+        init( (EntityManagerFactoryImpl)emf, null, null, applicationId, false);
+    }
+
+
+    public EntityManager init( 
+            EntityManagerFactoryImpl emf, CassandraService cass, CounterUtils counterUtils,
+            UUID applicationId, boolean skipAggregateCounters ) {
+
         this.emf = emf;
         this.cass = cass;
         this.counterUtils = counterUtils;
@@ -267,7 +267,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public void updateApplication( Map<String, Object> properties ) throws Exception {
-        this.updateProperties( applicationId, properties );
+        this.updateProperties( applicationId, "application", properties );
         this.application = get( applicationId, Application.class );
     }
 
@@ -752,13 +752,16 @@ public class EntityManagerImpl implements EntityManager {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
-        UUID itemId = UUIDUtils.newTimeUUID();
+        UUID itemId = null;
 
         if ( is_application ) {
             itemId = applicationId;
         }
         if ( importId != null ) {
             itemId = importId;
+        }
+        if (itemId == null) {
+            itemId = UUIDUtils.newTimeUUID();
         }
         boolean emptyPropertyMap = false;
         if ( properties == null ) {
@@ -913,7 +916,7 @@ public class EntityManagerImpl implements EntityManager {
 
     private void incrementEntityCollection( String collection_name, long cassandraTimestamp ) {
         try {
-            incrementAggregateCounters( null, null, null, new String( APPLICATION_COLLECTION + collection_name ),
+            incrementAggregateCounters( null, null, null, APPLICATION_COLLECTION + collection_name,
                     ONE_COUNT, cassandraTimestamp );
         }
         catch ( Exception e ) {
@@ -953,7 +956,10 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Metered( group = "core", name = "EntityManager_insertEntity" )
-    public void insertEntity( String type, UUID entityId ) throws Exception {
+    public void insertEntity( EntityRef entityRef ) throws Exception {
+
+        String type = entityRef.getType();
+        UUID entityId = entityRef.getUuid();
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -1028,9 +1034,7 @@ public class EntityManagerImpl implements EntityManager {
             column_names.add( PROPERTY_TYPE );
             column_names.add( PROPERTY_UUID );
 
-            for ( String propertyName : propertyNames ) {
-                column_names.add( propertyName );
-            }
+            Collections.addAll(column_names, propertyNames);
 
             results = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, key( entityId ),
                     column_names, se, be );
@@ -1068,8 +1072,8 @@ public class EntityManagerImpl implements EntityManager {
         Map<String, Object> results = null;
 
         // if (entityType == null) {
-        results = deserializeEntityProperties(
-                cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, entity_key ) );
+        results = deserializeEntityProperties( cass.getAllColumns( 
+                cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, entity_key ) );
         // } else {
         // Set<String> columnNames = Schema.getPropertyNames(entityType);
         // results = getColumns(getApplicationKeyspace(applicationId),
@@ -1077,7 +1081,8 @@ public class EntityManagerImpl implements EntityManager {
         // }
 
         if ( results == null ) {
-            logger.warn( "getEntity(): No properties found for entity {}, probably doesn't exist...", entityId );
+            logger.warn( "getEntity(): No properties found for entity {}, "
+                    + "probably doesn't exist...", entityId );
             return null;
         }
 
@@ -1086,7 +1091,8 @@ public class EntityManagerImpl implements EntityManager {
 
         if ( !entityId.equals( id ) ) {
 
-            logger.error( "Expected entity id {}, found {}. Returning null entity", new Object[]{entityId, id, new Throwable()} );
+            logger.error( "Expected entity id {}, found {}. Returning null entity", 
+                    new Object[]{entityId, id, new Throwable()} );
             return null;
         }
 
@@ -1108,7 +1114,8 @@ public class EntityManagerImpl implements EntityManager {
      * @throws Exception the exception
      */
     @Metered( group = "core", name = "EntityManager_getEntities" )
-    public <A extends Entity> List<A> getEntities( Collection<UUID> entityIds, Class<A> entityClass ) throws Exception {
+    public <A extends Entity> List<A> getEntities( 
+            Collection<UUID> entityIds, Class<A> entityClass ) throws Exception {
 
         List<A> entities = new ArrayList<A>();
 
@@ -1121,8 +1128,8 @@ public class EntityManagerImpl implements EntityManager {
         Rows<UUID, String, ByteBuffer> results = null;
 
         // if (entityType == null) {
-        results =
-                cass.getRows( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, entityIds, ue, se, be );
+        results = cass.getRows( cass.getApplicationKeyspace( applicationId ), 
+                ENTITY_PROPERTIES, entityIds, ue, se, be );
         // } else {
         // Set<String> columnNames = Schema.getPropertyNames(entityType);
         // results = getRows(getApplicationKeyspace(applicationId),
@@ -1135,7 +1142,8 @@ public class EntityManagerImpl implements EntityManager {
                 Map<String, Object> properties = deserializeEntityProperties( results.getByKey( key ) );
 
                 if ( properties == null ) {
-                    logger.error( "Error deserializing entity with key {} entity probaby doesn't exist, where did this key come from?", key );
+                    logger.error( "Error deserializing entity with key {} entity probaby "
+                            + "doesn't exist, where did this key come from?", key );
                     continue;
                 }
 
@@ -1378,12 +1386,10 @@ public class EntityManagerImpl implements EntityManager {
      * @throws Exception the exception
      */
     @Metered( group = "core", name = "EntityManager_updateProperties" )
-    public void updateProperties( UUID entityId, Map<String, Object> properties ) throws Exception {
+    public void updateProperties( 
+            UUID entityId, String type, Map<String, Object> properties ) throws Exception {
 
-        EntityRef entity = getRef( entityId );
-        if ( entity == null ) {
-            return;
-        }
+        EntityRef entity = new SimpleEntityRef( type, entityId );
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -1398,14 +1404,11 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Metered( group = "core", name = "EntityManager_deleteEntity" )
-    public void deleteEntity( UUID entityId ) throws Exception {
+    public void deleteEntity( UUID entityId, String type ) throws Exception {
 
         logger.info( "deleteEntity {} of application {}", entityId, applicationId );
 
-        EntityRef entity = getRef( entityId );
-        if ( entity == null ) {
-            return;
-        }
+        EntityRef entity = new SimpleEntityRef( type, entityId );
 
         logger.info( "deleteEntity: {} is of type {}", entityId, entity.getType() );
 
@@ -1472,7 +1475,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
-        deleteEntity( entityRef.getUuid() );
+        deleteEntity( entityRef.getUuid(), entityRef.getType() );
     }
 
 
@@ -1758,7 +1761,7 @@ public class EntityManagerImpl implements EntityManager {
             UUID entityId = entityRef.getUuid();
             String entityType = entityRef.getType();
             try {
-                entityRef = getRef( entityRef.getUuid() );
+                get( entityRef ).getType(); 
             }
             catch ( Exception e ) {
                 logger.error( "Unable to load entity: {}", new Object[] {entityRef.getUuid(), e} );
@@ -1776,34 +1779,11 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    @Override
-    public String getType( UUID entityid ) throws Exception {
-        return getEntityType( entityid );
-    }
-
-
     public String getType( EntityRef entity ) throws Exception {
         if ( entity.getType() != null ) {
             return entity.getType();
         }
         return getEntityType( entity.getUuid() );
-    }
-
-
-    @Override
-    public Entity get( UUID entityid ) throws Exception {
-        return getEntity( entityid, null );
-    }
-
-
-    @Override
-    public EntityRef getRef( UUID entityId ) throws Exception {
-        String entityType = getEntityType( entityId );
-        if ( entityType == null ) {
-            logger.warn( "Unable to get type for entity: {} ", new Object[] { entityId, new Exception()} );
-            return null;
-        }
-        return ref( entityType, entityId );
     }
 
 
@@ -1833,31 +1813,16 @@ public class EntityManagerImpl implements EntityManager {
             e = ( A ) getEntity( entityId, ( Class<Entity> ) entityClass );
         }
         catch ( ClassCastException e1 ) {
-            logger.error( "Unable to get typed entity: {} of class {}", new Object[] {entityId, entityClass.getCanonicalName(), e1} );
+            logger.error( "Unable to get typed entity: {} of class {}", 
+                    new Object[] {entityId, entityClass.getCanonicalName(), e1} );
         }
         return e;
     }
 
 
     @Override
-    public Results get( Collection<UUID> entityIds, Results.Level resultsLevel ) throws Exception {
-        List<? extends Entity> results = getEntities( entityIds, null );
-        return Results.fromEntities( results );
-    }
-
-
-    /* (non-Javadoc)
-   * @see org.apache.usergrid.persistence.EntityManager#get(java.util.Collection)
-   */
-    @Override
-    public Results get( Collection<UUID> entityIds ) throws Exception {
-        return fromEntities( getEntities( entityIds, null ) );
-    }
-
-
-    @Override
-    public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, Results.Level resultsLevel )
-            throws Exception {
+    public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, 
+            Results.Level resultsLevel ) throws Exception {
         return fromEntities( getEntities( entityIds, entityClass ) );
     }
 
@@ -1874,15 +1839,15 @@ public class EntityManagerImpl implements EntityManager {
     }
 
 
-    public Results loadEntities( Results results, Results.Level resultsLevel, Map<UUID, UUID> associatedMap, int count )
-            throws Exception {
+    public Results loadEntities( Results results, Results.Level resultsLevel, 
+            Map<UUID, UUID> associatedMap, int count ) throws Exception {
 
         results = results.trim( count );
         if ( resultsLevel.ordinal() <= results.getLevel().ordinal() ) {
             return results;
         }
 
-        results.setEntities( getEntities( results.getIds(), null ) );
+        results.setEntities( getEntities( results.getIds(), (Class)null ) );
 
         if ( resultsLevel == Results.Level.LINKED_PROPERTIES ) {
             List<Entity> entities = results.getEntities();
@@ -1900,7 +1865,9 @@ public class EntityManagerImpl implements EntityManager {
                     }
                 }
             }
-            List<DynamicEntity> linked = getEntities( new ArrayList<UUID>( associatedIds.values() ), null );
+            List<DynamicEntity> linked = getEntities( 
+                    new ArrayList<UUID>( associatedIds.values() ), (Class)null );
+
             for ( DynamicEntity l : linked ) {
                 Map<String, Object> p = l.getDynamicProperties();
                 if ( ( p != null ) && ( p.size() > 0 ) ) {
@@ -1921,7 +1888,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public void update( Entity entity ) throws Exception {
-        updateProperties( entity.getUuid(), entity.getProperties() );
+        updateProperties( entity.getUuid(), entity.getType(), entity.getProperties() );
     }
 
 
@@ -2031,7 +1998,7 @@ public class EntityManagerImpl implements EntityManager {
     public void updateProperties( EntityRef entityRef, Map<String, Object> properties ) throws Exception {
         entityRef = validate( entityRef );
         properties = getDefaultSchema().cleanUpdatedProperties( entityRef.getType(), properties, false );
-        updateProperties( entityRef.getUuid(), properties );
+        updateProperties( entityRef.getUuid(), entityRef.getType(), properties );
     }
 
 
@@ -2049,7 +2016,7 @@ public class EntityManagerImpl implements EntityManager {
             return;
         }
 
-        EntityRef entity = getRef( entityRef.getUuid() );
+        EntityRef entity = get( entityRef );
 
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
@@ -2069,7 +2036,7 @@ public class EntityManagerImpl implements EntityManager {
             return;
         }
 
-        EntityRef entity = getRef( entityRef.getUuid() );
+        EntityRef entity = get( entityRef );
 
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
@@ -2090,7 +2057,7 @@ public class EntityManagerImpl implements EntityManager {
             return;
         }
 
-        EntityRef entity = getRef( entityRef.getUuid() );
+        EntityRef entity = get( entityRef );
 
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
@@ -2112,7 +2079,7 @@ public class EntityManagerImpl implements EntityManager {
             return;
         }
 
-        EntityRef entity = getRef( entityRef.getUuid() );
+        EntityRef entity = get( entityRef );
 
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
@@ -2256,14 +2223,14 @@ public class EntityManagerImpl implements EntityManager {
 
         if ( roleNames != null ) {
             nameResults = getDictionaryElementValues( getApplicationRef(), DICTIONARY_ROLENAMES,
-                    roleNames.toArray( new String[0] ) );
+                    roleNames.toArray(new String[roleNames.size()]));
         }
         else {
             nameResults = cast( getDictionaryAsMap( getApplicationRef(), DICTIONARY_ROLENAMES ) );
             roleNames = nameResults.keySet();
         }
         Map<String, Object> timeResults = getDictionaryElementValues( getApplicationRef(), DICTIONARY_ROLETIMES,
-                roleNames.toArray( new String[0] ) );
+                roleNames.toArray(new String[roleNames.size()]));
 
         for ( String roleName : roleNames ) {
 
@@ -2856,4 +2823,32 @@ public class EntityManagerImpl implements EntityManager {
         permission = permission.toLowerCase();
         removeFromDictionary( groupRef( groupId ), DICTIONARY_PERMISSIONS, permission );
     }
+
+    @Override
+    public void refreshIndex() {
+        // no action necessary
+    }
+
+    @Override
+    public Results getEntities(List<UUID> ids, String type) {
+
+        ArrayList<Entity> entities = new ArrayList<Entity>();
+
+        for ( UUID uuid : ids ) {
+            EntityRef ref = new SimpleEntityRef( type, uuid );
+            Entity entity = null; 
+            try {
+                entity = get( ref );
+            } catch (Exception ex) {
+                logger.warn("Entity {}/{} not found", uuid, type);
+            }
+
+            if ( entity != null) {
+                entities.add( entity );
+            }
+        }
+
+        return Results.fromEntities( entities );
+    }
+
 }

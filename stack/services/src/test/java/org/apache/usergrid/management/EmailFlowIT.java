@@ -42,7 +42,6 @@ import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.management.cassandra.ManagementServiceImpl;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
 
@@ -199,7 +198,7 @@ public class EmailFlowIT {
                                                  "name-skipallemailtest", "nate+skipallemailtest@apigee.com",
                                                  "password" );
 
-        EntityManager em = setup.getEmf().getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
         User user = em.get( ooi.getOwner().getUuid(), User.class );
         assertTrue( user.activated() );
         assertFalse( user.disabled() );

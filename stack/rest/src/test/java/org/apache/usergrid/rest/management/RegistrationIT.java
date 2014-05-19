@@ -109,7 +109,7 @@ public class RegistrationIT extends AbstractRestIT {
                 assertEquals( "user disabled", body.findPath( "error_description" ).getTextValue() );
             }
 
-            setup.getMgmtSvc().deactivateUser( CassandraService.MANAGEMENT_APPLICATION_ID, owner_uuid );
+            setup.getMgmtSvc().deactivateUser( setup.getEmf().getManagementAppId(), owner_uuid );
             try {
                 resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
@@ -345,9 +345,9 @@ public class RegistrationIT extends AbstractRestIT {
         for ( Message m : msgs ) {
             logger.info( "Subject: " + m.getSubject() );
             logger.info(
-                    "Body content 0 " + ( String ) ( ( MimeMultipart ) m.getContent() ).getBodyPart( 0 ).getContent() );
+                    "Body content 0 " + ( ( MimeMultipart ) m.getContent() ).getBodyPart( 0 ).getContent());
             logger.info(
-                    "Body content 1 " + ( String ) ( ( MimeMultipart ) m.getContent() ).getBodyPart( 1 ).getContent() );
+                    "Body content 1 " + ( ( MimeMultipart ) m.getContent() ).getBodyPart( 1 ).getContent());
         }
         return msgs;
     }

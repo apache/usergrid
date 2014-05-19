@@ -38,6 +38,8 @@ public interface MergedEdgeReader {
      * Get the edges from the source for both the commit log and the permanent storage.  Merge them into a single observable
      * and remove duplicates.  Commit log takes priority
      *
+     *
+     *
      * @param scope
      * @param edgeType
      * @return

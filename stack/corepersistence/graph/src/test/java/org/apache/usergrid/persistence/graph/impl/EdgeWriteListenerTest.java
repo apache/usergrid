@@ -46,6 +46,9 @@ import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompact;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompactImpl;
+import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -131,16 +134,18 @@ public class EdgeWriteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        Edge edgeV1 = createEdge( sourceId, edgeType, targetId );
-        Edge edgeV2 = createEdge( sourceId, edgeType, targetId );
-        Edge edgeV3 = createEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId );
+
+        final UUID timestamp = UUIDGenerator.newTimeUUID();
 
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3 ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
 
-        EdgeEvent<Edge> edgeWriteEvent = new EdgeEvent<>( scope, edgeV3.getVersion(), edgeV3 );
+        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
 
         //now perform the listener execution
         Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
@@ -260,16 +265,17 @@ public class EdgeWriteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        Edge edgeV1 = createEdge( sourceId, edgeType, targetId );
-        Edge edgeV2 = createEdge( sourceId, edgeType, targetId );
-        Edge edgeV3 = createEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId );
 
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2 ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3 ).execute();
+        final UUID timestamp = UUIDGenerator.newTimeUUID();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
 
-        EdgeEvent<Edge> edgeWriteEvent = new EdgeEvent<>( scope, edgeV2.getVersion(), edgeV2 );
+        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV2 );
 
         //now perform the listener execution, should only clean up to edge v2
         Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
@@ -398,20 +404,25 @@ public class EdgeWriteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        Edge edgeV1 = createEdge( sourceId, edgeType, targetId );
+        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId );
 
         EdgeSerialization commitLog = mock( EdgeSerialization.class );
         EdgeSerialization storage = mock( EdgeSerialization.class );
 
-        AsyncProcessor<EdgeEvent<Edge>> edgeProcessor = mock( AsyncProcessor.class );
+        AsyncProcessor<EdgeEvent<MarkedEdge>> edgeProcessor = mock( AsyncProcessor.class );
 
 
-        EdgeEvent<Edge> edgeWriteEvent = new EdgeEvent<>( scope, edgeV1.getVersion(), edgeV1 );
+        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, edgeV1.getVersion(), edgeV1 );
 
         Keyspace keyspace = mock( Keyspace.class );
 
+
+        EdgeWriteCompact compact = new EdgeWriteCompactImpl( commitLog, storage, keyspace, graphFig );
+
+
+
         //now perform the listener execution, should only clean up to edge v2
-        EdgeWriteListener listener = new EdgeWriteListener( commitLog, storage, keyspace, edgeProcessor, graphFig );
+        EdgeWriteListener listener = new EdgeWriteListener( compact, edgeProcessor );
 
 
         /**

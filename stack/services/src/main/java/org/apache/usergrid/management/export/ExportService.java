@@ -42,7 +42,8 @@ public interface ExportService {
     /**
      * Returns the current state of the service.
      */
-    String getState( UUID appId, UUID state ) throws Exception;
+    String getState( UUID state ) throws Exception;
 
-    void setS3Export( S3Export s3Export );
+    String getErrorMessage( UUID appId, UUID state ) throws Exception;
+
 }

@@ -18,11 +18,11 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.model.field.Field;
 
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 /**
  * Reads and writes to UniqueValues column family.

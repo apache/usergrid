@@ -58,6 +58,8 @@ public class SchedulerRuntime5IT extends AbstractSchedulerRuntimeIT {
 
         assertTrue( "Job ran to complete", waited );
 
+        scheduler.refreshIndex();
+
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 
         // we should have only marked this as run once since we delayed further execution

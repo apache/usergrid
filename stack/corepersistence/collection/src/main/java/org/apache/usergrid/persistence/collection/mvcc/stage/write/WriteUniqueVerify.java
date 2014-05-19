@@ -18,14 +18,15 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
@@ -33,13 +34,8 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
-
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.FuncN;
@@ -61,10 +57,14 @@ public class WriteUniqueVerify implements
 
 
     @Inject
-    public WriteUniqueVerify( final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy, final SerializationFig serializationFig ) {
+    public WriteUniqueVerify( 
+            final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy, 
+            final SerializationFig serializationFig ) {
 
-        Preconditions.checkNotNull( uniqueValueSerializiationStrategy, "uniqueValueSerializationStrategy is required" );
-        Preconditions.checkNotNull( serializationFig, "serializationFig is required" );
+        Preconditions.checkNotNull( uniqueValueSerializiationStrategy, 
+                "uniqueValueSerializationStrategy is required" );
+        Preconditions.checkNotNull( serializationFig, 
+                "serializationFig is required" );
 
         this.uniqueValueStrat = uniqueValueSerializiationStrategy;
         this.serializationFig = serializationFig;
@@ -84,6 +84,7 @@ public class WriteUniqueVerify implements
         // We want to use concurrent to fork all validations this way they're wrapped by timeouts 
         // and Hystrix thread pools for JMX operations.  See the WriteCommand in the 
         // EntityCollectionManagerImpl. 
+
         // TODO: still needs to be added to the Concurrent utility class?
 
         final List<Observable<FieldUniquenessResult>> fields =
@@ -98,7 +99,10 @@ public class WriteUniqueVerify implements
             // concurrent validations
             if ( field.isUnique() ) {
 
-                Observable<FieldUniquenessResult> result =  Observable.from( field ).subscribeOn( Schedulers.io() ).map(new Func1<Field,  FieldUniquenessResult>() {
+                Observable<FieldUniquenessResult> result =  Observable.from( field )
+                        .subscribeOn( Schedulers.io() )
+                        .map(new Func1<Field,  FieldUniquenessResult>() {
+
                     @Override
                     public FieldUniquenessResult call(Field field ) {
 
@@ -128,7 +132,8 @@ public class WriteUniqueVerify implements
                                     "Error verifying write", ex );
                         }
 
-                        return new FieldUniquenessResult( field, loaded.equals( written ) );
+                        return new FieldUniquenessResult( 
+                            field, loaded.getEntityId().equals( written.getEntityId() ) );
                     }
                 } );
 
@@ -170,10 +175,7 @@ public class WriteUniqueVerify implements
             }
         };
 
-
-
         return Observable.zip( fields, zipFunction );
-
     }
 
 

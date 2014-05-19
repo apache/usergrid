@@ -16,4 +16,5 @@
 # specific language governing permissions and limitations
 # under the License.
 
+echo "Test script started running..."
 echo -e "Test script is run successfully, $TEST_PARAM" > /home/ubuntu/testScriptOut.log

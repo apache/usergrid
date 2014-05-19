@@ -62,11 +62,8 @@ public abstract class AbstractScanColumn implements ScanColumn {
 
         AbstractScanColumn that = ( AbstractScanColumn ) o;
 
-        if ( !uuid.equals( that.uuid ) ) {
-            return false;
-        }
+        return uuid.equals(that.uuid);
 
-        return true;
     }
 
 

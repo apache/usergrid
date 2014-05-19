@@ -20,8 +20,7 @@ package org.apache.usergrid.persistence.query.ir.result;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
-
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * Parser for reading and writing secondary index composites
@@ -30,15 +29,12 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
  */
 public class UUIDIndexSliceParser implements SliceParser {
 
-    private static final UUIDSerializer SERIALIZER = UUIDSerializer.get();
-
-
     /* (non-Javadoc)
      * @see org.apache.usergrid.persistence.query.ir.result.SliceParser#parse(java.nio.ByteBuffer)
      */
     @Override
     public ScanColumn parse( ByteBuffer buff ) {
-        return new UUIDColumn( SERIALIZER.fromByteBuffer( buff.duplicate() ), buff );
+        return new UUIDColumn( ue.fromByteBuffer( buff.duplicate() ), buff );
     }
 
 

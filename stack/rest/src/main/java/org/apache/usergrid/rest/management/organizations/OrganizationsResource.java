@@ -32,6 +32,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.RootResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +72,7 @@ public class OrganizationsResource extends AbstractContextResource {
     }
 
 
-    @Path( "{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
+    @Path(RootResource.ORGANIZATION_ID_PATH)
     @RequireOrganizationAccess
     public OrganizationResource getOrganizationById( @Context UriInfo ui,
                                                      @PathParam( "organizationId" ) String organizationIdStr )

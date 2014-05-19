@@ -80,7 +80,6 @@ import com.google.common.collect.HashBiMap;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
@@ -277,7 +276,7 @@ public class Realm extends AuthorizingRealm {
                 // They have access to organizations and organization
                 // applications
 
-                UserInfo user = ( ( AdminUserPrincipal ) principal ).getUser();
+                UserInfo user = principal.getUser();
 
                 if ( superUserEnabled && ( superUser != null ) && superUser.equals( user.getUsername() ) ) {
                     // The system user has access to everything
@@ -295,10 +294,10 @@ public class Realm extends AuthorizingRealm {
                     grant( info, principal, "applications:admin,access,get,put,post,delete:*:/**" );
                     grant( info, principal, "users:access:*" );
 
-                    grant( info, principal, getPermissionFromPath( MANAGEMENT_APPLICATION_ID, "access" ) );
+                    grant( info, principal, getPermissionFromPath( emf.getManagementAppId(), "access" ) );
 
                     grant( info, principal,
-                            getPermissionFromPath( MANAGEMENT_APPLICATION_ID, "get,put,post,delete", "/**" ) );
+                            getPermissionFromPath( emf.getManagementAppId(), "get,put,post,delete", "/**" ) );
                 }
                 else {
 
@@ -307,12 +306,12 @@ public class Realm extends AuthorizingRealm {
                     // An service user can be associated with multiple
                     // organizations
 
-                    grant( info, principal, getPermissionFromPath( MANAGEMENT_APPLICATION_ID, "access" ) );
+                    grant( info, principal, getPermissionFromPath( emf.getManagementAppId(), "access" ) );
 
                     // admin users cannot access the management app directly
                     // so open all permissions
                     grant( info, principal,
-                            getPermissionFromPath( MANAGEMENT_APPLICATION_ID, "get,put,post,delete", "/**" ) );
+                            getPermissionFromPath( emf.getManagementAppId(), "get,put,post,delete", "/**" ) );
 
                     role( info, principal, ROLE_ADMIN_USER );
 
@@ -350,7 +349,7 @@ public class Realm extends AuthorizingRealm {
                 UUID applicationId = ( ( ApplicationUserPrincipal ) principal ).getApplicationId();
 
                 AccessTokenCredentials tokenCredentials =
-                        ( ( ApplicationUserPrincipal ) principal ).getAccessTokenCredentials();
+                        principal.getAccessTokenCredentials();
                 TokenInfo token = null;
                 if ( tokenCredentials != null ) {
                     try {
@@ -389,7 +388,7 @@ public class Realm extends AuthorizingRealm {
                     logger.error( "Unable to get user default role permissions", e );
                 }
 
-                UserInfo user = ( ( ApplicationUserPrincipal ) principal ).getUser();
+                UserInfo user = principal.getUser();
                 try {
                     Set<String> permissions = em.getUserPermissions( user.getUuid() );
                     grant( info, principal, applicationId, permissions );

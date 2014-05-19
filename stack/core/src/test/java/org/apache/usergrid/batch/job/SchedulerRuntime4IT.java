@@ -51,11 +51,15 @@ public class SchedulerRuntime4IT extends AbstractSchedulerRuntimeIT {
 
         JobData returned = scheduler.createJob( "delayExecution", System.currentTimeMillis(), new JobData() );
 
+        scheduler.refreshIndex();
+
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
         boolean waited = getJobListener().blockTilDone( 3, 5000L + sleepTime * 2 );
 
         assertTrue( "Job ran to complete", waited );
+
+        scheduler.refreshIndex();
 
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 

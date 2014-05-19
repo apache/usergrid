@@ -41,13 +41,17 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         int failCount = Integer.parseInt( props.getProperty( FAIL_PROP ) );
         long sleepTime = Long.parseLong( props.getProperty( RUNLOOP_PROP ) );
 
-        FailureJobExceuction job = cassandraResource.getBean( "failureJobExceuction", FailureJobExceuction.class );
+        FailureJobExceuction job = cassandraResource.getBean( 
+                "failureJobExceuction", FailureJobExceuction.class );
 
         int latchValue = failCount + 1;
 
         job.setLatch( latchValue );
 
-        JobData returned = scheduler.createJob( "failureJobExceuction", System.currentTimeMillis(), new JobData() );
+        JobData returned = scheduler.createJob( 
+                "failureJobExceuction", System.currentTimeMillis(), new JobData() );
+
+        scheduler.refreshIndex();
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
@@ -60,6 +64,8 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
 
         //we shouldn't have run the last time, we should have counted down to it
         assertEquals( 1, job.getLatchCount() );
+
+        scheduler.refreshIndex();
 
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 

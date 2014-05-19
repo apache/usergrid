@@ -22,6 +22,8 @@ package org.apache.usergrid.persistence.core.guice;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
@@ -57,6 +59,7 @@ public class CommonModule extends AbstractModule {
 
         bind( TimeService.class ).to( TimeServiceImpl.class );
 
+        bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
 
 
 

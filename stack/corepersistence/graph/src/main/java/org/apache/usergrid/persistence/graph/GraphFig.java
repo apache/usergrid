@@ -36,9 +36,6 @@ public interface GraphFig extends GuicyFig {
     public static final String REPAIR_CONCURRENT_SIZE = "usergrid.graph.repair.concurrent.size";
 
 
-    public static final String READ_CL = "usergrid.graph.read.cl";
-
-    public static final String WRITE_CL = "usergrid.graph.write.cl";
 
     public static final String WRITE_TIMEOUT = "usergrid.graph.write.timeout";
 
@@ -56,13 +53,6 @@ public interface GraphFig extends GuicyFig {
     @Key(SCAN_PAGE_SIZE)
     int getScanPageSize();
 
-    @Default("CL_QUORUM")
-    @Key(READ_CL)
-    String getReadCL();
-
-    @Default("CL_QUORUM")
-    @Key(WRITE_CL)
-    String getWriteCL();
 
     @Default("10000")
     @Key(WRITE_TIMEOUT)

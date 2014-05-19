@@ -18,19 +18,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
-import java.util.Collections;
-
-import org.apache.cassandra.db.marshal.BytesType;
-
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.serialization.impl.CollectionScopedRowKeySerializer;
-import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.migration.Migration;
-import org.apache.usergrid.persistence.model.field.Field;
-
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.netflix.astyanax.ColumnListMutation;
@@ -39,12 +26,29 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.ColumnList;
+import com.netflix.astyanax.util.RangeBuilder;
+import java.util.Collections;
+import org.apache.cassandra.db.marshal.BytesType;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.serialization.impl.CollectionScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.model.field.Field;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * Reads and writes to UniqueValues column family.
  */
-public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializationStrategy, Migration {
+public class UniqueValueSerializationStrategyImpl 
+    implements UniqueValueSerializationStrategy, Migration {
+
+    private static final Logger log = 
+            LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
 
     // TODO: use "real" field serializer here instead once it is ready
     private static final CollectionScopedRowKeySerializer<Field> ROW_KEY_SER =
@@ -52,8 +56,9 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 
-    private static final MultiTennantColumnFamily<CollectionScope, Field, EntityVersion> CF_UNIQUE_VALUES =
-        new MultiTennantColumnFamily<CollectionScope, Field, EntityVersion>( "Unique_Values",
+    private static final MultiTennantColumnFamily<CollectionScope, Field, EntityVersion> 
+        CF_UNIQUE_VALUES =
+            new MultiTennantColumnFamily<CollectionScope, Field, EntityVersion>( "Unique_Values",
                 ROW_KEY_SER,
                 ENTITY_VERSION_SER );
 
@@ -93,6 +98,16 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
         Preconditions.checkNotNull( value, "value is required" );
         Preconditions.checkNotNull( timeToLive, "timeToLive is required" );
+
+        log.debug("Writing unique value scope={} id={} version={} name={} value={} ttl={} ",
+            new Object[] { 
+                value.getCollectionScope().getName(),
+                value.getEntityId(),
+                value.getEntityVersion(),
+                value.getField().getName(),
+                value.getField().getValue(),
+                timeToLive
+         });
 
         final EntityVersion ev = new EntityVersion( value.getEntityId(), value.getEntityVersion() );
 
@@ -148,13 +163,13 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
         Preconditions.checkNotNull( field, "field is required" );
 
-
-        //TODO Dave, this doesn't limit the size.  We should limit it to 1 explicitly, otherwise you can get a huge result set explosion if multiple values are attempting to write the same unique value.
         ColumnList<EntityVersion> result;
         try {
             result = keyspace.prepareQuery( CF_UNIQUE_VALUES )
                 .getKey( ScopedRowKey.fromKey( colScope, field ) )
-                .execute().getResult();
+                .withColumnRange(new RangeBuilder().setLimit(1).build())
+                .execute()
+                .getResult();
         }
         catch ( NotFoundException nfe ) {
             return null;
@@ -165,6 +180,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
         }
 
         EntityVersion ev = result.getColumnByIndex(0).getName();
+
         return new UniqueValueImpl( colScope, field, ev.getEntityId(), ev.getEntityVersion() );
     }
 

@@ -58,6 +58,8 @@ public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
 
         JobData saved = scheduler.createJob( "countdownLatch", fireTime, test );
 
+        scheduler.refreshIndex();
+
         // now query and make sure it equals the saved value
 
         Query query = new Query();

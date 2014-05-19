@@ -18,15 +18,10 @@ package org.apache.usergrid.management.cassandra;
 
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.io.FileUtils;
 
 import org.apache.usergrid.management.export.S3Export;
 
@@ -35,26 +30,18 @@ import org.apache.usergrid.management.export.S3Export;
  * Streams / reads the information written from the export service to a file named "test.json"
  */
 public class MockS3ExportImpl implements S3Export {
-    public static String filename;
+    private final String filename;
+
+    public MockS3ExportImpl (String filename) {
+        this.filename = filename;
+    }
+
     @Override
-    public void copyToS3( final InputStream inputStream, final Map<String,Object> exportInfo, String filename ) {
-        Logger logger = LoggerFactory.getLogger( MockS3ExportImpl.class );
-        int read = 0;
-        byte[] bytes = new byte[1024];
-        OutputStream outputStream = null;
+    public void copyToS3( File ephemeral, final Map<String,Object> exportInfo, String filename ) {
 
+        File verfiedData = new File( this.filename );
         try {
-            outputStream = new FileOutputStream( new File( getFilename() ) );
-        }
-        catch ( FileNotFoundException e ) {
-            e.printStackTrace();
-        }
-
-
-        try {
-            while ( ( read = ( inputStream.read( bytes ) ) ) != -1 ) {
-                outputStream.write( bytes, 0, read );
-            }
+            FileUtils.copyFile(ephemeral,verfiedData);
         }
         catch ( IOException e ) {
             e.printStackTrace();
@@ -66,6 +53,4 @@ public class MockS3ExportImpl implements S3Export {
         return filename;
     }
 
-    @Override
-    public void setFilename (String givenName) { filename = givenName; }
 }

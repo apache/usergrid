@@ -129,4 +129,13 @@ public class ServiceManagerFactory implements ApplicationContextAware {
     public LockManager getLockManager() {
         return lockManager;
     }
+
+    public UUID getManagementAppId() {
+        return emf.getManagementAppId();
+    }
+
+    public UUID getDefaultAppId() {
+        return emf.getDefaultAppId();
+    }
+
 }

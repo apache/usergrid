@@ -26,8 +26,8 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.util.EntityBuilder;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -39,7 +39,6 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -52,10 +51,13 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(ITRunner.class)
 @UseModules({ TestIndexModule.class })
-public class EntityConnectionIndexImplTest {
+public class EntityConnectionIndexImplTest extends BaseIT {
 
     private static final Logger log = LoggerFactory.getLogger( EntityConnectionIndexImplTest.class );
     
+    @ClassRule
+    public static ElasticSearchRule es = new ElasticSearchRule();
+
     @ClassRule
     public static CassandraRule cass = new CassandraRule();
 
@@ -82,7 +84,7 @@ public class EntityConnectionIndexImplTest {
         // create a muffin
         CollectionScope muffinScope = new CollectionScopeImpl( appId, orgId, "muffins" );
         Entity muffin = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), muffinScope.getName()));
-        muffin = EntityBuilder.fromMap( muffinScope.getName(), muffin, new HashMap<String, Object>() {{
+        muffin = EntityIndexMapUtils.fromMap( muffin, new HashMap<String, Object>() {{
             put("size", "Large");
             put("flavor", "Blueberry");
         }} );
@@ -93,7 +95,7 @@ public class EntityConnectionIndexImplTest {
         // create a person who likes muffins
         CollectionScope peopleScope = new CollectionScopeImpl( appId, orgId, "people" );
         Entity person = new Entity(new SimpleId(UUIDGenerator.newTimeUUID(), peopleScope.getName()));
-        person = EntityBuilder.fromMap( peopleScope.getName(), person, new HashMap<String, Object>() {{
+        person = EntityIndexMapUtils.fromMap( person, new HashMap<String, Object>() {{
             put("name", "Dave");
             put("hometown", "Chapel Hill");
         }} );

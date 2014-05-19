@@ -1,6 +1,34 @@
-(function() {
-  var name = 'Client', global = this, overwrittenName = global[name], exports;
+/*
+ *Licensed to the Apache Software Foundation (ASF) under one
+ *or more contributor license agreements.  See the NOTICE file
+ *distributed with this work for additional information
+ *regarding copyright ownership.  The ASF licenses this file
+ *to you under the Apache License, Version 2.0 (the
+ *"License"); you may not use this file except in compliance
+ *with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
 
+ *Unless required by applicable law or agreed to in writing,
+ *software distributed under the License is distributed on an
+ *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *KIND, either express or implied.  See the License for the
+ *specific language governing permissions and limitations
+ *under the License.
+ */
+(function() {
+  var name = 'Client',
+    global = this,
+    overwrittenName = global[name],
+    exports;
+  var AUTH_ERRORS = [
+    "auth_expired_session_token",
+    "auth_missing_credentials",
+    "auth_unverified_oath",
+    "expired_token",
+    "unauthorized",
+    "auth_invalid"
+  ];
   Usergrid.Client = function(options) {
     //usergrid endpoint
     this.URI = options.URI || 'https://api.usergrid.com';
@@ -12,7 +40,7 @@
     if (options.appName) {
       this.set('appName', options.appName);
     }
-    if(options.qs){
+    if (options.qs) {
       this.setObject('default_qs', options.qs);
     }
     //other options
@@ -20,9 +48,7 @@
     this.logging = options.logging || false;
 
     //timeout and callbacks
-    this._callTimeout =  options.callTimeout || 30000; //default to 30 seconds
-    this._callTimeoutCallback =  options.callTimeoutCallback || null;
-    this.logoutCallback =  options.logoutCallback || null;
+    // this.logoutCallback =  options.logoutCallback || null;
   };
 
   /*
@@ -41,8 +67,7 @@
    *  @param {function} callback
    *  @return {callback} callback(err, data)
    */
-  Usergrid.Client.prototype.request = function (options, callback) {
-    var self = this;
+  Usergrid.Client.prototype.request = function(options, callback) {
     var method = options.method || 'GET';
     var endpoint = options.endpoint;
     var body = options.body || {};
@@ -50,15 +75,15 @@
     var mQuery = options.mQuery || false; //is this a query to the management endpoint?
     var orgName = this.get('orgName');
     var appName = this.get('appName');
-    var default_qs=this.getObject('default_qs');
+    var default_qs = this.getObject('default_qs');
     var uri;
-      var logoutCallback=function(){
-          if (typeof(this.logoutCallback) === 'function') {
-              return this.logoutCallback(true, 'no_org_or_app_name_specified');
-          }
-      }.bind(this);
-    if(!mQuery && !orgName && !appName){
-        return logoutCallback();
+    /*var logoutCallback=function(){
+        if (typeof(this.logoutCallback) === 'function') {
+            return this.logoutCallback(true, 'no_org_or_app_name_specified');
+        }
+    }.bind(this);*/
+    if (!mQuery && !orgName && !appName) {
+      return logoutCallback();
     }
     if (mQuery) {
       uri = this.URI + '/' + endpoint;
@@ -67,29 +92,29 @@
     }
     if (this.getToken()) {
       qs.access_token = this.getToken();
-      /* //could also use headers for the token
+      /*
+       **NOTE** The token can also be passed as a header on the request
+
        xhr.setRequestHeader("Authorization", "Bearer " + self.getToken());
        xhr.withCredentials = true;
        */
     }
-    if(default_qs){
-      qs=propCopy(qs, default_qs);
+    if (default_qs) {
+      qs = propCopy(qs, default_qs);
     }
-      var req = new Usergrid.Request(method, uri, qs, body, function (err, response) {
-          if ([
-              "auth_expired_session_token",
-              "auth_missing_credentials",
-              "auth_unverified_oath",
-              "expired_token",
-              "unauthorized",
-              "auth_invalid"
-          ].indexOf(response.error) !== -1) {
-              return logoutCallback();
-          }
-          doCallback(callback, [err, response]);
-          //p.done(err, response);
-      });
-  }
+    var self=this;
+    var req = new Usergrid.Request(method, uri, qs, body, function(err, response) {
+      /*if (AUTH_ERRORS.indexOf(response.error) !== -1) {
+            return logoutCallback();
+        }*/
+      if(err){
+        doCallback(callback, [err, response, self], self);
+      }else{
+        doCallback(callback, [null, response, self], self);
+      }
+      //p.done(err, response);
+    });
+  };
 
   /*
    *  function for building asset urls
@@ -127,24 +152,13 @@
    *  @return {callback} callback(err, data)
    */
   Usergrid.Client.prototype.createGroup = function(options, callback) {
-    var getOnExist = options.getOnExist || false;
-
-    options = {
+    var group = new Usergrid.Group({
       path: options.path,
       client: this,
       data: options
-    };
-
-    var group = new Usergrid.Group(options);
-    group.fetch(function(err, data){
-      var okToSave = (err && ['service_resource_not_found','no_name_specified','null_pointer'].indexOf(err.name)!==-1) || (!err && getOnExist);
-      if (okToSave) {
-        group.save(function(err, data){
-            doCallback(callback, [err, group, data]);
-        });
-      } else {
-        doCallback(callback, [null, group, data]);
-      }
+    });
+    group.save(function(err, response) {
+      doCallback(callback, [err, response, group], group);
     });
   };
 
@@ -159,33 +173,15 @@
    *  @param {function} callback
    *  @return {callback} callback(err, data)
    */
-    Usergrid.Client.prototype.createEntity = function (options, callback) {
-        // todo: replace the check for new / save on not found code with simple save
-        // when users PUT on no user fix is in place.
-        var getOnExist = options['getOnExist'] || false; //if true, will return entity if one already exists
-        delete options['getOnExist']; //so it doesn't become part of our data model
-        var entity_data = {
-            client: this,
-            data: options
-        };
-        var entity = new Usergrid.Entity(entity_data);
-        var self = this;
-        entity.fetch(function (err, data) {
-            //if the fetch doesn't find what we are looking for, or there is no error, do a save
-            var common_errors = ['service_resource_not_found', 'no_name_specified', 'null_pointer'];
-            var okToSave = (!err && getOnExist)||(err && err.name && common_errors.indexOf(err.name) !== -1);
-
-            if (okToSave) {
-                entity.set(entity_data.data); //add the data again just in case
-                entity.save(function (err, data) {
-                    doCallback(callback, [err, entity, data]);
-                });
-            } else {
-                doCallback(callback, [null, entity, data]);
-            }
-        });
-
-    };
+  Usergrid.Client.prototype.createEntity = function(options, callback) {
+    var entity = new Usergrid.Entity({
+      client: this,
+      data: options
+    });
+    entity.save(function(err, response) {
+      doCallback(callback, [err, response, entity], entity);
+    });
+  };
   /*
    *  Main function for getting existing entities - should be called directly.
    *
@@ -200,14 +196,13 @@
    *  @param {function} callback
    *  @return {callback} callback(err, data)
    */
-  Usergrid.Client.prototype.getEntity = function (options, callback) {
-    var options = {
-      client:this,
-      data:options
-    }
-    var entity = new Usergrid.Entity(options);
-    entity.fetch(function(err, data) {
-        doCallback(callback, [err, entity, data]);
+  Usergrid.Client.prototype.getEntity = function(options, callback) {
+    var entity = new Usergrid.Entity({
+      client: this,
+      data: options
+    });
+    entity.fetch(function(err, response) {
+      doCallback(callback, [err, response, entity], entity);
     });
   };
 
@@ -221,14 +216,63 @@
    *  @param {string} serializedObject
    *  @return {object} Entity Object
    */
-  Usergrid.Client.prototype.restoreEntity = function (serializedObject) {
+  Usergrid.Client.prototype.restoreEntity = function(serializedObject) {
     var data = JSON.parse(serializedObject);
     var options = {
-      client:this,
-      data:data
-    }
+      client: this,
+      data: data
+    };
     var entity = new Usergrid.Entity(options);
     return entity;
+  };
+  /*
+   *  Main function for creating new counters - should be called directly.
+   *
+   *  options object: options {timestamp:0, category:'value', counters:{name : value}}
+   *
+   *  @method createCounter
+   *  @public
+   *  @params {object} options
+   *  @param {function} callback
+   *  @return {callback} callback(err, response, counter)
+   */
+  Usergrid.Client.prototype.createCounter = function(options, callback) {
+    var counter = new Usergrid.Counter({
+      client: this,
+      data: options
+    });
+    counter.save(callback);
+  };
+  /*
+   *  Main function for creating new assets - should be called directly.
+   *
+   *  options object: options {name:"photo.jpg", path:"/user/uploads", "content-type":"image/jpeg", owner:"F01DE600-0000-0000-0000-000000000000", file: FileOrBlobObject }
+   *
+   *  @method createCounter
+   *  @public
+   *  @params {object} options
+   *  @param {function} callback
+   *  @return {callback} callback(err, response, counter)
+   */
+  Usergrid.Client.prototype.createAsset = function(options, callback) {
+    var file=options.file;
+    if(file){
+      options.name=options.name||file.name;
+      options['content-type']=options['content-type']||file.type;
+      options.path=options.path||'/';
+      delete options.file;
+    }
+    var asset = new Usergrid.Asset({
+      client: this,
+      data: options
+    });
+    asset.save(function(err, response, asset){
+      if(file && !err){
+        asset.upload(file, callback);
+      }else{
+        doCallback(callback, [err, response, asset], asset);
+      }
+    });
   };
 
   /*
@@ -242,10 +286,11 @@
    *  @param {function} callback
    *  @return {callback} callback(err, data)
    */
-  Usergrid.Client.prototype.createCollection = function (options, callback) {
+  Usergrid.Client.prototype.createCollection = function(options, callback) {
     options.client = this;
-    new Usergrid.Collection(options, function(err, data, collection) {
-        doCallback(callback, [err, collection, data]);
+    var collection = new Usergrid.Collection(options);
+    collection.fetch(function(err, response, collection) {
+      doCallback(callback, [err, response, collection], this);
     });
   };
 
@@ -259,7 +304,7 @@
    *  @param {string} serializedObject
    *  @return {object} Collection Object
    */
-  Usergrid.Client.prototype.restoreCollection = function (serializedObject) {
+  Usergrid.Client.prototype.restoreCollection = function(serializedObject) {
     var data = JSON.parse(serializedObject);
     data.client = this;
     var collection = new Usergrid.Collection(data);
@@ -278,15 +323,15 @@
   Usergrid.Client.prototype.getFeedForUser = function(username, callback) {
     var options = {
       method: "GET",
-      endpoint: "users/"+username+"/feed"
+      endpoint: "users/" + username + "/feed"
     };
 
-    this.request(options, function(err, data){
-        if(err) {
-            doCallback(callback, [err]);
-        } else {
-            doCallback(callback, [err, data, data.getEntities()]);
-        }
+    this.request(options, function(err, data) {
+      if (err) {
+        doCallback(callback, [err]);
+      } else {
+        doCallback(callback, [err, data, data.getEntities()]);
+      }
     });
   };
 
@@ -325,15 +370,15 @@
    *  @param {function} callback
    *  @return {callback} callback(err, data)
    */
-  Usergrid.Client.prototype.createUserActivity = function (user, options, callback) {
-    options.type = 'users/'+user+'/activities';
-    var options = {
-      client:this,
-      data:options
-    }
+  Usergrid.Client.prototype.createUserActivity = function(user, options, callback) {
+    options.type = 'users/' + user + '/activities';
+    options = {
+      client: this,
+      data: options
+    };
     var entity = new Usergrid.Entity(options);
     entity.save(function(err, data) {
-        doCallback(callback, [err, entity]);
+      doCallback(callback, [err, data, entity]);
     });
   };
 
@@ -354,20 +399,20 @@
     var username = user.get("username");
     var options = {
       actor: {
-        "displayName":username,
-        "uuid":user.get("uuid"),
-        "username":username,
-        "email":user.get("email"),
-        "picture":user.get("picture"),
+        "displayName": username,
+        "uuid": user.get("uuid"),
+        "username": username,
+        "email": user.get("email"),
+        "picture": user.get("picture"),
         "image": {
-          "duration":0,
-          "height":80,
-          "url":user.get("picture"),
-          "width":80
+          "duration": 0,
+          "height": 80,
+          "url": user.get("picture"),
+          "width": 80
         }
       },
-      "verb":"post",
-      "content":content
+      "verb": "post",
+      "content": content
     };
 
     this.createUserActivity(username, options, callback);
@@ -377,12 +422,12 @@
   /*
    *  A private method to get call timing of last call
    */
-  Usergrid.Client.prototype.calcTimeDiff = function () {
+  Usergrid.Client.prototype.calcTimeDiff = function() {
     var seconds = 0;
     var time = this._end - this._start;
     try {
-      seconds = ((time/10) / 60).toFixed(2);
-    } catch(e) {
+      seconds = ((time / 10) / 60).toFixed(2);
+    } catch (e) {
       return 0;
     }
     return seconds;
@@ -396,7 +441,7 @@
    *  @params {string} token
    *  @return none
    */
-  Usergrid.Client.prototype.setToken = function (token) {
+  Usergrid.Client.prototype.setToken = function(token) {
     this.set('token', token);
   };
 
@@ -407,7 +452,7 @@
    *  @public
    *  @return {string} token
    */
-  Usergrid.Client.prototype.getToken = function () {
+  Usergrid.Client.prototype.getToken = function() {
     return this.get('token');
   };
 
@@ -418,10 +463,10 @@
     this.set(key, value);
   };
 
-  Usergrid.Client.prototype.set = function (key, value) {
-    var keyStore =  'apigee_' + key;
+  Usergrid.Client.prototype.set = function(key, value) {
+    var keyStore = 'apigee_' + key;
     this[key] = value;
-    if(typeof(Storage)!=="undefined"){
+    if (typeof(Storage) !== "undefined") {
       if (value) {
         localStorage.setItem(keyStore, value);
       } else {
@@ -434,15 +479,15 @@
     return JSON.parse(this.get(key));
   };
 
-  Usergrid.Client.prototype.get = function (key) {
+  Usergrid.Client.prototype.get = function(key) {
     var keyStore = 'apigee_' + key;
-    var value=null;
+    var value = null;
     if (this[key]) {
-      value= this[key];
-    } else if(typeof(Storage)!=="undefined") {
-      value= localStorage.getItem(keyStore);
+      value = this[key];
+    } else if (typeof(Storage) !== "undefined") {
+      value = localStorage.getItem(keyStore);
     }
-    return value  ;
+    return value;
   };
 
   /*
@@ -460,11 +505,11 @@
   Usergrid.Client.prototype.signup = function(username, password, email, name, callback) {
     var self = this;
     var options = {
-      type:"users",
-      username:username,
-      password:password,
-      email:email,
-      name:name
+      type: "users",
+      username: username,
+      password: password,
+      email: email,
+      name: name
     };
 
     this.createEntity(options, callback);
@@ -481,40 +526,40 @@
    *  @param {function} callback
    *  @return {callback} callback(err, data)
    */
-  Usergrid.Client.prototype.login = function (username, password, callback) {
+  Usergrid.Client.prototype.login = function(username, password, callback) {
     var self = this;
     var options = {
-      method:'POST',
-      endpoint:'token',
-      body:{
+      method: 'POST',
+      endpoint: 'token',
+      body: {
         username: username,
         password: password,
         grant_type: 'password'
       }
     };
-    self.request(options, function(err, data) {
+    self.request(options, function(err, response) {
       var user = {};
       if (err) {
-        if(self.logging)console.log('error trying to log user in');
+        if (self.logging) console.log('error trying to log user in');
       } else {
         var options = {
-          client:self,
-          data:data.user
+          client: self,
+          data: response.user
         };
         user = new Usergrid.Entity(options);
-        self.setToken(data.access_token);
+        self.setToken(response.access_token);
       }
-      doCallback(callback, [err, data, user]);
+      doCallback(callback, [err, response, user]);
     });
   };
 
 
-  Usergrid.Client.prototype.reAuthenticateLite = function (callback) {
+  Usergrid.Client.prototype.reAuthenticateLite = function(callback) {
     var self = this;
     var options = {
-      method:'GET',
-      endpoint:'management/me',
-      mQuery:true
+      method: 'GET',
+      endpoint: 'management/me',
+      mQuery: true
     };
     this.request(options, function(err, response) {
       if (err && self.logging) {
@@ -522,21 +567,21 @@
       } else {
 
         //save the re-authed token and current email/username
-          self.setToken(response.data.access_token);
+        self.setToken(response.data.access_token);
 
       }
-        doCallback(callback, [err]);
+      doCallback(callback, [err]);
 
     });
   };
 
 
-  Usergrid.Client.prototype.reAuthenticate = function (email, callback) {
+  Usergrid.Client.prototype.reAuthenticate = function(email, callback) {
     var self = this;
     var options = {
-      method:'GET',
-      endpoint:'management/users/'+email,
-      mQuery:true
+      method: 'GET',
+      endpoint: 'management/users/' + email,
+      mQuery: true
     };
     this.request(options, function(err, response) {
       var organizations = {};
@@ -558,14 +603,14 @@
 
 
         var userData = {
-          "username" : data.username,
-          "email" : data.email,
-          "name" : data.name,
-          "uuid" : data.uuid
+          "username": data.username,
+          "email": data.email,
+          "name": data.name,
+          "uuid": data.uuid
         };
         var options = {
-          client:self,
-          data:userData
+          client: self,
+          data: userData
         };
         user = new Usergrid.Entity(options);
 
@@ -574,9 +619,9 @@
         try {
           //if we have an org stored, then use that one. Otherwise, use the first one.
           var existingOrg = self.get('orgName');
-          org = (organizations[existingOrg])?organizations[existingOrg]:organizations[Object.keys(organizations)[0]];
+          org = (organizations[existingOrg]) ? organizations[existingOrg] : organizations[Object.keys(organizations)[0]];
           self.set('orgName', org.name);
-        } catch(e) {
+        } catch (e) {
           err = true;
           if (self.logging) {
             console.log('error selecting org');
@@ -604,12 +649,12 @@
    *  @param {function} callback
    *  @return {callback} callback(err, data)
    */
-  Usergrid.Client.prototype.loginFacebook = function (facebookToken, callback) {
+  Usergrid.Client.prototype.loginFacebook = function(facebookToken, callback) {
     var self = this;
     var options = {
-      method:'GET',
-      endpoint:'auth/facebook',
-      qs:{
+      method: 'GET',
+      endpoint: 'auth/facebook',
+      qs: {
         fb_access_token: facebookToken
       }
     };
@@ -621,7 +666,7 @@
         var options = {
           client: self,
           data: data.user
-        }
+        };
         user = new Usergrid.Entity(options);
         self.setToken(data.access_token);
       }
@@ -637,28 +682,29 @@
    *  @param {function} callback
    *  @return {callback} callback(err, data)
    */
-  Usergrid.Client.prototype.getLoggedInUser = function (callback) {
+  Usergrid.Client.prototype.getLoggedInUser = function(callback) {
+    var self = this;
     if (!this.getToken()) {
-      callback(true, null, null);
+        doCallback(callback, [new UsergridError("Access Token not set"), null, self], self);
     } else {
-      var self = this;
       var options = {
-        method:'GET',
-        endpoint:'users/me'
+        method: 'GET',
+        endpoint: 'users/me'
       };
-      this.request(options, function(err, data) {
+      this.request(options, function(err, response) {
         if (err) {
           if (self.logging) {
             console.log('error trying to log user in');
           }
-          doCallback(callback, [err, data, null], self);
+          console.error(err, response);
+          doCallback(callback, [err, response, self], self);
         } else {
           var options = {
-            client:self,
-            data:data.entities[0]
+            client: self,
+            data: response.getEntity()
           };
           var user = new Usergrid.Entity(options);
-          doCallback(callback, [null, data, user], self);
+          doCallback(callback, [null, response, user], self);
         }
       });
     }
@@ -672,9 +718,9 @@
    *  @public
    *  @return {boolean} Returns true the user is logged in (has token and uuid), false if not
    */
-  Usergrid.Client.prototype.isLoggedIn = function () {
-      var token=this.getToken();
-    return "undefined" !== typeof token && token!==null;
+  Usergrid.Client.prototype.isLoggedIn = function() {
+    var token = this.getToken();
+    return "undefined" !== typeof token && token !== null;
   };
 
   /*
@@ -684,73 +730,73 @@
    *  @public
    *  @return none
    */
-  Usergrid.Client.prototype.logout = function () {
+  Usergrid.Client.prototype.logout = function() {
     this.setToken();
   };
 
-    /*
-    *  A public method to destroy access tokens on the server
-    *
-    *  @method logout
-    *  @public    
-    *	 @param {string} username	the user associated with the token to revoke
-    *	 @param {string} token set to 'null' to revoke the token of the currently logged in user 
-    *  	 or set to token value to revoke a specific token
-    *	 @param {string} revokeAll set to 'true' to revoke all tokens for the user            
-    *  @return none
-    */
-		Usergrid.Client.prototype.destroyToken = function (username, token, revokeAll, callback) {
-      var options = {
-	        client:self,
-	        method:'PUT',	        
-				}
-				
-      if (revokeAll == true) {
-				options.endpoint = 'users/'+username+'/revoketokens';
-			} else if (token == null) {
-				options.endpoint = 'users/'+username+'/revoketoken?token='+this.getToken();
-			} else {
-				options.endpoint = 'users/'+username+'/revoketoken?token='+token;
-			}
-      this.request(options, function(err,data) {
-		    if (err) {
-	          if (self.logging) {
-	            console.log('error destroying access token');
-	          }
-	          doCallback(callback, [err, data, null], self);
-	        } else {
-	          if (revokeAll == true) {
-	            console.log('all user tokens invalidated');
-	          } else {
-							console.log('token invalidated');
-	          }
-	          doCallback(callback, [err, data, null], self);
-	        }
-      });
-	  };
-  
-    /*
-    *  A public method to log out an app user - clears all user fields from client
-    *  and destroys the access token on the server.
-    *
-    *  @method logout
-    *  @public
-    *	 @param {string} username the user associated with the token to revoke
-    *	 @param {string} token set to 'null' to revoke the token of the currently logged in user 
-    *  	 or set to token value to revoke a specific token
-    *	 @param {string} revokeAll set to 'true' to revoke all tokens for the user        
-    *  @return none
-    */
-    Usergrid.Client.prototype.logoutAndDestroyToken = function(username, token, revokeAll, callback) {
-			if (username == null) {
-				console.log('username required to revoke tokens');
-			} else {
-				this.destroyToken(username, token, revokeAll, callback);
-				if (revokeAll == true || token == this.getToken() || token == null) {
-		    	this.setToken(null);
-		    }
-		  }
+  /*
+   *  A public method to destroy access tokens on the server
+   *
+   *  @method logout
+   *  @public
+   *  @param {string} username	the user associated with the token to revoke
+   *  @param {string} token set to 'null' to revoke the token of the currently logged in user
+   *    or set to token value to revoke a specific token
+   *  @param {string} revokeAll set to 'true' to revoke all tokens for the user
+   *  @return none
+   */
+  Usergrid.Client.prototype.destroyToken = function(username, token, revokeAll, callback) {
+    var options = {
+      client: self,
+      method: 'PUT',
     };
+
+    if (revokeAll === true) {
+      options.endpoint = 'users/' + username + '/revoketokens';
+    } else if (token === null) {
+      options.endpoint = 'users/' + username + '/revoketoken?token=' + this.getToken();
+    } else {
+      options.endpoint = 'users/' + username + '/revoketoken?token=' + token;
+    }
+    this.request(options, function(err, data) {
+      if (err) {
+        if (self.logging) {
+          console.log('error destroying access token');
+        }
+        doCallback(callback, [err, data, null], self);
+      } else {
+        if (revokeAll === true) {
+          console.log('all user tokens invalidated');
+        } else {
+          console.log('token invalidated');
+        }
+        doCallback(callback, [err, data, null], self);
+      }
+    });
+  };
+
+  /*
+   *  A public method to log out an app user - clears all user fields from client
+   *  and destroys the access token on the server.
+   *
+   *  @method logout
+   *  @public
+   *  @param {string} username the user associated with the token to revoke
+   *  @param {string} token set to 'null' to revoke the token of the currently logged in user
+   *   or set to token value to revoke a specific token
+   *  @param {string} revokeAll set to 'true' to revoke all tokens for the user
+   *  @return none
+   */
+  Usergrid.Client.prototype.logoutAndDestroyToken = function(username, token, revokeAll, callback) {
+    if (username === null) {
+      console.log('username required to revoke tokens');
+    } else {
+      this.destroyToken(username, token, revokeAll, callback);
+      if (revokeAll === true || token === this.getToken() || token === null) {
+        this.setToken(null);
+      }
+    }
+  };
 
   /*
    *  A private method to build the curl call to display on the command line
@@ -760,7 +806,7 @@
    *  @param {object} options
    *  @return {string} curl
    */
-  Usergrid.Client.prototype.buildCurlCall = function (options) {
+  Usergrid.Client.prototype.buildCurlCall = function(options) {
     var curl = ['curl'];
     var method = (options.method || 'GET').toUpperCase();
     var body = options.body;
@@ -768,44 +814,43 @@
 
     //curl - add the method to the command (no need to add anything for GET)
     curl.push('-X');
-    curl.push((['POST','PUT','DELETE'].indexOf(method)>=0)?method:'GET');
+    curl.push((['POST', 'PUT', 'DELETE'].indexOf(method) >= 0) ? method : 'GET');
 
     //curl - append the path
     curl.push(uri);
 
-    if("object"===typeof body && Object.keys(body).length>0 && ['POST','PUT'].indexOf(method)!==-1){
+    if ("object" === typeof body && Object.keys(body).length > 0 && ['POST', 'PUT'].indexOf(method) !== -1) {
       curl.push('-d');
-      curl.push("'"+JSON.stringify(body)+"'");
+      curl.push("'" + JSON.stringify(body) + "'");
     }
-    curl=curl.join(' ');
+    curl = curl.join(' ');
     //log the curl command to the console
     console.log(curl);
 
     return curl;
-  }
+  };
 
-  Usergrid.Client.prototype.getDisplayImage = function (email, picture, size) {
-      size = size || 50;
-      var image='https://apigee.com/usergrid/images/user_profile.png';
+  Usergrid.Client.prototype.getDisplayImage = function(email, picture, size) {
+    size = size || 50;
+    var image = 'https://apigee.com/usergrid/images/user_profile.png';
     try {
       if (picture) {
-        image= picture;
-      }else if (email.length) {
-        image= 'https://secure.gravatar.com/avatar/' + MD5(email) + '?s=' + size + encodeURI("&d=https://apigee.com/usergrid/images/user_profile.png");
+        image = picture;
+      } else if (email.length) {
+        image = 'https://secure.gravatar.com/avatar/' + MD5(email) + '?s=' + size + encodeURI("&d=https://apigee.com/usergrid/images/user_profile.png");
       }
-    } catch(e) {
+    } catch (e) {
       //TODO do something with this error?
-    }finally{
+    } finally {
       return image;
     }
-  }
-  global[name] =  Usergrid.Client;
+  };
+  global[name] = Usergrid.Client;
   global[name].noConflict = function() {
-    if(overwrittenName){
+    if (overwrittenName) {
       global[name] = overwrittenName;
     }
     return exports;
   };
   return global[name];
 }());
-

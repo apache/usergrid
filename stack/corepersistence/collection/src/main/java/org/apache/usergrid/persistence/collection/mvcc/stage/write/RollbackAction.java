@@ -32,8 +32,8 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Scheduler;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
-import rx.util.functions.Action1;
 
 
 /**
@@ -53,7 +53,7 @@ public class RollbackAction implements Action1<Throwable> {
             MvccLogEntrySerializationStrategy logEntryStrat, 
             UniqueValueSerializationStrategy uniqueValueStrat ) {
 
-        scheduler = Schedulers.io(); //injector.getInstance( Scheduler.class );
+        scheduler = Schedulers.io(); 
         this.uniqueValueStrat = uniqueValueStrat;
         this.logEntryStrat = logEntryStrat;
     }

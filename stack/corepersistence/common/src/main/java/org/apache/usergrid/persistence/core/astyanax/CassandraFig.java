@@ -31,6 +31,12 @@ import org.safehaus.guicyfig.Key;
  */
 @FigSingleton
 public interface CassandraFig extends GuicyFig {
+
+
+    public static final String READ_CL = "usergrid.graph.read.cl";
+
+    public static final String WRITE_CL = "usergrid.graph.write.cl";
+
     @Key( "cassandra.hosts" )
     String getHosts();
 
@@ -60,6 +66,19 @@ public interface CassandraFig extends GuicyFig {
 
     @Key("cassandra.discovery")
     @Default( "RING_DESCRIBE" )
-    String getDiscoveryType();
+    String getDiscoveryType();    
+    
+    @Key("cassandra.embedded")
+    @Default( "false" )
+    boolean isEmbedded();
+
+
+    @Default("CL_QUORUM")
+    @Key(READ_CL)
+    String getReadCL();
+
+    @Default("CL_QUORUM")
+    @Key(WRITE_CL)
+    String getWriteCL();
 
 }
