@@ -27,7 +27,6 @@ import com.netflix.config.ConfigurationManager;
 import org.apache.commons.cli.CommandLine;
 import org.apache.shiro.guice.aop.ShiroAopModule;
 import org.apache.usergrid.chop.webapp.dao.SetupDao;
-import org.apache.usergrid.chop.webapp.elasticsearch.ElasticSearchClient;
 import org.apache.usergrid.chop.webapp.elasticsearch.ElasticSearchFig;
 import org.apache.usergrid.chop.webapp.elasticsearch.EsEmbedded;
 import org.apache.usergrid.chop.webapp.elasticsearch.IElasticSearchClient;

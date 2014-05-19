@@ -29,7 +29,6 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.rmi.runtime.Log;
 
 
 @Singleton
@@ -46,8 +45,7 @@ public class ElasticSearchClient implements IElasticSearchClient {
     @Inject
     private ElasticSearchFig elasticSearchFig;
 
-    public Client start()
-    {
+    public Client start() {
         Settings settings = ImmutableSettings.settingsBuilder().build();
         LOG.info("Starting Elasticsearch on {}", elasticSearchFig.getTransportHost() + ":" +
                 elasticSearchFig.getTransportPort());
