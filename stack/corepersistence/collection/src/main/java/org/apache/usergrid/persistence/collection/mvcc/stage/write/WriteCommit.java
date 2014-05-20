@@ -33,6 +33,8 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtil
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -87,6 +89,11 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         final Id entityId = mvccEntity.getId();
         final UUID version = mvccEntity.getVersion();
         final CollectionScope collectionScope = ioEvent.getEntityCollection();
+
+        EntityUtils.setVersion( mvccEntity.getEntity().get(), version );
+
+        MvccValidationUtils.verifyMvccEntityWithEntity( ioEvent.getEvent() );
+        ValidationUtils.verifyTimeUuid( ioEvent.getEvent().getVersion(),"version" );
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED );
         MutationBatch logMutation = logEntryStrat.write( collectionScope, startEntry );

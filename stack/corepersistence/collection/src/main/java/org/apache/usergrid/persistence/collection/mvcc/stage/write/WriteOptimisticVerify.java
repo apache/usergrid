@@ -73,6 +73,10 @@ public class WriteOptimisticVerify
 
         CollectionScope collectionScope = ioevent.getEntityCollection();
 
+        if(entity.getVersion() == null){
+            return ioevent;
+        }
+
         try {
             List<MvccLogEntry> versions = logEntryStrat.load( 
                 collectionScope, entity.getId(), entity.getVersion(), 2 );

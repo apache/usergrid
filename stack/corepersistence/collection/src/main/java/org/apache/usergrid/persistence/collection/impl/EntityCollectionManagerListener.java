@@ -1,7 +1,6 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.guice.EntityUpdate;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
@@ -26,7 +25,6 @@ public class EntityCollectionManagerListener implements MessageListener<Collecti
     Load load;
     WriteStart writeStart;
     WriteStart writeUpdate;
-    CollectionScope context;
 
     public EntityCollectionManagerListener(
                                            Load load,

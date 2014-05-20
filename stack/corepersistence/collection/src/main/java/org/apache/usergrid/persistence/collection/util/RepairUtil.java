@@ -56,10 +56,10 @@ public class RepairUtil {
 
                     ChangeLogEntry.ChangeType changeType = changeLogEntry.getChangeType();
 
-                    if ( changeType.toString().equals( "PROPERTY_DELETE" ) ) {
+                    if ( changeType.equals( ChangeLogEntry.ChangeType.PROPERTY_DELETE ) ) {
                         completedEntity.getEntity().get().getFields().remove( changeLogEntry.getField() );
                     }
-                    else if ( changeType.toString().equals( "PROPERTY_WRITE" ) ) {
+                    else if ( changeType.equals( ChangeLogEntry.ChangeType.PROPERTY_WRITE) ) {
                         completedEntity.getEntity().get().setField( changeLogEntry.getField() );
                     }
                     changeLogIndex++;

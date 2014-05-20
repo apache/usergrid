@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerIm
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerListener;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
@@ -34,6 +35,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSe
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
+import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessorImpl;
@@ -95,8 +97,8 @@ public class CollectionModule extends AbstractModule {
     @Inject
     @Write
 
-    public WriteStart write (MvccLogEntrySerializationStrategy logStrategy) {
-        final WriteStart writeStart = new WriteStart( logStrategy,0 );
+    public WriteStart write (MvccLogEntrySerializationStrategy logStrategy, UUIDService uuidService) {
+        final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.COMPLETE);
 
         return writeStart;
     }
@@ -106,8 +108,8 @@ public class CollectionModule extends AbstractModule {
     @Inject
     @WriteUpdate
 
-    public WriteStart writeUpdate (MvccLogEntrySerializationStrategy logStrategy) {
-        final WriteStart writeStart = new WriteStart( logStrategy,1 );
+    public WriteStart writeUpdate (MvccLogEntrySerializationStrategy logStrategy, UUIDService uuidService) {
+        final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.PARTIAL );
 
         return writeStart;
     }

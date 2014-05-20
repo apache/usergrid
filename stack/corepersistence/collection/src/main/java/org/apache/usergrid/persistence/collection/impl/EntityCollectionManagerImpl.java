@@ -19,8 +19,6 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +39,6 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimist
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -142,9 +139,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 .checkNotNull( entityId.getType(), "The entity id type required to be set for an update operation" );
 
 
-        final UUID version = uuidService.newTimeUUID();
-
-        EntityUtils.setVersion( entity, version );
+//        final UUID version = uuidService.newTimeUUID();
+//
+//        EntityUtils.setVersion( entity, version );
 
 
 
@@ -153,6 +150,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
         Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData,writeStart );
+
         // execute all validation stages concurrently.  Needs refactored when this is done.  
         // https://github.com/Netflix/RxJava/issues/627
         // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(), 
@@ -219,14 +217,14 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions
                 .checkNotNull( entityId.getType(), "The entity id type required to be set for an update operation" );
 
-        if ( entity.getVersion() != null ) {
-            //validate version
-        }
-        else {
-            final UUID version = uuidService.newTimeUUID();
-
-            EntityUtils.setVersion( entity, version );
-        }
+//        if ( entity.getVersion() != null ) {
+//            //validate version
+//        }
+//        else {
+//            final UUID version = uuidService.newTimeUUID();
+//
+//            EntityUtils.setVersion( entity, version );
+//        }
 
         // fire the stages
         // TODO use our own Schedulers.io() to help with multitenancy here.
@@ -248,12 +246,14 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             @Override
             public void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
                 //Queue future write here (verify)
-                //TODO: find more suitable timeout, 20 is just a random number.
 
             }
         } ).map( writeCommit ).doOnNext( new Action1<Entity>() {
             @Override
             public void call( final Entity entity ) {
+                //TODO: find more suitable timeout, 20 is just a random number.
+                //TODO: We should be setting the verification before the writeCommit, then starting the event post write commit.
+
                 log.debug( "sending entity to the queue" );
                 final AsynchronousMessage<Entity> event = entityUpdate.setVerification( entity, 20 );
                 //fork background processing here (start)

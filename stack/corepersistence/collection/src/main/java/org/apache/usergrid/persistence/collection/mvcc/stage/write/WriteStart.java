@@ -14,11 +14,10 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
@@ -42,25 +41,14 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
 
     /**
-     * Create a new stage with the current context
+     * Create a new stage with the current context and status for entity.
      */
-    @Inject
-    public WriteStart( final MvccLogEntrySerializationStrategy logStrategy ) {
-        Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
-
-        this.logStrategy = logStrategy;
-        status = MvccEntity.Status.COMPLETE;
-
-    }
 
     @Inject
-    public WriteStart ( final MvccLogEntrySerializationStrategy logStrategy, int partialFlag) {
+    public WriteStart ( final MvccLogEntrySerializationStrategy logStrategy, MvccEntity.Status status) {
         this.logStrategy = logStrategy;
-        if(partialFlag == 1){
-            status = MvccEntity.Status.PARTIAL;
-        }
-        else
-            status = MvccEntity.Status.COMPLETE;
+        this.status = status;
+
     }
 
 
@@ -70,11 +58,8 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             final Entity entity = ioEvent.getEvent();
             final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
-
-            ValidationUtils.verifyEntityWrite( entity );
-
             final Id entityId = entity.getId();
-            final UUID version = entity.getVersion();
+            final UUID version = UUIDGenerator.newTimeUUID();
 
             final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                     org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
@@ -90,12 +75,17 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
                 throw new WriteStartException( entity, collectionScope, 
                         "Failed to execute write ", e );
             }
+            catch ( NullPointerException e) {
+                LOG.error( "Failed to execute write ", e );
+                throw new WriteStartException( entity, collectionScope,
+                        "Failed to execute write", e);
+            }
 
 
             //create the mvcc entity for the next stage
             //todo, we need to create a complete or partial update here (or sooner)
             final MvccEntityImpl nextStage = 
-                    new MvccEntityImpl( entityId, version, MvccEntity.Status.COMPLETE, entity );
+                    new MvccEntityImpl( entityId, version, status, entity );
 
             return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
         }
