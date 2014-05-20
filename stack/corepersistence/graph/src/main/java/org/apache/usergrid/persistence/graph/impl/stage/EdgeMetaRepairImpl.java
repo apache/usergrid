@@ -28,7 +28,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -51,7 +51,6 @@ import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.observables.MathObservable;
-import rx.schedulers.Schedulers;
 
 
 /**
@@ -90,7 +89,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
     @Override
-    public Observable<Integer> repairSources( final OrganizationScope scope, final Id sourceId, final String edgeType,
+    public Observable<Integer> repairSources( final ApplicationScope scope, final Id sourceId, final String edgeType,
                                               final UUID version ) {
 
 
@@ -99,16 +98,16 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
     @Override
-    public Observable<Integer> repairTargets( final OrganizationScope scope, final Id targetId, final String edgeType,
+    public Observable<Integer> repairTargets( final ApplicationScope scope, final Id targetId, final String edgeType,
                                               final UUID version ) {
         return clearTypes( scope, targetId, edgeType, version, target );
     }
 
 
-    private Observable<Integer> clearTypes( final OrganizationScope scope, final Id node, final String edgeType,
+    private Observable<Integer> clearTypes( final ApplicationScope scope, final Id node, final String edgeType,
                                             final UUID version, final CleanSerialization serialization ) {
 
-        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
         Preconditions.checkNotNull( edgeType, "edge type is required" );
         Preconditions.checkNotNull( version, "version is required" );
@@ -237,26 +236,26 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         /**
          * Load all subtypes for the edge with a version <= the provided version
          */
-        Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId, final String type,
+        Observable<String> loadEdgeSubTypes( final ApplicationScope scope, final Id nodeId, final String type,
                                              final UUID version );
 
 
         /**
          * Load an observable with edges from the details provided
          */
-        Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
+        Observable<MarkedEdge> loadEdges( final ApplicationScope scope, final Id nodeId, final String edgeType,
                                           final String subType, final UUID version );
 
         /**
          * Remove the sub type specified
          */
-        MutationBatch removeEdgeSubType( final OrganizationScope scope, final Id nodeId, final String edgeType,
+        MutationBatch removeEdgeSubType( final ApplicationScope scope, final Id nodeId, final String edgeType,
                                          final String subType, final UUID version );
 
         /**
          * Remove the edge type
          */
-        MutationBatch removeEdgeType( final OrganizationScope scope, final Id nodeId, final String type,
+        MutationBatch removeEdgeType( final ApplicationScope scope, final Id nodeId, final String type,
                                       final UUID version );
     }
 
@@ -268,7 +267,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
         @Override
-        public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
+        public Observable<String> loadEdgeSubTypes( final ApplicationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
 
 
@@ -283,7 +282,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
         @Override
-        public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
+        public Observable<MarkedEdge> loadEdges( final ApplicationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
             return mergedEdgeReader.getEdgesToTargetBySourceType( scope,
                     new SimpleSearchByIdType( nodeId, edgeType, version, subType, null ) );
@@ -291,14 +290,14 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
         @Override
-        public MutationBatch removeEdgeSubType( final OrganizationScope scope, final Id nodeId, final String type,
+        public MutationBatch removeEdgeSubType( final ApplicationScope scope, final Id nodeId, final String type,
                                                 final String subType, final UUID version ) {
             return edgeMetadataSerialization.removeIdTypeToTarget( scope, nodeId, type, subType, version );
         }
 
 
         @Override
-        public MutationBatch removeEdgeType( final OrganizationScope scope, final Id nodeId, final String type,
+        public MutationBatch removeEdgeType( final ApplicationScope scope, final Id nodeId, final String type,
                                              final UUID version ) {
             return edgeMetadataSerialization.removeEdgeTypeToTarget( scope, nodeId, type, version );
         }
@@ -310,7 +309,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
     private final CleanSerialization source = new CleanSerialization() {
 
         @Override
-        public Observable<String> loadEdgeSubTypes( final OrganizationScope scope, final Id nodeId,
+        public Observable<String> loadEdgeSubTypes( final ApplicationScope scope, final Id nodeId,
                                                     final String edgeType, final UUID version ) {
             return Observable.create( new ObservableIterator<String>( "edgeSourceIdTypes" ) {
                 @Override
@@ -323,7 +322,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
         @Override
-        public Observable<MarkedEdge> loadEdges( final OrganizationScope scope, final Id nodeId, final String edgeType,
+        public Observable<MarkedEdge> loadEdges( final ApplicationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final UUID version ) {
 
             return mergedEdgeReader.getEdgesFromSourceByTargetType( scope,
@@ -332,14 +331,14 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
         @Override
-        public MutationBatch removeEdgeSubType( final OrganizationScope scope, final Id nodeId, final String type,
+        public MutationBatch removeEdgeSubType( final ApplicationScope scope, final Id nodeId, final String type,
                                                 final String subType, final UUID version ) {
             return edgeMetadataSerialization.removeIdTypeFromSource( scope, nodeId, type, subType, version );
         }
 
 
         @Override
-        public MutationBatch removeEdgeType( final OrganizationScope scope, final Id nodeId, final String type,
+        public MutationBatch removeEdgeType( final ApplicationScope scope, final Id nodeId, final String type,
                                              final UUID version ) {
             return edgeMetadataSerialization.removeEdgeTypeFromSource( scope, nodeId, type, version );
         }

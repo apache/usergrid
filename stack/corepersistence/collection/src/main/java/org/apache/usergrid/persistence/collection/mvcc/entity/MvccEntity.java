@@ -19,10 +19,8 @@
 package org.apache.usergrid.persistence.collection.mvcc.entity;
 
 
-import java.util.UUID;
-
+import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 
@@ -30,7 +28,7 @@ import com.google.common.base.Optional;
 /**
  * An entity with internal information for versioning
  */
-public interface MvccEntity {
+public interface MvccEntity extends EntityVersion{
 
     /**
      * The possible Status of the mvccEntity
@@ -45,7 +43,13 @@ public interface MvccEntity {
         /**
          * The entity being written represents a partial entity
          */
-        PARTIAL;
+        PARTIAL,
+
+        /**
+         * This entity has been marked as deleted
+         */
+        DELETED
+        ;
     }
 
 
@@ -56,16 +60,6 @@ public interface MvccEntity {
      *         optional
      */
     Optional<Entity> getEntity();
-
-    /**
-     * Return the version of this entityId we are attempting to write used in the current context
-     */
-    UUID getVersion();
-
-    /**
-     * Get the UUID of the entity
-     */
-    Id getId();
 
     /**
      * Get the status of the entity

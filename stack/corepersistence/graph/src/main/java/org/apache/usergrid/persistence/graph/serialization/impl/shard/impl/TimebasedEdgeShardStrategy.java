@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -44,21 +44,21 @@ public class TimebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     @Override
-    public long getWriteShard( final OrganizationScope scope, final Id rowKeyId, final UUID version,
+    public long getWriteShard( final ApplicationScope scope, final Id rowKeyId, final UUID version,
                                final String... types ) {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
 
     @Override
-    public Iterator<Long> getReadShards( final OrganizationScope scope, final Id rowKeyId, final UUID maxVersion,
+    public Iterator<Long> getReadShards( final ApplicationScope scope, final Id rowKeyId, final UUID maxVersion,
                                          final String... types ) {
         return Collections.singleton(0l).iterator();
     }
 
 
     @Override
-    public void increment( final OrganizationScope scope, final Id rowKeyId, final long shardId, final long count,
+    public void increment( final ApplicationScope scope, final Id rowKeyId, final long shardId, final long count,
                            final String... types ) {
         //NO-OP
     }

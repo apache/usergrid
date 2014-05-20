@@ -19,8 +19,6 @@
 package org.apache.usergrid.persistence.index;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
 
 import com.google.inject.assistedinject.Assisted;
 
@@ -28,6 +26,5 @@ import com.google.inject.assistedinject.Assisted;
 public interface EntityIndexFactory {
 
     public EntityIndex createEntityIndex( 
-        @Assisted OrganizationScope orgScope,
-        @Assisted CollectionScope appScope);
+        @Assisted IndexScope appScope);
 }

@@ -29,7 +29,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -42,9 +41,9 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.time.StopWatch;
 
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -75,7 +74,7 @@ public class GraphManagerLoadTest {
     public MigrationManagerRule migrationManagerRule;
 
 
-    protected OrganizationScope scope;
+    protected ApplicationScope scope;
 
     protected int numWorkers;
     protected int writeLimit;
@@ -87,7 +86,7 @@ public class GraphManagerLoadTest {
         //get the system property of the UUID to use.  If one is not set, use the defualt
         String uuidString = System.getProperty( "org.id", "80a42760-b699-11e3-a5e2-0800200c9a66" );
 
-        scope = new OrganizationScopeImpl( createId( UUID.fromString( uuidString ), "test" ) );
+        scope = new ApplicationScopeImpl( createId( UUID.fromString( uuidString ), "test" ) );
 
         numWorkers = Integer.parseInt( System.getProperty( "numWorkers", "100" ) );
         writeLimit = Integer.parseInt( System.getProperty( "writeLimit", "10000" ) );

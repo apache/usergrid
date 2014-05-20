@@ -20,4 +20,20 @@ public interface SerializationFig extends GuicyFig {
     @Key( "collection.stage.transient.timeout" )
     @Default( "60" )
     int getTimeout();
+
+    /**
+     * Number of history items to return for delete.
+     * @return Timeout in seconds.
+     */
+    @Key( "collection.delete.history.size" )
+    @Default( "100" )
+    int getHistorySize();
+
+    /**
+     * Number of items to buffer.
+     * @return Timeout in seconds.
+     */
+    @Key( "collection.buffer.size" )
+    @Default( "10" )
+    int getBufferSize();
 }

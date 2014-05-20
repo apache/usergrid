@@ -66,13 +66,15 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -101,9 +103,7 @@ public class CpEntityManager implements EntityManager {
 
     private CpManagerCache managerCache;
 
-    private OrganizationScope organizationScope;
-    private CollectionScope applicationScope;
-
+    private ApplicationScope appScope;
 
     public CpEntityManager() {}
 
@@ -115,8 +115,7 @@ public class CpEntityManager implements EntityManager {
         this.managerCache = this.emf.getManagerCache();
         this.applicationId = applicationId;
 
-        organizationScope = this.emf.getOrganizationScope(applicationId);
-        applicationScope = this.emf.getApplicationScope(applicationId);
+        appScope = this.emf.getApplicationScope(applicationId);
 
         try {
             application = getApplication();
@@ -206,9 +205,7 @@ public class CpEntityManager implements EntityManager {
         String collectionName = Schema.defaultCollectionName( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            applicationScope.getOrganization(), 
-            applicationScope.getOwner(), 
-            collectionName );
+            appScope.getApplication(), appScope.getApplication(), collectionName );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
 
@@ -262,9 +259,7 @@ public class CpEntityManager implements EntityManager {
         String collectionName = Schema.defaultCollectionName( type );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            applicationScope.getOrganization(), 
-            applicationScope.getOwner(), 
-            collectionName );
+            appScope.getApplication(), appScope.getApplication(), collectionName );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
 
@@ -320,33 +315,32 @@ public class CpEntityManager implements EntityManager {
         String collectionName = Schema.defaultCollectionName( entity.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            applicationScope.getOrganization(), 
-            applicationScope.getOwner(), 
-            collectionName );
+            appScope.getApplication(), appScope.getApplication(), collectionName );
+
+        IndexScope indexScope = new IndexScopeImpl( 
+            appScope.getApplication(), appScope.getApplication(), entity.getType());
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-        EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
+        EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
             ecm.load( entityId ).toBlockingObservable().last();
         
-        cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
+        cpEntity = CpEntityMapUtils.fromMap( 
+                cpEntity, entity.getProperties(), entity.getType(), true );
 
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
-        ei.index( collectionScope, cpEntity );
+        ei.index( cpEntity );
 
         // next, update entity in every collection and connection scope in which it is indexed 
-        updateEntityIndexes(entity, cpEntity, collectionScope);
+        updateEntityIndexes(entity, cpEntity );
     }
 
 
     private void updateEntityIndexes( Entity entity, 
-            org.apache.usergrid.persistence.model.entity.Entity cpEntity, 
-            CollectionScope collectionScope) throws Exception {
-
-        EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
+            org.apache.usergrid.persistence.model.entity.Entity cpEntity ) throws Exception {
 
         RelationManager rm = getRelationManager( entity );
         Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
@@ -361,19 +355,14 @@ public class CpEntityManager implements EntityManager {
                 Set<String> collections = collectionsByUuid.get( uuid );
                 for ( String coll : collections ) {
                     
-                    CollectionScope ownerScope = new CollectionScopeImpl(
-                            applicationScope.getOrganization(),
-                            applicationScope.getOwner(),
-                            Schema.defaultCollectionName( ownerType ) );
-                    
-                    EntityCollectionManager ownerEcm = 
-                            managerCache.getEntityCollectionManager(ownerScope);
-                    
-                    org.apache.usergrid.persistence.model.entity.Entity cpOwner = ownerEcm.load( 
-                            new SimpleId( uuid, ownerType )).toBlockingObservable().last();
-                    
-                    ei.indexConnection(cpOwner,
-                            coll + CpRelationManager.COLLECTION_SUFFIX, cpEntity, collectionScope);
+                    IndexScope indexScope = new IndexScopeImpl( 
+                        appScope.getApplication(), 
+                        new SimpleId(uuid, ownerType), 
+                        coll + CpRelationManager.COLLECTION_SUFFIX);
+
+                    EntityIndex ei = managerCache.getEntityIndex( indexScope );
+
+                    ei.index( cpEntity );
                 }
             }
         }
@@ -386,12 +375,13 @@ public class CpEntityManager implements EntityManager {
         String collectionName = Schema.defaultCollectionName( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            applicationScope.getOrganization(), 
-            applicationScope.getOwner(), 
-            collectionName );
+            appScope.getApplication(), appScope.getApplication(), collectionName );
+
+        IndexScope defaultIndexScope = new IndexScopeImpl(
+            appScope.getApplication(), appScope.getApplication(), entityRef.getType());
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
-        EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
+        EntityIndex entityIndex = managerCache.getEntityIndex(defaultIndexScope);
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
@@ -415,25 +405,20 @@ public class CpEntityManager implements EntityManager {
                     Set<String> collections = collectionsByUuid.get( uuid );
                     for ( String coll : collections ) {
 
-                        CollectionScope ownerScope = new CollectionScopeImpl( 
-                            applicationScope.getOrganization(), 
-                            applicationScope.getOwner(), 
-                            Schema.defaultCollectionName( ownerType ) );
+                        IndexScope indexScope = new IndexScopeImpl( 
+                            appScope.getApplication(), 
+                            new SimpleId(uuid, ownerType), 
+                            coll + CpRelationManager.COLLECTION_SUFFIX);
 
-                        EntityCollectionManager ownerEcm = 
-                                managerCache.getEntityCollectionManager(ownerScope);
+                        EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
-                        org.apache.usergrid.persistence.model.entity.Entity cpOwner = ownerEcm.load( 
-                                new SimpleId( uuid, ownerType )).toBlockingObservable().last();
-
-                        ei.deindexConnection(cpOwner.getId(), 
-                            coll + CpRelationManager.COLLECTION_SUFFIX, entity);
+                        ei.deindex( entity );
                     }
                 }
             }
             
             // next, delete entity index in its own collection scope
-            ei.deindex( collectionScope, entity );
+            entityIndex.deindex( entity );
             ecm.delete( entityId ).toBlockingObservable().last();
         }
     }
@@ -677,12 +662,13 @@ public class CpEntityManager implements EntityManager {
         String collectionName = Schema.defaultCollectionName( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            applicationScope.getOrganization(), 
-            applicationScope.getOwner(), 
-            collectionName );
+            appScope.getApplication(), appScope.getApplication(), collectionName );
+
+        IndexScope defaultIndexScope = new IndexScopeImpl(
+            appScope.getApplication(), appScope.getApplication(), entityRef.getType());
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
-        EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
+        EntityIndex ei = managerCache.getEntityIndex(defaultIndexScope);
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
@@ -692,10 +678,10 @@ public class CpEntityManager implements EntityManager {
         cpEntity.removeField( propertyName );
 
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
-        ei.index( collectionScope, cpEntity );
+        ei.index( cpEntity );
 
         // update entity in every collection and connection scope in which it is indexed
-        updateEntityIndexes( get( entityRef ), cpEntity, collectionScope );
+        updateEntityIndexes( get( entityRef ), cpEntity );
     }
 
     @Override
@@ -1435,12 +1421,13 @@ public class CpEntityManager implements EntityManager {
 
         // prepare to write and index Core Persistence Entity into correct scope
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            applicationScope.getOrganization(), 
-            applicationScope.getOwner(), 
-            collectionName );
+            appScope.getApplication(), appScope.getApplication(), collectionName );
+
+        IndexScope defaultIndexScope = new IndexScopeImpl(
+            appScope.getApplication(), appScope.getApplication(), entity.getType());
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
-        EntityIndex ei = managerCache.getEntityIndex(organizationScope, applicationScope);
+        EntityIndex ei = managerCache.getEntityIndex(defaultIndexScope);
 
         try {
             cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
@@ -1454,7 +1441,7 @@ public class CpEntityManager implements EntityManager {
             throw new DuplicateUniquePropertyExistsException( 
                 entity.getType(), conflict.getName(), conflict.getValue());
         }
-        ei.index( collectionScope, cpEntity );
+        ei.index( cpEntity );
 
         // reflect changes in the legacy Entity
         entity.setUuid( cpEntity.getId().getUuid() );
@@ -1553,14 +1540,16 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void refreshIndex() {
 
-        // refresh system entity index
-        EntityIndex sei = managerCache.getEntityIndex(
-            CpEntityManagerFactory.SYSTEM_ORG_SCOPE, CpEntityManagerFactory.SYSTEM_APPS_SCOPE);
-        sei.refresh();
+        // refresh system application indexes 
+        emf.refreshIndexes();
+
 
         // refresh application entity index
-        EntityIndex aei = managerCache.getEntityIndex( organizationScope, applicationScope);
-        aei.refresh();
+        IndexScope indexScope = new IndexScopeImpl(
+            appScope.getApplication(), appScope.getApplication(), "application");
+
+        EntityIndex ei = managerCache.getEntityIndex( indexScope );
+        ei.refresh();
 
         logger.debug("Refreshed index for system and application: " + applicationId);
     }
