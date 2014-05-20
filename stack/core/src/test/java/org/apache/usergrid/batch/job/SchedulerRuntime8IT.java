@@ -36,9 +36,10 @@ import static org.junit.Assert.assertFalse;
  */
 @Concurrent
 public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
+    
     /**
-     * Test the scheduler ramps up correctly when there are more jobs to be read after a pause when the job specifies
-     * the retry time
+     * Test the scheduler ramps up correctly when there are more jobs to be read after a pause 
+     * when the job specifies the retry time
      */
     @Test
     public void queryAndDeleteJobs() throws Exception {
@@ -57,6 +58,8 @@ public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
         test.setProperty( "notificationId", notificationId );
 
         JobData saved = scheduler.createJob( "countdownLatch", fireTime, test );
+
+        scheduler.refreshIndex();
 
         // now query and make sure it equals the saved value
 

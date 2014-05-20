@@ -40,7 +40,7 @@ public class PathingUtils {
      * @return a new string in the format "organizationName/applicationName"
      */
     public static String assembleAppName( String organizationName, String applicationName ) {
-        return new String( organizationName.toLowerCase() + SLASH + applicationName.toLowerCase() );
+        return organizationName.toLowerCase() + SLASH + applicationName.toLowerCase();
     }
 
 

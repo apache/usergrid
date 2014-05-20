@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.index.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
-
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
@@ -64,11 +63,8 @@ public class EsProvider {
 
             if (fig.isEmbedded()) {
 
-                log.info("--------------------------------");
-                log.info("Starting embedded ElasticSearch");
-                log.info("--------------------------------");
-
                 int port = AvailablePortFinder.getNextAvailable( 2000 );
+
                 Settings settings = ImmutableSettings.settingsBuilder()
                         .put("node.http.enabled", true)
                         .put("transport.tcp.port", port)
@@ -77,24 +73,32 @@ public class EsProvider {
                         .put("gateway.type", "none")
                         .put("index.store.type", "memory")
                         .put("index.number_of_shards", 1)
-                        .put("index.number_of_replicas", 1).build();
+                        .put("index.number_of_replicas", 1)
+                        .build();
+
+                log.info("Starting ElasticSearch embedded with settings: " +  settings.getAsMap());
 
                 Node node = NodeBuilder.nodeBuilder().local(true).settings(settings).node();
                 newClient = node.client();
 
             } else { // build client that connects to all hosts
 
-                log.info("--------------------------------");
-                log.info("Creating ElasticSearch client");
-                log.info("--------------------------------");
-
                 Settings settings = ImmutableSettings.settingsBuilder()
-                        .put("cluster.name", fig.getIndexNamePrefix() ).build();
+                        .put("cluster.name", fig.getClusterName() )
+                        // TODO: consider making these configurable
+                        .put("client.transport.ignore_cluster_name", true )
+                        .put("client.transport.ping_timeout", 2000) // milliseconds
+                        .put("client.transport.nodes_sampler_interval", 100 )
+                        .build();
+
+                log.info("Creating ElasticSearch client with settings: " +  settings.getAsMap());
 
                 TransportClient transportClient = new TransportClient(settings);
+
                 for (String host : fig.getHosts().split(",")) {
                     transportClient.addTransportAddress(
                             new InetSocketTransportAddress(host.trim(), fig.getPort()));
+                    log.info("   Added transport for ElasticSearch host {}:{}", host.trim(), fig.getPort() ) ;
                 }
                 newClient = transportClient;
             }

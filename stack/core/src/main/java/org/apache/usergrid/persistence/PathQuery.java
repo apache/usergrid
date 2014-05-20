@@ -47,7 +47,7 @@ public class PathQuery<E> {
      * top level
      *
      * @param head the top-level entity
-     * @param collectionName the query - must have a collection or connectType value set
+     * @param query the query - must have a collection or connectType value set
      */
     public PathQuery( EntityRef head, Query query ) {
         if ( query.getCollection() == null && query.getConnectionType() == null ) {
@@ -62,7 +62,7 @@ public class PathQuery<E> {
      * chained
      *
      * @param source the source query we're chaining from
-     * @param collectionName the query - must have a collection or connectType value set
+     * @param query the query - must have a collection or connectType value set
      */
     public PathQuery( PathQuery source, Query query ) {
         if ( query.getCollection() == null && query.getConnectionType() == null ) {

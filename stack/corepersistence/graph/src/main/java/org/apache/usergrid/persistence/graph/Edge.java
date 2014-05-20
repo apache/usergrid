@@ -27,7 +27,8 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- * Defines a directed edge from the source node to the target node
+ * Defines a directed edge from the source node to the target node.  Edges are considered immutable.
+ * Once created, their data cannot be modified.
  *
  * @author tnine
  */

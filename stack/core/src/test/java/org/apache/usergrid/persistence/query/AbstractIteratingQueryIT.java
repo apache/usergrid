@@ -895,6 +895,8 @@ public abstract class AbstractIteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
+        app.getEm().refreshIndex();
+
         Query query = new Query();
         query.setLimit( 100 );
 
@@ -993,6 +995,8 @@ public abstract class AbstractIteratingQueryIT {
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
+
+        app.getEm().refreshIndex();
 
         Query query = Query.fromQL( "select * order by boolean desc, index asc" );
         query.setLimit( queryLimit );
@@ -1097,6 +1101,8 @@ public abstract class AbstractIteratingQueryIT {
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
+
+        app.getEm().refreshIndex();
 
         Query query =
                 Query.fromQL( "select * where intersect = true OR intersect2 = true order by created, intersect desc" );
@@ -1246,6 +1252,7 @@ public abstract class AbstractIteratingQueryIT {
 
         @Override
         public Results getResults( Query query ) throws Exception {
+            app.getEm().refreshIndex();
             return app.getEm().searchCollection( app.getEm().getApplicationRef(), "tests", query );
         }
     }
@@ -1292,6 +1299,7 @@ public abstract class AbstractIteratingQueryIT {
          */
         @Override
         public Results getResults( Query query ) throws Exception {
+            app.getEm().refreshIndex();
             query.setConnectionType( CONNECTION );
             query.setEntityType( "test" );
             return app.getEm().searchConnectedEntities( rootEntity, query );

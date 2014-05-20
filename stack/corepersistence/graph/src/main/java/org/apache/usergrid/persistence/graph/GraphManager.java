@@ -27,7 +27,7 @@ import rx.Observable;
 
 /**
  * Represents operations that can be performed on edges within our graph.  A graph should be within an
- * OrganizationScope
+ * ApplicationScope
  *
  * An Edge: is defined as the following.
  *

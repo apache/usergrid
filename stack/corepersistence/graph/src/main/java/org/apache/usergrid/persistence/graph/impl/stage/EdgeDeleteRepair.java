@@ -20,8 +20,9 @@
 package org.apache.usergrid.persistence.graph.impl.stage;
 
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.graph.Edge;
+import java.util.UUID;
+
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 
 import rx.Observable;
@@ -37,9 +38,10 @@ public interface EdgeDeleteRepair {
      * Repair this edge.  Remove previous entries
      * @param scope The scope to use
      * @param edge The last edge to retain.  All versions  <= this edge's version  will be deleted
+     * @param timestamp The timestamp this operation was performed
      *
      * @return An observable that emits every version of the edge we delete.  Note that it may emit duplicates
      * since this is a streaming API.
      */
-    public Observable<MarkedEdge> repair( OrganizationScope scope, Edge edge );
+    public Observable<MarkedEdge> repair( ApplicationScope scope, MarkedEdge edge, UUID timestamp );
 }

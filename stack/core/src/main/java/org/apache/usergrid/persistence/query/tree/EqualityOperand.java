@@ -28,10 +28,6 @@ import org.antlr.runtime.Token;
  */
 public abstract class EqualityOperand extends Operand {
 
-    /**
-     * @param property
-     * @param literal
-     */
     public EqualityOperand( Token t ) {
         super( t );
     }
@@ -85,5 +81,10 @@ public abstract class EqualityOperand extends Operand {
     /** @return the literal */
     public Literal<?> getLiteral() {
         return ( Literal<?> ) this.children.get( 1 );
+    }
+
+    @Override
+    public boolean isNil() {
+        return true;
     }
 }

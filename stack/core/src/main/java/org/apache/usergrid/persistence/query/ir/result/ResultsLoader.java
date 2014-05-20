@@ -26,5 +26,5 @@ import org.apache.usergrid.persistence.Results;
 public interface ResultsLoader {
 
     /** Load results from the list of uuids.  Should return a Results entity where the query cursor can be set */
-    public Results getResults( List<ScanColumn> entityIds ) throws Exception;
+    public Results getResults( List<ScanColumn> entityIds, String type ) throws Exception;
 }

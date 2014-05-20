@@ -46,8 +46,6 @@ import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.core.TimerContext;
 import com.yammer.metrics.reporting.ConsoleReporter;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.DynamicComposite;
@@ -63,6 +61,7 @@ import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNI
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffers;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -73,7 +72,6 @@ import static org.apache.usergrid.utils.ConversionUtils.bytebuffers;
 public class EntityReadBenchMark extends ToolBase {
 
 
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
     private static final Logger logger = LoggerFactory.getLogger( EntityReadBenchMark.class );
 
@@ -275,8 +273,8 @@ public class EntityReadBenchMark extends ToolBase {
             }
 
             MultigetSliceQuery<ByteBuffer, DynamicComposite, ByteBuffer> multiget =
-                    HFactory.createMultigetSliceQuery( keyspace, be, DynamicCompositeSerializer.get(),
-                            ByteBufferSerializer.get() );
+                    HFactory.createMultigetSliceQuery( keyspace, be, dce,
+                            be );
 
             multiget.setColumnFamily( ENTITY_INDEX.getColumnFamily() );
             multiget.setKeys( bytebuffers( cassKeys ) );
@@ -334,12 +332,6 @@ public class EntityReadBenchMark extends ToolBase {
     private class UniqueIndexer {
 
         private Keyspace keyspace;
-
-
-        /**
-         * @param indexBucketLocator
-         * @param mutator
-         */
         public UniqueIndexer( Keyspace keyspace ) {
             super();
             this.keyspace = keyspace;

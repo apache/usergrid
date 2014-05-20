@@ -65,8 +65,8 @@ public interface RunManager {
      * in race conditions. During runner initialization this is not a possibility on the
      * same project.
      *
-     * @param project the project configuration
-     * @return the next available run number
+     * @param project   the project configuration
+     * @return          the next available run number
      */
     int getNextRunNumber( Project project );
 

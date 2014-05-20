@@ -50,7 +50,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
 import me.prettyprint.hector.api.beans.DynamicComposite;
@@ -60,6 +59,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX_ENTRIES;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
@@ -68,6 +68,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_E
 import static org.apache.usergrid.utils.CompositeUtils.setEqualityFlag;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -89,7 +90,6 @@ public class UniqueIndexCleanup extends ToolBase {
      */
     private static final int PAGE_SIZE = 100;
 
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
 
     private static final Logger logger = LoggerFactory.getLogger( UniqueIndexCleanup.class );
@@ -203,6 +203,8 @@ public class UniqueIndexCleanup extends ToolBase {
 
                     for ( ScanColumn col : ids ) {
                         final UUID id = col.getUUID();
+                        String type = getDefaultSchema().getCollectionType("application", collectionName);
+
                         boolean reIndex = false;
 
                         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -250,20 +252,21 @@ public class UniqueIndexCleanup extends ToolBase {
                                     // audit. Delete it, then mark this entity for update
                                     if ( entries.size() == 0 ) {
                                         logger.info(
-                                                "Could not find reference to value '{}' for property '{}' on entity " +
-                                                        "{} in collection {}. " + " Forcing reindex",
-                                                new Object[] { propValue, prop, id, collectionName } );
+                                            "Could not find reference to value '{}' property '{}'"+
+                                            " on entity {} in collection {}. " + " Forcing reindex",
+                                            new Object[] { propValue, prop, id, collectionName } );
 
-                                        addDeleteToMutator( m, ENTITY_INDEX, rowKey, index.getName().duplicate(),
-                                                timestamp );
+                                        addDeleteToMutator( 
+                                            m, ENTITY_INDEX, rowKey, index.getName().duplicate(), timestamp );
 
                                         reIndex = true;
                                     }
 
                                     if ( entries.size() > 1 ) {
                                         logger.info(
-                                                "Found more than 1 entity referencing unique index for property '{}' " +
-                                                        "with value " + "'{}'", prop, propValue );
+                                            "Found more than 1 entity referencing unique index "
+                                          + "for property '{}' with value " + "'{}'", 
+                                            prop, propValue );
                                         reIndex = true;
                                     }
                                 }
@@ -271,11 +274,12 @@ public class UniqueIndexCleanup extends ToolBase {
 
                             //force this entity to be updated
                             if ( reIndex ) {
-                                Entity entity = em.get( id );
+                                Entity entity = em.get( new SimpleEntityRef( type, id ));
 
                                 //entity may not exist, but we should have deleted rows from the index
                                 if ( entity == null ) {
-                                    logger.warn( "Entity with id {} did not exist in app {}", id, applicationId );
+                                    logger.warn( "Entity with id {} did not exist in app {}", 
+                                            id, applicationId );
                                     //now execute the cleanup. In this case the entity is gone,
                                     // so we'll want to remove references from
                                     // the secondary index

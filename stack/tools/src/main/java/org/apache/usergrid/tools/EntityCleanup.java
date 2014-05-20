@@ -43,7 +43,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.mutation.Mutator;
 
@@ -54,12 +53,13 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
- * This is a utility to audit all available entity ids for existing target rows If an entity Id exists in the collection
- * index with no target entity, the id is removed from the index. This is a cleanup tool as a result of the issue in
- * USERGRID-323
+ * This is a utility to audit all available entity ids for existing target rows If an entity 
+ * Id exists in the collection index with no target entity, the id is removed from the index. 
+ * This is a cleanup tool as a result of the issue in USERGRID-323
  *
  * @author tnine
  */
@@ -70,7 +70,6 @@ public class EntityCleanup extends ToolBase {
      */
     private static final int PAGE_SIZE = 100;
 
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
 
     private static final Logger logger = LoggerFactory.getLogger( EntityCleanup.class );
 
@@ -123,6 +122,8 @@ public class EntityCleanup extends ToolBase {
             // go through each collection and audit the value
             for ( String collectionName : collectionNames ) {
 
+                String type = Schema.getAssociatedEntityType(collectionName);
+
                 IndexScanner scanner = cass.getIdList( cass.getApplicationKeyspace( applicationId ),
                         key( applicationId, DICTIONARY_COLLECTIONS, collectionName ), null, null, PAGE_SIZE, false,
                         indexBucketLocator, applicationId, collectionName, false );
@@ -135,7 +136,7 @@ public class EntityCleanup extends ToolBase {
 
                     Set<ScanColumn> copy = new LinkedHashSet<ScanColumn>( itr.next() );
 
-                    results = em.get( ScanColumnTransformer.getIds( copy ) );
+                    results = em.getEntities(ScanColumnTransformer.getIds( copy ), type );
                     // nothing to do they're the same size so there's no
                     // orphaned uuid's in the entity index
                     if ( copy.size() == results.size() ) {

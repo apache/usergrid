@@ -25,14 +25,17 @@ import org.apache.usergrid.batch.SchedulerITSuite;
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.cassandra.CassandraResource;
-
+import org.apache.usergrid.cassandra.SchemaManager;
 import org.junit.Before;
+
+import org.junit.BeforeClass;
 
 
 /**
  * Class to test job runtimes
  */
 public class AbstractSchedulerRuntimeIT {
+
     protected static final int DEFAULT_COUNT = 10;
     protected static final String COUNT_PROP = AbstractSchedulerRuntimeIT.class.getCanonicalName();
     protected static final String TIMEOUT_PROP = "usergrid.scheduler.job.timeout";
@@ -42,17 +45,28 @@ public class AbstractSchedulerRuntimeIT {
     public static CassandraResource cassandraResource = SchedulerITSuite.cassandraResource;
 
     private TestJobListener listener = new TestJobListener();
+    protected long waitTime = TestJobListener.WAIT_MAX_MILLIS;
+
     private int count = DEFAULT_COUNT;
+
     protected SchedulerService scheduler;
     protected Properties props;
-    protected long waitTime = listener.WAIT_MAX_MILLIS;
 
 
+    @BeforeClass
+    public static void beforeClass() {
+        SchemaManager sm = cassandraResource.getBean("coreManager", SchemaManager.class);
+        sm.create();
+        sm.populateBaseData();
+    }
+
+    
     @Before
     @SuppressWarnings( "all" )
     public void setup() {
-        scheduler = cassandraResource.getBean( SchedulerService.class );
+
         props = cassandraResource.getBean( "properties", Properties.class );
+        scheduler = cassandraResource.getBean( SchedulerService.class );
 
         if ( System.getProperties().containsKey( COUNT_PROP ) ) {
             count = Integer.getInteger( System.getProperty( COUNT_PROP ) );

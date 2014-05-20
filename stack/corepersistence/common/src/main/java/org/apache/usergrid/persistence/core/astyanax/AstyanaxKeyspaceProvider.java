@@ -42,14 +42,13 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
  * @author tnine
  */
 public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
-    private final CassandraFig cassandraConfig;
+    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
 
-    // @todo aok - this being static is utterly horrible and needs to change
-    private final static Set<AstyanaxContext<Keyspace>> contexts =
-            new HashSet<AstyanaxContext<Keyspace>>();
 
     @Inject
-    public AstyanaxKeyspaceProvider( final CassandraFig cassandraConfig ) {
+    public AstyanaxKeyspaceProvider( final CassandraFig cassandraFig, final CassandraConfig cassandraConfig) {
+        this.cassandraFig = cassandraFig;
         this.cassandraConfig = cassandraConfig;
     }
 
@@ -58,19 +57,21 @@ public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
     public Keyspace get() {
 
         AstyanaxConfiguration config = new AstyanaxConfigurationImpl()
-                .setDiscoveryType( NodeDiscoveryType.valueOf( cassandraConfig.getDiscoveryType() ) )
-                .setTargetCassandraVersion( cassandraConfig.getVersion() );
+                .setDiscoveryType( NodeDiscoveryType.valueOf( cassandraFig.getDiscoveryType() ) )
+                .setTargetCassandraVersion( cassandraFig.getVersion() )
+                .setDefaultReadConsistencyLevel( cassandraConfig.getReadCL() )
+                .setDefaultWriteConsistencyLevel( cassandraConfig.getWriteCL() );
 
         ConnectionPoolConfiguration connectionPoolConfiguration =
                 new ConnectionPoolConfigurationImpl( "UsergridConnectionPool" )
-                        .setPort( cassandraConfig.getThriftPort() )
-                        .setMaxConnsPerHost( cassandraConfig.getConnections() )
-                        .setSeeds( cassandraConfig.getHosts() )
-                        .setSocketTimeout( cassandraConfig.getTimeout() );
+                        .setPort( cassandraFig.getThriftPort() )
+                        .setMaxConnsPerHost( cassandraFig.getConnections() )
+                        .setSeeds( cassandraFig.getHosts() )
+                        .setSocketTimeout( cassandraFig.getTimeout() );
 
         AstyanaxContext<Keyspace> context =
-                new AstyanaxContext.Builder().forCluster( cassandraConfig.getClusterName() )
-                        .forKeyspace( cassandraConfig.getKeyspaceName() )
+                new AstyanaxContext.Builder().forCluster( cassandraFig.getClusterName() )
+                        .forKeyspace( cassandraFig.getKeyspaceName() )
 
                         /*
                          * TODO tnine Filter this by adding a host supplier.  We will get token discovery from cassandra
@@ -86,25 +87,10 @@ public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
                         .buildKeyspace( ThriftFamilyFactory.getInstance() );
 
         context.start();
-        synchronized ( contexts ) {
-            contexts.add( context );
-        }
+
+
         return context.getClient();
     }
 
 
-    // @todo by aok - this must be considered to enable stress tests to shutdown or else
-    // @todo the system will run out of file descriptors (sockets) and tests will fail.
-    // this is where the lifecycle management annotations would come in handy.
-    public void shutdown() {
-        synchronized ( contexts ) {
-            HashSet<AstyanaxContext<Keyspace>> copy = new HashSet<AstyanaxContext<Keyspace>>( contexts.size() );
-            copy.addAll( contexts );
-
-            for ( AstyanaxContext<Keyspace> context : copy ) {
-                context.shutdown();
-                contexts.remove( context );
-            }
-        }
-    }
 }

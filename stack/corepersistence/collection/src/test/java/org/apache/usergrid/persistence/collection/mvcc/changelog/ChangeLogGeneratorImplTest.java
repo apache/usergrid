@@ -18,11 +18,12 @@
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.jukito.JukitoModule;
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -35,13 +36,14 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
@@ -56,14 +58,10 @@ import rx.Observable;
 /**
  * Test basic operation of change log
  */
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class ChangeLogGeneratorImplTest {
     private static final Logger LOG = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
-
 
 
     @Inject
@@ -130,7 +128,7 @@ public class ChangeLogGeneratorImplTest {
             // Type = PROPERTY_DELETE, Property = count,    Value = 1, Versions = [55faa3bc-a925-11e3-bf9d-10ddb1de66c4]
             // Type = PROPERTY_DELETE, Property = name,     Value = name1, Versions = [55faa3bc-a925-11e3-bf9d-10ddb1de66c4]
 
-            List<MvccEntity> versions = mvccEntitySerializationStrategy
+            Iterator<MvccEntity> versions = mvccEntitySerializationStrategy
                .load( context, e1.getId(), e3.getVersion(), 10);
 
             ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();
@@ -183,7 +181,7 @@ public class ChangeLogGeneratorImplTest {
             // Type = PROPERTY_DELETE, Property = count, Value = 1, Versions = [c75f589b-a927-11e3-8bfc-10ddb1de66c4]
             // Type = PROPERTY_DELETE, Property = name, Value = name1, Versions = [c75f589b-a927-11e3-8bfc-10ddb1de66c4]
 
-            List<MvccEntity> versions = mvccEntitySerializationStrategy
+            Iterator<MvccEntity> versions = mvccEntitySerializationStrategy
                .load( context, e1.getId(), e3.getVersion(), 10);
 
             ChangeLogGeneratorImpl instance = new ChangeLogGeneratorImpl();

@@ -22,9 +22,7 @@ package org.apache.usergrid.chop.webapp.coordinator.rest;
 
 import java.io.File;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -37,24 +35,15 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.usergrid.chop.api.Summary;
 import org.apache.usergrid.chop.webapp.ChopUiFig;
 import org.apache.usergrid.chop.webapp.coordinator.CoordinatorUtils;
 import org.apache.usergrid.chop.webapp.dao.model.BasicCommit;
-import org.apache.usergrid.chop.webapp.dao.model.BasicRun;
-import org.apache.usergrid.chop.webapp.dao.model.BasicRunResult;
-import org.apache.usergrid.chop.webapp.elasticsearch.Util;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import org.apache.usergrid.chop.api.Commit;
 import org.apache.usergrid.chop.api.Module;
 import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.webapp.dao.CommitDao;
 import org.apache.usergrid.chop.webapp.dao.ModuleDao;
-import org.apache.usergrid.chop.webapp.dao.RunDao;
-import org.apache.usergrid.chop.webapp.dao.RunResultDao;
 import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
 import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
@@ -73,7 +62,6 @@ import com.sun.jersey.multipart.FormDataParam;
 @Path( UploadResource.ENDPOINT )
 public class UploadResource extends TestableResource implements RestParams {
     public final static String ENDPOINT = "/upload";
-    public final static String SUCCESSFUL_TEST_MESSAGE = "Test parameters are OK";
     private final static Logger LOG = LoggerFactory.getLogger( UploadResource.class );
 
 
@@ -82,12 +70,6 @@ public class UploadResource extends TestableResource implements RestParams {
 
     @Inject
     private ModuleDao moduleDao;
-
-    @Inject
-    private RunDao runDao;
-
-    @Inject
-    private RunResultDao runResultDao;
 
     @Inject
     private CommitDao commitDao;
@@ -182,6 +164,14 @@ public class UploadResource extends TestableResource implements RestParams {
                 return Response.status( Response.Status.INTERNAL_SERVER_ERROR ).entity( errorMessage ).build();
             }
         }
+        if( runnerJar.exists() ) {
+            if( runnerJar.delete() ) {
+                LOG.info( "Deleted old runner.jar" );
+            }
+            else {
+                LOG.info( "Could not delete old runner.jar" );
+            }
+        }
 
         // Download and write the file to the proper position on disk & reference
         CoordinatorUtils.writeToFile( runnerJarStream, runnerJar.getAbsolutePath() );
@@ -216,98 +206,5 @@ public class UploadResource extends TestableResource implements RestParams {
         }
 
         return Response.status( Response.Status.CREATED ).entity( runnerJar.getAbsolutePath() ).build();
-    }
-
-
-
-
-    @SuppressWarnings( "unchecked" )
-    @POST
-    @Path( "/results" )
-    @Consumes( MediaType.MULTIPART_FORM_DATA )
-    @Produces( MediaType.APPLICATION_JSON )
-    public Response uploadResults(
-            @QueryParam( RUNNER_HOSTNAME ) String runnerHostName,
-            @QueryParam( TEST_CLASS ) String testClass,
-            @QueryParam( RUN_ID ) String runId,
-            @FormDataParam( CONTENT ) InputStream resultsFileInputStream,
-            @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
-                                 ) throws Exception {
-
-        if( inTestMode( testMode ) ) {
-            LOG.info( "Calling /upload/results in test mode ..." );
-            LOG.info( "{} is {}", RUNNER_HOSTNAME, runnerHostName );
-            LOG.info( "{} is {}", TEST_CLASS, testClass );
-            LOG.info( "{} is {}", RUN_ID, runId );
-
-            return Response.status( Response.Status.CREATED ).entity( SUCCESSFUL_TEST_MESSAGE ).build();
-        }
-        else {
-            LOG.info( "/upload/results called ..." );
-        }
-
-        JSONObject object = ( JSONObject ) new JSONParser().parse( new InputStreamReader( resultsFileInputStream ) );
-        JSONArray runResults = ( JSONArray ) object.get( "runResults" );
-        Iterator<JSONObject> iterator = runResults.iterator();
-
-        //noinspection WhileLoopReplaceableByForEach
-        while( iterator.hasNext() ) {
-            JSONObject jsonResult = iterator.next();
-
-            BasicRunResult runResult = new BasicRunResult(
-                    runId,
-                    Util.getInt( jsonResult, "runCount"),
-                    Util.getInt( jsonResult, "runTime" ),
-                    Util.getInt( jsonResult, "ignoreCount" ),
-                    Util.getInt( jsonResult, "failureCount" )
-            );
-
-            if ( runResultDao.save( runResult ) ) {
-                LOG.info( "Saved run result: {}", runResult );
-            }
-        }
-
-        return Response.status( Response.Status.CREATED ).entity( "TRUE" ).build();
-    }
-
-
-    @POST
-    @Path( "/summary" )
-    @Consumes( MediaType.APPLICATION_JSON )
-    @Produces( MediaType.APPLICATION_JSON )
-    public Response uploadSummary(
-            @QueryParam( RUNNER_HOSTNAME ) String runnerHostName,
-            @QueryParam( TEST_CLASS ) String testClass,
-            @QueryParam( RUN_NUMBER ) int runNumber,
-            @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
-                                 ) throws Exception {
-
-        if( inTestMode( testMode ) ) {
-            LOG.info( "Calling /upload/summary in test mode ..." );
-            LOG.info( "{} is {}", RUNNER_HOSTNAME, runnerHostName );
-            LOG.info( "{} is {}", TEST_CLASS, testClass );
-            LOG.info( "{} is {}", RUN_NUMBER, runNumber );
-
-            return Response.status( Response.Status.CREATED ).entity( SUCCESSFUL_TEST_MESSAGE ).build();
-        }
-        else {
-            LOG.info( "/upload/summary called ..." );
-        }
-
-        BasicRun run = new BasicRun(
-                COMMIT_ID,
-                runnerHostName,
-                runNumber,
-                testClass
-        );
-
-        if ( runDao.save( run ) ) {
-            LOG.info( "Created new Run {} ", run );
-        }
-        else {
-            LOG.warn( "Failed to create new Run" );
-        }
-
-        return Response.status( Response.Status.CREATED ).entity( run.getId() ).build();
     }
 }

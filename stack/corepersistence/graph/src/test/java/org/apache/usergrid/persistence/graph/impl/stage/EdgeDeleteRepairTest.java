@@ -22,20 +22,17 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 
 import java.util.Iterator;
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
-import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
@@ -50,6 +47,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
+import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createMarkedEdge;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
@@ -60,14 +58,11 @@ import static org.mockito.Mockito.when;
  *
  *
  */
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( { TestGraphModule.class } )
 public class EdgeDeleteRepairTest {
 
     private static final Logger LOG = LoggerFactory.getLogger( EdgeDeleteRepairTest.class );
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
 
     @Inject
@@ -88,19 +83,19 @@ public class EdgeDeleteRepairTest {
     protected EdgeDeleteRepair edgeDeleteRepair;
 
 
-    protected OrganizationScope scope;
+    protected ApplicationScope scope;
 
 
     @Before
     public void setup() {
-        scope = mock( OrganizationScope.class );
+        scope = mock( ApplicationScope.class );
 
         Id orgId = mock( Id.class );
 
         when( orgId.getType() ).thenReturn( "organization" );
         when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
 
-        when( scope.getOrganization() ).thenReturn( orgId );
+        when( scope.getApplication() ).thenReturn( orgId );
     }
 
 
@@ -109,9 +104,9 @@ public class EdgeDeleteRepairTest {
      */
     @Test
     public void noEdges() {
-        Edge edge = createEdge( "source", "test", "target" );
+        MarkedEdge edge = createEdge( "source", "test", "target" );
 
-        Iterator<MarkedEdge> edges = edgeDeleteRepair.repair( scope, edge ).toBlockingObservable().getIterator();
+        Iterator<MarkedEdge> edges = edgeDeleteRepair.repair( scope, edge, UUIDGenerator.newTimeUUID() ).toBlockingObservable().getIterator();
 
         assertFalse( "No edges cleaned", edges.hasNext() );
     }
@@ -122,85 +117,66 @@ public class EdgeDeleteRepairTest {
      */
     @Test
     public void commitLogTest() throws ConnectionException {
-        testSingleLocation( commitLogEdgeSerialization );
-    }
 
-
-    /**
-     * Commit log tests
-     */
-    @Test
-    public void storageTest() throws ConnectionException {
-        testSingleLocation( storageEdgeSerialization );
-    }
-
-
-    private void testSingleLocation( EdgeSerialization edgeSerialization ) throws ConnectionException {
 
         final Id sourceId = createId( "source" );
         final Id targetId = createId( "target" );
         final String edgeType = "edge";
 
 
-        final Edge edge1 = createEdge( sourceId, edgeType, targetId );
-        edgeSerialization.writeEdge( scope, edge1 ).execute();
+        final MarkedEdge edge1 = createMarkedEdge( sourceId, edgeType, targetId );
+        commitLogEdgeSerialization.writeEdge( scope, edge1,  UUIDGenerator.newTimeUUID() ).execute();
 
-        final Edge edge2 = createEdge( sourceId, edgeType, targetId );
-        edgeSerialization.writeEdge( scope, edge2 ).execute();
+        //write it as non deleted to storage
+        final MarkedEdge edge1NotDeleted =
+                createEdge( edge1.getSourceNode(), edgeType, edge1.getTargetNode(), edge1.getVersion(), false );
 
-        //now repair delete the first edge
-
-        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1 ).toBlockingObservable().single();
-
-        assertEquals( edge1, deleted );
-
-        Iterator<MarkedEdge> itr = edgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
-
-        assertEquals( edge2, itr.next() );
-
-        assertFalse( itr.hasNext() );
-    }
+        storageEdgeSerialization.writeEdge( scope, edge1NotDeleted,  UUIDGenerator.newTimeUUID() ).execute();
 
 
-    /**
-     * Tests the edge in both
-     * @throws ConnectionException
-     */
-    @Test
-    public void testBoth() throws ConnectionException {
-
-        final Id sourceId = createId( "source" );
-        final Id targetId = createId( "target" );
-        final String edgeType = "edge";
-
-
-        final Edge edge1 = createEdge( sourceId, edgeType, targetId );
-        commitLogEdgeSerialization.writeEdge( scope, edge1 ).execute();
-        storageEdgeSerialization.writeEdge( scope, edge1 ).execute();
-
-        final Edge edge2 = createEdge( sourceId, edgeType, targetId );
-        commitLogEdgeSerialization.writeEdge( scope, edge2 ).execute();
-        storageEdgeSerialization.writeEdge( scope, edge2 ).execute();
+        final MarkedEdge edge2 = createEdge( sourceId, edgeType, targetId );
+        commitLogEdgeSerialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
         //now repair delete the first edge
-
-        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1 ).toBlockingObservable().single();
-
-        assertEquals( edge1, deleted );
 
         Iterator<MarkedEdge> itr = commitLogEdgeSerialization.getEdgeVersions( scope,
                 new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
 
         assertEquals( edge2, itr.next() );
+        assertEquals( edge1, itr.next() );
+        assertFalse( itr.hasNext() );
 
+        itr =  storageEdgeSerialization.getEdgeVersions( scope,
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
+
+        assertEquals( edge2, itr.next() );
+        assertEquals( edge1NotDeleted, itr.next() );
+        assertFalse( itr.hasNext() );
+
+        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1, UUIDGenerator.newTimeUUID() ).toBlockingObservable().single();
+
+        assertEquals( edge1, deleted );
+
+        itr = commitLogEdgeSerialization.getEdgeVersions( scope,
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
+
+        assertEquals( edge2, itr.next() );
         assertFalse( itr.hasNext() );
 
         itr = storageEdgeSerialization.getEdgeVersions( scope,
                 new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
 
         assertEquals( edge2, itr.next() );
-
         assertFalse( itr.hasNext() );
+    }
+
+
+    /**
+     * If the edge is NOT marked as deleted in the commit log, then we don't want to
+     */
+    @Test
+    public void notDeletedInCommitLog() {
+
     }
 }

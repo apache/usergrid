@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence.entities;
 
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +36,7 @@ import org.apache.usergrid.persistence.annotations.EntityProperty;
 
 /** Applications represent the topmost container for all entities. */
 @XmlRootElement
-public class Application extends TypedEntity {
+public class Application extends TypedEntity implements Serializable {
 
     public static final String ENTITY_TYPE = "application";
 
@@ -438,7 +439,7 @@ public class Application extends TypedEntity {
 
 
     @XmlRootElement
-    public static class OAuthProvider {
+    public static class OAuthProvider implements Serializable {
         String clientId;
         String clientSecret;
         String redirectUris;

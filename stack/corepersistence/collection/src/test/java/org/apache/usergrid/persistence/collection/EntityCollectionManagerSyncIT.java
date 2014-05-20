@@ -1,17 +1,15 @@
 package org.apache.usergrid.persistence.collection;
 
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
@@ -32,7 +30,7 @@ import static org.junit.Assert.assertNull;
  * returns once jukito is finished
  *
  */
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class EntityCollectionManagerSyncIT {
     @Inject
@@ -40,10 +38,6 @@ public class EntityCollectionManagerSyncIT {
 
     @Inject
     private EventBus eventBus;
-
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
 
     @Inject
@@ -183,7 +177,7 @@ public class EntityCollectionManagerSyncIT {
 
 
         //now make sure we can't load it from another scope, using the same org
-        CollectionScope collectionScope2 = new CollectionScopeImpl(collectionScope1.getOrganization(),  new SimpleId("test2"), collectionScope1.getName());
+        CollectionScope collectionScope2 = new CollectionScopeImpl(collectionScope1.getApplication(),  new SimpleId("test2"), collectionScope1.getName());
 
         EntityCollectionManager manager2 = factory.createCollectionManager( collectionScope2 );
 

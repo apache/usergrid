@@ -221,26 +221,8 @@ public class CassandraResource extends ExternalResource {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append( "\n" );
-        sb.append( "cassandra.yaml = " ).append( new File( tempDir, "cassandra.yaml" ) );
-        sb.append( "\n" );
-        sb.append( RPC_PORT_KEY ).append( " = " ).append( rpcPort );
-        sb.append( "\n" );
-        sb.append( STORAGE_PORT_KEY ).append( " = " ).append( storagePort );
-        sb.append( "\n" );
-        sb.append( SSL_STORAGE_PORT_KEY ).append( " = " ).append( sslStoragePort );
-        sb.append( "\n" );
-        sb.append( NATIVE_TRANSPORT_PORT_KEY ).append( " = " ).append( nativeTransportPort );
-        sb.append( "\n" );
-        sb.append( DATA_FILE_DIR_KEY ).append( " = " ).append( new File( tempDir, "data" ).toString() );
-        sb.append( "\n" );
-        sb.append( COMMIT_FILE_DIR_KEY ).append( " = " ).append( new File( tempDir, "commitlog" ).toString() );
-        sb.append( "\n" );
-        sb.append( SAVED_CACHES_DIR_KEY ).append( " = " ).append( new File( tempDir, "saved_caches" ).toString() );
-        sb.append( "\n" );
 
-        return sb.toString();
+        return "\n" + "cassandra.yaml = " + new File(tempDir, "cassandra.yaml") + "\n" + RPC_PORT_KEY + " = " + rpcPort + "\n" + STORAGE_PORT_KEY + " = " + storagePort + "\n" + SSL_STORAGE_PORT_KEY + " = " + sslStoragePort + "\n" + NATIVE_TRANSPORT_PORT_KEY + " = " + nativeTransportPort + "\n" + DATA_FILE_DIR_KEY + " = " + new File(tempDir, "data").toString() + "\n" + COMMIT_FILE_DIR_KEY + " = " + new File(tempDir, "commitlog").toString() + "\n" + SAVED_CACHES_DIR_KEY + " = " + new File(tempDir, "saved_caches").toString() + "\n";
     }
 
 
@@ -470,9 +452,11 @@ public class CassandraResource extends ExternalResource {
                 sslStoragePort = AvailablePortFinder.getNextAvailable( sslStoragePort );
             }
 
-            instance = new CassandraResource( schemaManagerName, rpcPort, storagePort, sslStoragePort,
-                    nativeTransportPort );
+            instance = new CassandraResource( 
+                schemaManagerName, rpcPort, storagePort, sslStoragePort, nativeTransportPort );
+
             LOG.info("Created a new instance of CassandraResource: {}", instance);
+            LOG.info("Cassandra using ports {} and {}", storagePort, sslStoragePort);
             return instance;
         }
     }

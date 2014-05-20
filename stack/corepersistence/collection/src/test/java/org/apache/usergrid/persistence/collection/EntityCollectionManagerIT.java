@@ -18,46 +18,36 @@
 package org.apache.usergrid.persistence.collection;
 
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Assert;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 
-import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 
 import rx.Observable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import java.util.UUID;
+
+import static org.junit.Assert.*;
 
 
 /** @author tnine */
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class EntityCollectionManagerIT {
     @Inject
     private EntityCollectionManagerFactory factory;
-
-    @Inject
-    private EventBus eventBus;
-
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
 
     @Inject
@@ -160,6 +150,8 @@ public class EntityCollectionManagerIT {
 
         assertNotNull( "Id was assigned", createReturned.getId() );
 
+        UUID version = createReturned.getVersion();
+
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
         Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
@@ -173,7 +165,7 @@ public class EntityCollectionManagerIT {
         //load may return null, use last or default
         loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
 
-        assertNull( "Entity was deleted", loadReturned );
+        assertNull("Entity was deleted",loadReturned );
     }
 
 
@@ -249,7 +241,7 @@ public class EntityCollectionManagerIT {
 
 
         //now make sure we can't load it from another scope, using the same org
-        CollectionScope collectionScope2 = new CollectionScopeImpl(collectionScope1.getOrganization(),  new SimpleId("test2"), collectionScope1.getName());
+        CollectionScope collectionScope2 = new CollectionScopeImpl(collectionScope1.getApplication(),  new SimpleId("test2"), collectionScope1.getName());
 
         EntityCollectionManager manager2 = factory.createCollectionManager( collectionScope2 );
 

@@ -26,14 +26,14 @@ import java.util.Iterator;
 
 import org.apache.cassandra.db.marshal.BytesType;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
@@ -58,7 +58,7 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
     /**
      * Edge shards
      */
-    private static final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, Long> EDGE_SHARDS =
+    private static final MultiTennantColumnFamily<ApplicationScope, EdgeRowKey, Long> EDGE_SHARDS =
             new MultiTennantColumnFamily<>( "Edge_Shards",
                     new OrganizationScopedRowKeySerializer<>( new EdgeRowKeySerializer() ), LongSerializer.get() );
 
@@ -83,11 +83,11 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
     @Override
-    public MutationBatch writeEdgeMeta( final OrganizationScope scope, final Id nodeId, final long shard,
+    public MutationBatch writeEdgeMeta( final ApplicationScope scope, final Id nodeId, final long shard,
                                         final String... types ) {
 
 
-        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity(nodeId);
         Preconditions.checkArgument( shard > -1, "shardId must be greater than -1" );
         Preconditions.checkNotNull( types );
@@ -105,13 +105,13 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
     @Override
-    public Iterator<Long> getEdgeMetaData( final OrganizationScope scope, final Id nodeId, final Optional<Long> start,
+    public Iterator<Long> getEdgeMetaData( final ApplicationScope scope, final Id nodeId, final Optional<Long> start,
                                            final String... types ) {
         /**
          * If the edge is present, we need to being seeking from this
          */
 
-        final RangeBuilder rangeBuilder = new RangeBuilder().setLimit( cassandraConfig.getScanPageSize() );
+        final RangeBuilder rangeBuilder = new RangeBuilder().setLimit( graphFig.getScanPageSize() );
 
         if ( start.isPresent() ) {
             rangeBuilder.setStart( start.get() );
@@ -122,7 +122,7 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
         final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, key );
 
 
-        final RowQuery<ScopedRowKey<OrganizationScope, EdgeRowKey>, Long> query =
+        final RowQuery<ScopedRowKey<ApplicationScope, EdgeRowKey>, Long> query =
                 keyspace.prepareQuery( EDGE_SHARDS ).setConsistencyLevel( cassandraConfig.getReadCL() ).getKey( rowKey )
                         .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 
@@ -132,10 +132,10 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
     @Override
-    public MutationBatch removeEdgeMeta( final OrganizationScope scope, final Id nodeId, final long shard,
+    public MutationBatch removeEdgeMeta( final ApplicationScope scope, final Id nodeId, final long shard,
                                          final String... types ) {
 
-        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.validateApplicationScope( scope );
               ValidationUtils.verifyIdentity(nodeId);
               Preconditions.checkArgument( shard > -1, "shard must be greater than -1" );
               Preconditions.checkNotNull( types );

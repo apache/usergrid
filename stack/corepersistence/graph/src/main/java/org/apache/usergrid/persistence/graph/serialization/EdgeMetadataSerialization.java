@@ -23,7 +23,7 @@ package org.apache.usergrid.persistence.graph.serialization;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
@@ -42,7 +42,7 @@ public interface EdgeMetadataSerialization extends Migration {
     /**
      * EdgeWrite both the source--->Target edge and the target <----- source edge into the mutation
      */
-    MutationBatch writeEdge( OrganizationScope scope, Edge edge );
+    MutationBatch writeEdge( ApplicationScope scope, Edge edge );
 
     /**
      * Remove all meta data from the source to the target type.  The caller must ensure that this is the last edge with
@@ -53,7 +53,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return a mutation batch with the delete operations
      */
-    MutationBatch removeEdgeTypeFromSource( OrganizationScope scope, Edge edge );
+    MutationBatch removeEdgeTypeFromSource( ApplicationScope scope, Edge edge );
 
 
     /**
@@ -66,7 +66,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return A mutation batch to use on issuing the delelete
      */
-    MutationBatch removeEdgeTypeFromSource( OrganizationScope scope, Id sourceNode, String type, UUID version );
+    MutationBatch removeEdgeTypeFromSource( ApplicationScope scope, Id sourceNode, String type, UUID version );
 
     /**
      * Remove all meta data from the source to the target type.  The caller must ensure that this is the last edge with
@@ -77,7 +77,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return a mutation batch with the delete operations
      */
-    MutationBatch removeIdTypeFromSource( OrganizationScope scope, Edge edge );
+    MutationBatch removeIdTypeFromSource( ApplicationScope scope, Edge edge );
 
 
     /**
@@ -92,7 +92,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return a mutation batch with the delete operations
      */
-    MutationBatch removeIdTypeFromSource( OrganizationScope scope, Id sourceNode, String type, String idType,
+    MutationBatch removeIdTypeFromSource( ApplicationScope scope, Id sourceNode, String type, String idType,
                                           UUID version );
 
     /**
@@ -104,7 +104,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return a mutation batch with the delete operations
      */
-    MutationBatch removeEdgeTypeToTarget( OrganizationScope scope, Edge edge );
+    MutationBatch removeEdgeTypeToTarget( ApplicationScope scope, Edge edge );
 
 
     /**
@@ -118,7 +118,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return A mutation batch to use on issuing the delelete
      */
-    MutationBatch removeEdgeTypeToTarget( OrganizationScope scope, Id targetNode, String type, UUID version );
+    MutationBatch removeEdgeTypeToTarget( ApplicationScope scope, Id targetNode, String type, UUID version );
 
 
     /**
@@ -130,7 +130,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return a mutation batch with the delete operations
      */
-    MutationBatch removeIdTypeToTarget( OrganizationScope scope, Edge edge );
+    MutationBatch removeIdTypeToTarget( ApplicationScope scope, Edge edge );
 
 
     /**
@@ -145,7 +145,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return a mutation batch with the delete operations
      */
-    MutationBatch removeIdTypeToTarget( OrganizationScope scope, Id targetNode, String type, String idType,
+    MutationBatch removeIdTypeToTarget( ApplicationScope scope, Id targetNode, String type, String idType,
                                         UUID version );
 
     /**
@@ -155,7 +155,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return An iterator of all the edge types
      */
-    Iterator<String> getEdgeTypesFromSource( OrganizationScope scope, SearchEdgeType search );
+    Iterator<String> getEdgeTypesFromSource( ApplicationScope scope, SearchEdgeType search );
 
     /**
      * Get all target id types on the edge with the type given from the source node
@@ -164,7 +164,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return An iterator of all id types
      */
-    Iterator<String> getIdTypesFromSource( OrganizationScope scope, SearchIdType search );
+    Iterator<String> getIdTypesFromSource( ApplicationScope scope, SearchIdType search );
 
 
     /**
@@ -174,7 +174,7 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return An iterator of all the edge types
      */
-    Iterator<String> getEdgeTypesToTarget( OrganizationScope scope, SearchEdgeType search );
+    Iterator<String> getEdgeTypesToTarget( ApplicationScope scope, SearchEdgeType search );
 
     /**
      * Get all source id types on the edge with the type given pointing to the target node
@@ -183,5 +183,5 @@ public interface EdgeMetadataSerialization extends Migration {
      *
      * @return An iterator of all id types
      */
-    Iterator<String> getIdTypesToTarget( OrganizationScope scope, SearchIdType search );
+    Iterator<String> getIdTypesToTarget( ApplicationScope scope, SearchIdType search );
 }

@@ -38,6 +38,7 @@ import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazonaws.services.redshift.model.transform.ReservedNodeStaxUnmarshaller;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
@@ -231,6 +232,7 @@ public class RunnerConfig extends GuiceServletContextListener {
             }
         }
         runner.bypass( Runner.SERVER_PORT_KEY, "" + jettyRunner.getPort() );
+        runner.bypass( Runner.URL_KEY, "https://" + runner.getHostname() + ":" + runner.getServerPort() );
 
         final RunnerRegistry registry = getInjector().getInstance( RunnerRegistry.class );
         registry.register( runner );

@@ -149,7 +149,6 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_SECRET;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ACTOR;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ACTOR_NAME;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_CATEGORY;
@@ -376,7 +375,7 @@ public class ManagementServiceImpl implements ManagementService {
     public void postOrganizationActivity( UUID organizationId, final UserInfo user, String verb, final EntityRef object,
                                           final String objectType, final String objectName, String title,
                                           String content ) throws Exception {
-        ServiceManager sm = smf.getServiceManager( MANAGEMENT_APPLICATION_ID );
+        ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
 
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( PROPERTY_VERB, verb );
@@ -411,7 +410,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public ServiceResults getOrganizationActivity( OrganizationInfo organization ) throws Exception {
-        ServiceManager sm = smf.getServiceManager( MANAGEMENT_APPLICATION_ID );
+        ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
         return sm.newRequest( ServiceAction.GET, parameters( "groups", organization.getUuid(), "feed" ) ).execute();
     }
 
@@ -419,7 +418,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public ServiceResults getOrganizationActivityForAdminUser( OrganizationInfo organization, UserInfo user )
             throws Exception {
-        ServiceManager sm = smf.getServiceManager( MANAGEMENT_APPLICATION_ID );
+        ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
         return sm.newRequest( ServiceAction.GET,
                 parameters( "groups", organization.getUuid(), "users", user.getUuid(), "feed" ) ).execute();
     }
@@ -427,7 +426,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public ServiceResults getAdminUserActivity( UserInfo user ) throws Exception {
-        ServiceManager sm = smf.getServiceManager( MANAGEMENT_APPLICATION_ID );
+        ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
         return sm.newRequest( ServiceAction.GET, parameters( "users", user.getUuid(), "feed" ) ).execute();
     }
 
@@ -466,11 +465,11 @@ public class ManagementServiceImpl implements ManagementService {
          * node is trying to set the property do a different value
          */
         Lock groupLock =
-                getUniqueUpdateLock( lockManager, MANAGEMENT_APPLICATION_ID, organizationName, "groups", "path" );
+                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", "path" );
 
-        Lock userLock = getUniqueUpdateLock( lockManager, MANAGEMENT_APPLICATION_ID, username, "users", "username" );
+        Lock userLock = getUniqueUpdateLock( lockManager, smf.getManagementAppId(), username, "users", "username" );
 
-        Lock emailLock = getUniqueUpdateLock( lockManager, MANAGEMENT_APPLICATION_ID, email, "users", "email" );
+        Lock emailLock = getUniqueUpdateLock( lockManager, smf.getManagementAppId(), email, "users", "email" );
 
         UserInfo user = null;
         OrganizationInfo organization = null;
@@ -480,7 +479,7 @@ public class ManagementServiceImpl implements ManagementService {
             groupLock.lock();
             userLock.lock();
             emailLock.lock();
-            EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+            EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
             if ( !em.isPropertyValueUniqueForEntity( "group", "path", organizationName ) ) {
                 throw new DuplicateUniquePropertyExistsException( "group", "path", organizationName );
             }
@@ -518,7 +517,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         logger.info( "createOrganizationInternal: {}", organizationName );
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Group organizationEntity = new Group();
         organizationEntity.setPath( organizationName );
@@ -526,9 +525,9 @@ public class ManagementServiceImpl implements ManagementService {
 
         em.addToCollection( organizationEntity, "users", new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ) );
 
-        writeUserToken( MANAGEMENT_APPLICATION_ID, organizationEntity, encryptionService
+        writeUserToken( smf.getManagementAppId(), organizationEntity, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.ORGANIZATION ), user.getUuid(),
-                        MANAGEMENT_APPLICATION_ID ) );
+                        smf.getManagementAppId() ) );
 
         OrganizationInfo organization =
                 new OrganizationInfo( organizationEntity.getUuid(), organizationName, properties );
@@ -554,8 +553,8 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         Lock groupLock =
-                getUniqueUpdateLock( lockManager, MANAGEMENT_APPLICATION_ID, organizationName, "groups", "path" );
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", "path" );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         if ( !em.isPropertyValueUniqueForEntity( "group", "path", organizationName ) ) {
             throw new DuplicateUniquePropertyExistsException( "group", "path", organizationName );
         }
@@ -574,7 +573,7 @@ public class ManagementServiceImpl implements ManagementService {
         Map<String, Object> properties = organizationInfo.getProperties();
         if ( properties != null ) {
             EntityRef organizationEntity = new SimpleEntityRef( organizationInfo.getUuid() );
-            EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+            EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
             for ( Map.Entry<String, Object> entry : properties.entrySet() ) {
                 if ( "".equals( entry.getValue() ) ) {
                     properties.remove( entry.getKey() );
@@ -593,7 +592,7 @@ public class ManagementServiceImpl implements ManagementService {
     public OrganizationInfo importOrganization( UUID organizationId, OrganizationInfo organizationInfo,
                                                 Map<String, Object> properties ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         if ( !em.isPropertyValueUniqueForEntity( "group", "path", organizationInfo.getName() ) ) {
             throw new DuplicateUniquePropertyExistsException( "group", "path", organizationInfo.getName() );
         }
@@ -644,11 +643,11 @@ public class ManagementServiceImpl implements ManagementService {
                 emf.importApplication( organization.getName(), application.getUuid(), application.getName(),
                         application.getProperties() );
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         properties.setProperty( "name", buildAppName( application.getName(), organization ) );
         Entity app = em.create( applicationId, APPLICATION_INFO, application.getProperties() );
 
-        writeUserToken( MANAGEMENT_APPLICATION_ID, app, encryptionService
+        writeUserToken( smf.getManagementAppId(), app, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null, applicationId ) );
 
         addApplicationToOrganization( organizationId, applicationId );
@@ -669,7 +668,7 @@ public class ManagementServiceImpl implements ManagementService {
     public List<OrganizationInfo> getOrganizations( UUID startResult, int count ) throws Exception {
         // still need the bimap to search for existing
         BiMap<UUID, String> organizations = HashBiMap.create();
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         Results results =
                 em.getCollection( em.getApplicationRef(), "groups", startResult, count, Level.ALL_PROPERTIES, false );
         List<OrganizationInfo> orgs = new ArrayList<OrganizationInfo>( results.size() );
@@ -723,7 +722,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         EntityRef ref = em.getAlias( "group", organizationName );
         if ( ref == null ) {
             return null;
@@ -735,7 +734,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public OrganizationInfo getOrganizationByUuid( UUID id ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         Entity entity = em.get( new SimpleEntityRef( Group.ENTITY_TYPE, id ) );
         if ( entity == null ) {
             return null;
@@ -761,7 +760,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     public void postUserActivity( UserInfo user, String verb, EntityRef object, String objectType, String objectName,
                                   String title, String content ) throws Exception {
-        ServiceManager sm = smf.getServiceManager( MANAGEMENT_APPLICATION_ID );
+        ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
 
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( PROPERTY_VERB, verb );
@@ -786,7 +785,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public ServiceResults getAdminUserActivities( UserInfo user ) throws Exception {
-        ServiceManager sm = smf.getServiceManager( MANAGEMENT_APPLICATION_ID );
+        ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
         ServiceRequest request = sm.newRequest( ServiceAction.GET, parameters( "users", user.getUuid(), "feed" ) );
         ServiceResults results = request.execute();
         return results;
@@ -796,17 +795,18 @@ public class ManagementServiceImpl implements ManagementService {
     private UserInfo doCreateAdmin( User user, CredentialsInfo userPassword, CredentialsInfo mongoPassword )
             throws Exception {
 
-        writeUserToken( MANAGEMENT_APPLICATION_ID, user, encryptionService
+        writeUserToken( smf.getManagementAppId(), user, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.ADMIN_USER ), user.getUuid(),
-                        MANAGEMENT_APPLICATION_ID ) );
+                        smf.getManagementAppId() ) );
 
-        writeUserPassword( MANAGEMENT_APPLICATION_ID, user, userPassword );
+        writeUserPassword( smf.getManagementAppId(), user, userPassword );
 
-        writeUserMongoPassword( MANAGEMENT_APPLICATION_ID, user, mongoPassword );
+        writeUserMongoPassword( smf.getManagementAppId(), user, mongoPassword );
 
-        UserInfo userInfo = new UserInfo( MANAGEMENT_APPLICATION_ID, user.getUuid(), user.getUsername(), user.getName(),
-                user.getEmail(), user.getConfirmed(), user.getActivated(), user.getDisabled(),
-                user.getDynamicProperties() );
+        UserInfo userInfo = new UserInfo( 
+            smf.getManagementAppId(), user.getUuid(), user.getUsername(), user.getName(),
+            user.getEmail(), user.getConfirmed(), user.getActivated(), user.getDisabled(),
+            user.getDynamicProperties(), true );
 
         // special case for sysadmin and test account only
         if ( !user.getEmail().equals( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ) ) && !user.getEmail()
@@ -828,16 +828,16 @@ public class ManagementServiceImpl implements ManagementService {
                 // we can't actually set the mongo password. We never have the plain text in
                 // this path
                 encryptionService.plainTextCredentials( mongoPassword( user.getUsername(), "" ), user.getUuid(),
-                        MANAGEMENT_APPLICATION_ID ) );
+                        smf.getManagementAppId() ) );
     }
 
 
     @Override
     public UserInfo createAdminFrom( User user, String password ) throws Exception {
         return doCreateAdmin( user,
-                encryptionService.defaultEncryptedCredentials( password, user.getUuid(), MANAGEMENT_APPLICATION_ID ),
+                encryptionService.defaultEncryptedCredentials( password, user.getUuid(), smf.getManagementAppId() ),
                 encryptionService.plainTextCredentials( mongoPassword( user.getUsername(), password ), user.getUuid(),
-                        MANAGEMENT_APPLICATION_ID ) );
+                        smf.getManagementAppId() ) );
     }
 
 
@@ -869,7 +869,7 @@ public class ManagementServiceImpl implements ManagementService {
             name = email;
         }
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         if ( !em.isPropertyValueUniqueForEntity( "user", "username", username ) ) {
             throw new DuplicateUniquePropertyExistsException( "user", "username", username );
@@ -896,7 +896,7 @@ public class ManagementServiceImpl implements ManagementService {
         if ( name == null ) {
             name = email;
         }
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         User user = new User();
         user.setUsername( username );
         user.setName( name );
@@ -924,7 +924,9 @@ public class ManagementServiceImpl implements ManagementService {
                 entity.getName(), ( String ) entity.getProperty( "email" ),
                 ConversionUtils.getBoolean( entity.getProperty( "confirmed" ) ),
                 ConversionUtils.getBoolean( entity.getProperty( "activated" ) ),
-                ConversionUtils.getBoolean( entity.getProperty( "disabled" ) ), entity.getDynamicProperties() );
+                ConversionUtils.getBoolean( entity.getProperty( "disabled" ) ), 
+                entity.getDynamicProperties(),
+                ConversionUtils.getBoolean( entity.getProperty( "admin" )));
     }
 
 
@@ -946,12 +948,12 @@ public class ManagementServiceImpl implements ManagementService {
 
         List<UserInfo> users = new ArrayList<UserInfo>();
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         Results results =
                 em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "users", null, 10000,
                         Level.ALL_PROPERTIES, false );
         for ( Entity entity : results.getEntities() ) {
-            users.add( getUserInfo( MANAGEMENT_APPLICATION_ID, entity ) );
+            users.add( getUserInfo( smf.getManagementAppId(), entity ) );
         }
 
         return users;
@@ -967,16 +969,16 @@ public class ManagementServiceImpl implements ManagementService {
          * node is trying to set the property do a different value
          */
         Lock usernameLock =
-                getUniqueUpdateLock( lockManager, MANAGEMENT_APPLICATION_ID, username, "users", "username" );
+                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), username, "users", "username" );
 
-        Lock emailLock = getUniqueUpdateLock( lockManager, MANAGEMENT_APPLICATION_ID, email, "users", "email" );
+        Lock emailLock = getUniqueUpdateLock( lockManager, smf.getManagementAppId(), email, "users", "email" );
 
         try {
 
             usernameLock.lock();
             emailLock.lock();
 
-            EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+            EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
             SimpleEntityRef entityRef = new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() );
             if ( !isBlank( username ) ) {
@@ -1014,7 +1016,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        return getUserEntityByIdentifier( MANAGEMENT_APPLICATION_ID, Identifier.fromEmail( email ) );
+        return getUserEntityByIdentifier( smf.getManagementAppId(), Identifier.fromEmail( email ) );
     }
 
 
@@ -1023,8 +1025,8 @@ public class ManagementServiceImpl implements ManagementService {
         if ( email == null ) {
             return null;
         }
-        return getUserInfo( MANAGEMENT_APPLICATION_ID,
-                getUserEntityByIdentifier( MANAGEMENT_APPLICATION_ID, Identifier.fromEmail( email ) ) );
+        return getUserInfo( smf.getManagementAppId(),
+                getUserEntityByIdentifier( smf.getManagementAppId(), Identifier.fromEmail( email ) ) );
     }
 
 
@@ -1039,8 +1041,8 @@ public class ManagementServiceImpl implements ManagementService {
         if ( username == null ) {
             return null;
         }
-        return getUserInfo( MANAGEMENT_APPLICATION_ID,
-                getUserEntityByIdentifier( MANAGEMENT_APPLICATION_ID, Identifier.fromName( username ) ) );
+        return getUserInfo( smf.getManagementAppId(),
+                getUserEntityByIdentifier( smf.getManagementAppId(), Identifier.fromName( username ) ) );
     }
 
 
@@ -1049,20 +1051,20 @@ public class ManagementServiceImpl implements ManagementService {
         if ( id == null ) {
             return null;
         }
-        return getUserEntityByIdentifier( MANAGEMENT_APPLICATION_ID, Identifier.fromUUID( id ) );
+        return getUserEntityByIdentifier( smf.getManagementAppId(), Identifier.fromUUID( id ) );
     }
 
 
     @Override
     public UserInfo getAdminUserByUuid( UUID id ) throws Exception {
-        return getUserInfo( MANAGEMENT_APPLICATION_ID,
-                getUserEntityByIdentifier( MANAGEMENT_APPLICATION_ID, Identifier.fromUUID( id ) ) );
+        return getUserInfo( smf.getManagementAppId(),
+                getUserEntityByIdentifier( smf.getManagementAppId(), Identifier.fromUUID( id ) ) );
     }
 
 
     @Override
     public User getAdminUserEntityByIdentifier( Identifier id ) throws Exception {
-        return getUserEntityByIdentifier( MANAGEMENT_APPLICATION_ID, id );
+        return getUserEntityByIdentifier( smf.getManagementAppId(), id );
     }
 
 
@@ -1121,7 +1123,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public UserInfo findAdminUser( String identifier ) {
-        return getUserInfo( MANAGEMENT_APPLICATION_ID, findUserEntity( MANAGEMENT_APPLICATION_ID, identifier ) );
+        return getUserInfo( smf.getManagementAppId(), findUserEntity( smf.getManagementAppId(), identifier ) );
     }
 
 
@@ -1131,9 +1133,9 @@ public class ManagementServiceImpl implements ManagementService {
         if ( ( userId == null ) || ( oldPassword == null ) || ( newPassword == null ) ) {
             return;
         }
-        User user = emf.getEntityManager( MANAGEMENT_APPLICATION_ID ).get( userId, User.class );
+        User user = emf.getEntityManager( smf.getManagementAppId() ).get( userId, User.class );
 
-        if ( !verify( MANAGEMENT_APPLICATION_ID, user.getUuid(), oldPassword ) ) {
+        if ( !verify( smf.getManagementAppId(), user.getUuid(), oldPassword ) ) {
             logger.info( "Old password doesn't match" );
             throw new IncorrectPasswordException( "Old password does not match" );
         }
@@ -1152,11 +1154,11 @@ public class ManagementServiceImpl implements ManagementService {
             return;
         }
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         User user = em.get( userId, User.class );
 
         CredentialsInfo newCredentials =
-                encryptionService.defaultEncryptedCredentials( newPassword, user.getUuid(), MANAGEMENT_APPLICATION_ID );
+                encryptionService.defaultEncryptedCredentials( newPassword, user.getUuid(), smf.getManagementAppId() );
 
         int passwordHistorySize = calculatePasswordHistorySizeForUser( user.getUuid() );
         Map<String, CredentialsInfo> credsMap = cast( em.getDictionaryAsMap( user, CREDENTIALS_HISTORY ) );
@@ -1166,15 +1168,15 @@ public class ManagementServiceImpl implements ManagementService {
             ArrayList<CredentialsInfo> oldCreds = new ArrayList<CredentialsInfo>( credsMap.values() );
             Collections.sort( oldCreds );
 
-            currentCredentials = readUserPasswordCredentials( MANAGEMENT_APPLICATION_ID, user.getUuid() );
+            currentCredentials = readUserPasswordCredentials( smf.getManagementAppId(), user.getUuid() );
 
             // check credential history
-            if ( encryptionService.verify( newPassword, currentCredentials, userId, MANAGEMENT_APPLICATION_ID ) ) {
+            if ( encryptionService.verify( newPassword, currentCredentials, userId, smf.getManagementAppId() ) ) {
                 throw new RecentlyUsedPasswordException();
             }
             for ( int i = 0; i < oldCreds.size() && i < passwordHistorySize; i++ ) {
                 CredentialsInfo ci = oldCreds.get( i );
-                if ( encryptionService.verify( newPassword, ci, userId, MANAGEMENT_APPLICATION_ID ) ) {
+                if ( encryptionService.verify( newPassword, ci, userId, smf.getManagementAppId() ) ) {
                     throw new RecentlyUsedPasswordException();
                 }
             }
@@ -1197,17 +1199,17 @@ public class ManagementServiceImpl implements ManagementService {
             em.addToDictionary( user, CREDENTIALS_HISTORY, uuid.toString(), currentCredentials );
         }
 
-        writeUserPassword( MANAGEMENT_APPLICATION_ID, user, newCredentials );
-        writeUserMongoPassword( MANAGEMENT_APPLICATION_ID, user, encryptionService
+        writeUserPassword( smf.getManagementAppId(), user, newCredentials );
+        writeUserMongoPassword( smf.getManagementAppId(), user, encryptionService
                 .plainTextCredentials( mongoPassword( ( String ) user.getProperty( "username" ), newPassword ),
-                        user.getUuid(), MANAGEMENT_APPLICATION_ID ) );
+                        user.getUuid(), smf.getManagementAppId() ) );
     }
 
 
     public int calculatePasswordHistorySizeForUser( UUID userId ) throws Exception {
 
         int size = 0;
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Results orgResults =
                 em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "groups", null, 10000, Level.REFS,
@@ -1229,9 +1231,9 @@ public class ManagementServiceImpl implements ManagementService {
         if ( ( userId == null ) || ( password == null ) ) {
             return false;
         }
-        User user = emf.getEntityManager( MANAGEMENT_APPLICATION_ID ).get( userId, User.class );
+        User user = emf.getEntityManager( smf.getManagementAppId() ).get( userId, User.class );
 
-        return verify( MANAGEMENT_APPLICATION_ID, user.getUuid(), password );
+        return verify( smf.getManagementAppId(), user.getUuid(), password );
     }
 
 
@@ -1239,20 +1241,19 @@ public class ManagementServiceImpl implements ManagementService {
     public UserInfo verifyAdminUserPasswordCredentials( String name, String password ) throws Exception {
         UserInfo userInfo = null;
 
-        User user = findUserEntity( MANAGEMENT_APPLICATION_ID, name );
+        User user = findUserEntity( smf.getManagementAppId(), name );
         if ( user == null ) {
             return null;
         }
 
-        if ( verify( MANAGEMENT_APPLICATION_ID, user.getUuid(), password ) ) {
-            userInfo = getUserInfo( MANAGEMENT_APPLICATION_ID, user );
+        if ( verify( smf.getManagementAppId(), user.getUuid(), password ) ) {
+            userInfo = getUserInfo( smf.getManagementAppId(), user );
 
-            boolean userIsSuperAdmin =
-                    StringUtils.equals( getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ), userInfo.getEmail() );
-            boolean testUserEnabled = getBooleanProperty( PROPERTIES_SETUP_TEST_ACCOUNT );
+            boolean userIsSuperAdmin = properties.getSuperUser().isEnabled() && properties.getSuperUser().getEmail().equals(userInfo.getEmail());
 
-            boolean userIsTestUser = !testUserEnabled ? false :
-                    StringUtils.equals(getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ), userInfo.getEmail());
+            boolean testUserEnabled = parseBoolean( properties.getProperty( PROPERTIES_SETUP_TEST_ACCOUNT ) );
+            boolean userIsTestUser = testUserEnabled && properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL)
+                    .equals(userInfo.getEmail());
 
             if ( !userIsSuperAdmin && !userIsTestUser ) {
 
@@ -1276,13 +1277,13 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo verifyMongoCredentials( String name, String nonce, String key ) throws Exception {
 
-        Entity user = findUserEntity( MANAGEMENT_APPLICATION_ID, name );
+        Entity user = findUserEntity( smf.getManagementAppId(), name );
 
         if ( user == null ) {
             return null;
         }
 
-        String mongo_pwd = readUserMongoPassword( MANAGEMENT_APPLICATION_ID, user.getUuid() ).getSecret();
+        String mongo_pwd = readUserMongoPassword( smf.getManagementAppId(), user.getUuid() ).getSecret();
 
         if ( mongo_pwd == null ) {
             throw new IncorrectPasswordException( "Your mongo password has not be set" );
@@ -1294,7 +1295,7 @@ public class ManagementServiceImpl implements ManagementService {
             throw new IncorrectPasswordException();
         }
 
-        UserInfo userInfo = new UserInfo( MANAGEMENT_APPLICATION_ID, user.getProperties() );
+        UserInfo userInfo = new UserInfo( smf.getManagementAppId(), user.getProperties() );
 
         if ( !userInfo.isActivated() ) {
             throw new UnactivatedAdminUserException();
@@ -1376,9 +1377,13 @@ public class ManagementServiceImpl implements ManagementService {
 
     public Entity getEntityFromPrincipal( AuthPrincipalInfo principal ) throws Exception {
 
-        EntityManager em = emf.getEntityManager(
-                principal.getApplicationId() != null ? principal.getApplicationId() : MANAGEMENT_APPLICATION_ID );
-        Entity entity = em.get( principal.getUuid() );
+        EntityManager em = emf.getEntityManager( 
+            principal.getApplicationId() != null 
+                ? principal.getApplicationId() : smf.getManagementAppId() );
+
+        Entity entity = em.get( new SimpleEntityRef( 
+                principal.getType().getEntityType(), principal.getUuid()));
+
         return entity;
     }
 
@@ -1386,7 +1391,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public String getAccessTokenForAdminUser( UUID userId, long duration ) throws Exception {
 
-        return getTokenForPrincipal( ACCESS, null, MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId, duration );
+        return getTokenForPrincipal( ACCESS, null, smf.getManagementAppId(), ADMIN_USER, userId, duration );
     }
 
 
@@ -1399,7 +1404,7 @@ public class ManagementServiceImpl implements ManagementService {
    */
     @Override
     public void revokeAccessTokensForAdminUser( UUID userId ) throws Exception {
-        revokeTokensForPrincipal( ADMIN_USER, MANAGEMENT_APPLICATION_ID, userId );
+        revokeTokensForPrincipal( ADMIN_USER, smf.getManagementAppId(), userId );
     }
 
 
@@ -1429,7 +1434,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo getAdminUserInfoFromAccessToken( String token ) throws Exception {
         Entity user = getAdminUserEntityFromAccessToken( token );
-        return new UserInfo( MANAGEMENT_APPLICATION_ID, user.getProperties() );
+        return new UserInfo( smf.getManagementAppId(), user.getProperties() );
     }
 
 
@@ -1441,7 +1446,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         BiMap<UUID, String> organizations = HashBiMap.create();
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         Results results = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "groups", null, 10000,
                 Level.ALL_PROPERTIES, false );
 
@@ -1471,7 +1476,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public Long getLastAdminPasswordChange( UUID userId ) throws Exception {
-        CredentialsInfo ci = readUserPasswordCredentials( MANAGEMENT_APPLICATION_ID, userId );
+        CredentialsInfo ci = readUserPasswordCredentials( smf.getManagementAppId(), userId );
         return ci.getCreated();
     }
 
@@ -1551,7 +1556,7 @@ public class ManagementServiceImpl implements ManagementService {
             return;
         }
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.addToCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organization.getUuid() ), "users",
                 new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ) );
 
@@ -1568,7 +1573,7 @@ public class ManagementServiceImpl implements ManagementService {
             return;
         }
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         try {
             if ( em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "users", null, 2,
@@ -1608,13 +1613,13 @@ public class ManagementServiceImpl implements ManagementService {
 
         UUID applicationId = emf.createApplication( organizationInfo.getName(), applicationName, properties );
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         properties.put( "name", buildAppName( applicationName, organizationInfo ) );
         Entity applicationEntity = em.create( applicationId, APPLICATION_INFO, properties );
 
-        writeUserToken( MANAGEMENT_APPLICATION_ID, applicationEntity, encryptionService
+        writeUserToken( smf.getManagementAppId(), applicationEntity, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null,
-                        MANAGEMENT_APPLICATION_ID ) );
+                        smf.getManagementAppId() ) );
         addApplicationToOrganization( organizationId, applicationId );
 
         UserInfo user = null;
@@ -1641,7 +1646,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         Results r = em.getConnectingEntities( applicationId, "owns", "group", Level.ALL_PROPERTIES );
         Entity entity = r.getEntity();
         if ( entity != null ) {
@@ -1659,7 +1664,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         final BiMap<UUID, String> applications = HashBiMap.create();
-        final EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         final Results results = em.getConnectedEntities( organizationId, "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
         final PagingResultsIterator itr = new PagingResultsIterator( results );
 
@@ -1705,7 +1710,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.createConnection( new SimpleEntityRef( "group", organizationId ), "owns",
                 new SimpleEntityRef( APPLICATION_INFO, applicationId ) );
 
@@ -1745,8 +1750,8 @@ public class ManagementServiceImpl implements ManagementService {
         if ( applicationId == null ) {
             return null;
         }
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-        Entity entity = em.get( applicationId );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        Entity entity = em.get( new SimpleEntityRef( "applicationId", applicationId ));
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );
@@ -1803,7 +1808,7 @@ public class ManagementServiceImpl implements ManagementService {
     public String getSecret( UUID applicationId, AuthPrincipalType type, UUID id ) throws Exception {
         if ( AuthPrincipalType.ORGANIZATION.equals( type ) || AuthPrincipalType.APPLICATION.equals( type ) ) {
             UUID ownerId =
-                    AuthPrincipalType.APPLICATION_USER.equals( type ) ? applicationId : MANAGEMENT_APPLICATION_ID;
+                    AuthPrincipalType.APPLICATION_USER.equals( type ) ? applicationId : smf.getManagementAppId();
 
             return getCredentialsSecret( readUserToken( ownerId, id ) );
         }
@@ -1822,7 +1827,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getClientSecretForOrganization( UUID organizationId ) throws Exception {
-        return getSecret( MANAGEMENT_APPLICATION_ID, AuthPrincipalType.ORGANIZATION, organizationId );
+        return getSecret( smf.getManagementAppId(), AuthPrincipalType.ORGANIZATION, organizationId );
     }
 
 
@@ -1834,15 +1839,15 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getClientSecretForApplication( UUID applicationId ) throws Exception {
-        return getSecret( MANAGEMENT_APPLICATION_ID, AuthPrincipalType.APPLICATION, applicationId );
+        return getSecret( smf.getManagementAppId(), AuthPrincipalType.APPLICATION, applicationId );
     }
 
 
     public String newSecretKey( AuthPrincipalType type, UUID id ) throws Exception {
         String secret = generateOAuthSecretKey( type );
 
-        writeUserToken( MANAGEMENT_APPLICATION_ID, new SimpleEntityRef( type.getEntityType(), id ),
-                encryptionService.plainTextCredentials( secret, id, MANAGEMENT_APPLICATION_ID ) );
+        writeUserToken( smf.getManagementAppId(), new SimpleEntityRef( type.getEntityType(), id ),
+                encryptionService.plainTextCredentials( secret, id, smf.getManagementAppId() ) );
 
         return secret;
     }
@@ -1874,9 +1879,9 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         AccessInfo access_info = null;
-        if ( clientSecret.equals( getSecret( MANAGEMENT_APPLICATION_ID, type, uuid ) ) ) {
+        if ( clientSecret.equals( getSecret( smf.getManagementAppId(), type, uuid ) ) ) {
 
-            String token = getTokenForPrincipal( ACCESS, null, MANAGEMENT_APPLICATION_ID, type, uuid, ttl );
+            String token = getTokenForPrincipal( ACCESS, null, smf.getManagementAppId(), type, uuid, ttl );
 
             long duration = tokens.getMaxTokenAgeInSeconds( token );
 
@@ -1911,7 +1916,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         PrincipalCredentialsToken token = null;
-        if ( clientSecret.equals( getSecret( MANAGEMENT_APPLICATION_ID, type, uuid ) ) ) {
+        if ( clientSecret.equals( getSecret( smf.getManagementAppId(), type, uuid ) ) ) {
             if ( type.equals( AuthPrincipalType.APPLICATION ) ) {
                 ApplicationInfo app = getApplicationInfo( uuid );
                 token = new PrincipalCredentialsToken( new ApplicationPrincipal( app ),
@@ -1935,7 +1940,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getPasswordResetTokenForAdminUser( UUID userId, long ttl ) throws Exception {
-        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_PASSWORD_RESET, MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId,
+        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_PASSWORD_RESET, smf.getManagementAppId(), ADMIN_USER, userId,
                 ttl );
     }
 
@@ -1955,19 +1960,19 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getActivationTokenForAdminUser( UUID userId, long ttl ) throws Exception {
-        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_ACTIVATION, MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId, ttl );
+        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_ACTIVATION, smf.getManagementAppId(), ADMIN_USER, userId, ttl );
     }
 
 
     @Override
     public String getConfirmationTokenForAdminUser( UUID userId, long ttl ) throws Exception {
-        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_CONFIRM, MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId, ttl );
+        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_CONFIRM, smf.getManagementAppId(), ADMIN_USER, userId, ttl );
     }
 
 
     @Override
     public void activateAdminUser( UUID userId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "activated", true );
     }
 
@@ -1997,42 +2002,42 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public boolean isAdminUserActivated( UUID userId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         return Boolean.TRUE.equals( em.getProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "activated" ) );
     }
 
 
     @Override
     public void confirmAdminUser( UUID userId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "confirmed", true );
     }
 
 
     @Override
     public void unconfirmAdminUser( UUID userId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "confirmed", false );
     }
 
 
     @Override
     public boolean isAdminUserConfirmed( UUID userId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         return Boolean.TRUE.equals( em.getProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "confirmed" ) );
     }
 
 
     @Override
     public void enableAdminUser( UUID userId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "disabled", false );
     }
 
 
     @Override
     public void disableAdminUser( UUID userId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "disabled", true );
 
         revokeAccessTokensForAdminUser( userId );
@@ -2041,7 +2046,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public boolean isAdminUserEnabled( UUID userId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         return !Boolean.TRUE.equals( em.getProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "disabled" ) );
     }
 
@@ -2076,7 +2081,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getActivationTokenForOrganization( UUID organizationId, long ttl ) throws Exception {
-        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_ACTIVATION, MANAGEMENT_APPLICATION_ID, ORGANIZATION,
+        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_ACTIVATION, smf.getManagementAppId(), ORGANIZATION,
                 organizationId, ttl );
     }
 
@@ -2308,7 +2313,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     private void activateOrganization( OrganizationInfo organization, boolean sendEmail ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( Group.ENTITY_TYPE, organization.getUuid() ), "activated", true );
         List<UserInfo> users = getAdminUsersForOrganization( organization.getUuid() );
         for ( UserInfo user : users ) {
@@ -2326,14 +2331,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void deactivateOrganization( UUID organizationId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "activated", false );
     }
 
 
     @Override
     public boolean isOrganizationActivated( UUID organizationId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         return Boolean.TRUE.equals(
                 em.getProperty( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "activated" ) );
     }
@@ -2341,21 +2346,21 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void enableOrganization( UUID organizationId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "disabled", false );
     }
 
 
     @Override
     public void disableOrganization( UUID organizationId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "disabled", true );
     }
 
 
     @Override
     public boolean isOrganizationEnabled( UUID organizationId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         return !Boolean.TRUE.equals(
                 em.getProperty( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "disabled" ) );
     }
@@ -2457,8 +2462,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean registration_requires_admin_approval = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         REGISTRATION_REQUIRES_ADMIN_APPROVAL );
-        return registration_requires_admin_approval != null ? registration_requires_admin_approval.booleanValue() :
-               false;
+        return registration_requires_admin_approval != null && registration_requires_admin_approval.booleanValue();
     }
 
 
@@ -2468,8 +2472,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean registration_requires_email_confirmation = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         REGISTRATION_REQUIRES_EMAIL_CONFIRMATION );
-        return registration_requires_email_confirmation != null ?
-               registration_requires_email_confirmation.booleanValue() : false;
+        return registration_requires_email_confirmation != null && registration_requires_email_confirmation.booleanValue();
     }
 
 
@@ -2478,7 +2481,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean notify_admin_of_new_users = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         NOTIFY_ADMIN_OF_NEW_USERS );
-        return notify_admin_of_new_users != null ? notify_admin_of_new_users.booleanValue() : false;
+        return notify_admin_of_new_users != null && notify_admin_of_new_users.booleanValue();
     }
 
 
@@ -2735,7 +2738,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void countAdminUserAction( UserInfo user, String action ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.incrementAggregateCounters( user.getUuid(), null, null, "admin_logins", 1 );
     }
 
@@ -2749,7 +2752,7 @@ public class ManagementServiceImpl implements ManagementService {
    */
     @Override
     public void setOrganizationProps( UUID orgId, Map<String, Object> props ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Group org = em.get( orgId, Group.class );
 
@@ -2772,7 +2775,7 @@ public class ManagementServiceImpl implements ManagementService {
    */
     @Override
     public Group getOrganizationProps( UUID orgId ) throws Exception {
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         return em.get( orgId, Group.class );
     }
@@ -2834,14 +2837,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     private CredentialsInfo readCreds( UUID appId, UUID ownerId, String key ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
-        Entity owner = em.get( ownerId );
+        Entity owner = em.get( new SimpleEntityRef("user", ownerId ));
         return ( CredentialsInfo ) em.getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, key );
     }
 
 
     private Set<CredentialsInfo> readUserPasswordHistory( UUID appId, UUID ownerId ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
-        Entity owner = em.get( ownerId );
+        Entity owner = em.get( new SimpleEntityRef("user", ownerId ));
         return ( Set<CredentialsInfo> ) em
                 .getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, USER_PASSWORD_HISTORY );
     }

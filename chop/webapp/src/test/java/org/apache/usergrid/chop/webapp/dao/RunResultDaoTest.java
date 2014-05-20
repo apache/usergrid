@@ -25,64 +25,77 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 public class RunResultDaoTest {
 
-    private static Logger LOG = LoggerFactory.getLogger(RunResultDaoTest.class);
+    private static Logger LOG = LoggerFactory.getLogger( RunResultDaoTest.class );
 
 
     @Test
     public void getAll() {
 
-        LOG.info("\n\n===RunResultDaoTest.getAll===");
+        LOG.info( "\n===RunResultDaoTest.getAll===\n" );
 
         List<RunResult> list = ESSuiteTest.runResultDao.getAll();
 
-        for (RunResult runResult : list) {
-            LOG.info(runResult.toString());
+        for ( RunResult runResult : list ) {
+            LOG.info( runResult.toString() );
         }
 
-        assertEquals(3, list.size());
+        assertEquals( 10, list.size() );
     }
 
 
     @Test
     public void getMap() {
 
-        LOG.info("\n\n===RunResultDaoTest.getMap===");
+        LOG.info( "\n===RunResultDaoTest.getMap===\n" );
 
-        Map<String, Run> runs = ESSuiteTest.runDao.getMap(ESSuiteTest.COMMIT_ID_2, 2, ESSuiteTest.TEST_NAME);
-        Map<Run, List<RunResult>> runResults = ESSuiteTest.runResultDao.getMap(runs);
+        // This should result in a Map with 1 item which is ( RUN_ID_5, AllRuns[4] )
+        Map<String, Run> runs = ESSuiteTest.runDao.getMap( ESSuiteTest.COMMIT_ID_1, 2, ESSuiteTest.TEST_NAME_2 );
+        Run run = runs.get( ESSuiteTest.RUN_ID_5 );
+        assertNotNull( run );
+        assertEquals( ESSuiteTest.RUNNER_HOSTNAME_3, run.getRunner() );
 
-        for (Run run : runResults.keySet()) {
-            LOG.info(run.toString());
+        // This should result in 3 RunResults
+        Map<Run, List<RunResult>> runResults = ESSuiteTest.runResultDao.getMap( runs );
+        List<RunResult> results = runResults.get( run );
 
-            for (RunResult runResult : runResults.get(run)) {
-                LOG.info("   {}", runResult.toString());
-            }
+        assertEquals( 3, results.size() );
+
+        for ( RunResult result : results ) {
+            LOG.info( result.toString() );
+
+            assertEquals( ESSuiteTest.RESULT_RUN_COUNT, result.getRunCount() );
         }
-
-        assertEquals(1, runResults.size());
     }
 
 
     @Test
-    public void deleteAll() {
+    public void deleteAll() throws IOException {
 
-        LOG.info("\n\n=== RunResultDaoTest.deleteAll() ===");
+        LOG.info("\n=== RunResultDaoTest.deleteAll() ===\n");
 
-        for (RunResult runResult : ESSuiteTest.runResultDao.getAll()) {
-            ESSuiteTest.runResultDao.delete(runResult.getId());
+        List<RunResult> allRunResults = ESSuiteTest.runResultDao.getAll();
+
+        for ( RunResult runResult: allRunResults ) {
+            ESSuiteTest.runResultDao.delete( runResult.getId() );
         }
 
         List<RunResult> list = ESSuiteTest.runResultDao.getAll();
 
-        assertEquals(0, list.size());
-    }
+        assertEquals( 0, list.size() );
 
+        // Have to save them back for other tests
+        for( RunResult runResult: allRunResults ) {
+            ESSuiteTest.runResultDao.save( runResult );
+        }
+    }
 }

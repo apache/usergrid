@@ -73,9 +73,33 @@ public class EdgeTestUtils {
 
     /**
      * Create an edge for testing
+     *
+     * @param sourceType The source type to use in the id
+     * @param edgeType The edge type to use
+     * @param targetType The target type to use
+     *
+     * @return an Edge for testing
+     */
+    public static MarkedEdge createMarkedEdge( final String sourceType, final String edgeType,
+                                               final String targetType ) {
+        return createEdge( createId( sourceType ), edgeType, createId( targetType ), UUIDGenerator.newTimeUUID(),
+                true );
+    }
+
+
+    /**
+     * Create an edge for testing
      */
     public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId ) {
         return createEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID() );
+    }
+
+
+    /**
+     * Create an edge that is marked
+     */
+    public static MarkedEdge createMarkedEdge( final Id sourceId, final String edgeType, final Id targetId ) {
+        return createEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), true );
     }
 
 
@@ -84,7 +108,16 @@ public class EdgeTestUtils {
      */
     public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId,
                                          final UUID version ) {
-        return new SimpleMarkedEdge( sourceId, edgeType, targetId, version, false );
+        return createEdge( sourceId, edgeType, targetId, version, false );
+    }
+
+
+    /**
+     * Create an edge with the specified params
+     */
+    public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId,
+                                         final UUID version, final boolean deleted ) {
+        return new SimpleMarkedEdge( sourceId, edgeType, targetId, version, deleted );
     }
 
 
@@ -165,8 +198,8 @@ public class EdgeTestUtils {
 
 
     /**
-     * NEVER USE THIS IN A REAL ENV.  Setting timestamps in anything but the present can result in collections
-     * Copied from fasterxml uuid utils
+     * NEVER USE THIS IN A REAL ENV.  Setting timestamps in anything but the present can result in collections Copied
+     * from fasterxml uuid utils
      */
     public static UUID setTimestamp( long timestamp ) {
 
@@ -205,14 +238,12 @@ public class EdgeTestUtils {
      */
 
 
-
     protected final static long gatherLong( byte[] buffer, int offset ) {
         long hi = ( ( long ) _gatherInt( buffer, offset ) ) << 32;
         //long lo = ((long) _gatherInt(buffer, offset+4)) & MASK_LOW_INT;
         long lo = ( ( ( long ) _gatherInt( buffer, offset + 4 ) ) << 32 ) >>> 32;
         return hi | lo;
     }
-
 
 
     private final static int _gatherInt( byte[] buffer, int offset ) {

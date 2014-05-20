@@ -25,12 +25,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.apache.usergrid.persistence.core.hystrix.HystrixGraphObservable;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -70,8 +73,9 @@ import rx.schedulers.Schedulers;
  */
 public class GraphManagerImpl implements GraphManager {
 
+    private static final Logger LOG = LoggerFactory.getLogger( GraphManagerImpl.class );
 
-    private final OrganizationScope scope;
+    private final ApplicationScope scope;
 
     private final EdgeMetadataSerialization edgeMetadataSerialization;
 
@@ -81,8 +85,8 @@ public class GraphManagerImpl implements GraphManager {
 
     private final NodeSerialization nodeSerialization;
 
-    private final AsyncProcessor<EdgeEvent<Edge>> edgeDeleteAsyncProcessor;
-    private final AsyncProcessor<EdgeEvent<Edge>> edgeWriteAsyncProcessor;
+    private final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDeleteAsyncProcessor;
+    private final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWriteAsyncProcessor;
     private final AsyncProcessor<EdgeEvent<Id>> nodeDeleteAsyncProcessor;
 
     private final GraphFig graphFig;
@@ -93,14 +97,14 @@ public class GraphManagerImpl implements GraphManager {
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                              @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
                              final NodeSerialization nodeSerialization, final GraphFig graphFig,
-                             @EdgeDelete final AsyncProcessor<EdgeEvent<Edge>> edgeDelete,
+                             @EdgeDelete final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDelete,
                              @NodeDelete final AsyncProcessor<EdgeEvent<Id>> nodeDelete,
-                             @EdgeWrite final AsyncProcessor<EdgeEvent<Edge>> edgeWrite,
-                             @Assisted final OrganizationScope scope, final MergedEdgeReader mergedEdgeReader,
+                             @EdgeWrite final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite,
+                             @Assisted final ApplicationScope scope, final MergedEdgeReader mergedEdgeReader,
                              final ConsistencyFig consistencyFig ) {
 
 
-        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.validateApplicationScope( scope );
         Preconditions.checkNotNull( edgeMetadataSerialization, "edgeMetadataSerialization must not be null" );
         Preconditions.checkNotNull( mergedEdgeReader, "mergedEdgeReader must not be null" );
         Preconditions.checkNotNull( commitLogSerialization, "commitLogSerialization must not be null" );
@@ -120,9 +124,7 @@ public class GraphManagerImpl implements GraphManager {
         this.graphFig = graphFig;
         this.consistencyFig = consistencyFig;
 
-
         this.edgeDeleteAsyncProcessor = edgeDelete;
-
 
         this.nodeDeleteAsyncProcessor = nodeDelete;
 
@@ -134,21 +136,30 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<Edge> writeEdge( final Edge edge ) {
         EdgeUtils.validateEdge( edge );
 
+        final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
+
         return HystrixGraphObservable
-                .user( Observable.from( edge ).subscribeOn( Schedulers.io() ).map( new Func1<Edge, Edge>() {
+                .user( Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
                     @Override
-                    public Edge call( final Edge edge ) {
-                        final AsynchronousMessage<EdgeEvent<Edge>> event =
-                                edgeWriteAsyncProcessor.setVerification(
-                                        new EdgeEvent<>( scope, edge.getVersion(), edge ), getTimeout() );
+                    public Edge call( final MarkedEdge edge ) {
+
+                        final UUID timestamp = UUIDGenerator.newTimeUUID();
+
+
 
                         final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
 
-                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge );
+                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge, timestamp );
 
                         mutation.mergeShallow( edgeMutation );
 
+                        final AsynchronousMessage<EdgeEvent<MarkedEdge>> event = edgeWriteAsyncProcessor
+                                                       .setVerification( new EdgeEvent<>( scope, timestamp, edge ), getTimeout() );
+
+
+
                         try {
+                            LOG.debug( "Writing edge {} to metadata and commit log", edge );
                             mutation.execute();
                         }
                         catch ( ConnectionException e ) {
@@ -168,18 +179,28 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<Edge> deleteEdge( final Edge edge ) {
         EdgeUtils.validateEdge( edge );
 
-        return HystrixGraphObservable
-                .user( Observable.from( edge ).subscribeOn( Schedulers.io() ).map( new Func1<Edge, Edge>() {
-                    @Override
-                    public Edge call( final Edge edge ) {
-                        final MutationBatch edgeMutation = commitLogSerialization.markEdge( scope, edge );
+        final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
 
-                        final AsynchronousMessage<EdgeEvent<Edge>> event =
+
+        return
+                HystrixGraphObservable
+                .user(
+                        Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
+                    @Override
+                    public Edge call( final MarkedEdge edge ) {
+
+                        final UUID timestamp = UUIDGenerator.newTimeUUID();
+
+
+                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge, timestamp );
+
+                        final AsynchronousMessage<EdgeEvent<MarkedEdge>> event =
                                 edgeDeleteAsyncProcessor.setVerification(
-                                        new EdgeEvent<>( scope, edge.getVersion(), edge ), getTimeout() );
+                                        new EdgeEvent<>( scope, timestamp, edge ), getTimeout() );
 
 
                         try {
+                            LOG.debug( "Marking edge {} as deleted to commit log", edge );
                             edgeMutation.execute();
                         }
                         catch ( ConnectionException e ) {
@@ -213,6 +234,7 @@ public class GraphManagerImpl implements GraphManager {
 
 
                         try {
+                            LOG.debug( "Marking node {} as deleted to node mark", node );
                             nodeMutation.execute();
                         }
                         catch ( ConnectionException e ) {

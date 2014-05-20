@@ -54,7 +54,7 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
 
     protected final TimeoutQueue<T> queue;
     protected final ConsistencyFig consistencyFig;
-    protected final List<MessageListener<T, T>> listeners = new ArrayList<MessageListener<T, T>>();
+    protected final List<MessageListener<T, ?>> listeners = new ArrayList<>();
 
 
     protected List<ErrorListener<T>> errorListeners = new ArrayList<ErrorListener<T>>();
@@ -68,7 +68,7 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
 
         //we purposefully use a new thread.  We don't want to use one of the I/O threads to run this task
         //in the event the scheduler is full, we'll end up rejecting the reschedule of this task
-        Schedulers.newThread().schedulePeriodically( new TimeoutTask<T>( this, consistencyFig ), consistencyFig.getTaskLoopTime(),
+        Schedulers.newThread().createWorker().schedulePeriodically( new TimeoutTask<T>( this, consistencyFig ), consistencyFig.getTaskLoopTime(),
                 consistencyFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
     }
 
@@ -87,8 +87,8 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
          */
         List<Observable<?>> observables = new ArrayList<Observable<?>>( listeners.size() );
 
-        for ( MessageListener<T, T> listener : listeners ) {
-            observables.add( HystrixGraphObservable.async( listener.receive( data ) ) );
+        for ( MessageListener<T, ?> listener : listeners ) {
+            observables.add( HystrixGraphObservable.async( listener.receive( data ) ).subscribeOn( Schedulers.io() ) );
         }
 
         LOG.debug( "About to start {} observables for event {}", listeners.size(), event );
@@ -136,8 +136,10 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
     }
 
 
+
+
     @Override
-    public void addListener( final MessageListener<T, T> listener ) {
+    public <R> void addListener( final MessageListener<T, R> listener ) {
         this.listeners.add( listener );
     }
 

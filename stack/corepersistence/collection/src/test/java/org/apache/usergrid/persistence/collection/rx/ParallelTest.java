@@ -95,7 +95,7 @@ public class ParallelTest {
         final Observable<String> observable = Observable.from( input ).observeOn( Schedulers.io() );
 
 
-        Observable<Integer> thing = observable.mapMany( new Func1<String, Observable<Integer>>() {
+        Observable<Integer> thing = observable.flatMap( new Func1<String, Observable<Integer>>() {
 
             @Override
             public Observable<Integer> call( final String s ) {

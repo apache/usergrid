@@ -32,7 +32,7 @@ public class IDLoader implements ResultsLoader {
      * @see org.apache.usergrid.persistence.query.ir.result.ResultsLoader#getResults(java.util.List)
      */
     @Override
-    public Results getResults( List<ScanColumn> entityIds ) throws Exception {
+    public Results getResults( List<ScanColumn> entityIds, String type ) throws Exception {
         Results r = new Results();
         r.setIds( ScanColumnTransformer.getIds( entityIds ) );
         return r;

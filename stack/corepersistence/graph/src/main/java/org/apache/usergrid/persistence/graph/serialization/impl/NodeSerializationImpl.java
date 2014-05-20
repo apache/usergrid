@@ -34,7 +34,7 @@ import org.apache.cassandra.db.marshal.BooleanType;
 import org.apache.cassandra.db.marshal.BytesType;
 
 import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
@@ -42,7 +42,7 @@ import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.serialization.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -86,8 +86,8 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
      * cache, and we'll also bounce from the BloomFilter on read.  This means our performance will be no worse
      * than checking a distributed cache in RAM for the existence of a marked node.
      */
-    private static final MultiTennantColumnFamily<OrganizationScope, Id, Boolean> GRAPH_DELETE =
-            new MultiTennantColumnFamily<OrganizationScope, Id, Boolean>( "Graph_Marked_Nodes",
+    private static final MultiTennantColumnFamily<ApplicationScope, Id, Boolean> GRAPH_DELETE =
+            new MultiTennantColumnFamily<ApplicationScope, Id, Boolean>( "Graph_Marked_Nodes",
                     new OrganizationScopedRowKeySerializer<Id>( ROW_SERIALIZER ), BOOLEAN_SERIALIZER );
 
 
@@ -112,8 +112,8 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     @Override
-    public MutationBatch mark( final OrganizationScope scope, final Id node, final UUID version ) {
-        ValidationUtils.validateOrganizationScope( scope );
+    public MutationBatch mark( final ApplicationScope scope, final Id node, final UUID version ) {
+        ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
         ValidationUtils.verifyTimeUuid( version, "version" );
 
@@ -127,8 +127,8 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     @Override
-    public MutationBatch delete( final OrganizationScope scope, final Id node, final UUID version ) {
-        ValidationUtils.validateOrganizationScope( scope );
+    public MutationBatch delete( final ApplicationScope scope, final Id node, final UUID version ) {
+        ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
         ValidationUtils.verifyTimeUuid( version, "version" );
 
@@ -142,11 +142,11 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     @Override
-    public Optional<UUID> getMaxVersion( final OrganizationScope scope, final Id node ) {
-        ValidationUtils.validateOrganizationScope( scope );
+    public Optional<UUID> getMaxVersion( final ApplicationScope scope, final Id node ) {
+        ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
 
-        ColumnFamilyQuery<ScopedRowKey<OrganizationScope, Id>, Boolean> query = keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel(
+        ColumnFamilyQuery<ScopedRowKey<ApplicationScope, Id>, Boolean> query = keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel(
                 fig.getReadCL() );
 
 
@@ -167,15 +167,15 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     @Override
-    public Map<Id, UUID> getMaxVersions( final OrganizationScope scope, final Collection<? extends Edge> nodeIds ) {
-        ValidationUtils.validateOrganizationScope( scope );
+    public Map<Id, UUID> getMaxVersions( final ApplicationScope scope, final Collection<? extends Edge> nodeIds ) {
+        ValidationUtils.validateApplicationScope( scope );
         Preconditions.checkNotNull( nodeIds, "nodeIds cannot be null" );
 
 
-        final ColumnFamilyQuery<ScopedRowKey<OrganizationScope, Id>, Boolean> query = keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel( fig.getReadCL() );
+        final ColumnFamilyQuery<ScopedRowKey<ApplicationScope, Id>, Boolean> query = keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel( fig.getReadCL() );
 
 
-        final List<ScopedRowKey<OrganizationScope, Id>> keys = new ArrayList<ScopedRowKey<OrganizationScope, Id>>(nodeIds.size());
+        final List<ScopedRowKey<ApplicationScope, Id>> keys = new ArrayList<ScopedRowKey<ApplicationScope, Id>>(nodeIds.size());
 
         //worst case all are marked
         final Map<Id, UUID> versions = new HashMap<Id, UUID>(nodeIds.size());
@@ -186,10 +186,10 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         }
 
         try {
-            final Rows<ScopedRowKey<OrganizationScope, Id>, Boolean>
+            final Rows<ScopedRowKey<ApplicationScope, Id>, Boolean>
                     results = query.getRowSlice( keys ).withColumnSlice( Collections.singletonList( COLUMN_NAME ) ).execute().getResult();
 
-            for(Row<ScopedRowKey<OrganizationScope, Id>, Boolean> row: results){
+            for(Row<ScopedRowKey<ApplicationScope, Id>, Boolean> row: results){
                 Column<Boolean> column = row.getColumns().getColumnByName( COLUMN_NAME );
 
                 if(column != null){

@@ -48,8 +48,6 @@ import org.apache.commons.cli.Options;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-
 
 /**
  * This is a utility to load all entities in an application and re-save them, this forces the secondary indexing to be
@@ -106,7 +104,7 @@ public class DupAdminRepair extends ExportingToolBase {
 
         logger.info( "Starting crawl of all admins" );
 
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
         Application app = em.getApplication();
 
         // search for all orgs
@@ -228,7 +226,7 @@ public class DupAdminRepair extends ExportingToolBase {
 
         boolean collision = false;
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
 
         for ( UUID id : ids ) {
             UserInfo other = managementService.getAdminUserByUuid( id );
@@ -276,7 +274,7 @@ public class DupAdminRepair extends ExportingToolBase {
     /** Merge the source admin to the target admin by copying oranizations. Then deletes the source admin */
     private void mergeAdmins( String targetDir, UUID sourceId, UUID targetId ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
 
         User sourceUser = em.get( sourceId, User.class );
 

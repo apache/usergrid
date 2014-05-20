@@ -18,109 +18,153 @@
  */
 package org.apache.usergrid.chop.webapp.view.chart.layout;
 
-import com.vaadin.ui.AbsoluteLayout;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.JavaScriptFunction;
-import com.vaadin.ui.themes.Reindeer;
+
+import java.util.Set;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import org.apache.usergrid.chop.webapp.service.DataService;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
 import org.apache.usergrid.chop.webapp.service.chart.Chart;
 import org.apache.usergrid.chop.webapp.service.chart.Params;
 import org.apache.usergrid.chop.webapp.service.chart.Params.FailureType;
 import org.apache.usergrid.chop.webapp.service.chart.Params.Metric;
+import org.apache.usergrid.chop.webapp.service.chart.builder.ChartBuilder;
 import org.apache.usergrid.chop.webapp.service.util.FileUtil;
 import org.apache.usergrid.chop.webapp.view.chart.format.Format;
 import org.apache.usergrid.chop.webapp.view.chart.layout.item.DetailsTable;
 import org.apache.usergrid.chop.webapp.view.chart.layout.item.NoteLayout;
 import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
 import org.apache.usergrid.chop.webapp.view.util.UIUtil;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.util.Set;
+import com.vaadin.ui.AbsoluteLayout;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.JavaScriptFunction;
 
-public abstract class ChartLayout extends AbsoluteLayout implements JavaScriptFunction {
 
-    private DataService dataService = InjectorFactory.getInstance(DataService.class);
+public class ChartLayout extends AbsoluteLayout implements JavaScriptFunction {
 
-    protected final Config config;
+    private DataService dataService = InjectorFactory.getInstance( DataService.class );
+
+    private final ChartBuilder chartBuilder;
+    private final String chartFile;
+    private final String chartId;
+    protected final Params params;
+
+    protected Button nextChartButton;
 
     protected ComboBox testNameCombo;
     protected ComboBox metricCombo;
     protected ComboBox percentileCombo;
     protected ComboBox failureCombo;
-    protected Button nextChartButton;
     protected DetailsTable detailsTable;
     protected NoteLayout noteLayout;
-    protected Params params;
 
-    protected ChartLayout(Config config) {
-        this.config = config;
+
+    public ChartLayout( ChartBuilder chartBuilder, String chartId, String chartFile, Params params ) {
+        this.chartBuilder = chartBuilder;
+        this.chartId = chartId;
+        this.chartFile = chartFile;
+        this.params = params;
+
+        init();
+        loadChart();
+    }
+
+
+    private void init() {
         setSizeFull();
-        addControls();
+        addItems();
+        populateTestNames();
     }
 
-    protected abstract void handleBreadcrumb();
 
-    @Override
-    public void call(JSONArray args) throws JSONException {
-        JSONObject json = args.getJSONObject(0);
-        pointClicked(json);
+    protected void addItems() {
+        addParamsItems();
+        addChartItems();
+        addDetailsItems();
     }
 
-    protected void addControls() {
-        addMainControls();
-        addSubControls(410);
+
+    protected void populateTestNames() {
+        Set<String> testNames = dataService.getTestNames( params.getModuleId() );
+        UIUtil.populateCombo( testNameCombo, testNames.toArray( new String[] { } ) );
     }
 
-    protected void addMainControls() {
 
-        testNameCombo = UIUtil.addCombo(this, "Test Name:", "left: 10px; top: 30px;", "500px", null);
-
-        metricCombo = UIUtil.addCombo(this, "Metric:", "left: 10px; top: 80px;", "100px", Metric.values());
-
-        percentileCombo = UIUtil.addCombo(this, "Percentile:", "left: 150px; top: 80px;", "100px",
-                new String[]{"100", "90", "80", "70", "60", "50", "40", "30", "20", "10"});
-
-        failureCombo = UIUtil.addCombo(this, "Points to Plot:", "left: 290px; top: 80px;", "100px", FailureType.values());
-
-        addSubmitButton();
-
-        UIUtil.addLayout(this, config.getChartId(), "left: 10px; top: 150px;", "720px", "450px");
-
+    private void addDetailsItems() {
         detailsTable = new DetailsTable();
-        addComponent(detailsTable, "left: 750px; top: 150px;");
-    }
+        addComponent( detailsTable, "left: 1010px; top: 25px;" );
 
-    protected void addSubControls(int startTop) {
         noteLayout = new NoteLayout();
-        addComponent(noteLayout, String.format("left: 750px; top: %spx;", startTop));
+        addComponent( noteLayout, "left: 1010px; top: 400px;" );
     }
 
-    protected void addSubmitButton() {
 
-        Button button = UIUtil.addButton(this, "Submit", "left: 420px; top: 80px;", "100px");
+    private void addChartItems() {
 
-        button.addClickListener(new Button.ClickListener() {
+        UIUtil.addLayout( this, chartId, "left: 270px; top: 20px;", "720px", "550px" );
+
+        nextChartButton = new Button( "..." );
+        nextChartButton.setWidth( "150px" );
+        nextChartButton.setVisible( false );
+        nextChartButton.addClickListener( new Button.ClickListener() {
+            public void buttonClick( Button.ClickEvent event ) {
+                nextChartButtonClicked();
+            }
+        } );
+
+        addComponent( nextChartButton, "left: 565px; top: 580px;" );
+    }
+
+    protected void nextChartButtonClicked() {
+
+    }
+
+    protected void addParamsItems() {
+
+        testNameCombo = UIUtil.createCombo( "Test Name:", null );
+        testNameCombo.setWidth( "155px" );
+
+        metricCombo = UIUtil.createCombo( "Metric:", Metric.values() );
+
+        percentileCombo = UIUtil.createCombo( "Percentile:",
+                new String[] { "100", "90", "80", "70", "60", "50", "40", "30", "20", "10" } );
+
+        failureCombo = UIUtil.createCombo( "Points to Plot:", FailureType.values() );
+
+        Button submitButton = new Button("Submit");
+        submitButton.addClickListener(new Button.ClickListener() {
             public void buttonClick(Button.ClickEvent event) {
                 loadChart();
             }
         });
+
+        FormLayout formLayout = addFormLayout();
+        formLayout.addComponent( testNameCombo );
+        formLayout.addComponent( metricCombo );
+        formLayout.addComponent( percentileCombo );
+        formLayout.addComponent( failureCombo );
+        formLayout.addComponent( submitButton );
     }
 
-    protected void addNextChartButton() {
+    private FormLayout addFormLayout() {
 
-        nextChartButton = UIUtil.addButton(this, "", "left: 750px; top: 120px;", "250px");
-        nextChartButton.setStyleName(Reindeer.BUTTON_LINK);
+        FormLayout formLayout = new FormLayout();
+        formLayout.setWidth( "250px" );
+        formLayout.setHeight( "250px" );
+        formLayout.addStyleName( "outlined" );
+        formLayout.setSpacing( true );
 
-        nextChartButton.addClickListener(new Button.ClickListener() {
-            public void buttonClick(Button.ClickEvent event) {
-                config.getLayoutContext().show(config.getNextLayout(), getParams());
-            }
-        });
+        addComponent( formLayout, "left: 10px; top: 10px;" );
+
+        return formLayout;
     }
+
 
     protected Params getParams() {
         return new Params(
@@ -129,48 +173,38 @@ public abstract class ChartLayout extends AbsoluteLayout implements JavaScriptFu
                 params.getCommitId(),
                 params.getRunNumber(),
                 (Metric) metricCombo.getValue(),
-                Integer.parseInt((String) percentileCombo.getValue()),
+                Integer.parseInt( ( String ) percentileCombo.getValue() ),
                 (FailureType) failureCombo.getValue()
         );
     }
 
-    protected void populateTestNames() {
-        Set<String> testNames = dataService.getTestNames(params.getModuleId());
-        UIUtil.populateCombo(testNameCombo, testNames.toArray(new String[]{}));
-    }
-
-    private void populateControls() {
-        populateTestNames();
-        UIUtil.select(testNameCombo, params.getTestName());
-        UIUtil.select(metricCombo, params.getMetric());
-        UIUtil.select(failureCombo, params.getFailureType());
-    }
-
-    public void show(Params params) {
-        this.params = params;
-        populateControls();
-        loadChart();
-        handleBreadcrumb();
-    }
-
-    protected void pointClicked(JSONObject json) throws JSONException {
-        params.setCommitId(json.optString("commitId"));
-        params.setRunNumber(json.optInt("runNumber", 0));
-
-        detailsTable.setContent(json);
-        noteLayout.load(params.getCommitId(), params.getRunNumber());
-    }
 
     public void loadChart() {
 
         // BUG: If common.js is loaded separately its content is not visible later
-        String chartContent = FileUtil.getContent("js/common.js") + FileUtil.getContent(config.getChartFile());
-        Chart chart = config.getChartBuilder().getChart(getParams());
+        String chartContent = FileUtil.getContent( "js/common.js" ) + FileUtil.getContent( chartFile );
+        Chart chart = chartBuilder.getChart( getParams() );
 
-        chartContent = chartContent.replace("$categories", Format.formatCategories(chart.getCategories()));
-        chartContent = chartContent.replace("$points", Format.formatPoints(chart.getSeries()));
-        chartContent = chartContent.replace("$data", Format.formatData(chart.getSeries()));
+        chartContent = chartContent.replace( "$categories", Format.formatCategories( chart.getCategories() ) );
+        chartContent = chartContent.replace( "$points", Format.formatPoints( chart.getSeries() ) );
+        chartContent = chartContent.replace( "$data", Format.formatData( chart.getSeries() ) );
 
-        JavaScriptUtil.loadChart(chartContent, "chartCallback", this);
+        JavaScriptUtil.loadChart( chartContent, "chartCallback", this );
+    }
+
+
+    @Override
+    public void call( JSONArray args ) throws JSONException {
+        JSONObject json = args.getJSONObject( 0 );
+        pointClicked( json );
+    }
+
+
+    protected void pointClicked( JSONObject json ) throws JSONException {
+        params.setCommitId( json.optString( "commitId" ) );
+        params.setRunNumber( json.optInt( "runNumber", 0 ) );
+
+        detailsTable.setContent( json );
+        noteLayout.load( params.getCommitId(), params.getRunNumber() );
     }
 }

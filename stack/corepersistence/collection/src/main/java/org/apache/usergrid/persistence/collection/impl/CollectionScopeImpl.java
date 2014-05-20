@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.collection.impl;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
-import org.apache.usergrid.persistence.core.scope.OrganizationScopeImpl;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -30,13 +30,13 @@ import org.apache.usergrid.persistence.model.entity.Id;
  *
  * @author tnine
  */
-public class CollectionScopeImpl extends OrganizationScopeImpl implements CollectionScope {
+public class CollectionScopeImpl extends ApplicationScopeImpl implements CollectionScope {
     private final Id ownerId;
     private final String name;
 
 
-    public CollectionScopeImpl( final Id organizationId, final Id ownerId, final String name ) {
-        super( organizationId );
+    public CollectionScopeImpl( final Id applicationId, final Id ownerId, final String name ) {
+        super( applicationId );
         this.ownerId = ownerId;
         this.name = name;
 

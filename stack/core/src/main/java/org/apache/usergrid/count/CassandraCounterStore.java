@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.count.common.Count;
 
 import me.prettyprint.cassandra.model.HCounterColumnImpl;
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -70,7 +70,7 @@ public class CassandraCounterStore implements CounterStore {
                 countHolder.put( count.getCounterName(), count );
             }
         }
-        Mutator<ByteBuffer> mutator = HFactory.createMutator( keyspace, ByteBufferSerializer.get() );
+        Mutator<ByteBuffer> mutator = HFactory.createMutator( keyspace, be );
         for ( Count count : countHolder.values() ) {
             mutator.addCounter( count.getKeyNameBytes(), count.getTableName(),
                     new HCounterColumnImpl( count.getColumnName(), count.getValue(),

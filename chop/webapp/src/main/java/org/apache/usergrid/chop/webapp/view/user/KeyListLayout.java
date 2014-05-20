@@ -29,9 +29,15 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
 
 public class KeyListLayout extends AbsoluteLayout implements Upload.Receiver, Upload.SucceededListener {
 
@@ -61,20 +67,20 @@ public class KeyListLayout extends AbsoluteLayout implements Upload.Receiver, Up
     }
 
     void addTitleLabel() {
-        UIUtil.addLabel(this, "<b>Manage Keys</b>", "left: 0px; top: 50px;", "120px");
+        UIUtil.addLabel(this, "<b>Manage Keys</b>", "left: 0px; top: 10px;", "120px");
     }
 
     void addUploadControls() {
 
         keyNameField.setWidth("290px");
         keyNameField.setValue("key-pair-name");
-        addComponent(keyNameField, "left: 0px; top: 90px;");
+        addComponent(keyNameField, "left: 0px; top: 50px;");
 
         Upload upload = new Upload("", this);
         upload.setButtonCaption("Add");
         upload.addSucceededListener(this);
 
-        addComponent(upload, "left: 0px; top: 120px;");
+        addComponent(upload, "left: 0px; top: 80px;");
     }
 
     @Override
@@ -85,8 +91,14 @@ public class KeyListLayout extends AbsoluteLayout implements Upload.Receiver, Up
         try {
             File file = keyService.addFile(username, keyNameField.getValue(), fileName);
             outStream = new FileOutputStream(file);
-        } catch (FileNotFoundException e) {
-            LOG.error("Error to upload file: ", e);
+            /** SSH requires that key files only have read-write permissions for OWNER */
+            Set<PosixFilePermission> permissions = new HashSet<PosixFilePermission>();
+            permissions.add( PosixFilePermission.OWNER_READ );
+            permissions.add( PosixFilePermission.OWNER_WRITE );
+            Files.setPosixFilePermissions( file.toPath(), permissions );
+        }
+        catch ( IOException e ) {
+            LOG.error( "Error while setting key file permissions.", e );
         }
 
         return outStream;

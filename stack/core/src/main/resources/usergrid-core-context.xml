@@ -105,13 +105,20 @@
         <property name="defaultWriteConsistencyLevel" value="${cassandra.writecl}"/>
     </bean>
 	
-
 	<bean id="entityManagerFactory"
+		class="org.apache.usergrid.corepersistence.CpEntityManagerFactory" scope="singleton">
+		<constructor-arg ref="cassandraService" />
+        <constructor-arg ref="counterUtils"/>
+        <constructor-arg value="${usergrid.counter.skipAggregate}"/>
+    </bean>
+<!--
+    <bean id="entityManagerFactory"
 		class="org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
 		<constructor-arg ref="cassandraService" />
         <constructor-arg ref="counterUtils"/>
         <constructor-arg value="${usergrid.counter.skipAggregate}"/>
     </bean>
+-->
 
     <bean id="queueManagerFactory"
           class="org.apache.usergrid.mq.cassandra.QueueManagerFactoryImpl">
@@ -156,9 +163,16 @@
     
     <bean id="mailUtils" class="org.apache.usergrid.utils.MailUtils" />
 
-    <bean id="entityManager" class="org.apache.usergrid.persistence.cassandra.EntityManagerImpl" scope="prototype"/>
+    <bean id="entityManager" class="org.apache.usergrid.corepersistence.CpEntityManager" scope="prototype"/>
+<!--
+    <bean id="entityManager" 
+        class="org.apache.usergrid.cassandra.EntityManagerImpl" 
+        scope="prototype"/>
 
-    <bean id="relationManager" class="org.apache.usergrid.persistence.cassandra.RelationManagerImpl" scope="prototype"/>
+    <bean id="relationManager" 
+        class="org.apache.usergrid.persistence.cassandra.RelationManagerImpl" 
+        scope="prototype"/>
+-->
 
     <bean id="traceTagAspect" class="org.apache.usergrid.persistence.cassandra.util.TraceTagAspect"/>
 
@@ -166,7 +180,7 @@
       <aop:aspect id="traceParticipant" ref="traceTagAspect">
         <!-- pointcut on the prescense of the TraceParticipant annotation only -->
         <aop:pointcut id="emTraceParticipant"
-            expression="execution(* org.apache.usergrid.persistence.cassandra.EntityManagerImpl.*(..)) and
+            expression="execution(* org.apache.usergrid.persistence.cassandra.*EntityManagerImpl.*(..)) and
             @annotation(org.apache.usergrid.persistence.cassandra.util.TraceParticipant)"/>
         <aop:around
            pointcut-ref="emTraceParticipant"
@@ -193,7 +207,6 @@
 
     <bean id="jobFactory" class="org.apache.usergrid.batch.UsergridJobFactory" />
 
-    <!-- scan all job classes -->
     <context:component-scan base-package="org.apache.usergrid.batch.job" />
     <context:annotation-config />
 

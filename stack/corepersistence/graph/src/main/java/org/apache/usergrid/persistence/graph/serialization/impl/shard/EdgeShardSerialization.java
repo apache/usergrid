@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 import java.util.Iterator;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -42,7 +42,7 @@ public interface EdgeShardSerialization extends Migration{
      * @param shard The next time to write
      * @param types The types to write to.  Can be edge type, or edgeType+id type
      */
-    public MutationBatch writeEdgeMeta(OrganizationScope scope, Id nodeId, long shard,  String... types);
+    public MutationBatch writeEdgeMeta(ApplicationScope scope, Id nodeId, long shard,  String... types);
 
     /**
      * Get an iterator of all meta data and types.  Returns a range from High to low
@@ -52,7 +52,7 @@ public interface EdgeShardSerialization extends Migration{
      * @param types The types to use
      * @return
      */
-    public Iterator<Long> getEdgeMetaData(OrganizationScope scope, Id nodeId, Optional<Long> start,  String... types);
+    public Iterator<Long> getEdgeMetaData(ApplicationScope scope, Id nodeId, Optional<Long> start,  String... types);
 
     /**
      * Remove the shard from the edge meta data from the types.
@@ -63,6 +63,6 @@ public interface EdgeShardSerialization extends Migration{
      * @param types
      * @return
      */
-    public MutationBatch removeEdgeMeta(OrganizationScope scope, Id nodeId, long shard, String... types);
+    public MutationBatch removeEdgeMeta(ApplicationScope scope, Id nodeId, long shard, String... types);
 
 }

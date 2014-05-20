@@ -17,9 +17,11 @@
  */
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
+
 import java.nio.ByteBuffer;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
@@ -29,7 +31,6 @@ import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
 import com.netflix.astyanax.serializers.AbstractSerializer;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 
 
 /**
@@ -56,7 +57,7 @@ public class CollectionScopedRowKeySerializer<K>
         final CompositeBuilder builder = Composites.newCompositeBuilder();
 
         //add the organization's id
-        ID_SER.toComposite( builder, scopedRowKey.getScope().getOrganization() );
+        ID_SER.toComposite( builder, scopedRowKey.getScope().getApplication() );
 
         //add the scope's owner id to the composite
         ID_SER.toComposite( builder, scopedRowKey.getScope().getOwner() );

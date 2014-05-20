@@ -22,6 +22,8 @@ package org.apache.usergrid.persistence.core.guice;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
@@ -50,13 +52,14 @@ public class CommonModule extends AbstractModule {
                 CassandraFig.class, ConsistencyFig.class) );
 
              // bind our keyspace to the AstyanaxKeyspaceProvider
-        bind( Keyspace.class ).toProvider( AstyanaxKeyspaceProvider.class );
+        bind( Keyspace.class ).toProvider( AstyanaxKeyspaceProvider.class ).asEagerSingleton();
 
         // bind our migration manager
         bind( MigrationManager.class ).to( MigrationManagerImpl.class );
 
         bind( TimeService.class ).to( TimeServiceImpl.class );
 
+        bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
 
 
 

@@ -23,7 +23,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 
 import com.google.common.base.Preconditions;
 
-import static org.apache.usergrid.persistence.core.util.ValidationUtils.validateOrganizationScope;
+import static org.apache.usergrid.persistence.core.util.ValidationUtils.validateApplicationScope;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyEntityWrite;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyIdentity;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyString;
@@ -73,7 +73,7 @@ public class MvccValidationUtils {
 
         verifyString( scope.getName(), "name" );
 
-        validateOrganizationScope( scope );
+        validateApplicationScope( scope );
     }
 
 

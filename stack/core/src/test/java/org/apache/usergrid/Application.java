@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import org.junit.rules.TestRule;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 
@@ -105,7 +106,9 @@ public interface Application extends TestRule {
      *
      * @throws Exception if anything goes wrong accessing the entity
      */
-    Entity get( UUID id ) throws Exception;
+    Entity get( UUID id, String type ) throws Exception;
+
+    Entity get( EntityRef entityRef ) throws Exception;
 
     /**
      * Adds an item to a collection associated with this Application.
@@ -137,4 +140,14 @@ public interface Application extends TestRule {
      * @param properties the Map of property key value pairs
      */
     void putAll( Map<String, Object> properties );
+
+    /**
+     * Remove and de-index entity.
+     * @param Entity to be removed.
+     */
+    public void remove( Entity entity ) throws Exception;
+
+    public void remove( EntityRef entityRef ) throws Exception;
+
+    public void refreshIndex();
 }

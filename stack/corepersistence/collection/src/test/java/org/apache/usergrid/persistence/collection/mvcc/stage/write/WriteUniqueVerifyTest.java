@@ -18,7 +18,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -32,6 +31,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.inject.Inject;
@@ -42,12 +42,9 @@ import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
 
 
-@RunWith( JukitoRunner.class )
+@RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class WriteUniqueVerifyTest {
-
-    @ClassRule
-    public static CassandraRule rule = new CassandraRule();
 
     @Inject
     private UniqueValueSerializationStrategy uvstrat;

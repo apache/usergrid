@@ -71,7 +71,7 @@ public class OpQuery extends OpCrud {
     static Set<String> operators = new HashSet<String>();
 
 
-    {
+    static {
         operators.add( "all" );
         operators.add( "and" );
         operators.add( "elemMatch" );
@@ -280,7 +280,9 @@ public class OpQuery extends OpCrud {
             return handleAuthFails( this );
         }
 
-        PrincipalCredentialsToken token = PrincipalCredentialsToken.getFromAdminUserInfoAndPassword( user, key );
+        PrincipalCredentialsToken token = 
+                PrincipalCredentialsToken.getFromAdminUserInfoAndPassword( 
+                        user, key, handler.getEmf().getManagementAppId() );
         Subject subject = SubjectUtils.getSubject();
 
         try {

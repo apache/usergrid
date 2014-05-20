@@ -21,6 +21,11 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
+import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +36,6 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -56,10 +60,14 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
     private final MvccLogEntrySerializationStrategy logStrat;
     private final MvccEntitySerializationStrategy entityStrat;
+    private final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityEventAsyncProcessor;
+    private final ConsistencyFig consistencyFig;
 
     @Inject
     public MarkCommit( final MvccLogEntrySerializationStrategy logStrat,
-                       final MvccEntitySerializationStrategy entityStrat ) {
+                       final MvccEntitySerializationStrategy entityStrat,
+                       @MvccEntityDelete AsyncProcessor<MvccEntityEvent<MvccEntity>> entityEventAsyncProcessor,
+                       final ConsistencyFig consistencyFig ) {
 
         Preconditions.checkNotNull( 
                 logStrat, "logEntrySerializationStrategy is required" );
@@ -68,8 +76,13 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
         this.logStrat = logStrat;
         this.entityStrat = entityStrat;
+        this.entityEventAsyncProcessor = entityEventAsyncProcessor;
+        this.consistencyFig = consistencyFig;
     }
 
+    private long getTimeout() {
+        return consistencyFig.getRepairTimeout() * 2;
+    }
 
     @Override
     public Void call( final CollectionIoEvent<MvccEntity> idIoEvent ) {
@@ -97,6 +110,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         logMutation.mergeShallow( entityMutation );
 
         //set up the post processing queue
+        final AsynchronousMessage<MvccEntityEvent<MvccEntity>> event = entityEventAsyncProcessor.setVerification( new MvccEntityEvent<MvccEntity>(collectionScope, version, entity ), getTimeout() );
 
         try {
             logMutation.execute();
@@ -107,8 +121,8 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
                     "Failed to execute write asynchronously ", e );
         }
 
-
         //fork post processing
+        entityEventAsyncProcessor.start( event );
 
         /**
          * We're done executing.

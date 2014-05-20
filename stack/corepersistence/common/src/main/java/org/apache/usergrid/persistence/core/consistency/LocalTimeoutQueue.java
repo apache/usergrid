@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 
 /**
@@ -41,7 +40,8 @@ public class LocalTimeoutQueue<T extends Serializable> implements TimeoutQueue<T
     /**
      * For in memory queueing
      */
-    private final PriorityBlockingQueue<AsynchronousMessage<T>> queue = new PriorityBlockingQueue<AsynchronousMessage<T>>( 1000, new TimeoutEventCompatator<T>() );
+    private final PriorityBlockingQueue<AsynchronousMessage<T>> queue = 
+            new PriorityBlockingQueue<AsynchronousMessage<T>>( 1000, new TimeoutEventCompatator<T>() );
 
     private final TimeService timeService;
 

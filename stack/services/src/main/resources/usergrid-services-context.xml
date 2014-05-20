@@ -89,6 +89,4 @@
 
   <bean id="exportJob" class="org.apache.usergrid.management.export.ExportJob" />
 
-  <bean id="s3Export" class="org.apache.usergrid.management.export.S3ExportImpl" />
-
 </beans>

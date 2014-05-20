@@ -83,10 +83,10 @@ public class CoreITSetupImpl implements CoreITSetup {
 
     private void initialize() {
         if ( !enabled ) {
+            cassandraService = cassandraResource.getBean( CassandraService.class );
             emf = cassandraResource.getBean( EntityManagerFactory.class );
             qmf = cassandraResource.getBean( QueueManagerFactory.class );
             indexBucketLocator = cassandraResource.getBean( IndexBucketLocator.class );
-            cassandraService = cassandraResource.getBean( CassandraService.class );
             enabled = true;
         }
     }
@@ -140,12 +140,12 @@ public class CoreITSetupImpl implements CoreITSetup {
 
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-        if ( USE_DEFAULT_APPLICATION ) {
-            return CassandraService.DEFAULT_APPLICATION_ID;
-        }
-
         if ( emf == null ) {
             emf = cassandraResource.getBean( EntityManagerFactory.class );
+        }
+
+        if ( USE_DEFAULT_APPLICATION ) {
+            return emf.getDefaultAppId();
         }
 
         return emf.createApplication( organizationName, applicationName );

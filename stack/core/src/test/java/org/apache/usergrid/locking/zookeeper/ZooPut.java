@@ -87,7 +87,7 @@ public class ZooPut implements Watcher {
         StringBuilder sbPath = new StringBuilder();
         for ( int i = 0; i < paths.length; i++ ) {
             String pathPiece = paths[i];
-            sbPath.append( "/" + pathPiece );
+            sbPath.append("/").append(pathPiece);
             String currentPath = sbPath.toString();
             Object exists = keeper.exists( currentPath, null );
             if ( exists == null ) {

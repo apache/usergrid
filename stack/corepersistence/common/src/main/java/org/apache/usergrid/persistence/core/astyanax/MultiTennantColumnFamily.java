@@ -19,7 +19,7 @@
 package org.apache.usergrid.persistence.core.astyanax;
 
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.netflix.astyanax.Serializer;
 import com.netflix.astyanax.model.ColumnFamily;
@@ -30,7 +30,7 @@ import com.netflix.astyanax.model.ColumnFamily;
  *
  * @author tnine
  */
-public class MultiTennantColumnFamily<S extends OrganizationScope, K, V> 
+public class MultiTennantColumnFamily<S extends ApplicationScope, K, V>
     extends ColumnFamily<ScopedRowKey<S, K>, V> {
 
     public MultiTennantColumnFamily( 

@@ -1,3 +1,21 @@
+/**
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
     display: none;
 }
@@ -689,6 +707,10 @@ body > header .navbar:first-child > a {
 
 .navbar-text .dropdown-menu a {
     color: #343434;
+}
+
+.navbar-text.pull-left {
+    margin-left:90px;
 }
 
 /*---------------------------secondary header (org/app nav + sdks)*/
@@ -1574,6 +1596,11 @@ li.tab.selected .btn.btn-primary.toolbar {
 
 }
 
+li.tab.selected .btn-content {
+    text-decoration:none;
+    color: #494949;    
+}
+
 .btn.btn-primary.toolbar,
 .btn-group.compare .filter-selector.btn:first-child{
     color:#494949;
@@ -1703,3 +1730,269 @@ li.selected .btn.btn-primary.toolbar {
     font-size:9pt;
     vertical-align: super;
 }
+
+/* Bootstrap help tooltips */
+.help_tooltip{
+		font-size:9pt;
+		text-transform: none;        
+}
+
+/** Begin help toggle buttons **/
+
+/*  -----   button has fixed width so when 'enable / disable' toggles, button shape does not shift   -----   */
+.helpButton {
+    font-family: 'Helvetica', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    padding: 5px 8px;
+    text-align: center;
+    vertical-align: middle;
+    color: #ffd6ca;
+    border: 1px solid #ffbfab; 
+    -webkit-border-radius: 3px;
+       -moz-border-radius: 3px;
+            border-radius: 3px; 
+    background-color: #ff3b00;
+    width: 110px;
+    outline:none;
+}
+
+.helpButton:hover {
+    cursor: pointer;
+    background-color: #FFB7A5;
+    color: #dc3300;
+    /*transition*/
+  -webkit-transition:background-color .1s;
+     -moz-transition:background-color .1s;
+       -o-transition:background-color .1s;
+          transition:background-color .1s;
+
+}
+
+.helpButtonClicked {
+    background-color: #FFB7A5;
+    color: #dc3300;
+    outline:none;
+}
+
+/** End help toggle buttons **/
+
+/** Begin introjs **/
+
+.introjs-overlay {
+  background: none;
+  filter: none;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)";
+  filter: alpha(opacity=20);
+  background-color: #fff;
+  opacity: 0.2;
+}
+
+.introjs-helperLayer {  
+  border: 1px solid rgba(0,0,0,.1);
+  border-radius: 0;
+  box-shadow: none;
+  border: 1px solid rgba(0,0,0,.25);
+}
+
+.introjs-helperNumberLayer {
+  top: -12px;
+  left: -12px;  
+  font-family: "Open Sans", Arial, sans-serif;  
+  font-weight: normal;  
+  border: none;  
+  filter: none; /* IE6-9 */ 
+  filter: none; /* IE10 text shadows */
+  box-shadow: none;
+}
+
+.introjs-arrow {
+  border: 10px solid white;
+}
+
+.introjs-arrow.top {
+  top: -20px;
+  border-bottom-color: #6dbce3;
+}
+
+.introjs-arrow.right {
+  right: -20px;
+  top: 20px;
+  border-left-color: #6dbce3;
+}
+
+.introjs-arrow.bottom {
+  bottom: -20px;
+  border-top-color: #6dbce3;
+}
+
+.introjs-arrow.left {
+  left: -20px;
+  top: 20px;
+  border-right-color: #6dbce3;
+}
+
+/*  -----   for layered tooltip to acheive a border effect around triangle   -----   */
+.introjs-arrow:before {
+  border: 10px solid white;
+  content:'';
+  position: absolute;
+}
+.introjs-arrow.top:before { 
+  top: -8px;
+  left: -10px;
+  border-top-color:transparent;
+  border-right-color:transparent;
+  border-bottom-color: #F0F8FC;
+  border-left-color:transparent;
+}
+.introjs-arrow.right:before {  
+  right: -7px;
+  top: -10px;
+  border-top-color:transparent;
+  border-right-color:transparent;
+  border-bottom-color:transparent;
+  border-left-color: #F0F8FC;
+}
+.introjs-arrow.bottom:before {
+  bottom: -9px;
+  left: -10px;
+  border-top-color: #F0F8FC;
+  border-right-color:transparent;
+  border-bottom-color:transparent;
+  border-left-color:transparent;
+}
+.introjs-arrow.left:before {  
+  left: -7px;
+  top: -10px;
+  border-top-color:transparent;
+  border-right-color: #F0F8FC;
+  border-bottom-color:transparent;
+  border-left-color:transparent;
+}
+
+/*  -----   body of tooltip   -----   */
+
+.introjs-tooltip {
+  background-color: #F0F8FC;
+  border-radius: 0;
+  border: 1px solid #6dbce3;
+  box-shadow: 0 1px 7px rgba(0,0,0,.3);
+}
+
+/*  -----   button styles   -----   */
+
+.introjs-button {
+  font-family: "Open Sans", Arial, sans-serif;  
+  text-shadow: none;
+  font: 12px/normal sans-serif;
+  color: #1f77a3;
+  background-color: #F0F8FC;
+  background-image: none;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+  border: 1px solid #d4d4d4;
+}
+
+.introjs-button:hover {
+  font-family: "Open Sans", Arial, sans-serif;
+}
+
+.introjs-button:focus,
+.introjs-button:active {
+   text-decoration: none;
+   outline: 0;
+}
+
+.introjs-skipbutton {
+  color: #1f77a3;
+  text-decoration: none; 
+  font-family: "Open Sans", Arial, sans-serif;
+  margin-right: 32px;
+  border: 1px solid #6dbce3;
+}
+
+.introjs-nextbutton {
+  text-decoration: none; 
+  font-family: "Open Sans", Arial, sans-serif;
+  text-align: left;
+  width: 40px;
+  border-color: #6dbce3;
+  margin-left: 3px;
+}
+
+.introjs-prevbutton {
+  border-right: none;    
+  text-decoration: none; 
+  font-family: "Open Sans", Arial, sans-serif;
+  text-align: right;
+  width: 40px;
+  border-color: #6dbce3;  
+}
+
+.introjs-nextbutton,
+.introjs-nextbutton:focus, 
+.introjs-nextbutton:active,
+.introjs-nextbutton:hover {
+  background-image: url("../img/introjs_arrow_step_next.png");
+  background-position: 45px 5px;
+  background-repeat: no-repeat;
+  text-align: left;
+  border: 1px solid #6dbce3;
+}
+
+.introjs-prevbutton,
+.introjs-prevbutton:focus, 
+.introjs-prevbutton:active,
+.introjs-prevbutton:hover {
+  background-image: url("../img/introjs_arrow_step_prev.png");
+  background-position: 2px 5px;
+  background-repeat: no-repeat;
+  text-align: right;
+  border: 1px solid #6dbce3;
+}
+
+.introjs-nextbutton.introjs-disabled, 
+.introjs-nextbutton.introjs-disabled:active, 
+.introjs-nextbutton.introjs-disabled:hover, 
+.introjs-nextbutton.introjs-disabled:focus {
+  background-image: url("../img/introjs_arrow_step_next_disabled.png");
+  background-position: 48px 5px;
+  background-repeat: no-repeat;
+  text-align: left;
+  border: 1px solid #d4d4d4;
+}
+
+.introjs-prevbutton.introjs-disabled, 
+.introjs-prevbutton.introjs-disabled:active, 
+.introjs-prevbutton.introjs-disabled:hover, 
+.introjs-prevbutton.introjs-disabled:focus {
+  background-image: url("../img/introjs_arrow_step_prev_disabled.png");
+  background-position: 2px 5px;
+  background-repeat: no-repeat;
+  text-align: right;
+  border: 1px solid #d4d4d4;
+}
+
+.introjs-disabled, .introjs-disabled:hover, .introjs-disabled:focus {
+  color: gray;
+  background-color: #F0F8FC;
+}
+
+.introjs-tooltiptext {  
+  font-size: 13px;
+  line-height: 19px;  
+}
+
+.introjstooltipheader {  
+  font-size: 13px;
+  line-height: 19px;
+  font-family: marquette-medium,'Helvetica Neue',Helvetica,Arial,sans-serif;
+}
+
+.introjs-tooltip {
+    min-width: 210px;
+    max-width: 450px;
+}
+/** End introjs **/
