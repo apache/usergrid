@@ -112,6 +112,7 @@ public class CpRelationManager implements RelationManager {
         Assert.notNull( headEntity.getUuid(), "Head entity uuid cannot be null" );
 
         this.em = em;
+        this.emf =emf;
         this.applicationId = applicationId;
         this.headEntity = headEntity;
         this.managerCache = emf.getManagerCache();
