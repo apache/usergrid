@@ -225,6 +225,29 @@ public class CoordinatorUtils {
               .append( value )
               .append( "\";" );
         }
+
+        /** export instance IPs and host names as a space separated list with ClusterName suffixed by _HOSTS and _ADDRS   */
+        StringBuilder ipList = new StringBuilder();
+        StringBuilder hostList = new StringBuilder();
+        for ( Instance temp : cluster.getInstances() ) {
+            ipList.append( temp.getPrivateIpAddress() )
+                    .append( " " );
+            hostList.append( temp.getPublicDnsName() )
+                    .append( " " );
+        }
+
+        sb.append( "export " )
+                .append( cluster.getName().toUpperCase() )
+                .append( "_ADDRS=\"" )
+                .append( ipList.substring( 0, ipList.toString().length() - 1 ) )
+                .append( "\";" );
+
+        sb.append( "export " )
+                .append( cluster.getName().toUpperCase() )
+                .append( "_HOSTS=\"" )
+                .append( hostList.substring( 0, hostList.toString().length() - 1 ) )
+                .append( "\";" );
+
         String exportVars = sb.toString();
 
         // Prepare SSH and SCP commands
