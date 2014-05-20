@@ -10,6 +10,8 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGenerator;
+import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGeneratorImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractIdStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -57,7 +59,7 @@ public class LoadTest  extends AbstractIdStageTest {
         final Iterator<MvccEntity> results = Lists.newArrayList( mvccEntity ).iterator();
 
         //mock up returning a list of MvccEntities
-        when(serializationStrategy.load( collection, entityId, loadVersion, 5 )).thenReturn( results);
+        when(serializationStrategy.load( collection, entityId, loadVersion, 1 )).thenReturn( results);
 
 
 
@@ -108,7 +110,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
 
         //mock up returning a list of MvccEntities
-        when( serializationStrategy.load( collection, entityId, loadVersion, 5 ) ).thenReturn( results.iterator());
+        when( serializationStrategy.load( collection, entityId, loadVersion, 1 ) ).thenReturn( results.iterator());
 
         Load load = new Load( uuidService, serializationStrategy );
         Entity loaded = load.call( entityIoEvent );
@@ -127,6 +129,8 @@ public class LoadTest  extends AbstractIdStageTest {
         final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
+        final ChangeLogGenerator changeLogGenerator = new ChangeLogGeneratorImpl();
+
 
 
         final UUID loadVersion = UUIDGenerator.newTimeUUID();
@@ -156,7 +160,6 @@ public class LoadTest  extends AbstractIdStageTest {
         results.add( completeMvccEntity );
 
         //mock up returning a list of MvccEntities
-        when( uuidService.newTimeUUID() ).thenReturn( loadVersion );
         when( serializationStrategy.load( collection, entityId, loadVersion, 1 ) ).thenReturn( results.iterator());
 
         Load load = new Load( uuidService, serializationStrategy );
@@ -208,7 +211,7 @@ public class LoadTest  extends AbstractIdStageTest {
         results.add( partialMvccEntity2 );
 
         //mock up returning a list of MvccEntities
-        when( serializationStrategy.load( collection, entityId, loadVersion, 5 ) ).thenReturn( results.iterator());
+        when( serializationStrategy.load( collection, entityId, loadVersion, 1 ) ).thenReturn( results.iterator());
 
         Load load = new Load( uuidService, serializationStrategy );
         Entity loaded = load.call( entityIoEvent );

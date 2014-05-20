@@ -9,11 +9,11 @@ import org.apache.commons.collections4.iterators.PushbackIterator;
 
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGenerator;
+import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGeneratorImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.common.base.Optional;
-import com.google.inject.Inject;
 
 
 /**
@@ -22,9 +22,7 @@ import com.google.inject.Inject;
  */
 public class RepairUtil {
 
-
-    @Inject
-    private static  ChangeLogGenerator changeLogGenerator;
+    private static  ChangeLogGenerator changeLogGenerator = new ChangeLogGeneratorImpl();
 
     public static Entity repair(Iterator<MvccEntity> results){
 
@@ -40,7 +38,8 @@ public class RepairUtil {
 
         //this entity has been marked as cleared.(deleted)
         //The version exists, but does not have entity data
-        if ( !targetVersion.isPresent() && mvccEntity.getStatus() == MvccEntity.Status.DELETED ) {
+        if ( !targetVersion.isPresent() && (mvccEntity.getStatus() == MvccEntity.Status.DELETED
+                                            || mvccEntity.getStatus() == MvccEntity.Status.COMPLETE)) {
             return null;
         }
 
