@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.index.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
-
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;

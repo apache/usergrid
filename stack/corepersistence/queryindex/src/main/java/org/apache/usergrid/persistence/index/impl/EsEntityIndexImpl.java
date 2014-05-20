@@ -19,6 +19,9 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import com.google.common.base.Joiner;
+import com.google.common.util.concurrent.AtomicDouble;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,27 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
-import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequestBuilder;
-import org.elasticsearch.client.AdminClient;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.sort.SortOrder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.commons.lang3.time.StopWatch;
-
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
@@ -56,8 +39,9 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -69,16 +53,27 @@ import org.apache.usergrid.persistence.model.field.ListField;
 import org.apache.usergrid.persistence.model.field.LocationField;
 import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
-
-import com.google.common.util.concurrent.AtomicDouble;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-
+import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
+import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
+import org.elasticsearch.client.AdminClient;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.sort.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -140,7 +135,8 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         //log.debug("Creating new EsEntityIndexImpl for: " + indexName);
 
-        //TODO, this will get used heavily, can we lazy repair instead of checking every time we instantiate this?
+        // TODO, this will get used heavily, can we lazy repair instead of checking every 
+        // time we instantiate this?
         AdminClient admin = client.admin();
         try {
             CreateIndexResponse r = admin.indices().prepareCreate(indexName).execute().actionGet();
@@ -251,7 +247,10 @@ public class EsEntityIndexImpl implements EntityIndex {
         StringBuilder sb = new StringBuilder();
         String sep = DOC_TYPE_SEPARATOR;
         sb.append( scope.getApplication().getUuid() ).append(sep);
-        sb.append( scope.getApplication().getType() );
+        sb.append( scope.getApplication().getType() ).append(sep);
+        sb.append( scope.getOwner().getUuid() ).append(sep);
+        sb.append( scope.getOwner().getType() ).append(sep);
+        sb.append( scope.getName() );
         return sb.toString();
     }
 
@@ -275,8 +274,6 @@ public class EsEntityIndexImpl implements EntityIndex {
                 }
 
                 Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
-
-
 
                 // let caller add these fields if needed
                 // entityAsMap.put("created", entity.getId().getUuid().timestamp();
@@ -303,7 +300,8 @@ public class EsEntityIndexImpl implements EntityIndex {
                     }
                     long count = indexedCount.addAndGet(1);
                     if ( count % 1000 == 0 ) {
-                       log.debug("Indexed {} entities, average time {}ms", count, averageIndexTime.get() );
+                       log.debug("Indexed {} entities, average time {}ms", 
+                               count, averageIndexTime.get() );
                     }
                 }
     }
@@ -311,8 +309,6 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     @Override
     public void deindex( Entity entity ) {
-        
-
 
         String indexId = createIndexDocId( entity.getId(), entity.getVersion() );
 

@@ -18,7 +18,6 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
-
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;

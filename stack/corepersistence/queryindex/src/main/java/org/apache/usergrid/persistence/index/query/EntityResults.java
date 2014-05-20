@@ -24,7 +24,6 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.index.impl.CandidateResult;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 

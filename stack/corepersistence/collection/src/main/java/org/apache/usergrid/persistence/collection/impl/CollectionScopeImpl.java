@@ -35,8 +35,8 @@ public class CollectionScopeImpl extends ApplicationScopeImpl implements Collect
     private final String name;
 
 
-    public CollectionScopeImpl( final Id organizationId, final Id ownerId, final String name ) {
-        super( organizationId );
+    public CollectionScopeImpl( final Id applicationId, final Id ownerId, final String name ) {
+        super( applicationId );
         this.ownerId = ownerId;
         this.name = name;
 

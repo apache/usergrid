@@ -15,10 +15,9 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.persistence.index.query;
 
 import java.util.UUID;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
