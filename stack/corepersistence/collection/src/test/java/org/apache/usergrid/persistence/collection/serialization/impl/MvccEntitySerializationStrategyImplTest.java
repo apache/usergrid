@@ -1,14 +1,11 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
+import junit.framework.Assert;
 import org.jukito.UseModules;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -403,21 +400,20 @@ public class MvccEntitySerializationStrategyImplTest {
         //now ask for up to 10 versions from the current version, we should get cleared, v2, v1
         UUID current = UUIDGenerator.newTimeUUID();
 
-        List<MvccEntity> entities = serializationStrategy.load( context, id, current, 3 );
+        Iterator<MvccEntity> entities = serializationStrategy.load( context, id, current, 3 );
 
-        assertEquals( 3, entities.size() );
+        MvccEntity first = entities.next();
+        assertEquals( clearedV3, first);
 
-        assertEquals( clearedV3, entities.get( 0 ) );
+        assertEquals(id, first.getId());
 
-        assertEquals( id, entities.get( 0 ).getId() );
+        MvccEntity second = entities.next();
+        assertEquals( returnedV2, second );
+        assertEquals( id, second.getId() );
 
-
-        assertEquals( returnedV2, entities.get( 1 ) );
-        assertEquals( id, entities.get( 1 ).getId() );
-
-
-        assertEquals( returnedV1, entities.get( 2 ) );
-        assertEquals( id, entities.get( 2 ).getId() );
+        MvccEntity third = entities.next();
+        assertEquals( returnedV1, third );
+        assertEquals( id, third.getId() );
 
 
         //now delete v2 and v1, we should still get v3
@@ -426,9 +422,8 @@ public class MvccEntitySerializationStrategyImplTest {
 
         entities = serializationStrategy.load( context, id, current, 3 );
 
-        assertEquals( 1, entities.size() );
-
-        assertEquals( clearedV3, entities.get( 0 ) );
+         first = entities.next();
+        assertEquals( clearedV3, first );
 
 
         //now get it, should be gone
@@ -437,9 +432,43 @@ public class MvccEntitySerializationStrategyImplTest {
 
         entities = serializationStrategy.load( context, id, current, 3 );
 
-        assertEquals( 0, entities.size() );
+        Assert.assertTrue( !entities.hasNext());
     }
 
+    @Test
+    public void loadHistory()  throws ConnectionException  {
+        final Id organizationId = new SimpleId("organization");
+        final Id applicationId = new SimpleId("application");
+        final String name = "test";
+
+        CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name);
+
+
+        final UUID entityId = UUIDGenerator.newTimeUUID();
+        final UUID version1 = UUIDGenerator.newTimeUUID();
+        final String type = "test";
+
+        final Id id = new SimpleId(entityId, type);
+        Entity entityv1 = new Entity(id);
+        EntityUtils.setVersion(entityv1, version1);
+        MvccEntity saved = new MvccEntityImpl(id, version1, MvccEntity.Status.COMPLETE, Optional.of(entityv1));
+        //persist the entity
+        serializationStrategy.write(context, saved).execute();
+
+        //now write a new version of it
+        Entity entityv2 = new Entity(id);
+        UUID version2 = UUIDGenerator.newTimeUUID();
+        EntityUtils.setVersion(entityv1, version2);
+        MvccEntity savedV2 = new MvccEntityImpl(id, version2, MvccEntity.Status.COMPLETE, Optional.of(entityv2));
+        serializationStrategy.write(context, savedV2).execute();
+
+        Iterator<MvccEntity> entities = serializationStrategy.loadHistory(context,id,savedV2.getVersion(),20);
+        assertTrue(entities.hasNext());
+        assertEquals(saved.getVersion(), entities.next().getVersion());
+        assertEquals(savedV2.getVersion(), entities.next().getVersion());
+        assertFalse(entities.hasNext());
+
+    }
 
     @Test
     public void writeLoadDeletePartial() throws ConnectionException {

@@ -15,30 +15,39 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.index.query;
 
+package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
+
+import org.apache.usergrid.persistence.collection.CollectionScope;
+
+import java.io.Serializable;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.entity.EntityVersion;
-import org.apache.usergrid.persistence.model.entity.Id;
+/**
+ * Entity Event for queues
+ */
+public class MvccEntityEvent<T> implements Serializable {
+
+    private final CollectionScope collectionScope;
+    private final T data;
+    private final UUID version;
 
 
-public class CandidateResult implements EntityVersion {
-    private final Id entityId;
-    private final UUID entityVersion;
-
-    public CandidateResult( Id entityId, UUID entityVersion ) {
-        this.entityId = entityId;
-        this.entityVersion = entityVersion;
+    public MvccEntityEvent(final CollectionScope collectionScope, final UUID version, final T data ) {
+        this.collectionScope = collectionScope;
+        this.data = data;
+        this.version = version;
     }
 
-    @Override
+    public CollectionScope getCollectionScope() {
+        return collectionScope;
+    }
+
     public UUID getVersion() {
-        return entityVersion;
+        return version;
     }
 
-    @Override
-    public Id getId() {
-        return entityId;
+    public T getData() {
+        return data;
     }
 }

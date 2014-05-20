@@ -910,7 +910,7 @@ public class CpRelationManager implements RelationManager {
             List<UUID> ids = new ArrayList<UUID>();
             Iterator<CandidateResult> iter = crs.iterator();
             while ( iter.hasNext() ) {
-                ids.add( iter.next().getEntityId().getUuid() );
+                ids.add( iter.next().getId().getUuid() );
             }
             results = Results.fromIdList( ids );
 
@@ -919,7 +919,7 @@ public class CpRelationManager implements RelationManager {
             List<EntityRef> entityRefs = new ArrayList<EntityRef>();
             Iterator<CandidateResult> iter = crs.iterator();
             while ( iter.hasNext() ) {
-                Id id = iter.next().getEntityId();
+                Id id = iter.next().getId();
                 entityRefs.add( new SimpleEntityRef( id.getType(), id.getUuid() ));
             } 
             results = Results.fromRefList(entityRefs);
@@ -939,7 +939,7 @@ public class CpRelationManager implements RelationManager {
             while ( iter.hasNext() ) {
 
                 org.apache.usergrid.persistence.model.entity.Entity e =
-                    ecm.load( iter.next().getEntityId() ).toBlockingObservable().last();
+                    ecm.load( iter.next().getId() ).toBlockingObservable().last();
 
                 Entity entity = EntityFactory.newEntity(
                         e.getId().getUuid(), e.getField("type").getValue().toString() );

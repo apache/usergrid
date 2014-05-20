@@ -311,7 +311,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         CandidateResult candidateResult = results.iterator().next(); 
 
-        Entity appEntity = em.load( candidateResult.getEntityId() ).toBlockingObservable().last();
+        Entity appEntity = em.load( candidateResult.getId() ).toBlockingObservable().last();
 
         return new CollectionScopeImpl(
             new SimpleId( ((UUID)(appEntity.getField("organizationUuid")).getValue()), "organization"),
@@ -340,7 +340,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             return null; 
         } 
 
-        return results.iterator().next().getEntityId().getUuid();
+        return results.iterator().next().getId().getUuid();
     }
 
 
@@ -357,7 +357,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             return null; 
         } 
 
-        return results.iterator().next().getEntityId().getUuid();
+        return results.iterator().next().getId().getUuid();
     }
 
 
@@ -379,7 +379,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Iterator<CandidateResult> iter = results.iterator();
         while ( iter.hasNext() ) {
             CandidateResult cr = iter.next();
-            Entity e = em.load( cr.getEntityId() ).toBlockingObservable().last();
+            Entity e = em.load( cr.getId() ).toBlockingObservable().last();
             appMap.put( 
                 (String)e.getField(PROPERTY_NAME).getValue(), 
                 (UUID)e.getField(PROPERTY_UUID).getValue() );
@@ -412,7 +412,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
 
         CandidateResult cr = results.iterator().next();
-        Entity propsEntity = em.load( cr.getEntityId() ).toBlockingObservable().last();
+        Entity propsEntity = em.load( cr.getId() ).toBlockingObservable().last();
 
         Map<String, String> props = new HashMap<String, String>();
 
@@ -438,7 +438,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         CandidateResults results = ei.search( q );
         Entity propsEntity;
         if ( !results.isEmpty() ) {
-            propsEntity = em.load( results.iterator().next().getEntityId() ).toBlockingObservable().last();
+            propsEntity = em.load( results.iterator().next().getId()).toBlockingObservable().last();
         } else {
             propsEntity = new Entity( new SimpleId( "properties" ));
         }
@@ -474,7 +474,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         CandidateResults results = ei.search( q );
 
         Entity propsEntity = em.load( 
-                results.iterator().next().getEntityId() ).toBlockingObservable().last();
+                results.iterator().next().getId() ).toBlockingObservable().last();
 
         if ( propsEntity == null ) {
             return false; // nothing to delete
