@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;

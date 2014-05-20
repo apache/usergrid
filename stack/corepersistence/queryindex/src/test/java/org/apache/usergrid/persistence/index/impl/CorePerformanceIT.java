@@ -36,7 +36,9 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
+import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.EntityResults;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -44,8 +46,6 @@ import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -161,7 +161,8 @@ public class CorePerformanceIT extends BaseIT {
         public void run() {
 
             EntityIndex eci =   ecif.createEntityIndex( indexScope );
-            EntityCollectionManager ecm = ecmf.createCollectionManager( new CollectionScopeImpl( indexScope.getApplication(), indexScope.getOwner(), indexScope.getName() ) );
+            EntityCollectionManager ecm = ecmf.createCollectionManager( new CollectionScopeImpl( 
+                indexScope.getApplication(), indexScope.getOwner(), indexScope.getName() ) );
 
             Query query = Query.fromQL( "review_score > 0"); // get all reviews;
             query.withLimit( maxEntities < 1000 ? maxEntities : 1000 );
@@ -175,13 +176,15 @@ public class CorePerformanceIT extends BaseIT {
                 count += candidateResults.size();
 
                 //cause retrieval from cassandra
-                EntityResults entityResults = new EntityResults( candidateResults, ecm, UUIDGenerator.newTimeUUID() );
+                EntityResults entityResults = new EntityResults( 
+                    candidateResults, ecm, UUIDGenerator.newTimeUUID() );
 
                 while(entityResults.hasNext()){
                     entityResults.next();
                 }
 
-                log.info("Read {} reviews in {} / {} ", new Object[] { count, indexScope.getOwner(), indexScope.getName() } );
+                log.info("Read {} reviews in {} / {} ", new Object[] { 
+                    count, indexScope.getOwner(), indexScope.getName() } );
             }
         }
     }
@@ -196,7 +199,8 @@ public class CorePerformanceIT extends BaseIT {
 
         public void run() {
 
-            CollectionScope collectionScope = new CollectionScopeImpl( indexScope.getApplication(), indexScope.getOwner(), indexScope.getName() );
+            CollectionScope collectionScope = new CollectionScopeImpl( 
+                    indexScope.getApplication(), indexScope.getOwner(), indexScope.getName() );
             EntityCollectionManager ecm = ecmf.createCollectionManager(collectionScope );
             EntityIndex eci = ecif.createEntityIndex(indexScope );
 
@@ -239,7 +243,11 @@ public class CorePerformanceIT extends BaseIT {
                             
                             count++;
                             if (count % 100000 == 0) {
-                                log.info("Indexed {} reviews in {} / {} ", new Object[] { count, indexScope.getApplication(), indexScope.getOwner() } );
+                                log.info("Indexed {} reviews in {} / {} ", 
+                                    new Object[] { 
+                                        count, 
+                                        indexScope.getApplication(), 
+                                        indexScope.getOwner() } );
                             }
                             continue;
                         }
@@ -281,7 +289,8 @@ public class CorePerformanceIT extends BaseIT {
         for ( IndexScope indexScope : indexScopes ) {
 
 
-            CollectionScope scope = new CollectionScopeImpl( indexScope.getApplication(), indexScope.getOwner(), indexScope.getName() );
+            CollectionScope scope = new CollectionScopeImpl( 
+                    indexScope.getApplication(), indexScope.getOwner(), indexScope.getName() );
             EntityIndex eci = ecif.createEntityIndex(indexScope );
 
             // TODO: come up with more and more complex queries for CorePerformanceIT

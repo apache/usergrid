@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.persistence.index.query;
 
 import java.util.UUID;
 

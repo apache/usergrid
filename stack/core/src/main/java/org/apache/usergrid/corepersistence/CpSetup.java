@@ -80,18 +80,6 @@ public class CpSetup implements Setup {
     }
 
 
-    /**
-     * Initialize.
-     *
-     * @throws Exception the exception
-     */
-    @Override
-    public synchronized void setup() throws Exception {
-        setupStaticKeyspace();
-        createDefaultApplications();
-    }
-
-
     @Override
     public void init() throws Exception {
         cass.init();
@@ -107,7 +95,7 @@ public class CpSetup implements Setup {
             ConfigurationManager.loadProperties( testProps );
         }
         catch ( IOException e ) {
-            throw new RuntimeException( "Cannot do much without properly loading our configuration.", e );
+            throw new RuntimeException( "Fatal error loading configuration.", e );
         }
 
         Injector injector = CpSetup.getInjector();
@@ -117,6 +105,12 @@ public class CpSetup implements Setup {
         } catch (MigrationException ex) {
             throw new RuntimeException("Error migrating Core Persistence", ex);
         }
+
+        setupSystemKeyspace();
+
+        setupStaticKeyspace();
+
+        createDefaultApplications();
     }
 
 
@@ -145,6 +139,7 @@ public class CpSetup implements Setup {
 
     @Override
     public void setupSystemKeyspace() throws Exception {
+        // no-op
     }
 
     
@@ -169,11 +164,15 @@ public class CpSetup implements Setup {
             logger.info( "Creating application keyspace " + app_keyspace 
                     + " for " + applicationName + " application" );
 
-            cass.createColumnFamily( app_keyspace, createColumnFamilyDefinition( 
+            cass.createColumnFamily( app_keyspace, 
+                createColumnFamilyDefinition( 
                     SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
 
-            cass.createColumnFamilies( app_keyspace, getCfDefs( ApplicationCF.class, app_keyspace ) );
-            cass.createColumnFamilies( app_keyspace, getCfDefs( QueuesCF.class, app_keyspace ) );
+            cass.createColumnFamilies( app_keyspace, 
+                getCfDefs( ApplicationCF.class, app_keyspace ) );
+
+            cass.createColumnFamilies( app_keyspace, 
+                getCfDefs( QueuesCF.class, app_keyspace ) );
         }
     }
 

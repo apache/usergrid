@@ -58,6 +58,8 @@ public class PathQueryIT extends AbstractCoreIT {
             }
         }
 
+        em.refreshIndex();
+
         // pick an arbitrary user, ensure it has 5 devices
         Results devices = em.getCollection( users.get( 10 ), "devices", null, 20, Results.Level.IDS, false );
         assertEquals( 5, devices.size() );
@@ -77,7 +79,7 @@ public class PathQueryIT extends AbstractCoreIT {
         int count = 2;
         while ( pri.hasNext() ) {
             Entity e = ( Entity ) pri.next();
-            assertEquals( count++, ( ( Long ) e.getProperty( "index" ) ).intValue() );
+            assertEquals( count++, (int)e.getProperty( "index" ) );
         }
         assertEquals( count, expectedUserQuerySize + 2 );
 
@@ -140,6 +142,8 @@ public class PathQueryIT extends AbstractCoreIT {
                 em.addToCollection( user, "devices", created );
             }
         }
+
+        em.refreshIndex();
 
         // pick an arbitrary user, ensure it has 7 devices
         Results rd = em.getCollection( users.get( 6 ), "devices", null, 20, Results.Level.IDS, false );

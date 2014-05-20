@@ -173,7 +173,7 @@ public abstract class ToolBase {
 
         Setup setup = ( ( EntityManagerFactoryImpl ) emf ).getSetup();
         logger.info( "Setting up Usergrid schema" );
-        setup.setup();
+        setup.init();
         logger.info( "Usergrid schema setup" );
 
         logger.info( "Setting up Usergrid management services" );

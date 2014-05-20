@@ -39,6 +39,7 @@ import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import java.util.*;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 
 public class EsEntityIndexDeleteListener implements MvccDeleteMessageListener {
 

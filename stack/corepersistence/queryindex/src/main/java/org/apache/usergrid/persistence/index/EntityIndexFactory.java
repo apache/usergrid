@@ -19,8 +19,6 @@
 package org.apache.usergrid.persistence.index;
 
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.google.inject.assistedinject.Assisted;
 

@@ -19,13 +19,13 @@
 
 package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.index.impl.CandidateResult;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.util.UUID;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 
 
 /**
