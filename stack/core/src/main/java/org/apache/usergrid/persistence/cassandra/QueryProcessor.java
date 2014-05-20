@@ -516,7 +516,7 @@ public class QueryProcessor {
         public void visit( Equal op ) throws NoIndexException {
             String fieldName = op.getProperty().getValue();
 
-            checkIndexed( fieldName );
+            //checkIndexed( fieldName );
 
             Literal<?> literal = op.getLiteral();
             SliceNode node = getUnionNode( op );
