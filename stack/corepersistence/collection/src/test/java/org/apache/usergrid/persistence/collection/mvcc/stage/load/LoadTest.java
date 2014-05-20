@@ -2,6 +2,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.load;
 
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,7 +54,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
         final MvccEntity mvccEntity = TestEntityGenerator.fromEntity( entity );
 
-        final List<MvccEntity> results = Lists.newArrayList( mvccEntity );
+        final Iterator<MvccEntity> results = Lists.newArrayList( mvccEntity ).iterator();
 
         //mock up returning a list of MvccEntities
         when(serializationStrategy.load( collection, entityId, loadVersion, 5 )).thenReturn( results);
@@ -107,7 +108,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
 
         //mock up returning a list of MvccEntities
-        when( serializationStrategy.load( collection, entityId, loadVersion, 5 ) ).thenReturn( results);
+        when( serializationStrategy.load( collection, entityId, loadVersion, 5 ) ).thenReturn( results.iterator());
 
         Load load = new Load( uuidService, serializationStrategy );
         Entity loaded = load.call( entityIoEvent );
@@ -155,7 +156,8 @@ public class LoadTest  extends AbstractIdStageTest {
         results.add( completeMvccEntity );
 
         //mock up returning a list of MvccEntities
-        when( serializationStrategy.load( collection, entityId, loadVersion, 5 ) ).thenReturn( results);
+        when( uuidService.newTimeUUID() ).thenReturn( loadVersion );
+        when( serializationStrategy.load( collection, entityId, loadVersion, 1 ) ).thenReturn( results.iterator());
 
         Load load = new Load( uuidService, serializationStrategy );
         Entity loaded = load.call( entityIoEvent );
@@ -206,7 +208,7 @@ public class LoadTest  extends AbstractIdStageTest {
         results.add( partialMvccEntity2 );
 
         //mock up returning a list of MvccEntities
-        when( serializationStrategy.load( collection, entityId, loadVersion, 5 ) ).thenReturn( results);
+        when( serializationStrategy.load( collection, entityId, loadVersion, 5 ) ).thenReturn( results.iterator());
 
         Load load = new Load( uuidService, serializationStrategy );
         Entity loaded = load.call( entityIoEvent );
@@ -233,9 +235,7 @@ public class LoadTest  extends AbstractIdStageTest {
         final CollectionIoEvent<Id> entityIoEvent = new CollectionIoEvent<Id>(collection,  entityId );
 
 
-
-
-        final List<MvccEntity> results = Collections.EMPTY_LIST;
+        final Iterator<MvccEntity> results = Collections.EMPTY_LIST.iterator();
 
         //mock up returning a list of MvccEntities
         when(serializationStrategy.load( collection, entityId, loadVersion, 1 )).thenReturn( results);

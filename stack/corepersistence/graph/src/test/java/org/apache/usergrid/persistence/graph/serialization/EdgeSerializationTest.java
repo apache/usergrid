@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -92,19 +92,19 @@ public abstract class EdgeSerializationTest {
     @Inject
     protected Keyspace keyspace;
 
-    protected OrganizationScope scope;
+    protected ApplicationScope scope;
 
 
     @Before
     public void setup() {
-        scope = mock( OrganizationScope.class );
+        scope = mock( ApplicationScope.class );
 
         Id orgId = mock( Id.class );
 
         when( orgId.getType() ).thenReturn( "organization" );
         when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
 
-        when( scope.getOrganization() ).thenReturn( orgId );
+        when( scope.getApplication() ).thenReturn( orgId );
 
         serialization = getSerialization();
     }

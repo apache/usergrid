@@ -59,7 +59,7 @@ public class Results implements Iterable<Entity> {
         this.candidates = candidates;
         this.ecmf = ecmf;
         for ( CandidateResult candidate : candidates ) {
-            ids.add( candidate.getEntityId() );
+            ids.add( candidate.getId() );
         }
     }
 
@@ -87,30 +87,28 @@ public class Results implements Iterable<Entity> {
 
     @JsonSerialize(include = Inclusion.NON_NULL)
     public List<Id> getIds() {
-        return Collections.unmodifiableList( ids );
+        return Collections.unmodifiableList(ids);
     }
 
 
     @JsonSerialize(include = Inclusion.NON_NULL)
     public List<Entity> getEntities() {
+        return getEntities(false);
+    }
+
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    public List<Entity> getEntities(Boolean takeAllVersions) {
 
         if ( entities == null ) {
 
             entities = new ArrayList<Entity>();
 
             EntityCollectionManager ecm = null;
-            CollectionScope lastScope = null;
 
             for ( CandidateResult candidate : candidates ) {
 
-                if ( !candidate.getCollectionScope().equals(lastScope)) {
-                    // new scope means we need new manager
-                    ecm = ecmf.createCollectionManager( candidate.getCollectionScope() );
-                    lastScope = candidate.getCollectionScope();
-                }
-
-                Entity entity = ecm.load( candidate.getEntityId() ).toBlockingObservable().last();
-                if ( candidate.getEntityVersion().compareTo(entity.getVersion()) == -1) {
+                Entity entity = ecm.load( candidate.getId() ).toBlockingObservable().last();
+                if ( !takeAllVersions && candidate.getVersion().compareTo(entity.getVersion()) == -1) {
                     log.debug("   Stale hit {} version {}", entity.getId(), entity.getVersion() );
                     continue;
                 }

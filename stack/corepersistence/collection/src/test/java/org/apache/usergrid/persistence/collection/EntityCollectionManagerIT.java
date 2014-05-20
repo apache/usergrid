@@ -18,6 +18,8 @@
 package org.apache.usergrid.persistence.collection;
 
 
+import java.util.UUID;
+
 import org.jukito.UseModules;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -77,7 +79,8 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Version exists" );
     }
 
-//TODO: figure out where this test lies, on the range of working or flawed premise.
+//TODO: Flawed test, needs to be reworked. Recreating an entity using newSimpleId alway return new Ent
+
     @Ignore
     public void writeWithUniqueValues() {
 
@@ -152,6 +155,8 @@ public class EntityCollectionManagerIT {
 
         assertNotNull( "Id was assigned", createReturned.getId() );
 
+        UUID version = createReturned.getVersion();
+
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
         Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
@@ -165,7 +170,7 @@ public class EntityCollectionManagerIT {
         //load may return null, use last or default
         loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
 
-        assertNull( "Entity was deleted", loadReturned );
+        assertNull("Entity was deleted",loadReturned );
     }
 
 
@@ -241,7 +246,7 @@ public class EntityCollectionManagerIT {
 
 
         //now make sure we can't load it from another scope, using the same org
-        CollectionScope collectionScope2 = new CollectionScopeImpl(collectionScope1.getOrganization(),  new SimpleId("test2"), collectionScope1.getName());
+        CollectionScope collectionScope2 = new CollectionScopeImpl(collectionScope1.getApplication(),  new SimpleId("test2"), collectionScope1.getName());
 
         EntityCollectionManager manager2 = factory.createCollectionManager( collectionScope2 );
 

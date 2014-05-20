@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.load;
 
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +36,7 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -85,12 +87,8 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         //generate  a version that represents now
         final UUID versionMax = uuidService.newTimeUUID();
 
-        List<MvccEntity> results = entitySerializationStrategy.load( collectionScope, entityId, versionMax, 5 );
-
-        //nothing to do, we didn't get a result back
-        if ( results.size() < 1 ) {
-            return null;
-        }
+        Iterator<MvccEntity> results = entitySerializationStrategy.load(
+                collectionScope, entityId, versionMax, 1 );
 
         return RepairUtil.repair( results );
 

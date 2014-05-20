@@ -23,7 +23,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -48,21 +48,21 @@ public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     @Override
-    public long getWriteShard( final OrganizationScope scope, final Id rowKeyId, final UUID version,
+    public long getWriteShard( final ApplicationScope scope, final Id rowKeyId, final UUID version,
                                final String... types ) {
         return shardCache.getSlice( scope, rowKeyId, version, types );
     }
 
 
     @Override
-    public Iterator<Long> getReadShards( final OrganizationScope scope, final Id rowKeyId, final UUID maxVersion,
+    public Iterator<Long> getReadShards( final ApplicationScope scope, final Id rowKeyId, final UUID maxVersion,
                                          final String... types ) {
         return shardCache.getVersions( scope, rowKeyId, maxVersion, types );
     }
 
 
     @Override
-    public void increment( final OrganizationScope scope, final Id rowKeyId,
+    public void increment( final ApplicationScope scope, final Id rowKeyId,
                            final long shardId, final long count, final String... types ) {
         shardCache.increment(  scope, rowKeyId, shardId, count, types );
     }

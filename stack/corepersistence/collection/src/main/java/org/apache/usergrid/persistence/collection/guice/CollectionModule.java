@@ -26,8 +26,12 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerListener;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteListener;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
@@ -55,6 +59,8 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
+import com.netflix.astyanax.Keyspace;
+
 
 
 /**
@@ -83,13 +89,9 @@ public class CollectionModule extends AbstractModule {
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
 
-        /**
-         * Bindings to fire up all our message listener implementations.  These will bind their dependencies
-         */
-        Multibinder<MessageListener> messageListenerMultibinder =
-                Multibinder.newSetBinder( binder(), MessageListener.class );
+        Multibinder<MessageListener> messageListenerMultibinder = Multibinder.newSetBinder(binder(), MessageListener.class);
 
-        messageListenerMultibinder.addBinding().toProvider( EntityCollectionListenerProvider.class ).asEagerSingleton();
+        messageListenerMultibinder.addBinding().toProvider( MvccEntityDeleteListenerProvider.class ).asEagerSingleton();
     }
 
     @Provides
@@ -127,6 +129,16 @@ public class CollectionModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
+    @Inject
+    @MvccEntityDelete
+    public AsyncProcessor<MvccEntityEvent<MvccEntity>> edgeDelete(@MvccEntityDelete final TimeoutQueue<MvccEntityEvent<MvccEntity>> queue, final ConsistencyFig consistencyFig) {
+        return new AsyncProcessorImpl<>(queue, consistencyFig);
+    }
+
+
+
+    @Provides
     @Inject
     @Singleton
     @EntityUpdate
@@ -134,11 +146,19 @@ public class CollectionModule extends AbstractModule {
         return new LocalTimeoutQueue<>( timeService );
     }
 
+    @Provides
+    @Inject
+    @Singleton
+    @MvccEntityDelete
+    public TimeoutQueue<MvccEntityEvent<MvccEntity>> edgeDeleteQueue(final TimeService timeService) {
+        return new LocalTimeoutQueue<>(timeService);
+    }
+
 
     /**
      * Create the provider for the node delete listener
      */
-    public static class EntityCollectionListenerProvider implements Provider<MessageListener<CollectionIoEvent<Id>,Entity>>  {
+    public static class EntityCollectionListenerProvider implements Provider<MessageListener<CollectionIoEvent<Id>,Entity>> {
 
         private final Load load;
         private final WriteStart writeStart;
@@ -146,24 +166,53 @@ public class CollectionModule extends AbstractModule {
         private final AsyncProcessor<Entity> entityUpdate;
 
 
-
         @Inject
-        public EntityCollectionListenerProvider( final Load load,
-                                                 @Write final WriteStart writeStart,
+        public EntityCollectionListenerProvider( final Load load, @Write final WriteStart writeStart,
                                                  @WriteUpdate final WriteStart writeUpdate,
-                                                 @EntityUpdate final AsyncProcessor<Entity> entityUpdate) {
+                                                 @EntityUpdate final AsyncProcessor<Entity> entityUpdate ) {
 
             this.load = load;
             this.writeStart = writeStart;
             this.writeUpdate = writeUpdate;
             this.entityUpdate = entityUpdate;
-
         }
 
 
         @Override
-        public MessageListener<CollectionIoEvent<Id>,Entity> get() {
-            return new EntityCollectionManagerListener(load,writeStart,writeUpdate,entityUpdate);
+        public MessageListener<CollectionIoEvent<Id>, Entity> get() {
+            return new EntityCollectionManagerListener( load, writeStart, writeUpdate, entityUpdate );
+        }
+    }
+
+
+     /**
+     * Create the provider for the entity delete listener
+     */
+    public static class MvccEntityDeleteListenerProvider
+            implements Provider<MvccDeleteMessageListener> {
+
+
+        private final MvccEntitySerializationStrategy entitySerialization;
+        private final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete;
+        private final Keyspace keyspace;
+        private final SerializationFig serializationFig;
+
+
+        @Inject
+        public MvccEntityDeleteListenerProvider( final MvccEntitySerializationStrategy entitySerialization,
+                                           @MvccEntityDelete final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete,
+                                           final Keyspace keyspace,
+                                           final SerializationFig serializationFig) {
+            this.entitySerialization = entitySerialization;
+            this.entityDelete = entityDelete;
+            this.serializationFig = serializationFig;
+            this.keyspace = keyspace;
+        }
+
+        @Override
+        public MvccDeleteMessageListener get() {
+            return new MvccEntityDeleteListener( entitySerialization,entityDelete,keyspace,serializationFig  );
+
         }
     }
 }

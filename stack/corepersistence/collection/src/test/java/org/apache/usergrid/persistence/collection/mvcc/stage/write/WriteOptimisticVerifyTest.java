@@ -68,7 +68,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
     public void testNoConflict() throws Exception {
 
         final CollectionScope collectionScope = mock( CollectionScope.class );
-        when( collectionScope.getOrganization() )
+        when( collectionScope.getApplication() )
             .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "organization" ) );
         when( collectionScope.getOwner() )
             .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "owner" ) );
@@ -116,7 +116,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
     public void testConflict() throws Exception {
 
         final CollectionScope scope = mock( CollectionScope.class );
-        when( scope.getOrganization() )
+        when( scope.getApplication() )
             .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "organization" ) );
         when( scope.getOwner() )
             .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "owner" ) );

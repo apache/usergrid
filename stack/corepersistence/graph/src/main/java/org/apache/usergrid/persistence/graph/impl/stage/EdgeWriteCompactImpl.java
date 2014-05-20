@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -78,7 +78,7 @@ public class EdgeWriteCompactImpl implements EdgeWriteCompact {
        }
 
     @Override
-    public Observable<Integer> compact( final OrganizationScope scope, final MarkedEdge edge, final UUID timestamp ) {
+    public Observable<Integer> compact( final ApplicationScope scope, final MarkedEdge edge, final UUID timestamp ) {
         final Edge writtenEdge = edge;
 
               final UUID writeVersion = edge.getVersion();

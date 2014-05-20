@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -84,7 +84,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
     }
 
 
-    public Observable<MarkedEdge> repair( final OrganizationScope scope, final MarkedEdge edge, final UUID timestamp ) {
+    public Observable<MarkedEdge> repair( final ApplicationScope scope, final MarkedEdge edge, final UUID timestamp ) {
 
 
         //merge source and target then deal with the distinct values
@@ -129,7 +129,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
     /**
      * Get all edge versions <= the specified max from the source
      */
-    private Observable<MarkedEdge> getEdgeVersions( final OrganizationScope scope, final Edge edge,
+    private Observable<MarkedEdge> getEdgeVersions( final ApplicationScope scope, final Edge edge,
                                                     final EdgeSerialization serialization ) {
 
         return Observable.create( new ObservableIterator<MarkedEdge>( "edgeVersions" ) {

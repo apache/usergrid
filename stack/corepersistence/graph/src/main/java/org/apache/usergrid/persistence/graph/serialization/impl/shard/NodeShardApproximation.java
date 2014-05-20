@@ -20,7 +20,7 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -39,13 +39,13 @@ public interface NodeShardApproximation {
      * @param count
      * @param edgeType The edge type
      */
-    public void increment( final OrganizationScope scope, final Id nodeId, final long shardId,  final long count,
+    public void increment( final ApplicationScope scope, final Id nodeId, final long shardId,  final long count,
                            final String... edgeType );
 
 
     /**
      * Get the approximation of the number of unique items
      */
-    public long getCount( final OrganizationScope scope, final Id nodeId, final long shardId,
+    public long getCount( final ApplicationScope scope, final Id nodeId, final long shardId,
                           final String... edgeType );
 }

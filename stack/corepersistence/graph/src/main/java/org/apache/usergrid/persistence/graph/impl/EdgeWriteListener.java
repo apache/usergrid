@@ -19,34 +19,17 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.EdgeWrite;
-import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompact;
-import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
-import rx.functions.Func1;
 
 
 /**
@@ -76,6 +59,6 @@ public class EdgeWriteListener implements MessageListener<EdgeEvent<MarkedEdge>,
 
     @Override
     public Observable<Integer> receive( final EdgeEvent<MarkedEdge> write ) {
-       return edgeWriteCompact.compact( write.getOrganizationScope(), write.getData(), write.getTimestamp() );
+       return edgeWriteCompact.compact( write.getApplicationScope(), write.getData(), write.getTimestamp() );
     }
 }

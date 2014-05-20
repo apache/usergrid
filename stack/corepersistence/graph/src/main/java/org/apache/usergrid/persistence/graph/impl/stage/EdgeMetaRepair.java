@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
@@ -44,7 +44,7 @@ public interface EdgeMetaRepair {
      * @return An observable that emits the total number of sub types still in use.  0 implies the type and subtypes
      *         have been removed.  Anything > 0 implies the edgeType and subTypes are still in use
      */
-    public Observable<Integer> repairSources( OrganizationScope scope, Id sourceId, String edgeType, UUID version );
+    public Observable<Integer> repairSources( ApplicationScope scope, Id sourceId, String edgeType, UUID version );
 
 
     /**
@@ -58,5 +58,5 @@ public interface EdgeMetaRepair {
      * @return An observable that emits the total number of sub types still in use.  0 implies the type and subtypes
      *         have been removed.  Anything > 0 implies the edgeType and subTypes are still in use
      */
-    public Observable<Integer> repairTargets( OrganizationScope scope, Id targetId, String edgeType, UUID version );
+    public Observable<Integer> repairTargets( ApplicationScope scope, Id targetId, String edgeType, UUID version );
 }

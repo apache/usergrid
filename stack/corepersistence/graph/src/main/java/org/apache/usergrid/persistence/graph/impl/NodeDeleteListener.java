@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
@@ -113,7 +113,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     public Observable<Integer> receive( final EdgeEvent<Id> edgeEvent ) {
 
         final Id node = edgeEvent.getData();
-        final OrganizationScope scope = edgeEvent.getOrganizationScope();
+        final ApplicationScope scope = edgeEvent.getApplicationScope();
 
 
         return Observable.from( node )
@@ -160,7 +160,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     /**
      * Do the deletes
      */
-    private Observable<MarkedEdge> doDeletes( final Id node, final OrganizationScope scope, final UUID version ) {
+    private Observable<MarkedEdge> doDeletes( final Id node, final ApplicationScope scope, final UUID version ) {
         /**
          * Note that while we're processing, returned edges could be moved from the commit log to storage.  As a result,
          * we need to issue a delete with the same version as the node delete on both commit log and storage for
@@ -276,7 +276,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     /**
      * Get all existing edge types to the target node
      */
-    private Observable<String> getEdgesTypesToTarget( final OrganizationScope scope, final SearchEdgeType search ) {
+    private Observable<String> getEdgesTypesToTarget( final ApplicationScope scope, final SearchEdgeType search ) {
 
         return Observable.create( new ObservableIterator<String>( "getEdgeTypesToTarget" ) {
             @Override
@@ -290,7 +290,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     /**
      * Get all existing edge types to the target node
      */
-    private Observable<String> getEdgesTypesFromSource( final OrganizationScope scope, final SearchEdgeType search ) {
+    private Observable<String> getEdgesTypesFromSource( final ApplicationScope scope, final SearchEdgeType search ) {
 
         return Observable.create( new ObservableIterator<String>( "getEdgeTypesFromSource" ) {
             @Override

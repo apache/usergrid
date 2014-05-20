@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.collection;
 
 /**
  * A basic factory that creates a collection manager with the given context. 
- * Each instance of this factory should exist for a Single OrganizationScope
+ * Each instance of this factory should exist for a Single ApplicationScope
  */
 public interface EntityCollectionManagerFactory {
 

@@ -29,7 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
@@ -96,7 +96,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
     @Override
-    public long getSlice( final OrganizationScope scope, final Id nodeId, final UUID time, final String... edgeType ) {
+    public long getSlice( final ApplicationScope scope, final Id nodeId, final UUID time, final String... edgeType ) {
 
 
         final CacheKey key = new CacheKey( scope, nodeId, edgeType );
@@ -121,7 +121,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
     @Override
-    public Iterator<Long> getVersions( final OrganizationScope scope, final Id nodeId, final UUID maxVersion,
+    public Iterator<Long> getVersions( final ApplicationScope scope, final Id nodeId, final UUID maxVersion,
                                        final String... edgeType ) {
         final CacheKey key = new CacheKey( scope, nodeId, edgeType );
               CacheEntry entry;
@@ -144,7 +144,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
     @Override
-    public long increment( final OrganizationScope scope, final Id nodeId, final long shard, final long count,
+    public long increment( final ApplicationScope scope, final Id nodeId, final long shard, final long count,
                                      final String... edgeTypes ) {
         //TODO, implement this
         return 0;
@@ -186,12 +186,12 @@ public class NodeShardCacheImpl implements NodeShardCache {
      * Cache key for looking up items in the shard
      */
     private static class CacheKey {
-        private final OrganizationScope scope;
+        private final ApplicationScope scope;
         private final Id id;
         private final String[] types;
 
 
-        private CacheKey( final OrganizationScope scope, final Id id, final String[] types ) {
+        private CacheKey( final ApplicationScope scope, final Id id, final String[] types ) {
             this.scope = scope;
             this.id = id;
             this.types = types;

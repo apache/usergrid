@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -82,7 +82,7 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
 
     @Override
-    public void increment( final OrganizationScope scope, final Id nodeId, final long shardId,  final long count,
+    public void increment( final ApplicationScope scope, final Id nodeId, final long shardId,  final long count,
                            final String... edgeType ) {
 
 
@@ -100,7 +100,7 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
 
     @Override
-    public long getCount( final OrganizationScope scope, final Id nodeId, final long shardId,
+    public long getCount( final ApplicationScope scope, final Id nodeId, final long shardId,
                           final String... edgeType ) {
 
         final ShardKey key = new ShardKey( scope, nodeId, shardId, edgeType );
@@ -120,13 +120,13 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
      * Internal class for shard keys
      */
     private static final class ShardKey {
-        private final OrganizationScope scope;
+        private final ApplicationScope scope;
         private final Id nodeId;
         private final long shardId;
         private final String[] edgeTypes;
 
 
-        private ShardKey( final OrganizationScope scope, final Id nodeId, final long shardId, final String[] edgeTypes ) {
+        private ShardKey( final ApplicationScope scope, final Id nodeId, final long shardId, final String[] edgeTypes ) {
 
 
             this.scope = scope;
