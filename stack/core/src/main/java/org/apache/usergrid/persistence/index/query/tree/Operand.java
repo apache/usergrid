@@ -14,26 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
 import org.antlr.runtime.Token;
 import org.antlr.runtime.tree.CommonTree;
+import org.apache.usergrid.persistence.exceptions.PersistenceException;
 
 
 /**
- * Abstract class for literals
+ * Any logical operation should subclass.  Boolean logic, equality, not, contains, within and others are examples of
+ * operands
  *
  * @author tnine
  */
-public abstract class Literal<V> extends CommonTree {
+public abstract class Operand extends CommonTree {
 
 
-    protected Literal( Token t ) {
+    /** Default constructor to take a token */
+    public Operand( Token t ) {
         super( t );
     }
 
 
-    /** Return the value of the literal the user has passed in */
-    public abstract V getValue();
+    /** Get the pointer to the parent node */
+    public Operand getParent() {
+        return ( Operand ) super.getParent();
+    }
+
+
+    /** Visitor method */
+    public abstract void visit( QueryVisitor visitor ) throws PersistenceException;
 }

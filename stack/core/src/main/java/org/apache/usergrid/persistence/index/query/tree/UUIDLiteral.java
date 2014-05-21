@@ -14,35 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
+import java.util.UUID;
+
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
-import org.antlr.runtime.tree.CommonTree;
-import org.apache.usergrid.persistence.exceptions.PersistenceException;
 
 
-/**
- * Any logical operation should subclass.  Boolean logic, equality, not, contains, within and others are examples of
- * operands
- *
- * @author tnine
- */
-public abstract class Operand extends CommonTree {
+/** @author tnine */
+public class UUIDLiteral extends Literal<UUID> {
+
+    private UUID value;
 
 
-    /** Default constructor to take a token */
-    public Operand( Token t ) {
+    /**
+     * @param t
+     */
+    public UUIDLiteral( Token t ) {
         super( t );
+        value = UUID.fromString( t.getText() );
     }
 
 
-    /** Get the pointer to the parent node */
-    public Operand getParent() {
-        return ( Operand ) super.getParent();
+    public UUIDLiteral( UUID value ) {
+        super( new ClassicToken( 0, String.valueOf( value ) ) );
+        this.value = value;
     }
 
 
-    /** Visitor method */
-    public abstract void visit( QueryVisitor visitor ) throws PersistenceException;
+    public UUID getValue() {
+        return this.value;
+    }
 }

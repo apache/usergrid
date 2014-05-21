@@ -14,30 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
+import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
 
 
 /** @author tnine */
-public class NotOperand extends Operand {
+public class OrOperand extends BooleanOperand {
 
-
-    public NotOperand( Token t ) {
+    /**
+     * @param left
+     * @param token
+     * @param right
+     */
+    public OrOperand( Token t ) {
         super( t );
     }
 
 
-    /** get the only child operation */
-    public Operand getOperation() {
-        return ( Operand ) this.children.get( 0 );
+    public OrOperand() {
+        super( new CommonToken( 0, "or" ) );
     }
 
 
-    /* (non-Javadoc)
-     * @see org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence.query.tree.QueryVisitor)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence
+     * .query.tree.QueryVisitor)
      */
     @Override
     public void visit( QueryVisitor visitor ) throws PersistenceException {

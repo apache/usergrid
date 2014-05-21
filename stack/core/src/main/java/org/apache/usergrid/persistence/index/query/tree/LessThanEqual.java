@@ -14,37 +14,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
-import java.util.UUID;
-
-import org.antlr.runtime.ClassicToken;
+import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
+import org.apache.usergrid.persistence.exceptions.NoIndexException;
 
 
 /** @author tnine */
-public class UUIDLiteral extends Literal<UUID> {
+public class LessThanEqual extends EqualityOperand {
 
-    private UUID value;
+    /**
+     * @param property
+     * @param literal
+     */
+    public LessThanEqual( Token t ) {
+        super( t );
+    }
 
 
     /**
-     * @param t
      */
-    public UUIDLiteral( Token t ) {
-        super( t );
-        value = UUID.fromString( t.getText() );
+    public LessThanEqual() {
+        super( new CommonToken( 0, "<=" ) );
     }
 
 
-    public UUIDLiteral( UUID value ) {
-        super( new ClassicToken( 0, String.valueOf( value ) ) );
-        this.value = value;
-    }
-
-
-    public UUID getValue() {
-        return this.value;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence
+     * .query.tree.QueryVisitor)
+     */
+    @Override
+    public void visit( QueryVisitor visitor ) throws NoIndexException {
+        visitor.visit( this );
     }
 }

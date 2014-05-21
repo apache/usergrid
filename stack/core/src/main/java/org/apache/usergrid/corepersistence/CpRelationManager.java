@@ -64,7 +64,7 @@ import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.query.tree.Operand;
+import org.apache.usergrid.persistence.index.query.tree.Operand;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import org.apache.usergrid.utils.MapUtils;
@@ -540,50 +540,50 @@ public class CpRelationManager implements RelationManager {
             cpQuery.addSort( newsp ); 
         }
 
-        List<org.apache.usergrid.persistence.query.tree.Operand> 
+        List<org.apache.usergrid.persistence.index.query.tree.Operand> 
             filterClauses = query.getFilterClauses();
 
         for ( Operand oldop : filterClauses ) {
             
-            if ( oldop instanceof org.apache.usergrid.persistence.query.tree.ContainsOperand ) {
+            if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.ContainsOperand ) {
 
-                org.apache.usergrid.persistence.query.tree.ContainsOperand casted = 
-                    (org.apache.usergrid.persistence.query.tree.ContainsOperand)oldop;
+                org.apache.usergrid.persistence.index.query.tree.ContainsOperand casted = 
+                    (org.apache.usergrid.persistence.index.query.tree.ContainsOperand)oldop;
                 cpQuery.addContainsFilter( 
                     casted.getProperty().getText(), casted.getLiteral().getValue().toString());
 
-            } else if ( oldop instanceof org.apache.usergrid.persistence.query.tree.Equal ) {
+            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.Equal ) {
 
-                org.apache.usergrid.persistence.query.tree.Equal casted = 
-                    (org.apache.usergrid.persistence.query.tree.Equal)oldop;
+                org.apache.usergrid.persistence.index.query.tree.Equal casted = 
+                    (org.apache.usergrid.persistence.index.query.tree.Equal)oldop;
                 cpQuery.addEqualityFilter(
                         casted.getProperty().getText(), casted.getLiteral().getValue() );
 
-            } else if ( oldop instanceof org.apache.usergrid.persistence.query.tree.GreaterThan ) {
+            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.GreaterThan ) {
 
-                org.apache.usergrid.persistence.query.tree.GreaterThan casted = 
-                    (org.apache.usergrid.persistence.query.tree.GreaterThan)oldop;
+                org.apache.usergrid.persistence.index.query.tree.GreaterThan casted = 
+                    (org.apache.usergrid.persistence.index.query.tree.GreaterThan)oldop;
                 cpQuery.addGreaterThanFilter(
                         casted.getProperty().getText(), casted.getLiteral().getValue());
 
-            } else if(oldop instanceof org.apache.usergrid.persistence.query.tree.GreaterThanEqual){
+            } else if(oldop instanceof org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual){
 
-                org.apache.usergrid.persistence.query.tree.GreaterThanEqual casted = 
-                    (org.apache.usergrid.persistence.query.tree.GreaterThanEqual)oldop;
+                org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual casted = 
+                    (org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual)oldop;
                 cpQuery.addGreaterThanEqualFilter(
                         casted.getProperty().getText(), casted.getLiteral().getValue());
 
-            } else if ( oldop instanceof org.apache.usergrid.persistence.query.tree.LessThan ) {
+            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.LessThan ) {
 
-                org.apache.usergrid.persistence.query.tree.LessThan casted = 
-                    (org.apache.usergrid.persistence.query.tree.LessThan)oldop;
+                org.apache.usergrid.persistence.index.query.tree.LessThan casted = 
+                    (org.apache.usergrid.persistence.index.query.tree.LessThan)oldop;
                 cpQuery.addLessThanFilter(
                         casted.getProperty().getText(), casted.getLiteral().getValue());
 
-            } else if ( oldop instanceof org.apache.usergrid.persistence.query.tree.LessThanEqual) {
+            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.LessThanEqual) {
 
-                org.apache.usergrid.persistence.query.tree.LessThanEqual casted = 
-                    (org.apache.usergrid.persistence.query.tree.LessThanEqual)oldop;
+                org.apache.usergrid.persistence.index.query.tree.LessThanEqual casted = 
+                    (org.apache.usergrid.persistence.index.query.tree.LessThanEqual)oldop;
                 cpQuery.addLessThanEqualFilter(
                         casted.getProperty().getText(), casted.getLiteral().getValue());
             }

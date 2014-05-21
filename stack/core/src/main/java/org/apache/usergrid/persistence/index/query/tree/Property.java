@@ -14,41 +14,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
-import org.antlr.runtime.CommonToken;
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.exceptions.PersistenceException;
 
 
-/** @author tnine */
-public class OrOperand extends BooleanOperand {
+/**
+ * A property
+ *
+ * @author tnine
+ */
+public class Property extends Literal<String> {
 
-    /**
-     * @param left
-     * @param token
-     * @param right
-     */
-    public OrOperand( Token t ) {
+    private String property;
+
+
+    public Property( Token t ) {
         super( t );
+        this.property = t.getText();
     }
 
 
-    public OrOperand() {
-        super( new CommonToken( 0, "or" ) );
+    public Property( String property ) {
+        this( new ClassicToken( 0, property ) );
     }
 
 
     /*
      * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence
-     * .query.tree.QueryVisitor)
+     *
+     * @see org.apache.usergrid.persistence.query.tree.Literal#getValue()
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws PersistenceException {
-        visitor.visit( this );
+    public String getValue() {
+        return this.property;
+    }
+
+
+    /**
+     * Subclasses an override.  Indexed value could be different when stored internally.  By default returns the same
+     * property
+     */
+    public String getIndexedValue() {
+        return this.property;
     }
 }

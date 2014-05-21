@@ -33,8 +33,8 @@ import org.apache.usergrid.persistence.query.ir.OrNode;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 import org.apache.usergrid.persistence.query.ir.SliceNode;
 import org.apache.usergrid.persistence.query.ir.WithinNode;
-import org.apache.usergrid.persistence.query.tree.QueryFilterLexer;
-import org.apache.usergrid.persistence.query.tree.QueryFilterParser;
+import org.apache.usergrid.persistence.index.query.tree.QueryFilterLexer;
+import org.apache.usergrid.persistence.index.query.tree.QueryFilterParser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

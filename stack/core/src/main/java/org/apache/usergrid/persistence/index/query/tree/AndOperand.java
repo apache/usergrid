@@ -14,28 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
-import org.antlr.runtime.ClassicToken;
+import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.exceptions.NoIndexException;
+import org.apache.usergrid.persistence.exceptions.PersistenceException;
 
 
 /** @author tnine */
-public class Equal extends EqualityOperand {
+public class AndOperand extends BooleanOperand {
 
-    /**
-     * @param property
-     * @param literal
-     */
-    public Equal( Token t ) {
-        super( t );
+    public AndOperand() {
+        super( new CommonToken( 0, "and" ) );
     }
 
 
-    public Equal() {
-        super( new ClassicToken( 0, "=" ) );
+    public AndOperand( Token t ) {
+        super( t );
     }
 
 
@@ -47,7 +43,7 @@ public class Equal extends EqualityOperand {
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws NoIndexException {
+    public void visit( QueryVisitor visitor ) throws PersistenceException {
         visitor.visit( this );
     }
 }

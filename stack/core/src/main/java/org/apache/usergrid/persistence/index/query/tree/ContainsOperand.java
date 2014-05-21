@@ -1,4 +1,4 @@
-/*
+    /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,40 +14,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
-import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.exceptions.NoIndexException;
+import org.apache.usergrid.persistence.exceptions.PersistenceException;
 
 
 /** @author tnine */
-public class GreaterThan extends EqualityOperand {
+public class ContainsOperand extends EqualityOperand {
 
-    /**
-     * @param property
-     * @param literal
-     */
-    public GreaterThan( Token t ) {
+    public ContainsOperand( Token t ) {
         super( t );
     }
 
-
-    public GreaterThan() {
-        super( new CommonToken( 0, ">" ) );
+    @Override
+    public void visit( QueryVisitor visitor ) throws PersistenceException {
+        visitor.visit( this );
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence
-     * .query.tree.QueryVisitor)
+    public StringLiteral getString() {
+        return ( StringLiteral ) getLiteral();
+    }
+
+    @Override
+    protected Property newProperty( String name ) {
+        return new ContainsProperty( name );
+    }
+
+
+    /* (non-Javadoc)
+     * @see org.apache.usergrid.persistence.query.tree.EqualityOperand#getProperty()
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws NoIndexException {
-        visitor.visit( this );
+    public ContainsProperty getProperty() {
+        return ( ContainsProperty ) this.children.get( 0 );
     }
 }

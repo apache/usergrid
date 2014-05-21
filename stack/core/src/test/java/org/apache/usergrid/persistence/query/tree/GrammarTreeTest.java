@@ -17,6 +17,22 @@
 package org.apache.usergrid.persistence.query.tree;
 
 
+import org.apache.usergrid.persistence.index.query.tree.OrOperand;
+import org.apache.usergrid.persistence.index.query.tree.LessThan;
+import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
+import org.apache.usergrid.persistence.index.query.tree.AndOperand;
+import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
+import org.apache.usergrid.persistence.index.query.tree.QueryFilterLexer;
+import org.apache.usergrid.persistence.index.query.tree.Equal;
+import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
+import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
+import org.apache.usergrid.persistence.index.query.tree.QueryFilterParser;
+import org.apache.usergrid.persistence.index.query.tree.Operand;
+import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
+import org.apache.usergrid.persistence.index.query.tree.StringLiteral;
+import org.apache.usergrid.persistence.index.query.tree.NotOperand;
+import org.apache.usergrid.persistence.index.query.tree.LongLiteral;
+import org.apache.usergrid.persistence.index.query.tree.UUIDLiteral;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;

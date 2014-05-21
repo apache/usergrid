@@ -14,45 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
-import org.antlr.runtime.ClassicToken;
+import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
+import org.apache.usergrid.persistence.exceptions.NoIndexException;
 
 
-/**
- * A property for full text searching that requires special renaming
- *
- * @author tnine
- */
-public class ContainsProperty extends Property {
+/** @author tnine */
+public class GreaterThan extends EqualityOperand {
 
-    private String indexedName = null;
-
-
-    public ContainsProperty( Token t ) {
+    /**
+     * @param property
+     * @param literal
+     */
+    public GreaterThan( Token t ) {
         super( t );
-        this.indexedName = String.format( "%s.keywords", super.getValue() );
     }
 
 
-    public ContainsProperty( String property ) {
-        this( new ClassicToken( 0, property ) );
+    public GreaterThan() {
+        super( new CommonToken( 0, ">" ) );
     }
 
 
-    /* (non-Javadoc)
-     * @see org.apache.usergrid.persistence.query.tree.Property#getIndexedValue()
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence
+     * .query.tree.QueryVisitor)
      */
     @Override
-    public String getIndexedValue() {
-        return this.indexedName;
-    }
-
-
-    /** @return the property */
-    public ContainsProperty getProperty() {
-        return ( ContainsProperty ) this.children.get( 0 );
+    public void visit( QueryVisitor visitor ) throws NoIndexException {
+        visitor.visit( this );
     }
 }

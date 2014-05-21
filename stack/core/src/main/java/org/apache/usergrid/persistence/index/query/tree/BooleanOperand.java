@@ -14,36 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
-import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.exceptions.PersistenceException;
 
 
-/** @author tnine */
-public class AndOperand extends BooleanOperand {
+/**
+ * A base class for any equality expression.  Expressions must have a property and a value. Examples are >=, >, =, <,
+ * <=,
+ *
+ * @author tnine
+ */
+public abstract class BooleanOperand extends Operand {
 
-    public AndOperand() {
-        super( new CommonToken( 0, "and" ) );
-    }
-
-
-    public AndOperand( Token t ) {
+    public BooleanOperand( Token t ) {
         super( t );
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence
-     * .query.tree.QueryVisitor)
-     */
-    @Override
-    public void visit( QueryVisitor visitor ) throws PersistenceException {
-        visitor.visit( this );
+    public Operand getLeft() {
+        return ( Operand ) this.children.get( 0 );
+    }
+
+
+    public Operand getRight() {
+        return ( Operand ) this.children.get( 1 );
     }
 }

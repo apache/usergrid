@@ -14,36 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
-import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
+import org.antlr.runtime.tree.CommonTree;
 
 
-/** @author tnine */
-public class BooleanLiteral extends Literal<Boolean> {
+/**
+ * Abstract class for literals
+ *
+ * @author tnine
+ */
+public abstract class Literal<V> extends CommonTree {
 
-    private boolean value;
 
-
-    /**
-     * @param t
-     */
-    protected BooleanLiteral( Token t ) {
+    protected Literal( Token t ) {
         super( t );
-        value = Boolean.valueOf( t.getText() );
     }
 
 
-    /** The boolean literal */
-    public BooleanLiteral( boolean value ) {
-        super( new ClassicToken( 0, String.valueOf( value ) ) );
-        this.value = value;
-    }
-
-
-    public Boolean getValue() {
-        return value;
-    }
+    /** Return the value of the literal the user has passed in */
+    public abstract V getValue();
 }

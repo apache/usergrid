@@ -14,31 +14,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
+import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
 
 
-/**
- * A base class for any equality expression.  Expressions must have a property and a value. Examples are >=, >, =, <,
- * <=,
- *
- * @author tnine
- */
-public abstract class BooleanOperand extends Operand {
+/** @author tnine */
+public class LongLiteral extends Literal<Long> implements NumericLiteral {
 
-    public BooleanOperand( Token t ) {
+    private long value;
+
+
+    /**
+     * @param t
+     */
+    public LongLiteral( Token t ) {
         super( t );
+        this.value = Long.valueOf( t.getText() );
     }
 
 
-    public Operand getLeft() {
-        return ( Operand ) this.children.get( 0 );
+    /**
+     *
+     * @param value
+     */
+    public LongLiteral( long value ) {
+        super( new ClassicToken( 0, String.valueOf( value ) ) );
+        this.value = value;
     }
 
 
-    public Operand getRight() {
-        return ( Operand ) this.children.get( 1 );
+    /**
+     *
+     * @return
+     */
+    public Long getValue() {
+        return this.value;
+    }
+
+
+    /* (non-Javadoc)
+     * @see org.apache.usergrid.persistence.query.tree.NumericLiteral#getFloatValue()
+     */
+    @Override
+    public float getFloatValue() {
+        return value;
     }
 }

@@ -14,42 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
-import org.antlr.runtime.ClassicToken;
+import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.Token;
+import org.apache.usergrid.persistence.exceptions.NoIndexException;
 
 
-/**
- * A property
- *
- * @author tnine
- */
-public class WithinProperty extends Property {
+/** @author tnine */
+public class GreaterThanEqual extends EqualityOperand {
 
-    private String indexedName = null;
-
-
-    public WithinProperty( Token t ) {
+    /**
+     * @param property
+     * @param literal
+     */
+    public GreaterThanEqual( Token t ) {
         super( t );
-        this.indexedName = String.format( "%s.coordinates", super.getValue() );
     }
 
 
-    public WithinProperty( String property ) {
-        this( new ClassicToken( 0, property ) );
+    /**
+     * @param property
+     * @param literal
+     */
+    public GreaterThanEqual() {
+        super( new CommonToken( 0, ">=" ) );
     }
 
 
-    /** Get the */
-    public String getIndexedName() {
-        return this.indexedName;
-    }
-
-
-    /** @return the property */
-    public WithinProperty getProperty() {
-        return ( WithinProperty ) this.children.get( 0 );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence
+     * .query.tree.QueryVisitor)
+     */
+    @Override
+    public void visit( QueryVisitor visitor ) throws NoIndexException {
+        visitor.visit( this );
     }
 }

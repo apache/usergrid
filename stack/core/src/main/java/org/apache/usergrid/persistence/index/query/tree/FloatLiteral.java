@@ -14,12 +14,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
+
+
+import org.antlr.runtime.ClassicToken;
+import org.antlr.runtime.Token;
 
 
 /** @author tnine */
-public interface NumericLiteral {
+public class FloatLiteral extends Literal<Float> implements NumericLiteral {
 
-    /** Return the value of this numeric literal as a float */
-    public float getFloatValue();
+    private float value;
+
+
+    /**
+     * @param t
+     */
+    public FloatLiteral( Token t ) {
+        super( t );
+        value = Float.valueOf( t.getText() );
+    }
+
+
+    public FloatLiteral( float f ) {
+        super( new ClassicToken( 0, String.valueOf( f ) ) );
+        value = f;
+    }
+
+
+    /** @return the value */
+    public Float getValue() {
+        return value;
+    }
+
+
+    /* (non-Javadoc)
+     * @see org.apache.usergrid.persistence.query.tree.NumericLiteral#getFloatValue()
+     */
+    @Override
+    public float getFloatValue() {
+        return value;
+    }
 }

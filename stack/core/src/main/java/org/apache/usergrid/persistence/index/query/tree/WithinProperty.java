@@ -14,45 +14,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.tree;
+package org.apache.usergrid.persistence.index.query.tree;
 
 
 import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.Token;
 
 
-/** @author tnine */
-public class FloatLiteral extends Literal<Float> implements NumericLiteral {
+/**
+ * A property
+ *
+ * @author tnine
+ */
+public class WithinProperty extends Property {
 
-    private float value;
+    private String indexedName = null;
 
 
-    /**
-     * @param t
-     */
-    public FloatLiteral( Token t ) {
+    public WithinProperty( Token t ) {
         super( t );
-        value = Float.valueOf( t.getText() );
+        this.indexedName = String.format( "%s.coordinates", super.getValue() );
     }
 
 
-    public FloatLiteral( float f ) {
-        super( new ClassicToken( 0, String.valueOf( f ) ) );
-        value = f;
+    public WithinProperty( String property ) {
+        this( new ClassicToken( 0, property ) );
     }
 
 
-    /** @return the value */
-    public Float getValue() {
-        return value;
+    /** Get the */
+    public String getIndexedName() {
+        return this.indexedName;
     }
 
 
-    /* (non-Javadoc)
-     * @see org.apache.usergrid.persistence.query.tree.NumericLiteral#getFloatValue()
-     */
-    @Override
-    public float getFloatValue() {
-        return value;
+    /** @return the property */
+    public WithinProperty getProperty() {
+        return ( WithinProperty ) this.children.get( 0 );
     }
 }
