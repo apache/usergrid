@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.rx.OrderedMerge;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
@@ -84,7 +84,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
      * Get the edges from the source for both the commit log and the permanent storage.  Merge them into a single
      * observable
      */
-    public Observable<MarkedEdge> getEdgesFromSource( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
+    public Observable<MarkedEdge> getEdgesFromSource( final ApplicationScope scope, final SearchByEdgeType edgeType ) {
         Observable<SourceAwareMarkedEdge> commitLog =
                 Observable.create( new ObservableIterator<MarkedEdge>( "getEdgesFromSourceCommitLog" ) {
                     @Override
@@ -119,7 +119,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
     }
 
 
-    public Observable<MarkedEdge> getEdgesFromSourceByTargetType( final OrganizationScope scope,
+    public Observable<MarkedEdge> getEdgesFromSourceByTargetType( final ApplicationScope scope,
                                                                   final SearchByIdType edgeType ) {
 
         Observable<SourceAwareMarkedEdge> commitLog =
@@ -156,7 +156,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
     }
 
 
-    public Observable<MarkedEdge> getEdgesToTarget( final OrganizationScope scope, final SearchByEdgeType edgeType ) {
+    public Observable<MarkedEdge> getEdgesToTarget( final ApplicationScope scope, final SearchByEdgeType edgeType ) {
         Observable<SourceAwareMarkedEdge> commitLog =
                 Observable.create( new ObservableIterator<MarkedEdge>( "getEdgesToTargetCommitLog" ) {
                     @Override
@@ -191,7 +191,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
     }
 
 
-    public Observable<MarkedEdge> getEdgesToTargetBySourceType( final OrganizationScope scope,
+    public Observable<MarkedEdge> getEdgesToTargetBySourceType( final ApplicationScope scope,
                                                                 final SearchByIdType edgeType ) {
         Observable<SourceAwareMarkedEdge> commitLog =
                 Observable.create( new ObservableIterator<MarkedEdge>( "getEdgesToTargetBySourceTypeCommitLog" ) {
@@ -228,7 +228,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
 
 
     @Override
-    public Observable<MarkedEdge> getEdgeVersions( final OrganizationScope scope, final SearchByEdge search ) {
+    public Observable<MarkedEdge> getEdgeVersions( final ApplicationScope scope, final SearchByEdge search ) {
         Observable<SourceAwareMarkedEdge> commitLog =
                 Observable.create( new ObservableIterator<MarkedEdge>( "ggetEdgeVersionsCommitLog" ) {
                     @Override

@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
@@ -83,19 +83,19 @@ public class EdgeDeleteRepairTest {
     protected EdgeDeleteRepair edgeDeleteRepair;
 
 
-    protected OrganizationScope scope;
+    protected ApplicationScope scope;
 
 
     @Before
     public void setup() {
-        scope = mock( OrganizationScope.class );
+        scope = mock( ApplicationScope.class );
 
         Id orgId = mock( Id.class );
 
         when( orgId.getType() ).thenReturn( "organization" );
         when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
 
-        when( scope.getOrganization() ).thenReturn( orgId );
+        when( scope.getApplication() ).thenReturn( orgId );
     }
 
 

@@ -1,6 +1,11 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
+import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
+import org.apache.usergrid.persistence.core.consistency.SimpleAsynchronousMessage;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -18,6 +23,8 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.netflix.astyanax.MutationBatch;
+
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -106,18 +113,17 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
          */
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
         final MutationBatch logMutation = mock( MutationBatch.class );
-
-        when( logStrategy.write( any( CollectionScope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
-
-
+        final ConsistencyFig consistencyFig = mock(ConsistencyFig.class);
+        final AsyncProcessor<MvccEntityEvent<MvccEntity>> processor = mock(AsyncProcessor.class);
+        final SimpleAsynchronousMessage<MvccEntityEvent<MvccEntity>> message = mock(SimpleAsynchronousMessage.class);
         final MvccEntitySerializationStrategy mvccEntityStrategy = mock( MvccEntitySerializationStrategy.class );
-
         final MutationBatch entityMutation = mock( MutationBatch.class );
 
+        when( logStrategy.write( any( CollectionScope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
         when( mvccEntityStrategy.write( any( CollectionScope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
-
-        new MarkCommit( logStrategy, mvccEntityStrategy ).call( event );
+        when(processor.setVerification(any(MvccEntityEvent.class),any(long.class))).thenReturn(message);
+        new MarkCommit( logStrategy, mvccEntityStrategy, processor, consistencyFig ).call( event );
     }
 
 }

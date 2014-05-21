@@ -55,7 +55,6 @@ public class AbstractSchedulerRuntimeIT {
 
     @BeforeClass
     public static void beforeClass() {
-        System.out.println("------- INIT SCHEMA --------");
         SchemaManager sm = cassandraResource.getBean("coreManager", SchemaManager.class);
         sm.create();
         sm.populateBaseData();

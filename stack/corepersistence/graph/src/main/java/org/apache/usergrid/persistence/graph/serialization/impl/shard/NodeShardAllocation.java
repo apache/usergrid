@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 import java.util.Iterator;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -44,7 +44,7 @@ public interface NodeShardAllocation {
      * @param edgeTypes
      * @return A list of all shards <= the current shard.  This will always return 0l if no shards are allocated
      */
-    public Iterator<Long> getShards( final OrganizationScope scope, final Id nodeId, Optional<Long> maxShardId,
+    public Iterator<Long> getShards( final ApplicationScope scope, final Id nodeId, Optional<Long> maxShardId,
                                      final String... edgeTypes );
 
 
@@ -56,7 +56,7 @@ public interface NodeShardAllocation {
      * @param edgeType The edge types
      * @return True if a new shard was allocated
      */
-    public boolean auditMaxShard(final OrganizationScope scope, final Id nodeId, final String... edgeType);
+    public boolean auditMaxShard(final ApplicationScope scope, final Id nodeId, final String... edgeType);
 
 
 }

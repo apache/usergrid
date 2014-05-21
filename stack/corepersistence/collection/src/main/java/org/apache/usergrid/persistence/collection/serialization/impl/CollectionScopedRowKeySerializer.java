@@ -57,7 +57,7 @@ public class CollectionScopedRowKeySerializer<K>
         final CompositeBuilder builder = Composites.newCompositeBuilder();
 
         //add the organization's id
-        ID_SER.toComposite( builder, scopedRowKey.getScope().getOrganization() );
+        ID_SER.toComposite( builder, scopedRowKey.getScope().getApplication() );
 
         //add the scope's owner id to the composite
         ID_SER.toComposite( builder, scopedRowKey.getScope().getOwner() );

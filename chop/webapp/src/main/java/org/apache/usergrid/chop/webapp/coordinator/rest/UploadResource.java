@@ -164,6 +164,14 @@ public class UploadResource extends TestableResource implements RestParams {
                 return Response.status( Response.Status.INTERNAL_SERVER_ERROR ).entity( errorMessage ).build();
             }
         }
+        if( runnerJar.exists() ) {
+            if( runnerJar.delete() ) {
+                LOG.info( "Deleted old runner.jar" );
+            }
+            else {
+                LOG.info( "Could not delete old runner.jar" );
+            }
+        }
 
         // Download and write the file to the proper position on disk & reference
         CoordinatorUtils.writeToFile( runnerJarStream, runnerJar.getAbsolutePath() );

@@ -15,34 +15,30 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.index.impl;
+package org.apache.usergrid.persistence.index.query;
 
 import java.util.UUID;
-import org.apache.usergrid.persistence.collection.CollectionScope;
+
+import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public class CandidateResult {
+public class CandidateResult implements EntityVersion {
     private final Id entityId;
     private final UUID entityVersion;
-    private final CollectionScope scope;
 
-    public CandidateResult( Id entityId, UUID entityVersion, CollectionScope scope ) {
+    public CandidateResult( Id entityId, UUID entityVersion ) {
         this.entityId = entityId;
         this.entityVersion = entityVersion;
-        this.scope = scope;
     }
 
-    public Id getEntityId() {
-        return entityId;
-    }
-
-    public UUID getEntityVersion() {
+    @Override
+    public UUID getVersion() {
         return entityVersion;
     }
 
-    public CollectionScope getCollectionScope() {
-        return scope;
+    @Override
+    public Id getId() {
+        return entityId;
     }
-    
 }

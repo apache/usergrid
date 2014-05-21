@@ -121,15 +121,26 @@ public class CoordinatorUtils {
      * @return
      */
     public static Stack getStackFromRunnerJar( File runnerJar ) {
+        InputStream stream = null;
         try {
             ObjectMapper mapper = new ObjectMapper();
-            InputStream stream = getResourceAsStreamFromRunnerJar( runnerJar, Constants.STACK_JSON );
+            stream = getResourceAsStreamFromRunnerJar( runnerJar, Constants.STACK_JSON );
 
             return mapper.readValue( stream, BasicStack.class );
         }
         catch ( Exception e ) {
             LOG.warn( "Error while reading stack.json from runner.jar resources", e );
             return null;
+        }
+        finally {
+            if( stream != null ) {
+                try {
+                    stream.close();
+                }
+                catch ( Exception e ) {
+                    LOG.debug( "Could not close stack json stream", e );
+                }
+            }
         }
     }
 

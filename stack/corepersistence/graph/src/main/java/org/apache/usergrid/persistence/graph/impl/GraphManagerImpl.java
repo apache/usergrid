@@ -33,7 +33,7 @@ import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.apache.usergrid.persistence.core.hystrix.HystrixGraphObservable;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -62,7 +62,6 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import org.apache.usergrid.persistence.model.entity.Entity;
 
 import rx.Observable;
 import rx.functions.Func1;
@@ -76,7 +75,7 @@ public class GraphManagerImpl implements GraphManager {
 
     private static final Logger LOG = LoggerFactory.getLogger( GraphManagerImpl.class );
 
-    private final OrganizationScope scope;
+    private final ApplicationScope scope;
 
     private final EdgeMetadataSerialization edgeMetadataSerialization;
 
@@ -101,11 +100,11 @@ public class GraphManagerImpl implements GraphManager {
                              @EdgeDelete final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDelete,
                              @NodeDelete final AsyncProcessor<EdgeEvent<Id>> nodeDelete,
                              @EdgeWrite final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite,
-                             @Assisted final OrganizationScope scope, final MergedEdgeReader mergedEdgeReader,
+                             @Assisted final ApplicationScope scope, final MergedEdgeReader mergedEdgeReader,
                              final ConsistencyFig consistencyFig ) {
 
 
-        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.validateApplicationScope( scope );
         Preconditions.checkNotNull( edgeMetadataSerialization, "edgeMetadataSerialization must not be null" );
         Preconditions.checkNotNull( mergedEdgeReader, "mergedEdgeReader must not be null" );
         Preconditions.checkNotNull( commitLogSerialization, "commitLogSerialization must not be null" );

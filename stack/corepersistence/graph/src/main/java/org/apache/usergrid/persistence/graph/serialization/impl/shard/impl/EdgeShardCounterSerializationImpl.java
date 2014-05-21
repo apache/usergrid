@@ -30,7 +30,7 @@ import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
@@ -57,7 +57,7 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
     /**
      * Edge shards
      */
-    private static final MultiTennantColumnFamily<OrganizationScope, EdgeRowKey, Long> EDGE_SHARD_COUNTS =
+    private static final MultiTennantColumnFamily<ApplicationScope, EdgeRowKey, Long> EDGE_SHARD_COUNTS =
             new MultiTennantColumnFamily<>( "Edge_Shard_Counts",
                     new OrganizationScopedRowKeySerializer<>( new EdgeRowKeySerializer() ), LongSerializer.get() );
 
@@ -77,10 +77,10 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
 
 
     @Override
-    public MutationBatch writeMetaDataLog( final OrganizationScope scope, final Id nodeId, final long shardId,
+    public MutationBatch writeMetaDataLog( final ApplicationScope scope, final Id nodeId, final long shardId,
                                            final long count, final String... types ) {
 
-        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity(nodeId);
         Preconditions.checkArgument( shardId > -1, "shardId must be greater than -1" );
         Preconditions.checkNotNull( types );
@@ -98,10 +98,10 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
 
 
     @Override
-    public long getCount( final OrganizationScope scope, final Id nodeId, final long shardId, final String... types ) {
+    public long getCount( final ApplicationScope scope, final Id nodeId, final long shardId, final String... types ) {
 
 
-        ValidationUtils.validateOrganizationScope( scope );
+        ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity(nodeId);
         Preconditions.checkArgument( shardId > -1, "shardId must be greater than -1" );
         Preconditions.checkNotNull( types );

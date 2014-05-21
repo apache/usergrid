@@ -18,15 +18,9 @@ package org.apache.usergrid.persistence.cassandra;
 
 
 import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.usergrid.mq.cassandra.QueuesCF;
-import org.apache.usergrid.persistence.entities.Application;
-
 import me.prettyprint.hector.api.ddl.ComparatorType;
-
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
+import org.apache.usergrid.mq.cassandra.QueuesCF;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
@@ -39,6 +33,9 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.SYSTEM_
 import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
+import org.apache.usergrid.persistence.entities.Application;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -54,35 +51,17 @@ public class SetupImpl implements Setup {
     private final CassandraService cass;
 
 
-    /**
-     * Instantiates a new setup object.
-     *
-     * @param emf the emf
-     */
     public SetupImpl( EntityManagerFactoryImpl emf, CassandraService cass ) {
         this.emf = emf;
         this.cass = cass;
     }
 
 
-    /**
-     * Initialize.
-     *
-     * @throws Exception the exception
-     */
-    public synchronized void setup() throws Exception {
-        init();
-
-        setupSystemKeyspace();
-
-        setupStaticKeyspace();
-
-        createDefaultApplications();
-    }
-
-
-    public void init() throws Exception {
+    public synchronized void init() throws Exception {
         cass.init();
+        setupSystemKeyspace();
+        setupStaticKeyspace();
+        createDefaultApplications();
     }
 
 
@@ -105,17 +84,17 @@ public class SetupImpl implements Setup {
 
         logger.info( "Initialize system keyspace" );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE,
-                createColumnFamilyDefinition( SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+                SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE,
-                createColumnFamilyDefinition( SYSTEM_KEYSPACE, PROPERTIES_CF, ComparatorType.BYTESTYPE ) );
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+                SYSTEM_KEYSPACE, PROPERTIES_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE,
-                createColumnFamilyDefinition( SYSTEM_KEYSPACE, TOKENS_CF, ComparatorType.BYTESTYPE ) );
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+                SYSTEM_KEYSPACE, TOKENS_CF, ComparatorType.BYTESTYPE ) );
 
-        cass.createColumnFamily( SYSTEM_KEYSPACE,
-                createColumnFamilyDefinition( SYSTEM_KEYSPACE, PRINCIPAL_TOKEN_CF, ComparatorType.UUIDTYPE ) );
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+                SYSTEM_KEYSPACE, PRINCIPAL_TOKEN_CF, ComparatorType.UUIDTYPE ) );
 
         logger.info( "System keyspace initialized" );
     }
@@ -129,17 +108,19 @@ public class SetupImpl implements Setup {
      *
      * @throws Exception the exception
      */
-    public void setupApplicationKeyspace( final UUID applicationId, String applicationName ) throws Exception {
+    public void setupApplicationKeyspace( 
+            final UUID applicationId, String applicationName ) throws Exception {
 
         if ( !USE_VIRTUAL_KEYSPACES ) {
             String app_keyspace = keyspaceForApplication( applicationId );
 
-            logger.info( "Creating application keyspace " + app_keyspace + " for " + applicationName + " application" );
+            logger.info( "Creating application keyspace " + app_keyspace + " for " 
+                    + applicationName + " application" );
 
-            cass.createColumnFamily( app_keyspace,
-                    createColumnFamilyDefinition( SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
+            cass.createColumnFamily( app_keyspace, createColumnFamilyDefinition( 
+                    SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
 
-            cass.createColumnFamilies( app_keyspace, getCfDefs( ApplicationCF.class, app_keyspace ) );
+            cass.createColumnFamilies( app_keyspace, getCfDefs( ApplicationCF.class, app_keyspace));
             cass.createColumnFamilies( app_keyspace, getCfDefs( QueuesCF.class, app_keyspace ) );
         }
     }

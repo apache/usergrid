@@ -46,8 +46,6 @@ public class CoreSchemaManager implements SchemaManager {
     public void create() {
         try {
             setup.init();
-            setup.setupSystemKeyspace();
-            setup.setupStaticKeyspace();
         }
         catch ( Exception ex ) {
             LOG.error( "Could not setup usergrid core schema", ex );

@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.core.util;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.OrganizationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -90,10 +90,10 @@ public class ValidationUtils {
     /**
      * Validate the organization scope
      */
-    public static void validateOrganizationScope( final OrganizationScope scope ) {
+    public static void validateApplicationScope( final ApplicationScope scope ) {
         Preconditions.checkNotNull( scope, "organization scope is required" );
 
-        verifyIdentity( scope.getOrganization() );
+        verifyIdentity( scope.getApplication() );
     }
 
 
