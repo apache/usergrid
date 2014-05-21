@@ -27,10 +27,14 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Singleton
 public class ElasticSearchClient implements IElasticSearchClient {
+
+    private final static Logger LOG = LoggerFactory.getLogger(ElasticSearchClient.class);
 
     private Client client;
     private String host;
@@ -39,16 +43,20 @@ public class ElasticSearchClient implements IElasticSearchClient {
 
 
     @Inject
-    public ElasticSearchClient(ElasticSearchFig elasticFig) {
+    private ElasticSearchFig elasticSearchFig;
+
+    public Client start() {
         Settings settings = ImmutableSettings.settingsBuilder().build();
-
+        LOG.info("Starting Elasticsearch on {}", elasticSearchFig.getTransportHost() + ":" +
+                elasticSearchFig.getTransportPort());
         client = new TransportClient(settings).addTransportAddress(
-                new InetSocketTransportAddress(elasticFig.getTransportHost(), elasticFig.getTransportPort()));
-        port = elasticFig.getTransportPort();
-        host = elasticFig.getTransportHost();
-        clusterName = elasticFig.getClusterName();
+                new InetSocketTransportAddress(elasticSearchFig.getTransportHost(),
+                        elasticSearchFig.getTransportPort()));
+        port = elasticSearchFig.getTransportPort();
+        host = elasticSearchFig.getTransportHost();
+        clusterName = elasticSearchFig.getClusterName();
+        return client;
     }
-
 
     @Override
     public Client getClient() {
@@ -72,7 +80,6 @@ public class ElasticSearchClient implements IElasticSearchClient {
     public String getClusterName() {
         return clusterName;
     }
-
 
     @Override
     public String toString() {
