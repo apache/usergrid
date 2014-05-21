@@ -209,8 +209,8 @@ public class CpEntityManager implements EntityManager {
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
 
-//        logger.debug("Loading entity {} type {} to {}", 
-//            new String[] { entityId.toString(), type, collectionName });
+        // logger.debug("Loading entity {} type {} to {}", 
+        //      new String[] { entityId.toString(), type, collectionName });
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
             ecm.load( id ).toBlockingObservable().last();
@@ -1419,7 +1419,7 @@ public class CpEntityManager implements EntityManager {
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = entityToCpEntity( entity ); 
 
-        // prepare to write and index Core Persistence Entity into correct scope
+        // prepare to write and index Core Persistence Entity into default scope
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), appScope.getApplication(), collectionName );
 
@@ -1540,14 +1540,12 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void refreshIndex() {
 
-        // refresh system application indexes 
-        emf.refreshIndexes();
-
+        // refresh system indexes 
+        emf.refreshIndex();
 
         // refresh application entity index
         IndexScope indexScope = new IndexScopeImpl(
-            appScope.getApplication(), appScope.getApplication(), "application");
-
+            appScope.getApplication(), new SimpleId("dummy"), "dummy");
         EntityIndex ei = managerCache.getEntityIndex( indexScope );
         ei.refresh();
 

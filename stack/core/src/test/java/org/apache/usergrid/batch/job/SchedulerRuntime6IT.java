@@ -60,8 +60,6 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
         scheduler.refreshIndex();
 
-
-
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
         boolean waited = getJobListener().blockTilDone( 1, customRetry * numberOfRuns * 2 + 5000L );
@@ -71,6 +69,8 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
         //reset our latch immediately for further tests
         job.setLatch( numberOfRuns );
+
+        scheduler.refreshIndex();
 
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 

@@ -94,6 +94,18 @@ public class EC2InstanceManager implements InstanceManager {
 
 
     /**
+     * All public methods except <code>terminateInstances</code> use supplied arguments
+     * to set the appropriate data center. So this is only needed before calling <code>terminateInstances</code>.
+     *
+     * @param dataCenter    Ec2Client's endpoint, us-east-1, us-west-2 etc.
+     */
+    @Override
+    public void setDataCenter( final String dataCenter ) {
+        client.setEndpoint( AmazonUtils.getEndpoint( dataCenter ) );
+    }
+
+
+    /**
      * Launches instances of given cluster.
      *
      * After launching instances, blocks for maximum <code>timeout</code> amount until all

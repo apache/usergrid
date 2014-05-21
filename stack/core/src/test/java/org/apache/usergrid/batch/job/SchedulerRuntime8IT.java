@@ -86,6 +86,8 @@ public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
 
         scheduler.deleteJob( saved.getUuid() );
 
+        scheduler.refreshIndex();
+
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
 

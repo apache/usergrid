@@ -37,4 +37,6 @@ public interface IElasticSearchClient {
 
     @JsonProperty
     String getClusterName();
+
+    Client start();
 }
