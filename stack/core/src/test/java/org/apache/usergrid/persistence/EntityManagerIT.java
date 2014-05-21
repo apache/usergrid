@@ -34,9 +34,9 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import static org.apache.usergrid.AbstractCoreIT.setup;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;

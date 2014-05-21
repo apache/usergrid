@@ -27,14 +27,14 @@ import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
 import org.apache.usergrid.persistence.query.ir.AndNode;
 import org.apache.usergrid.persistence.query.ir.NotNode;
 import org.apache.usergrid.persistence.query.ir.OrNode;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 import org.apache.usergrid.persistence.query.ir.SliceNode;
 import org.apache.usergrid.persistence.query.ir.WithinNode;
-import org.apache.usergrid.persistence.index.query.tree.QueryFilterLexer;
-import org.apache.usergrid.persistence.index.query.tree.QueryFilterParser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,9 +52,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a = 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -78,9 +78,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a < 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -104,9 +104,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a <= 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -130,9 +130,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a > 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -156,9 +156,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a >= 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -182,9 +182,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a contains 'foo'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -211,9 +211,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a contains 'FOO'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -240,9 +240,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a contains 'foo*'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -269,9 +269,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a within .5 of 157.00, 0.00";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -299,10 +299,11 @@ public class QueryProcessorTest {
 
 
     private void assertAndQuery( String queryString ) throws Exception {
+
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -350,10 +351,11 @@ public class QueryProcessorTest {
 
 
     private void assertOrQuery( String queryString ) throws Exception {
+
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -395,9 +397,9 @@ public class QueryProcessorTest {
                         + "<= 40)";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -462,9 +464,9 @@ public class QueryProcessorTest {
                         + "  and d <= 40))";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -537,9 +539,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a > 1 and not b = 2";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -582,9 +584,9 @@ public class QueryProcessorTest {
         String queryString = "select * where not b = 2";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -611,9 +613,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a = 'foo with bar'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -640,9 +642,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a-foo = 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -668,9 +670,9 @@ public class QueryProcessorTest {
         String queryString = "select * where a = 'foo-bar'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -704,9 +706,9 @@ public class QueryProcessorTest {
         String queryString = "select * where uuid = c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 

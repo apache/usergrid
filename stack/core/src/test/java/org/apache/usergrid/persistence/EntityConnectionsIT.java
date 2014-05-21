@@ -28,8 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -187,7 +187,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         Entity en = em.get( new SimpleEntityRef( entityType, entityId));
 
-        Results results = em.getConnectedEntities( en.getUuid(), null, null, Results.Level.REFS );
+        Results results = em.getConnectedEntities( en.getUuid(), null, null, Level.REFS );
 
         LOG.info( "----------------------------------------------------" );
         assertEquals( "Expected " + expectedCount + " connections", expectedCount, results.getConnections().size() );
@@ -214,7 +214,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         Entity en = em.get( new SimpleEntityRef( entityType, entityId ));
 
         int i = 0;
-        Results entities = em.getCollection( en, collectionName, null, 100, Results.Level.IDS, false );
+        Results entities = em.getCollection( en, collectionName, null, 100, Level.IDS, false );
         for ( UUID id : entities.getIds() ) {
             LOG.info( ( i++ ) + " " + id.toString() );
         }

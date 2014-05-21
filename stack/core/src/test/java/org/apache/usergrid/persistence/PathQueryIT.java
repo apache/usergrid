@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import org.junit.Test;
 import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 import static org.junit.Assert.assertEquals;
 
@@ -62,7 +63,7 @@ public class PathQueryIT extends AbstractCoreIT {
         em.refreshIndex();
 
         // pick an arbitrary user, ensure it has 5 devices
-        Results devices = em.getCollection( users.get( 10 ), "devices", null, 20, Results.Level.IDS, false );
+        Results devices = em.getCollection( users.get( 10 ), "devices", null, 20, Level.IDS, false );
         assertEquals( 5, devices.size() );
 
         int pageSize = 10; // shouldn't affect these tests
@@ -130,7 +131,7 @@ public class PathQueryIT extends AbstractCoreIT {
         }
 
         // pick an arbitrary group, ensure it has 7 users
-        Results ru = em.getCollection( groups.get( 2 ), "users", null, 20, Results.Level.IDS, false );
+        Results ru = em.getCollection( groups.get( 2 ), "users", null, 20, Level.IDS, false );
         assertEquals( 7, ru.size() );
 
         List<UUID> devices = new ArrayList<UUID>();
@@ -147,7 +148,7 @@ public class PathQueryIT extends AbstractCoreIT {
         em.refreshIndex();
 
         // pick an arbitrary user, ensure it has 7 devices
-        Results rd = em.getCollection( users.get( 6 ), "devices", null, 20, Results.Level.IDS, false );
+        Results rd = em.getCollection( users.get( 6 ), "devices", null, 20, Level.IDS, false );
         assertEquals( 7, rd.size() );
 
         int pageSize = 3; // ensure we're crossing page boundaries

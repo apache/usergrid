@@ -90,7 +90,7 @@ public class QueryTest {
 
         assertEquals( "loc", op.getProperty().getValue() );
         assertEquals( .05f, op.getDistance().getFloatValue(), 0 );
-        assertEquals( 5f, op.getLattitude().getFloatValue(), 0 );
+        assertEquals( 5f, op.getLatitude().getFloatValue(), 0 );
         assertEquals( 6f, op.getLongitude().getFloatValue(), 0 );
 
         and = ( AndOperand ) and.getLeft();

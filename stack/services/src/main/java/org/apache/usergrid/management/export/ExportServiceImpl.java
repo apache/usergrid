@@ -47,6 +47,7 @@ import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.JobData;
 
 import com.google.common.collect.BiMap;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 /**
@@ -438,7 +439,7 @@ public class ExportServiceImpl implements ExportService {
 
                 //is 100000 an arbitary number?
                 Results collectionMembers =
-                        em.getCollection( entity, collectionName, null, 100000, Results.Level.IDS, false );
+                        em.getCollection( entity, collectionName, null, 100000, Level.IDS, false );
 
                 List<UUID> entityIds = collectionMembers.getIds();
 
@@ -508,7 +509,7 @@ public class ExportServiceImpl implements ExportService {
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
 
-            Results results = em.getConnectedEntities( entity.getUuid(), connectionType, null, Results.Level.IDS );
+            Results results = em.getConnectedEntities( entity.getUuid(), connectionType, null, Level.IDS );
             List<ConnectionRef> connections = results.getConnections();
 
             for ( ConnectionRef connectionRef : connections ) {
@@ -593,7 +594,7 @@ public class ExportServiceImpl implements ExportService {
                     }
                 }
                 query.setLimit( MAX_ENTITY_FETCH );
-                query.setResultsLevel( Results.Level.ALL_PROPERTIES );
+                query.setResultsLevel( Level.ALL_PROPERTIES );
                 query.setCollection( collectionName );
 
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );

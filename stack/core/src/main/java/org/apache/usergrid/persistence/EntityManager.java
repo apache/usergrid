@@ -26,11 +26,13 @@ import java.util.Set;
 import java.util.UUID;
 import me.prettyprint.hector.api.mutation.Mutator;
 
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Role;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 /**
@@ -138,7 +140,7 @@ public interface EntityManager {
      * @return a list of entity objects.
      */
     public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, 
-            Results.Level resultsLevel ) throws Exception;
+            Level resultsLevel ) throws Exception;
 
     /**
      * Retrieves a set of Entities cast to the specified class type.
@@ -146,7 +148,7 @@ public interface EntityManager {
      * @return a list of entity objects.
      */
     public Results get( Collection<UUID> entityIds, String entityType, 
-        Class<? extends Entity> entityClass, Results.Level resultsLevel ) throws Exception;
+        Class<? extends Entity> entityClass, Level resultsLevel ) throws Exception;
 
     public Results getEntities(List<UUID> ids, String type);
 
@@ -339,10 +341,10 @@ public interface EntityManager {
      * @throws Exception the exception
      */
     public Results getCollection( EntityRef entityRef, String collectionName, UUID startResult, int count,
-                                  Results.Level resultsLevel, boolean reversed ) throws Exception;
+                                  Level resultsLevel, boolean reversed ) throws Exception;
 
 
-    public Results getCollection( UUID entityId, String collectionName, Query query, Results.Level resultsLevel )
+    public Results getCollection( UUID entityId, String collectionName, Query query, Level resultsLevel )
             throws Exception;
 
     /**
@@ -440,7 +442,7 @@ public interface EntityManager {
      * @throws Exception the exception
      */
     public Results getConnectedEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                         Results.Level resultsLevel ) throws Exception;
+                                         Level resultsLevel ) throws Exception;
 
     /**
      * Gets the entities connecting to this entity, optionally with the specified connection type and/or entity type.
@@ -456,7 +458,7 @@ public interface EntityManager {
      * @throws Exception the exception
      */
     public Results getConnectingEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                          Results.Level resultsLevel ) throws Exception;
+                                          Level resultsLevel ) throws Exception;
 
 
     public Results getConnectingEntities(UUID uuid, String connectionType,
@@ -531,7 +533,7 @@ public interface EntityManager {
 
     public void removeUserFromGroupRole( UUID userId, UUID groupId, String roleName ) throws Exception;
 
-    public Results getUsersInGroupRole( UUID groupId, String roleName, Results.Level level ) throws Exception;
+    public Results getUsersInGroupRole( UUID groupId, String roleName, Level level ) throws Exception;
 
     public void incrementAggregateCounters( UUID userId, UUID groupId, String category, 
             String counterName, long value );

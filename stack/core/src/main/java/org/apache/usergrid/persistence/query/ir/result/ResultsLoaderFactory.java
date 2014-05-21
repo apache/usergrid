@@ -19,7 +19,7 @@ package org.apache.usergrid.persistence.query.ir.result;
 
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 /**
@@ -30,8 +30,8 @@ import org.apache.usergrid.persistence.Results;
 public interface ResultsLoaderFactory {
 
     /**
-     * Get the results loaded that will load all Ids given the results level.  The original query and the entity manager
-     * may be needed to load these results
+     * Get the results loaded that will load all Ids given the results level.  
+     * The original query and the entity manager may be needed to load these results
      */
-    public ResultsLoader getResultsLoader( EntityManager em, Query query, Results.Level level );
+    public ResultsLoader getResultsLoader( EntityManager em, Query query, Level level );
 }

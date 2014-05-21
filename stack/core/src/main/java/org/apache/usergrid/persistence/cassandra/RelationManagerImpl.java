@@ -45,7 +45,6 @@ import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleCollectionRef;
@@ -137,6 +136,7 @@ import static org.apache.usergrid.utils.MapUtils.addMapSet;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 public class RelationManagerImpl implements RelationManager {
@@ -1495,7 +1495,7 @@ public class RelationManagerImpl implements RelationManager {
 
     @Override
     @Metered(group = "core", name = "RelationManager_getCollection_start_result")
-    public Results getCollection( String collectionName, UUID startResult, int count, Results.Level resultsLevel,
+    public Results getCollection( String collectionName, UUID startResult, int count, Level resultsLevel,
                                   boolean reversed ) throws Exception {
         // changed intentionally to delegate to search so that behavior is
         // consistent across all index access.
@@ -1514,7 +1514,7 @@ public class RelationManagerImpl implements RelationManager {
 
     @Override
     @Metered(group = "core", name = "RelationManager_getCollecitonForQuery")
-    public Results getCollection( String collectionName, Query query, Results.Level resultsLevel ) throws Exception {
+    public Results getCollection( String collectionName, Query query, Level resultsLevel ) throws Exception {
 
         // changed intentionally to delegate to search so that behavior is
         // consistent across all index access.
@@ -1931,7 +1931,7 @@ public class RelationManagerImpl implements RelationManager {
 
     @Override
     @Metered(group = "core", name = "RelationManager_getConnectedEntities")
-    public Results getConnectedEntities( String connectionType, String connectedEntityType, Results.Level resultsLevel )
+    public Results getConnectedEntities( String connectionType, String connectedEntityType, Level resultsLevel )
             throws Exception {
 
 
@@ -1971,7 +1971,7 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     @Metered(group = "core", name = "RelationManager_getConnectingEntities")
     public Results getConnectingEntities( String connectionType, String connectedEntityType,
-                                          Results.Level resultsLevel ) throws Exception {
+                                          Level resultsLevel ) throws Exception {
 
         return getConnectingEntities(connectionType, connectedEntityType, resultsLevel, 0 );
     }

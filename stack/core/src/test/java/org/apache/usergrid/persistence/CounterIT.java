@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.utils.JsonUtils;
 
 import org.apache.usergrid.count.SimpleBatcher;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

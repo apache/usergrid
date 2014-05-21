@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.UUID;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
@@ -32,12 +31,10 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.Schema;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
@@ -61,6 +58,8 @@ import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -270,7 +269,7 @@ public class CpRelationManager implements RelationManager {
 
     @Override
     public Results getCollection(String collectionName, UUID startResult, int count, 
-            Results.Level resultsLevel, boolean reversed) throws Exception {
+            Level resultsLevel, boolean reversed) throws Exception {
 
         // TODO: how to set Query startResult?
 
@@ -283,7 +282,7 @@ public class CpRelationManager implements RelationManager {
 
     @Override
     public Results getCollection(
-            String collName, Query query, Results.Level level) throws Exception {
+            String collName, Query query, Level level) throws Exception {
 
         return searchCollection(collName, query);
     }
@@ -461,12 +460,13 @@ public class CpRelationManager implements RelationManager {
         }
 
         headEntity = em.validate( headEntity );
+
         CollectionInfo collection = 
             getDefaultSchema().getCollection( headEntity.getType(), collName );
 
         query.setEntityType( collection.getType() );
 
-        org.apache.usergrid.persistence.index.query.Query cpQuery = createCpQuery( query );
+        //org.apache.usergrid.persistence.index.query.Query cpQuery = createCpQuery( query );
 
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
@@ -481,155 +481,155 @@ public class CpRelationManager implements RelationManager {
                 headEntityScope.getOwner().toString(),
                 collName }); 
 
-        CandidateResults crs = ei.search( cpQuery );
+        CandidateResults crs = ei.search( addIdentifiers(query) );
 
         return buildResults( query, crs, collName );
     }
 
 
-    private org.apache.usergrid.persistence.index.query.Query createCpQuery( Query query ) {
-
-        org.apache.usergrid.persistence.index.query.Query cpQuery =
-           new org.apache.usergrid.persistence.index.query.Query();
-
-        cpQuery.setCollection( query.getCollection() );
-        cpQuery.setConnectionType( query.getConnectionType() );
-        cpQuery.setCursor( query.getCursor() );
-        cpQuery.setEntityType( query.getEntityType() );
-        cpQuery.setFinishTime( query.getFinishTime() );
-        cpQuery.setLimit( query.getLimit() );
-        cpQuery.setPad( query.isPad() );
-        cpQuery.setPermissions( query.getPermissions() );
-        cpQuery.setQl( query.getQl() );
-        cpQuery.setReversed( query.isReversed() );
-        cpQuery.setStartTime( query.getStartTime() );
-
-        for ( Query.SortPredicate sp : query.getSortPredicates() ) {
-
-            org.apache.usergrid.persistence.index.query.Query.SortDirection newdir = 
-                org.apache.usergrid.persistence.index.query.Query.SortDirection.ASCENDING;
-
-            if ( sp.getDirection().equals( Query.SortDirection.DESCENDING )) {
-                newdir =org.apache.usergrid.persistence.index.query.Query.SortDirection.DESCENDING;
-            }
-
-            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
-                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
-                    sp.getPropertyName(), newdir );
-
-            cpQuery.addSort( newsp );
-        }
-
-        if ( cpQuery.isReversed() ) {
-
-            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
-                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
-                    PROPERTY_CREATED, 
-                        org.apache.usergrid.persistence.index.query.Query.SortDirection.DESCENDING );
-
-            cpQuery.addSort( newsp ); 
-        }
-
-        if ( cpQuery.getSortPredicates().isEmpty() ) {
-
-            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
-                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
-                    PROPERTY_CREATED, 
-                        org.apache.usergrid.persistence.index.query.Query.SortDirection.ASCENDING);
-
-            cpQuery.addSort( newsp ); 
-        }
-
-        List<org.apache.usergrid.persistence.index.query.tree.Operand> 
-            filterClauses = query.getFilterClauses();
-
-        for ( Operand oldop : filterClauses ) {
-            
-            if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.ContainsOperand ) {
-
-                org.apache.usergrid.persistence.index.query.tree.ContainsOperand casted = 
-                    (org.apache.usergrid.persistence.index.query.tree.ContainsOperand)oldop;
-                cpQuery.addContainsFilter( 
-                    casted.getProperty().getText(), casted.getLiteral().getValue().toString());
-
-            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.Equal ) {
-
-                org.apache.usergrid.persistence.index.query.tree.Equal casted = 
-                    (org.apache.usergrid.persistence.index.query.tree.Equal)oldop;
-                cpQuery.addEqualityFilter(
-                        casted.getProperty().getText(), casted.getLiteral().getValue() );
-
-            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.GreaterThan ) {
-
-                org.apache.usergrid.persistence.index.query.tree.GreaterThan casted = 
-                    (org.apache.usergrid.persistence.index.query.tree.GreaterThan)oldop;
-                cpQuery.addGreaterThanFilter(
-                        casted.getProperty().getText(), casted.getLiteral().getValue());
-
-            } else if(oldop instanceof org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual){
-
-                org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual casted = 
-                    (org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual)oldop;
-                cpQuery.addGreaterThanEqualFilter(
-                        casted.getProperty().getText(), casted.getLiteral().getValue());
-
-            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.LessThan ) {
-
-                org.apache.usergrid.persistence.index.query.tree.LessThan casted = 
-                    (org.apache.usergrid.persistence.index.query.tree.LessThan)oldop;
-                cpQuery.addLessThanFilter(
-                        casted.getProperty().getText(), casted.getLiteral().getValue());
-
-            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.LessThanEqual) {
-
-                org.apache.usergrid.persistence.index.query.tree.LessThanEqual casted = 
-                    (org.apache.usergrid.persistence.index.query.tree.LessThanEqual)oldop;
-                cpQuery.addLessThanEqualFilter(
-                        casted.getProperty().getText(), casted.getLiteral().getValue());
-            }
-        }
-
-        if ( cpQuery.getRootOperand() == null ) {
-
-            // a name alias or email alias was specified
-            if ( query.containsSingleNameOrEmailIdentifier() ) {
-
-                Identifier ident = query.getSingleIdentifier();
-
-                // an email was specified.  An edge case that only applies to users.  
-                // This is fulgy to put here, but required.
-                if ( query.getEntityType().equals( User.ENTITY_TYPE ) && ident.isEmail() ) {
-
-                    org.apache.usergrid.persistence.index.query.Query newQuery = 
-                        org.apache.usergrid.persistence.index.query.Query.fromQL(
-                            "select * where email='" + query.getSingleNameOrEmailIdentifier()+ "'");
-
-                    cpQuery.setRootOperand( newQuery.getRootOperand() );
-                }
-
-                // use the ident with the default alias. could be an email
-                else {
-
-                    org.apache.usergrid.persistence.index.query.Query newQuery = 
-                        org.apache.usergrid.persistence.index.query.Query.fromQL(
-                            "select * where name='" + query.getSingleNameOrEmailIdentifier()+ "'");
-
-                    cpQuery.setRootOperand( newQuery.getRootOperand() );
-                }
-
-            } else if ( query.containsSingleUuidIdentifier() ) {
-
-                org.apache.usergrid.persistence.index.query.Query newQuery = 
-                    org.apache.usergrid.persistence.index.query.Query.fromQL(
-                        "select * where uuid='" + query.getSingleUuidIdentifier() + "'");
-
-                cpQuery.setRootOperand( newQuery.getRootOperand() );
-            }
-
-        }
-
-        return cpQuery;
-    }
+//    private org.apache.usergrid.persistence.index.query.Query createCpQuery( Query query ) {
+//
+//        org.apache.usergrid.persistence.index.query.Query cpQuery =
+//           new org.apache.usergrid.persistence.index.query.Query();
+//
+//        cpQuery.setCollection( query.getCollection() );
+//        cpQuery.setConnectionType( query.getConnectionType() );
+//        cpQuery.setCursor( query.getCursor() );
+//        cpQuery.setEntityType( query.getEntityType() );
+//        cpQuery.setFinishTime( query.getFinishTime() );
+//        cpQuery.setLimit( query.getLimit() );
+//        cpQuery.setPad( query.isPad() );
+//        cpQuery.setPermissions( query.getPermissions() );
+//        cpQuery.setQl( query.getQl() );
+//        cpQuery.setReversed( query.isReversed() );
+//        cpQuery.setStartTime( query.getStartTime() );
+//
+//        for ( Query.SortPredicate sp : query.getSortPredicates() ) {
+//
+//            org.apache.usergrid.persistence.index.query.Query.SortDirection newdir = 
+//                org.apache.usergrid.persistence.index.query.Query.SortDirection.ASCENDING;
+//
+//            if ( sp.getDirection().equals( Query.SortDirection.DESCENDING )) {
+//                newdir =org.apache.usergrid.persistence.index.query.Query.SortDirection.DESCENDING;
+//            }
+//
+//            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
+//                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
+//                    sp.getPropertyName(), newdir );
+//
+//            cpQuery.addSort( newsp );
+//        }
+//
+//        if ( cpQuery.isReversed() ) {
+//
+//            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
+//                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
+//                    PROPERTY_CREATED, 
+//                        org.apache.usergrid.persistence.index.query.Query.SortDirection.DESCENDING );
+//
+//            cpQuery.addSort( newsp ); 
+//        }
+//
+//        if ( cpQuery.getSortPredicates().isEmpty() ) {
+//
+//            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
+//                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
+//                    PROPERTY_CREATED, 
+//                        org.apache.usergrid.persistence.index.query.Query.SortDirection.ASCENDING);
+//
+//            cpQuery.addSort( newsp ); 
+//        }
+//
+//        List<org.apache.usergrid.persistence.index.query.tree.Operand> 
+//            filterClauses = query.getFilterClauses();
+//
+//        for ( Operand oldop : filterClauses ) {
+//            
+//            if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.ContainsOperand ) {
+//
+//                org.apache.usergrid.persistence.index.query.tree.ContainsOperand casted = 
+//                    (org.apache.usergrid.persistence.index.query.tree.ContainsOperand)oldop;
+//                cpQuery.addContainsFilter( 
+//                    casted.getProperty().getText(), casted.getLiteral().getValue().toString());
+//
+//            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.Equal ) {
+//
+//                org.apache.usergrid.persistence.index.query.tree.Equal casted = 
+//                    (org.apache.usergrid.persistence.index.query.tree.Equal)oldop;
+//                cpQuery.addEqualityFilter(
+//                        casted.getProperty().getText(), casted.getLiteral().getValue() );
+//
+//            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.GreaterThan ) {
+//
+//                org.apache.usergrid.persistence.index.query.tree.GreaterThan casted = 
+//                    (org.apache.usergrid.persistence.index.query.tree.GreaterThan)oldop;
+//                cpQuery.addGreaterThanFilter(
+//                        casted.getProperty().getText(), casted.getLiteral().getValue());
+//
+//            } else if(oldop instanceof org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual){
+//
+//                org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual casted = 
+//                    (org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual)oldop;
+//                cpQuery.addGreaterThanEqualFilter(
+//                        casted.getProperty().getText(), casted.getLiteral().getValue());
+//
+//            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.LessThan ) {
+//
+//                org.apache.usergrid.persistence.index.query.tree.LessThan casted = 
+//                    (org.apache.usergrid.persistence.index.query.tree.LessThan)oldop;
+//                cpQuery.addLessThanFilter(
+//                        casted.getProperty().getText(), casted.getLiteral().getValue());
+//
+//            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.LessThanEqual) {
+//
+//                org.apache.usergrid.persistence.index.query.tree.LessThanEqual casted = 
+//                    (org.apache.usergrid.persistence.index.query.tree.LessThanEqual)oldop;
+//                cpQuery.addLessThanEqualFilter(
+//                        casted.getProperty().getText(), casted.getLiteral().getValue());
+//            }
+//        }
+//
+//        if ( cpQuery.getRootOperand() == null ) {
+//
+//            // a name alias or email alias was specified
+//            if ( query.containsSingleNameOrEmailIdentifier() ) {
+//
+//                Identifier ident = query.getSingleIdentifier();
+//
+//                // an email was specified.  An edge case that only applies to users.  
+//                // This is fulgy to put here, but required.
+//                if ( query.getEntityType().equals( User.ENTITY_TYPE ) && ident.isEmail() ) {
+//
+//                    org.apache.usergrid.persistence.index.query.Query newQuery = 
+//                        org.apache.usergrid.persistence.index.query.Query.fromQL(
+//                            "select * where email='" + query.getSingleNameOrEmailIdentifier()+ "'");
+//
+//                    cpQuery.setRootOperand( newQuery.getRootOperand() );
+//                }
+//
+//                // use the ident with the default alias. could be an email
+//                else {
+//
+//                    org.apache.usergrid.persistence.index.query.Query newQuery = 
+//                        org.apache.usergrid.persistence.index.query.Query.fromQL(
+//                            "select * where name='" + query.getSingleNameOrEmailIdentifier()+ "'");
+//
+//                    cpQuery.setRootOperand( newQuery.getRootOperand() );
+//                }
+//
+//            } else if ( query.containsSingleUuidIdentifier() ) {
+//
+//                org.apache.usergrid.persistence.index.query.Query newQuery = 
+//                    org.apache.usergrid.persistence.index.query.Query.fromQL(
+//                        "select * where uuid='" + query.getSingleUuidIdentifier() + "'");
+//
+//                cpQuery.setRootOperand( newQuery.getRootOperand() );
+//            }
+//
+//        }
+//
+//        return cpQuery;
+//    }
 
 
     @Override
@@ -748,19 +748,19 @@ public class CpRelationManager implements RelationManager {
 
     @Override
     public Results getConnectedEntities(String connectionType, String connectedEntityType, 
-            Results.Level resultsLevel) throws Exception {
+            Level resultsLevel) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
     @Override
     public Results getConnectingEntities(String connectionType, String connectedEntityType, 
-            Results.Level resultsLevel) throws Exception {
+            Level resultsLevel) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
     @Override
     public Results getConnectingEntities(String connectionType, String entityType, 
-            Results.Level level, int count) throws Exception {
+            Level level, int count) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
@@ -773,7 +773,7 @@ public class CpRelationManager implements RelationManager {
 
         headEntity = em.validate( headEntity );
 
-        org.apache.usergrid.persistence.index.query.Query cpQuery = createCpQuery( query );
+//        org.apache.usergrid.persistence.index.query.Query cpQuery = createCpQuery( query );
 
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
@@ -810,11 +810,55 @@ public class CpRelationManager implements RelationManager {
             }
         }
 
-        CandidateResults crs = ei.search( cpQuery );
+        CandidateResults crs = ei.search( addIdentifiers(query) );
 
-        // TODO: is the collName parameter correct here?
-        return buildResults( query , crs, connectionTypes.get(0) );
+        return buildResults( query , crs, query.getConnectionType() );
     }
+
+
+    private Query addIdentifiers( Query query ) {
+
+        if ( query.getRootOperand() == null ) {
+
+            // a name alias or email alias was specified
+            if ( query.containsSingleNameOrEmailIdentifier() ) {
+
+                Identifier ident = query.getSingleIdentifier();
+
+                // an email was specified.  An edge case that only applies to users.  
+                // This is fulgy to put here, but required.
+                if ( query.getEntityType().equals( User.ENTITY_TYPE ) && ident.isEmail() ) {
+
+                    org.apache.usergrid.persistence.index.query.Query newQuery = 
+                        org.apache.usergrid.persistence.index.query.Query.fromQL(
+                            "select * where email='" + query.getSingleNameOrEmailIdentifier()+ "'");
+
+                    query.setRootOperand( newQuery.getRootOperand() );
+                }
+
+                // use the ident with the default alias. could be an email
+                else {
+
+                    org.apache.usergrid.persistence.index.query.Query newQuery = 
+                        org.apache.usergrid.persistence.index.query.Query.fromQL(
+                            "select * where name='" + query.getSingleNameOrEmailIdentifier()+ "'");
+
+                    query.setRootOperand( newQuery.getRootOperand() );
+                }
+
+            } else if ( query.containsSingleUuidIdentifier() ) {
+
+                org.apache.usergrid.persistence.index.query.Query newQuery = 
+                    org.apache.usergrid.persistence.index.query.Query.fromQL(
+                        "select * where uuid='" + query.getSingleUuidIdentifier() + "'");
+
+                query.setRootOperand( newQuery.getRootOperand() );
+            }
+        }
+
+        return query;
+    }
+
 
     @Override
     public Set<String> getConnectionIndexes(String connectionType) throws Exception {
@@ -927,7 +971,7 @@ public class CpRelationManager implements RelationManager {
         }
 
         results.setCursor( crs.getCursor() );
-        results.setQueryProcessor( new CpQueryProcessor(em, headEntity, collName));
+        results.setQueryProcessor( new CpQueryProcessor(em, query, headEntity, collName) );
 
         return results;
     }

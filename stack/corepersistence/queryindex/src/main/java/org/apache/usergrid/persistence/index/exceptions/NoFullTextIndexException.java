@@ -23,7 +23,7 @@ package org.apache.usergrid.persistence.index.exceptions;
  *
  * @author tnine
  */
-public class NoFullTextIndexException extends PersistenceException {
+public class NoFullTextIndexException extends IndexException {
 
     /**
      *

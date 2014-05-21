@@ -34,14 +34,12 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import org.apache.usergrid.persistence.CollectionRef;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.CounterResolution;
 import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.RelationManager;
@@ -75,6 +73,9 @@ import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundExcept
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -282,7 +283,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Results get(Collection<UUID> entityIds, Class<? extends Entity> entityClass, 
-            Results.Level resultsLevel) throws Exception {
+            Level resultsLevel) throws Exception {
 
         String type = getDefaultSchema().getEntityType( entityClass );
 
@@ -303,7 +304,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Results get(Collection<UUID> entityIds, String entityType, 
-            Class<? extends Entity> entityClass, Results.Level resultsLevel) throws Exception {
+            Class<? extends Entity> entityClass, Level resultsLevel) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
     
@@ -838,7 +839,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Results getCollection(
             EntityRef entityRef, String collectionName, UUID startResult, int count, 
-            Results.Level resultsLevel, boolean reversed) throws Exception {
+            Level resultsLevel, boolean reversed) throws Exception {
 
         return getRelationManager(entityRef)
                 .getCollection(collectionName, startResult, count, resultsLevel, reversed);
@@ -846,7 +847,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Results getCollection(
-            UUID entityId, String collectionName, Query query, Results.Level resultsLevel) 
+            UUID entityId, String collectionName, Query query, Level resultsLevel) 
             throws Exception {
 
         throw new UnsupportedOperationException("Cannot get entity by UUID alone"); 
@@ -972,20 +973,20 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Results getConnectedEntities(
             UUID entityId, String connectionType, String connectedEntityType, 
-            Results.Level resultsLevel) throws Exception {
+            Level resultsLevel) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
     @Override
     public Results getConnectingEntities(
             UUID entityId, String connectionType, String connectedEntityType, 
-            Results.Level resultsLevel) throws Exception {
+            Level resultsLevel) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
     @Override
     public Results getConnectingEntities(UUID uuid, String connectionType, 
-            String entityType, Results.Level level, int count) throws Exception {
+            String entityType, Level level, int count) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
@@ -1123,7 +1124,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Results getUsersInGroupRole(
-            UUID groupId, String roleName, Results.Level level) throws Exception {
+            UUID groupId, String roleName, Level level) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 

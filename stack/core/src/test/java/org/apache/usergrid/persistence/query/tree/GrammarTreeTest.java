@@ -22,11 +22,9 @@ import org.apache.usergrid.persistence.index.query.tree.LessThan;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
-import org.apache.usergrid.persistence.index.query.tree.QueryFilterLexer;
 import org.apache.usergrid.persistence.index.query.tree.Equal;
 import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
-import org.apache.usergrid.persistence.index.query.tree.QueryFilterParser;
 import org.apache.usergrid.persistence.index.query.tree.Operand;
 import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
 import org.apache.usergrid.persistence.index.query.tree.StringLiteral;
@@ -43,6 +41,8 @@ import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -62,9 +62,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a = 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -85,9 +85,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a < 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -104,9 +104,9 @@ public class GrammarTreeTest {
         queryString = "select * where a lt 5";
 
         in = new ANTLRStringStream( queryString );
-        lexer = new QueryFilterLexer( in );
+        lexer = new CpQueryFilterLexer( in );
         tokens = new TokenRewriteStream( lexer );
-        parser = new QueryFilterParser( tokens );
+        parser = new CpQueryFilterParser( tokens );
 
         query = parser.ql().query;
 
@@ -127,9 +127,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a <= 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -144,9 +144,9 @@ public class GrammarTreeTest {
         queryString = "select * where a lte 5";
 
         in = new ANTLRStringStream( queryString );
-        lexer = new QueryFilterLexer( in );
+        lexer = new CpQueryFilterLexer( in );
         tokens = new TokenRewriteStream( lexer );
-        parser = new QueryFilterParser( tokens );
+        parser = new CpQueryFilterParser( tokens );
 
         query = parser.ql().query;
 
@@ -167,9 +167,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a > 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -184,9 +184,9 @@ public class GrammarTreeTest {
         queryString = "select * where a gt 5";
 
         in = new ANTLRStringStream( queryString );
-        lexer = new QueryFilterLexer( in );
+        lexer = new CpQueryFilterLexer( in );
         tokens = new TokenRewriteStream( lexer );
-        parser = new QueryFilterParser( tokens );
+        parser = new CpQueryFilterParser( tokens );
 
         query = parser.ql().query;
 
@@ -207,9 +207,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a >= 5";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -224,9 +224,9 @@ public class GrammarTreeTest {
         queryString = "select * where a gte 5";
 
         in = new ANTLRStringStream( queryString );
-        lexer = new QueryFilterLexer( in );
+        lexer = new CpQueryFilterLexer( in );
         tokens = new TokenRewriteStream( lexer );
-        parser = new QueryFilterParser( tokens );
+        parser = new CpQueryFilterParser( tokens );
 
         query = parser.ql().query;
 
@@ -247,9 +247,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a = 1 and b > 2";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -277,9 +277,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a = 1 or b > 2";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -307,9 +307,9 @@ public class GrammarTreeTest {
         String queryString = "select * where not a = 1";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -332,9 +332,9 @@ public class GrammarTreeTest {
         String queryString = "select * where not a = 1";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -357,9 +357,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a = 1 or b > 2";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -374,9 +374,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a within .1 of -40.343666, 175.630917";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -384,7 +384,7 @@ public class GrammarTreeTest {
 
         assertEquals( "a", operand.getProperty().getValue() );
         assertEquals( .1f, operand.getDistance().getFloatValue(), 0 );
-        assertEquals( -40.343666f, operand.getLattitude().getFloatValue(), 0 );
+        assertEquals( -40.343666f, operand.getLatitude().getFloatValue(), 0 );
         assertEquals( 175.630917f, operand.getLongitude().getFloatValue(), 0 );
     }
 
@@ -394,9 +394,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a within 1 of -40.343666, 175.630917";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -404,7 +404,7 @@ public class GrammarTreeTest {
 
         assertEquals( "a", operand.getProperty().getValue() );
         assertEquals( 1, operand.getDistance().getFloatValue(), 0 );
-        assertEquals( -40.343666f, operand.getLattitude().getFloatValue(), 0 );
+        assertEquals( -40.343666f, operand.getLatitude().getFloatValue(), 0 );
         assertEquals( 175.630917f, operand.getLongitude().getFloatValue(), 0 );
     }
 
@@ -414,9 +414,9 @@ public class GrammarTreeTest {
         String queryString = "select * where a contains 'foo'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -433,9 +433,9 @@ public class GrammarTreeTest {
         String queryString = "select c where a = 1 or b > 2";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -451,9 +451,9 @@ public class GrammarTreeTest {
         String queryString = "select {source:target} where a = 1 or b > 2";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -468,9 +468,9 @@ public class GrammarTreeTest {
         String queryString = "select * where keywords contains 'hot' or title contains 'hot'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -500,9 +500,9 @@ public class GrammarTreeTest {
 
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -519,9 +519,9 @@ public class GrammarTreeTest {
 
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
@@ -552,9 +552,9 @@ public class GrammarTreeTest {
         String queryString = "select * where  title = c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
-        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         TokenRewriteStream tokens = new TokenRewriteStream( lexer );
-        QueryFilterParser parser = new QueryFilterParser( tokens );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
 
         Query query = parser.ql().query;
 
