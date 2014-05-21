@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +26,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Query.SortDirection;
-import org.apache.usergrid.persistence.Query.SortPredicate;
+import org.apache.usergrid.persistence.index.query.Query.SortDirection;
+import org.apache.usergrid.persistence.index.query.Query.SortPredicate;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.query.tree.AndOperand;
 import org.apache.usergrid.persistence.query.tree.ContainsOperand;

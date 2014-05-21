@@ -36,7 +36,7 @@ import org.apache.usergrid.mongo.query.MongoQueryParser;
 import org.apache.usergrid.mongo.utils.BSONUtils;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Identifier;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.SimpleEntityRef;

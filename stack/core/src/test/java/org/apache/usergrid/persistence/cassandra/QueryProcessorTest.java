@@ -25,7 +25,7 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
 import org.apache.usergrid.persistence.query.ir.AndNode;
 import org.apache.usergrid.persistence.query.ir.NotNode;

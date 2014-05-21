@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;

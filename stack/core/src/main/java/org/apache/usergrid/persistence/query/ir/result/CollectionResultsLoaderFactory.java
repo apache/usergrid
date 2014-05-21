@@ -18,7 +18,7 @@ package org.apache.usergrid.persistence.query.ir.result;
 
 
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 
 

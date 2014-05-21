@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.Query.CounterFilterPredicate;
+import org.apache.usergrid.persistence.index.query.Query.CounterFilterPredicate;
 import org.apache.usergrid.utils.JsonUtils;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ListUtils.firstBoolean;
