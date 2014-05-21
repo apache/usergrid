@@ -25,9 +25,9 @@
 
   <section class="row-fluid">
     <div id="intro-list" class="span3 user-col">
-      <a class="btn btn-primary" id="new-collection-link" ng-click="showModal('newCollection')">New Collection</a>
+      <a class="btn btn-primary" id="new-collection-link" ng-click="showModal('newCollection')" title="new collection"><i class="pictogram">&#57347;</i></a>
       <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data new collection')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_new_collection}}" tooltip-placement="right">(?)</a>
-        <ul  class="user-list">
+        <ul  class="user-list" style="margin-top:5px;">
           <li ng-class="queryCollection._type === entity.name ? 'selected' : ''" ng-repeat="entity in collectionList" ng-click="loadCollection('/'+entity.name);">
             <a id="collection-{{entity.name}}-link" href="javaScript:void(0)">/{{entity.name}} </a>
           </li>

@@ -114,7 +114,7 @@ public class Job implements Callable<ResponseInfo> {
                 LOG.info( "SSH command response: {}", message );
             }
             while ( ( message = errorReader.readLine() ) != null ) {
-                response.addErrorMessage( message );
+                response.addMessage( message );
                 LOG.info( "Error in ssh command: {}", message );
             }
 
