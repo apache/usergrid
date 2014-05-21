@@ -99,7 +99,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
-                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
+                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED, MvccLogEntry.Status.DELETED );
 
         MutationBatch logMutation = logStrat.write( collectionScope, startEntry );
 
@@ -122,7 +122,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         }
 
         //fork post processing
-        entityEventAsyncProcessor.start( event );
+        entityEventAsyncProcessor.start(event);
 
         /**
          * We're done executing.
