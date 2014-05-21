@@ -53,7 +53,7 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
     private static final Logger LOG = LoggerFactory.getLogger( AsyncProcessor.class );
 
     protected final TimeoutQueue<T> queue;
-    protected final ConsistencyFig consistencyFig;
+//    protected final ConsistencyFig consistencyFig;
     protected final List<MessageListener<T, ?>> listeners = new ArrayList<>();
 
 
@@ -64,7 +64,7 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
     @Inject
     public AsyncProcessorImpl( final TimeoutQueue<T> queue, final ConsistencyFig consistencyFig ) {
         this.queue = queue;
-        this.consistencyFig = consistencyFig;
+//        this.consistencyFig = consistencyFig;
 
         //we purposefully use a new thread.  We don't want to use one of the I/O threads to run this task
         //in the event the scheduler is full, we'll end up rejecting the reschedule of this task

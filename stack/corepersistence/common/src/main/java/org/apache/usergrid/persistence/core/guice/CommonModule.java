@@ -25,14 +25,20 @@ import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
+import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueueFactory;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
+import org.apache.usergrid.persistence.core.consistency.TimeoutQueueFactory;
 import org.apache.usergrid.persistence.core.migration.MigrationManager;
 import org.apache.usergrid.persistence.core.migration.MigrationManagerFig;
 import org.apache.usergrid.persistence.core.migration.MigrationManagerImpl;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.netflix.astyanax.Keyspace;
 
@@ -61,7 +67,21 @@ public class CommonModule extends AbstractModule {
 
         bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
 
+        bind(AsyncProcessorFactory.class).to( AsyncProcessorFactory.class );
 
 
+    }
+
+
+    /**
+     * TODO, we need a better way for users to override this factory
+     * @param timeService
+     * @return
+     */
+    @Provides
+    @Singleton
+    @Inject
+    public TimeoutQueueFactory getTimeoutQueueFactory(final TimeService timeService){
+        return new LocalTimeoutQueueFactory( timeService );
     }
 }
