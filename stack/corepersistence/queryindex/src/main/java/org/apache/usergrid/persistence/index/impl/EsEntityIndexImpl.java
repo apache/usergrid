@@ -31,30 +31,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
-import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequestBuilder;
-import org.elasticsearch.client.AdminClient;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.sort.SortOrder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -91,6 +72,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -234,7 +217,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         String sep = INDEX_NAME_SEPARATOR;
         sb.append( prefix ).append(sep);
         sb.append( indexScope.getApplication().getUuid() ).append(sep);
-        sb.append( indexScope.getApplication().getType() ).append(sep);
+        sb.append( indexScope.getApplication().getType() );
         return sb.toString();
     }
 
@@ -290,48 +273,48 @@ public class EsEntityIndexImpl implements EntityIndex {
                 log.debug("    Index Name:   " + this.indexName);
                 log.debug("    ES Type:      " + this.indexType);
 
-                ValidationUtils.verifyEntityWrite(entity);
+        ValidationUtils.verifyEntityWrite(entity);
 
-                initType( indexType );
+        initType( indexType );
 
-                StopWatch timer = null;
-                if ( log.isDebugEnabled() ) {
-                    timer = new StopWatch();
-                    timer.start();
-                }
+        StopWatch timer = null;
+        if ( log.isDebugEnabled() ) {
+            timer = new StopWatch();
+            timer.start();
+        }
 
-                Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
+        Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
         entityAsMap.put(ENTITYID_FIELDNAME,entity.getId().getUuid().toString());
 
-                // let caller add these fields if needed
-                // entityAsMap.put("created", entity.getId().getUuid().timestamp();
-                // entityAsMap.put("updated", entity.getVersion().timestamp());
+        // let caller add these fields if needed
+        // entityAsMap.put("created", entity.getId().getUuid().timestamp();
+        // entityAsMap.put("updated", entity.getVersion().timestamp());
 
-                log.debug("Indexing entity: " + entityAsMap);
+        log.debug("Indexing entity: " + entityAsMap);
 
-                String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
+        String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
 
-                IndexRequestBuilder irb = client
-                    .prepareIndex( indexName, this.indexType, indexId)
-                    .setSource(entityAsMap)
-                    .setRefresh(refresh);
+        IndexRequestBuilder irb = client
+            .prepareIndex( indexName, this.indexType, indexId)
+            .setSource(entityAsMap)
+            .setRefresh(refresh);
 
-                irb.execute().actionGet();
+        irb.execute().actionGet();
 
-                //log.debug("Indexed Entity with index id " + indexId);
+        //log.debug("Indexed Entity with index id " + indexId);
 
-                if ( log.isDebugEnabled() ) {
-                    timer.stop();
-                    double average = averageIndexTime.get();
-                    if ( !averageIndexTime.compareAndSet( 0, timer.getTime() ) ) {
-                        averageIndexTime.compareAndSet( average, (average + timer.getTime()) / 2.0 );
-                    }
-                    long count = indexedCount.addAndGet(1);
-                    if ( count % 1000 == 0 ) {
-                       log.debug("Indexed {} entities, average time {}ms", 
-                               count, averageIndexTime.get() );
-                    }
-                }
+        if ( log.isDebugEnabled() ) {
+            timer.stop();
+            double average = averageIndexTime.get();
+            if ( !averageIndexTime.compareAndSet( 0, timer.getTime() ) ) {
+                averageIndexTime.compareAndSet( average, (average + timer.getTime()) / 2.0 );
+            }
+            long count = indexedCount.addAndGet(1);
+            if ( count % 1000 == 0 ) {
+                log.debug("Indexed {} entities, average time {}ms", 
+                        count, averageIndexTime.get() );
+            }
+        }
     }
 
     @Override
@@ -396,7 +379,11 @@ public class EsEntityIndexImpl implements EntityIndex {
                 } else {
                     order = SortOrder.DESC;
                 }
-                srb.addSort(sp.getPropertyName(), order);
+                FieldSortBuilder sort = SortBuilders
+                    .fieldSort(sp.getPropertyName())
+                    .order(order)
+                    .ignoreUnmapped(true);
+                srb.addSort( sort );
                 log.debug("   Sort: {} order by {}", sp.getPropertyName(), order.toString());
             }
 
