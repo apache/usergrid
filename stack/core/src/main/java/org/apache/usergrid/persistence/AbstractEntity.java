@@ -267,7 +267,13 @@ public abstract class AbstractEntity implements Entity {
     @Override
     @JsonAnySetter
     public void setDynamicProperty( String key, Object value ) {
-        dynamic_properties.put( key, value );
+        if (value.equals("")) {
+			if (dynamic_properties.containsKey(key)) {
+				dynamic_properties.remove(key);
+			}
+		} else {
+			dynamic_properties.put(key, value);
+		}
     }
 
 
