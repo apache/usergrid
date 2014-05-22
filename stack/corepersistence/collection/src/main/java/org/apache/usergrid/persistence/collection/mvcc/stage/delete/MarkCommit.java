@@ -124,31 +124,21 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         final MutationBatch entityMutation = entityStrat.mark( collectionScope, entityId, version );
 
         //
-        Observable<List<Field>> deleteFieldsObservable = Observable.create(new ObservableIterator<MvccEntity>("deleteColumns") {
+        Observable<List<Field>> deleteFieldsObservable = Observable.create(new ObservableIterator<Field>("deleteColumns") {
             @Override
-            protected Iterator<MvccEntity> getIterator() {
+            protected Iterator<Field> getIterator() {
                 Iterator<MvccEntity> entities  = entityStrat.load(collectionScope, entityId, entity.getVersion(), 1);
-                return entities;
+                Iterator<Field> fieldIterator = Collections.emptyIterator();
+                if(entities.hasNext()) {
+                    Optional<Entity> oe = entities.next().getEntity();
+                    if (oe.isPresent()) {
+                        fieldIterator = oe.get().getFields().iterator();
+                    }
+                }
+                return fieldIterator;
             }
         }).subscribeOn(Schedulers.io())
           .buffer(serializationFig.getBufferSize())
-          .map(new Func1<List<MvccEntity>, List<Field>>() {
-              @Override
-              public List<Field> call(List<MvccEntity> mvccEntities) {
-                  List<Field> fields = new ArrayList<Field>();
-                  for(MvccEntity mvccEntity : mvccEntities) {
-                      Optional<Entity> oe = mvccEntity.getEntity();
-                      Iterator<Field> fieldIterator = Collections.emptyIterator();
-                      if (oe.isPresent()) {
-                          fieldIterator = oe.get().getFields().iterator();
-                          while(fieldIterator.hasNext()){
-                              fields.add( fieldIterator.next());
-                          }
-                      }
-                  }
-                  return fields;
-              }
-          })
           .map(new Func1<List<Field>, List<Field>>() {
               @Override
               public List<Field> call(List<Field> fields) {
