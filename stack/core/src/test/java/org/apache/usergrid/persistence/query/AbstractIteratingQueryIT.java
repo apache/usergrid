@@ -35,7 +35,7 @@ import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.CoreITSetup;
 import org.apache.usergrid.CoreITSetupImpl;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 
 import static org.junit.Assert.assertEquals;
@@ -1150,7 +1150,7 @@ public abstract class AbstractIteratingQueryIT {
         /**
          * Leave this as a large size.  We have to write over 1k to reproduce this issue
          */
-        int size = 3000;
+        int size = 2000;
 
         long start = System.currentTimeMillis();
 
@@ -1159,7 +1159,7 @@ public abstract class AbstractIteratingQueryIT {
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
             entity.put( "name", String.valueOf( i ) );
-            entity.put( "boolean", !(i % 100 == 0));
+            entity.put( "boolean", !(i % 2 == 0));
             entity.put( "index", i);
 
             io.writeEntity( entity );

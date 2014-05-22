@@ -23,16 +23,16 @@ import org.antlr.runtime.ClassicToken;
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.bson.types.BasicBSONList;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.Query.SortDirection;
-import org.apache.usergrid.persistence.query.tree.AndOperand;
-import org.apache.usergrid.persistence.query.tree.Equal;
-import org.apache.usergrid.persistence.query.tree.GreaterThan;
-import org.apache.usergrid.persistence.query.tree.GreaterThanEqual;
-import org.apache.usergrid.persistence.query.tree.LessThan;
-import org.apache.usergrid.persistence.query.tree.LessThanEqual;
-import org.apache.usergrid.persistence.query.tree.Operand;
-import org.apache.usergrid.persistence.query.tree.OrOperand;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Query.SortDirection;
+import org.apache.usergrid.persistence.index.query.tree.AndOperand;
+import org.apache.usergrid.persistence.index.query.tree.Equal;
+import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
+import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
+import org.apache.usergrid.persistence.index.query.tree.LessThan;
+import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
+import org.apache.usergrid.persistence.index.query.tree.Operand;
+import org.apache.usergrid.persistence.index.query.tree.OrOperand;
 
 import static org.apache.commons.collections.MapUtils.getIntValue;
 

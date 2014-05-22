@@ -36,10 +36,8 @@ import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.tools.bean.ExportOrg;
 import org.apache.usergrid.utils.JsonUtils;
 
@@ -47,6 +45,7 @@ import org.apache.commons.cli.CommandLine;
 
 import com.google.common.collect.BiMap;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 public class Export extends ExportingToolBase {
@@ -176,7 +175,7 @@ public class Export extends ExportingToolBase {
 
                 Query query = new Query();
                 query.setLimit( MAX_ENTITY_FETCH );
-                query.setResultsLevel( Results.Level.ALL_PROPERTIES );
+                query.setResultsLevel( Level.ALL_PROPERTIES );
 
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
@@ -308,7 +307,9 @@ public class Export extends ExportingToolBase {
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
 
-            Results results = em.getConnectedEntities( entity.getUuid(), connectionType, null, Level.IDS );
+            Results results = em.getConnectedEntities( 
+                    entity, connectionType, null, Level.IDS );
+
             List<ConnectionRef> connections = results.getConnections();
 
             for ( ConnectionRef connectionRef : connections ) {

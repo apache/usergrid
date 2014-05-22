@@ -44,4 +44,56 @@ public interface MvccLogEntry {
      * Get the version of the entity
      */
     UUID getVersion();
+
+    /**
+     * Get the status of the entity
+     */
+    Status getStatus();
+
+
+
+    /**
+     * The possible Status of the mvccEntity
+     */
+    public enum Status  {
+
+        /**
+         * The logentry being written represents a complete entity
+         */
+        COMPLETE(0),
+
+        /**
+         * The logentry being written represents a Stated entity
+         */
+        STARTED(1),
+
+        /**
+         * The logentry being written represents a partial entity
+         */
+        PARTIAL(2),
+
+        /**
+         * This logentry has been marked as deleted
+         */
+        DELETED(3)
+        ;
+
+        private final int id;
+
+
+        private Status( final int id ) {
+            this.id = id;
+        }
+
+
+        /**
+         * Returns true if this stage is transient and should not be retained in the datastore permanently Stages such as
+         * start and write don't need to be retained, but can be used to signal "in flight" updates
+         */
+
+
+        public int getId() {
+            return this.id;
+        }
+    }
 }

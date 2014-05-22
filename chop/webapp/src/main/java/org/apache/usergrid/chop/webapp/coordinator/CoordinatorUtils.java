@@ -122,11 +122,17 @@ public class CoordinatorUtils {
      */
     public static Stack getStackFromRunnerJar( File runnerJar ) {
         InputStream stream = null;
+        URLClassLoader classLoader = null;
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            stream = getResourceAsStreamFromRunnerJar( runnerJar, Constants.STACK_JSON );
+             // Access the jar file resources after adding it to a new ClassLoader
+            classLoader = new URLClassLoader( new URL[] { runnerJar.toURL() },
+                    Thread.currentThread().getContextClassLoader() );
 
-            return mapper.readValue( stream, BasicStack.class );
+            ObjectMapper mapper = new ObjectMapper();
+            stream = classLoader.getResourceAsStream( Constants.STACK_JSON );
+
+            BasicStack stack = mapper.readValue( stream, BasicStack.class );
+            return stack;
         }
         catch ( Exception e ) {
             LOG.warn( "Error while reading stack.json from runner.jar resources", e );
@@ -139,6 +145,14 @@ public class CoordinatorUtils {
                 }
                 catch ( Exception e ) {
                     LOG.debug( "Could not close stack json stream", e );
+                }
+            }
+            if( classLoader != null ) {
+                try {
+                    classLoader.close();
+                }
+                catch ( Exception e ) {
+                    LOG.debug( "Could not close class loader for loading stack.json", e );
                 }
             }
         }
@@ -225,6 +239,47 @@ public class CoordinatorUtils {
               .append( value )
               .append( "\";" );
         }
+
+        /** export instance IPs and host names as a space separated list with ClusterName suffixed by _HOSTS and _ADDRS   */
+        StringBuilder ipList = new StringBuilder();
+        StringBuilder privateIpList = new StringBuilder();
+        StringBuilder hostList = new StringBuilder();
+        StringBuilder privateHostList = new StringBuilder();
+        for ( Instance temp : cluster.getInstances() ) {
+            ipList.append( temp.getPublicIpAddress() )
+                    .append( " " );
+            privateIpList.append( temp.getPrivateIpAddress() )
+                    .append( " " );
+            hostList.append( temp.getPublicDnsName() )
+                    .append( " " );
+            privateHostList.append( temp.getPrivateDnsName() )
+                    .append( " " );
+        }
+
+        sb.append( "export " )
+                .append( cluster.getName().toUpperCase() )
+                .append( "_ADDRS=\"" )
+                .append( ipList.substring( 0, ipList.toString().length() - 1 ) )
+                .append( "\";" );
+
+        sb.append( "export " )
+                .append( cluster.getName().toUpperCase() )
+                .append( "_PRIVATE_ADDRS=\"" )
+                .append( privateIpList.substring( 0, privateIpList.toString().length() - 1 ) )
+                .append( "\";" );
+
+        sb.append( "export " )
+                .append( cluster.getName().toUpperCase() )
+                .append( "_HOSTS=\"" )
+                .append( hostList.substring( 0, hostList.toString().length() - 1 ) )
+                .append( "\";" );
+
+        sb.append( "export " )
+                .append( cluster.getName().toUpperCase() )
+                .append( "_PRIVATE_HOSTS=\"" )
+                .append( privateHostList.substring( 0, privateHostList.toString().length() - 1 ) )
+                .append( "\";" );
+
         String exportVars = sb.toString();
 
         // Prepare SSH and SCP commands

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence;
+package org.apache.usergrid.persistence.index.query;
 
 
 import java.io.Serializable;
@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.apache.usergrid.utils.UUIDUtils;
 
 
 public class Identifier implements Serializable {
@@ -42,7 +42,8 @@ public class Identifier implements Serializable {
     Object value;
 
     static Pattern emailRegEx = Pattern.compile( EMAIL_REX );
-    static Pattern nameRegEx = Pattern.compile( "[a-zA-Z0-9_\\-./]*" );
+    //"Pattern nameRegEx" below used to be [a-zA-Z0-9_\\-./], changed it to contain a 'space' to address https://issues.apache.org/jira/browse/USERGRID-94
+    static Pattern nameRegEx = Pattern.compile( "[a-zA-Z0-9_\\-./ ]*" );
 
 
     private Identifier( Type type, Object value ) {

@@ -17,7 +17,7 @@ package org.apache.usergrid.persistence.index.query.tree;
 
 
 import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.index.exceptions.PersistenceException;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
 
 
 /** @author tnine */
@@ -39,7 +39,7 @@ public class NotOperand extends Operand {
      * @see org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence.query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws PersistenceException {
+    public void visit( QueryVisitor visitor ) throws IndexException {
         visitor.visit( this );
     }
 }

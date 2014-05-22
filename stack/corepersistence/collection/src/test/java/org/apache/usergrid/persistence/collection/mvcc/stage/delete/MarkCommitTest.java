@@ -2,6 +2,7 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
@@ -118,12 +119,14 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
         final SimpleAsynchronousMessage<MvccEntityEvent<MvccEntity>> message = mock(SimpleAsynchronousMessage.class);
         final MvccEntitySerializationStrategy mvccEntityStrategy = mock( MvccEntitySerializationStrategy.class );
         final MutationBatch entityMutation = mock( MutationBatch.class );
+        final UniqueValueSerializationStrategy uniqueValueStrat = mock(UniqueValueSerializationStrategy.class);
+        final SerializationFig serializationFig = mock(SerializationFig.class);
 
         when( logStrategy.write( any( CollectionScope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
         when( mvccEntityStrategy.write( any( CollectionScope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
         when(processor.setVerification(any(MvccEntityEvent.class),any(long.class))).thenReturn(message);
-        new MarkCommit( logStrategy, mvccEntityStrategy, processor, consistencyFig ).call( event );
+        new MarkCommit( logStrategy, mvccEntityStrategy, processor, consistencyFig, serializationFig,uniqueValueStrat ).call( event );
     }
 
 }

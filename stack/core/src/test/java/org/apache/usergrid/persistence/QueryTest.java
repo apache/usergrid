@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -25,26 +26,25 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Query.SortDirection;
-import org.apache.usergrid.persistence.Query.SortPredicate;
-import org.apache.usergrid.persistence.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.query.tree.AndOperand;
-import org.apache.usergrid.persistence.query.tree.ContainsOperand;
-import org.apache.usergrid.persistence.query.tree.Equal;
-import org.apache.usergrid.persistence.query.tree.FloatLiteral;
-import org.apache.usergrid.persistence.query.tree.GreaterThan;
-import org.apache.usergrid.persistence.query.tree.GreaterThanEqual;
-import org.apache.usergrid.persistence.query.tree.LessThan;
-import org.apache.usergrid.persistence.query.tree.LessThanEqual;
-import org.apache.usergrid.persistence.query.tree.LongLiteral;
-import org.apache.usergrid.persistence.query.tree.NotOperand;
-import org.apache.usergrid.persistence.query.tree.StringLiteral;
-import org.apache.usergrid.persistence.query.tree.WithinOperand;
+import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
+import org.apache.usergrid.persistence.index.query.Query.SortDirection;
+import org.apache.usergrid.persistence.index.query.Query.SortPredicate;
+import org.apache.usergrid.persistence.index.query.tree.AndOperand;
+import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
+import org.apache.usergrid.persistence.index.query.tree.Equal;
+import org.apache.usergrid.persistence.index.query.tree.FloatLiteral;
+import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
+import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
+import org.apache.usergrid.persistence.index.query.tree.LessThan;
+import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
+import org.apache.usergrid.persistence.index.query.tree.LongLiteral;
+import org.apache.usergrid.persistence.index.query.tree.NotOperand;
+import org.apache.usergrid.persistence.index.query.tree.StringLiteral;
+import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import org.junit.Ignore;
 
 
 @Concurrent()
@@ -53,7 +53,7 @@ public class QueryTest {
     private static final Logger LOG = LoggerFactory.getLogger( QueryTest.class );
 
 
-    @Test @Ignore // need to fix the old parser for this to work 
+    @Test 
     public void testQueryTree() throws Exception {
         LOG.info( "testQuery" );
 
@@ -89,7 +89,7 @@ public class QueryTest {
 
         assertEquals( "loc", op.getProperty().getValue() );
         assertEquals( .05f, op.getDistance().getFloatValue(), 0 );
-        assertEquals( 5f, op.getLattitude().getFloatValue(), 0 );
+        assertEquals( 5f, op.getLatitude().getFloatValue(), 0 );
         assertEquals( 6f, op.getLongitude().getFloatValue(), 0 );
 
         and = ( AndOperand ) and.getLeft();
@@ -189,7 +189,7 @@ public class QueryTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void testFromJson() throws QueryParseException {
         String s = "{\"filter\":\"a contains 'ed'\"}";
         Query q = Query.fromJsonString( s );
@@ -202,7 +202,7 @@ public class QueryTest {
     }
 
 
-    @Test @Ignore // need to fix the old parser for this to work 
+    @Test 
     public void testCompoundQueryWithNot() throws QueryParseException {
         String s = "name contains 'm' and not name contains 'grover'";
         Query q = Query.fromQL( s );

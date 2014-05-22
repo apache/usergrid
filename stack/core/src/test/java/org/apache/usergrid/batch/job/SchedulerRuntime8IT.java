@@ -20,7 +20,7 @@ package org.apache.usergrid.batch.job;
 import java.util.UUID;
 
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -85,6 +85,8 @@ public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
         // now delete the job
 
         scheduler.deleteJob( saved.getUuid() );
+
+        scheduler.refreshIndex();
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test

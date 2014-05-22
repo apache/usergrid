@@ -69,6 +69,7 @@ public class StackDestroyer {
         amazonFig.bypass( AmazonFig.AWS_SECRET_KEY, providerParams.getSecretKey() );
 
         InstanceManager instanceManager = InjectorFactory.getInstance( InstanceManager.class );
+        instanceManager.setDataCenter( stack.getDataCenter() );
 
         Collection<String> instances = new LinkedList<String>();
         for( Instance instance: stack.getRunnerInstances() ) {
