@@ -18,15 +18,16 @@
 
 package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
+import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.slf4j.Logger;
@@ -42,7 +43,8 @@ import java.util.List;
 /**
  * Listens for delete entity event then deletes entity for real this time
  */
-public class MvccEntityDeleteListener implements MvccDeleteMessageListener {
+@Singleton
+public class MvccEntityDeleteListener implements MessageListener<MvccEntityDeleteEvent, EntityVersion> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MvccEntityDeleteListener.class);
 
@@ -50,19 +52,20 @@ public class MvccEntityDeleteListener implements MvccDeleteMessageListener {
     private final Keyspace keyspace;
     private final SerializationFig serializationFig;
 
+    @Inject
     public MvccEntityDeleteListener(final MvccEntitySerializationStrategy entityMetadataSerialization,
-                                    @MvccEntityDelete final AsyncProcessor entityDelete,
+                                    final AsyncProcessorFactory asyncProcessorFactory,
                                     final Keyspace keyspace,
                                     final SerializationFig serializationFig){
         this.entityMetadataSerialization = entityMetadataSerialization;
         this.keyspace = keyspace;
         this.serializationFig = serializationFig;
-        entityDelete.addListener( this );
+        asyncProcessorFactory.getProcessor( MvccEntityDeleteEvent.class ).addListener( this );
     }
 
     @Override
-    public Observable<EntityVersion> receive(final MvccEntityEvent<MvccEntity> entityEvent) {
-        final MvccEntity entity = entityEvent.getData();
+    public Observable<EntityVersion> receive(final MvccEntityDeleteEvent entityEvent) {
+        final MvccEntity entity = entityEvent.getEntity();
          return Observable.create( new ObservableIterator<MvccEntity>( "deleteEntities" ) {
                 @Override
                 protected Iterator<MvccEntity> getIterator() {

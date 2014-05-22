@@ -26,6 +26,7 @@ import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactoryImpl;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueueFactory;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
@@ -47,7 +48,7 @@ import com.netflix.astyanax.Keyspace;
  * Simple module for configuring our core services.  Cassandra etc
  *
  */
-public class CommonModule extends AbstractModule {
+public abstract class CommonModule extends AbstractModule {
 
 
     @Override
@@ -55,7 +56,8 @@ public class CommonModule extends AbstractModule {
         //noinspection unchecked
         install( new GuicyFigModule(
                 MigrationManagerFig.class,
-                CassandraFig.class, ConsistencyFig.class) );
+                CassandraFig.class,
+                ConsistencyFig.class) );
 
              // bind our keyspace to the AstyanaxKeyspaceProvider
         bind( Keyspace.class ).toProvider( AstyanaxKeyspaceProvider.class ).asEagerSingleton();
@@ -67,21 +69,19 @@ public class CommonModule extends AbstractModule {
 
         bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
 
-        bind(AsyncProcessorFactory.class).to( AsyncProcessorFactory.class );
+        bind(AsyncProcessorFactory.class).to( AsyncProcessorFactoryImpl.class );
+
+        bindTimeoutQueueFactory();
 
 
     }
 
 
     /**
-     * TODO, we need a better way for users to override this factory
-     * @param timeService
+     * Bind the timeoutqueue factory to an implementation
      * @return
      */
-    @Provides
-    @Singleton
-    @Inject
-    public TimeoutQueueFactory getTimeoutQueueFactory(final TimeService timeService){
-        return new LocalTimeoutQueueFactory( timeService );
-    }
+    protected abstract void bindTimeoutQueueFactory();
+
+
 }

@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationSt
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.jukito.JukitoRunner;
@@ -53,7 +54,7 @@ public class MvccEntityDeleteListenerTest {
     @Inject
     protected MvccEntitySerializationStrategy mvccEntitySerializationStrategy;
 
-    protected AsyncProcessor<MvccEntityEvent<MvccEntity>> processor;
+    protected AsyncProcessor<MvccEntityDeleteEvent> processor;
 
     protected MvccEntityDeleteListener listener;
 
@@ -67,7 +68,12 @@ public class MvccEntityDeleteListenerTest {
         serializationFig = mock(SerializationFig.class);
         keyspace = mock(Keyspace.class);
         mvccEntitySerializationStrategy = mock(MvccEntitySerializationStrategy.class);
-        listener = new MvccEntityDeleteListener(mvccEntitySerializationStrategy, processor, keyspace, serializationFig);
+
+        AsyncProcessorFactory factory = mock(AsyncProcessorFactory.class);
+
+        when(factory.getProcessor( MvccEntityDeleteEvent.class )).thenReturn( processor );
+
+        listener = new MvccEntityDeleteListener(mvccEntitySerializationStrategy, factory, keyspace, serializationFig);
     }
 
     @Test
@@ -78,7 +84,7 @@ public class MvccEntityDeleteListenerTest {
         Id entityId = new SimpleId(id,"test");
         when(entity.getId()).thenReturn(entityId);
         when(entity.getVersion()).thenReturn(id);
-        MvccEntityEvent<MvccEntity> entityEvent = new MvccEntityEvent<MvccEntity>(scope,id,entity);
+        MvccEntityDeleteEvent entityEvent = new MvccEntityDeleteEvent(scope,id,entity);
         MutationBatch batch = mock(MutationBatch.class);
         when(keyspace.prepareMutationBatch()).thenReturn(batch);
         when(serializationFig.getBufferSize()).thenReturn(10);

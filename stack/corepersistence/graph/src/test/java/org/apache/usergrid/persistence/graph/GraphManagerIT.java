@@ -81,15 +81,15 @@ public abstract class GraphManagerIT {
 
 
     @Before
-    public void setup() {
-        scope = mock( ApplicationScope.class );
+    public void mockApp() {
+        this.scope = mock( ApplicationScope.class );
 
         Id orgId = mock( Id.class );
 
         when( orgId.getType() ).thenReturn( "organization" );
         when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
 
-        when( scope.getApplication() ).thenReturn( orgId );
+        when( this.scope.getApplication() ).thenReturn( orgId );
     }
 
 

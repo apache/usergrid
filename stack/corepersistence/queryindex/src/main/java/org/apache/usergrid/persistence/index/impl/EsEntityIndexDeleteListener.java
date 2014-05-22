@@ -17,55 +17,60 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
-import com.google.common.base.Optional;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
+import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Optional;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-import java.util.*;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
-
-public class EsEntityIndexDeleteListener implements MvccDeleteMessageListener {
+@Singleton
+public class EsEntityIndexDeleteListener implements MessageListener<MvccEntityDeleteEvent, EntityVersion> {
 
     private final SerializationFig serializationFig;
     private final EntityIndexFactory entityIndexFactory;
-    private final EntityCollectionManager entityCollectionManager;
 
-    public EsEntityIndexDeleteListener(EntityIndexFactory entityIndexFactory,
-                                       @MvccEntityDelete final AsyncProcessor entityDelete,
-                                       SerializationFig serializationFig,
-                                       EntityCollectionManager collectionManager) {
+    @Inject
+    public EsEntityIndexDeleteListener(final EntityIndexFactory entityIndexFactory,
+                                      final AsyncProcessorFactory asyncProcessorFactory,
+                                       SerializationFig serializationFig) {
         this.entityIndexFactory = entityIndexFactory;
         this.serializationFig = serializationFig;
-        this.entityCollectionManager = collectionManager;
-        entityDelete.addListener(this);
+        asyncProcessorFactory.getProcessor( MvccEntityDeleteEvent.class ).addListener( this );
     }
 
     @Override
-    public Observable<EntityVersion> receive(final MvccEntityEvent<MvccEntity> event) {
+    public Observable<EntityVersion> receive(final MvccEntityDeleteEvent event) {
         CollectionScope collectionScope = event.getCollectionScope();
         IndexScope indexScope = new IndexScopeImpl(collectionScope.getApplication(),collectionScope.getOwner(),collectionScope.getName());
         final EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexScope);
         return Observable.create(new ObservableIterator<CandidateResult>("deleteEsIndexVersions") {
             @Override
             protected Iterator<CandidateResult> getIterator() {
-                CandidateResults results = entityIndex.getEntityVersions(event.getData().getId());
+                CandidateResults results = entityIndex.getEntityVersions(event.getEntity().getId());
                 return results.iterator();
             }
         }).subscribeOn(Schedulers.io())
@@ -86,36 +91,5 @@ public class EsEntityIndexDeleteListener implements MvccDeleteMessageListener {
                 });
     }
 
-    public class EsMvccEntityImpl implements MvccEntity{
 
-        UUID version;
-        Id id;
-        Entity entity;
-
-        public EsMvccEntityImpl(Entity entity){
-            this.entity = entity;
-            this.id = entity.getId();
-            this.version = entity.getVersion();
-        }
-
-        @Override
-        public Optional<Entity> getEntity() {
-            return Optional.fromNullable(entity) ;
-        }
-
-        @Override
-        public UUID getVersion() {
-            return version;
-        }
-
-        @Override
-        public Id getId() {
-            return id;
-        }
-
-        @Override
-        public Status getStatus() {
-            return Status.DELETED;
-        }
-    }
 }

@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.apache.usergrid.persistence.core.hystrix.HystrixGraphObservable;
@@ -45,9 +46,6 @@ import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
-import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
-import org.apache.usergrid.persistence.graph.guice.EdgeWrite;
-import org.apache.usergrid.persistence.graph.guice.NodeDelete;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
@@ -85,9 +83,9 @@ public class GraphManagerImpl implements GraphManager {
 
     private final NodeSerialization nodeSerialization;
 
-    private final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDeleteAsyncProcessor;
-    private final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWriteAsyncProcessor;
-    private final AsyncProcessor<EdgeEvent<Id>> nodeDeleteAsyncProcessor;
+    private final AsyncProcessor<EdgeDeleteEvent> edgeDeleteAsyncProcessor;
+    private final AsyncProcessor<EdgeWriteEvent> edgeWriteAsyncProcessor;
+    private final AsyncProcessor<NodeDeleteEvent> nodeDeleteAsyncProcessor;
 
     private final GraphFig graphFig;
     private final ConsistencyFig consistencyFig;
@@ -97,11 +95,10 @@ public class GraphManagerImpl implements GraphManager {
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                              @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
                              final NodeSerialization nodeSerialization, final GraphFig graphFig,
-                             @EdgeDelete final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDelete,
-                             @NodeDelete final AsyncProcessor<EdgeEvent<Id>> nodeDelete,
-                             @EdgeWrite final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite,
-                             @Assisted final ApplicationScope scope, final MergedEdgeReader mergedEdgeReader,
-                             final ConsistencyFig consistencyFig ) {
+                             final AsyncProcessorFactory asyncProcessorFactory,
+                             final MergedEdgeReader mergedEdgeReader,
+                             final ConsistencyFig consistencyFig,
+                             @Assisted final ApplicationScope scope) {
 
 
         ValidationUtils.validateApplicationScope( scope );
@@ -110,9 +107,7 @@ public class GraphManagerImpl implements GraphManager {
         Preconditions.checkNotNull( commitLogSerialization, "commitLogSerialization must not be null" );
         Preconditions.checkNotNull( nodeSerialization, "nodeSerialization must not be null" );
         Preconditions.checkNotNull( graphFig, "consistencyFig must not be null" );
-        Preconditions.checkNotNull( edgeDelete, "edgeDelete must not be null" );
-        Preconditions.checkNotNull( nodeDelete, "nodeDelete must not be null" );
-        Preconditions.checkNotNull( edgeWrite, "edgeWrite must not be null" );
+        Preconditions.checkNotNull( asyncProcessorFactory, "asyncProcessorFactory must not be null" );
         Preconditions.checkNotNull( scope, "scope must not be null" );
         Preconditions.checkNotNull( consistencyFig, "consistencyFig must not be null" );
 
@@ -124,11 +119,11 @@ public class GraphManagerImpl implements GraphManager {
         this.graphFig = graphFig;
         this.consistencyFig = consistencyFig;
 
-        this.edgeDeleteAsyncProcessor = edgeDelete;
+        this.edgeDeleteAsyncProcessor = asyncProcessorFactory.getProcessor( EdgeDeleteEvent.class );
 
-        this.nodeDeleteAsyncProcessor = nodeDelete;
+        this.nodeDeleteAsyncProcessor = asyncProcessorFactory.getProcessor( NodeDeleteEvent.class );
 
-        this.edgeWriteAsyncProcessor = edgeWrite;
+        this.edgeWriteAsyncProcessor = asyncProcessorFactory.getProcessor( EdgeWriteEvent.class );
     }
 
 
@@ -153,8 +148,9 @@ public class GraphManagerImpl implements GraphManager {
 
                         mutation.mergeShallow( edgeMutation );
 
-                        final AsynchronousMessage<EdgeEvent<MarkedEdge>> event = edgeWriteAsyncProcessor
-                                                       .setVerification( new EdgeEvent<>( scope, timestamp, edge ), getTimeout() );
+                        final AsynchronousMessage<EdgeWriteEvent> event = edgeWriteAsyncProcessor
+                                                       .setVerification( new EdgeWriteEvent( scope, timestamp, edge ),
+                                                               getTimeout() );
 
 
 
@@ -194,9 +190,9 @@ public class GraphManagerImpl implements GraphManager {
 
                         final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge, timestamp );
 
-                        final AsynchronousMessage<EdgeEvent<MarkedEdge>> event =
-                                edgeDeleteAsyncProcessor.setVerification(
-                                        new EdgeEvent<>( scope, timestamp, edge ), getTimeout() );
+                        final AsynchronousMessage<EdgeDeleteEvent> event =
+                                edgeDeleteAsyncProcessor.setVerification( new EdgeDeleteEvent( scope, timestamp, edge ),
+                                        getTimeout() );
 
 
                         try {
@@ -228,9 +224,9 @@ public class GraphManagerImpl implements GraphManager {
 
                         final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, deleteTime );
 
-                        final AsynchronousMessage<EdgeEvent<Id>> event =
-                                nodeDeleteAsyncProcessor.setVerification( new EdgeEvent<>( scope, deleteTime, node ),
-                                        getTimeout() );
+                        final AsynchronousMessage<NodeDeleteEvent> event =
+                                nodeDeleteAsyncProcessor.setVerification(
+                                        new NodeDeleteEvent( scope, deleteTime, node ), getTimeout() );
 
 
                         try {

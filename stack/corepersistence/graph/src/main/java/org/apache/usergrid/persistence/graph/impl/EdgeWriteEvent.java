@@ -16,22 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.usergrid.persistence.graph.guice;
-
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-import com.google.inject.BindingAnnotation;
-
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+package org.apache.usergrid.persistence.graph.impl;
 
 
-@BindingAnnotation
-@Target( { FIELD, PARAMETER, METHOD } )
-@Retention( RUNTIME )
-public @interface NodeDelete {}
+import java.util.UUID;
+
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
+
+
+/**
+ * Event for when an edge is written
+ */
+public class EdgeWriteEvent extends EdgeEvent<MarkedEdge> {
+    public EdgeWriteEvent( final ApplicationScope applicationScope, final UUID version, final MarkedEdge data ) {
+        super( applicationScope, version, data );
+    }
+}

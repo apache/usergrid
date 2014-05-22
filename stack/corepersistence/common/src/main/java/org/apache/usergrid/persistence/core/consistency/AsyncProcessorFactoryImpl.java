@@ -22,6 +22,9 @@ package org.apache.usergrid.persistence.core.consistency;
 import java.io.Serializable;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -35,6 +38,8 @@ import com.google.inject.Singleton;
 @Singleton
 public class AsyncProcessorFactoryImpl implements AsyncProcessorFactory {
 
+    private static final Logger LOG = LoggerFactory.getLogger( AsyncProcessorFactoryImpl.class );
+
     private final TimeoutQueueFactory queueFactory;
     private final ConsistencyFig consistencyFig;
 
@@ -44,6 +49,8 @@ public class AsyncProcessorFactoryImpl implements AsyncProcessorFactory {
 
                @Override
                public AsyncProcessor<? extends Serializable> load( final Class<? extends Serializable> key ) throws Exception {
+                   LOG.info( "Creating queue from factory for event key {}", key );
+
                    final TimeoutQueue queue = queueFactory.getQueue( key );
 
                    return  new AsyncProcessorImpl( queue, consistencyFig );
