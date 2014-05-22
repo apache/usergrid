@@ -17,12 +17,15 @@
 package org.apache.usergrid.persistence;
 
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.Results.Level;
+
+import me.prettyprint.hector.api.mutation.Mutator;
 
 
 public interface RelationManager {
@@ -111,4 +114,7 @@ public interface RelationManager {
 
 
     public Set<String> getConnectionIndexes( String connectionType ) throws Exception;
+
+    public void batchUpdateSetIndexes( Mutator<ByteBuffer> batch, String setName, Object elementValue,
+                                       boolean removeFromSet, UUID timestampUuid ) throws Exception;
 }
