@@ -219,13 +219,14 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public void updateProperties( EntityRef entityRef, Map<String, Object> properties ) throws Exception;
+    public void updateProperties( EntityRef entityRef, Map<String, Object> properties ) 
+            throws Exception;
 
     public void deleteProperty( EntityRef entityRef, String propertyName ) throws Exception;
 
     /**
-     * Gets the values from an entity list property. Lists are a special type of entity property that can contain an
-     * unordered set of non-duplicate values.
+     * Gets the values from an entity list property. Lists are a special type of entity property 
+     * that can contain an unordered set of non-duplicate values.
      *
      * @param entityRef an entity reference
      * @param dictionaryName the property list name to retrieve.
@@ -234,11 +235,12 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public Set<Object> getDictionaryAsSet( EntityRef entityRef, String dictionaryName ) throws Exception;
+    public Set<Object> getDictionaryAsSet( EntityRef entityRef, String dictionaryName ) 
+            throws Exception;
 
     /**
-     * Adds the specified value to the named entity list property. Lists are a special type of entity property that can
-     * contain an unordered set of non-duplicate values.
+     * Adds the specified value to the named entity list property. Lists are a special type of 
+     * entity property that can contain an unordered set of non-duplicate values.
      *
      * @param entityRef an entity reference
      * @param dictionaryName the property to set.
@@ -246,24 +248,27 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementValue ) throws Exception;
-
-    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementName, Object elementValue )
+    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementValue ) 
             throws Exception;
 
-    public void addSetToDictionary( EntityRef entityRef, String dictionaryName, Set<?> elementValues ) throws Exception;
+    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementName, 
+            Object elementValue ) throws Exception;
 
-    public void addMapToDictionary( EntityRef entityRef, String dictionaryName, Map<?, ?> elementValues )
+    public void addSetToDictionary( EntityRef entityRef, String dictionaryName, 
+            Set<?> elementValues ) throws Exception;
+
+    public void addMapToDictionary( EntityRef entityRef, String dictionaryName, 
+            Map<?, ?> elementValues ) throws Exception;
+
+    public Map<Object, Object> getDictionaryAsMap( EntityRef entityRef, String dictionaryName ) 
             throws Exception;
 
-    public Map<Object, Object> getDictionaryAsMap( EntityRef entityRef, String dictionaryName ) throws Exception;
-
-    public Object getDictionaryElementValue( EntityRef entityRef, String dictionaryName, String elementName )
-            throws Exception;
+    public Object getDictionaryElementValue( EntityRef entityRef, String dictionaryName, 
+            String elementName ) throws Exception;
 
     /**
-     * Removes the specified value to the named entity list property. Lists are a special type of entity property that
-     * can contain an unordered set of non-duplicate values.
+     * Removes the specified value to the named entity list property. Lists are a special type of 
+     * entity property that can contain an unordered set of non-duplicate values.
      *
      * @param entityRef an entity reference
      * @param dictionaryName the property to set.
@@ -290,8 +295,8 @@ public interface EntityManager {
      *
      * @param entityRef an entity reference
      *
-     * @return a map of entity references to set of collection names for the entities and collections that this entity
-     *         is a member of.
+     * @return a map of entity references to set of collection names for the entities and 
+     * collections that this entity is a member of.
      *
      * @throws Exception the exception
      */
@@ -304,7 +309,8 @@ public interface EntityManager {
      * @param collectionName The collection name
      * @param entity The entity in the collection
      */
-    public boolean isCollectionMember( EntityRef owner, String collectionName, EntityRef entity ) throws Exception;
+    public boolean isCollectionMember( EntityRef owner, String collectionName, EntityRef entity ) 
+            throws Exception;
 
     /**
      * Return true if the owner entity ref is an owner of the entity;
@@ -313,12 +319,13 @@ public interface EntityManager {
      * @param connectionName The collection name
      * @param entity The entity in the collection
      */
-    public boolean isConnectionMember( EntityRef owner, String connectionName, EntityRef entity ) throws Exception;
+    public boolean isConnectionMember( EntityRef owner, String connectionName, EntityRef entity ) 
+            throws Exception;
 
 
     /**
-     * Gets the collections for the specified entity. Collection for a given type are encoded in the schema, this method
-     * loads the entity type and returns the collections from the schema.
+     * Gets the collections for the specified entity. Collection for a given type are encoded 
+     * in the schema, this method loads the entity type and returns the collections from the schema.
      *
      * @param entityRef an entity reference
      *
@@ -381,18 +388,21 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public void removeFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception;
+    public void removeFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef) 
+            throws Exception;
 
-    public Results searchCollection( EntityRef entityRef, String collectionName, Query query ) throws Exception;
+    public Results searchCollection( EntityRef entityRef, String collectionName, Query query ) 
+            throws Exception;
 
-    public Set<String> getCollectionIndexes( EntityRef entity, String collectionName ) throws Exception;
+    public Set<String> getCollectionIndexes( EntityRef entity, String collectionName ) 
+            throws Exception;
 
-    public void copyRelationships( EntityRef srcEntityRef, String srcRelationName, EntityRef dstEntityRef,
-                                   String dstRelationName ) throws Exception;
+    public void copyRelationships( EntityRef srcEntityRef, String srcRelationName, 
+            EntityRef dstEntityRef, String dstRelationName ) throws Exception;
 
     /**
-     * Connect the specified entity to another entity with the specified connection type. Connections are directional
-     * relationships that can be traversed in either direction.
+     * Connect the specified entity to another entity with the specified connection type. 
+     * Connections are directional relationships that can be traversed in either direction.
      *
      * @throws Exception the exception
      */
@@ -402,24 +412,25 @@ public interface EntityManager {
                                            EntityRef connectedEntityRef ) throws Exception;
 
     public ConnectionRef createConnection( EntityRef connectingEntity, String pairedConnectionType,
-                                           EntityRef pairedEntity, String connectionType, EntityRef connectedEntityRef )
-            throws Exception;
+                                           EntityRef pairedEntity, String connectionType, 
+                                           EntityRef connectedEntityRef ) throws Exception;
 
-    public ConnectionRef createConnection( EntityRef connectingEntity, ConnectedEntityRef... connections )
+    public ConnectionRef createConnection( 
+            EntityRef connectingEntity, ConnectedEntityRef... connections )
             throws Exception;
 
     public ConnectionRef connectionRef( EntityRef connectingEntity, String connectionType,
                                         EntityRef connectedEntityRef ) throws Exception;
 
-    public ConnectionRef connectionRef( EntityRef connectingEntity, String pairedConnectionType, EntityRef pairedEntity,
-                                        String connectionType, EntityRef connectedEntityRef ) throws Exception;
+    public ConnectionRef connectionRef( EntityRef connectingEntity, String pairedConnectionType, 
+            EntityRef pairedEntity, String connectionType, EntityRef connectedEntityRef ) 
+            throws Exception;
 
     public ConnectionRef connectionRef( EntityRef connectingEntity, ConnectedEntityRef... connections );
 
     /**
-     * Disconnects two connected entities with the specified connection type. Connections are directional relationships
-     * that can be traversed in either direction.
-     *
+     * Disconnects two connected entities with the specified connection type. Connections are 
+     * directional relationships that can be traversed in either direction.
      *
      * @throws Exception the exception
      */
@@ -430,8 +441,8 @@ public interface EntityManager {
 
 
     /**
-     * Gets the entities of the specified type connected to the specified entity, optionally matching the specified
-     * connection types and/or entity types. Returns a list of entity ids.
+     * Gets the entities of the specified type connected to the specified entity, optionally 
+     * matching the specified connection types and/or entity types. Returns a list of entity ids.
      *
      * @param entityId an entity reference
      * @param connectionType type of connection or null.
@@ -441,11 +452,12 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public Results getConnectedEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                         Level resultsLevel ) throws Exception;
+    public Results getConnectedEntities( EntityRef entityRef, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception;
 
     /**
-     * Gets the entities connecting to this entity, optionally with the specified connection type and/or entity type.
+     * Gets the entities connecting to this entity, optionally with the specified connection 
+     * type and/or entity type.
      * <p/>
      * e.g. "get users who have favorited this place"
      *
@@ -457,11 +469,10 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public Results getConnectingEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                          Level resultsLevel ) throws Exception;
+    public Results getConnectingEntities( EntityRef entityRef, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception;
 
-
-    public Results getConnectingEntities(UUID uuid, String connectionType,
+    public Results getConnectingEntities( EntityRef entityRef, String connectionType,
     		String entityType, Level level, int count) throws Exception;
 
 	public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception;

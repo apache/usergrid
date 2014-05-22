@@ -40,14 +40,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
 
 
 /** @author tnine */
 @Concurrent()
 public class QueryProcessorTest {
 
-    @Test @Ignore // not needed for Core Persistence @Ignore // not needed for Core Persistence
+    @Test 
     public void equality() throws Exception {
         String queryString = "select * where a = 5";
 
@@ -73,7 +72,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence @Ignore // not needed for Core Persistence
+    @Test
     public void lessThan() throws Exception {
         String queryString = "select * where a < 5";
 
@@ -99,7 +98,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence @Ignore // not needed for Core Persistence
+    @Test
     public void lessThanEquals() throws Exception {
         String queryString = "select * where a <= 5";
 
@@ -125,7 +124,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void greaterThan() throws Exception {
         String queryString = "select * where a > 5";
 
@@ -151,7 +150,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void greaterThanEquals() throws Exception {
         String queryString = "select * where a >= 5";
 
@@ -177,7 +176,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void contains() throws Exception {
         String queryString = "select * where a contains 'foo'";
 
@@ -206,7 +205,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void containsLower() throws Exception {
         String queryString = "select * where a contains 'FOO'";
 
@@ -235,7 +234,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void containsRange() throws Exception, PersistenceException {
         String queryString = "select * where a contains 'foo*'";
 
@@ -264,7 +263,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void within() throws Exception {
         String queryString = "select * where a within .5 of 157.00, 0.00";
 
@@ -286,7 +285,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void andEquality() throws Exception {
         assertAndQuery( "select * where a = 1 and b = 2 and c = 3" );
         assertAndQuery( "select * where a = 1 AND b = 2 and c = 3" );
@@ -340,7 +339,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void orEquality() throws Exception {
         assertOrQuery( "select * where a = 1 or b = 2" );
         assertOrQuery( "select * where a = 1 OR b = 2" );
@@ -390,7 +389,7 @@ public class QueryProcessorTest {
 
 
     /** Tests that when properties are not siblings, they are properly assigned to a SliceNode */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void nestedCompression() throws Exception {
         String queryString =
                 "select * where (a > 1 and b > 10 and a < 10 and b < 20 ) or ( c >= 20 and d >= 30 and c <= 30 and d "
@@ -457,7 +456,7 @@ public class QueryProcessorTest {
 
 
     /** Tests that when there are multiple or with and clauses, the tree is constructed correctly */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void nestedOrCompression() throws Exception {
         String queryString =
                 "select * where ((a > 1 and  a < 10) or (b > 10 and b < 20 )) or (( c >= 20 and c <= 30 ) or (d >= 30"
@@ -534,7 +533,7 @@ public class QueryProcessorTest {
 
 
     /** Tests that when NOT is not the root operand the tree has a different root */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void andNot() throws Exception {
         String queryString = "select * where a > 1 and not b = 2";
 
@@ -579,7 +578,7 @@ public class QueryProcessorTest {
 
 
     /** Tests that when NOT is the root operand, a full scan range is performed. */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void notRootOperand() throws Exception {
         String queryString = "select * where not b = 2";
 
@@ -608,7 +607,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void stringWithSpaces() throws Exception {
         String queryString = "select * where a = 'foo with bar'";
 
@@ -637,7 +636,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void fieldWithDash() throws Exception {
         String queryString = "select * where a-foo = 5";
 
@@ -665,7 +664,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void stringWithDash() throws Exception {
         String queryString = "select * where a = 'foo-bar'";
 
@@ -694,7 +693,7 @@ public class QueryProcessorTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void uuidParse() throws Exception {
 
         //    UUID value = UUID.fromString("4b91a9c2-86a1-11e2-b7fa-68a86d52fa56");

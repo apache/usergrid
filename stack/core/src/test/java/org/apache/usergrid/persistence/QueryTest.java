@@ -26,9 +26,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.query.Query.SortDirection;
 import org.apache.usergrid.persistence.index.query.Query.SortPredicate;
-import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.index.query.tree.Equal;
@@ -45,7 +45,6 @@ import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import org.junit.Ignore;
 
 
 @Concurrent()
@@ -54,7 +53,7 @@ public class QueryTest {
     private static final Logger LOG = LoggerFactory.getLogger( QueryTest.class );
 
 
-    @Test @Ignore // need to fix the old parser for this to work 
+    @Test 
     public void testQueryTree() throws Exception {
         LOG.info( "testQuery" );
 
@@ -190,7 +189,7 @@ public class QueryTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void testFromJson() throws QueryParseException {
         String s = "{\"filter\":\"a contains 'ed'\"}";
         Query q = Query.fromJsonString( s );
@@ -203,7 +202,7 @@ public class QueryTest {
     }
 
 
-    @Test @Ignore // need to fix the old parser for this to work 
+    @Test 
     public void testCompoundQueryWithNot() throws QueryParseException {
         String s = "name contains 'm' and not name contains 'grover'";
         Query q = Query.fromQL( s );

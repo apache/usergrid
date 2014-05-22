@@ -1587,7 +1587,7 @@ public class CollectionIT extends AbstractCoreIT {
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
-        String s = "select * where name = 'bob' order by asc";
+        String s = "select * where name = 'bob' order by";
 
         String error = null;
         String entityType = null;
@@ -1620,7 +1620,7 @@ public class CollectionIT extends AbstractCoreIT {
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
-        String s = "select * where name = 'bob' order by desc";
+        String s = "select * where name = 'bob' order by";
 
         String error = null;
         String entityType = null;

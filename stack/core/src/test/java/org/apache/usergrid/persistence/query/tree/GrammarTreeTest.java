@@ -56,7 +56,7 @@ import org.junit.Ignore;
 public class GrammarTreeTest {
 
     /** Simple test that constructs and AST from the ANTLR generated files */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void equality() throws RecognitionException {
 
         String queryString = "select * where a = 5";
@@ -79,7 +79,7 @@ public class GrammarTreeTest {
 
 
     /** Simple test that constructs and AST from the ANTLR generated files */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void lessThan() throws RecognitionException {
 
         String queryString = "select * where a < 5";
@@ -121,7 +121,7 @@ public class GrammarTreeTest {
 
 
     /** Simple test that constructs and AST from the ANTLR generated files */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void lessThanEqual() throws RecognitionException {
 
         String queryString = "select * where a <= 5";
@@ -161,7 +161,7 @@ public class GrammarTreeTest {
 
 
     /** Simple test that constructs and AST from the ANTLR generated files */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void greaterThan() throws RecognitionException {
 
         String queryString = "select * where a > 5";
@@ -201,7 +201,7 @@ public class GrammarTreeTest {
 
 
     /** Simple test that constructs and AST from the ANTLR generated files */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void greaterThanEqual() throws RecognitionException {
 
         String queryString = "select * where a >= 5";
@@ -241,7 +241,7 @@ public class GrammarTreeTest {
 
 
     /** Test basic && expression */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void andExpression() throws RecognitionException {
 
         String queryString = "select * where a = 1 and b > 2";
@@ -271,7 +271,7 @@ public class GrammarTreeTest {
 
 
     /** Test basic || expression */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void orExpression() throws RecognitionException {
 
         String queryString = "select * where a = 1 or b > 2";
@@ -301,7 +301,7 @@ public class GrammarTreeTest {
 
 
     /** Test basic not expression */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void notExpression() throws RecognitionException {
 
         String queryString = "select * where not a = 1";
@@ -326,7 +326,7 @@ public class GrammarTreeTest {
 
 
     /** Test basic not expression */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void complexExpression() throws RecognitionException {
 
         String queryString = "select * where not a = 1";
@@ -351,7 +351,7 @@ public class GrammarTreeTest {
 
 
     /** Test basic || expression */
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void selectAll() throws RecognitionException {
 
         String queryString = "select * where a = 1 or b > 2";
@@ -369,7 +369,7 @@ public class GrammarTreeTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void selectGeo() throws RecognitionException {
         String queryString = "select * where a within .1 of -40.343666, 175.630917";
 
@@ -389,7 +389,7 @@ public class GrammarTreeTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void selectGeoWithInt() throws RecognitionException {
         String queryString = "select * where a within 1 of -40.343666, 175.630917";
 
@@ -409,7 +409,7 @@ public class GrammarTreeTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void selectDistance() throws RecognitionException {
         String queryString = "select * where a contains 'foo'";
 
@@ -427,7 +427,7 @@ public class GrammarTreeTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void selectField() throws RecognitionException {
 
         String queryString = "select c where a = 1 or b > 2";
@@ -445,7 +445,7 @@ public class GrammarTreeTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void selectRename() throws RecognitionException {
 
         String queryString = "select {source:target} where a = 1 or b > 2";
@@ -463,7 +463,7 @@ public class GrammarTreeTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void containsOr() throws Exception {
         String queryString = "select * where keywords contains 'hot' or title contains 'hot'";
 
@@ -494,7 +494,7 @@ public class GrammarTreeTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void stringLower() throws Exception {
         String queryString = "select * where  title = 'Hot'";
 
@@ -513,7 +513,7 @@ public class GrammarTreeTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void nestedBooleanLogic() throws Exception {
         String queryString = "select * where field1 = 'foo' AND (field2 = 'bar' OR field2 = 'baz')";
 
@@ -547,7 +547,7 @@ public class GrammarTreeTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void uuidParse() throws RecognitionException {
         String queryString = "select * where  title = c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0";
 
@@ -566,7 +566,7 @@ public class GrammarTreeTest {
     }
 
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void badOrderByGrammar() throws QueryParseException {
         // from isn't allowed
         String s = "select * where name = 'bob' order by";
@@ -584,7 +584,7 @@ public class GrammarTreeTest {
                 error );
     }
 
-    @Test @Ignore // not needed for Core Persistence
+    @Test 
     public void badOperand() throws QueryParseException {
            // from isn't allowed
            String s = "select * where name != 'bob'";

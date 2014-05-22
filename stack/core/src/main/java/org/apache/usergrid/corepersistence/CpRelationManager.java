@@ -32,7 +32,6 @@ import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
@@ -59,11 +58,11 @@ import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.index.query.tree.Operand;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import org.apache.usergrid.utils.MapUtils;
@@ -193,8 +192,6 @@ public class CpRelationManager implements RelationManager {
                     continue;
                 }
 
-                String collName = edge.getType().substring(0, edge.getType().indexOf(COLLECTION_SUFFIX));
-
                 CollectionScope collScope = new CollectionScopeImpl( 
                     this.applicationScope.getApplication(), 
                     this.applicationScope.getApplication(), 
@@ -304,7 +301,7 @@ public class CpRelationManager implements RelationManager {
 
         if ( memberEntity == null ) {
             throw new RuntimeException("Unable to load entity uuid=" 
-                    + memberRef.getUuid() + " type=" + memberRef.getType());
+                + memberRef.getUuid() + " type=" + memberRef.getType());
         }
 
         // create graph edge connection from head entity to member entity
@@ -330,14 +327,13 @@ public class CpRelationManager implements RelationManager {
         EntityIndex allCollectionIndex = managerCache.getEntityIndex(allCollectionsIndexScope);
         allCollectionIndex.index( memberEntity );
 
-        logger.debug("Added entity {}:{} to collection {}", 
-            new String[] { memberRef.getUuid().toString(), memberRef.getType(), collName }); 
+        logger.debug("Added entity {}:{} to collection {}", new String[] { 
+            memberRef.getUuid().toString(), memberRef.getType(), collName }); 
 
-        logger.debug("With head entity scope is {}:{}:{}",
-            new String[] { 
-                headEntityScope.getApplication().toString(), 
-                headEntityScope.getOwner().toString(),
-                headEntityScope.getName()}); 
+        logger.debug("With head entity scope is {}:{}:{}", new String[] { 
+            headEntityScope.getApplication().toString(), 
+            headEntityScope.getOwner().toString(),
+            headEntityScope.getName()}); 
 
         return em.get( memberRef );
     }
@@ -464,10 +460,6 @@ public class CpRelationManager implements RelationManager {
         CollectionInfo collection = 
             getDefaultSchema().getCollection( headEntity.getType(), collName );
 
-        query.setEntityType( collection.getType() );
-
-        //org.apache.usergrid.persistence.index.query.Query cpQuery = createCpQuery( query );
-
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
@@ -481,155 +473,13 @@ public class CpRelationManager implements RelationManager {
                 headEntityScope.getOwner().toString(),
                 collName }); 
 
-        CandidateResults crs = ei.search( addIdentifiers(query) );
+        query.setEntityType( collection.getType() );
+        query = adjustQuery( query );
+
+        CandidateResults crs = ei.search( query );
 
         return buildResults( query, crs, collName );
     }
-
-
-//    private org.apache.usergrid.persistence.index.query.Query createCpQuery( Query query ) {
-//
-//        org.apache.usergrid.persistence.index.query.Query cpQuery =
-//           new org.apache.usergrid.persistence.index.query.Query();
-//
-//        cpQuery.setCollection( query.getCollection() );
-//        cpQuery.setConnectionType( query.getConnectionType() );
-//        cpQuery.setCursor( query.getCursor() );
-//        cpQuery.setEntityType( query.getEntityType() );
-//        cpQuery.setFinishTime( query.getFinishTime() );
-//        cpQuery.setLimit( query.getLimit() );
-//        cpQuery.setPad( query.isPad() );
-//        cpQuery.setPermissions( query.getPermissions() );
-//        cpQuery.setQl( query.getQl() );
-//        cpQuery.setReversed( query.isReversed() );
-//        cpQuery.setStartTime( query.getStartTime() );
-//
-//        for ( Query.SortPredicate sp : query.getSortPredicates() ) {
-//
-//            org.apache.usergrid.persistence.index.query.Query.SortDirection newdir = 
-//                org.apache.usergrid.persistence.index.query.Query.SortDirection.ASCENDING;
-//
-//            if ( sp.getDirection().equals( Query.SortDirection.DESCENDING )) {
-//                newdir =org.apache.usergrid.persistence.index.query.Query.SortDirection.DESCENDING;
-//            }
-//
-//            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
-//                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
-//                    sp.getPropertyName(), newdir );
-//
-//            cpQuery.addSort( newsp );
-//        }
-//
-//        if ( cpQuery.isReversed() ) {
-//
-//            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
-//                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
-//                    PROPERTY_CREATED, 
-//                        org.apache.usergrid.persistence.index.query.Query.SortDirection.DESCENDING );
-//
-//            cpQuery.addSort( newsp ); 
-//        }
-//
-//        if ( cpQuery.getSortPredicates().isEmpty() ) {
-//
-//            org.apache.usergrid.persistence.index.query.Query.SortPredicate newsp = 
-//                new org.apache.usergrid.persistence.index.query.Query.SortPredicate( 
-//                    PROPERTY_CREATED, 
-//                        org.apache.usergrid.persistence.index.query.Query.SortDirection.ASCENDING);
-//
-//            cpQuery.addSort( newsp ); 
-//        }
-//
-//        List<org.apache.usergrid.persistence.index.query.tree.Operand> 
-//            filterClauses = query.getFilterClauses();
-//
-//        for ( Operand oldop : filterClauses ) {
-//            
-//            if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.ContainsOperand ) {
-//
-//                org.apache.usergrid.persistence.index.query.tree.ContainsOperand casted = 
-//                    (org.apache.usergrid.persistence.index.query.tree.ContainsOperand)oldop;
-//                cpQuery.addContainsFilter( 
-//                    casted.getProperty().getText(), casted.getLiteral().getValue().toString());
-//
-//            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.Equal ) {
-//
-//                org.apache.usergrid.persistence.index.query.tree.Equal casted = 
-//                    (org.apache.usergrid.persistence.index.query.tree.Equal)oldop;
-//                cpQuery.addEqualityFilter(
-//                        casted.getProperty().getText(), casted.getLiteral().getValue() );
-//
-//            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.GreaterThan ) {
-//
-//                org.apache.usergrid.persistence.index.query.tree.GreaterThan casted = 
-//                    (org.apache.usergrid.persistence.index.query.tree.GreaterThan)oldop;
-//                cpQuery.addGreaterThanFilter(
-//                        casted.getProperty().getText(), casted.getLiteral().getValue());
-//
-//            } else if(oldop instanceof org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual){
-//
-//                org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual casted = 
-//                    (org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual)oldop;
-//                cpQuery.addGreaterThanEqualFilter(
-//                        casted.getProperty().getText(), casted.getLiteral().getValue());
-//
-//            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.LessThan ) {
-//
-//                org.apache.usergrid.persistence.index.query.tree.LessThan casted = 
-//                    (org.apache.usergrid.persistence.index.query.tree.LessThan)oldop;
-//                cpQuery.addLessThanFilter(
-//                        casted.getProperty().getText(), casted.getLiteral().getValue());
-//
-//            } else if ( oldop instanceof org.apache.usergrid.persistence.index.query.tree.LessThanEqual) {
-//
-//                org.apache.usergrid.persistence.index.query.tree.LessThanEqual casted = 
-//                    (org.apache.usergrid.persistence.index.query.tree.LessThanEqual)oldop;
-//                cpQuery.addLessThanEqualFilter(
-//                        casted.getProperty().getText(), casted.getLiteral().getValue());
-//            }
-//        }
-//
-//        if ( cpQuery.getRootOperand() == null ) {
-//
-//            // a name alias or email alias was specified
-//            if ( query.containsSingleNameOrEmailIdentifier() ) {
-//
-//                Identifier ident = query.getSingleIdentifier();
-//
-//                // an email was specified.  An edge case that only applies to users.  
-//                // This is fulgy to put here, but required.
-//                if ( query.getEntityType().equals( User.ENTITY_TYPE ) && ident.isEmail() ) {
-//
-//                    org.apache.usergrid.persistence.index.query.Query newQuery = 
-//                        org.apache.usergrid.persistence.index.query.Query.fromQL(
-//                            "select * where email='" + query.getSingleNameOrEmailIdentifier()+ "'");
-//
-//                    cpQuery.setRootOperand( newQuery.getRootOperand() );
-//                }
-//
-//                // use the ident with the default alias. could be an email
-//                else {
-//
-//                    org.apache.usergrid.persistence.index.query.Query newQuery = 
-//                        org.apache.usergrid.persistence.index.query.Query.fromQL(
-//                            "select * where name='" + query.getSingleNameOrEmailIdentifier()+ "'");
-//
-//                    cpQuery.setRootOperand( newQuery.getRootOperand() );
-//                }
-//
-//            } else if ( query.containsSingleUuidIdentifier() ) {
-//
-//                org.apache.usergrid.persistence.index.query.Query newQuery = 
-//                    org.apache.usergrid.persistence.index.query.Query.fromQL(
-//                        "select * where uuid='" + query.getSingleUuidIdentifier() + "'");
-//
-//                cpQuery.setRootOperand( newQuery.getRootOperand() );
-//            }
-//
-//        }
-//
-//        return cpQuery;
-//    }
 
 
     @Override
@@ -718,11 +568,13 @@ public class CpRelationManager implements RelationManager {
     @Override
     public ConnectionRef connectionRef(String pairedConnectionType, EntityRef pairedEntity, 
             String connectionType, EntityRef connectedEntityRef) throws Exception {
+
         throw new UnsupportedOperationException("Paired connections not supported"); 
     }
 
     @Override
     public ConnectionRef connectionRef(ConnectedEntityRef... connections) {
+
         throw new UnsupportedOperationException("Paired connections not supported"); 
     }
 
@@ -749,19 +601,23 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Results getConnectedEntities(String connectionType, String connectedEntityType, 
             Level resultsLevel) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        Query query = new Query();
+        query.setConnectionType(connectionType);
+        query.setEntityType(connectedEntityType);
+        return searchConnectedEntities( query );
     }
 
     @Override
     public Results getConnectingEntities(String connectionType, String connectedEntityType, 
             Level resultsLevel) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        throw new UnsupportedOperationException("Not supported yet.");     
     }
 
     @Override
     public Results getConnectingEntities(String connectionType, String entityType, 
             Level level, int count) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        throw new UnsupportedOperationException("Not supported yet.");     
     }
 
     @Override
@@ -773,51 +629,28 @@ public class CpRelationManager implements RelationManager {
 
         headEntity = em.validate( headEntity );
 
-//        org.apache.usergrid.persistence.index.query.Query cpQuery = createCpQuery( query );
-
+        // search across all types of collections of the head-entity
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             ALL_TYPES);
-
         EntityIndex ei = managerCache.getEntityIndex(indexScope);
       
-        logger.debug("Searching connections from all-targets scope {}:{}:{}",
-            new String[] { 
-                indexScope.getApplication().toString(), 
-                indexScope.getOwner().toString(),
-                indexScope.getName()}); 
+        logger.debug("Searching connections from all-types scope {}:{}:{}", new String[] { 
+            indexScope.getApplication().toString(), 
+            indexScope.getOwner().toString(),
+            indexScope.getName()}); 
 
-        // get list of all connection types from this entity
-        List<String> connectionTypes = new ArrayList<String>();
-
-        if ( query.getConnectionType() != null ) {
-
-            // query specifies type
-            connectionTypes.add( query.getConnectionType() );
-
-        } else {
-
-            // find all outgoing connection types of entity
-            GraphManager gm = managerCache.getGraphManager(applicationScope);
-
-            Observable<String> types= gm.getEdgeTypesFromSource( 
-                new SimpleSearchEdgeType( cpHeadEntity.getId(), null ));
-
-            Iterator<String> iter = types.toBlockingObservable().getIterator();
-            while ( iter.hasNext() ) {
-                connectionTypes.add( iter.next() );
-            }
-        }
-
-        CandidateResults crs = ei.search( addIdentifiers(query) );
+        query = adjustQuery( query );
+        CandidateResults crs = ei.search( query );
 
         return buildResults( query , crs, query.getConnectionType() );
     }
 
 
-    private Query addIdentifiers( Query query ) {
+    private Query adjustQuery( Query query ) {
 
+        // handle the select by identifier case
         if ( query.getRootOperand() == null ) {
 
             // a name alias or email alias was specified
@@ -829,32 +662,42 @@ public class CpRelationManager implements RelationManager {
                 // This is fulgy to put here, but required.
                 if ( query.getEntityType().equals( User.ENTITY_TYPE ) && ident.isEmail() ) {
 
-                    org.apache.usergrid.persistence.index.query.Query newQuery = 
-                        org.apache.usergrid.persistence.index.query.Query.fromQL(
-                            "select * where email='" + query.getSingleNameOrEmailIdentifier()+ "'");
-
+                    Query newQuery = Query.fromQL(
+                        "select * where email='" + query.getSingleNameOrEmailIdentifier()+ "'");
                     query.setRootOperand( newQuery.getRootOperand() );
                 }
 
                 // use the ident with the default alias. could be an email
                 else {
 
-                    org.apache.usergrid.persistence.index.query.Query newQuery = 
-                        org.apache.usergrid.persistence.index.query.Query.fromQL(
-                            "select * where name='" + query.getSingleNameOrEmailIdentifier()+ "'");
-
+                    Query newQuery = Query.fromQL(
+                        "select * where name='" + query.getSingleNameOrEmailIdentifier()+ "'");
                     query.setRootOperand( newQuery.getRootOperand() );
                 }
 
             } else if ( query.containsSingleUuidIdentifier() ) {
 
-                org.apache.usergrid.persistence.index.query.Query newQuery = 
-                    org.apache.usergrid.persistence.index.query.Query.fromQL(
+                Query newQuery = Query.fromQL(
                         "select * where uuid='" + query.getSingleUuidIdentifier() + "'");
-
                 query.setRootOperand( newQuery.getRootOperand() );
             }
         }
+
+        if ( query.isReversed() ) {
+
+            Query.SortPredicate newsp = new Query.SortPredicate( 
+                PROPERTY_CREATED, Query.SortDirection.DESCENDING );
+            query.addSort( newsp ); 
+        }
+
+        // reverse chrono order by default
+        if ( query.getSortPredicates().isEmpty() ) {
+
+            Query.SortPredicate newsp = new Query.SortPredicate( 
+                PROPERTY_CREATED, Query.SortDirection.ASCENDING);
+            query.addSort( newsp ); 
+        }
+
 
         return query;
     }
@@ -934,7 +777,7 @@ public class CpRelationManager implements RelationManager {
 
                 if ( cr.getVersion().compareTo(e.getVersion()) < 0 )  {
                     logger.debug("Stale version uuid:{} type:{} v:{}", 
-                        new Object[] {cr.getId().getUuid(), cr.getId().getType(), cr.getVersion()} );
+                        new Object[] {cr.getId().getUuid(), cr.getId().getType(), cr.getVersion()});
                     continue;
                 }
 

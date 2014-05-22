@@ -2679,24 +2679,27 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public Results getConnectedEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                         Level resultsLevel ) throws Exception {
-        return getRelationManager( ref( entityId ) )
+    public Results getConnectedEntities( EntityRef entityRef, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception {
+
+        return getRelationManager( entityRef )
                 .getConnectedEntities( connectionType, connectedEntityType, resultsLevel );
     }
 
 
     @Override
-    public Results getConnectingEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                          Level resultsLevel ) throws Exception {
-        return getConnectingEntities(entityId, connectionType, connectedEntityType, resultsLevel, 0);
+    public Results getConnectingEntities( EntityRef entityRef, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception {
+
+        return getConnectingEntities( entityRef, connectionType, connectedEntityType, resultsLevel, 0);
     }
 
 
     @Override
-	public Results getConnectingEntities(UUID uuid, String connectionType,
+	public Results getConnectingEntities( EntityRef entityRef, String connectionType,
 			String entityType, Level level, int count) throws Exception {
-		return getRelationManager( ref( uuid ) )
+
+		return getRelationManager( entityRef )
                 .getConnectingEntities( connectionType, entityType, level, count );
 	}
 

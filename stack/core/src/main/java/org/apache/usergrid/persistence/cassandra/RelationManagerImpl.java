@@ -1726,7 +1726,7 @@ public class RelationManagerImpl implements RelationManager {
                 results = em.getCollection( headEntity, srcRelationName, null, 5000, Level.REFS, false );
             }
             else {
-                results = em.getConnectedEntities( headEntity.getUuid(), srcRelationName, null, Level.REFS );
+                results = em.getConnectedEntities( headEntity, srcRelationName, null, Level.REFS );
             }
 
             if ( ( results != null ) && ( results.size() > 0 ) ) {

@@ -73,7 +73,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( firstUserEntity, "likes", secondUserEntity );
 
-        Results r = em.getConnectedEntities( firstUserEntity.getUuid(), "likes", null, Level.IDS );
+        Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.IDS );
 
         List<ConnectionRef> connections = r.getConnections();
 
@@ -187,10 +187,11 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         Entity en = em.get( new SimpleEntityRef( entityType, entityId));
 
-        Results results = em.getConnectedEntities( en.getUuid(), null, null, Level.REFS );
+        Results results = em.getConnectedEntities( en, null, null, Level.REFS );
 
         LOG.info( "----------------------------------------------------" );
-        assertEquals( "Expected " + expectedCount + " connections", expectedCount, results.getConnections().size() );
+        assertEquals( "Expected " + expectedCount + " connections", 
+                expectedCount, results.getConnections().size() );
         // return connections;
         return null;
     }
@@ -266,7 +267,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         em.createConnection( secondUserEntity, "likes", arrogantbutcher );
 
 
-        Results r = em.getConnectedEntities( firstUserEntity.getUuid(), "likes", "restaurant", Level.IDS );
+        Results r = em.getConnectedEntities( firstUserEntity, "likes", "restaurant", Level.IDS );
 
         List<ConnectionRef> connections = r.getConnections();
 
@@ -280,7 +281,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         assertFalse( em.isConnectionMember( firstUserEntity, "likes", arrogantbutcher ) );
 
         // check we don't get the restaurant from the second user
-        r = em.getConnectedEntities( secondUserEntity.getUuid(), "likes", "restaurant", Level.IDS );
+        r = em.getConnectedEntities( secondUserEntity, "likes", "restaurant", Level.IDS );
 
         connections = r.getConnections();
 

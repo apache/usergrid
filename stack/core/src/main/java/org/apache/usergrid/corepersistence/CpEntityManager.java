@@ -967,27 +967,34 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Set<String> getConnectionTypes(EntityRef ref) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager(ref).getConnectionTypes();
     }
 
     @Override
     public Results getConnectedEntities(
-            UUID entityId, String connectionType, String connectedEntityType, 
+            EntityRef entityRef, String connectionType, String connectedEntityType, 
             Level resultsLevel) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager( entityRef )
+                .getConnectedEntities( connectionType, connectedEntityType, resultsLevel );
     }
 
     @Override
     public Results getConnectingEntities(
-            UUID entityId, String connectionType, String connectedEntityType, 
+            EntityRef entityRef, String connectionType, String connectedEntityType, 
             Level resultsLevel) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager( entityRef )
+                .getConnectingEntities(connectionType, connectedEntityType, resultsLevel);
     }
 
     @Override
-    public Results getConnectingEntities(UUID uuid, String connectionType, 
+    public Results getConnectingEntities(EntityRef entityRef, String connectionType, 
             String entityType, Level level, int count) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager( entityRef )
+                .getConnectingEntities(connectionType, entityType, level, count);
     }
 
     @Override
@@ -1000,7 +1007,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getConnectionIndexes(
             EntityRef entity, String connectionType) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager( entity ).getConnectionIndexes(connectionType);
     }
 
     @Override

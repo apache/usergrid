@@ -22,8 +22,6 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
-import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.query.ir.QueryNode;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 import org.apache.usergrid.persistence.query.ir.SearchVisitor;

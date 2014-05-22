@@ -194,8 +194,10 @@ public class Query {
         ql = ql.trim();
 
         String qlt = ql.toLowerCase();
-        if ( !qlt.startsWith( "select" ) && !qlt.startsWith( "insert" ) && !qlt.startsWith( "update" ) && !qlt
-                .startsWith( "delete" ) ) {
+        if (       !qlt.startsWith( "select" ) 
+                && !qlt.startsWith( "insert" ) 
+                && !qlt.startsWith( "update" ) && !qlt.startsWith( "delete" ) ) {
+
             if ( qlt.startsWith( "order by" ) ) {
                 ql = "select * " + ql;
             }
