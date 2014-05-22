@@ -67,7 +67,7 @@ public class MvccLESSTransientTest {
         final UUID version = UUIDGenerator.newTimeUUID();
 
         for ( Stage stage : Stage.values() ) {
-            MvccLogEntry saved = new MvccLogEntryImpl( id, version, stage );
+            MvccLogEntry saved = new MvccLogEntryImpl( id, version, stage, MvccLogEntry.Status.COMPLETE );
             logEntryStrategy.write( context, saved ).execute();
 
             //Read it back after the timeout
