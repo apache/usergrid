@@ -89,7 +89,7 @@ public class MarkStart implements Func1<CollectionIoEvent<Id>, CollectionIoEvent
         final CollectionScope collectionScope = entityIoEvent.getEntityCollection();
 
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.ACTIVE, MvccLogEntry.Status.STARTED );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.ACTIVE, MvccLogEntry.State.DELETED );
 
         MutationBatch write = logStrategy.write( collectionScope, startEntry );
 

@@ -257,7 +257,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
 
     /**
-     * Simple bean wrapper for status and entity
+     * Simple bean wrapper for state and entity
      */
     private static class EntityWrapper {
         private final MvccEntity.Status status;

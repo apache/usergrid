@@ -21,9 +21,10 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.slf4j.Logger;
@@ -99,7 +100,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
-                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED );
+                Stage.COMMITTED, MvccLogEntry.State.DELETED );
 
         MutationBatch logMutation = logStrat.write( collectionScope, startEntry );
 
