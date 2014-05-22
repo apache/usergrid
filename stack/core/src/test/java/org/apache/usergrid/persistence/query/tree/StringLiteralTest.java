@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence.query.tree;
 
 
+import org.apache.usergrid.persistence.index.query.tree.StringLiteral;
 import org.antlr.runtime.CommonToken;
 import org.junit.Test;
 

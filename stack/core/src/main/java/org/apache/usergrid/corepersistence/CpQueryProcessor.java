@@ -19,7 +19,7 @@ package org.apache.usergrid.corepersistence;
 import java.nio.ByteBuffer;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
 import org.apache.usergrid.persistence.query.ir.QueryNode;
@@ -35,8 +35,12 @@ public class CpQueryProcessor implements QueryProcessor {
     EntityRef entityRef;
     String collectionName;
 
-    public CpQueryProcessor( EntityManager em, EntityRef entityRef, String collectionName ) {
+
+    public CpQueryProcessor( 
+            EntityManager em, Query query, EntityRef entityRef, String collectionName ) {
+
         this.em = em;
+        this.query = query;
         this.entityRef = entityRef;
         this.collectionName = collectionName;
     }
@@ -58,7 +62,7 @@ public class CpQueryProcessor implements QueryProcessor {
 
     @Override
     public EntityManager getEntityManager() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return em;
     }
 
     @Override
@@ -85,5 +89,6 @@ public class CpQueryProcessor implements QueryProcessor {
     public void setQuery(Query query) {
         this.query = query;
     }
+
     
 }

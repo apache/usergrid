@@ -19,7 +19,7 @@ package org.apache.usergrid.persistence.index.query.tree;
 
 
 import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.index.exceptions.PersistenceException;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
 
 
 /** @author tnine */
@@ -42,7 +42,7 @@ public class ContainsOperand extends EqualityOperand {
      * .query.tree.QueryVisitor)
      */
     @Override
-    public void visit( QueryVisitor visitor ) throws PersistenceException {
+    public void visit( QueryVisitor visitor ) throws IndexException {
         visitor.visit( this );
     }
 

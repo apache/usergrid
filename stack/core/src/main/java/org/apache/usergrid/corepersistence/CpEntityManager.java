@@ -34,16 +34,13 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import org.apache.usergrid.persistence.CollectionRef;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.CounterResolution;
-import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.RoleRef;
@@ -75,6 +72,9 @@ import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundExcept
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -219,10 +219,10 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        Entity entity = new DynamicEntity( entityRef.getType(), cpEntity.getId().getUuid() );
-        entity.setUuid( cpEntity.getId().getUuid() );
-        Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
-        entity.addProperties( entityMap );
+        Class clazz = Schema.getDefaultSchema().getEntityClass(entityRef.getType());
+
+        Entity entity = EntityFactory.newEntity( entityRef.getUuid(), entityRef.getType(), clazz);
+        entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
 
         return entity; 
     }
@@ -282,7 +282,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Results get(Collection<UUID> entityIds, Class<? extends Entity> entityClass, 
-            Results.Level resultsLevel) throws Exception {
+            Level resultsLevel) throws Exception {
 
         String type = getDefaultSchema().getEntityType( entityClass );
 
@@ -303,7 +303,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Results get(Collection<UUID> entityIds, String entityType, 
-            Class<? extends Entity> entityClass, Results.Level resultsLevel) throws Exception {
+            Class<? extends Entity> entityClass, Level resultsLevel) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
     
@@ -498,19 +498,20 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public EntityRef getAlias(String aliasType, String alias) throws Exception {
-        return getAlias( applicationId, aliasType, alias );
+
+        return getAlias( new SimpleEntityRef("application", applicationId), aliasType, alias );
     }
 
     @Override
     public EntityRef getAlias(
-            UUID ownerId, String collectionType, String aliasValue) throws Exception {
+            EntityRef ownerRef, String collectionType, String aliasValue) throws Exception {
 
-        Assert.notNull( ownerId, "ownerId is required" );
+        Assert.notNull( ownerRef, "ownerRef is required" );
         Assert.notNull( collectionType, "collectionType is required" );
         Assert.notNull( aliasValue, "aliasValue is required" );
 
         Map<String, EntityRef> results = getAlias( 
-             ownerId, collectionType, Collections.singletonList( aliasValue ) );
+             ownerRef, collectionType, Collections.singletonList( aliasValue ) );
 
         if ( results == null || results.size() == 0 ) {
             return null;
@@ -521,7 +522,7 @@ public class CpEntityManager implements EntityManager {
         if ( results.size() > 1 ) {
             logger.warn("More than 1 entity with Owner id '{}' of type '{}' and alias '{}' exists. "
                     + " This is a duplicate alias, and needs audited", 
-                    new Object[] { ownerId, collectionType, aliasValue } );
+                    new Object[] { ownerRef, collectionType, aliasValue } );
         }
 
         return results.get( aliasValue );
@@ -531,14 +532,14 @@ public class CpEntityManager implements EntityManager {
     public Map<String, EntityRef> getAlias(
             String aliasType, List<String> aliases) throws Exception {
 
-        return getAlias( applicationId, aliasType, aliases );
+        return getAlias( new SimpleEntityRef("application", applicationId), aliasType, aliases );
     }
 
     @Override
     public Map<String, EntityRef> getAlias(
-            UUID ownerId, String collName, List<String> aliases) throws Exception {
+            EntityRef ownerRef, String collName, List<String> aliases) throws Exception {
 
-        Assert.notNull( ownerId, "ownerId is required" );
+        Assert.notNull( ownerRef, "ownerRef is required" );
         Assert.notNull( collName, "collectionName is required" );
         Assert.notEmpty( aliases, "aliases are required" );
 
@@ -546,14 +547,28 @@ public class CpEntityManager implements EntityManager {
 
         Map<String, EntityRef> results = new HashMap<String, EntityRef>();
 
-//        for ( String alias : aliases ) {
-//            for ( UUID id : getUUIDsForUniqueProperty( ownerId, collName, propertyName, alias)) {
-//                results.put( alias, new SimpleEntityRef( collName, id ) );
-//            }
-//        }
+        for ( String alias : aliases ) {
+
+            Iterable<EntityRef> refs = 
+                    getEntityRefsForUniqueProperty( ownerRef, collName, propertyName, alias);
+
+            for ( EntityRef ref : refs ) {
+                results.put( alias, ref );
+            }
+        }
 
         return results;
     }
+
+    private Iterable<EntityRef> getEntityRefsForUniqueProperty(
+        EntityRef ownerRef, String collName, String propName, String alias) throws Exception {
+
+        Results results = getRelationManager(ownerRef).searchCollection( collName,
+            Query.fromQL("select * where " + propName + " = '" + alias + "'"));
+
+        return results.getRefs();
+    }
+
 
     @Override
     public EntityRef validate( EntityRef entityRef ) throws Exception {
@@ -838,7 +853,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Results getCollection(
             EntityRef entityRef, String collectionName, UUID startResult, int count, 
-            Results.Level resultsLevel, boolean reversed) throws Exception {
+            Level resultsLevel, boolean reversed) throws Exception {
 
         return getRelationManager(entityRef)
                 .getCollection(collectionName, startResult, count, resultsLevel, reversed);
@@ -846,7 +861,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Results getCollection(
-            UUID entityId, String collectionName, Query query, Results.Level resultsLevel) 
+            UUID entityId, String collectionName, Query query, Level resultsLevel) 
             throws Exception {
 
         throw new UnsupportedOperationException("Cannot get entity by UUID alone"); 
@@ -966,27 +981,34 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Set<String> getConnectionTypes(EntityRef ref) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager(ref).getConnectionTypes();
     }
 
     @Override
     public Results getConnectedEntities(
-            UUID entityId, String connectionType, String connectedEntityType, 
-            Results.Level resultsLevel) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+            EntityRef entityRef, String connectionType, String connectedEntityType, 
+            Level resultsLevel) throws Exception {
+
+        return getRelationManager( entityRef )
+                .getConnectedEntities( connectionType, connectedEntityType, resultsLevel );
     }
 
     @Override
     public Results getConnectingEntities(
-            UUID entityId, String connectionType, String connectedEntityType, 
-            Results.Level resultsLevel) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+            EntityRef entityRef, String connectionType, String connectedEntityType, 
+            Level resultsLevel) throws Exception {
+
+        return getRelationManager( entityRef )
+                .getConnectingEntities(connectionType, connectedEntityType, resultsLevel);
     }
 
     @Override
-    public Results getConnectingEntities(UUID uuid, String connectionType, 
-            String entityType, Results.Level level, int count) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public Results getConnectingEntities(EntityRef entityRef, String connectionType, 
+            String entityType, Level level, int count) throws Exception {
+
+        return getRelationManager( entityRef )
+                .getConnectingEntities(connectionType, entityType, level, count);
     }
 
     @Override
@@ -999,7 +1021,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getConnectionIndexes(
             EntityRef entity, String connectionType) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return getRelationManager( entity ).getConnectionIndexes(connectionType);
     }
 
     @Override
@@ -1123,7 +1146,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Results getUsersInGroupRole(
-            UUID groupId, String roleName, Results.Level level) throws Exception {
+            UUID groupId, String roleName, Level level) throws Exception {
         throw new UnsupportedOperationException("Not supported yet."); 
     }
 
@@ -1567,6 +1590,7 @@ public class CpEntityManager implements EntityManager {
 
         return cpEntity;
     }
+
 
 
 }
