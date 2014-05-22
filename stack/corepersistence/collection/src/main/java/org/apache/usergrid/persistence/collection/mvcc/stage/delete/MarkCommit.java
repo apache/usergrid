@@ -123,7 +123,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         //insert a "cleared" value into the versions.  Post processing should actually delete
         final MutationBatch entityMutation = entityStrat.mark( collectionScope, entityId, version );
 
-        //
+        //delete unique fields
         Observable<List<Field>> deleteFieldsObservable = Observable.create(new ObservableIterator<Field>("deleteColumns") {
             @Override
             protected Iterator<Field> getIterator() {
@@ -137,8 +137,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
                 }
                 return fieldIterator;
             }
-        }).subscribeOn(Schedulers.io())
-          .buffer(serializationFig.getBufferSize())
+        }).buffer(serializationFig.getBufferSize())
           .map(new Func1<List<Field>, List<Field>>() {
               @Override
               public List<Field> call(List<Field> fields) {
