@@ -2,6 +2,7 @@ package org.apache.usergrid.persistence.collection.util;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -51,15 +52,32 @@ public class RepairUtil {
         iter.pushback( mvccEntity );
         while(iter.hasNext()){
             mvccEntity = iter.next();
+            partialEntities.add( mvccEntity );
             if(mvccEntity.getStatus() == MvccEntity.Status.PARTIAL){
-                partialEntities.add( mvccEntity );
+                continue;
             }
             else{
-                partialEntities.add(mvccEntity);
-                List<ChangeLogEntry> chgPersist = changeLogGenerator.getChangeLog(partialEntities.iterator()
-                        ,partialEntities.get( 0 ).getVersion() );
 
-                return entityRepair( chgPersist,partialEntities,mvccEntity );
+                //reverse the list
+                Collections.reverse(partialEntities);
+
+                //
+                List<ChangeLogEntry> chgPersist = new ArrayList<>();
+                //Create a sublist of 2 containing completed entity and partial entity
+                List<MvccEntity> subEntList =  new ArrayList<>(  );
+
+                for(int chg = 1; chg <= partialEntities.size()-1; chg++){
+                    subEntList.clear();
+                    chgPersist.clear();
+                    subEntList.add( mvccEntity );
+                    subEntList.add( partialEntities.get( chg ) );
+                    chgPersist.addAll( changeLogGenerator.getChangeLog(subEntList.iterator()
+                            ,subEntList.get( subEntList.size()-1 ).getVersion() ) );
+
+                    mvccEntity = entityRepair( chgPersist,subEntList,mvccEntity );
+                }
+
+                return mvccEntity.getEntity().get();
             }
 
         }
@@ -67,7 +85,7 @@ public class RepairUtil {
     }
 
     //TODO: change the list to be an iterator
-    private static Entity entityRepair( List<ChangeLogEntry> changeLogEntryList, List<MvccEntity> results,
+    private static MvccEntity entityRepair( List<ChangeLogEntry> changeLogEntryList, List<MvccEntity> results,
                                             MvccEntity completedEntity ) {
         int changeLogIndex = 0;
         for ( MvccEntity result : results ) {
@@ -98,6 +116,6 @@ public class RepairUtil {
             return null;
         }
 
-        return completedEntity.getEntity().get();
+        return completedEntity;
     }
 }

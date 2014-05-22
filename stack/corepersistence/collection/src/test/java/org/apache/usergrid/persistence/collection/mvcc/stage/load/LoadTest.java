@@ -54,7 +54,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
         final Entity entity = TestEntityGenerator.generateEntity(entityId, loadVersion);
 
-        final MvccEntity mvccEntity = TestEntityGenerator.fromEntity( entity );
+        final MvccEntity mvccEntity = TestEntityGenerator.fromEntityStatus( entity, MvccEntity.Status.COMPLETE );
 
         final Iterator<MvccEntity> results = Lists.newArrayList( mvccEntity ).iterator();
 
@@ -170,7 +170,7 @@ public class LoadTest  extends AbstractIdStageTest {
     }
 
     @Test
-    public void testLoadWithPartialWriteDeleteMultipleTimes(){
+    public void testLoadWithPartialWriteDeleteThreeTimes(){
         final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
@@ -201,14 +201,13 @@ public class LoadTest  extends AbstractIdStageTest {
 
         final Entity entity3 = TestEntityGenerator.generateEntity( entityId, UUIDGenerator.newTimeUUID() );
         entity3.setField( new StringField( "derp","noderp" ) );
-        entity3.setField( new StringField( "derple","somemerple" ) );
 
 
         final MvccEntity partialMvccEntity2 = TestEntityGenerator.fromEntityStatus( entity3, MvccEntity.Status.PARTIAL );
 
-        final List<MvccEntity> results = Lists.newArrayList( completeMvccEntity );
+        final List<MvccEntity> results = Lists.newArrayList( partialMvccEntity2 );
         results.add( partialMvccEntity );
-        results.add( partialMvccEntity2 );
+        results.add( completeMvccEntity );
 
         //mock up returning a list of MvccEntities
         when( serializationStrategy.load( collection, entityId, loadVersion, 1 ) ).thenReturn( results.iterator());
@@ -217,7 +216,7 @@ public class LoadTest  extends AbstractIdStageTest {
         Entity loaded = load.call( entityIoEvent );
 
         assertNotNull( loaded.getField( "derp" ) );
-        assertNotNull( loaded.getField( "derple" ) );
+        assertNull( loaded.getField( "derple" ) );
 
     }
 
