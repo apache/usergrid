@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,6 +104,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         final Stage stage = entry.getStage();
         final UUID colName = entry.getVersion();
+        final StageStatus stageStatus = new StageStatus(stage,entry.getStatus());
 
         return doWrite( collectionScope, entry.getEntityId(), entry.getVersion(), new RowOp() {
             @Override
@@ -110,12 +112,12 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
                 //Write the stage with a timeout, it's set as transient
                 if ( stage.isTransient() ) {
-                    colMutation.putColumn( colName, stage, SER, fig.getTimeout() );
+                    colMutation.putColumn( colName, stageStatus, SER, fig.getTimeout() );
                     return;
                 }
 
                 //otherwise it's persistent, write it with no expiration
-                colMutation.putColumn( colName, stage, SER, null );
+                colMutation.putColumn( colName, stageStatus, SER, null );
             }
         } );
     }
@@ -141,9 +143,9 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         }
 
 
-        final Stage stage = result.getValue( SER );
+        final StageStatus stageStatus = result.getValue( SER );
 
-        return new MvccLogEntryImpl( entityId, version, stage );
+        return new MvccLogEntryImpl( entityId, version, stageStatus.stage, stageStatus.status );
     }
 
 
@@ -166,9 +168,9 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         for ( Column<UUID> col : columns ) {
             final UUID storedVersion = col.getName();
-            final Stage stage = col.getValue( SER );
+            final StageStatus stage = col.getValue( SER );
 
-            results.add( new MvccLogEntryImpl( entityId, storedVersion, stage ) );
+            results.add( new MvccLogEntryImpl( entityId, storedVersion, stage.stage, stage.status ) );
         }
 
         return results;
@@ -261,27 +263,67 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         }
     }
 
+    /**
+     * Internal stage shard
+     */
+    private static class StatusCache {
+        private Map<Integer, MvccLogEntry.Status> values = new HashMap<Integer, MvccLogEntry.Status>( MvccLogEntry.Status.values().length );
 
-    public static class StageSerializer extends AbstractSerializer<Stage> {
+
+        private StatusCache() {
+            for ( MvccLogEntry.Status status : MvccLogEntry.Status.values() ) {
+
+                final int statusValue = status.getId();
+
+                values.put( statusValue, status );
+            }
+        }
+
+
+        /**
+         * Get the stage with the byte value
+         */
+        private MvccLogEntry.Status getStatus( final int value ) {
+            return values.get( value );
+        }
+    }
+
+    public static class StageSerializer extends AbstractSerializer<StageStatus> {
 
         /**
          * Used for caching the byte => stage mapping
          */
         private static final StageCache CACHE = new StageCache();
-        private static final IntegerSerializer INT_SER = IntegerSerializer.get();
-
+        private static final StatusCache STATUS_CACHE = new StatusCache();
 
         @Override
-        public ByteBuffer toByteBuffer( final Stage obj ) {
-            return INT_SER.toByteBuffer( obj.getId() );
+        public ByteBuffer toByteBuffer( final StageStatus obj ) {
+
+            ByteBuffer byteBuffer  = ByteBuffer.allocate(8);
+            byteBuffer.putInt(obj.stage.getId());
+            byteBuffer.putInt(obj.status.getId());
+            byteBuffer.rewind();
+            return byteBuffer;
         }
 
 
         @Override
-        public Stage fromByteBuffer( final ByteBuffer byteBuffer ) {
-            final int value = INT_SER.fromByteBuffer( byteBuffer );
-
-            return CACHE.getStage( value );
+        public StageStatus fromByteBuffer( final ByteBuffer byteBuffer ) {
+            int value = byteBuffer.getInt();
+            Stage stage = CACHE.getStage( value );
+            value = byteBuffer.getInt();
+            MvccLogEntry.Status status =  STATUS_CACHE.getStatus(value);
+            return new StageStatus(stage,status);
         }
+    }
+
+    public static class StageStatus {
+        final Stage stage;
+        final MvccLogEntry.Status status;
+        public StageStatus(Stage stage, MvccLogEntry.Status status){
+            this.stage = stage;
+            this.status = status;
+        }
+
     }
 }

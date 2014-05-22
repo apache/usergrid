@@ -38,17 +38,20 @@ public class MvccLogEntryImpl implements MvccLogEntry {
     private final Id entityId;
     private final UUID version;
     private final Stage stage;
+    private final Status status;
 
 
-    public MvccLogEntryImpl( final Id entityId, final UUID version, final Stage stage ) {
+    public MvccLogEntryImpl( final Id entityId, final UUID version, final Stage stage, final Status status ) {
         Preconditions.checkNotNull( entityId, "entity id is required" );
         Preconditions.checkNotNull( version, "version id is required" );
         Preconditions.checkNotNull( stage, "entity  is required" );
+        Preconditions.checkNotNull( status, "status  is required" );
 
 
         this.entityId = entityId;
         this.version = version;
         this.stage = stage;
+        this.status = status;
     }
 
 
@@ -68,6 +71,9 @@ public class MvccLogEntryImpl implements MvccLogEntry {
     public UUID getVersion() {
         return version;
     }
+
+    @Override
+    public Status getStatus(){ return status;}
 
 
     @Override
@@ -92,6 +98,9 @@ public class MvccLogEntryImpl implements MvccLogEntry {
             return false;
         }
 
+        if( status != that.status ){
+            return false;
+        }
 
         return true;
     }

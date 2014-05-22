@@ -81,9 +81,9 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
         List<MvccLogEntry> logEntries = new ArrayList<MvccLogEntry>();
         logEntries.add( new MvccLogEntryImpl( 
-            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE ));
+            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE, MvccLogEntry.Status.STARTED ));
         logEntries.add( new MvccLogEntryImpl( 
-            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.COMMITTED));
+            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.COMMITTED, MvccLogEntry.Status.COMPLETE ));
 
         MvccLogEntrySerializationStrategy noConflictLog = 
             mock( MvccLogEntrySerializationStrategy.class );
@@ -129,11 +129,11 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         // log that one operation is active on entity
         List<MvccLogEntry> logEntries = new ArrayList<MvccLogEntry>();
         logEntries.add( new MvccLogEntryImpl( 
-            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE ));
+            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE, MvccLogEntry.Status.STARTED ));
 
         // log another operation as active on entity
         logEntries.add( new MvccLogEntryImpl( 
-            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE));
+            entity.getId(), UUIDGenerator.newTimeUUID(), Stage.ACTIVE, MvccLogEntry.Status.COMPLETE ));
 
         // mock up the log
         MvccLogEntrySerializationStrategy mvccLog = 
