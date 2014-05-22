@@ -25,7 +25,7 @@ public class RepairUtil {
 
     private static  ChangeLogGenerator changeLogGenerator = new ChangeLogGeneratorImpl();
 
-    public static Entity repair(Iterator<MvccEntity> results){
+    public static MvccEntity repair(Iterator<MvccEntity> results){
 
         //nothing to do, we didn't get a result back
         if ( !results.hasNext() ) {
@@ -46,7 +46,7 @@ public class RepairUtil {
 
         //TODO: make this return a mvcc entity?
         if ( mvccEntity.getStatus() == MvccEntity.Status.COMPLETE ) {
-            return targetVersion.get();
+            return mvccEntity;
         }
 
         iter.pushback( mvccEntity );
@@ -77,7 +77,7 @@ public class RepairUtil {
                     mvccEntity = entityRepair( chgPersist,subEntList,mvccEntity );
                 }
 
-                return mvccEntity.getEntity().get();
+                return mvccEntity;
             }
 
         }
@@ -115,6 +115,7 @@ public class RepairUtil {
         if(!completedEntity.getEntity().isPresent()){
             return null;
         }
+
 
         return completedEntity;
     }

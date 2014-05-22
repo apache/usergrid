@@ -218,6 +218,11 @@ public class LoadTest  extends AbstractIdStageTest {
         assertNotNull( loaded.getField( "derp" ) );
         assertNull( loaded.getField( "derple" ) );
 
+        loaded = load.call( entityIoEvent );
+
+        assertNotNull( loaded.getField( "derp" ) );
+        assertNull( loaded.getField( "derple" ) );
+
     }
 
     @Test

@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.load;
 
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -36,7 +35,6 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -90,7 +88,13 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         Iterator<MvccEntity> results = entitySerializationStrategy.load(
                 collectionScope, entityId, versionMax, 1 );
 
-        return RepairUtil.repair( results );
+        MvccEntity repairedEntity = RepairUtil.repair( results );
+        if(repairedEntity == null)
+            return null;
+
+        entitySerializationStrategy.write( collectionScope, repairedEntity );
+
+        return repairedEntity.getEntity().get();
 
     }
 }
