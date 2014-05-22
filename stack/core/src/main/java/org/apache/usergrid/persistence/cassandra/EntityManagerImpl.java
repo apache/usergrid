@@ -49,19 +49,16 @@ import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.CollectionRef;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.CounterResolution;
 import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.Query.CounterFilterPredicate;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Query.CounterFilterPredicate;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleCollectionRef;
@@ -113,7 +110,6 @@ import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.locking.LockHelper.getUniqueUpdateLock;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import static org.apache.usergrid.persistence.Results.Level.REFS;
 import static org.apache.usergrid.persistence.Results.fromEntities;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
@@ -169,6 +165,10 @@ import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query.Level;
+import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 
 
 /**
@@ -1822,24 +1822,24 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, 
-            Results.Level resultsLevel ) throws Exception {
+            Level resultsLevel ) throws Exception {
         return fromEntities( getEntities( entityIds, entityClass ) );
     }
 
 
     @Override
     public Results get( Collection<UUID> entityIds, String entityType, Class<? extends Entity> entityClass,
-                        Results.Level resultsLevel ) throws Exception {
+                        Level resultsLevel ) throws Exception {
         return fromEntities( getEntities( entityIds, entityClass ) );
     }
 
 
-    public Results loadEntities( Results results, Results.Level resultsLevel, int count ) throws Exception {
+    public Results loadEntities( Results results, Level resultsLevel, int count ) throws Exception {
         return loadEntities( results, resultsLevel, null, count );
     }
 
 
-    public Results loadEntities( Results results, Results.Level resultsLevel, 
+    public Results loadEntities( Results results, Level resultsLevel, 
             Map<UUID, UUID> associatedMap, int count ) throws Exception {
 
         results = results.trim( count );
@@ -1849,7 +1849,7 @@ public class EntityManagerImpl implements EntityManager {
 
         results.setEntities( getEntities( results.getIds(), (Class)null ) );
 
-        if ( resultsLevel == Results.Level.LINKED_PROPERTIES ) {
+        if ( resultsLevel == Level.LINKED_PROPERTIES ) {
             List<Entity> entities = results.getEntities();
             BiMap<UUID, UUID> associatedIds = null;
 
@@ -2465,7 +2465,7 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public Results getUsersInGroupRole( UUID groupId, String roleName, Results.Level level ) throws Exception {
+    public Results getUsersInGroupRole( UUID groupId, String roleName, Level level ) throws Exception {
         EntityRef roleRef = roleRef( groupId, roleName );
         return this.getCollection( roleRef, COLLECTION_USERS, null, 10000, level, false );
     }
@@ -2679,24 +2679,27 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public Results getConnectedEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                         Level resultsLevel ) throws Exception {
-        return getRelationManager( ref( entityId ) )
+    public Results getConnectedEntities( EntityRef entityRef, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception {
+
+        return getRelationManager( entityRef )
                 .getConnectedEntities( connectionType, connectedEntityType, resultsLevel );
     }
 
 
     @Override
-    public Results getConnectingEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                          Level resultsLevel ) throws Exception {
-        return getConnectingEntities(entityId, connectionType, connectedEntityType, resultsLevel, 0);
+    public Results getConnectingEntities( EntityRef entityRef, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception {
+
+        return getConnectingEntities( entityRef, connectionType, connectedEntityType, resultsLevel, 0);
     }
 
 
     @Override
-	public Results getConnectingEntities(UUID uuid, String connectionType,
+	public Results getConnectingEntities( EntityRef entityRef, String connectionType,
 			String entityType, Level level, int count) throws Exception {
-		return getRelationManager( ref( uuid ) )
+
+		return getRelationManager( entityRef )
                 .getConnectingEntities( connectionType, entityType, level, count );
 	}
 

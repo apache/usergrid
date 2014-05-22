@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.index.query.tree;
 
 import org.apache.usergrid.persistence.index.exceptions.NoFullTextIndexException;
 import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
-import org.apache.usergrid.persistence.index.exceptions.PersistenceException;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
@@ -36,21 +36,21 @@ public interface QueryVisitor {
     /**
      *
      * @param op
-     * @throws PersistenceException
+     * @throws IndexException
      */
-    public void visit( AndOperand op ) throws PersistenceException;
+    public void visit( AndOperand op ) throws IndexException;
 
     /**
      * @param op
-     * @throws PersistenceException
+     * @throws IndexException
      */
-    public void visit( OrOperand op ) throws PersistenceException;
+    public void visit( OrOperand op ) throws IndexException;
 
     /**
      * @param op
-     * @throws PersistenceException
+     * @throws IndexException
      */
-    public void visit( NotOperand op ) throws PersistenceException;
+    public void visit( NotOperand op ) throws IndexException;
 
     /**
      * @param op

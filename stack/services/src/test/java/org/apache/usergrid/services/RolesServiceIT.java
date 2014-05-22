@@ -24,7 +24,7 @@ import java.util.Set;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.entities.Role;
 
 import static org.junit.Assert.assertEquals;

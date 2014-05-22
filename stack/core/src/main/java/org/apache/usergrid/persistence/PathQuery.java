@@ -17,8 +17,10 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
 import java.util.Iterator;
 import java.util.UUID;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 public class PathQuery<E> {
@@ -102,13 +104,13 @@ public class PathQuery<E> {
 
     protected Iterator uuidIterator( EntityManager em ) throws Exception {
         if ( head != null ) {
-            return new PagingResultsIterator( getHeadResults( em ), Results.Level.IDS );
+            return new PagingResultsIterator( getHeadResults( em ), Level.IDS );
         }
         else {
             Query q = query;
-            if ( query.getResultsLevel() != Results.Level.IDS ) { // ensure IDs level
+            if ( query.getResultsLevel() != Level.IDS ) { // ensure IDs level
                 q = new Query( q );
-                q.setResultsLevel( Results.Level.IDS );
+                q.setResultsLevel( Level.IDS );
             }
             return new MultiQueryIterator( em, source.uuidIterator( em ), q );
         }

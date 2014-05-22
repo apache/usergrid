@@ -26,12 +26,12 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.ServiceParameter.NameParameter;
 import org.apache.usergrid.services.ServiceParameter.QueryParameter;
@@ -173,11 +173,11 @@ public class AbstractConnectionsService extends AbstractService {
 
         if ( connecting() ) {
             r = em.getConnectingEntities( context.getOwner().getUuid(), context.getCollectionName(), null,
-                    Results.Level.ALL_PROPERTIES );
+                    Level.ALL_PROPERTIES );
         }
         else {
             r = em.getConnectedEntities( context.getOwner().getUuid(), context.getCollectionName(), null,
-                    Results.Level.ALL_PROPERTIES );
+                    Level.ALL_PROPERTIES );
         }
 
         importEntities( context, r );
@@ -278,7 +278,7 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
         int count = query.getLimit();
-        Results.Level level = Results.Level.REFS;
+        Level level = Level.REFS;
         if ( !context.moreParameters() ) {
             count = Query.MAX_LIMIT;
             level = Level.ALL_PROPERTIES;
@@ -288,7 +288,7 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
         if ( context.getRequest().isReturnsTree() ) {
-            level = Results.Level.ALL_PROPERTIES;
+            level = Level.ALL_PROPERTIES;
         }
 
 //        query.setLimit( count );

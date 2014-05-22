@@ -20,7 +20,7 @@ package org.apache.usergrid.batch.job;
 import java.util.UUID;
 
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.utils.UUIDUtils;

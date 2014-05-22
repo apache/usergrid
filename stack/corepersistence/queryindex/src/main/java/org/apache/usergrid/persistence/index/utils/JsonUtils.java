@@ -20,16 +20,11 @@ package org.apache.usergrid.persistence.index.utils;
 import java.io.File;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import org.apache.usergrid.persistence.index.exceptions.JsonReadException;
 import org.apache.usergrid.persistence.index.exceptions.JsonWriteException;
-//import org.apache.usergrid.persistence.Entity;
-
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.io.JsonStringEncoder;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -38,9 +33,6 @@ import org.codehaus.jackson.smile.SmileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.commons.lang.StringUtils.substringAfter;
-
-import static org.apache.usergrid.persistence.index.utils.StringUtils.stringOrSubstringBeforeFirst;
 
 
 public class JsonUtils {

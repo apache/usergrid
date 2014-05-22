@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence;
+package org.apache.usergrid.persistence.index.query;
 
 
 import java.io.Serializable;
@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.apache.usergrid.utils.UUIDUtils;
 
 
 public class Identifier implements Serializable {

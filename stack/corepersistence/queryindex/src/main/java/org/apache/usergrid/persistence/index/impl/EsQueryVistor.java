@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Stack;
 import org.apache.usergrid.persistence.index.exceptions.NoFullTextIndexException;
 import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
-import org.apache.usergrid.persistence.index.exceptions.PersistenceException;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.index.query.tree.Equal;
@@ -51,21 +51,21 @@ public class EsQueryVistor implements QueryVisitor {
     List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
 
     @Override
-    public void visit( AndOperand op ) throws PersistenceException {
+    public void visit( AndOperand op ) throws IndexException {
         op.getLeft().visit( this );
         op.getRight().visit( this );
         stack.push( QueryBuilders.boolQuery().must( stack.pop() ).must(  stack.pop() ));
     }
 
     @Override
-    public void visit( OrOperand op ) throws PersistenceException {
+    public void visit( OrOperand op ) throws IndexException {
         op.getLeft().visit( this );
         op.getRight().visit( this );
         stack.push( QueryBuilders.boolQuery().should( stack.pop() ).should(  stack.pop() ));
     }
 
     @Override
-    public void visit( NotOperand op ) throws PersistenceException {
+    public void visit( NotOperand op ) throws IndexException {
         op.getOperation().visit( this );
         stack.push( QueryBuilders.boolQuery().mustNot( stack.pop() ));
     }

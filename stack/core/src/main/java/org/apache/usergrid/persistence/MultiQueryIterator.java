@@ -17,8 +17,10 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
 import java.util.Iterator;
 import java.util.UUID;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 /**
@@ -35,7 +37,7 @@ public class MultiQueryIterator implements Iterator {
 
 
     public MultiQueryIterator( Results results, Query query ) {
-        this( results.getQueryProcessor().getEntityManager(), new PagingResultsIterator( results, Results.Level.IDS ),
+        this( results.getQueryProcessor().getEntityManager(), new PagingResultsIterator( results, Level.IDS ),
                 query );
     }
 

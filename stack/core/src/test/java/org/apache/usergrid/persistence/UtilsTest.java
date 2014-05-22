@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence;
 
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
 
 import static org.junit.Assert.assertEquals;
 
