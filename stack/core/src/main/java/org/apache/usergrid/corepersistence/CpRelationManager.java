@@ -118,11 +118,12 @@ public class CpRelationManager implements RelationManager {
         this.headEntity = headEntity;
         this.managerCache = emf.getManagerCache();
 
+        String collectionName = Schema.defaultCollectionName( headEntity.getType() ); 
         this.applicationScope = emf.getApplicationScope(applicationId);
         this.headEntityScope = new CollectionScopeImpl( 
             this.applicationScope.getApplication(), 
             this.applicationScope.getApplication(), 
-            Schema.defaultCollectionName( headEntity.getType()) );
+            collectionName );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(headEntityScope);
         this.cpHeadEntity = ecm.load( new SimpleId( 
@@ -170,6 +171,11 @@ public class CpRelationManager implements RelationManager {
 
 
     private Map<EntityRef, Set<String>> getContainingCollections() {
+        return getContainingCollections( -1 );
+    }
+
+
+    private Map<EntityRef, Set<String>> getContainingCollections( int limit ) {
 
         Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
 
@@ -193,24 +199,18 @@ public class CpRelationManager implements RelationManager {
                     continue;
                 }
 
-                CollectionScope collScope = new CollectionScopeImpl( 
-                    this.applicationScope.getApplication(), 
-                    this.applicationScope.getApplication(), 
-                    Schema.defaultCollectionName( edge.getSourceNode().getType() ));
-
-                EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
-
-                org.apache.usergrid.persistence.model.entity.Entity container = 
-                    ecm.load( edge.getSourceNode() ).toBlockingObservable().last();
-
                 EntityRef eref = new SimpleEntityRef( 
-                    container.getId().getType(), container.getId().getUuid() );
+                    edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
 
                 String cEdgeType = edge.getType();
                 if ( cEdgeType.endsWith( COLLECTION_SUFFIX )) {
                     cEdgeType = cEdgeType.substring( 0, cEdgeType.indexOf(COLLECTION_SUFFIX));
                 }
                 addMapSet( results, eref, cEdgeType );
+            }
+
+            if ( limit > 0 && results.keySet().size() >= limit ) {
+                break;
             }
         }
 
@@ -586,7 +586,8 @@ public class CpRelationManager implements RelationManager {
 
     @Override
     public Set<String> getConnectionTypes(UUID connectedEntityId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        throw new UnsupportedOperationException("Cannot specify entity by UUID alone."); 
     }
 
     @Override
@@ -612,14 +613,38 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Results getConnectingEntities(String connectionType, String connectedEntityType, 
             Level resultsLevel) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");     
+
+        return getConnectingEntities( connectionType, connectedEntityType, resultsLevel, -1 );
     }
 
     @Override
     public Results getConnectingEntities(String connectionType, String entityType, 
             Level level, int count) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");     
+
+        Map<EntityRef, Set<String>> containers = getContainingCollections( count );
+
+        if ( Level.REFS.equals(level ) ) {
+            List<EntityRef> refList = new ArrayList<EntityRef>( containers.keySet() );
+            return Results.fromRefList( refList );
+        } 
+
+        if ( Level.IDS.equals(level ) ) {
+            // TODO: someday this should return a list of Core Persistence Ids
+            List<UUID> idList = new ArrayList<UUID>();
+            for ( EntityRef ref : containers.keySet() ) {
+                idList.add( ref.getUuid() );
+            }
+            return Results.fromIdList( idList );
+        }
+
+        List<Entity> entities = new ArrayList<Entity>();
+        for ( EntityRef ref : containers.keySet() ) {
+            Entity entity = em.get( ref );
+            entities.add( entity );
+        }
+        return Results.fromEntities( entities );
     }
+
 
     @Override
     public Results searchConnectedEntities( Query query ) throws Exception {

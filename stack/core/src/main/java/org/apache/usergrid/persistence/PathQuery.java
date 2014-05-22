@@ -19,7 +19,6 @@ package org.apache.usergrid.persistence;
 
 import org.apache.usergrid.persistence.index.query.Query;
 import java.util.Iterator;
-import java.util.UUID;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
@@ -27,7 +26,7 @@ public class PathQuery<E> {
 
     private PathQuery source;
     private Query query;
-    private UUID head;
+    private EntityRef head;
 
 
     public PathQuery() {
@@ -40,7 +39,7 @@ public class PathQuery<E> {
      * @param head the top-level entity
      */
     public PathQuery( EntityRef head ) {
-        this.head = head.getUuid();
+        this.head = head;
         this.query = null;
     }
 
@@ -55,7 +54,7 @@ public class PathQuery<E> {
         if ( query.getCollection() == null && query.getConnectionType() == null ) {
             throw new IllegalArgumentException( "Query must have a collection or connectionType value" );
         }
-        this.head = head.getUuid();
+        this.head = head;
         this.query = query;
     }
 
@@ -86,7 +85,7 @@ public class PathQuery<E> {
                 return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel() );
             }
             else {
-                return new MultiQueryIterator( em, source.uuidIterator( em ), query );
+                return new MultiQueryIterator( em, source.refIterator( em ), query );
             }
         }
         catch ( Exception e ) {
@@ -97,22 +96,23 @@ public class PathQuery<E> {
 
     protected Results getHeadResults( EntityManager em ) throws Exception {
         EntityRef ref = new SimpleEntityRef( head );
-        return ( query.getCollection() != null ) ? em.searchCollection( ref, query.getCollection(), query ) :
+        return ( query.getCollection() != null ) ? 
+               em.searchCollection( ref, query.getCollection(), query ) :
                em.searchConnectedEntities( ref, query );
     }
 
 
-    protected Iterator uuidIterator( EntityManager em ) throws Exception {
+    protected Iterator refIterator( EntityManager em ) throws Exception {
         if ( head != null ) {
-            return new PagingResultsIterator( getHeadResults( em ), Level.IDS );
+            return new PagingResultsIterator( getHeadResults( em ), Level.REFS );
         }
         else {
             Query q = query;
-            if ( query.getResultsLevel() != Level.IDS ) { // ensure IDs level
+            if ( query.getResultsLevel() != Level.REFS ) { // ensure REFS level
                 q = new Query( q );
-                q.setResultsLevel( Level.IDS );
+                q.setResultsLevel( Level.REFS );
             }
-            return new MultiQueryIterator( em, source.uuidIterator( em ), q );
+            return new MultiQueryIterator( em, source.refIterator( em ), q );
         }
     }
 
@@ -122,7 +122,7 @@ public class PathQuery<E> {
     }
 
 
-    public UUID getHead() {
+    public EntityRef getHead() {
         return head;
     }
 

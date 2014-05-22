@@ -49,13 +49,13 @@ public class PathQueryIT extends AbstractCoreIT {
             users.add( created );
         }
 
-        List<UUID> deviceIds = new ArrayList<UUID>();
+        List<EntityRef> deviceRefs = new ArrayList<EntityRef>();
         for ( Entity user : users ) {
             for ( int i = 0; i < 5; i++ ) {
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
                 properties.put( "index", i );
                 Entity created = em.create( "device", properties );
-                deviceIds.add( created.getUuid() );
+                deviceRefs.add( created );
                 em.addToCollection( user, "devices", created );
             }
         }
@@ -92,7 +92,7 @@ public class PathQueryIT extends AbstractCoreIT {
         deviceQuery.addFilter( "index >= 2" );
         int expectedDeviceQuerySize = 3;
 
-        PathQuery<UUID> usersPQ = new PathQuery<UUID>( em.getApplicationRef(), userQuery );
+        PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>( em.getApplicationRef(), userQuery );
         PathQuery<Entity> devicesPQ = usersPQ.chain( deviceQuery );
         HashSet set = new HashSet( expectedUserQuerySize * expectedDeviceQuerySize );
         Iterator<Entity> i = devicesPQ.iterator( em );
@@ -130,17 +130,19 @@ public class PathQueryIT extends AbstractCoreIT {
             }
         }
 
+        em.refreshIndex();
+
         // pick an arbitrary group, ensure it has 7 users
         Results ru = em.getCollection( groups.get( 2 ), "users", null, 20, Level.IDS, false );
         assertEquals( 7, ru.size() );
 
-        List<UUID> devices = new ArrayList<UUID>();
+        List<EntityRef> devices = new ArrayList<EntityRef>();
         for ( Entity user : users ) {
             for ( int i = 0; i < 7; i++ ) {
                 Map<String, Object> properties = new LinkedHashMap<String, Object>();
                 properties.put( "index", i );
                 Entity created = em.create( "device", properties );
-                devices.add( created.getUuid() );
+                devices.add( created );
                 em.addToCollection( user, "devices", created );
             }
         }
