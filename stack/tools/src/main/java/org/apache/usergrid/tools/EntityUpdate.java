@@ -27,15 +27,16 @@ import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.PagingResultsIterator;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 
@@ -138,7 +139,7 @@ public class EntityUpdate extends ToolBase {
 
         Results results = entityManager.searchCollection( entityManager.getApplicationRef(), collectionName, query );
 
-        PagingResultsIterator itr = new PagingResultsIterator( results, Results.Level.ALL_PROPERTIES );
+        PagingResultsIterator itr = new PagingResultsIterator( results, Level.ALL_PROPERTIES );
 
         long count = 0;
 

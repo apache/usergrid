@@ -50,6 +50,7 @@ import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.LongField;
@@ -85,37 +86,25 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public static final String SYSTEM_ORGS_TYPE = "zzzorgszzz";
     public static final String SYSTEM_PROPS_TYPE = "zzzpropszzz"; 
 
+    private static final Id systemAppId = 
+         new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE );
+
     // Scopes for those three types of things
 
-    public static final CollectionScope SYSTEM_APPS_SCOPE = new CollectionScopeImpl( 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            SYSTEM_APPS_TYPE);
+    public static final CollectionScope SYSTEM_APP_SCOPE = 
+        new CollectionScopeImpl( systemAppId, systemAppId, SYSTEM_APPS_TYPE );
+    public static final IndexScope SYSTEM_APPS_INDEX_SCOPE = 
+        new IndexScopeImpl( systemAppId, systemAppId,  SYSTEM_APPS_TYPE);
 
-    public static final IndexScope SYSTEM_APPS_INDEX_SCOPE = new IndexScopeImpl( 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            SYSTEM_APPS_TYPE);
+    public static final CollectionScope SYSTEM_ORGS_SCOPE = 
+        new CollectionScopeImpl( systemAppId, systemAppId,  SYSTEM_ORGS_TYPE);
+    public static final IndexScope SYSTEM_ORGS_INDEX_SCOPE = 
+        new IndexScopeImpl( systemAppId, systemAppId, SYSTEM_ORGS_TYPE);
 
-    public static final CollectionScope SYSTEM_ORGS_SCOPE = new CollectionScopeImpl( 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            SYSTEM_ORGS_TYPE);
-
-    public static final IndexScope SYSTEM_ORGS_INDEX_SCOPE = new IndexScopeImpl( 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            SYSTEM_ORGS_TYPE);
-
-    public static final CollectionScope SYSTEM_PROPS_SCOPE = new CollectionScopeImpl( 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            SYSTEM_PROPS_TYPE);
-
-    public static final IndexScope SYSTEM_PROPS_INDEX_SCOPE = new IndexScopeImpl( 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE ), 
-            SYSTEM_PROPS_TYPE);
+    public static final CollectionScope SYSTEM_PROPS_SCOPE = 
+        new CollectionScopeImpl( systemAppId, systemAppId, SYSTEM_PROPS_TYPE);
+    public static final IndexScope SYSTEM_PROPS_INDEX_SCOPE = 
+        new IndexScopeImpl( systemAppId, systemAppId, SYSTEM_PROPS_TYPE);
 
 
     // cache of already instantiated entity managers
@@ -271,7 +260,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             new SimpleId(UUIDGenerator.newTimeUUID(), "application" ));
 
         long timestamp = System.currentTimeMillis();
-            appInfoEntity.setField( new LongField( PROPERTY_CREATED, (long)(timestamp / 1000)));
+        appInfoEntity.setField( new LongField( PROPERTY_CREATED, (long)(timestamp / 1000)));
         appInfoEntity.setField( new StringField( PROPERTY_NAME, name ));
         appInfoEntity.setField( new UUIDField( PROPERTY_UUID, applicationId ));
         appInfoEntity.setField( new UUIDField( "organizationUuid", orgUuid ));
@@ -279,7 +268,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // create app in system app scope
         {
             EntityCollectionManager ecm = getManagerCache()
-                    .getEntityCollectionManager( SYSTEM_APPS_SCOPE );
+                    .getEntityCollectionManager( SYSTEM_APP_SCOPE );
             EntityIndex eci = getManagerCache()
                     .getEntityIndex( SYSTEM_APPS_INDEX_SCOPE );
 
@@ -301,7 +290,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Query q = Query.fromQL( PROPERTY_UUID + " = '" + applicationId.toString() + "'");
 
-        EntityCollectionManager em= getManagerCache().getEntityCollectionManager(SYSTEM_APPS_SCOPE);
+        EntityCollectionManager em= getManagerCache().getEntityCollectionManager(SYSTEM_APP_SCOPE);
         EntityIndex ei = getManagerCache().getEntityIndex( SYSTEM_APPS_INDEX_SCOPE );
         CandidateResults results = ei.search( q );
 
@@ -368,7 +357,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Query q = Query.fromQL("select *");
 
         EntityCollectionManager em = getManagerCache()
-                .getEntityCollectionManager( SYSTEM_APPS_SCOPE );
+                .getEntityCollectionManager( SYSTEM_APP_SCOPE );
         EntityIndex ei = getManagerCache()
                 .getEntityIndex( SYSTEM_APPS_INDEX_SCOPE );
 
@@ -441,6 +430,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             propsEntity = em.load( results.iterator().next().getId()).toBlockingObservable().last();
         } else {
             propsEntity = new Entity( new SimpleId( "properties" ));
+            long timestamp = System.currentTimeMillis();
+            propsEntity.setField( new LongField( PROPERTY_CREATED, (long)(timestamp / 1000)));
         }
 
         // intentionally going only one-level deep into fields and treating all 
@@ -531,18 +522,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         return new CpSetup( this, cass );
     }
 
-    void refreshIndexes() {
-
-        EntityIndex aei = managerCache.getEntityIndex( 
-                CpEntityManagerFactory.SYSTEM_APPS_INDEX_SCOPE );
-        EntityIndex oei = managerCache.getEntityIndex( 
-                CpEntityManagerFactory.SYSTEM_ORGS_INDEX_SCOPE );
-        EntityIndex pei = managerCache.getEntityIndex( 
-                CpEntityManagerFactory.SYSTEM_PROPS_INDEX_SCOPE );
-
-        aei.refresh();
-        oei.refresh();
-        pei.refresh();
+    void refreshIndex() {
+        managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_APPS_INDEX_SCOPE ).refresh();
     }
 
 

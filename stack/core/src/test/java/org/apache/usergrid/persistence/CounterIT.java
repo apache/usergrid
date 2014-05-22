@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -35,6 +36,7 @@ import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.utils.JsonUtils;
 
 import org.apache.usergrid.count.SimpleBatcher;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

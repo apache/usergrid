@@ -23,20 +23,34 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Identifier;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.Query.SortDirection;
-import org.apache.usergrid.persistence.Query.SortPredicate;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
+import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.exceptions.NoFullTextIndexException;
-import org.apache.usergrid.persistence.exceptions.NoIndexException;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.exceptions.NoFullTextIndexException;
+import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Query.SortDirection;
+import org.apache.usergrid.persistence.index.query.Query.SortPredicate;
+import org.apache.usergrid.persistence.index.query.tree.AndOperand;
+import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
+import org.apache.usergrid.persistence.index.query.tree.Equal;
+import org.apache.usergrid.persistence.index.query.tree.EqualityOperand;
+import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
+import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
+import org.apache.usergrid.persistence.index.query.tree.LessThan;
+import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
+import org.apache.usergrid.persistence.index.query.tree.Literal;
+import org.apache.usergrid.persistence.index.query.tree.NotOperand;
+import org.apache.usergrid.persistence.index.query.tree.Operand;
+import org.apache.usergrid.persistence.index.query.tree.OrOperand;
+import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
+import org.apache.usergrid.persistence.index.query.tree.StringLiteral;
+import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
 import org.apache.usergrid.persistence.query.ir.AllNode;
 import org.apache.usergrid.persistence.query.ir.AndNode;
 import org.apache.usergrid.persistence.query.ir.EmailIdentifierNode;
@@ -54,24 +68,11 @@ import org.apache.usergrid.persistence.query.ir.result.ResultIterator;
 import org.apache.usergrid.persistence.query.ir.result.ResultsLoader;
 import org.apache.usergrid.persistence.query.ir.result.ResultsLoaderFactory;
 import org.apache.usergrid.persistence.query.ir.result.ScanColumn;
-import org.apache.usergrid.persistence.query.tree.AndOperand;
-import org.apache.usergrid.persistence.query.tree.ContainsOperand;
-import org.apache.usergrid.persistence.query.tree.Equal;
-import org.apache.usergrid.persistence.query.tree.EqualityOperand;
-import org.apache.usergrid.persistence.query.tree.GreaterThan;
-import org.apache.usergrid.persistence.query.tree.GreaterThanEqual;
-import org.apache.usergrid.persistence.query.tree.LessThan;
-import org.apache.usergrid.persistence.query.tree.LessThanEqual;
-import org.apache.usergrid.persistence.query.tree.Literal;
-import org.apache.usergrid.persistence.query.tree.NotOperand;
-import org.apache.usergrid.persistence.query.tree.Operand;
-import org.apache.usergrid.persistence.query.tree.OrOperand;
-import org.apache.usergrid.persistence.query.tree.QueryVisitor;
-import org.apache.usergrid.persistence.query.tree.StringLiteral;
-import org.apache.usergrid.persistence.query.tree.WithinOperand;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
-
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class QueryProcessorImpl implements QueryProcessor {
@@ -97,7 +98,7 @@ public class QueryProcessorImpl implements QueryProcessor {
 
 
     public QueryProcessorImpl( Query query, CollectionInfo collectionInfo, EntityManager em,
-                           ResultsLoaderFactory loaderFactory ) throws PersistenceException {
+            ResultsLoaderFactory loaderFactory ) throws PersistenceException {
         setQuery( query );
         this.collectionInfo = collectionInfo;
         this.em = em;
@@ -336,7 +337,7 @@ public class QueryProcessorImpl implements QueryProcessor {
          * .persistence.query.tree.AndOperand)
          */
         @Override
-        public void visit( AndOperand op ) throws PersistenceException {
+        public void visit( AndOperand op ) throws IndexException {
 
             op.getLeft().visit( this );
 
@@ -370,7 +371,7 @@ public class QueryProcessorImpl implements QueryProcessor {
          * .persistence.query.tree.OrOperand)
          */
         @Override
-        public void visit( OrOperand op ) throws PersistenceException {
+        public void visit( OrOperand op ) throws IndexException {
 
             // we need to create a new slicenode for the children of this
             // operation
@@ -407,7 +408,7 @@ public class QueryProcessorImpl implements QueryProcessor {
          * .persistence.query.tree.NotOperand)
          */
         @Override
-        public void visit( NotOperand op ) throws PersistenceException {
+        public void visit( NotOperand op ) throws IndexException {
 
             // create a new context since any child of NOT will need to be
             // evaluated independently
@@ -468,7 +469,7 @@ public class QueryProcessorImpl implements QueryProcessor {
 
             // change the property name to coordinates
             nodes.push( new WithinNode( op.getProperty().getIndexedName(), op.getDistance().getFloatValue(),
-                    op.getLattitude().getFloatValue(), op.getLongitude().getFloatValue(), ++contextCount ) );
+                    op.getLatitude().getFloatValue(), op.getLongitude().getFloatValue(), ++contextCount ) );
         }
 
 
@@ -616,6 +617,16 @@ public class QueryProcessorImpl implements QueryProcessor {
 
         public int getSliceCount() {
             return nodes.getSliceCount();
+        }
+
+        @Override
+        public QueryBuilder getQueryBuilder() {
+            throw new UnsupportedOperationException("Not supported by this vistor implementation."); 
+        }
+
+        @Override
+        public FilterBuilder getFilterBuilder() {
+            throw new UnsupportedOperationException("Not supported by this vistor implementation."); 
         }
     }
 

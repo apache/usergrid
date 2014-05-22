@@ -54,10 +54,9 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
@@ -161,6 +160,7 @@ import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_TYPE;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_TITLE;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_VERB;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import static org.apache.usergrid.security.AuthPrincipalType.ADMIN_USER;
 import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION;
 import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION_USER;
@@ -1647,7 +1647,11 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Results r = em.getConnectingEntities( applicationId, "owns", "group", Level.ALL_PROPERTIES );
+
+        Results r = em.getConnectingEntities( 
+                new SimpleEntityRef("application", applicationId), 
+                "owns", "group", Level.ALL_PROPERTIES );
+
         Entity entity = r.getEntity();
         if ( entity != null ) {
             return new OrganizationInfo( entity.getUuid(), ( String ) entity.getProperty( "path" ) );
@@ -1665,9 +1669,12 @@ public class ManagementServiceImpl implements ManagementService {
         }
         final BiMap<UUID, String> applications = HashBiMap.create();
         final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        final Results results = em.getConnectedEntities( organizationId, "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
-        final PagingResultsIterator itr = new PagingResultsIterator( results );
 
+        final Results results = em.getConnectedEntities( 
+                new SimpleEntityRef("organization", organizationId), 
+                "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
+
+        final PagingResultsIterator itr = new PagingResultsIterator( results );
 
         String entityName;
 

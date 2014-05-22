@@ -63,7 +63,7 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             final UUID version = entity.getVersion();
 
             final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
-                    org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE );
+                    org.apache.usergrid.persistence.collection.mvcc.entity.Stage.ACTIVE, MvccLogEntry.Status.STARTED );
 
             MutationBatch write = logStrategy.write( collectionScope, startEntry );
 

@@ -88,7 +88,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         final UUID version = mvccEntity.getVersion();
         final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.Status.COMPLETE );
         MutationBatch logMutation = logEntryStrat.write( collectionScope, startEntry );
 
         // now get our actual insert into the entity data

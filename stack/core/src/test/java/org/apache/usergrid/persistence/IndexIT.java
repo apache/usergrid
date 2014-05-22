@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;

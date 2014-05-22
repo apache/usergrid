@@ -28,7 +28,7 @@ import java.util.UUID;
 import org.codehaus.jackson.JsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServiceManager;

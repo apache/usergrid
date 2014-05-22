@@ -193,17 +193,13 @@ angular.module('appservices', ['ngRoute',
         templateUrl: 'data/shell.html',
         controller: 'ShellCtrl'
       })
-      .when('/profile/organizations', {
+      .when('/organizations', {
         templateUrl: 'profile/organizations.html',
         controller: 'OrgCtrl'
       })
-      .when('/profile/profile', {
+      .when('/profile', {
         templateUrl: 'profile/profile.html',
         controller: 'ProfileCtrl'
-      })
-      .when('/profile', {
-        templateUrl: 'profile/account.html',
-        controller: 'AccountCtrl'
       })
       .when('/activities', {
         templateUrl: 'activities/activities.html',

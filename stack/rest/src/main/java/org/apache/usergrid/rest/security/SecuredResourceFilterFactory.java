@@ -34,7 +34,7 @@ import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.exceptions.SecurityException;
 import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
