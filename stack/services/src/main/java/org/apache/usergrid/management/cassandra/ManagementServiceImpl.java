@@ -1647,7 +1647,11 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Results r = em.getConnectingEntities( applicationId, "owns", "group", Level.ALL_PROPERTIES );
+
+        Results r = em.getConnectingEntities( 
+                new SimpleEntityRef("application", applicationId), 
+                "owns", "group", Level.ALL_PROPERTIES );
+
         Entity entity = r.getEntity();
         if ( entity != null ) {
             return new OrganizationInfo( entity.getUuid(), ( String ) entity.getProperty( "path" ) );
@@ -1665,9 +1669,12 @@ public class ManagementServiceImpl implements ManagementService {
         }
         final BiMap<UUID, String> applications = HashBiMap.create();
         final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        final Results results = em.getConnectedEntities( organizationId, "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
-        final PagingResultsIterator itr = new PagingResultsIterator( results );
 
+        final Results results = em.getConnectedEntities( 
+                new SimpleEntityRef("organization", organizationId), 
+                "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
+
+        final PagingResultsIterator itr = new PagingResultsIterator( results );
 
         String entityName;
 

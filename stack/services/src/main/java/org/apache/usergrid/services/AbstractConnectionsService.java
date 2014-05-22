@@ -172,12 +172,14 @@ public class AbstractConnectionsService extends AbstractService {
         Results r = null;
 
         if ( connecting() ) {
-            r = em.getConnectingEntities( context.getOwner().getUuid(), context.getCollectionName(), null,
-                    Level.ALL_PROPERTIES );
+            r = em.getConnectingEntities( 
+                new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()), 
+                context.getCollectionName(), null, Level.ALL_PROPERTIES );
         }
         else {
-            r = em.getConnectedEntities( context.getOwner().getUuid(), context.getCollectionName(), null,
-                    Level.ALL_PROPERTIES );
+            r = em.getConnectedEntities( 
+                new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()), 
+                context.getCollectionName(), null, Level.ALL_PROPERTIES );
         }
 
         importEntities( context, r );
@@ -292,7 +294,8 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
 //        query.setLimit( count );
-        // usergrid-2389: User defined limit in the query is ignored. Fixed it by following same style in AstractCollectionService
+        // usergrid-2389: User defined limit in the query is ignored. Fixed it by following 
+        // same style in AstractCollectionService
         query.setLimit( query.getLimit( count ) );
         query.setResultsLevel( level );
 
@@ -306,8 +309,11 @@ public class AbstractConnectionsService extends AbstractService {
             else {
 //            	r = em.getConnectingEntities( context.getOwner().getUuid(), query.getConnectionType(),
 //            			query.getEntityType(), level );
-                // usergrid-2389: User defined limit in the query is ignored. Fixed it by adding the limit to the method parameter downstream.
-            	r = em.getConnectingEntities( context.getOwner().getUuid(), query.getConnectionType(),query.getEntityType(), level , query.getLimit()); 
+                // usergrid-2389: User defined limit in the query is ignored. Fixed it by adding 
+                // the limit to the method parameter downstream.
+            	r = em.getConnectingEntities( 
+                    new SimpleEntityRef( context.getOwner().getType(), context.getOwner().getUuid()), 
+                    query.getConnectionType(),query.getEntityType(), level , query.getLimit()); 
             }
         }
         else {

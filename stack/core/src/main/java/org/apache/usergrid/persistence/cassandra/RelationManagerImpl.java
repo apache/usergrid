@@ -2155,7 +2155,8 @@ public class RelationManagerImpl implements RelationManager {
 
         @Override
         public void visit( NameIdentifierNode nameIdentifierNode ) throws Exception {
-            EntityRef ref = em.getAlias( headEntity.getUuid(), collection.getType(), nameIdentifierNode.getName() );
+            EntityRef ref = em.getAlias( 
+                    headEntity, collection.getType(), nameIdentifierNode.getName() );
 
             if ( ref == null ) {
                 this.results.push( new EmptyIterator() );
@@ -2313,8 +2314,8 @@ public class RelationManagerImpl implements RelationManager {
         @Override
         public void visit( NameIdentifierNode nameIdentifierNode ) throws Exception {
             //TODO T.N. USERGRID-1919 actually validate this is connected
-            EntityRef ref =
-                    em.getAlias( applicationId, connection.getConnectedEntityType(), nameIdentifierNode.getName() );
+            EntityRef ref = em.getAlias( new SimpleEntityRef("applicaion", applicationId), 
+                    connection.getConnectedEntityType(), nameIdentifierNode.getName() );
 
             if ( ref == null ) {
                 this.results.push( new EmptyIterator() );

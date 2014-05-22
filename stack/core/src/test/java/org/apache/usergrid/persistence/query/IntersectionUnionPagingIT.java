@@ -116,7 +116,7 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
 
             Entity saved =  io.writeEntity( entity );
 
-            LOG.info("Writing entity with id '{}'", saved.getUuid());
+            LOG.debug("Writing entity with id '{}'", saved.getUuid());
         }
 
         long stop = System.currentTimeMillis();

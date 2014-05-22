@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import static org.apache.usergrid.AbstractCoreIT.setup;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.Query.Level;
@@ -45,7 +44,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
+//@Concurrent()
 public class EntityManagerIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( EntityManagerIT.class );
 
@@ -77,7 +76,11 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
         assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ));
 
-        EntityRef userRef = em.getAlias( applicationId, "user", "edanuff" );
+        em.refreshIndex();
+
+        EntityRef userRef = em.getAlias( 
+            new SimpleEntityRef("application", applicationId), "users", "edanuff" );
+
         assertNotNull( userRef );
         assertEquals( "userRef.id not expected value", user.getUuid(), userRef.getUuid() );
         assertEquals( "userRef.type not expected value", "user", userRef.getType() );

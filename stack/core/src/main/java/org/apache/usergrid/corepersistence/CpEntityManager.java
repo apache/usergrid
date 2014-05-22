@@ -34,7 +34,6 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import org.apache.usergrid.persistence.CollectionRef;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
@@ -220,10 +219,10 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        Entity entity = new DynamicEntity( entityRef.getType(), cpEntity.getId().getUuid() );
-        entity.setUuid( cpEntity.getId().getUuid() );
-        Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
-        entity.addProperties( entityMap );
+        Class clazz = Schema.getDefaultSchema().getEntityClass(entityRef.getType());
+
+        Entity entity = EntityFactory.newEntity( entityRef.getUuid(), entityRef.getType(), clazz);
+        entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
 
         return entity; 
     }
@@ -499,19 +498,20 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public EntityRef getAlias(String aliasType, String alias) throws Exception {
-        return getAlias( applicationId, aliasType, alias );
+
+        return getAlias( new SimpleEntityRef("application", applicationId), aliasType, alias );
     }
 
     @Override
     public EntityRef getAlias(
-            UUID ownerId, String collectionType, String aliasValue) throws Exception {
+            EntityRef ownerRef, String collectionType, String aliasValue) throws Exception {
 
-        Assert.notNull( ownerId, "ownerId is required" );
+        Assert.notNull( ownerRef, "ownerRef is required" );
         Assert.notNull( collectionType, "collectionType is required" );
         Assert.notNull( aliasValue, "aliasValue is required" );
 
         Map<String, EntityRef> results = getAlias( 
-             ownerId, collectionType, Collections.singletonList( aliasValue ) );
+             ownerRef, collectionType, Collections.singletonList( aliasValue ) );
 
         if ( results == null || results.size() == 0 ) {
             return null;
@@ -522,7 +522,7 @@ public class CpEntityManager implements EntityManager {
         if ( results.size() > 1 ) {
             logger.warn("More than 1 entity with Owner id '{}' of type '{}' and alias '{}' exists. "
                     + " This is a duplicate alias, and needs audited", 
-                    new Object[] { ownerId, collectionType, aliasValue } );
+                    new Object[] { ownerRef, collectionType, aliasValue } );
         }
 
         return results.get( aliasValue );
@@ -532,14 +532,14 @@ public class CpEntityManager implements EntityManager {
     public Map<String, EntityRef> getAlias(
             String aliasType, List<String> aliases) throws Exception {
 
-        return getAlias( applicationId, aliasType, aliases );
+        return getAlias( new SimpleEntityRef("application", applicationId), aliasType, aliases );
     }
 
     @Override
     public Map<String, EntityRef> getAlias(
-            UUID ownerId, String collName, List<String> aliases) throws Exception {
+            EntityRef ownerRef, String collName, List<String> aliases) throws Exception {
 
-        Assert.notNull( ownerId, "ownerId is required" );
+        Assert.notNull( ownerRef, "ownerRef is required" );
         Assert.notNull( collName, "collectionName is required" );
         Assert.notEmpty( aliases, "aliases are required" );
 
@@ -547,14 +547,28 @@ public class CpEntityManager implements EntityManager {
 
         Map<String, EntityRef> results = new HashMap<String, EntityRef>();
 
-//        for ( String alias : aliases ) {
-//            for ( UUID id : getUUIDsForUniqueProperty( ownerId, collName, propertyName, alias)) {
-//                results.put( alias, new SimpleEntityRef( collName, id ) );
-//            }
-//        }
+        for ( String alias : aliases ) {
+
+            Iterable<EntityRef> refs = 
+                    getEntityRefsForUniqueProperty( ownerRef, collName, propertyName, alias);
+
+            for ( EntityRef ref : refs ) {
+                results.put( alias, ref );
+            }
+        }
 
         return results;
     }
+
+    private Iterable<EntityRef> getEntityRefsForUniqueProperty(
+        EntityRef ownerRef, String collName, String propName, String alias) throws Exception {
+
+        Results results = getRelationManager(ownerRef).searchCollection( collName,
+            Query.fromQL("select * where " + propName + " = '" + alias + "'"));
+
+        return results.getRefs();
+    }
+
 
     @Override
     public EntityRef validate( EntityRef entityRef ) throws Exception {
@@ -1576,6 +1590,7 @@ public class CpEntityManager implements EntityManager {
 
         return cpEntity;
     }
+
 
 
 }

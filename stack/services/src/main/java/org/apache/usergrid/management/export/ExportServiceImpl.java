@@ -47,6 +47,7 @@ import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.JobData;
 
 import com.google.common.collect.BiMap;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
@@ -509,7 +510,10 @@ public class ExportServiceImpl implements ExportService {
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
 
-            Results results = em.getConnectedEntities( entity.getUuid(), connectionType, null, Level.IDS );
+            Results results = em.getConnectedEntities( 
+                new SimpleEntityRef(entity.getType(), entity.getUuid()), 
+                connectionType, null, Level.IDS );
+
             List<ConnectionRef> connections = results.getConnections();
 
             for ( ConnectionRef connectionRef : connections ) {

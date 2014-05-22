@@ -516,7 +516,8 @@ public class EntityManagerImpl implements EntityManager {
          * both entities will be unable to update and must be deleted
          */
 
-        Set<UUID> ownerEntityIds = getUUIDsForUniqueProperty( applicationId, entityType, propertyName, propertyValue );
+        Set<UUID> ownerEntityIds = getUUIDsForUniqueProperty( 
+            new SimpleEntityRef("applicaion", applicationId), entityType, propertyName, propertyValue );
 
         //if there are no entities for this property, we know it's unique.  If there are,
         // we have to make sure the one we were passed is in the set.  otherwise it belongs
@@ -533,17 +534,18 @@ public class EntityManagerImpl implements EntityManager {
      * @param propertyName The name of the unique property
      * @param propertyValue The value of the unique property
      */
-    private Set<UUID> getUUIDsForUniqueProperty( UUID ownerEntityId, String collectionName, String propertyName,
-                                                 Object propertyValue ) throws Exception {
+    private Set<UUID> getUUIDsForUniqueProperty( 
+            EntityRef ownerEntityRef, String collectionName, String propertyName,
+            Object propertyValue ) throws Exception {
 
 
         String collectionNameInternal = defaultCollectionName( collectionName );
 
-        Object key = createUniqueIndexKey( ownerEntityId, collectionNameInternal, propertyName, propertyValue );
+        Object key = createUniqueIndexKey( 
+            ownerEntityRef.getUuid(), collectionNameInternal, propertyName, propertyValue );
 
-        List<HColumn<ByteBuffer, ByteBuffer>> cols =
-                cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2,
-                        false );
+        List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns( 
+            cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2, false );
 
 
         //No columns at all, it's unique
@@ -553,13 +555,14 @@ public class EntityManagerImpl implements EntityManager {
 
         //shouldn't happen, but it's an error case
         if ( cols.size() > 1 ) {
-            logger.error( "INDEX CORRUPTION: More than 1 unique value exists for entities in ownerId {} of type {} on "
-                    + "property {} with value {}",
-                    new Object[] { ownerEntityId, collectionNameInternal, propertyName, propertyValue } );
+            logger.error( "INDEX CORRUPTION: More than 1 unique value exists for entities in "
+                + "ownerId {} of type {} on property {} with value {}",
+                new Object[] { ownerEntityRef, collectionNameInternal, propertyName, propertyValue } );
         }
 
         /**
-         * Doing this in a loop sucks, but we need to account for possibly having more than 1 entry in the index due
+         * Doing this in a loop sucks, but we need to account for possibly having more than 
+         * 1 entry in the index due
          * to corruption.  We need to allow them to update, otherwise
          * both entities will be unable to update and must be deleted
          */
@@ -576,8 +579,8 @@ public class EntityManagerImpl implements EntityManager {
 
     /** Add this unique index to the delete */
     private void uniquePropertyDelete( Mutator<ByteBuffer> m, String collectionName, String entityType,
-                                       String propertyName, Object propertyValue, UUID entityId, long timestamp )
-            throws Exception {
+        String propertyName, Object propertyValue, UUID entityId, long timestamp ) throws Exception {
+
         //read the old value and delete it
 
         Object oldValue = getProperty( new SimpleEntityRef( entityType, entityId ), propertyName );
@@ -602,23 +605,27 @@ public class EntityManagerImpl implements EntityManager {
 
 
     /**
-     * Create a row key for the entity of the given type with the name and value in the property.  Used for fast unique
+     * Create a row key for the entity of the given type with the name and value in the property.  
+     * Used for fast unique
      * index lookups
      */
-    private Object createUniqueIndexKey( UUID ownerId, String collectionName, String propertyName, Object value ) {
+    private Object createUniqueIndexKey( 
+            UUID ownerId, String collectionName, String propertyName, Object value ) {
         return key( ownerId, collectionName, propertyName, value );
     }
 
 
     @Override
     @Metered( group = "core", name = "EntityManager_getAlias_single" )
-    public EntityRef getAlias( UUID ownerId, String collectionType, String aliasValue ) throws Exception {
+    public EntityRef getAlias( EntityRef ownerRef, String collectionType, String aliasValue ) 
+            throws Exception {
 
-        Assert.notNull( ownerId, "ownerId is required" );
+        Assert.notNull( ownerRef, "ownerRef is required" );
         Assert.notNull( collectionType, "collectionType is required" );
         Assert.notNull( aliasValue, "aliasValue is required" );
 
-        Map<String, EntityRef> results = getAlias( ownerId, collectionType, Collections.singletonList( aliasValue ) );
+        Map<String, EntityRef> results = getAlias( 
+                ownerRef, collectionType, Collections.singletonList( aliasValue ) );
 
         if ( results == null || results.size() == 0 ) {
             return null;
@@ -628,8 +635,9 @@ public class EntityManagerImpl implements EntityManager {
         //TODO When we get an event system, trigger a repair if this is detected
         if ( results.size() > 1 ) {
             logger.warn(
-                    "More than 1 entity with Owner id '{}' of type '{}' and alias '{}' exists.  This is a duplicate "
-                            + "alias, and needs audited", new Object[] { ownerId, collectionType, aliasValue } );
+                "More than 1 entity with Owner id '{}' of type '{}' and alias '{}' exists.  "
+              + "This is a duplicate alias, and needs audited", 
+                    new Object[] { ownerRef, collectionType, aliasValue } );
         }
 
         return results.get( aliasValue );
@@ -638,26 +646,25 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public Map<String, EntityRef> getAlias( String aliasType, List<String> aliases ) throws Exception {
-        return getAlias( applicationId, aliasType, aliases );
+        return getAlias( new SimpleEntityRef("applicaion", applicationId), aliasType, aliases );
     }
 
 
     @Override
     @Metered( group = "core", name = "EntityManager_getAlias_multi" )
-    public Map<String, EntityRef> getAlias( UUID ownerId, String collectionName, List<String> aliases )
-            throws Exception {
+    public Map<String, EntityRef> getAlias( 
+            EntityRef ownerRef, String collectionName, List<String> aliases ) throws Exception {
 
-        Assert.notNull( ownerId, "ownerId is required" );
+        Assert.notNull( ownerRef, "ownerRef is required" );
         Assert.notNull( collectionName, "collectionName is required" );
         Assert.notEmpty( aliases, "aliases are required" );
-
 
         String propertyName = Schema.getDefaultSchema().aliasProperty( collectionName );
 
         Map<String, EntityRef> results = new HashMap<String, EntityRef>();
 
         for ( String alias : aliases ) {
-            for ( UUID id : getUUIDsForUniqueProperty( ownerId, collectionName, propertyName, alias ) ) {
+            for ( UUID id : getUUIDsForUniqueProperty( ownerRef, collectionName, propertyName, alias ) ) {
                 results.put( alias, new SimpleEntityRef( collectionName, id ) );
             }
         }
@@ -668,8 +675,10 @@ public class EntityManagerImpl implements EntityManager {
 
     @SuppressWarnings( "unchecked" )
     @Override
-    public <A extends Entity> A create( String entityType, Class<A> entityClass, Map<String, Object> properties )
+    public <A extends Entity> A create( 
+            String entityType, Class<A> entityClass, Map<String, Object> properties ) 
             throws Exception {
+
         if ( ( entityType != null ) && ( entityType.startsWith( TYPE_ENTITY ) || entityType
                 .startsWith( "entities" ) ) ) {
             throw new IllegalArgumentException( "Invalid entity type" );
@@ -686,7 +695,8 @@ public class EntityManagerImpl implements EntityManager {
 
 
     @Override
-    public Entity create( UUID importId, String entityType, Map<String, Object> properties ) throws Exception {
+    public Entity create( UUID importId, String entityType, Map<String, Object> properties ) 
+            throws Exception {
         return create( entityType, null, properties, importId );
     }
 
@@ -719,8 +729,9 @@ public class EntityManagerImpl implements EntityManager {
      */
     @Metered( group = "core", name = "EntityManager_create" )
     @TraceParticipant
-    public <A extends Entity> A create( String entityType, Class<A> entityClass, Map<String, Object> properties,
-                                        UUID importId ) throws Exception {
+    public <A extends Entity> A create( 
+            String entityType, Class<A> entityClass, Map<String, Object> properties,
+            UUID importId ) throws Exception {
 
         UUID timestampUuid = newTimeUUID();
 
@@ -736,8 +747,9 @@ public class EntityManagerImpl implements EntityManager {
 
     @SuppressWarnings( "unchecked" )
     @Metered( group = "core", name = "EntityManager_batchCreate" )
-    public <A extends Entity> A batchCreate( Mutator<ByteBuffer> m, String entityType, Class<A> entityClass,
-                                             Map<String, Object> properties, UUID importId, UUID timestampUuid )
+    public <A extends Entity> A batchCreate( 
+            Mutator<ByteBuffer> m, String entityType, Class<A> entityClass,
+            Map<String, Object> properties, UUID importId, UUID timestampUuid )
             throws Exception {
 
         String eType = Schema.normalizeEntityType( entityType );
@@ -1533,7 +1545,9 @@ public class EntityManagerImpl implements EntityManager {
             return new SimpleEntityRef( "user", identifier.getUUID() );
         }
         if ( identifier.isName() ) {
-            return this.getAlias( applicationId, "user", identifier.getName() );
+            return this.getAlias( 
+                    new SimpleEntityRef("applicaion", applicationId), 
+                    "user", identifier.getName() );
         }
         if ( identifier.isEmail() ) {
 
@@ -1549,7 +1563,9 @@ public class EntityManagerImpl implements EntityManager {
             }
             else {
                 // look-aside as it might be an email in the name field
-                return this.getAlias( applicationId, "user", identifier.getEmail() );
+                return this.getAlias( 
+                        new SimpleEntityRef("application", applicationId), 
+                        "user", identifier.getEmail() );
             }
         }
         return null;
@@ -1565,24 +1581,28 @@ public class EntityManagerImpl implements EntityManager {
             return new SimpleEntityRef( "group", identifier.getUUID() );
         }
         if ( identifier.isName() ) {
-            return this.getAlias( applicationId, "group", identifier.getName() );
+            return this.getAlias( 
+                    new SimpleEntityRef("application", applicationId), 
+                    "group", identifier.getName() );
         }
         return null;
     }
 
 
     @Override
-    public Results getAggregateCounters( UUID userId, UUID groupId, String category, String counterName,
-                                         CounterResolution resolution, long start, long finish, boolean pad ) {
-        return this
-                .getAggregateCounters( userId, groupId, null, category, counterName, resolution, start, finish, pad );
+    public Results getAggregateCounters( UUID userId, UUID groupId, String category, 
+        String counterName, CounterResolution resolution, long start, long finish, boolean pad ) {
+
+        return this.getAggregateCounters( 
+                userId, groupId, null, category, counterName, resolution, start, finish, pad );
     }
 
 
     @Override
     @Metered( group = "core", name = "EntityManager_getAggregateCounters" )
-    public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category, String counterName,
-                                         CounterResolution resolution, long start, long finish, boolean pad ) {
+    public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category, 
+            String counterName, CounterResolution resolution, long start, long finish, boolean pad ) {
+
         start = resolution.round( start );
         finish = resolution.round( finish );
         long expected_time = start;
@@ -1590,9 +1610,11 @@ public class EntityManagerImpl implements EntityManager {
         SliceCounterQuery<String, Long> q = createCounterSliceQuery( ko, se, le );
         q.setColumnFamily( APPLICATION_AGGREGATE_COUNTERS.toString() );
         q.setRange( start, finish, false, ALL_COUNT );
+
         QueryResult<CounterSlice<Long>> r = q.setKey(
-                counterUtils.getAggregateCounterRow( counterName, userId, groupId, queueId, category, resolution ) )
-                                             .execute();
+                counterUtils.getAggregateCounterRow( 
+                        counterName, userId, groupId, queueId, category, resolution ) ).execute();
+
         List<AggregateCounter> counters = new ArrayList<AggregateCounter>();
         for ( HCounterColumn<Long> column : r.get().getColumns() ) {
             AggregateCounter count = new AggregateCounter( column.getName(), column.getValue() );
@@ -1743,7 +1765,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {
-        return getAlias( applicationId, aliasType, alias );
+        return getAlias( new SimpleEntityRef("application", applicationId), aliasType, alias );
     }
 
 

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.services.ServiceContext;
@@ -72,7 +73,9 @@ public class ActivitiesService extends GenericCollectionService {
         if ( ( r1 == null ) || ( r1.isEmpty() ) ) {
             return;
         }
-        Results r2 = em.getConnectingEntities( user.getUuid(), "following", User.ENTITY_TYPE, Level.IDS );
+
+        Results r2 = em.getConnectingEntities( new SimpleEntityRef( user.getType(), user.getUuid()), 
+            "following", User.ENTITY_TYPE, Level.IDS );
 
         if ( ( r2 == null ) || ( r2.isEmpty() ) ) {
             return;

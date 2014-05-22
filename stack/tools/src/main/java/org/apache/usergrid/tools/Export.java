@@ -307,7 +307,9 @@ public class Export extends ExportingToolBase {
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
 
-            Results results = em.getConnectedEntities( entity.getUuid(), connectionType, null, Level.IDS );
+            Results results = em.getConnectedEntities( 
+                    entity, connectionType, null, Level.IDS );
+
             List<ConnectionRef> connections = results.getConnections();
 
             for ( ConnectionRef connectionRef : connections ) {

@@ -131,8 +131,12 @@ public class ActivitiesService extends GenericCollectionService {
         }
         //add activity
         em.addToCollection( user, "feed", activity );
+
         //publish to all connections
-        Results results =  em.getConnectingEntities(user.getUuid(), "following", User.ENTITY_TYPE, Level.REFS);
+        Results results =  em.getConnectingEntities(
+            new SimpleEntityRef( user.getType(), user.getUuid()), 
+            "following", User.ENTITY_TYPE, Level.REFS);
+
         if( results != null ){
             PagingResultsIterator itr = new PagingResultsIterator(results);
 

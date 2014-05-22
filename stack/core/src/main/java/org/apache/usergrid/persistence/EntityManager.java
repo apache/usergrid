@@ -88,7 +88,8 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public Entity create( UUID importId, String entityType, Map<String, Object> properties ) throws Exception;
+    public Entity create( UUID importId, String entityType, Map<String, Object> properties ) 
+            throws Exception;
 
     public void createApplicationCollection( String entityType ) throws Exception;
 
@@ -101,7 +102,8 @@ public interface EntityManager {
      * @param collectionName The name of the collection
      * @param aliasValue The value of the alias
      */
-    public EntityRef getAlias( UUID ownerId, String collectionName, String aliasValue ) throws Exception;
+    public EntityRef getAlias( EntityRef ownerRef, String collectionName, String aliasValue ) 
+            throws Exception;
 
     public Map<String, EntityRef> getAlias( String aliasType, List<String> aliases ) throws Exception;
 
@@ -112,8 +114,8 @@ public interface EntityManager {
      * @param collectionName The name of the collection
      * @param aliases The alias property
      */
-    public Map<String, EntityRef> getAlias( UUID ownerId, String collectionName, List<String> aliases )
-            throws Exception;
+    public Map<String, EntityRef> getAlias( EntityRef ownerRef, String collectionName, 
+            List<String> aliases ) throws Exception;
 
     /**
      * Validates that the entity exists in the datastore meaning that it exists and the type has 
