@@ -80,4 +80,23 @@ sub POST ($$$\%) {
   return $json->decode($response);
 }
 
+sub PUT ($$$\%) {
+  my ($self, $token, $resource, $request) = @_;
+
+  my $json_req = $json->encode($request);
+
+  my $client = REST::Client->new();
+  $client->setHost($self->api_url);
+
+  if (defined $token) {
+    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
+  }
+
+  $client->PUT($resource, $json_req);
+
+  my $response = $client->responseContent();
+
+  return $json->decode($response);
+}
+
 1;
