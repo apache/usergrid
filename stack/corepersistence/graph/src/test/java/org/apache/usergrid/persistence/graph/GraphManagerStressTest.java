@@ -251,7 +251,7 @@ public class GraphManagerStressTest {
             Edge returned = manager.writeEdge( edge ).toBlockingObservable().last();
 
 
-            assertNotNull( "Returned has a version", returned.getVersion() );
+            assertNotNull( "Returned has a version", returned.getTimestamp() );
 
             ids.add( returned );
 

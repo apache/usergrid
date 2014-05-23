@@ -104,7 +104,7 @@ public abstract class GraphManagerIT {
 
         //now test retrieving it
 
-        SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
+        SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTimestamp(), null );
 
         Observable<Edge> edges = gm.loadEdgesFromSource( search );
 
@@ -114,7 +114,7 @@ public abstract class GraphManagerIT {
         assertEquals( "Correct edge returned", edge, returned );
 
         //change edge type to be invalid, shouldn't get a result
-        search = createSearchByEdge( edge.getSourceNode(), edge.getType() + "invalid", edge.getVersion(), null );
+        search = createSearchByEdge( edge.getSourceNode(), edge.getType() + "invalid", edge.getTimestamp(), null );
 
         edges = gm.loadEdgesFromSource( search );
 
@@ -136,7 +136,7 @@ public abstract class GraphManagerIT {
 
         //now test retrieving it
 
-        SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getVersion(), null );
+        SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getTimestamp(), null );
 
         Observable<Edge> edges = gm.loadEdgesToTarget( search );
 
@@ -146,7 +146,7 @@ public abstract class GraphManagerIT {
         assertEquals( "Correct edge returned", edge, returned );
 
         //change edge type to be invalid, shouldn't get a result
-        search = createSearchByEdge( edge.getTargetNode(), edge.getType() + "invalid", edge.getVersion(), null );
+        search = createSearchByEdge( edge.getTargetNode(), edge.getType() + "invalid", edge.getTimestamp(), null );
 
         edges = gm.loadEdgesToTarget( search );
 
@@ -170,7 +170,7 @@ public abstract class GraphManagerIT {
 
         //now test retrieving it
 
-        SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
+        SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTimestamp(), null );
 
         Observable<Edge> edges = gm.loadEdgesFromSource( search );
 
@@ -205,7 +205,7 @@ public abstract class GraphManagerIT {
 
         //now test retrieving it
 
-        SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getVersion(), null );
+        SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getTimestamp(), null );
 
         Observable<Edge> edges = gm.loadEdgesToTarget( search );
 
@@ -257,7 +257,7 @@ public abstract class GraphManagerIT {
         //now test retrieving it, we should only get edge3, since it's the latest
 
         SearchByEdgeType search =
-                createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getVersion(), null );
+                createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getTimestamp(), null );
 
         Observable<Edge> edges = gm.loadEdgesFromSource( search );
 
@@ -270,7 +270,7 @@ public abstract class GraphManagerIT {
         assertFalse( "No more edges", returned.hasNext() );
 
         //now test with an earlier version, we shouldn't get the edge back
-        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge2.getVersion(), null );
+        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge2.getTimestamp(), null );
 
         edges = gm.loadEdgesFromSource( search );
 
@@ -280,7 +280,7 @@ public abstract class GraphManagerIT {
         assertEquals( "Correct edge returned", edge1, returned.next() );
         assertFalse( "No more edges", returned.hasNext() );
 
-        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getVersion(), null );
+        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTimestamp(), null );
 
         edges = gm.loadEdgesFromSource( search );
 
@@ -331,7 +331,7 @@ public abstract class GraphManagerIT {
         //now test retrieving it, we should only get edge3, since it's the latest
 
         SearchByEdgeType search =
-                createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getVersion(), null );
+                createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getTimestamp(), null );
 
         Observable<Edge> edges = gm.loadEdgesToTarget( search );
 
@@ -344,7 +344,7 @@ public abstract class GraphManagerIT {
         assertFalse( "No more edges", returned.hasNext() );
 
         //now test with an earlier version, we shouldn't get the edge back
-        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge2.getVersion(), null );
+        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge2.getTimestamp(), null );
 
         edges = gm.loadEdgesToTarget( search );
 
@@ -354,7 +354,7 @@ public abstract class GraphManagerIT {
         assertEquals( "Correct edge returned", edge1, returned.next() );
         assertFalse( "No more edges", returned.hasNext() );
 
-        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge1.getVersion(), null );
+        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge1.getTimestamp(), null );
 
         edges = gm.loadEdgesToTarget( search );
 
@@ -397,7 +397,7 @@ public abstract class GraphManagerIT {
         //now test retrieving it
 
         SearchByEdgeType search =
-                createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getVersion(), null );
+                createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getTimestamp(), null );
 
         Observable<Edge> edges = gm.loadEdgesFromSource( search );
 
@@ -415,7 +415,7 @@ public abstract class GraphManagerIT {
         assertFalse( "No more edges", returned.hasNext() );
 
         //still edge 3 is our max version, but we start with edge 2 as our last read
-        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getVersion(), edge2 );
+        search = createSearchByEdge( edge1.getSourceNode(), edge1.getType(), edge3.getTimestamp(), edge2 );
 
         edges = gm.loadEdgesFromSource( search );
 
@@ -453,7 +453,7 @@ public abstract class GraphManagerIT {
         //now test retrieving it
 
         SearchByEdgeType search =
-                createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getVersion(), null );
+                createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getTimestamp(), null );
 
         Observable<Edge> edges = gm.loadEdgesToTarget( search );
 
@@ -471,7 +471,7 @@ public abstract class GraphManagerIT {
 
         assertFalse( "No more edges", returned.hasNext() );
 
-        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getVersion(), edge2 );
+        search = createSearchByEdge( edge1.getTargetNode(), edge1.getType(), edge3.getTimestamp(), edge2 );
 
         edges = gm.loadEdgesToTarget( search );
 
@@ -496,7 +496,7 @@ public abstract class GraphManagerIT {
 
         //now test retrieving it
 
-        SearchByIdType search = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getVersion(),
+        SearchByIdType search = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getTimestamp(),
                 edge.getTargetNode().getType(), null );
 
         Observable<Edge> edges = gm.loadEdgesFromSourceByType( search );
@@ -508,7 +508,7 @@ public abstract class GraphManagerIT {
 
 
         //change edge type to be invalid, shouldn't get a result
-        search = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getVersion(),
+        search = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getTimestamp(),
                 edge.getTargetNode().getType() + "invalid", null );
 
         edges = gm.loadEdgesFromSourceByType( search );
@@ -533,7 +533,7 @@ public abstract class GraphManagerIT {
 
         //now test retrieving it
 
-        SearchByIdType search = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getVersion(),
+        SearchByIdType search = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getTimestamp(),
                 edge.getSourceNode().getType(), null );
 
         Observable<Edge> edges = gm.loadEdgesToTargetByType( search );
@@ -545,7 +545,7 @@ public abstract class GraphManagerIT {
 
 
         //change edge type to be invalid, shouldn't get a result
-        search = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getVersion(),
+        search = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getTimestamp(),
                 edge.getSourceNode().getType() + "invalid", null );
 
         edges = gm.loadEdgesToTargetByType( search );
@@ -570,7 +570,7 @@ public abstract class GraphManagerIT {
         //now test retrieving it
 
 
-        SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getVersion(), null );
+        SearchByEdgeType search = createSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTimestamp(), null );
 
         Observable<Edge> edges = gm.loadEdgesFromSource( search );
 
@@ -579,7 +579,7 @@ public abstract class GraphManagerIT {
 
         assertEquals( "Correct edge returned", edge, returned );
 
-        SearchByIdType searchById = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getVersion(),
+        SearchByIdType searchById = createSearchByEdgeAndId( edge.getSourceNode(), edge.getType(), edge.getTimestamp(),
                 edge.getTargetNode().getType(), null );
 
         edges = gm.loadEdgesFromSourceByType( searchById );
@@ -590,7 +590,7 @@ public abstract class GraphManagerIT {
         assertEquals( "Correct edge returned", edge, returned );
 
         final SearchByEdge searchByEdge =
-                createGetByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getVersion(), null );
+                createGetByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getTimestamp(), null );
 
         returned = gm.loadEdgeVersions( searchByEdge ).toBlockingObservable().single();
 
@@ -640,7 +640,7 @@ public abstract class GraphManagerIT {
         //now test retrieving it
 
 
-        SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getVersion(), null );
+        SearchByEdgeType search = createSearchByEdge( edge.getTargetNode(), edge.getType(), edge.getTimestamp(), null );
 
         Observable<Edge> edges = gm.loadEdgesToTarget( search );
 
@@ -649,7 +649,7 @@ public abstract class GraphManagerIT {
 
         assertEquals( "Correct edge returned", edge, returned );
 
-        SearchByIdType searchById = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getVersion(),
+        SearchByIdType searchById = createSearchByEdgeAndId( edge.getTargetNode(), edge.getType(), edge.getTimestamp(),
                 edge.getSourceNode().getType(), null );
 
         edges = gm.loadEdgesToTargetByType( searchById );
@@ -991,11 +991,11 @@ public abstract class GraphManagerIT {
 
 
 
-        assertTrue( UUIDComparator.staticCompare( maxVersion, edge2.getVersion() ) > 0);
-        assertTrue( UUIDComparator.staticCompare( maxVersion, edge1.getVersion() ) > 0);
+        assertTrue( UUIDComparator.staticCompare( maxVersion, edge2.getTimestamp() ) > 0);
+        assertTrue( UUIDComparator.staticCompare( maxVersion, edge1.getTimestamp() ) > 0);
 
-        ByteBuffer edge1Buff = UUIDSerializer.get().toByteBuffer( edge1.getVersion() );
-        ByteBuffer edge2Buff = UUIDSerializer.get().toByteBuffer( edge2.getVersion() );
+        ByteBuffer edge1Buff = UUIDSerializer.get().toByteBuffer( edge1.getTimestamp() );
+        ByteBuffer edge2Buff = UUIDSerializer.get().toByteBuffer( edge2.getTimestamp() );
         ByteBuffer maxBuff = UUIDSerializer.get().toByteBuffer( maxVersion );
 
 

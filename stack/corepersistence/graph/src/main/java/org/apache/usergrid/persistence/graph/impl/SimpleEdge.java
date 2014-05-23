@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -71,7 +70,7 @@ public class SimpleEdge implements Edge {
     }
 
 
-    public UUID getVersion() {
+    public UUID getTimestamp() {
         return version;
     }
 
@@ -104,7 +103,7 @@ public class SimpleEdge implements Edge {
         if ( !type.equals( that.getType() ) ) {
             return false;
         }
-        if ( !version.equals( that.getVersion() ) ) {
+        if ( !version.equals( that.getTimestamp() ) ) {
             return false;
         }
 

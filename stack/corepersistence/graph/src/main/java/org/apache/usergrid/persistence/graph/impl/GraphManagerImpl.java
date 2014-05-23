@@ -389,7 +389,7 @@ public class GraphManagerImpl implements GraphManager {
         public Boolean call( final MarkedEdge edge ) {
 
 
-            final UUID edgeVersion = edge.getVersion();
+            final UUID edgeVersion = edge.getTimestamp();
 
             //our edge needs to not be deleted and have a version that's > max Version
             if ( edge.isDeleted() || UUIDComparator.staticCompare( edgeVersion, maxVersion ) > 0 ) {

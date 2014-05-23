@@ -81,7 +81,7 @@ public class EdgeWriteCompactImpl implements EdgeWriteCompact {
     public Observable<Integer> compact( final ApplicationScope scope, final MarkedEdge edge, final UUID timestamp ) {
         final Edge writtenEdge = edge;
 
-              final UUID writeVersion = edge.getVersion();
+              final UUID writeVersion = edge.getTimestamp();
 
               return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeVersions" ) {
                   @Override

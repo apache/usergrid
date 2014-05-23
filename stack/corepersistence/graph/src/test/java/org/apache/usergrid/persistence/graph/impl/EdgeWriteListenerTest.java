@@ -412,7 +412,7 @@ public class EdgeWriteListenerTest {
         when(edgeProcessor.getProcessor( EdgeWriteEvent.class )).thenReturn( processor );
 
 
-        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, edgeV1.getVersion(), edgeV1 );
+        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, edgeV1.getTimestamp(), edgeV1 );
 
         Keyspace keyspace = mock( Keyspace.class );
 
@@ -430,7 +430,7 @@ public class EdgeWriteListenerTest {
          */
         when( commitLog.getEdgeVersions( same(scope), any( SearchByEdge.class ) ) ).thenReturn( Collections
                 .singletonList( createEdge( edgeV1.getSourceNode(), edgeV1.getType(), edgeV1.getTargetNode(),
-                        edgeV1.getVersion() ) ).iterator() );
+                        edgeV1.getTimestamp() ) ).iterator() );
 
 
         /**

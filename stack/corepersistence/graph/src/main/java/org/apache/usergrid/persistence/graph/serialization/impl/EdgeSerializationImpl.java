@@ -270,7 +270,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         final Id sourceNodeId = edge.getSourceNode();
         final Id targetNodeId = edge.getTargetNode();
-        final UUID version = edge.getVersion();
+        final UUID version = edge.getTimestamp();
         final String type = edge.getType();
 
 
@@ -367,7 +367,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
                     @Override
                     protected UUID getStartColumn( final Edge last ) {
-                        return last.getVersion();
+                        return last.getTimestamp();
                     }
 
 
@@ -410,7 +410,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
                     @Override
                     protected DirectedEdge getStartColumn( final Edge last ) {
-                        return new DirectedEdge( last.getTargetNode(), last.getVersion() );
+                        return new DirectedEdge( last.getTargetNode(), last.getTimestamp() );
                     }
 
 
@@ -454,7 +454,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
                     @Override
                     protected DirectedEdge getStartColumn( final Edge last ) {
-                        return new DirectedEdge( last.getTargetNode(), last.getVersion() );
+                        return new DirectedEdge( last.getTargetNode(), last.getTimestamp() );
                     }
 
 
@@ -496,7 +496,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
                     @Override
                     protected DirectedEdge getStartColumn( final Edge last ) {
-                        return new DirectedEdge( last.getSourceNode(), last.getVersion() );
+                        return new DirectedEdge( last.getSourceNode(), last.getTimestamp() );
                     }
 
 
@@ -541,7 +541,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
                     @Override
                     protected DirectedEdge getStartColumn( final Edge last ) {
-                        return new DirectedEdge( last.getTargetNode(), last.getVersion() );
+                        return new DirectedEdge( last.getTargetNode(), last.getTimestamp() );
                     }
 
 

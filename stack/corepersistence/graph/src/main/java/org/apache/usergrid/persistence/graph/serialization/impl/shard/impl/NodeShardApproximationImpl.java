@@ -37,30 +37,13 @@ import com.google.common.cache.LoadingCache;
 
 
 /**
- * Implementation for doing approximation.  Uses hy perlog log.
+ * Implementation for doing edge approximation based on counters.  Uses a guava loading cache to load values from
+ * cassandra, and flush them on cache eviction.
  *
- *
- * http://blog.aggregateknowledge.com/2012/10/25/sketch-of-the-day-hyperloglog-cornerstone-of-a-big-data-infrastructure/
- *
- * See also
- *
- * http://blog.aggregateknowledge.com/2012/10/25/sketch-of-the-day-hyperloglog-cornerstone-of-a-big-data-infrastructure/
- *
- * See also
- *
- * https://github.com/addthis/stream-lib/blob/master/src/main/java/com/clearspring/analytics/stream/cardinality
- * /HyperLogLog.java
  */
-
-
 public class NodeShardApproximationImpl implements NodeShardApproximation {
 
-    private final GraphFig graphFig;
-
-    //TODO, replace with with our counters. This is just a POC for now.  HyperLogLog appears to use too much ram, waiting
-    //to hear back on http://dsiutils.di.unimi.it/#install
-    //for our use case
-    private final LoadingCache<ShardKey, AtomicLong> graphLogs;
+       private final LoadingCache<ShardKey, AtomicLong> graphLogs;
 
 
     /**
@@ -68,7 +51,6 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
      */
     @Inject
     public NodeShardApproximationImpl( final GraphFig graphFig) {
-        this.graphFig = graphFig;
 
         graphLogs = CacheBuilder.newBuilder()
                .maximumSize( graphFig.getShardCacheSize() )

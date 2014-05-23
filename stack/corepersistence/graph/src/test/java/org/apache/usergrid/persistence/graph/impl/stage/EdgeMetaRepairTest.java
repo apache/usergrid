@@ -126,7 +126,7 @@ public class EdgeMetaRepairTest {
 
         edgeMetadataSerialization.writeEdge( scope, edge ).execute();
 
-        int value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getVersion() )
+        int value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getTimestamp() )
                                   .toBlockingObservable().single();
 
         assertEquals( "No subtypes removed, edge exists", 1, value );
@@ -135,7 +135,7 @@ public class EdgeMetaRepairTest {
 
         storageEdgeSerialization.deleteEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
-        value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getVersion() )
+        value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getTimestamp() )
                               .toBlockingObservable().single();
 
         assertEquals( "Single subtype should be removed", 0, value );
@@ -289,7 +289,7 @@ public class EdgeMetaRepairTest {
 
         edgeMetadataSerialization.writeEdge( scope, edge ).execute();
 
-        int value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getVersion() )
+        int value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getTimestamp() )
                                   .toBlockingObservable().single();
 
         assertEquals( "No subtypes removed, edge exists", 1, value );
@@ -298,7 +298,7 @@ public class EdgeMetaRepairTest {
 
         storageEdgeSerialization.deleteEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
-        value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getVersion() )
+        value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getTimestamp() )
                               .toBlockingObservable().single();
 
         assertEquals( "Single subtype should be removed", 0, value );

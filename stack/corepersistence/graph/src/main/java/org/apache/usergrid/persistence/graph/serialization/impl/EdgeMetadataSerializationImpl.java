@@ -141,7 +141,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         final Id source = edge.getSourceNode();
         final Id target = edge.getTargetNode();
         final String edgeType = edge.getType();
-        final long timestamp = CassUtils.getTimestamp( edge.getVersion() );
+        final long timestamp = CassUtils.getTimestamp( edge.getTimestamp() );
 
         final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() ).withTimestamp( timestamp );
 
@@ -184,7 +184,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     @Override
     public MutationBatch removeEdgeTypeFromSource( final ApplicationScope scope, final Edge edge ) {
-        return removeEdgeTypeFromSource( scope, edge.getSourceNode(), edge.getType(), edge.getVersion() );
+        return removeEdgeTypeFromSource( scope, edge.getSourceNode(), edge.getType(), edge.getTimestamp() );
     }
 
 
@@ -198,7 +198,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     @Override
     public MutationBatch removeIdTypeFromSource( final ApplicationScope scope, final Edge edge ) {
         return removeIdTypeFromSource( scope, edge.getSourceNode(), edge.getType(), edge.getTargetNode().getType(),
-                edge.getVersion() );
+                edge.getTimestamp() );
     }
 
 
@@ -211,7 +211,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     @Override
     public MutationBatch removeEdgeTypeToTarget( final ApplicationScope scope, final Edge edge ) {
-        return removeEdgeTypeToTarget( scope, edge.getTargetNode(), edge.getType(), edge.getVersion() );
+        return removeEdgeTypeToTarget( scope, edge.getTargetNode(), edge.getType(), edge.getTimestamp() );
     }
 
 
@@ -225,7 +225,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     @Override
     public MutationBatch removeIdTypeToTarget( final ApplicationScope scope, final Edge edge ) {
         return removeIdTypeToTarget( scope, edge.getTargetNode(), edge.getType(), edge.getSourceNode().getType(),
-                edge.getVersion() );
+                edge.getTimestamp() );
     }
 
 

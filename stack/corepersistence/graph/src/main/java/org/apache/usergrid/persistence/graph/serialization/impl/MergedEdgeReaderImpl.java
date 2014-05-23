@@ -381,7 +381,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
      * want descending ordering
      */
     public static int compareVersions( final MarkedEdge o1, final MarkedEdge o2 ) {
-        return UUIDComparator.staticCompare( o1.getVersion(), o2.getVersion() );
+        return UUIDComparator.staticCompare( o1.getTimestamp(), o2.getTimestamp() );
     }
 
 
@@ -437,7 +437,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
         @Override
         public EdgeKey call( final MarkedEdge markedEdge ) {
             return new EdgeKey( markedEdge.getSourceNode(), markedEdge.getType(), markedEdge.getTargetNode(),
-                    markedEdge.getVersion() );
+                    markedEdge.getTimestamp() );
         }
     }
 

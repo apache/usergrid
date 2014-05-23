@@ -47,7 +47,7 @@ public class EdgeUtils {
         ValidationUtils.verifyIdentity( e.getSourceNode() );
         ValidationUtils.verifyIdentity( e.getTargetNode() );
         ValidationUtils.verifyString( e.getType(), "type" );
-        ValidationUtils.verifyTimeUuid( e.getVersion(), "version" );
+        ValidationUtils.verifyTimeUuid( e.getTimestamp(), "version" );
     }
 
 

@@ -44,7 +44,7 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
 
 
     public SimpleMarkedEdge(final Edge edge, final boolean deleted){
-        this(edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getVersion(), deleted);
+        this(edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getTimestamp(), deleted);
     }
 
 

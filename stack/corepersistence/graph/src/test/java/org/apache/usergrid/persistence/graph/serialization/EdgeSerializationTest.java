@@ -231,7 +231,7 @@ public abstract class EdgeSerializationTest {
         final MarkedEdge diffTarget = createEdge( sourceId, "edge1", createId( "newTarget" ) );
 
         assertTrue( "Edge version 1 has lower time uuid",
-                UUIDComparator.staticCompare( edgev1.getVersion(), edgev2.getVersion() ) < 0 );
+                UUIDComparator.staticCompare( edgev1.getTimestamp(), edgev2.getTimestamp() ) < 0 );
 
         //create edge type 2 to ensure we don't get it in results
         final MarkedEdge edgeType2V1 = createEdge( sourceId, "edge2", targetId );
@@ -259,7 +259,7 @@ public abstract class EdgeSerializationTest {
         //max version test
 
         //test max version
-        search = createGetByEdge( sourceId, "edge1", targetId, edgev1.getVersion(), null );
+        search = createGetByEdge( sourceId, "edge1", targetId, edgev1.getTimestamp(), null );
 
         results = serialization.getEdgeVersions( scope, search );
 
@@ -557,10 +557,10 @@ public abstract class EdgeSerializationTest {
         //now we've validated everything exists, lets blitz the data and ensure it's removed
 
         final MarkedEdge mark1 =
-                createEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(), edge1.getVersion(), true );
+                createEdge( edge1.getSourceNode(), edge1.getType(), edge1.getTargetNode(), edge1.getTimestamp(), true );
 
         final MarkedEdge mark2 =
-                createEdge( edge2.getSourceNode(), edge2.getType(), edge2.getTargetNode(), edge2.getVersion(), true );
+                createEdge( edge2.getSourceNode(), edge2.getType(), edge2.getTargetNode(), edge2.getTimestamp(), true );
 
 
         final UUID timestamp2 = UUIDGenerator.newTimeUUID();
@@ -712,7 +712,7 @@ public abstract class EdgeSerializationTest {
 
             final MarkedEdge edge = createEdge( sourceId, edgeType, targetId );
 
-            lastMax = edge.getVersion();
+            lastMax = edge.getTimestamp();
 
             batch.mergeShallow( serialization.writeEdge( scope, edge, timestamp ) );
         }

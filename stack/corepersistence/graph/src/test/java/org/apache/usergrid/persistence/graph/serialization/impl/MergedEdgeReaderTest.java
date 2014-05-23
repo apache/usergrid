@@ -90,9 +90,9 @@ public class MergedEdgeReaderTest {
         MarkedEdge storageEdge2 = createEdge( sourceId, type, createId( "target4" ) );
 
         //verify our versions are as expected
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getVersion(), storageEdge1.getVersion() ) < 0 );
-        assertTrue( UUIDComparator.staticCompare( storageEdge1.getVersion(), commitLogEdge2.getVersion() ) < 0 );
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getVersion(), storageEdge2.getVersion() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( storageEdge1.getTimestamp(), commitLogEdge2.getTimestamp() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) < 0 );
 
         SearchByEdgeType searchByEdgeType = createSearchByEdge( sourceId, type, UUIDGenerator.newTimeUUID(), null );
 
@@ -137,13 +137,13 @@ public class MergedEdgeReaderTest {
 
 
         MarkedEdge commitLogEdge1 = createEdge( sourceId, type, createId( "target" ), UUIDGenerator.newTimeUUID(), true );
-        MarkedEdge storageEdge1 =   createEdge( sourceId, type, commitLogEdge1.getTargetNode(), commitLogEdge1.getVersion(), false );
+        MarkedEdge storageEdge1 =   createEdge( sourceId, type, commitLogEdge1.getTargetNode(), commitLogEdge1.getTimestamp(), false );
         MarkedEdge commitLogEdge2 =  createEdge( sourceId, type, createId( "target" ), UUIDGenerator.newTimeUUID(), true );
-        MarkedEdge storageEdge2 =  createEdge( sourceId, type, commitLogEdge2.getTargetNode(), commitLogEdge2.getVersion(), false );
+        MarkedEdge storageEdge2 =  createEdge( sourceId, type, commitLogEdge2.getTargetNode(), commitLogEdge2.getTimestamp(), false );
 
         //verify our versions are as expected
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getVersion(), storageEdge1.getVersion() ) ==  0 );
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getVersion(), storageEdge2.getVersion() ) == 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) ==  0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) == 0 );
 
         SearchByEdgeType searchByEdgeType = createSearchByEdge( sourceId, type, UUIDGenerator.newTimeUUID(), null );
 
@@ -188,9 +188,9 @@ public class MergedEdgeReaderTest {
         MarkedEdge storageEdge2 = createEdge( sourceId, type, createId( targetIdType ) );
 
         //verify our versions are as expected
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getVersion(), storageEdge1.getVersion() ) < 0 );
-        assertTrue( UUIDComparator.staticCompare( storageEdge1.getVersion(), commitLogEdge2.getVersion() ) < 0 );
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getVersion(), storageEdge2.getVersion() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( storageEdge1.getTimestamp(), commitLogEdge2.getTimestamp() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) < 0 );
 
         SearchByIdType searchByEdgeType =
                 createSearchByEdgeAndId( sourceId, type, UUIDGenerator.newTimeUUID(), targetIdType, null );
@@ -233,13 +233,13 @@ public class MergedEdgeReaderTest {
         final String targetIdType = "target";
 
         MarkedEdge commitLogEdge1 = createEdge( sourceId, type, createId( targetIdType ), UUIDGenerator.newTimeUUID(), true );
-        MarkedEdge storageEdge1 = createEdge( sourceId, type, commitLogEdge1.getTargetNode(), commitLogEdge1.getVersion(), false );
+        MarkedEdge storageEdge1 = createEdge( sourceId, type, commitLogEdge1.getTargetNode(), commitLogEdge1.getTimestamp(), false );
         MarkedEdge commitLogEdge2 = createEdge( sourceId, type, createId( targetIdType ) , UUIDGenerator.newTimeUUID(), true);
-        MarkedEdge storageEdge2 = createEdge( sourceId, type, commitLogEdge2.getTargetNode(), commitLogEdge2.getVersion(), false );
+        MarkedEdge storageEdge2 = createEdge( sourceId, type, commitLogEdge2.getTargetNode(), commitLogEdge2.getTimestamp(), false );
 
         //verify our versions are as expected
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getVersion(), storageEdge1.getVersion() ) == 0  );
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getVersion(), storageEdge2.getVersion() ) == 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) == 0  );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) == 0 );
 
         SearchByIdType searchByEdgeType =
                 createSearchByEdgeAndId( sourceId, type, UUIDGenerator.newTimeUUID(), targetIdType, null );
@@ -288,9 +288,9 @@ public class MergedEdgeReaderTest {
         MarkedEdge storageEdge2 = createEdge( createId( "source" ), type, targetId );
 
         //verify our versions are as expected
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getVersion(), storageEdge1.getVersion() ) < 0 );
-        assertTrue( UUIDComparator.staticCompare( storageEdge1.getVersion(), commitLogEdge2.getVersion() ) < 0 );
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getVersion(), storageEdge2.getVersion() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( storageEdge1.getTimestamp(), commitLogEdge2.getTimestamp() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) < 0 );
 
         SearchByEdgeType searchByEdgeType = createSearchByEdge( targetId, type, UUIDGenerator.newTimeUUID(), null );
 
@@ -336,14 +336,14 @@ public class MergedEdgeReaderTest {
 
         MarkedEdge commitLogEdge1 =
                 createEdge( createId( "source" ), type, targetId, UUIDGenerator.newTimeUUID(), true );
-        MarkedEdge storageEdge1 = createEdge( commitLogEdge1.getSourceNode(), type, commitLogEdge1.getTargetNode(), commitLogEdge1.getVersion(), false );
+        MarkedEdge storageEdge1 = createEdge( commitLogEdge1.getSourceNode(), type, commitLogEdge1.getTargetNode(), commitLogEdge1.getTimestamp(), false );
         MarkedEdge commitLogEdge2 =
                 createEdge( createId( "source" ), type, targetId, UUIDGenerator.newTimeUUID(), true );
-        MarkedEdge storageEdge2 = createEdge( commitLogEdge2.getSourceNode(), type, commitLogEdge2.getTargetNode(), commitLogEdge2.getVersion(), false );
+        MarkedEdge storageEdge2 = createEdge( commitLogEdge2.getSourceNode(), type, commitLogEdge2.getTargetNode(), commitLogEdge2.getTimestamp(), false );
 
         //verify our versions are as expected
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getVersion(), storageEdge1.getVersion() ) ==  0 );
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getVersion(), storageEdge2.getVersion() ) == 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) ==  0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) == 0 );
 
         SearchByEdgeType searchByEdgeType = createSearchByEdge( targetId, type, UUIDGenerator.newTimeUUID(), null );
 
@@ -389,9 +389,9 @@ public class MergedEdgeReaderTest {
         MarkedEdge storageEdge2 = createEdge( createId( sourceIdType ), type, targetId );
 
         //verify our versions are as expected
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getVersion(), storageEdge1.getVersion() ) < 0 );
-        assertTrue( UUIDComparator.staticCompare( storageEdge1.getVersion(), commitLogEdge2.getVersion() ) < 0 );
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getVersion(), storageEdge2.getVersion() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( storageEdge1.getTimestamp(), commitLogEdge2.getTimestamp() ) < 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) < 0 );
 
         SearchByIdType searchByEdgeType =
                 createSearchByEdgeAndId( targetId, type, UUIDGenerator.newTimeUUID(), sourceIdType, null );
@@ -437,13 +437,13 @@ public class MergedEdgeReaderTest {
         final String sourceIdType = "target";
 
         MarkedEdge commitLogEdge1 = createEdge( createId( sourceIdType), type, targetId, UUIDGenerator.newTimeUUID(), true );
-        MarkedEdge storageEdge1 = createEdge( commitLogEdge1.getSourceNode(), type, commitLogEdge1.getTargetNode(), commitLogEdge1.getVersion(), false );
+        MarkedEdge storageEdge1 = createEdge( commitLogEdge1.getSourceNode(), type, commitLogEdge1.getTargetNode(), commitLogEdge1.getTimestamp(), false );
         MarkedEdge commitLogEdge2 = createEdge( createId( sourceIdType), type, targetId , UUIDGenerator.newTimeUUID(), true);
-        MarkedEdge storageEdge2 = createEdge( commitLogEdge2.getSourceNode(), type, commitLogEdge2.getTargetNode(), commitLogEdge2.getVersion(), false );
+        MarkedEdge storageEdge2 = createEdge( commitLogEdge2.getSourceNode(), type, commitLogEdge2.getTargetNode(), commitLogEdge2.getTimestamp(), false );
 
         //verify our versions are as expected
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getVersion(), storageEdge1.getVersion() ) == 0  );
-        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getVersion(), storageEdge2.getVersion() ) == 0 );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) == 0  );
+        assertTrue( UUIDComparator.staticCompare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) == 0 );
 
         SearchByIdType searchByEdgeType =
                 createSearchByEdgeAndId( targetId, type, UUIDGenerator.newTimeUUID(), sourceIdType, null );

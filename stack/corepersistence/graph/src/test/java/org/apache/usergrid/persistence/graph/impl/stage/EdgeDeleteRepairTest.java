@@ -129,7 +129,7 @@ public class EdgeDeleteRepairTest {
 
         //write it as non deleted to storage
         final MarkedEdge edge1NotDeleted =
-                createEdge( edge1.getSourceNode(), edgeType, edge1.getTargetNode(), edge1.getVersion(), false );
+                createEdge( edge1.getSourceNode(), edgeType, edge1.getTargetNode(), edge1.getTimestamp(), false );
 
         storageEdgeSerialization.writeEdge( scope, edge1NotDeleted,  UUIDGenerator.newTimeUUID() ).execute();
 
