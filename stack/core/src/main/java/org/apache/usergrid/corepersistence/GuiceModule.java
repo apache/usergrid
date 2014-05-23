@@ -49,6 +49,9 @@ public class GuiceModule  extends AbstractModule {
         install(new GraphModule());
         install(new IndexModule());
 
-    }   
+        bind(CpEntityDeleteListener.class).asEagerSingleton();
+        bind(CpEntityIndexDeleteListener.class).asEagerSingleton();
+
+    }
 
 }
