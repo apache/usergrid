@@ -25,7 +25,6 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.impl.EsEntityIndexDeleteListener;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
@@ -41,8 +40,6 @@ public class IndexModule extends AbstractModule {
         install( new FactoryModuleBuilder()
             .implement( EntityIndex.class, EsEntityIndexImpl.class )
             .build( EntityIndexFactory.class ) );
-
-        bind(EsEntityIndexDeleteListener.class).asEagerSingleton();
 
     }
 

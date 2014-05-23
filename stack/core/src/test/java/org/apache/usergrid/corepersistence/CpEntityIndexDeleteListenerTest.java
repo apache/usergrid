@@ -1,11 +1,26 @@
-package org.apache.usergrid.persistence.index.impl;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements.  The ASF licenses this file to You
+ * under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.  For additional information regarding
+ * copyright in this work, please see the NOTICE file in the top level
+ * directory of this distribution.
+ */
+package org.apache.usergrid.corepersistence;
 
 import com.netflix.astyanax.util.TimeUUIDUtils;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
@@ -14,13 +29,12 @@ import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.guice.TestIndexModule;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +44,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
@@ -38,12 +51,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(JukitoRunner.class)
-@UseModules({ TestIndexModule.class })
-public class EsEntityIndexDeleteListenerTest {
-
+@RunWith( JukitoRunner.class )
+public class CpEntityIndexDeleteListenerTest {
     EntityIndex entityIndex;
-    EsEntityIndexDeleteListener esEntityIndexDeleteListener;
+    CpEntityIndexDeleteListener esEntityIndexDeleteListener;
     SerializationFig serializationFig;
     private EntityIndexFactory eif;
 
@@ -59,7 +70,7 @@ public class EsEntityIndexDeleteListenerTest {
 
         when(asyncProcessorFactory.getProcessor( MvccEntityDeleteEvent.class )).thenReturn(entityDelete );
 
-        this.esEntityIndexDeleteListener = new EsEntityIndexDeleteListener(eif,asyncProcessorFactory,serializationFig);
+        this.esEntityIndexDeleteListener = new CpEntityIndexDeleteListener(eif,asyncProcessorFactory,serializationFig);
     }
 
     @Test
