@@ -80,7 +80,8 @@ public class CpRelationManager implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
 
-    public static String COLLECTION_SUFFIX = "zzzcollectionzzz";
+    public static String COLLECTION_SUFFIX = ""; // TODO: do we need a suffix at all?
+
     public static String ALL_TYPES = "zzzalltypesnzzz";
 
     private CpEntityManagerFactory emf;
@@ -119,13 +120,16 @@ public class CpRelationManager implements RelationManager {
         this.managerCache = emf.getManagerCache();
 
         String collectionName = Schema.defaultCollectionName( headEntity.getType() ); 
+
         this.applicationScope = emf.getApplicationScope(applicationId);
+
         this.headEntityScope = new CollectionScopeImpl( 
             this.applicationScope.getApplication(), 
             this.applicationScope.getApplication(), 
-            collectionName );
+            collectionName + COLLECTION_SUFFIX );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(headEntityScope);
+        
         this.cpHeadEntity = ecm.load( new SimpleId( 
             headEntity.getUuid(), headEntity.getType() )).toBlockingObservable().last();
 
@@ -294,7 +298,7 @@ public class CpRelationManager implements RelationManager {
         CollectionScope memberScope = new CollectionScopeImpl( 
             applicationScope.getApplication(), 
             applicationScope.getApplication(), 
-            Schema.defaultCollectionName( memberRef.getType()));
+            Schema.defaultCollectionName( memberRef.getType()) + COLLECTION_SUFFIX);
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
@@ -421,7 +425,7 @@ public class CpRelationManager implements RelationManager {
         CollectionScope memberScope = new CollectionScopeImpl( 
             this.applicationScope.getApplication(), 
             this.applicationScope.getApplication(), 
-            Schema.defaultCollectionName( memberRef.getType() ));
+            Schema.defaultCollectionName( memberRef.getType() ) + COLLECTION_SUFFIX );
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
@@ -504,7 +508,7 @@ public class CpRelationManager implements RelationManager {
         CollectionScope targetScope = new CollectionScopeImpl( 
             applicationScope.getApplication(), 
             applicationScope.getApplication(), 
-            Schema.defaultCollectionName( connectedEntityRef.getType() ));
+            Schema.defaultCollectionName( connectedEntityRef.getType() ) + COLLECTION_SUFFIX);
 
         EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager(targetScope);
         org.apache.usergrid.persistence.model.entity.Entity targetEntity = targetEcm.load(
@@ -522,7 +526,7 @@ public class CpRelationManager implements RelationManager {
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
-            connectionType);
+            connectionType + COLLECTION_SUFFIX);
         EntityIndex ei = managerCache.getEntityIndex(indexScope);
         ei.index( targetEntity );
 
@@ -785,7 +789,7 @@ public class CpRelationManager implements RelationManager {
             CollectionScope collScope = new CollectionScopeImpl( 
                 applicationScope.getApplication(), 
                 applicationScope.getApplication(), 
-                Schema.defaultCollectionName( query.getEntityType() ) );
+                Schema.defaultCollectionName( query.getEntityType() ) + COLLECTION_SUFFIX);
 
             EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
 

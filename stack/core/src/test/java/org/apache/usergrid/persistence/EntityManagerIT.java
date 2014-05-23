@@ -327,7 +327,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         // now search by username, no results should be returned
 
         Results r = em.searchCollection( em.getApplicationRef(), "users",
-                new Query().addEqualityFilter( "username", name ) );
+            new Query().addEqualityFilter( "username", name ) );
 
         assertEquals( 0, r.size() );
 
