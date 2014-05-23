@@ -31,7 +31,7 @@
         <guava.version>15.0</guava.version>
         <guice.version>3.0</guice.version>
         <guicyfig.version>3.2</guicyfig.version>
-        <hystrix.version>1.4.0-RC1</hystrix.version>
+        <hystrix.version>1.4.0-RC4</hystrix.version>
         <jackson-smile.verson>1.9.13</jackson-smile.verson>
         <jukito.version>1.4-UG</jukito.version>
         <junit.version>4.11</junit.version>
