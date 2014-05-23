@@ -381,6 +381,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       this.client().createCollection(options, function (err, collection, data) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error getting ' + collection._type + ': ' + data.error_description);
+          $rootScope.$broadcast(type + '-error', collection);
         } else {
           $rootScope.$broadcast(type + '-received', collection);
         }
