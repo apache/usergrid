@@ -26,19 +26,12 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerSync;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerImpl;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerListener;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSyncImpl;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGenerator;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGeneratorImpl;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
-
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteListener;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteListener;
-
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
@@ -53,7 +46,6 @@ import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueue;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeoutQueue;
-import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -62,11 +54,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-
-import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
-import com.netflix.astyanax.Keyspace;
 
 
 
@@ -101,8 +90,7 @@ public class CollectionModule extends AbstractModule {
         Multibinder<MessageListener> messageListenerMultibinder = Multibinder.newSetBinder(binder(), MessageListener.class);
 
 
-        messageListenerMultibinder.addBinding().toProvider( MvccEntityDeleteListenerProvider.class ).asEagerSingleton();
-        bind(MvccEntityDeleteListener.class).asEagerSingleton();
+
 
     }
 
@@ -140,13 +128,7 @@ public class CollectionModule extends AbstractModule {
         return new AsyncProcessorImpl<>( queue, consistencyFig );
     }
 
-    @Provides
-    @Singleton
-    @Inject
-    @MvccEntityDelete
-    public AsyncProcessor<MvccEntityEvent<MvccEntity>> edgeDelete(@MvccEntityDelete final TimeoutQueue<MvccEntityEvent<MvccEntity>> queue, final ConsistencyFig consistencyFig) {
-        return new AsyncProcessorImpl<>(queue, consistencyFig);
-    }
+
 
 
 
@@ -158,13 +140,7 @@ public class CollectionModule extends AbstractModule {
         return new LocalTimeoutQueue<>( timeService );
     }
 
-    @Provides
-    @Inject
-    @Singleton
-    @MvccEntityDelete
-    public TimeoutQueue<MvccEntityEvent<MvccEntity>> edgeDeleteQueue(final TimeService timeService) {
-        return new LocalTimeoutQueue<>(timeService);
-    }
+
 
 
     /**
@@ -196,40 +172,6 @@ public class CollectionModule extends AbstractModule {
         }
     }
 
-
-     /**
-     * Create the provider for the entity delete listener
-     */
-    public static class MvccEntityDeleteListenerProvider
-            implements Provider<MvccDeleteMessageListener> {
-
-
-
-        private final MvccEntitySerializationStrategy entitySerialization;
-        private final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete;
-        private final Keyspace keyspace;
-        private final SerializationFig serializationFig;
-
-
-        @Inject
-        public MvccEntityDeleteListenerProvider( final MvccEntitySerializationStrategy entitySerialization,
-                                           @MvccEntityDelete final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete,
-                                           final Keyspace keyspace,
-                                           final SerializationFig serializationFig) {
-            this.entitySerialization = entitySerialization;
-            this.entityDelete = entityDelete;
-            this.serializationFig = serializationFig;
-            this.keyspace = keyspace;
-        }
-
-        @Override
-        public MvccDeleteMessageListener get() {
-            return new MvccEntityDeleteListener( entitySerialization,entityDelete,keyspace,serializationFig  );
-
-        }
-    }
-
-    }
-
-
 }
+
+
