@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.hystrix.HystrixGraphObservable;
+import org.apache.usergrid.persistence.core.hystrix.HystrixObservable;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -88,7 +88,7 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
         List<Observable<?>> observables = new ArrayList<Observable<?>>( listeners.size() );
 
         for ( MessageListener<T, ?> listener : listeners ) {
-            observables.add( HystrixGraphObservable.async( listener.receive( data ) ).subscribeOn( Schedulers.io() ) );
+            observables.add( HystrixObservable.async( listener.receive( data ) ).subscribeOn( Schedulers.io() ) );
         }
 
         LOG.debug( "About to start {} observables for event {}", listeners.size(), event );
