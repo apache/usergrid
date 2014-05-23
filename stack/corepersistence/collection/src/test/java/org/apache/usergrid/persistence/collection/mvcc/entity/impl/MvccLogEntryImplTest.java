@@ -19,19 +19,19 @@ public class MvccLogEntryImplTest {
 
     @Test(expected = NullPointerException.class)
     public void entityIdRequired() {
-        new MvccLogEntryImpl( null, UUIDGenerator.newTimeUUID(), Stage.ACTIVE );
+        new MvccLogEntryImpl( null, UUIDGenerator.newTimeUUID(), Stage.ACTIVE, MvccLogEntry.State.COMPLETE );
     }
 
 
     @Test(expected = NullPointerException.class)
     public void versionRequired() {
-        new MvccLogEntryImpl( new SimpleId( "test" ), null, Stage.ACTIVE );
+        new MvccLogEntryImpl( new SimpleId( "test" ), null, Stage.ACTIVE, MvccLogEntry.State.COMPLETE );
     }
 
 
     @Test(expected = NullPointerException.class)
     public void stageRequired() {
-        new MvccLogEntryImpl( new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), null );
+        new MvccLogEntryImpl( new SimpleId( "test" ), UUIDGenerator.newTimeUUID(), null, MvccLogEntry.State.COMPLETE );
     }
 
 
@@ -41,9 +41,9 @@ public class MvccLogEntryImplTest {
         final SimpleId entityId = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
         final Stage stage = Stage.COMPLETE;
+        final MvccLogEntry.State state = MvccLogEntry.State.COMPLETE;
 
-
-        MvccLogEntry logEntry = new MvccLogEntryImpl( entityId, version, stage );
+        MvccLogEntry logEntry = new MvccLogEntryImpl( entityId, version, stage, state );
 
         assertEquals( entityId, logEntry.getEntityId() );
         assertEquals( version, logEntry.getVersion() );
@@ -57,11 +57,12 @@ public class MvccLogEntryImplTest {
         final SimpleId entityId = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
         final Stage stage = Stage.COMPLETE;
+        final MvccLogEntry.State state = MvccLogEntry.State.COMPLETE;
 
 
-        MvccLogEntry first = new MvccLogEntryImpl( entityId, version, stage );
+        MvccLogEntry first = new MvccLogEntryImpl( entityId, version, stage, state );
 
-        MvccLogEntry second = new MvccLogEntryImpl( entityId, version, stage );
+        MvccLogEntry second = new MvccLogEntryImpl( entityId, version, stage, state );
 
         assertEquals( first, second );
     }
@@ -73,11 +74,12 @@ public class MvccLogEntryImplTest {
         final SimpleId entityId = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
         final Stage stage = Stage.COMPLETE;
+        final MvccLogEntry.State state = MvccLogEntry.State.COMPLETE;
 
 
-        MvccLogEntry first = new MvccLogEntryImpl( entityId, version, stage );
+        MvccLogEntry first = new MvccLogEntryImpl( entityId, version, stage, state );
 
-        MvccLogEntry second = new MvccLogEntryImpl( entityId, version, stage );
+        MvccLogEntry second = new MvccLogEntryImpl( entityId, version, stage, state );
 
         assertEquals( first.hashCode(), second.hashCode() );
     }

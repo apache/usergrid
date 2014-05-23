@@ -33,12 +33,12 @@ import rx.functions.Action1;
 public class TimeoutTask<T> implements Action0 {
 
     private final AsyncProcessor<T> processor;
-    private final ConsistencyFig graphFig;
+    private final ConsistencyFig consistencyFig;
 
 
-    public TimeoutTask( final AsyncProcessor<T> processor, final ConsistencyFig graphFig ) {
+    public TimeoutTask( final AsyncProcessor<T> processor, final ConsistencyFig consistencyFig ) {
         this.processor = processor;
-        this.graphFig = graphFig;
+        this.consistencyFig = consistencyFig;
     }
 
 
@@ -49,7 +49,7 @@ public class TimeoutTask<T> implements Action0 {
      * @return
      */
     private Iterator<AsynchronousMessage<T>> getTimeouts() {
-        return processor.getTimeouts( graphFig.getTimeoutReadSize(), graphFig.getRepairTimeout() * 2 ).iterator();
+        return processor.getTimeouts( consistencyFig.getTimeoutReadSize(), consistencyFig.getRepairTimeout() * 2 ).iterator();
     }
 
 
@@ -60,7 +60,7 @@ public class TimeoutTask<T> implements Action0 {
          * We purposefully loop through a tight loop.  If we have anything to process, we need to do so
          * Once we run out of items to process, this thread will sleep and the timer will fire
          */
-        while(graphFig.getTimeoutReadSize() > 0) {
+        while(consistencyFig.getTimeoutReadSize() > 0) {
 
             Iterator<AsynchronousMessage<T>> timeouts = getTimeouts();
 

@@ -31,11 +31,14 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGenerator;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGeneratorImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
+
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteListener;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteListener;
+
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
@@ -59,6 +62,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+
+import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
 import com.netflix.astyanax.Keyspace;
@@ -75,7 +80,7 @@ public class CollectionModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install( new CommonModule() );
+
         //noinspection unchecked
         install( new GuicyFigModule( SerializationFig.class ) );
 
@@ -90,11 +95,15 @@ public class CollectionModule extends AbstractModule {
                                           .build( EntityCollectionManagerFactory.class ) );
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
+
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
 
         Multibinder<MessageListener> messageListenerMultibinder = Multibinder.newSetBinder(binder(), MessageListener.class);
 
+
         messageListenerMultibinder.addBinding().toProvider( MvccEntityDeleteListenerProvider.class ).asEagerSingleton();
+        bind(MvccEntityDeleteListener.class).asEagerSingleton();
+
     }
 
     @Provides
@@ -195,6 +204,7 @@ public class CollectionModule extends AbstractModule {
             implements Provider<MvccDeleteMessageListener> {
 
 
+
         private final MvccEntitySerializationStrategy entitySerialization;
         private final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete;
         private final Keyspace keyspace;
@@ -218,4 +228,8 @@ public class CollectionModule extends AbstractModule {
 
         }
     }
+
+    }
+
+
 }

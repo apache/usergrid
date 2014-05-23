@@ -50,7 +50,7 @@ import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.apache.usergrid.management.exceptions.UnactivatedAppUserException;
 import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;

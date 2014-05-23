@@ -137,14 +137,14 @@ public class NodeDeleteListenerTest {
         UUID version = UUIDGenerator.newTimeUUID();
 
 
-        EdgeEvent<Id> deleteEvent = new EdgeEvent<Id>( scope, version, sourceNode );
+        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, version, sourceNode );
 
         int count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
 
         assertEquals( "Mark was not set, no delete should be executed", 0, count );
 
 
-        deleteEvent = new EdgeEvent<Id>( scope, version, targetNode );
+        deleteEvent = new NodeDeleteEvent( scope, version, targetNode );
 
         count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
 
@@ -179,7 +179,7 @@ public class NodeDeleteListenerTest {
 
         nodeSerialization.mark( scope, sourceNode, deleteVersion ).execute();
 
-        EdgeEvent<Id> deleteEvent = new EdgeEvent<Id>( scope, deleteVersion, sourceNode );
+        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, deleteVersion, sourceNode );
 
 
         int count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
@@ -267,7 +267,7 @@ public class NodeDeleteListenerTest {
 
         nodeSerialization.mark( scope, targetNode, deleteVersion ).execute();
 
-        EdgeEvent<Id> deleteEvent = new EdgeEvent<Id>( scope, deleteVersion, targetNode );
+        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, deleteVersion, targetNode );
 
 
         int count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
@@ -380,7 +380,7 @@ public class NodeDeleteListenerTest {
 
         nodeSerialization.mark( scope, toDelete, deleteVersion ).execute();
 
-        EdgeEvent<Id> deleteEvent = new EdgeEvent<Id>( scope, deleteVersion, toDelete );
+        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, deleteVersion, toDelete );
 
 
         int count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();

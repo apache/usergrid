@@ -64,11 +64,9 @@ public class ParallelTest {
         final int expected = size - 1;
 
 
-        /**
-         * QUESTION Using this thread blocks indefinitely.  The execution of the Hystrix command happens on the
-         * computation
-         * Thread if this is used
-         */
+        // QUESTION Using this thread blocks indefinitely.  The execution of the Hystrix command 
+         // happens on the computation Thread if this is used
+
         //        final Scheduler scheduler = Schedulers.threadPoolForComputation();
 
         //use the I/O scheduler to allow enough thread, otherwise our pool will be the same size as the # of cores
@@ -101,15 +99,16 @@ public class ParallelTest {
             public Observable<Integer> call( final String s ) {
                 List<Observable<Integer>> functions = new ArrayList<Observable<Integer>>();
 
-                logger.info( "Creating new set of observables in thread {}", Thread.currentThread().getName() );
+                logger.info( "Creating new set of observables in thread {}", 
+                        Thread.currentThread().getName() );
 
                 for ( int i = 0; i < size; i++ ) {
 
 
                     final int index = i;
 
-                    //create a new observable and execute the function on it.  These should happen in parallel when
-                    // a subscription occurs
+                    // create a new observable and execute the function on it.  
+                    // These should happen in parallel when a subscription occurs
 
                     /**
                      * QUESTION: Should this again be the process thread, not the I/O

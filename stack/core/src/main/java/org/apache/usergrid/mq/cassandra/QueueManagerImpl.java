@@ -54,7 +54,6 @@ import org.apache.usergrid.mq.cassandra.io.QueueSearch;
 import org.apache.usergrid.mq.cassandra.io.StartSearch;
 import org.apache.usergrid.persistence.AggregateCounter;
 import org.apache.usergrid.persistence.AggregateCounterSet;
-import org.apache.usergrid.persistence.CounterResolution;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -127,6 +126,7 @@ import static org.apache.usergrid.utils.NumberUtils.roundLong;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
 
 
 public class QueueManagerImpl implements QueueManager {

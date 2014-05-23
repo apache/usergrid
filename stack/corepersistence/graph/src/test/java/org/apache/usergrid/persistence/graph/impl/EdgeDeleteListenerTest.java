@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -154,10 +155,10 @@ public class EdgeDeleteListenerTest {
 
 
 
-        EdgeEvent<MarkedEdge> edgeDeleteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
+        EdgeDeleteEvent edgeDeleteEvent = new EdgeDeleteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
 
         //now perform the listener execution
-        EdgeEvent<MarkedEdge> returned = edgeDeleteListener.receive( edgeDeleteEvent ).toBlockingObservable().single();
+        EdgeDeleteEvent returned = edgeDeleteListener.receive( edgeDeleteEvent ).toBlockingObservable().single();
 
         assertEquals( edgeV3, returned.getData() );
 
@@ -298,18 +299,18 @@ public class EdgeDeleteListenerTest {
 
 
         //now perform the listener execution, should only clean up to edge v2
-        EdgeEvent<MarkedEdge> returned =
-                edgeDeleteListener.receive( new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV2 ) )
+        EdgeDeleteEvent returned =
+                edgeDeleteListener.receive( new EdgeDeleteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV2 ) )
                                   .toBlockingObservable().single();
 
         assertEquals( edgeV2, returned.getData() );
 
-        returned = edgeDeleteListener.receive( new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV1 ) )
+        returned = edgeDeleteListener.receive( new EdgeDeleteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV1 ) )
                                      .toBlockingObservable().single();
 
         assertEquals( edgeV1, returned.getData() );
 
-        returned = edgeDeleteListener.receive( new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 ) )
+        returned = edgeDeleteListener.receive( new EdgeDeleteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV3 ) )
                                      .toBlockingObservable().single();
 
         assertEquals( edgeV3, returned.getData() );
@@ -464,10 +465,14 @@ public class EdgeDeleteListenerTest {
         EdgeSerialization commitLog = mock( EdgeSerialization.class );
         EdgeSerialization storage = mock( EdgeSerialization.class );
 
-        AsyncProcessor<EdgeEvent<MarkedEdge>> edgeProcessor = mock( AsyncProcessor.class );
+        AsyncProcessorFactory edgeProcessor = mock( AsyncProcessorFactory.class );
+
+        AsyncProcessor<EdgeWriteEvent> processor = mock(AsyncProcessor.class);
+
+        when(edgeProcessor.getProcessor( EdgeWriteEvent.class )).thenReturn( processor );
 
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, edgeV1.getVersion(), edgeV1 );
+        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, edgeV1.getVersion(), edgeV1 );
 
         Keyspace keyspace = mock( Keyspace.class );
 

@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -140,7 +141,7 @@ public class EdgeWriteListenerTest {
         commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp).execute();
         commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
+        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
 
         //now perform the listener execution
         Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
@@ -270,7 +271,7 @@ public class EdgeWriteListenerTest {
         commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
         commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV2 );
+        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV2 );
 
         //now perform the listener execution, should only clean up to edge v2
         Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
@@ -404,10 +405,14 @@ public class EdgeWriteListenerTest {
         EdgeSerialization commitLog = mock( EdgeSerialization.class );
         EdgeSerialization storage = mock( EdgeSerialization.class );
 
-        AsyncProcessor<EdgeEvent<MarkedEdge>> edgeProcessor = mock( AsyncProcessor.class );
+        AsyncProcessorFactory edgeProcessor = mock( AsyncProcessorFactory.class );
+
+        AsyncProcessor<EdgeWriteEvent> processor = mock(AsyncProcessor.class);
+
+        when(edgeProcessor.getProcessor( EdgeWriteEvent.class )).thenReturn( processor );
 
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, edgeV1.getVersion(), edgeV1 );
+        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, edgeV1.getVersion(), edgeV1 );
 
         Keyspace keyspace = mock( Keyspace.class );
 

@@ -4,10 +4,12 @@ import com.netflix.astyanax.util.TimeUUIDUtils;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -51,9 +53,13 @@ public class EsEntityIndexDeleteListenerTest {
         serializationFig = mock(SerializationFig.class);
         this.eif = mock(EntityIndexFactory.class);
 
-        AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete = mock(AsyncProcessor.class);
-        EntityCollectionManager collectionManager = mock(EntityCollectionManager.class);
-        this.esEntityIndexDeleteListener = new EsEntityIndexDeleteListener(eif,entityDelete,serializationFig,collectionManager);
+        AsyncProcessor<MvccEntityDeleteEvent> entityDelete = mock(AsyncProcessor.class);
+
+        AsyncProcessorFactory asyncProcessorFactory = mock(AsyncProcessorFactory.class);
+
+        when(asyncProcessorFactory.getProcessor( MvccEntityDeleteEvent.class )).thenReturn(entityDelete );
+
+        this.esEntityIndexDeleteListener = new EsEntityIndexDeleteListener(eif,asyncProcessorFactory,serializationFig);
     }
 
     @Test
@@ -79,7 +85,9 @@ public class EsEntityIndexDeleteListenerTest {
         when(serializationFig.getHistorySize()).thenReturn(20);
         when(entityIndex.getEntityVersions(entityId)).thenReturn(results);
         MvccEntity mvccEntity = new MvccEntityImpl(entityId,uuid, MvccEntity.Status.COMPLETE,mock(Entity.class));
-        MvccEntityEvent<MvccEntity> event = new MvccEntityEvent<MvccEntity>(scope,uuid,mvccEntity);
+
+
+        MvccEntityDeleteEvent event = new MvccEntityDeleteEvent(scope,uuid,mvccEntity);
         Observable<EntityVersion> o = esEntityIndexDeleteListener.receive(event);
         EntityVersion testEntity = o.toBlockingObservable().last();
         assertEquals(testEntity.getId(),mvccEntity.getId());

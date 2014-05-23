@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -36,7 +37,6 @@ import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
-import org.apache.usergrid.persistence.graph.guice.NodeDelete;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
@@ -60,7 +60,7 @@ import rx.schedulers.Schedulers;
 /**
  * Construct the asynchronous node delete from the q
  */
-public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Integer> {
+public class NodeDeleteListener implements MessageListener<NodeDeleteEvent, Integer> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( NodeDeleteListener.class );
@@ -82,7 +82,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     public NodeDeleteListener( final NodeSerialization nodeSerialization,
                                final EdgeMetadataSerialization edgeMetadataSerialization,
                                final EdgeMetaRepair edgeMetaRepair, final GraphFig graphFig,
-                               @NodeDelete final AsyncProcessor nodeDelete,
+                               final AsyncProcessorFactory asyncProcessorFactory,
                                @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
                                @StorageEdgeSerialization final EdgeSerialization storageSerialization,
                                final MergedEdgeReader mergedEdgeReader, final Keyspace keyspace ) {
@@ -97,7 +97,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
         this.graphFig = graphFig;
         this.keyspace = keyspace;
 
-        nodeDelete.addListener( this );
+        asyncProcessorFactory.getProcessor( NodeDeleteEvent.class ).addListener( this );
     }
 
 
@@ -110,7 +110,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
      *         target and source
      */
     @Override
-    public Observable<Integer> receive( final EdgeEvent<Id> edgeEvent ) {
+    public Observable<Integer> receive( final NodeDeleteEvent edgeEvent ) {
 
         final Id node = edgeEvent.getData();
         final ApplicationScope scope = edgeEvent.getApplicationScope();

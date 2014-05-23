@@ -29,7 +29,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
  * Get the edge event in the organizational scope
  *
  */
-public class EdgeEvent<T> implements Serializable {
+public abstract class EdgeEvent<T> implements Serializable {
 
     private final ApplicationScope applicationScope;
     private final T data;

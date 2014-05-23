@@ -74,8 +74,6 @@ public class EntityConnectionIndexImplTest extends BaseIT {
     @Inject
     public EntityIndexFactory ecif;
 
-    @Inject
-    public EntityCollectionManagerFactory ecmf;
 
 
     @Test
@@ -92,8 +90,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
             put( "flavor", "Blueberry" );
         }} );
         EntityUtils.setVersion( muffin, UUIDGenerator.newTimeUUID() );
-        EntityCollectionManager muffinMgr = ecmf.createCollectionManager( muffinScope );
-        muffin = muffinMgr.write( muffin ).toBlockingObservable().last();
+
 
 
         // create a person who likes muffins
@@ -104,8 +101,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
             put( "hometown", "Chapel Hill" );
         }} );
         EntityUtils.setVersion( person, UUIDGenerator.newTimeUUID() );
-        EntityCollectionManager peopleMgr = ecmf.createCollectionManager( peopleScope );
-        person = peopleMgr.write( person ).toBlockingObservable().last();
+
 
         assertNotNull( person.getId() );
         assertNotNull( person.getId().getUuid() );
@@ -122,12 +118,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         // now, let's search for things that Dave likes
         CandidateResults likes = personLikesIndex.search( Query.fromQL( "select *" ) );
         assertEquals( 1, likes.size() );
+        assertEquals(muffin.getId(), likes.get(0).getId());
 
-
-        //cause retrieval from cassandra
-        EntityResults entityResults = new EntityResults( likes, muffinMgr, UUIDGenerator.newTimeUUID() );
-
-
-        assertEquals( "Blueberry", entityResults.next().getField( "flavor" ).getValue() );
     }
 }

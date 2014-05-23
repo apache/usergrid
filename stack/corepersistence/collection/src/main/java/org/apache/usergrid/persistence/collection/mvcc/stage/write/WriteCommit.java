@@ -95,7 +95,8 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         MvccValidationUtils.verifyMvccEntityWithEntity( ioEvent.getEvent() );
         ValidationUtils.verifyTimeUuid( ioEvent.getEvent().getVersion(),"version" );
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED );
+        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
+
         MutationBatch logMutation = logEntryStrat.write( collectionScope, startEntry );
 
         // now get our actual insert into the entity data

@@ -19,10 +19,8 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
-import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.guice.EdgeWrite;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompact;
 
 import com.google.common.base.Preconditions;
@@ -37,28 +35,28 @@ import rx.Observable;
  * rather as a part of the usergrid mechanism
  */
 @Singleton
-public class EdgeWriteListener implements MessageListener<EdgeEvent<MarkedEdge>, Integer> {
+public class EdgeWriteListener implements MessageListener<EdgeWriteEvent, Integer> {
 
 
     private final EdgeWriteCompact edgeWriteCompact;
 
 
     @Inject
-    public EdgeWriteListener( final EdgeWriteCompact edgeWriteCompact, @EdgeWrite final AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite) {
+    public EdgeWriteListener( final EdgeWriteCompact edgeWriteCompact, final AsyncProcessorFactory asyncProcessorFactory) {
 
 
         Preconditions.checkNotNull( edgeWriteCompact, "edgeWriteCompact is required" );
-        Preconditions.checkNotNull( edgeWrite, "edgeWrite is required" );
+        Preconditions.checkNotNull( asyncProcessorFactory, "asyncProcessorFactory is required" );
 
 
         this.edgeWriteCompact = edgeWriteCompact;
 
-        edgeWrite.addListener( this );
+        asyncProcessorFactory.getProcessor( EdgeWriteEvent.class ).addListener( this );
     }
 
 
     @Override
-    public Observable<Integer> receive( final EdgeEvent<MarkedEdge> write ) {
+    public Observable<Integer> receive( final EdgeWriteEvent write ) {
        return edgeWriteCompact.compact( write.getApplicationScope(), write.getData(), write.getTimestamp() );
     }
 }

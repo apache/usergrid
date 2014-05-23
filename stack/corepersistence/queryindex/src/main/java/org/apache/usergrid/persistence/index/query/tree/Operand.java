@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.index.query.tree;
 
 import org.antlr.runtime.Token;
 import org.antlr.runtime.tree.CommonTree;
-import org.apache.usergrid.persistence.index.exceptions.PersistenceException;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
 
 
 /**
@@ -46,5 +46,5 @@ public abstract class Operand extends CommonTree {
 
 
     /** Visitor method */
-    public abstract void visit( QueryVisitor visitor ) throws PersistenceException;
+    public abstract void visit( QueryVisitor visitor ) throws IndexException;
 }

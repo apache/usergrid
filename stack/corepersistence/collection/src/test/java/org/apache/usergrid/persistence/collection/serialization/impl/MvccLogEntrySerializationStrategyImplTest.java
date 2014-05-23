@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
@@ -5,7 +24,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.jukito.UseModules;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,7 +36,6 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -61,7 +78,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         final UUID version = UUIDGenerator.newTimeUUID();
 
         for ( Stage stage : Stage.values() ) {
-            MvccLogEntry saved = new MvccLogEntryImpl( id, version, stage );
+            MvccLogEntry saved = new MvccLogEntryImpl( id, version, stage, MvccLogEntry.State.COMPLETE );
             logEntryStrategy.write( context, saved ).execute();
 
             //Read it back
@@ -119,7 +136,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         for ( int i = 0; i < count; i++ ) {
             versions[i] = UUIDGenerator.newTimeUUID();
 
-            entries[i] = new MvccLogEntryImpl( id, versions[i], COMPLETE );
+            entries[i] = new MvccLogEntryImpl( id, versions[i], COMPLETE, MvccLogEntry.State.COMPLETE );
             logEntryStrategy.write( context, entries[i] ).execute();
 
             //Read it back
