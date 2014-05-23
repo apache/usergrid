@@ -162,7 +162,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
                         return fields;
                     }
                 });
-        deleteFieldsObservable.toBlockingObservable().last();
+        deleteFieldsObservable.toBlockingObservable().firstOrDefault(null);
 
         try {
             logMutation.execute();
