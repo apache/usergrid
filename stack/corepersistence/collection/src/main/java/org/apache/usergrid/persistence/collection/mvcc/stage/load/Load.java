@@ -88,11 +88,9 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         Iterator<MvccEntity> results = entitySerializationStrategy.load(
                 collectionScope, entityId, versionMax, 1 );
 
-        MvccEntity repairedEntity = RepairUtil.repair( results );
+        MvccEntity repairedEntity = RepairUtil.repair( results,collectionScope,entitySerializationStrategy );
         if(repairedEntity == null)
             return null;
-
-        entitySerializationStrategy.write( collectionScope, repairedEntity );
 
         return repairedEntity.getEntity().get();
 

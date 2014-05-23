@@ -279,17 +279,20 @@ public class EntityCollectionManagerIT {
 
         assertNotNull( "Returned has a uuid", returned.getId() );
 
+        /**
+         * Modify the oldEntity
+         */
         oldEntity.getFields().remove( testField1  );
         oldEntity.setField( addedField );
 
-        observable = manager.update( oldEntity);
+        observable = manager.update( oldEntity );
 
-        returned = observable.toBlockingObservable().lastOrDefault( null );
+        Entity updateReturned = observable.toBlockingObservable().lastOrDefault( null );
 
         assertNotNull( "Returned has a uuid", returned.getId() );
         assertEquals( oldEntity.getField( "testFud" ), returned.getField( "testFud" ) );
 
-        Observable<Entity> newEntityObs = manager.load( oldEntity.getId() );
+        Observable<Entity> newEntityObs = manager.load( updateReturned.getId() );
         Entity newEntity = newEntityObs.toBlockingObservable().last();
 
         assertNotNull( "Returned has a uuid", returned.getId() );

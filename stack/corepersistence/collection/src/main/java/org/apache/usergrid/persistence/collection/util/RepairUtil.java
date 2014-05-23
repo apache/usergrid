@@ -6,8 +6,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.collections4.iterators.PushbackIterator;
-
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGenerator;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGeneratorImpl;
@@ -25,15 +25,16 @@ public class RepairUtil {
 
     private static  ChangeLogGenerator changeLogGenerator = new ChangeLogGeneratorImpl();
 
-    public static MvccEntity repair(Iterator<MvccEntity> results){
+    public static MvccEntity  repair(Iterator<MvccEntity> results,
+                                     CollectionScope collectionScope,
+                                     MvccEntitySerializationStrategy entitySerializationStrategy){
 
         //nothing to do, we didn't get a result back
         if ( !results.hasNext() ) {
             return null;
         }
 
-        org.apache.commons.collections4.iterators.PushbackIterator<MvccEntity> iter = new PushbackIterator<>( results );
-        MvccEntity mvccEntity = iter.next();
+        MvccEntity mvccEntity = results.next();
         final Optional<Entity> targetVersion = mvccEntity.getEntity();
         List<MvccEntity> partialEntities = new ArrayList<>();
 
@@ -48,10 +49,11 @@ public class RepairUtil {
         if ( mvccEntity.getStatus() == MvccEntity.Status.COMPLETE ) {
             return mvccEntity;
         }
+        partialEntities.add( mvccEntity );
 
-        iter.pushback( mvccEntity );
-        while(iter.hasNext()){
-            mvccEntity = iter.next();
+
+        while(results.hasNext()){
+            mvccEntity = results.next();
             partialEntities.add( mvccEntity );
             if(mvccEntity.getStatus() == MvccEntity.Status.PARTIAL){
                 continue;
@@ -66,18 +68,19 @@ public class RepairUtil {
                 //Create a sublist of 2 containing completed entity and partial entity
                 List<MvccEntity> subEntList =  new ArrayList<>(  );
 
-                for(int chg = 1; chg <= partialEntities.size()-1; chg++){
-                    subEntList.clear();
-                    chgPersist.clear();
-                    subEntList.add( mvccEntity );
-                    subEntList.add( partialEntities.get( chg ) );
-                    chgPersist.addAll( changeLogGenerator.getChangeLog(subEntList.iterator()
-                            ,subEntList.get( subEntList.size()-1 ).getVersion() ) );
+                chgPersist = changeLogGenerator.getChangeLog( partialEntities.iterator(),
+                        partialEntities.get( partialEntities.size()-1 ).getVersion());
 
-                    mvccEntity = entityRepair( chgPersist,subEntList,mvccEntity );
+                mvccEntity =  entityRepair( chgPersist,partialEntities,mvccEntity );
+
+                try {
+                    entitySerializationStrategy.write( collectionScope, mvccEntity).execute();
                 }
-
+                catch ( Exception e ) {
+                    throw new RuntimeException( "Couldn't rewrite repaired entity", e );
+                }
                 return mvccEntity;
+
             }
 
         }
@@ -115,7 +118,6 @@ public class RepairUtil {
         if(!completedEntity.getEntity().isPresent()){
             return null;
         }
-
 
         return completedEntity;
     }

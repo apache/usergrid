@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
@@ -23,15 +24,20 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.collect.Lists;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
 /** @author tnine */
+
 public class LoadTest  extends AbstractIdStageTest {
 
 
@@ -77,7 +83,7 @@ public class LoadTest  extends AbstractIdStageTest {
      * A read on an entity , and we recognize that the entity we are reading is partial.
      */
     @Test
-    public void testLoadWithPartialWrite(){
+    public void testLoadWithPartialWrite() throws ConnectionException {
         final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
@@ -112,11 +118,38 @@ public class LoadTest  extends AbstractIdStageTest {
         //mock up returning a list of MvccEntities
         when( serializationStrategy.load( collection, entityId, loadVersion, 1 ) ).thenReturn( results.iterator());
 
+        /**
+         * Mock up returning the batch for repair
+         */
+
+        final MutationBatch batch = mock(MutationBatch.class);
+
+        ArgumentCaptor<MvccEntity> writtenEntityArg = ArgumentCaptor.forClass( MvccEntity.class );
+
+        when(serializationStrategy.write( same(collection), writtenEntityArg.capture() )).thenReturn( batch );
+
         Load load = new Load( uuidService, serializationStrategy );
         Entity loaded = load.call( entityIoEvent );
 
         assertNotNull( loaded.getField( "derp" ) );
-        assertNotNull( loaded.getField( "merple" ) );
+        assertNull( loaded.getField( "derple" ) );
+
+        /**
+         * Verify that the repair executed
+         */
+        verify(batch).execute();
+
+        /**
+         * Verify the fields in the argument are correct
+         */
+        MvccEntity writtenEntity = writtenEntityArg.getValue();
+
+        //assert all fields that should be updated
+
+        assertSame( loaded, writtenEntity.getEntity().get() );
+        assertNotNull( writtenEntity );
+        assertNotNull( writtenEntity.getEntity().get().getField( "derp" ) );
+        assertNull( writtenEntity.getEntity().get().getField( "derple" ) );
 
     }
 
@@ -125,7 +158,7 @@ public class LoadTest  extends AbstractIdStageTest {
      * A read on an entity , and we recognize that the entity we are reading is partial.
      */
     @Test
-    public void testLoadWithPartialDelete(){
+    public void testLoadWithPartialDelete() throws ConnectionException {
         final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
@@ -162,19 +195,47 @@ public class LoadTest  extends AbstractIdStageTest {
         //mock up returning a list of MvccEntities
         when( serializationStrategy.load( collection, entityId, loadVersion, 1 ) ).thenReturn( results.iterator());
 
+
+        /**
+         * Mock up returning the batch for repair
+         */
+
+        final MutationBatch batch = mock(MutationBatch.class);
+
+        ArgumentCaptor<MvccEntity> writtenEntityArg = ArgumentCaptor.forClass( MvccEntity.class );
+
+        when(serializationStrategy.write( same(collection), writtenEntityArg.capture() )).thenReturn( batch );
+
         Load load = new Load( uuidService, serializationStrategy );
         Entity loaded = load.call( entityIoEvent );
 
-        assertNull( loaded.getField( "derp" ) );
+        assertNotNull( loaded.getField( "derple" ) );
+
+
+        /**
+         * Verify that the repair executed
+         */
+        verify(batch).execute();
+
+        /**
+         * Verify the fields in the argument are correct
+         */
+        MvccEntity writtenEntity = writtenEntityArg.getValue();
+
+        //assert all fields that should be updated
+
+        assertSame( loaded, writtenEntity.getEntity().get() );
+        assertNotNull( writtenEntity );
+        assertNotNull( writtenEntity.getEntity().get().getField( "derple" ) );
+
 
     }
 
     @Test
-    public void testLoadWithPartialWriteDeleteThreeTimes(){
+    public void testLoadWithPartialWriteDeleteThreeTimes() throws ConnectionException {
         final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
-
 
         final UUID loadVersion = UUIDGenerator.newTimeUUID();
 
@@ -212,16 +273,42 @@ public class LoadTest  extends AbstractIdStageTest {
         //mock up returning a list of MvccEntities
         when( serializationStrategy.load( collection, entityId, loadVersion, 1 ) ).thenReturn( results.iterator());
 
+
+        /**
+         * Mock up returning the batch for repair
+         */
+
+        final MutationBatch batch = mock(MutationBatch.class);
+
+        ArgumentCaptor<MvccEntity> writtenEntityArg = ArgumentCaptor.forClass( MvccEntity.class );
+
+        when(serializationStrategy.write( same(collection), writtenEntityArg.capture() )).thenReturn( batch );
+
         Load load = new Load( uuidService, serializationStrategy );
         Entity loaded = load.call( entityIoEvent );
 
         assertNotNull( loaded.getField( "derp" ) );
         assertNull( loaded.getField( "derple" ) );
 
-        loaded = load.call( entityIoEvent );
+        /**
+         * Verify that the repair executed
+         */
+        verify(batch).execute();
 
-        assertNotNull( loaded.getField( "derp" ) );
-        assertNull( loaded.getField( "derple" ) );
+        /**
+         * Verify the fields in the argument are correct
+         */
+        MvccEntity writtenEntity = writtenEntityArg.getValue();
+
+        //assert all fields that should be updated
+
+        assertSame( loaded, writtenEntity.getEntity().get() );
+        assertNotNull( writtenEntity );
+        assertNotNull( writtenEntity.getEntity().get().getField( "derp" ) );
+        assertNull( writtenEntity.getEntity().get().getField( "derple" ) );
+
+
+
 
     }
 
