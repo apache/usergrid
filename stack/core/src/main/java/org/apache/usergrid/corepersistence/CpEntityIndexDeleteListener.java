@@ -41,6 +41,9 @@ import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+/**
+ * Listener for cleans up old indexes and deletes from indexer
+ */
 @Singleton
 public class CpEntityIndexDeleteListener implements MessageListener<MvccEntityDeleteEvent, EntityVersion> {
 

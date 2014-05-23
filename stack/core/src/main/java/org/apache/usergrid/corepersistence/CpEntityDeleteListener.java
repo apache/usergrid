@@ -40,6 +40,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Listener for cleans up old entities and deletes from data store
+ */
 @Singleton
 public class CpEntityDeleteListener implements MessageListener<MvccEntityDeleteEvent, EntityVersion> {
     private static final Logger LOG = LoggerFactory.getLogger(CpEntityDeleteListener.class);
