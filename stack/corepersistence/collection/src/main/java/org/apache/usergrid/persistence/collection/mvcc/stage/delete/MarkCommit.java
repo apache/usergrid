@@ -19,14 +19,24 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValue;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +57,7 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
+import rx.Observable;
 import rx.functions.Func1;
 
 
@@ -63,12 +74,16 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
     private final MvccEntitySerializationStrategy entityStrat;
     private final AsyncProcessor<MvccEntityDeleteEvent> entityEventAsyncProcessor;
     private final ConsistencyFig consistencyFig;
+    private final SerializationFig serializationFig;
+    private final UniqueValueSerializationStrategy uniqueValueStrat;
 
     @Inject
     public MarkCommit( final MvccLogEntrySerializationStrategy logStrat,
                        final MvccEntitySerializationStrategy entityStrat,
+                       final UniqueValueSerializationStrategy uniqueValueStrat,
                        final AsyncProcessorFactory asyncProcessorFactory,
-                       final ConsistencyFig consistencyFig ) {
+                       final ConsistencyFig consistencyFig,
+                       final SerializationFig serializationFig) {
 
         Preconditions.checkNotNull( 
                 logStrat, "logEntrySerializationStrategy is required" );
@@ -79,6 +94,8 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         this.entityStrat = entityStrat;
         this.entityEventAsyncProcessor = asyncProcessorFactory.getProcessor( MvccEntityDeleteEvent.class );
         this.consistencyFig = consistencyFig;
+        this.serializationFig = serializationFig;
+        this.uniqueValueStrat = uniqueValueStrat;
     }
 
     private long getTimeout() {
@@ -102,7 +119,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
                 Stage.COMMITTED, MvccLogEntry.State.DELETED );
 
-        MutationBatch logMutation = logStrat.write( collectionScope, startEntry );
+        final MutationBatch logMutation = logStrat.write( collectionScope, startEntry );
 
         //insert a "cleared" value into the versions.  Post processing should actually delete
         MutationBatch entityMutation = entityStrat.mark( collectionScope, entityId, version );
@@ -113,6 +130,39 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         //set up the post processing queue
         final AsynchronousMessage<MvccEntityDeleteEvent> event = entityEventAsyncProcessor.setVerification(
                 new MvccEntityDeleteEvent( collectionScope, version, entity ), getTimeout() );
+
+        //delete unique fields
+        Observable<List<Field>> deleteFieldsObservable = Observable.create(new ObservableIterator<Field>("deleteColumns") {
+            @Override
+            protected Iterator<Field> getIterator() {
+                Iterator<MvccEntity> entities = entityStrat.load(collectionScope, entityId, entity.getVersion(), 1);
+                Iterator<Field> fieldIterator = Collections.emptyIterator();
+                if (entities.hasNext()) {
+                    Optional<Entity> oe = entities.next().getEntity();
+                    if (oe.isPresent()) {
+                        fieldIterator = oe.get().getFields().iterator();
+                    }
+                }
+                return fieldIterator;
+            }
+        }).buffer(serializationFig.getBufferSize())
+                .map(new Func1<List<Field>, List<Field>>() {
+                    @Override
+                    public List<Field> call(List<Field> fields) {
+                        for (Field field : fields) {
+                            try {
+                                UniqueValue value = uniqueValueStrat.load(collectionScope, field);
+                                if (value != null) {
+                                    logMutation.mergeShallow(uniqueValueStrat.delete(value));
+                                }
+                            } catch (ConnectionException ce) {
+                                LOG.error("Failed to delete Unique Value", ce);
+                            }
+                        }
+                        return fields;
+                    }
+                });
+        deleteFieldsObservable.toBlockingObservable().last();
 
         try {
             logMutation.execute();

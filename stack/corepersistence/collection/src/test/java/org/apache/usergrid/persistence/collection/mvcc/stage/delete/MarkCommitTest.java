@@ -3,6 +3,8 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
@@ -123,6 +125,8 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
         final SimpleAsynchronousMessage<MvccEntityDeleteEvent> message = mock(SimpleAsynchronousMessage.class);
         final MvccEntitySerializationStrategy mvccEntityStrategy = mock( MvccEntitySerializationStrategy.class );
         final MutationBatch entityMutation = mock( MutationBatch.class );
+        final SerializationFig serializationFig = mock(SerializationFig.class);
+        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy = mock(UniqueValueSerializationStrategy.class);
 
         when( logStrategy.write( any( CollectionScope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
         when( mvccEntityStrategy.write( any( CollectionScope.class ), any( MvccEntity.class ) ) )
@@ -131,7 +135,7 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
         when (factory.getProcessor( MvccEntityDeleteEvent.class )).thenReturn( processor );
 
         when(processor.setVerification(any(MvccEntityDeleteEvent.class),any(long.class))).thenReturn(message);
-        new MarkCommit( logStrategy, mvccEntityStrategy, factory, consistencyFig ).call( event );
+        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, factory, consistencyFig, serializationFig ).call( event );
     }
 
 }

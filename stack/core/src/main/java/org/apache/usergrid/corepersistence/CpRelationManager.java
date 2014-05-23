@@ -50,6 +50,7 @@ import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -236,18 +237,11 @@ public class CpRelationManager implements RelationManager {
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
-        Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType( 
-            entityId, collName, cpHeadEntity.getVersion(), null ));
+        Observable<Edge> edges = gm.loadEdgeVersions(
+                new SimpleSearchByEdge(new SimpleId(headEntity.getUuid(), headEntity.getType()), collName, entityId, UUIDGenerator.newTimeUUID(), null)
+        );
 
-        // TODO: more efficient way to do this?
-        Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
-        while ( iter.hasNext() ) {
-            Edge edge = iter.next();
-            if ( edge.getSourceNode().equals( cpHeadEntity.getId() )) {
-                return true;
-            }
-        }
-        return false;
+        return edges.toBlockingObservable().firstOrDefault(null) != null;
     }
 
     @Override
@@ -402,8 +396,8 @@ public class CpRelationManager implements RelationManager {
             addToCollection( collName, itemEntity );
 
             if ( collection.getLinkedCollection() != null ) {
-                getRelationManager( itemEntity )
-                    .addToCollection( collection.getLinkedCollection(), getHeadEntity());
+                getRelationManager(  getHeadEntity() )
+                    .addToCollection( collection.getLinkedCollection(),itemEntity);
             }
         }
 
