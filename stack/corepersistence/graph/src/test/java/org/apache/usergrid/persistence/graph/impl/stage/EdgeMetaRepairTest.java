@@ -110,7 +110,7 @@ public class EdgeMetaRepairTest {
 
         final Id targetId = createId( "target" );
         final String test = "test";
-        final UUID version = UUIDGenerator.newTimeUUID();
+        final long version = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairTargets( scope, targetId, test, version ).toBlockingObservable().single();
 
@@ -180,7 +180,7 @@ public class EdgeMetaRepairTest {
         edgeMetadataSerialization.writeEdge( scope, edge3 ).execute();
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairTargets( scope, edge1.getTargetNode(), edge1.getType(), cleanupVersion )
                                   .toBlockingObservable().single();
@@ -248,7 +248,7 @@ public class EdgeMetaRepairTest {
         }
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairTargets( scope, targetId, edgeType, cleanupVersion ).toBlockingObservable()
                                   .single();
@@ -343,7 +343,7 @@ public class EdgeMetaRepairTest {
         edgeMetadataSerialization.writeEdge( scope, edge3 ).execute();
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairSources( scope, edge1.getSourceNode(), edge1.getType(), cleanupVersion )
                                   .toBlockingObservable().single();
@@ -412,7 +412,7 @@ public class EdgeMetaRepairTest {
         }
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairSources( scope, sourceId, edgeType, cleanupVersion ).toBlockingObservable()
                                   .single();

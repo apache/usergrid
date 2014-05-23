@@ -141,14 +141,14 @@ public class EdgeDeleteRepairTest {
         //now repair delete the first edge
 
         Iterator<MarkedEdge> itr = commitLogEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), null ) );
 
         assertEquals( edge2, itr.next() );
         assertEquals( edge1, itr.next() );
         assertFalse( itr.hasNext() );
 
         itr =  storageEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), null ) );
 
         assertEquals( edge2, itr.next() );
         assertEquals( edge1NotDeleted, itr.next() );
@@ -159,13 +159,13 @@ public class EdgeDeleteRepairTest {
         assertEquals( edge1, deleted );
 
         itr = commitLogEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
+                new SimpleSearchByEdge( sourceId, edgeType, targetId,System.currentTimeMillis(), null ) );
 
         assertEquals( edge2, itr.next() );
         assertFalse( itr.hasNext() );
 
         itr = storageEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), null ) );
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), null ) );
 
         assertEquals( edge2, itr.next() );
         assertFalse( itr.hasNext() );

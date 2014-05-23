@@ -75,8 +75,8 @@ public class ComittedGraphManagerIT extends GraphManagerIT {
 
 
         @Override
-        public Observable<Id> deleteNode( final Id node ) {
-            return graphManager.deleteNode( node );
+        public Observable<Id> deleteNode( final Id node, final long timestamp) {
+            return graphManager.deleteNode( node, timestamp );
         }
 
 

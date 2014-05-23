@@ -149,7 +149,7 @@ public class EdgeWriteListenerTest {
         assertEquals( 3, returned.intValue() );
 
         //now validate there's nothing in the commit log.
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         /******
          * Ensure everything is removed from the commit log
@@ -279,7 +279,7 @@ public class EdgeWriteListenerTest {
         assertEquals( 2, returned.intValue() );
 
         //now validate there's nothing in the commit log.
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         /******
          * Ensure everything is removed from the commit log
@@ -412,7 +412,7 @@ public class EdgeWriteListenerTest {
         when(edgeProcessor.getProcessor( EdgeWriteEvent.class )).thenReturn( processor );
 
 
-        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, edgeV1.getTimestamp(), edgeV1 );
+        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV1 );
 
         Keyspace keyspace = mock( Keyspace.class );
 

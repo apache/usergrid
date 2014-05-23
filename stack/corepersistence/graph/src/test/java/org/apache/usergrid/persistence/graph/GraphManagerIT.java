@@ -162,7 +162,7 @@ public abstract class GraphManagerIT {
 
         GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
-        final UUID earlyVersion = UUIDGenerator.newTimeUUID();
+        final long earlyVersion = System.currentTimeMillis();
 
         Edge edge = createEdge( "source", "test", "target" );
 
@@ -196,7 +196,7 @@ public abstract class GraphManagerIT {
 
         GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
-        final UUID earlyVersion = UUIDGenerator.newTimeUUID();
+        final long earlyVersion = System.currentTimeMillis();
 
 
         Edge edge = createEdge( "source", "test", "target" );
@@ -234,7 +234,7 @@ public abstract class GraphManagerIT {
 
         GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
-        final UUID earlyVersion = UUIDGenerator.newTimeUUID();
+        final long earlyVersion = System.currentTimeMillis();
 
 
         Edge edge1 = createEdge( "source", "test", "target" );
@@ -308,7 +308,7 @@ public abstract class GraphManagerIT {
         ;
 
 
-        final UUID earlyVersion = UUIDGenerator.newTimeUUID();
+        final long earlyVersion = System.currentTimeMillis();
 
 
         Edge edge1 = createEdge( "source", "test", "target" );
@@ -692,16 +692,16 @@ public abstract class GraphManagerIT {
         Id targetId1 = new SimpleId( "target" );
         Id targetId2 = new SimpleId( "target2" );
 
-        Edge testTargetEdge = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge = createEdge( sourceId, "test", targetId1, System.currentTimeMillis() );
 
         gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
-        Edge testTarget2Edge = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
+        Edge testTarget2Edge = createEdge( sourceId, "test", targetId2, System.currentTimeMillis() );
 
         gm.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
 
 
-        Edge test2TargetEdge = createEdge( sourceId, "test2", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge test2TargetEdge = createEdge( sourceId, "test2", targetId1, System.currentTimeMillis() );
 
         gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
@@ -755,16 +755,16 @@ public abstract class GraphManagerIT {
         Id targetId1 = new SimpleId( "target" );
 
 
-        Edge testTargetEdge = createEdge( sourceId1, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge = createEdge( sourceId1, "test", targetId1, System.currentTimeMillis() );
 
         gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
-        Edge testTarget2Edge = createEdge( sourceId2, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge testTarget2Edge = createEdge( sourceId2, "test", targetId1, System.currentTimeMillis() );
 
         gm.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
 
 
-        Edge test2TargetEdge = createEdge( sourceId1, "test2", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge test2TargetEdge = createEdge( sourceId1, "test2", targetId1, System.currentTimeMillis() );
 
         gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
@@ -820,17 +820,17 @@ public abstract class GraphManagerIT {
         Id targetId2 = new SimpleId( "target2" );
 
 
-        Edge testTargetEdge = createEdge( sourceId1, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge = createEdge( sourceId1, "test", targetId1, System.currentTimeMillis() );
 
         gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
-        Edge testTargetEdge2 = createEdge( sourceId1, "test", targetId2, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge2 = createEdge( sourceId1, "test", targetId2, System.currentTimeMillis() );
 
         gm.writeEdge( testTargetEdge2 ).toBlockingObservable().singleOrDefault( null );
 
 
-        Edge test2TargetEdge = createEdge( sourceId1, "test2", targetId2, UUIDGenerator.newTimeUUID() );
+        Edge test2TargetEdge = createEdge( sourceId1, "test2", targetId2, System.currentTimeMillis() );
 
         gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
@@ -898,16 +898,16 @@ public abstract class GraphManagerIT {
         Id targetId = new SimpleId( "target" );
 
 
-        Edge testTargetEdge = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge = createEdge( sourceId1, "test", targetId, System.currentTimeMillis() );
 
         gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
 
 
-        Edge testTargetEdge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
+        Edge testTargetEdge2 = createEdge( sourceId2, "test", targetId, System.currentTimeMillis() );
 
         gm.writeEdge( testTargetEdge2 ).toBlockingObservable().singleOrDefault( null );
 
-        Edge test2TargetEdge = createEdge( sourceId2, "test2", targetId, UUIDGenerator.newTimeUUID() );
+        Edge test2TargetEdge = createEdge( sourceId2, "test2", targetId, System.currentTimeMillis() );
 
         gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
 
@@ -978,30 +978,23 @@ public abstract class GraphManagerIT {
         Id targetId1 = new SimpleId( "target" );
         Id targetId2 = new SimpleId( "target2" );
 
-        Edge edge1 = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge edge1 = createEdge( sourceId, "test", targetId1, System.currentTimeMillis() );
 
         gm.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
 
-        Edge edge2 = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
+        Edge edge2 = createEdge( sourceId, "test", targetId2, System.currentTimeMillis() );
 
         gm.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
 
 
-        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+        final long maxVersion = System.currentTimeMillis();
 
 
 
-        assertTrue( UUIDComparator.staticCompare( maxVersion, edge2.getTimestamp() ) > 0);
-        assertTrue( UUIDComparator.staticCompare( maxVersion, edge1.getTimestamp() ) > 0);
-
-        ByteBuffer edge1Buff = UUIDSerializer.get().toByteBuffer( edge1.getTimestamp() );
-        ByteBuffer edge2Buff = UUIDSerializer.get().toByteBuffer( edge2.getTimestamp() );
-        ByteBuffer maxBuff = UUIDSerializer.get().toByteBuffer( maxVersion );
+        assertTrue( Long.compare( maxVersion, edge2.getTimestamp() ) > 0);
+        assertTrue( Long.compare( maxVersion, edge1.getTimestamp() ) > 0);
 
 
-
-        assertTrue( UUIDType.instance.compare( maxBuff.duplicate(), edge1Buff.duplicate() ) > 0);
-        assertTrue( UUIDType.instance.compare( maxBuff.duplicate(), edge2Buff.duplicate() ) > 0);
 
 
         //get our 2 edges
@@ -1071,16 +1064,16 @@ public abstract class GraphManagerIT {
         Id sourceId2 = new SimpleId( "source2" );
         Id targetId = new SimpleId( "target" );
 
-        Edge edge1 = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
+        Edge edge1 = createEdge( sourceId1, "test", targetId, System.currentTimeMillis() );
 
         gm.writeEdge( edge1 ).toBlockingObservable().last();
 
-        Edge edge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
+        Edge edge2 = createEdge( sourceId2, "test", targetId, System.currentTimeMillis() );
 
         gm.writeEdge( edge2 ).toBlockingObservable().last();
 
 
-        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+        final long maxVersion = System.currentTimeMillis();
 
 
         //get our 2 edges
@@ -1139,16 +1132,16 @@ public abstract class GraphManagerIT {
         Id targetId1 = new SimpleId( "target" );
         Id targetId2 = new SimpleId( "target2" );
 
-        Edge edge1 = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge edge1 = createEdge( sourceId, "test", targetId1, System.currentTimeMillis() );
 
         gm.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
 
-        Edge edge2 = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
+        Edge edge2 = createEdge( sourceId, "test", targetId2, System.currentTimeMillis() );
 
         gm.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
 
 
-        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+        final long maxVersion = System.currentTimeMillis();
 
 
         //get our 2 edges
@@ -1217,16 +1210,16 @@ public abstract class GraphManagerIT {
         Id sourceId2 = new SimpleId( "source2" );
         Id targetId = new SimpleId( "target" );
 
-        Edge edge1 = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
+        Edge edge1 = createEdge( sourceId1, "test", targetId, System.currentTimeMillis() );
 
         gm.writeEdge( edge1 ).toBlockingObservable().last();
 
-        Edge edge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
+        Edge edge2 = createEdge( sourceId2, "test", targetId, System.currentTimeMillis() );
 
         gm.writeEdge( edge2 ).toBlockingObservable().last();
 
 
-        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+        final long maxVersion = System.currentTimeMillis();
 
         //get our 2 edges
         Observable<Edge> edges = gm.loadEdgesToTargetByType(
@@ -1295,16 +1288,16 @@ public abstract class GraphManagerIT {
         Id targetId1 = new SimpleId( "target" );
         Id targetId2 = new SimpleId( "target2" );
 
-        Edge edge1 = createEdge( sourceId, "test", targetId1, UUIDGenerator.newTimeUUID() );
+        Edge edge1 = createEdge( sourceId, "test", targetId1, System.currentTimeMillis() );
 
         gm.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
 
-        Edge edge2 = createEdge( sourceId, "test", targetId2, UUIDGenerator.newTimeUUID() );
+        Edge edge2 = createEdge( sourceId, "test", targetId2, System.currentTimeMillis() );
 
         gm.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
 
 
-        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+        final long maxVersion = System.currentTimeMillis();
 
         Iterator<Edge> results =
                 gm.loadEdgesFromSource( createSearchByEdge( sourceId, edge1.getType(), maxVersion, null ) )
@@ -1339,7 +1332,7 @@ public abstract class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
         //mark the source node
-        gm.deleteNode( sourceId ).toBlockingObservable().last();
+        gm.deleteNode( sourceId, edge2.getTimestamp() ).toBlockingObservable().last();
 
 
         //now re-read, nothing should be there since they're marked
@@ -1377,16 +1370,16 @@ public abstract class GraphManagerIT {
         Id sourceId2 = new SimpleId( "source2" );
         Id targetId = new SimpleId( "target" );
 
-        Edge edge1 = createEdge( sourceId1, "test", targetId, UUIDGenerator.newTimeUUID() );
+        Edge edge1 = createEdge( sourceId1, "test", targetId, System.currentTimeMillis() );
 
         gm.writeEdge( edge1 ).toBlockingObservable().singleOrDefault( null );
 
-        Edge edge2 = createEdge( sourceId2, "test", targetId, UUIDGenerator.newTimeUUID() );
+        Edge edge2 = createEdge( sourceId2, "test", targetId, System.currentTimeMillis() );
 
         gm.writeEdge( edge2 ).toBlockingObservable().singleOrDefault( null );
 
 
-        final UUID maxVersion = UUIDGenerator.newTimeUUID();
+        final long maxVersion = System.currentTimeMillis();
 
         Iterator<Edge> results =
                 gm.loadEdgesToTarget( createSearchByEdge( targetId, edge1.getType(), maxVersion, null ) )
@@ -1421,7 +1414,7 @@ public abstract class GraphManagerIT {
         assertFalse( "No more edges", results.hasNext() );
 
         //mark the source node
-        gm.deleteNode( targetId ).toBlockingObservable().last();
+        gm.deleteNode( targetId, edge2.getTimestamp() ).toBlockingObservable().last();
 
 
         //now re-read, nothing should be there since they're marked
@@ -1464,54 +1457,6 @@ public abstract class GraphManagerIT {
 
         em.deleteEdge( edge );
     }
-
-    //
-    //    public static class InvalidInput extends JukitoModule {
-    //
-    //        @Override
-    //        protected void configureTest() {
-    //create all edge types of junk input
-    //
-    //            final UUID version = UUIDGenerator.newTimeUUID();
-    //
-    //            Id nullUuid = mock( Id.class );
-    //            when( nullUuid.getUuid() ).thenReturn( null );
-    //
-    //
-    //            Id nullType = mock( Id.class );
-    //            when( nullType.getType() ).thenReturn( "type" );
-    //
-    //            Edge[] edges = new Edge[] {
-    //                    mockEdge( nullUuid, "test", createId( "target" ), version ),
-    //
-    //                    mockEdge( nullType, "test", createId( "target" ), version ),
-    //
-    //                    mockEdge( createId( "source" ), null, createId( "target" ), version ),
-    //
-    //                    mockEdge( createId( "source" ), "test", nullUuid, version ),
-    //
-    //                    mockEdge( createId( "source" ), "test", nullType, version ),
-    //
-    //                    mockEdge( createId( "source" ), "test", createId( "target" ), null )
-    //            };
-    //
-    //
-    //            bindManyInstances( Edge.class, edges );
-    //
-    //        }
-    //
-    //
-    //        private Edge mockEdge( final Id sourceId, final String type, final Id targetId, final UUID version ) {
-    //            Edge edge = mock( Edge.class );
-    //
-    //            when( edge.getSourceNode() ).thenReturn( sourceId );
-    //            when( edge.getType() ).thenReturn( type );
-    //            when( edge.getTargetNode() ).thenReturn( targetId );
-    //            when( edge.getTimestamp() ).thenReturn( version );
-    //
-    //            return edge;
-    //        }
-    //    }
 }
 
 

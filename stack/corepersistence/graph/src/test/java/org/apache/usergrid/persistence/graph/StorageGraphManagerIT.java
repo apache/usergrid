@@ -163,9 +163,9 @@ public class StorageGraphManagerIT extends GraphManagerIT {
 
 
         @Override
-        public Observable<Id> deleteNode( final Id node ) {
+        public Observable<Id> deleteNode( final Id node, final long timestamp ) {
             completeInvocations.decrementAndGet();
-            return graphManager.deleteNode( node );
+            return graphManager.deleteNode( node, timestamp );
         }
 
 

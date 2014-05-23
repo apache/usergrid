@@ -96,7 +96,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
     @Override
-    public long getSlice( final ApplicationScope scope, final Id nodeId, final UUID time, final String... edgeType ) {
+    public long getSlice( final ApplicationScope scope, final Id nodeId, final long timestamp, final String... edgeType ) {
 
 
         final CacheKey key = new CacheKey( scope, nodeId, edgeType );
@@ -109,7 +109,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
             throw new RuntimeException( "Unable to load shard key for graph", e );
         }
 
-        final Long shardId = entry.getShardId( time.timestamp() );
+        final Long shardId = entry.getShardId( timestamp );
 
         if ( shardId != null ) {
             return shardId;
@@ -121,7 +121,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
     @Override
-    public Iterator<Long> getVersions( final ApplicationScope scope, final Id nodeId, final UUID maxVersion,
+    public Iterator<Long> getVersions( final ApplicationScope scope, final Id nodeId, final long maxTimestamp,
                                        final String... edgeType ) {
         final CacheKey key = new CacheKey( scope, nodeId, edgeType );
               CacheEntry entry;
@@ -133,7 +133,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
                   throw new RuntimeException( "Unable to load shard key for graph", e );
               }
 
-        Iterator<Long> iterator = entry.getShards( maxVersion.timestamp() );
+        Iterator<Long> iterator = entry.getShards( maxTimestamp );
 
         if(iterator == null){
             return Collections.<Long>emptyList().iterator();

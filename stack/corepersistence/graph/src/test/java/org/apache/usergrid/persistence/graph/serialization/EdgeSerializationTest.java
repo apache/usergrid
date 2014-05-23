@@ -136,7 +136,7 @@ public abstract class EdgeSerializationTest {
         serialization.writeEdge( scope, edge2, timestamp ).execute();
 
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         //get our edges out by name
 
@@ -185,7 +185,7 @@ public abstract class EdgeSerializationTest {
         serialization.writeEdge( scope, edge2, timestamp ).execute();
 
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         //get our edges out by name
 
@@ -231,7 +231,7 @@ public abstract class EdgeSerializationTest {
         final MarkedEdge diffTarget = createEdge( sourceId, "edge1", createId( "newTarget" ) );
 
         assertTrue( "Edge version 1 has lower time uuid",
-                UUIDComparator.staticCompare( edgev1.getTimestamp(), edgev2.getTimestamp() ) < 0 );
+                Long.compare( edgev1.getTimestamp(), edgev2.getTimestamp() ) < 0 );
 
         //create edge type 2 to ensure we don't get it in results
         final MarkedEdge edgeType2V1 = createEdge( sourceId, "edge2", targetId );
@@ -245,7 +245,7 @@ public abstract class EdgeSerializationTest {
         serialization.writeEdge( scope, edgeType2V1, timestamp ).execute();
         serialization.writeEdge( scope, diffTarget, timestamp ).execute();
 
-        final UUID now = UUIDGenerator.newTimeUUID();
+        final long now = System.currentTimeMillis();
 
 
         SearchByEdge search = createGetByEdge( sourceId, "edge1", targetId, now, null );
@@ -290,7 +290,7 @@ public abstract class EdgeSerializationTest {
         serialization.writeEdge( scope, edge2, timestamp ).execute();
 
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         //get our edges out by name
 
@@ -343,7 +343,7 @@ public abstract class EdgeSerializationTest {
         serialization.writeEdge( scope, edge2, timestamp ).execute();
 
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         //get our edges out by name
 
@@ -401,7 +401,7 @@ public abstract class EdgeSerializationTest {
         serialization.writeEdge( scope, edge2, timestamp ).execute();
 
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         //get our edges out by name
         Iterator<MarkedEdge> results = serialization.getEdgesFromSourceByTargetType( scope,
@@ -510,7 +510,7 @@ public abstract class EdgeSerializationTest {
         serialization.writeEdge( scope, edge2, timestamp ).execute();
 
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         //get our edges out by name
         Iterator<MarkedEdge> results = serialization.getEdgesFromSourceByTargetType( scope,
@@ -672,7 +672,7 @@ public abstract class EdgeSerializationTest {
         }
 
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         //get our edges out by name
         Iterator<MarkedEdge> results =
@@ -704,7 +704,7 @@ public abstract class EdgeSerializationTest {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        UUID lastMax = null;
+        long lastMax = 0;
 
         final UUID timestamp = UUIDGenerator.newTimeUUID();
 
@@ -771,7 +771,7 @@ public abstract class EdgeSerializationTest {
         serialization.writeEdge( scope, edge1, timestamp2 ).execute();
 
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         //get our edges out by name
 
@@ -862,7 +862,7 @@ public abstract class EdgeSerializationTest {
         serialization.writeEdge( scope, edge1, timestamp2 ).execute();
 
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         //get our edges out by name
 

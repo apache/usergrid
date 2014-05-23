@@ -85,7 +85,7 @@ public class MergedEdgeReaderImplComparatorTest {
         //same as first, just with large target node
         MergedEdgeReaderImpl.SourceAwareMarkedEdge second = new MergedEdgeReaderImpl.SourceAwareMarkedEdge(
                 createEdge( first.edge.getSourceNode(), first.edge.getType(), first.edge.getTargetNode(),
-                        UUIDGenerator.newTimeUUID() ), edgeSerialization );
+                       1000l), edgeSerialization );
 
 
         int compare = new MergedEdgeReaderImpl.SourceEdgeComparator( edgeSerialization ).compare( first, second );
@@ -165,7 +165,7 @@ public class MergedEdgeReaderImplComparatorTest {
         //same as first, just with large target node
         MergedEdgeReaderImpl.SourceAwareMarkedEdge second = new MergedEdgeReaderImpl.SourceAwareMarkedEdge(
                 createEdge( first.edge.getSourceNode(), first.edge.getType(), first.edge.getTargetNode(),
-                        UUIDGenerator.newTimeUUID() ), edgeSerialization );
+                        1000l ), edgeSerialization );
 
 
         int compare = new MergedEdgeReaderImpl.TargetEdgeComparator( edgeSerialization ).compare( first, second );
@@ -209,7 +209,7 @@ public class MergedEdgeReaderImplComparatorTest {
         //same as first, just with large target node
         MergedEdgeReaderImpl.SourceAwareMarkedEdge second = new MergedEdgeReaderImpl.SourceAwareMarkedEdge(
                 createEdge( first.edge.getSourceNode(), first.edge.getType(), first.edge.getTargetNode(),
-                        UUIDGenerator.newTimeUUID() ), edgeSerialization );
+                       1000l ), edgeSerialization );
 
         int compare = new MergedEdgeReaderImpl.EdgeVersionComparator( edgeSerialization ).compare( first, second );
 

@@ -36,9 +36,9 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
     private final boolean deleted;
 
 
-    public SimpleMarkedEdge( final Id sourceNode, final String type, final Id targetNode, final UUID version, final boolean deleted) {
+    public SimpleMarkedEdge( final Id sourceNode, final String type, final Id targetNode, final long timestamp, final boolean deleted) {
 
-        super(sourceNode, type, targetNode, version);
+        super(sourceNode, type, targetNode, timestamp);
         this.deleted = deleted;
     }
 
@@ -88,11 +88,7 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
     @Override
     public String toString() {
         return "SimpleMarkedEdge{" +
-                "sourceNode=" + sourceNode +
-                ", type='" + type + '\'' +
-                ", targetNode=" + targetNode +
-                ", version=" + version +
-                ", deleted=" + deleted +
-                '}';
+                "deleted=" + deleted +
+                "} " + super.toString();
     }
 }
