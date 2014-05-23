@@ -23,7 +23,6 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
@@ -31,7 +30,9 @@ import org.apache.usergrid.persistence.model.entity.Id;
  */
 public class MvccEntityDeleteEvent extends MvccEntityEvent {
 
-    public MvccEntityDeleteEvent( final CollectionScope collectionScope, final UUID version, final MvccEntity entity ) {
+    public MvccEntityDeleteEvent( 
+            final CollectionScope collectionScope, final UUID version, final MvccEntity entity ) {
+
         super( collectionScope, version, entity );
     }
 }
