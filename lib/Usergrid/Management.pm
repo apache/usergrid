@@ -13,69 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-package Usergrid::Client;
+package Usergrid::Management;
 
-use Moose;
+use Moose::Role;
+use URI::Template;
+use JSON;
 
 use namespace::autoclean;
 
-extends 'Usergrid::Core';
+my $json = JSON->new->allow_nonref;
 
-with (
-  'Usergrid::Entity',
-  'Usergrid::Collection',
-  'Usergrid::Management'
-);
-
-sub login($$$) {
+sub management_login($$$) {
   my ($self, $username, $password) = @_;
 
   my %request = (
     grant_type=>"password",
     username=>$username,
-    password=>$password
-  );
+    password=>$password);
 
-  my $uri = URI::Template
-    ->new('/{organization}/{application}/token')
-    ->process(
-      organization=>$self->organization,
-      application=>$self->application
-  );
-
-  my $token = $self->POST($uri, \%request);
+  my $token = $self->POST('/management/token', \%request);
 
   $self->user_token($token);
 
   return $self->user_token;
 }
 
-__PACKAGE__->meta->make_immutable;
-
 1;
-
-__END__
-
-=head1 NAME
-
-Usergrid::Client - Usergrid Perl Client
-
-=head1 SYNOPSIS
-
-	use Usergrid::Client;
-	my $client = Usergrid::Client->new();
-	$client->login($username, $password);
-
-=head1 DESCRIPTION
-
-Usergrid::Client is the client SDK for Apache Usergrid Backend-as-a-Service.
-
-=head1 LICENSE
-
-This software is distributed under the Apache 2 license.
-
-=head1 AUTHOR
-
-Anuradha Weeraman <anuradha@cpan.org>
-
-=cut

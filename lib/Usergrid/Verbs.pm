@@ -23,80 +23,54 @@ use namespace::autoclean;
 
 our $json = JSON->new->allow_nonref;
 
-sub DELETE ($$$) {
-  my ($self, $token, $resource) = @_;
-
-  my $client = REST::Client->new();
-  $client->setHost($self->api_url);
-
-  if (defined $token) {
-    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
-  }
-
-  $client->DELETE($resource);
-
-  my $response = $client->responseContent();
-
-  return $json->decode($response);
+sub is_token_required ($) {
+  my ($self, $resource) = @_;
+  return 0 if $resource =~ m/\/management\/token/;
+  1;
 }
 
-sub GET ($$$) {
-  my ($self, $token, $resource) = @_;
+sub api_request ($$$\%) {
+  my ($self, $method, $resource, $request) = @_;
 
   my $client = REST::Client->new();
   $client->setHost($self->api_url);
 
-  if (defined $token) {
-    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
+  if ($self->is_token_required($resource) == 1 && defined $self->user_token) {
+    $client->addHeader('Authorization', 'Bearer ' . $self->user_token->{'access_token'});
   }
 
-  $client->GET($resource);
+  my $json_req = $json->encode($request) if ($request);
+
+  $client->DELETE($resource)          if ($method eq 'DELETE');
+  $client->GET($resource)             if ($method eq 'GET');
+  $client->POST($resource, $json_req) if ($method eq 'POST');
+  $client->PUT($resource, $json_req)  if ($method eq 'PUT');
 
   my $response = $client->responseContent();
-
-  my $json_resp = $json->decode($response);
 
   return undef if ($client->responseCode() eq "404");
 
-  return $json_resp;
-}
-
-sub POST ($$$\%) {
-  my ($self, $token, $resource, $request) = @_;
-
-  my $json_req = $json->encode($request);
-
-  my $client = REST::Client->new();
-  $client->setHost($self->api_url);
-
-  if (defined $token) {
-    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
-  }
-
-  $client->POST($resource, $json_req);
-
-  my $response = $client->responseContent();
-
   return $json->decode($response);
 }
 
-sub PUT ($$$\%) {
-  my ($self, $token, $resource, $request) = @_;
+sub DELETE ($$) {
+  my ($self, $resource) = @_;
+  $self->api_request('DELETE', $resource);
+}
 
-  my $json_req = $json->encode($request);
+sub GET ($$) {
+  my ($self, $resource) = @_;
+  $self->api_request('GET', $resource);
+}
 
-  my $client = REST::Client->new();
-  $client->setHost($self->api_url);
+sub POST ($$\%) {
+  my ($self, $resource, $request) = @_;
+  $self->api_request('POST', $resource, $request);
+}
 
-  if (defined $token) {
-    $client->addHeader('Authorization', 'Bearer ' . $token->{'access_token'});
-  }
-
-  $client->PUT($resource, $json_req);
-
-  my $response = $client->responseContent();
-
-  return $json->decode($response);
+sub PUT ($$\%) {
+  my ($self, $resource, $request) = @_;
+  $self->api_request('PUT', $resource, $request);
 }
 
 1;

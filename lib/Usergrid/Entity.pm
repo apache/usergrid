@@ -31,7 +31,7 @@ sub create($$\%) {
       collection=>$collection
   );
 
-  return $self->POST($self->user_token, $uri, $data);
+  return $self->POST($uri, $data);
 }
 
 sub retrieve_by_id($$) {
@@ -46,7 +46,7 @@ sub retrieve_by_id($$) {
       id=>$id
   );
 
-  return $self->GET($self->user_token, $uri);
+  return $self->GET($uri);
 }
 
 sub delete($$$) {
@@ -61,7 +61,7 @@ sub delete($$$) {
       uuid=>$uuid
   );
 
-  return $self->DELETE($self->user_token, $uri);
+  return $self->DELETE($uri);
 }
 
 1;
