@@ -122,11 +122,17 @@ public class CoordinatorUtils {
      */
     public static Stack getStackFromRunnerJar( File runnerJar ) {
         InputStream stream = null;
+        URLClassLoader classLoader = null;
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            stream = getResourceAsStreamFromRunnerJar( runnerJar, Constants.STACK_JSON );
+             // Access the jar file resources after adding it to a new ClassLoader
+            classLoader = new URLClassLoader( new URL[] { runnerJar.toURL() },
+                    Thread.currentThread().getContextClassLoader() );
 
-            return mapper.readValue( stream, BasicStack.class );
+            ObjectMapper mapper = new ObjectMapper();
+            stream = classLoader.getResourceAsStream( Constants.STACK_JSON );
+
+            BasicStack stack = mapper.readValue( stream, BasicStack.class );
+            return stack;
         }
         catch ( Exception e ) {
             LOG.warn( "Error while reading stack.json from runner.jar resources", e );
@@ -139,6 +145,14 @@ public class CoordinatorUtils {
                 }
                 catch ( Exception e ) {
                     LOG.debug( "Could not close stack json stream", e );
+                }
+            }
+            if( classLoader != null ) {
+                try {
+                    classLoader.close();
+                }
+                catch ( Exception e ) {
+                    LOG.debug( "Could not close class loader for loading stack.json", e );
                 }
             }
         }
