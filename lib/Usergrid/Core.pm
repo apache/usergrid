@@ -40,7 +40,7 @@ has 'trace'         => ( is => 'rw', isa => 'Bool', trigger => \&_enable_tracing
 
 has 'user_token'    => ( is => 'rw');
 
-sub _enable_tracing() {
+sub _enable_tracing {
   my ($self, $state, $old_state) = @_;
   if ($state) {
     Log::Log4perl::easy_init($DEBUG);

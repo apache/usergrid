@@ -17,6 +17,7 @@ package Usergrid::Verbs;
 
 use Moose::Role;
 use namespace::autoclean;
+use Carp qw(confess);
 
 use REST::Client;
 
@@ -52,6 +53,11 @@ sub _api_request {
   $self->trace_message("RESPONSE: " . $self->prettify($response)) if ($response);
 
   return undef if ($client->responseCode() eq "404");
+
+  confess "Bad request" if ($client->responseCode() eq "400");
+  confess "Unauthorized" if ($client->responseCode() eq "401");
+  confess "Forbidden" if ($client->responseCode() eq "403");
+  confess "Server error" if ($client->responseCode() eq "500");
 
   return $self->json_decode($response);
 }
