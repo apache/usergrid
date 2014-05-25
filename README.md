@@ -13,6 +13,7 @@ from CPAN as shown below:
     $ sudo cpan install JSON
     $ sudo cpan install REST::Client
     $ sudo cpan install URI::Template
+    $ sudo cpan install Log::Log4perl
 
 ### Build and install
 

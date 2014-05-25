@@ -17,6 +17,7 @@ package Usergrid::Core;
 
 use Moose;
 use namespace::autoclean;
+use Log::Log4perl qw(:easy);
 
 our $VERSION = '0.1';
 
@@ -31,6 +32,21 @@ has 'api_url'       => ( is => 'rw', isa => 'Str', required => 1);
 has 'username'      => ( is => 'rw', isa => 'Str');
 has 'password'      => ( is => 'rw', isa => 'Str');
 
-has 'user_token'  => ( is => 'rw');
+has 'trace'         => ( is => 'rw', isa => 'Bool', trigger => \&_enable_tracing);
+
+has 'user_token'    => ( is => 'rw');
+
+sub _enable_tracing() {
+  my ($self, $state, $old_state) = @_;
+  if ($state) {
+    Log::Log4perl::easy_init($DEBUG);
+    our $logger = Log::Log4perl->get_logger();
+  }
+}
+
+sub trace_message($) {
+  my ($self, $message) = @_;
+  $Usergrid::Core::logger->debug($message) if (defined $Usergrid::Core::logger);
+}
 
 1;

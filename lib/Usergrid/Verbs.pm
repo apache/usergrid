@@ -32,6 +32,9 @@ sub is_token_required ($) {
 sub api_request ($$$\%) {
   my ($self, $method, $resource, $request) = @_;
 
+  $self->trace_message("$method $resource");
+  $self->trace_message("REQUEST: " . $json->pretty->encode($request)) if (defined $request);
+
   my $client = REST::Client->new();
   $client->setHost($self->api_url);
 
@@ -47,6 +50,8 @@ sub api_request ($$$\%) {
   $client->PUT($resource, $json_req)  if ($method eq 'PUT');
 
   my $response = $client->responseContent();
+
+  $self->trace_message("RESPONSE: " . $json->pretty->encode($response)) if (defined $response);
 
   return undef if ($client->responseCode() eq "404");
 

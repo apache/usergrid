@@ -9,7 +9,8 @@ my $json = JSON->new->allow_nonref;
 my $client = Usergrid::Client->new(
   organization => 'test-organization',
   application => 'test-app',
-  api_url => 'http://localhost:8080/ROOT'
+  api_url => 'http://localhost:8080/ROOT',
+  trace => 1
 );
 
 # Create a test user

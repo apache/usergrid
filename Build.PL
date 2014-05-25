@@ -18,7 +18,8 @@ my $builder = Module::Build->new(
     requires => {
         'Moose' => 0,
         'JSON' => 0,
-        'REST::Client' => 0
+        'REST::Client' => 0,
+        'Log::Log4perl' => 0
     },
     add_to_cleanup     => [ 'Usergrid-Client-*' ]
 );
