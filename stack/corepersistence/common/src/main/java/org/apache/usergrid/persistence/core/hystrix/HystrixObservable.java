@@ -21,31 +21,41 @@ package org.apache.usergrid.persistence.core.hystrix;
 
 
 import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
+import com.netflix.hystrix.HystrixThreadPoolProperties;
 
 import rx.Observable;
 
 
 /**
- * A utility class that creates graph observables wrapped in Hystrix for timeouts and circuit breakers.
+ * A utility class that creates graph observables wrapped in Hystrix for 
+ * timeouts and circuit breakers.
  */
 public class HystrixObservable {
 
     /**
      * Command group used for realtime user commands
      */
-    private static final HystrixCommandGroupKey USER_GROUP = HystrixCommandGroupKey.Factory.asKey( "user" );
+    private static final HystrixCommandGroupKey USER_GROUP = 
+            HystrixCommandGroupKey.Factory.asKey( "user" );
 
     /**
      * Command group for asynchronous operations
      */
-    private static final HystrixCommandGroupKey ASYNC_GROUP = HystrixCommandGroupKey.Factory.asKey( "async" );
+    private static final HystrixCommandGroupKey ASYNC_GROUP = 
+            HystrixCommandGroupKey.Factory.asKey( "async" );
 
 
     /**
-     * Wrap the observable in the timeout for user facing operation.  This is for user reads and deletes.
+     * Wrap the observable in the timeout for user facing operation.  
+     * This is for user reads and deletes.
      */
     public static <T> Observable<T> user( final Observable<T> observable ) {
+
+        HystrixThreadPoolProperties.Setter().withMaxQueueSize(200).withCoreSize(200);
+        HystrixCommandProperties.Setter().withExecutionIsolationSemaphoreMaxConcurrentRequests(200);
+
         return new HystrixObservableCommand<T>( USER_GROUP ) {
 
             @Override
@@ -57,7 +67,8 @@ public class HystrixObservable {
 
 
     /**
-     * Wrap the observable in the timeout for asynchronous operations.  This is for compaction and cleanup processing.
+     * Wrap the observable in the timeout for asynchronous operations.  
+     * This is for compaction and cleanup processing.
      */
     public static <T> Observable<T> async( final Observable<T> observable ) {
         return new HystrixObservableCommand<T>( ASYNC_GROUP ) {
