@@ -32,6 +32,21 @@ sub create {
   $self->POST($uri, $data);
 }
 
+sub update {
+  my ($self, $collection, $uuid, $data) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{uuid}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$collection,
+      uuid=>$uuid
+  );
+
+  $self->PUT($uri, $data);
+}
+
 sub retrieve_by_id {
   my ($self, $collection, $id) = @_;
 

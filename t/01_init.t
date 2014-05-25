@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 7;
+use Test::More tests => 9;
 
 # TEST DATA
 my $api_url         = 'http://localhost:8080/ROOT';
@@ -15,7 +15,7 @@ my $admin_password  = 'admin';
 my $test_collection = 'collection_foo';
 ###########
 
-my ($resp, @to_delete);
+my ($resp, @to_delete, $uuid);
 
 BEGIN {
   use_ok 'Usergrid::Client' || print "Bail out!\n";
@@ -25,7 +25,8 @@ BEGIN {
 my $client = Usergrid::Client->new(
   organization => $organization,
   application => $application,
-  api_url => $api_url
+  api_url => $api_url,
+  trace => 0
 );
 
 # Create a test user
@@ -45,10 +46,20 @@ $resp = $client->retrieve("collection_foo");
 my $old_count = scalar @{$resp->{entities}};
 
 # Create two entities in test collection
-$resp = $client->create($test_collection, { name=> "bar", type=>"fruit" });
+$resp = $client->create($test_collection, { name=> "bar", coll_type=>"fruit" });
 push (@to_delete, $resp->{'entities'}[0]->{'uuid'});
-$resp = $client->create($test_collection, { name=> "baz", type=>"not-a-fruit" });
+$resp = $client->create($test_collection, { name=> "baz", coll_type=>"not-a-fruit" });
 push (@to_delete, $resp->{'entities'}[0]->{'uuid'});
+
+# Check value of attribute before modifying
+$uuid = $resp->{'entities'}[0]->{'uuid'};
+ok( $resp->{'entities'}[0]->{'coll_type'} eq 'not-a-fruit', "check value before PUT" );
+
+$resp->{'entities'}[0]->{'coll_type'} = 'fruit';
+$client->update($test_collection, $uuid, $resp->{'entities'}[0]);
+
+$resp = $client->retrieve_by_id($test_collection, $uuid);
+ok( $resp->{'entities'}[0]->{'coll_type'} eq 'fruit', "check value after PUT");
 
 # Retrieve all from test collection to check whether the entities are created
 $resp = $client->retrieve("collection_foo");
@@ -56,7 +67,6 @@ my $new_count = scalar @{$resp->{entities}};
 ok( $new_count == $old_count + 2, 'added two entities' );
 
 # Delete the two created entities
-my $uuid;
 foreach $uuid (@to_delete) {
   $client->delete($test_collection, $uuid);
 }

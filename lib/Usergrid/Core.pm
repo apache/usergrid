@@ -55,7 +55,7 @@ sub trace_message {
 
 sub prettify {
   my ($self, $json_obj) = @_;
-  $json->pretty->encode($json_obj);
+  return $json->pretty->encode($json_obj);
 }
 
 sub json_encode {

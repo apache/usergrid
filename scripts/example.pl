@@ -1,9 +1,6 @@
 #!/usr/bin/perl
 
-use JSON;
 use Usergrid::Client;
-
-my $json = JSON->new->allow_nonref;
 
 # Create the client object that will be used for all subsequent requests
 my $client = Usergrid::Client->new(
@@ -26,14 +23,16 @@ print "Logged in as test user.\n";
 $resp = $client->retrieve_by_id("user", $resp->{'entities'}[0]->{'uuid'});
 print "Retrieved user entity.\n";
 
+# Create an entity
 $resp = $client->create("collection_foo", { name=> "bar", type=>"fruit" });
 print "Created entity #1 - $resp->{'entities'}[0]->{'uuid'}\n";
 
+# Create another entity
 $resp = $client->create("collection_foo", { name=> "baz", type=>"not-a-fruit" });
 print "Created entity #2 - $resp->{'entities'}[0]->{'uuid'}\n";
 
+# Retrieve the collection and delete the entities
 $resp = $client->retrieve("collection_foo");
-
 foreach $entity (@{$resp->{'entities'}}) {
   print "Retrieved $entity->{'name'} - $entity->{'uuid'}\n";
   $resp = $client->delete("collection_foo", $entity->{'uuid'});
