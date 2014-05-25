@@ -16,8 +16,6 @@
 package Usergrid::Collection;
 
 use Moose::Role;
-use URI::Template;
-
 use namespace::autoclean;
 
 1;

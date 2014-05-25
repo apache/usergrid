@@ -16,14 +16,9 @@
 package Usergrid::Management;
 
 use Moose::Role;
-use URI::Template;
-use JSON;
-
 use namespace::autoclean;
 
-my $json = JSON->new->allow_nonref;
-
-sub management_login($$$) {
+sub management_login {
   my ($self, $username, $password) = @_;
 
   my %request = (

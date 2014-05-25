@@ -19,7 +19,7 @@ my $user_obj = $client->create("users", \%user);
 print "Created test user\n";
 
 # Log the test user in
-$resp = $client->login('testuser', '1QAZ2wsx');
+$client->login('testuser', '1QAZ2wsx');
 print "Logged in as test user.\n";
 
 # Retrieve the user details by UUID
@@ -40,9 +40,9 @@ foreach $entity (@{$resp->{'entities'}}) {
 }
 
 # Get a management token
-my $tok = $client->management_login('admin', 'admin');
+$client->management_login('admin', 'admin');
 print "Logged in as admin.\n";
 
 # Delete the test user
-$resp = $client->delete("users", $user_obj->{'entities'}[0]->{'uuid'});
+$client->delete("users", $user_obj->{'entities'}[0]->{'uuid'});
 print "Deleted the test user.\n";

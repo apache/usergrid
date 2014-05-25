@@ -18,8 +18,12 @@ package Usergrid::Core;
 use Moose;
 use namespace::autoclean;
 use Log::Log4perl qw(:easy);
+use URI::Template;
+use JSON;
 
 our $VERSION = '0.1';
+
+my $json = JSON->new->allow_nonref;
 
 with (
   'Usergrid::Verbs',
@@ -44,9 +48,24 @@ sub _enable_tracing() {
   }
 }
 
-sub trace_message($) {
+sub trace_message {
   my ($self, $message) = @_;
   $Usergrid::Core::logger->debug($message) if (defined $Usergrid::Core::logger);
+}
+
+sub prettify {
+  my ($self, $json_obj) = @_;
+  $json->pretty->encode($json_obj);
+}
+
+sub json_encode {
+  my ($self, $json_obj) = @_;
+  $json->encode($json_obj);
+}
+
+sub json_decode {
+  my ($self, $json_obj) = @_;
+  $json->decode($json_obj);
 }
 
 1;

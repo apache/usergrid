@@ -15,34 +15,32 @@
 
 package Usergrid::Verbs;
 
-use REST::Client;
 use Moose::Role;
-use JSON;
-
 use namespace::autoclean;
 
-our $json = JSON->new->allow_nonref;
+use REST::Client;
 
-sub is_token_required ($$) {
+sub is_token_required {
   my ($self, $resource) = @_;
   return 0 if $resource =~ m/\/management\/token/;
   1;
 }
 
-sub api_request ($$$\%) {
+sub _api_request {
   my ($self, $method, $resource, $request) = @_;
 
   $self->trace_message("$method $resource");
-  $self->trace_message("REQUEST: " . $json->pretty->encode($request)) if (defined $request);
+  $self->trace_message("REQUEST: " . $self->prettify($request)) if ($request);
 
   my $client = REST::Client->new();
   $client->setHost($self->api_url);
 
   if ($self->is_token_required($resource) == 1 && defined $self->user_token) {
-    $client->addHeader('Authorization', 'Bearer ' . $self->user_token->{'access_token'});
+     $client->addHeader('Authorization',
+        'Bearer ' . $self->user_token->{'access_token'});
   }
 
-  my $json_req = $json->encode($request) if ($request);
+  my $json_req = $self->json_encode($request) if ($request);
 
   $client->DELETE($resource)          if ($method eq 'DELETE');
   $client->GET($resource)             if ($method eq 'GET');
@@ -51,31 +49,31 @@ sub api_request ($$$\%) {
 
   my $response = $client->responseContent();
 
-  $self->trace_message("RESPONSE: " . $json->pretty->encode($response)) if (defined $response);
+  $self->trace_message("RESPONSE: " . $self->prettify($response)) if ($response);
 
   return undef if ($client->responseCode() eq "404");
 
-  return $json->decode($response);
+  return $self->json_decode($response);
 }
 
-sub DELETE ($$) {
+sub DELETE {
   my ($self, $resource) = @_;
-  $self->api_request('DELETE', $resource);
+  $self->_api_request('DELETE', $resource);
 }
 
-sub GET ($$) {
+sub GET {
   my ($self, $resource) = @_;
-  $self->api_request('GET', $resource);
+  $self->_api_request('GET', $resource);
 }
 
-sub POST ($$\%) {
+sub POST {
   my ($self, $resource, $request) = @_;
-  $self->api_request('POST', $resource, $request);
+  $self->_api_request('POST', $resource, $request);
 }
 
-sub PUT ($$\%) {
+sub PUT {
   my ($self, $resource, $request) = @_;
-  $self->api_request('PUT', $resource, $request);
+  $self->_api_request('PUT', $resource, $request);
 }
 
 1;

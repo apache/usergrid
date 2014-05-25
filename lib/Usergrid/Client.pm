@@ -16,7 +16,6 @@
 package Usergrid::Client;
 
 use Moose;
-
 use namespace::autoclean;
 
 extends 'Usergrid::Core';
@@ -27,7 +26,7 @@ with (
   'Usergrid::Management'
 );
 
-sub login($$$) {
+sub login {
   my ($self, $username, $password) = @_;
 
   my %request = (

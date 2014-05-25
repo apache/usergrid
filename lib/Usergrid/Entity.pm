@@ -16,11 +16,9 @@
 package Usergrid::Entity;
 
 use Moose::Role;
-use URI::Template;
-
 use namespace::autoclean;
 
-sub create($$\%) {
+sub create {
   my ($self, $collection, $data) = @_;
 
   my $uri = URI::Template
@@ -31,10 +29,10 @@ sub create($$\%) {
       collection=>$collection
   );
 
-  return $self->POST($uri, $data);
+  $self->POST($uri, $data);
 }
 
-sub retrieve_by_id($$$) {
+sub retrieve_by_id {
   my ($self, $collection, $id) = @_;
 
   my $uri = URI::Template
@@ -46,10 +44,10 @@ sub retrieve_by_id($$$) {
       id=>$id
   );
 
-  return $self->GET($uri);
+  $self->GET($uri);
 }
 
-sub retrieve($$) {
+sub retrieve {
   my ($self, $collection) = @_;
 
   my $uri = URI::Template
@@ -60,10 +58,10 @@ sub retrieve($$) {
       collection=>$collection
   );
 
-  return $self->GET($uri);
+  $self->GET($uri);
 }
 
-sub delete($$$) {
+sub delete {
   my ($self, $collection, $uuid) = @_;
 
   my $uri = URI::Template
@@ -75,7 +73,7 @@ sub delete($$$) {
       uuid=>$uuid
   );
 
-  return $self->DELETE($uri);
+  $self->DELETE($uri);
 }
 
 1;
