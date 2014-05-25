@@ -23,7 +23,7 @@ use namespace::autoclean;
 
 our $json = JSON->new->allow_nonref;
 
-sub is_token_required ($) {
+sub is_token_required ($$) {
   my ($self, $resource) = @_;
   return 0 if $resource =~ m/\/management\/token/;
   1;

@@ -34,7 +34,7 @@ sub create($$\%) {
   return $self->POST($uri, $data);
 }
 
-sub retrieve_by_id($$) {
+sub retrieve_by_id($$$) {
   my ($self, $collection, $id) = @_;
 
   my $uri = URI::Template
@@ -44,6 +44,20 @@ sub retrieve_by_id($$) {
       application=>$self->application,
       collection=>$collection,
       id=>$id
+  );
+
+  return $self->GET($uri);
+}
+
+sub retrieve($$) {
+  my ($self, $collection) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{id}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$collection
   );
 
   return $self->GET($uri);

@@ -10,7 +10,7 @@ my $client = Usergrid::Client->new(
   organization => 'test-organization',
   application => 'test-app',
   api_url => 'http://localhost:8080/ROOT',
-  trace => 1
+  trace => 0
 );
 
 # Create a test user
@@ -25,6 +25,19 @@ print "Logged in as test user.\n";
 # Retrieve the user details by UUID
 $resp = $client->retrieve_by_id("user", $resp->{'entities'}[0]->{'uuid'});
 print "Retrieved user entity.\n";
+
+$resp = $client->create("collection_foo", { name=> "bar", type=>"fruit" });
+print "Created entity #1 - $resp->{'entities'}[0]->{'uuid'}\n";
+
+$resp = $client->create("collection_foo", { name=> "baz", type=>"not-a-fruit" });
+print "Created entity #2 - $resp->{'entities'}[0]->{'uuid'}\n";
+
+$resp = $client->retrieve("collection_foo");
+
+foreach $entity (@{$resp->{'entities'}}) {
+  print "Retrieved $entity->{'name'} - $entity->{'uuid'}\n";
+  $resp = $client->delete("collection_foo", $entity->{'uuid'});
+}
 
 # Get a management token
 my $tok = $client->management_login('admin', 'admin');
