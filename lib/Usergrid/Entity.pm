@@ -15,7 +15,21 @@
 
 package Usergrid::Entity;
 
-use Moose::Role;
+use Moose;
 use namespace::autoclean;
+
+has 'object'      => ( is => 'rw', required => 1);
+
+sub get {
+  my ($self, $key) = @_;
+  return $self->object->{'entities'}[0]->{$key};
+}
+
+sub set {
+  my ($self, $key, $value) = @_;
+  $self->object->{'entities'}[0]->{$key} = $value;
+}
+
+__PACKAGE__->meta->make_immutable;
 
 1;

@@ -20,11 +20,6 @@ use namespace::autoclean;
 
 extends 'Usergrid::Core';
 
-with (
-  'Usergrid::Collection',
-  'Usergrid::Management'
-);
-
 sub login {
   my ($self, $username, $password) = @_;
 
@@ -61,6 +56,80 @@ sub management_login {
   $self->user_token($token);
 
   return $self->user_token;
+}
+
+sub create {
+  my ($self, $collection, $data) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$collection
+  );
+
+  return Usergrid::Entity->new( object => $self->POST($uri, $data));
+}
+
+sub update {
+  my ($self, $collection, $uuid, $data) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{uuid}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$collection,
+      uuid=>$uuid
+  );
+
+  return Usergrid::Entity->new( object => $self->PUT($uri,
+    $data->object->{'entities'}[0]) );
+}
+
+sub retrieve_by_id {
+  my ($self, $collection, $id) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{id}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$collection,
+      id=>$id
+  );
+
+  return Usergrid::Entity->new( object => $self->GET($uri) );
+}
+
+sub retrieve {
+  my ($self, $collection) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{id}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$collection
+  );
+
+  return Usergrid::Collection->new( object => $self->GET($uri) );
+}
+
+sub delete {
+  my ($self, $collection, $uuid) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{uuid}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$collection,
+      uuid=>$uuid
+  );
+
+  return Usergrid::Entity->new( object => $self->DELETE($uri) );
 }
 
 __PACKAGE__->meta->make_immutable;

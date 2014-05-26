@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 9;
+use Test::More tests => 10;
 
 # TEST DATA
 my $api_url         = 'http://localhost:8080/ROOT';
@@ -15,10 +15,12 @@ my $admin_password  = 'admin';
 my $test_collection = 'collection_foo';
 ###########
 
-my ($resp, @to_delete, $uuid);
+my ($resp, @to_delete, $uuid, $collection, $entity);
 
 BEGIN {
-  use_ok 'Usergrid::Client' || print "Bail out!\n";
+  use_ok 'Usergrid::Client'     || print "Bail out!\n";
+  use_ok 'Usergrid::Entity'     || print "Bail out!\n";
+  use_ok 'Usergrid::Collection' || print "Bail out!\n";
 }
 
 # Create the client object that will be used for all subsequent requests
@@ -31,39 +33,39 @@ my $client = Usergrid::Client->new(
 
 # Create a test user
 my $user = $client->create("users", { username=>$username, password=>$password });
-ok( length($user->{'entities'}[0]->{'uuid'}) > 0, 'create user' );
+ok( length($user->get('uuid')) > 0, 'create user' );
 
 # Log the test user in
-$resp = $client->login($username, $password);
-ok( length($resp->{'access_token'}) > 0, 'login' );
+$client->login($username, $password);
 
 # Retrieve the user details by UUID
-$resp = $client->retrieve_by_id("user", $resp->{'entities'}[0]->{'uuid'});
-ok( length($resp->{'entities'}[0]->{'uuid'}) > 0, 'retrieve user entity by id' );
+$entity = $client->retrieve_by_id("user", $user->get('uuid'));
+ok( length($entity->get('uuid')) > 0, 'retrieve user entity by id' );
 
 # Retrieve all from a test collection
-$resp = $client->retrieve("collection_foo");
-my $old_count = scalar @{$resp->{entities}};
+$collection = $client->retrieve("collection_foo");
+my $old_count = $collection->count();
 
 # Create two entities in test collection
-$resp = $client->create($test_collection, { name=> "bar", coll_type=>"fruit" });
-push (@to_delete, $resp->{'entities'}[0]->{'uuid'});
-$resp = $client->create($test_collection, { name=> "baz", coll_type=>"not-a-fruit" });
-push (@to_delete, $resp->{'entities'}[0]->{'uuid'});
+$entity = $client->create($test_collection, { name=> "bar", coll_type=>"fruit" });
+push (@to_delete, $entity->get('uuid'));
+
+$entity = $client->create($test_collection, { name=> "baz", coll_type=>"not-a-fruit" });
+push (@to_delete, $entity->get('uuid'));
 
 # Check value of attribute before modifying
-$uuid = $resp->{'entities'}[0]->{'uuid'};
-ok( $resp->{'entities'}[0]->{'coll_type'} eq 'not-a-fruit', "check value before PUT" );
+$uuid = $entity->get('uuid');
+ok( $entity->get('coll_type') eq 'not-a-fruit', "check value before PUT" );
 
-$resp->{'entities'}[0]->{'coll_type'} = 'fruit';
-$client->update($test_collection, $uuid, $resp->{'entities'}[0]);
+$entity->set('coll_type', 'fruit');
+$client->update($test_collection, $uuid, $entity);
 
-$resp = $client->retrieve_by_id($test_collection, $uuid);
-ok( $resp->{'entities'}[0]->{'coll_type'} eq 'fruit', "check value after PUT");
+$entity = $client->retrieve_by_id($test_collection, $uuid);
+ok( $entity->get('coll_type') eq 'fruit', "check value after PUT");
 
 # Retrieve all from test collection to check whether the entities are created
-$resp = $client->retrieve("collection_foo");
-my $new_count = scalar @{$resp->{entities}};
+$collection = $client->retrieve("collection_foo");
+my $new_count = $collection->count();
 ok( $new_count == $old_count + 2, 'added two entities' );
 
 # Delete the two created entities
@@ -72,14 +74,14 @@ foreach $uuid (@to_delete) {
 }
 
 # Confirm the count again in the test collection
-$resp = $client->retrieve($test_collection);
-my $after_delete_count = scalar @{$resp->{entities}};
+$collection = $client->retrieve($test_collection);
+my $after_delete_count = $collection->count();
 ok ( $after_delete_count == $old_count, 'deleted two entities' );
 
 # Get a management token and delete the test user
 $client->management_login($admin_username, $admin_password);
-$resp = $client->delete("users", $user->{'entities'}[0]->{'uuid'});
+$entity = $client->delete("users", $user->get('uuid'));
 
 # Try to get the test user by UUID again and confirm it doesn't exist
-$resp = $client->retrieve_by_id("user", $resp->{'entities'}[0]->{'uuid'});
-ok( ! defined($resp), 'user deleted' );
+$entity = $client->retrieve_by_id("user", $entity->get('uuid'));
+ok( ! defined($entity->object), 'user deleted' );

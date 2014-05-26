@@ -3,13 +3,9 @@ lib/Usergrid/Client.pm
 lib/Usergrid/Collection.pm
 lib/Usergrid/Core.pm
 lib/Usergrid/Entity.pm
-lib/Usergrid/Management.pm
-lib/Usergrid/Verbs.pm
+lib/Usergrid/Request.pm
 LICENSE
 Makefile.PL
-MANIFEST
-META.json
-META.yml
+MANIFEST			This list of files
 README.md
-scripts/example.pl
 t/01_init.t
