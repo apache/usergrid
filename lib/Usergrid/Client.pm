@@ -21,7 +21,6 @@ use namespace::autoclean;
 extends 'Usergrid::Core';
 
 with (
-  'Usergrid::Entity',
   'Usergrid::Collection',
   'Usergrid::Management'
 );
@@ -43,6 +42,21 @@ sub login {
   );
 
   my $token = $self->POST($uri, \%request);
+
+  $self->user_token($token);
+
+  return $self->user_token;
+}
+
+sub management_login {
+  my ($self, $username, $password) = @_;
+
+  my %request = (
+    grant_type=>"password",
+    username=>$username,
+    password=>$password);
+
+  my $token = $self->POST('/management/token', \%request);
 
   $self->user_token($token);
 

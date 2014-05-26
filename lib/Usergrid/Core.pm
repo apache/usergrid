@@ -26,7 +26,7 @@ our $VERSION = '0.1';
 my $json = JSON->new->allow_nonref;
 
 with (
-  'Usergrid::Verbs',
+  'Usergrid::Request',
 );
 
 has 'organization'  => ( is => 'rw', isa => 'Str', required => 1);
