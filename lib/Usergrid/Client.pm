@@ -17,6 +17,8 @@ package Usergrid::Client;
 
 use Moose;
 use namespace::autoclean;
+use Usergrid::Entity;
+use Usergrid::Collection;
 
 extends 'Usergrid::Core';
 
@@ -58,8 +60,8 @@ sub management_login {
   return $self->user_token;
 }
 
-sub create {
-  my ($self, $collection, $data) = @_;
+sub add_entity {
+  my ($self, $collection, $entity) = @_;
 
   my $uri = URI::Template
     ->new('/{organization}/{application}/{collection}')
@@ -69,26 +71,26 @@ sub create {
       collection=>$collection
   );
 
-  return Usergrid::Entity->new( object => $self->POST($uri, $data));
+  return Usergrid::Entity->new( object => $self->POST($uri, $entity));
 }
 
-sub update {
-  my ($self, $collection, $uuid, $data) = @_;
+sub update_entity {
+  my ($self, $entity) = @_;
 
   my $uri = URI::Template
     ->new('/{organization}/{application}/{collection}/{uuid}')
     ->process(
       organization=>$self->organization,
       application=>$self->application,
-      collection=>$collection,
-      uuid=>$uuid
+      collection=>$entity->get('type'),
+      uuid=>$entity->get('uuid')
   );
 
   return Usergrid::Entity->new( object => $self->PUT($uri,
-    $data->object->{'entities'}[0]) );
+    $entity->object->{'entities'}[0]) );
 }
 
-sub retrieve_by_id {
+sub get_entity_by_uuid {
   my ($self, $collection, $id) = @_;
 
   my $uri = URI::Template
@@ -103,11 +105,11 @@ sub retrieve_by_id {
   return Usergrid::Entity->new( object => $self->GET($uri) );
 }
 
-sub retrieve {
+sub get_collection {
   my ($self, $collection) = @_;
 
   my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}/{id}')
+    ->new('/{organization}/{application}/{collection}')
     ->process(
       organization=>$self->organization,
       application=>$self->application,
@@ -117,7 +119,7 @@ sub retrieve {
   return Usergrid::Collection->new( object => $self->GET($uri) );
 }
 
-sub delete {
+sub delete_entity_by_uuid {
   my ($self, $collection, $uuid) = @_;
 
   my $uri = URI::Template
@@ -127,6 +129,21 @@ sub delete {
       application=>$self->application,
       collection=>$collection,
       uuid=>$uuid
+  );
+
+  return Usergrid::Entity->new( object => $self->DELETE($uri) );
+}
+
+sub delete_entity {
+  my ($self, $entity) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{uuid}')
+    ->process(
+      organization=>$self->organization,
+      application=>$self->application,
+      collection=>$entity->get('type'),
+      uuid=>$entity->get('uuid')
   );
 
   return Usergrid::Entity->new( object => $self->DELETE($uri) );
