@@ -73,6 +73,7 @@ import com.sun.jersey.multipart.FormDataMultiPart;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import org.apache.usergrid.persistence.QueryUtils;
 import static org.apache.usergrid.services.ServiceParameter.addParameter;
 import static org.apache.usergrid.services.ServicePayload.batchPayload;
 import static org.apache.usergrid.services.ServicePayload.idListPayload;
@@ -255,7 +256,7 @@ public class ServiceResource extends AbstractContextResource {
             Query query = r.getLastQuery();
             if ( query != null ) {
                 if ( query.hasSelectSubjects() ) {
-                    response.setList( query.getSelectionResults( results ) );
+                    response.setList( QueryUtils.getSelectionResults( query, results ) );
                     response.setCount( response.getList().size() );
                     response.setNext( results.getNextResult() );
                     response.setPath( results.getPath() );
