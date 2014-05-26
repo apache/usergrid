@@ -20,10 +20,11 @@
 package org.apache.usergrid.persistence.core.hystrix;
 
 
+import com.netflix.config.ConfigurationManager;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
-import com.netflix.hystrix.HystrixThreadPoolProperties;
+import com.netflix.hystrix.HystrixThreadPoolProperties.Setter;
 
 import rx.Observable;
 
@@ -33,6 +34,14 @@ import rx.Observable;
  * timeouts and circuit breakers.
  */
 public class HystrixObservable {
+
+//    static {
+//        // TODO: can't we put these in the our normal properties file?
+//        ConfigurationManager.getConfigInstance()
+//            .setProperty("hystrix.command.default.execution.isolation.strategy","THREAD");
+//        ConfigurationManager.getConfigInstance()
+//            .setProperty("hystrix.threadpool.default.coreSize", 1032);
+//    }
 
     /**
      * Command group used for realtime user commands
@@ -53,8 +62,12 @@ public class HystrixObservable {
      */
     public static <T> Observable<T> user( final Observable<T> observable ) {
 
-        HystrixThreadPoolProperties.Setter().withMaxQueueSize(200).withCoreSize(200);
-        HystrixCommandProperties.Setter().withExecutionIsolationSemaphoreMaxConcurrentRequests(200);
+//        HystrixCommandProperties.Setter hcpSetter = HystrixCommandProperties.Setter()
+//            .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.THREAD);
+//
+//        final HystrixObservableCommand.Setter setter = HystrixObservableCommand.Setter
+//            .withGroupKey(USER_GROUP)
+//            .andCommandPropertiesDefaults(hcpSetter);
 
         return new HystrixObservableCommand<T>( USER_GROUP ) {
 
