@@ -15,22 +15,29 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.yammer.metrics.annotation.Metered;
 import java.io.Serializable;
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
-import me.prettyprint.hector.api.mutation.Mutator;
-import static org.apache.commons.lang.StringUtils.isBlank;
+
+import javax.annotation.Resource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
+
+import org.apache.usergrid.persistence.AggregateCounter;
+import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.CollectionRef;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
@@ -40,23 +47,15 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
+import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.CollectionScope;
@@ -74,20 +73,55 @@ import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
-import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import org.apache.usergrid.utils.UUIDUtils;
+
+import com.yammer.metrics.annotation.Metered;
+
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.CounterRow;
+import me.prettyprint.hector.api.beans.CounterRows;
+import me.prettyprint.hector.api.beans.CounterSlice;
+import me.prettyprint.hector.api.beans.HCounterColumn;
+import me.prettyprint.hector.api.factory.HFactory;
+import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
+import me.prettyprint.hector.api.query.QueryResult;
+import me.prettyprint.hector.api.query.SliceCounterQuery;
+
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+
+import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
+import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
+import static org.apache.usergrid.persistence.cassandra.Serializers.le;
+import static org.apache.usergrid.persistence.cassandra.Serializers.se;
+import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
+import static org.apache.usergrid.utils.ClassUtils.cast;
+import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
 
 
 /**
@@ -105,24 +139,57 @@ public class CpEntityManager implements EntityManager {
 
     private ApplicationScope appScope;
 
+    @Resource
+    private CassandraService cass;
+
+    @Resource
+    private CounterUtils counterUtils;
+
+    private boolean skipAggregateCounters;
+
     public CpEntityManager() {}
 
 
     @Override
     public void init( EntityManagerFactory emf, UUID applicationId ) {
 
-        this.emf = (CpEntityManagerFactory)emf;
-        this.managerCache = this.emf.getManagerCache();
-        this.applicationId = applicationId;
+        init((CpEntityManagerFactory) emf, applicationId ,null, null, false);
+//        this.emf = (CpEntityManagerFactory)emf;
+//        this.managerCache = this.emf.getManagerCache();
+//        this.applicationId = applicationId;
+//
+//        appScope = this.emf.getApplicationScope(applicationId);
+//
+//
+//        try {
+//            application = getApplication();
+//        }
+//        catch ( Exception ex ) {
+//            logger.error("Getting application", ex);
+//        }
+    }
 
-        appScope = this.emf.getApplicationScope(applicationId);
+    public EntityManager init(CpEntityManagerFactory emf, UUID applicationId ,CassandraService cass, CounterUtils counterUtils,
+                              boolean skipAggregateCounters){
 
-        try {
-            application = getApplication();
-        }
-        catch ( Exception ex ) {
-            logger.error("Getting application", ex);
-        }
+                this.emf = emf;
+                this.managerCache = this.emf.getManagerCache();
+                this.applicationId = applicationId;
+
+                appScope = this.emf.getApplicationScope(applicationId);
+
+        this.cass = cass;
+        this.counterUtils = counterUtils;
+
+        this.skipAggregateCounters = skipAggregateCounters;
+
+                try {
+                    application = getApplication();
+                }
+                catch ( Exception ex ) {
+                    logger.error("Getting application", ex);
+                }
+        return this;
     }
 
 
@@ -1161,26 +1228,150 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void incrementAggregateCounters(
             UUID userId, UUID groupId, String category, String counterName, long value) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        long cassandraTimestamp = cass.createTimestamp();
+        incrementAggregateCounters( userId, groupId, category, counterName, value, cassandraTimestamp );
+    }
+
+    private void incrementAggregateCounters( UUID userId, UUID groupId, String category, String counterName, long value,
+                                             long cassandraTimestamp ) {
+        // TODO short circuit
+        if ( !skipAggregateCounters ) {
+            Mutator<ByteBuffer> m = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+
+            counterUtils
+                    .batchIncrementAggregateCounters( m, applicationId, userId, groupId, null, category, counterName,
+                            value, cassandraTimestamp / 1000, cassandraTimestamp );
+
+            batchExecute( m, CassandraService.RETRY_COUNT );
+        }
     }
 
     @Override
     public Results getAggregateCounters(
             UUID userId, UUID groupId, String category, String counterName, 
             CounterResolution resolution, long start, long finish, boolean pad) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return this.getAggregateCounters(
+                userId, groupId, null, category, counterName, resolution, start, finish, pad );
     }
 
     @Override
     public Results getAggregateCounters(
             UUID userId, UUID groupId, UUID queueId, String category, String counterName, 
             CounterResolution resolution, long start, long finish, boolean pad) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        start = resolution.round( start );
+        finish = resolution.round( finish );
+        long expected_time = start;
+        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        SliceCounterQuery<String, Long> q = createCounterSliceQuery( ko, se, le );
+        q.setColumnFamily( APPLICATION_AGGREGATE_COUNTERS.toString() );
+        q.setRange( start, finish, false, ALL_COUNT );
+
+        QueryResult<CounterSlice<Long>> r = q.setKey(
+                counterUtils.getAggregateCounterRow(
+                        counterName, userId, groupId, queueId, category, resolution ) ).execute();
+
+        List<AggregateCounter> counters = new ArrayList<AggregateCounter>();
+        for ( HCounterColumn<Long> column : r.get().getColumns() ) {
+            AggregateCounter count = new AggregateCounter( column.getName(), column.getValue() );
+            if ( pad && !( resolution == CounterResolution.ALL ) ) {
+                while ( count.getTimestamp() != expected_time ) {
+                    counters.add( new AggregateCounter( expected_time, 0 ) );
+                    expected_time = resolution.next( expected_time );
+                }
+                expected_time = resolution.next( expected_time );
+            }
+            counters.add( count );
+        }
+        if ( pad && !( resolution == CounterResolution.ALL ) ) {
+            while ( expected_time <= finish ) {
+                counters.add( new AggregateCounter( expected_time, 0 ) );
+                expected_time = resolution.next( expected_time );
+            }
+        }
+        return Results.fromCounters( new AggregateCounterSet( counterName, userId, groupId, category, counters ) );
     }
 
     @Override
     public Results getAggregateCounters(Query query) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        CounterResolution resolution = query.getResolution();
+        if ( resolution == null ) {
+            resolution = CounterResolution.ALL;
+        }
+        long start = query.getStartTime() != null ? query.getStartTime() : 0;
+        long finish = query.getFinishTime() != null ? query.getFinishTime() : 0;
+        boolean pad = query.isPad();
+        if ( start <= 0 ) {
+            start = 0;
+        }
+        if ( ( finish <= 0 ) || ( finish < start ) ) {
+            finish = System.currentTimeMillis();
+        }
+        start = resolution.round( start );
+        finish = resolution.round( finish );
+        long expected_time = start;
+
+        if ( pad && ( resolution != CounterResolution.ALL ) ) {
+            long max_counters = ( finish - start ) / resolution.interval();
+            if ( max_counters > 1000 ) {
+                finish = resolution.round( start + ( resolution.interval() * 1000 ) );
+            }
+        }
+
+        List<Query.CounterFilterPredicate> filters = query.getCounterFilters();
+        if ( filters == null ) {
+            return null;
+        }
+        Map<String, CounterUtils.AggregateCounterSelection> selections = new HashMap<String, CounterUtils.AggregateCounterSelection>();
+        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+
+        for ( Query.CounterFilterPredicate filter : filters ) {
+            CounterUtils.AggregateCounterSelection selection =
+                    new CounterUtils.AggregateCounterSelection( filter.getName(), getUuid( getUserByIdentifier( filter.getUser() ) ),
+                            getUuid( getGroupByIdentifier( filter.getGroup() ) ),
+                            org.apache.usergrid.mq.Queue.getQueueId( filter.getQueue() ), filter.getCategory() );
+            selections.put( selection.getRow( resolution ), selection );
+        }
+
+        MultigetSliceCounterQuery<String, Long> q = HFactory.createMultigetSliceCounterQuery( ko, se, le );
+        q.setColumnFamily( APPLICATION_AGGREGATE_COUNTERS.toString() );
+        q.setRange( start, finish, false, ALL_COUNT );
+        QueryResult<CounterRows<String, Long>> rows = q.setKeys( selections.keySet() ).execute();
+
+        List<AggregateCounterSet> countSets = new ArrayList<AggregateCounterSet>();
+        for ( CounterRow<String, Long> r : rows.get() ) {
+            expected_time = start;
+            List<AggregateCounter> counters = new ArrayList<AggregateCounter>();
+            for ( HCounterColumn<Long> column : r.getColumnSlice().getColumns() ) {
+                AggregateCounter count = new AggregateCounter( column.getName(), column.getValue() );
+                if ( pad && ( resolution != CounterResolution.ALL ) ) {
+                    while ( count.getTimestamp() != expected_time ) {
+                        counters.add( new AggregateCounter( expected_time, 0 ) );
+                        expected_time = resolution.next( expected_time );
+                    }
+                    expected_time = resolution.next( expected_time );
+                }
+                counters.add( count );
+            }
+            if ( pad && ( resolution != CounterResolution.ALL ) ) {
+                while ( expected_time <= finish ) {
+                    counters.add( new AggregateCounter( expected_time, 0 ) );
+                    expected_time = resolution.next( expected_time );
+                }
+            }
+            CounterUtils.AggregateCounterSelection selection = selections.get( r.getKey() );
+            countSets.add( new AggregateCounterSet( selection.getName(), selection.getUserId(), selection.getGroupId(),
+                    selection.getCategory(), counters ) );
+        }
+
+        Collections.sort( countSets, new Comparator<AggregateCounterSet>() {
+            @Override
+            public int compare( AggregateCounterSet o1, AggregateCounterSet o2 ) {
+                String s1 = o1.getName();
+                String s2 = o2.getName();
+                return s1.compareTo( s2 );
+            }
+        } );
+        return Results.fromCounters( countSets );
     }
 
     @Override
@@ -1195,17 +1386,29 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Set<String> getCounterNames() throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        Set<String> names = new TreeSet<String>( CASE_INSENSITIVE_ORDER );
+        Set<String> nameSet = cast( getDictionaryAsSet( getApplicationRef(), Schema.DICTIONARY_COUNTERS ) );
+        names.addAll( nameSet );
+        return names;
     }
 
     @Override
     public Map<String, Long> getEntityCounters(UUID entityId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        Map<String, Long> counters = new HashMap<String, Long>();
+        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        SliceCounterQuery<UUID, String> q = createCounterSliceQuery( ko, ue, se );
+        q.setColumnFamily( ENTITY_COUNTERS.toString() );
+        q.setRange( null, null, false, ALL_COUNT );
+        QueryResult<CounterSlice<String>> r = q.setKey( entityId ).execute();
+        for ( HCounterColumn<String> column : r.get().getColumns() ) {
+            counters.put( column.getName(), column.getValue() );
+        }
+        return counters;
     }
 
     @Override
     public Map<String, Long> getApplicationCounters() throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return getEntityCounters( applicationId );
     }
 
     @Override
