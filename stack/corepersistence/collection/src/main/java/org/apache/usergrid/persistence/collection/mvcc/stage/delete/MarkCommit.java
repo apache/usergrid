@@ -19,15 +19,19 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 
 import com.google.common.base.Optional;
-import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValue;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
@@ -55,7 +59,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 
 /**
@@ -69,32 +72,30 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
     private final MvccLogEntrySerializationStrategy logStrat;
     private final MvccEntitySerializationStrategy entityStrat;
-    private final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityEventAsyncProcessor;
+    private final AsyncProcessor<MvccEntityDeleteEvent> entityEventAsyncProcessor;
     private final ConsistencyFig consistencyFig;
-    private final UniqueValueSerializationStrategy uniqueValueStrat;
     private final SerializationFig serializationFig;
+    private final UniqueValueSerializationStrategy uniqueValueStrat;
 
     @Inject
     public MarkCommit( final MvccLogEntrySerializationStrategy logStrat,
                        final MvccEntitySerializationStrategy entityStrat,
-                       @MvccEntityDelete AsyncProcessor<MvccEntityEvent<MvccEntity>> entityEventAsyncProcessor,
-                       final ConsistencyFig consistencyFig, final SerializationFig serializationFig,
-                       final UniqueValueSerializationStrategy uniqueValueStrat) {
+                       final UniqueValueSerializationStrategy uniqueValueStrat,
+                       final AsyncProcessorFactory asyncProcessorFactory,
+                       final ConsistencyFig consistencyFig,
+                       final SerializationFig serializationFig) {
 
         Preconditions.checkNotNull( 
                 logStrat, "logEntrySerializationStrategy is required" );
         Preconditions.checkNotNull( 
                 entityStrat, "entitySerializationStrategy is required" );
 
-        Preconditions.checkNotNull(
-                uniqueValueStrat, "uniqueValueSerializationStrategy is required");
-
         this.logStrat = logStrat;
         this.entityStrat = entityStrat;
-        this.entityEventAsyncProcessor = entityEventAsyncProcessor;
+        this.entityEventAsyncProcessor = asyncProcessorFactory.getProcessor( MvccEntityDeleteEvent.class );
         this.consistencyFig = consistencyFig;
-        this.uniqueValueStrat = uniqueValueStrat;
         this.serializationFig = serializationFig;
+        this.uniqueValueStrat = uniqueValueStrat;
     }
 
     private long getTimeout() {
@@ -116,20 +117,27 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
-                org.apache.usergrid.persistence.collection.mvcc.entity.Stage.COMMITTED, MvccLogEntry.Status.DELETED );
+                Stage.COMMITTED, MvccLogEntry.State.DELETED );
 
         final MutationBatch logMutation = logStrat.write( collectionScope, startEntry );
 
         //insert a "cleared" value into the versions.  Post processing should actually delete
-        final MutationBatch entityMutation = entityStrat.mark( collectionScope, entityId, version );
+        MutationBatch entityMutation = entityStrat.mark( collectionScope, entityId, version );
+
+        //merge the 2 into 1 mutation
+        logMutation.mergeShallow( entityMutation );
+
+        //set up the post processing queue
+        final AsynchronousMessage<MvccEntityDeleteEvent> event = entityEventAsyncProcessor.setVerification(
+                new MvccEntityDeleteEvent( collectionScope, version, entity ), getTimeout() );
 
         //delete unique fields
         Observable<List<Field>> deleteFieldsObservable = Observable.create(new ObservableIterator<Field>("deleteColumns") {
             @Override
             protected Iterator<Field> getIterator() {
-                Iterator<MvccEntity> entities  = entityStrat.load(collectionScope, entityId, entity.getVersion(), 1);
+                Iterator<MvccEntity> entities = entityStrat.load(collectionScope, entityId, entity.getVersion(), 1);
                 Iterator<Field> fieldIterator = Collections.emptyIterator();
-                if(entities.hasNext()) {
+                if (entities.hasNext()) {
                     Optional<Entity> oe = entities.next().getEntity();
                     if (oe.isPresent()) {
                         fieldIterator = oe.get().getFields().iterator();
@@ -138,41 +146,35 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
                 return fieldIterator;
             }
         }).buffer(serializationFig.getBufferSize())
-          .map(new Func1<List<Field>, List<Field>>() {
-              @Override
-              public List<Field> call(List<Field> fields) {
-                  for (Field field : fields) {
-                      try {
-                          UniqueValue value = uniqueValueStrat.load(collectionScope, field);
-                          if (value != null) {
-                              logMutation.mergeShallow(uniqueValueStrat.delete(value));
-                          }
-                      } catch (ConnectionException ce) {
-                          LOG.error("Failed to delete Unique Value", ce);
-                      }
-                  }
-                  return fields;
-              }
-          });
-        deleteFieldsObservable.toBlockingObservable().last();
+                .map(new Func1<List<Field>, List<Field>>() {
+                    @Override
+                    public List<Field> call(List<Field> fields) {
+                        for (Field field : fields) {
+                            try {
+                                UniqueValue value = uniqueValueStrat.load(collectionScope, field);
+                                if (value != null) {
+                                    logMutation.mergeShallow(uniqueValueStrat.delete(value));
+                                }
+                            } catch (ConnectionException ce) {
+                                LOG.error("Failed to delete Unique Value", ce);
+                            }
+                        }
+                        return fields;
+                    }
+                });
+        deleteFieldsObservable.toBlockingObservable().firstOrDefault(null);
 
         try {
             logMutation.execute();
         }
         catch ( ConnectionException e ) {
             LOG.error( "Failed to execute write asynchronously ", e );
-            throw new CollectionRuntimeException( entity.getEntity().get(), collectionScope,
+            throw new CollectionRuntimeException( entity.getEntity().get(), collectionScope, 
                     "Failed to execute write asynchronously ", e );
         }
-        //merge the 2 into 1 mutation
-        logMutation.mergeShallow( entityMutation );
-
-        //set up the post processing queue
-        final AsynchronousMessage<MvccEntityEvent<MvccEntity>> event = entityEventAsyncProcessor.setVerification( new MvccEntityEvent<MvccEntity>(collectionScope, version, entity ), getTimeout() );
-
 
         //fork post processing
-        entityEventAsyncProcessor.start(event);
+        entityEventAsyncProcessor.start( event );
 
         /**
          * We're done executing.

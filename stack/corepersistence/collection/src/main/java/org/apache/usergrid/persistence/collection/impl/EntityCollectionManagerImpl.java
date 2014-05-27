@@ -45,6 +45,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import org.apache.usergrid.persistence.core.hystrix.HystrixObservable;
 
 import rx.Observable;
 import rx.functions.Func1;
@@ -196,8 +197,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(), 
         //                  writeVerifyUnique, writeOptimisticVerify );
 
-        // return the commit result.
-        return observable.map(writeCommit).doOnError( rollback );
+        // return the commit result
+        return HystrixObservable.user( observable.map(writeCommit).doOnError(rollback) );
+
     }
 
 
@@ -208,8 +210,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
-        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-            .subscribeOn( Schedulers.io() ).map( markStart ).map( markCommit );
+        return HystrixObservable.user(
+                Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ) 
+                        .subscribeOn( Schedulers.io() ).map( markStart ).map( markCommit )) ;
     }
 
 
@@ -220,8 +223,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage");
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage");
 
-        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-            .subscribeOn( Schedulers.io() ).map( load );
+        return HystrixObservable.user(
+                Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
+                        .subscribeOn( Schedulers.io() ).map( load ) ) ;
     }
 
 
@@ -230,10 +234,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
      */
     private static class WaitZip<R> implements FuncN<R> {
 
-
-        private WaitZip() {
-        }
-
+        private WaitZip() {}
 
         @Override
         public R call( final Object... args ) {

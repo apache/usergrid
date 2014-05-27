@@ -16,28 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.guice;
+package org.apache.usergrid.persistence.core.consistency;
 
 
-import org.apache.usergrid.persistence.collection.guice.TestModule;
-import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueueFactory;
-import org.apache.usergrid.persistence.core.consistency.TimeoutQueueFactory;
-import org.apache.usergrid.persistence.core.guice.CommonModule;
+import java.io.Serializable;
 
 
 /**
- * Wrapper for configuring our guice test env
+ * Factory for returning and caching AsyncProcessor implementations.
  */
-public class TestGraphModule extends TestModule {
+public interface AsyncProcessorFactory {
 
-    @Override
-    protected void configure() {
-        install( new CommonModule() {
-                   @Override
-                   protected void bindTimeoutQueueFactory() {
-                      bind(TimeoutQueueFactory.class).to(LocalTimeoutQueueFactory.class);
-                   }
-               } );
-        install( new GraphModule() );
-    }
+    /**
+     * Get the asynchornous processor for this class type
+     * @param eventClass
+     * @param <T>
+     * @return
+     */
+    public <T extends Serializable> AsyncProcessor<T> getProcessor(Class<T> eventClass);
 }

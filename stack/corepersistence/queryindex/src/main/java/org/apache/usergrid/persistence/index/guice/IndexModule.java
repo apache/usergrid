@@ -19,24 +19,12 @@
 
 package org.apache.usergrid.persistence.index.guice;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.multibindings.Multibinder;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.guice.MvccEntityDelete;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccDeleteMessageListener;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.index.IndexFig;
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.impl.EsEntityIndexDeleteListener;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
@@ -46,9 +34,6 @@ public class IndexModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        // configure collections and our core astyanax framework
-        install(new CollectionModule());
-
         // install our configuration
         install (new GuicyFigModule( IndexFig.class ));
 
@@ -56,38 +41,6 @@ public class IndexModule extends AbstractModule {
             .implement( EntityIndex.class, EsEntityIndexImpl.class )
             .build( EntityIndexFactory.class ) );
 
-        Multibinder<MessageListener> messageListenerMultibinder = Multibinder.newSetBinder(binder(), MessageListener.class);
-
-        messageListenerMultibinder.addBinding().toProvider(EsEntityIndexDeleteListenerProvider.class).asEagerSingleton();
     }
 
-    /**
-     * Create the provider for the node delete listener
-     */
-    public static class EsEntityIndexDeleteListenerProvider
-            implements Provider<MvccDeleteMessageListener> {
-
-
-        private final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete;
-        private final EntityIndexFactory entityIndexFactory;
-        private final SerializationFig serializationFig;
-        private final EntityCollectionManager collectionManager;
-
-
-        @Inject
-        public EsEntityIndexDeleteListenerProvider( final EntityIndexFactory entityIndexFactory,
-                                                 @MvccEntityDelete final AsyncProcessor<MvccEntityEvent<MvccEntity>> entityDelete,
-                                                 SerializationFig serializationFig,
-                                                 EntityCollectionManager collectionManager) {
-            this.entityDelete = entityDelete;
-            this.entityIndexFactory = entityIndexFactory;
-            this.serializationFig = serializationFig;
-            this.collectionManager = collectionManager;
-        }
-
-        @Override
-        public MvccDeleteMessageListener get() {
-            return new EsEntityIndexDeleteListener(entityIndexFactory,entityDelete,serializationFig,collectionManager);
-        }
-    }
 }

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.QueryUtils;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 
@@ -153,7 +154,7 @@ public class ServiceResults extends Results {
         if ( q == null ) {
             return null;
         }
-        return q.getSelectionResults( this );
+        return QueryUtils.getSelectionResults( q, this );
     }
 
 
@@ -162,7 +163,7 @@ public class ServiceResults extends Results {
         if ( q == null ) {
             return null;
         }
-        return q.getSelectionResult( this );
+        return QueryUtils.getSelectionResult( q, this );
     }
 
 

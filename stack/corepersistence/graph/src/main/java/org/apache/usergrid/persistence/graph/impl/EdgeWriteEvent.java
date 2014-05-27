@@ -16,28 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.guice;
+package org.apache.usergrid.persistence.graph.impl;
 
 
-import org.apache.usergrid.persistence.collection.guice.TestModule;
-import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueueFactory;
-import org.apache.usergrid.persistence.core.consistency.TimeoutQueueFactory;
-import org.apache.usergrid.persistence.core.guice.CommonModule;
+import java.util.UUID;
+
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 
 
 /**
- * Wrapper for configuring our guice test env
+ * Event for when an edge is written
  */
-public class TestGraphModule extends TestModule {
-
-    @Override
-    protected void configure() {
-        install( new CommonModule() {
-                   @Override
-                   protected void bindTimeoutQueueFactory() {
-                      bind(TimeoutQueueFactory.class).to(LocalTimeoutQueueFactory.class);
-                   }
-               } );
-        install( new GraphModule() );
+public class EdgeWriteEvent extends EdgeEvent<MarkedEdge> {
+    public EdgeWriteEvent( final ApplicationScope applicationScope, final UUID version, final MarkedEdge data ) {
+        super( applicationScope, version, data );
     }
 }

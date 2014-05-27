@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +58,6 @@ import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.serializers.AbstractSerializer;
-import com.netflix.astyanax.serializers.IntegerSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 
 
@@ -104,7 +102,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         final Stage stage = entry.getStage();
         final UUID colName = entry.getVersion();
-        final StageStatus stageStatus = new StageStatus(stage,entry.getStatus());
+        final StageStatus stageStatus = new StageStatus(stage,entry.getState());
 
         return doWrite( collectionScope, entry.getEntityId(), entry.getVersion(), new RowOp() {
             @Override
@@ -145,7 +143,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
         final StageStatus stageStatus = result.getValue( SER );
 
-        return new MvccLogEntryImpl( entityId, version, stageStatus.stage, stageStatus.status );
+        return new MvccLogEntryImpl( entityId, version, stageStatus.stage, stageStatus.state );
     }
 
 
@@ -170,7 +168,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
             final UUID storedVersion = col.getName();
             final StageStatus stage = col.getValue( SER );
 
-            results.add( new MvccLogEntryImpl( entityId, storedVersion, stage.stage, stage.status ) );
+            results.add( new MvccLogEntryImpl( entityId, storedVersion, stage.stage, stage.state ) );
         }
 
         return results;
@@ -267,15 +265,16 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
      * Internal stage shard
      */
     private static class StatusCache {
-        private Map<Integer, MvccLogEntry.Status> values = new HashMap<Integer, MvccLogEntry.Status>( MvccLogEntry.Status.values().length );
+        private Map<Integer, MvccLogEntry.State> values = new HashMap<Integer, MvccLogEntry.State>( MvccLogEntry.State
+                                                                                                                .values().length );
 
 
         private StatusCache() {
-            for ( MvccLogEntry.Status status : MvccLogEntry.Status.values() ) {
+            for ( MvccLogEntry.State state : MvccLogEntry.State.values() ) {
 
-                final int statusValue = status.getId();
+                final int statusValue = state.getId();
 
-                values.put( statusValue, status );
+                values.put( statusValue, state );
             }
         }
 
@@ -283,7 +282,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
         /**
          * Get the stage with the byte value
          */
-        private MvccLogEntry.Status getStatus( final int value ) {
+        private MvccLogEntry.State getStatus( final int value ) {
             return values.get( value );
         }
     }
@@ -301,7 +300,7 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
 
             ByteBuffer byteBuffer  = ByteBuffer.allocate(8);
             byteBuffer.putInt(obj.stage.getId());
-            byteBuffer.putInt(obj.status.getId());
+            byteBuffer.putInt(obj.state.getId());
             byteBuffer.rewind();
             return byteBuffer;
         }
@@ -312,17 +311,17 @@ public class MvccLogEntrySerializationStrategyImpl implements MvccLogEntrySerial
             int value = byteBuffer.getInt();
             Stage stage = CACHE.getStage( value );
             value = byteBuffer.getInt();
-            MvccLogEntry.Status status =  STATUS_CACHE.getStatus(value);
-            return new StageStatus(stage,status);
+            MvccLogEntry.State state =  STATUS_CACHE.getStatus(value);
+            return new StageStatus(stage, state );
         }
     }
 
     public static class StageStatus {
         final Stage stage;
-        final MvccLogEntry.Status status;
-        public StageStatus(Stage stage, MvccLogEntry.Status status){
+        final MvccLogEntry.State state;
+        public StageStatus(Stage stage, MvccLogEntry.State state ){
             this.stage = stage;
-            this.status = status;
+            this.state = state;
         }
 
     }

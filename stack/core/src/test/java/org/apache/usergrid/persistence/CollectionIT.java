@@ -1518,15 +1518,19 @@ public class CollectionIT extends AbstractCoreIT {
         em.refreshIndex();
 
         // String s = "select * where Flag = 'requested'";
-        // String s =
-        // "select * where Flag = 'requested' and NOT Recipient.Username = 'fb_536692245' order by created asc";
-        String s = "select * where Flag = 'requested' and NOT Recipient.Username = 'fb_536692245' order by created asc";
+        // String s = "select * where Flag = 'requested' and NOT Recipient.Username = 
+        // 'fb_536692245' order by created asc";
+
+        String s = "select * where Flag = 'requested' and NOT Recipient.Username "
+                + "= 'fb_536692245' order by created asc";
         Query query = Query.fromQL( s );
 
         Results r = em.searchCollection( em.getApplicationRef(), "loveobjects", query );
         assertTrue( r.size() == 1 );
 
-        String username = ( String ) ( ( Map ) r.getEntities().get( 0 ).getProperty( "Recipient" ) ).get( "Username" );
+        String username = (String)( (Map)r.getEntities().get( 0 )
+                .getProperty( "Recipient" ) ).get( "Username" );
+
         // selection results should be a list of lists
 //        List<Object> sr = query.getSelectionResults( r );
 //        assertTrue( sr.size() == 1 );

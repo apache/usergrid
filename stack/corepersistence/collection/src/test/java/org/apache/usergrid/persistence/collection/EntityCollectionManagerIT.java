@@ -38,6 +38,7 @@ import com.google.inject.Inject;
 import rx.Observable;
 
 import java.util.UUID;
+import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 
 import static org.junit.Assert.*;
 
@@ -93,18 +94,17 @@ public class EntityCollectionManagerIT {
         }
 
         {
-            boolean dupPrevented = false;
             try {
                 Entity newEntity = new Entity( new SimpleId( "test" ) );
                 newEntity.setField( new IntegerField("count", 5, true) );
 
-                Observable<Entity> observable = manager.write( newEntity );
-                Entity returned = observable.toBlockingObservable().lastOrDefault( null );
+                manager.write( newEntity ).toBlockingObservable().last();
+                fail("Write should have thrown an exception");
 
-            } catch ( CollectionRuntimeException cre ) {
-                dupPrevented = true;
+            } catch ( Exception ex ) {
+                WriteUniqueVerifyException e = (WriteUniqueVerifyException)ex.getCause();
+                assertEquals( 1, e.getVioliations().size() );
             }
-            Assert.assertTrue( dupPrevented );
         }
     }
 
@@ -138,7 +138,8 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeLoadDelete() {
 
-        CollectionScope context = new CollectionScopeImpl(new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
+        CollectionScope context = new CollectionScopeImpl(
+                new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
@@ -172,7 +173,8 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeLoadUpdateLoad() {
 
-        CollectionScope context = new CollectionScopeImpl(new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
+        CollectionScope context = new CollectionScopeImpl(
+                new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
         newEntity.setField( new IntegerField( "counter", 1 ) );
@@ -193,7 +195,8 @@ public class EntityCollectionManagerIT {
         assertEquals( "Same value", createReturned, loadReturned );
 
 
-        assertEquals( "Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ) );
+        assertEquals( "Field value correct", createReturned.getField( "counter" ), 
+                loadReturned.getField( "counter" ) );
 
 
         //update the field to 2
@@ -210,7 +213,8 @@ public class EntityCollectionManagerIT {
         assertEquals( "Same value", createReturned, loadReturned );
 
 
-        assertEquals( "Field value correct", createReturned.getField( "counter" ), loadReturned.getField( "counter" ) );
+        assertEquals( "Field value correct", createReturned.getField( "counter" ), 
+                loadReturned.getField( "counter" ) );
     }
 
 
@@ -218,7 +222,8 @@ public class EntityCollectionManagerIT {
     public void writeAndLoadScopeClosure() {
 
 
-        CollectionScope collectionScope1 = new CollectionScopeImpl(new SimpleId( "organization" ),  new SimpleId( "test1" ), "test1" );
+        CollectionScope collectionScope1 = new CollectionScopeImpl(
+                new SimpleId( "organization" ),  new SimpleId( "test1" ), "test1" );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
@@ -241,17 +246,20 @@ public class EntityCollectionManagerIT {
 
 
         //now make sure we can't load it from another scope, using the same org
-        CollectionScope collectionScope2 = new CollectionScopeImpl(collectionScope1.getApplication(),  new SimpleId("test2"), collectionScope1.getName());
+        CollectionScope collectionScope2 = new CollectionScopeImpl(
+            collectionScope1.getApplication(),  new SimpleId("test2"), collectionScope1.getName());
 
         EntityCollectionManager manager2 = factory.createCollectionManager( collectionScope2 );
 
-        Entity loaded = manager2.load( createReturned.getId() ).toBlockingObservable().lastOrDefault( null );
+        Entity loaded = manager2.load( createReturned.getId() )
+                .toBlockingObservable().lastOrDefault( null );
 
         assertNull("CollectionScope works correctly", loaded);
 
         //now try to load it from another org, with the same scope
 
-        CollectionScope collectionScope3 = new CollectionScopeImpl( new SimpleId("organization2"), collectionScope1.getOwner(), collectionScope1.getName() );
+        CollectionScope collectionScope3 = new CollectionScopeImpl( 
+            new SimpleId("organization2"), collectionScope1.getOwner(), collectionScope1.getName());
         assertNotNull( collectionScope3 );
     }
 }

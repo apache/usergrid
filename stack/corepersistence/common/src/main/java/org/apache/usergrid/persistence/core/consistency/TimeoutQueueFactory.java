@@ -16,28 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.guice;
+package org.apache.usergrid.persistence.core.consistency;
 
 
-import org.apache.usergrid.persistence.collection.guice.TestModule;
-import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueueFactory;
-import org.apache.usergrid.persistence.core.consistency.TimeoutQueueFactory;
-import org.apache.usergrid.persistence.core.guice.CommonModule;
+import java.io.Serializable;
+import java.util.Collection;
 
 
 /**
- * Wrapper for configuring our guice test env
+ * Interface for implementations of a timeout queue.
  */
-public class TestGraphModule extends TestModule {
+public interface TimeoutQueueFactory {
 
-    @Override
-    protected void configure() {
-        install( new CommonModule() {
-                   @Override
-                   protected void bindTimeoutQueueFactory() {
-                      bind(TimeoutQueueFactory.class).to(LocalTimeoutQueueFactory.class);
-                   }
-               } );
-        install( new GraphModule() );
-    }
+    /**
+     * Return a timeout queue that can handle the class type provided.
+     */
+    public <T extends Serializable> TimeoutQueue<T> getQueue(Class<T> eventType);
+
 }

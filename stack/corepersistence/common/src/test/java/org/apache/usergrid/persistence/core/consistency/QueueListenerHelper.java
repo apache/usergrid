@@ -97,8 +97,12 @@ public class QueueListenerHelper<T> {
      * @param timeUnit
      */
     public void awaitWithErrors(long time, final TimeUnit timeUnit) throws InterruptedException {
-        successLatch.await( time, timeUnit );
-        exceptionLatch.await( time, timeUnit );
+        if(!successLatch.await( time, timeUnit )){
+            throw new RuntimeException("Timed out while waiting on success latch");
+        }
+        if(!exceptionLatch.await( time, timeUnit )){
+            throw new RuntimeException("Timed out while waiting on exception latch");
+        }
     }
 
 

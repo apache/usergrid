@@ -206,7 +206,7 @@ public class Query {
             }
         }
 
-        ANTLRStringStream in = new ANTLRStringStream( qlt.trim() );
+        ANTLRStringStream in = new ANTLRStringStream( ql.trim() );
         CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         CommonTokenStream tokens = new CommonTokenStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
@@ -223,9 +223,8 @@ public class Query {
             int lineNumber = e.line;
             Token token = e.token;
 
-            String message = String.format(
-                    "The query cannot be parsed. The token '%s' at column %d on line %d cannot be " + "parsed",
-                    token.getText(), index, lineNumber );
+            String message = String.format("The query cannot be parsed. The token '%s' at "
+                + "column %d on line %d cannot be " + "parsed", token.getText(), index, lineNumber);
 
             throw new QueryParseException( message, e );
         }
@@ -623,7 +622,7 @@ public class Query {
     }
 
 
-    boolean isMergeSelectResults() {
+    public boolean isMergeSelectResults() {
         return mergeSelectResults;
     }
 
@@ -670,7 +669,8 @@ public class Query {
         for ( SortPredicate s : sortPredicates ) {
             if ( s.getPropertyName().equals( propertyName ) ) {
                 logger.error(
-                        "Attempted to set sort order for " + s.getPropertyName() + " more than once, discarding..." );
+                        "Attempted to set sort order for " + s.getPropertyName() 
+                                + " more than once, discarding..." );
                 return this;
             }
         }

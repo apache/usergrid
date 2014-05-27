@@ -354,7 +354,12 @@ public class CpEntityManager implements EntityManager {
             for ( UUID uuid : collectionsByUuid.keySet() ) {
                 Set<String> collections = collectionsByUuid.get( uuid );
                 for ( String coll : collections ) {
-                    
+                   
+                    if ( coll.trim().isEmpty() ) {
+                        logger.warn("Ignoring empty collection name for owner {}:{}", uuid, ownerType);
+                        break;
+                    }
+
                     IndexScope indexScope = new IndexScopeImpl( 
                         appScope.getApplication(), 
                         new SimpleId(uuid, ownerType), 
@@ -377,11 +382,7 @@ public class CpEntityManager implements EntityManager {
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), appScope.getApplication(), collectionName );
 
-        IndexScope defaultIndexScope = new IndexScopeImpl(
-            appScope.getApplication(), appScope.getApplication(), entityRef.getType());
-
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
-        EntityIndex entityIndex = managerCache.getEntityIndex(defaultIndexScope);
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
@@ -416,9 +417,16 @@ public class CpEntityManager implements EntityManager {
                     }
                 }
             }
-            
-            // next, delete entity index in its own collection scope
+           
+            // deindex from default index scope
+            IndexScope defaultIndexScope = new IndexScopeImpl(
+                appScope.getApplication(), appScope.getApplication(), 
+                collectionName + CpRelationManager.COLLECTION_SUFFIX);
+            EntityIndex entityIndex = managerCache.getEntityIndex(defaultIndexScope);
+
             entityIndex.deindex( entity );
+
+            // and finally...
             ecm.delete( entityId ).toBlockingObservable().last();
         }
     }

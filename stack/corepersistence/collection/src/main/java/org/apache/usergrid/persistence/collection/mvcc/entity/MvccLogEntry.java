@@ -48,40 +48,34 @@ public interface MvccLogEntry {
     /**
      * Get the status of the entity
      */
-    Status getStatus();
+    State getState();
 
 
 
     /**
-     * The possible Status of the mvccEntity
+     * The state of the entity.  Is it a complete entity, a partial entity, or a deleted?
      */
-    public enum Status  {
+    public enum State {
 
         /**
          * The logentry being written represents a complete entity
          */
         COMPLETE(0),
-
-        /**
-         * The logentry being written represents a Stated entity
-         */
-        STARTED(1),
-
         /**
          * The logentry being written represents a partial entity
          */
-        PARTIAL(2),
+        PARTIAL(1),
 
         /**
          * This logentry has been marked as deleted
          */
-        DELETED(3)
+        DELETED(2)
         ;
 
         private final int id;
 
 
-        private Status( final int id ) {
+        private State( final int id ) {
             this.id = id;
         }
 
