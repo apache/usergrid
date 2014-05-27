@@ -102,7 +102,11 @@ sub get_entity_by_uuid {
       id=>$id
   );
 
-  return Usergrid::Entity->new( object => $self->GET($uri) );
+  my $response = $self->GET($uri);
+
+  return undef if (! $response);
+
+  return Usergrid::Entity->new( object => $response );
 }
 
 sub get_collection {

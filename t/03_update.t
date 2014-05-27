@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 5;
+use Test::More tests => 7;
 
 # TEST DATA
 my $api_url         = 'http://localhost:8080';
@@ -12,7 +12,7 @@ my $username        = 'testuser';
 my $password        = 'Testuser123$';
 ###########
 
-my ($user, $token, $book);
+my ($user, $token, $book, $deleted_book);
 
 BEGIN {
   use_ok 'Usergrid::Client'     || print "Bail out!\n";
@@ -51,7 +51,19 @@ eval {
 
   ok ( $book->get('genre') eq "Novel", "check for updated attribute");
 
+  $book = $client->get_entity_by_uuid("books", $book->get('uuid'));
+
+  ok ( $book->get('genre') eq "Novel", "check again for updated attribute by uuid");
+
+  $book = $client->delete_entity_by_uuid("books", $book->get('uuid'));
+
+  $deleted_book = $client->get_entity_by_uuid("books", $book->get('uuid'));
+
+  ok ( (! defined $deleted_book), "deleted book cannot be found")
+
 };
+
+diag($@) if $@;
 
 # Cleanup
 $client->delete_entity($book);

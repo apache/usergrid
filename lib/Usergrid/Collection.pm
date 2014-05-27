@@ -41,6 +41,11 @@ sub count {
   return scalar @{$self->object->{entities}};
 }
 
+sub reset_iterator {
+  my $self = shift;
+  $self->iterator (-1);
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;
