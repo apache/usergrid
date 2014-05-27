@@ -1,4 +1,5 @@
 Build.PL
+examples/books.pl
 lib/Usergrid/Client.pm
 lib/Usergrid/Collection.pm
 lib/Usergrid/Core.pm
