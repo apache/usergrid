@@ -31,26 +31,13 @@ import java.util.UUID;
 
 import javax.annotation.Resource;
 
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.Group;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import org.apache.usergrid.persistence.CollectionRef;
-import org.apache.usergrid.persistence.ConnectedEntityRef;
-import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityFactory;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.RelationManager;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.RoleRef;
-import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
@@ -92,15 +79,9 @@ import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_SETS;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.persistence.Schema.*;
+import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
+import static org.apache.usergrid.persistence.SimpleRoleRef.getIdForRoleName;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
@@ -110,6 +91,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.se;
+import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import static org.apache.usergrid.utils.ConversionUtils.object;
@@ -1180,7 +1162,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Map<String, String> getRoles() throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return cast( getDictionaryAsMap( getApplicationRef(), DICTIONARY_ROLENAMES ) );
     }
 
     @Override
@@ -1190,7 +1172,15 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Entity createRole(String roleName, String roleTitle, long inactivity) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        UUID timestampUuid = newTimeUUID();
+        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        batchCreateRole( batch, null, roleName, roleTitle, inactivity, null, timestampUuid );
+        batchExecute( batch, CassandraService.RETRY_COUNT );
+        return get( roleRef( roleName ) );
+    }
+
+    private EntityRef roleRef( String roleName ) {
+        return ref( TYPE_ROLE, getIdForRoleName( roleName ) );
     }
 
     @Override
@@ -1407,12 +1397,48 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Map<String, Role> getRolesWithTitles(Set<String> roleNames) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        Map<String, Role> rolesWithTitles = new HashMap<String, Role>();
+
+        Map<String, Object> nameResults = null;
+
+        if ( roleNames != null ) {
+            nameResults = getDictionaryElementValues( getApplicationRef(), DICTIONARY_ROLENAMES,
+                    roleNames.toArray(new String[roleNames.size()]));
+        }
+        else {
+            nameResults = cast( getDictionaryAsMap( getApplicationRef(), DICTIONARY_ROLENAMES ) );
+            roleNames = nameResults.keySet();
+        }
+        Map<String, Object> timeResults = getDictionaryElementValues( getApplicationRef(), DICTIONARY_ROLETIMES,
+                roleNames.toArray(new String[roleNames.size()]));
+
+        for ( String roleName : roleNames ) {
+
+            String savedTitle = string( nameResults.get( roleName ) );
+
+            // no title, skip the role
+            if ( savedTitle == null ) {
+                continue;
+            }
+
+            Role newRole = new Role();
+            newRole.setName( roleName );
+            newRole.setTitle( savedTitle );
+            newRole.setInactivity( getLong( timeResults.get( roleName ) ) );
+
+            rolesWithTitles.put( roleName, newRole );
+        }
+
+        return rolesWithTitles;
     }
 
     @Override
     public String getRoleTitle(String roleName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        String title = string( getDictionaryElementValue( getApplicationRef(), DICTIONARY_ROLENAMES, roleName ) );
+        if ( title == null ) {
+            title = roleName;
+        }
+        return title;
     }
 
     @Override
@@ -1635,8 +1661,48 @@ public class CpEntityManager implements EntityManager {
     public void batchCreateRole(
             Mutator<ByteBuffer> batch, UUID groupId, String roleName, String roleTitle, 
             long inactivity, RoleRef roleRef, UUID timestampUuid) throws Exception {
-        
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        long timestamp = getTimestampInMicros( timestampUuid );
+
+        if ( roleRef == null ) {
+            roleRef = new SimpleRoleRef( groupId, roleName );
+        }
+        if ( roleTitle == null ) {
+            roleTitle = roleRef.getRoleName();
+        }
+
+        EntityRef ownerRef = null;
+        if ( roleRef.getGroupId() != null ) {
+            ownerRef = new SimpleEntityRef( Group.ENTITY_TYPE, roleRef.getGroupId() );
+        }
+        else {
+            ownerRef = new SimpleEntityRef( Application.ENTITY_TYPE, applicationId );
+        }
+
+        Map<String, Object> properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+        properties.put( PROPERTY_TYPE, Role.ENTITY_TYPE );
+        if(roleRef.getGroupId()!=null) {
+            properties.put("group", roleRef.getGroupId());
+        }
+        properties.put( PROPERTY_NAME, roleRef.getApplicationRoleName() );
+        properties.put( "roleName", roleRef.getRoleName() );
+        properties.put( "title", roleTitle );
+        properties.put( PROPERTY_INACTIVITY, inactivity );
+
+        Entity role = batchCreate( batch, Role.ENTITY_TYPE, null, properties, roleRef.getUuid(), timestampUuid );
+
+        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( ownerRef.getUuid(), Schema.DICTIONARY_ROLENAMES ),
+                roleRef.getRoleName(), roleTitle, timestamp );
+
+        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( ownerRef.getUuid(), Schema.DICTIONARY_ROLETIMES ),
+                roleRef.getRoleName(), inactivity, timestamp );
+
+        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( ownerRef.getUuid(), DICTIONARY_SETS ),
+                Schema.DICTIONARY_ROLENAMES, null, timestamp );
+
+        if ( roleRef.getGroupId() != null ) {
+        //    getRelationManager( ownerRef ).addToCollection( batch, COLLECTION_ROLES, role, timestampUuid );
+        }
     }
 
     @Override
