@@ -2,8 +2,11 @@ Apache Usergrid
 ===============
 
 
-WARNING: This is the __two-dot-o__ branch and work is underway on a new persistence system for Usergrid. Not everything is working in this branch. If you want stability, you should be working against the master branch or a tag. We refer to the new persistence system as Core Persistence and you can find its modules in the stack/corepersistence directory. 
+__WARNING__: This is the __two-dot-o__ branch and work is underway on a new persistence system for Usergrid. Not everything is working in this branch. If you want stability, you should be working against the master branch or a tag. We refer to the new persistence system as Core Persistence and you can find its modules in the stack/corepersistence directory. 
 
+
+Overview
+--------
 
 **Apache Usergrid is a multi-tenant Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs. It is [currently incubating at the Apache Software Foundation](http://usergrid.incubator.apache.org/).**
 
