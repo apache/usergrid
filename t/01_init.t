@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 8;
+use Test::More tests => 9;
 
 # TEST DATA
 my $api_url         = 'http://localhost:8080/ROOT';
@@ -65,8 +65,18 @@ ok( $entity->get('coll_type') eq 'fruit', "check value after PUT");
 
 # Retrieve all from test collection to check whether the entities are created
 $collection = $client->get_collection("collection_foo");
+
 my $new_count = $collection->count();
 ok( $new_count == $old_count + 2, 'added two entities' );
+
+# Iterate through the collection
+my $count = 0;
+while ($collection->has_next_entity()) {
+  $count++;
+  my $ent = $collection->get_next_entity();
+}
+
+ok ( $count == $new_count, 'iterating through the collection');
 
 # Delete the two created entities
 foreach $del (@to_delete) {

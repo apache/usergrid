@@ -22,12 +22,22 @@ has 'object'      => ( is => 'rw', required => 1);
 
 sub get {
   my ($self, $key) = @_;
+  return $self->object->{$key} if (defined $self->object->{$key});
   return $self->object->{'entities'}[0]->{$key};
 }
 
 sub set {
   my ($self, $key, $value) = @_;
+  if (defined $self->object->{$key}) {
+    $self->object->{$key} = $value;
+    return;
+  }
   $self->object->{'entities'}[0]->{$key} = $value;
+}
+
+sub count {
+  my $self = shift;
+  return scalar @{$self->object->{entities}};
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -18,7 +18,23 @@ package Usergrid::Collection;
 use Moose;
 use namespace::autoclean;
 
-has 'object'      => ( is => 'rw', required => 1);
+has 'object'      => ( is => 'rw', required => 1 );
+has 'iterator'    => ( is => 'rw', isa => 'Int', default => sub { -1 } );
+
+sub has_next_entity {
+  my $self = shift;
+  my $next = $self->iterator + 1;
+  return ($next >= 0 && $next < $self->count());
+}
+
+sub get_next_entity {
+  my $self = shift;
+  if ($self->has_next_entity()) {
+    $self->iterator ($self->iterator + 1);
+    return Usergrid::Entity->new ( object => $self->object->{'entities'}[$self->iterator] );
+  }
+  return undef;
+}
 
 sub count {
   my $self = shift;
