@@ -4,11 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <name>core-persistence</name>
     <description>Prototype for refactoring persistence of usergrid</description>
 
     <groupId>org.apache.usergrid</groupId>
     <artifactId>persistence</artifactId>
+    <name>Usergrid Persistence</name>
     <packaging>pom</packaging>
     <version>2.0.0-SNAPSHOT</version>
 

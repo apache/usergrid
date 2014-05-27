@@ -187,6 +187,7 @@
 
   <modules>
     <module>config</module>
+    <module>corepersistence</module>
     <module>core</module>
     <module>services</module>
     <module>tools</module>
