@@ -3,37 +3,13 @@
 Usergrid::Client provides a modular object oriented interface to
 Apache Usergrid's REST API.
 
-## Installation
+## Quickstart
 
-### Prerequisites
-Usergrid::Client depends on the following modules which can be installed
-from CPAN as shown below:
+Install Usergrid::Client from CPAN (not yet available):
 
-    $ sudo cpan install Moose
-    $ sudo cpan install JSON
-    $ sudo cpan install REST::Client
-    $ sudo cpan install URI::Template
-    $ sudo cpan install Log::Log4perl
+    $ sudo cpan install Usergrid::Client
 
-### Build and install
-
-    $ perl Build.PL
-    $ ./Build
-    $ ./Build test
-    $ sudo ./Build install
-
-### For legacy users on older versions of Perl
-
-    $ perl Makefile.PL
-    $ make
-    $ make test
-    $ sudo make install
-
-## Usage
-
-### Getting started
-
-### Quick start
+Write a perl script that uses the Perl API to talk to Usergrid. Here's an example:
 
 ```perl
 #!/usr/bin/perl
@@ -69,6 +45,36 @@ while ($books->has_next_entity()) {
   $client->update_entity($book);
 }
 ```
+
+## Installation
+
+### Prerequisites
+Usergrid::Client depends on the following modules which can be installed
+from CPAN as shown below:
+
+    $ sudo cpan install Moose
+    $ sudo cpan install JSON
+    $ sudo cpan install REST::Client
+    $ sudo cpan install URI::Template
+    $ sudo cpan install Log::Log4perl
+
+### Build and install
+
+    $ perl Build.PL
+    $ ./Build
+    $ ./Build test
+    $ sudo ./Build install
+
+### For legacy users on older versions of Perl
+
+    $ perl Makefile.PL
+    $ make
+    $ make test
+    $ sudo make install
+
+## Usage
+
+### Getting started
 
 ### Developers
 
