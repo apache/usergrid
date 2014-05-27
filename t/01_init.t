@@ -5,13 +5,13 @@ use warnings;
 use Test::More tests => 9;
 
 # TEST DATA
-my $api_url         = 'http://localhost:8080/ROOT';
+my $api_url         = 'http://localhost:8080';
 my $organization    = 'test-organization';
 my $application     = 'test-app';
 my $username        = 'testuser';
 my $password        = '1QAZ2wsx';
-my $admin_username  = 'admin';
-my $admin_password  = 'admin';
+my $admin_username  = 'superuser';
+my $admin_password  = 'superuser';
 my $test_collection = 'collection_foo';
 ###########
 
@@ -24,9 +24,9 @@ BEGIN {
 # Create the client object that will be used for all subsequent requests
 my $client = Usergrid::Client->new(
   organization => $organization,
-  application => $application,
-  api_url => $api_url,
-  trace => 0
+  application  => $application,
+  api_url      => $api_url,
+  trace        => 0
 );
 
 # Create a test user
