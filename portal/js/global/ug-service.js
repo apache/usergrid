@@ -822,7 +822,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     },
 
     updateUser: function (user) {
-      var body = $rootScope.currentUser;
+      var body = {};
       body.username = user.username;
       body.name = user.name;
       body.email = user.email;
