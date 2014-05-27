@@ -16,8 +16,10 @@
 
 package org.apache.usergrid.corepersistence;
 
-import com.yammer.metrics.annotation.Metered;
+import java.nio.ByteBuffer;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -25,6 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
+
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
@@ -32,21 +39,29 @@ import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
+
+import org.apache.usergrid.persistence.PagingResultsIterator;
+
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.defaultCollectionName;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
+import org.apache.usergrid.persistence.cassandra.IndexUpdate;
+import org.apache.usergrid.persistence.cassandra.QueryProcessorImpl;
+import org.apache.usergrid.persistence.cassandra.index.ConnectedIndexScanner;
+import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
+import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
+import org.apache.usergrid.persistence.cassandra.index.NoOpIndexScanner;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.geo.ConnectionGeoSearch;
+import org.apache.usergrid.persistence.geo.EntityLocationRef;
+import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
@@ -55,8 +70,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -64,14 +79,60 @@ import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
+import org.apache.usergrid.persistence.query.ir.AllNode;
+import org.apache.usergrid.persistence.query.ir.NameIdentifierNode;
+import org.apache.usergrid.persistence.query.ir.QueryNode;
+import org.apache.usergrid.persistence.query.ir.QuerySlice;
+import org.apache.usergrid.persistence.query.ir.SearchVisitor;
+import org.apache.usergrid.persistence.query.ir.WithinNode;
+import org.apache.usergrid.persistence.query.ir.result.ConnectionIndexSliceParser;
+import org.apache.usergrid.persistence.query.ir.result.ConnectionResultsLoaderFactory;
+import org.apache.usergrid.persistence.query.ir.result.ConnectionTypesIterator;
+import org.apache.usergrid.persistence.query.ir.result.EmptyIterator;
+import org.apache.usergrid.persistence.query.ir.result.GeoIterator;
+import org.apache.usergrid.persistence.query.ir.result.SliceIterator;
+import org.apache.usergrid.persistence.query.ir.result.StaticIdIterator;
+
 import org.apache.usergrid.persistence.schema.CollectionInfo;
-import static org.apache.usergrid.utils.InflectionUtils.singularize;
+import org.apache.usergrid.utils.IndexUtils;
 import org.apache.usergrid.utils.MapUtils;
-import static org.apache.usergrid.utils.MapUtils.addMapSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
+
+import com.yammer.metrics.annotation.Metered;
+
+import me.prettyprint.hector.api.beans.DynamicComposite;
+import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.mutation.Mutator;
 import rx.Observable;
+
+import static java.util.Arrays.asList;
+
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_ENTITIES;
+import static org.apache.usergrid.persistence.Schema.INDEX_CONNECTIONS;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
+import static org.apache.usergrid.persistence.Schema.defaultCollectionName;
+import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX_ENTRIES;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchDeleteLocationInConnectionsIndex;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchRemoveLocationFromCollectionIndex;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInCollectionIndex;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInConnectionsIndex;
+import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
+import static org.apache.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
+import static org.apache.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
+import static org.apache.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
+import static org.apache.usergrid.utils.InflectionUtils.singularize;
+import static org.apache.usergrid.utils.MapUtils.addMapSet;
+import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 
 
 /**
@@ -100,6 +161,10 @@ public class CpRelationManager implements RelationManager {
     private ApplicationScope applicationScope;
     private CollectionScope headEntityScope;
 
+    private CassandraService cass;
+
+    private IndexBucketLocator indexBucketLocator;
+
 
 
     public CpRelationManager() {}
@@ -120,6 +185,9 @@ public class CpRelationManager implements RelationManager {
         this.headEntity = headEntity;
         this.managerCache = emf.getManagerCache();
 
+
+        this.indexBucketLocator = indexBucketLocator;
+
         String collectionName = Schema.defaultCollectionName( headEntity.getType() ); 
 
         this.applicationScope = emf.getApplicationScope(applicationId);
@@ -135,6 +203,8 @@ public class CpRelationManager implements RelationManager {
             headEntity.getUuid(), headEntity.getType() )).toBlockingObservable().last();
 
         Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
+
+        this.cass = em.getCass();
 
         return this;
     }
@@ -843,6 +913,729 @@ public class CpRelationManager implements RelationManager {
         return results;
     }
 
+    @Override
+    public void batchUpdateSetIndexes( Mutator<ByteBuffer> batch, String setName, Object elementValue,
+                                       boolean removeFromSet, UUID timestampUuid ) throws Exception {
+
+        Entity entity = getHeadEntity();
+
+        elementValue = getDefaultSchema().validateEntitySetValue( entity.getType(), setName, elementValue );
+
+        IndexUpdate indexUpdate =
+                batchStartIndexUpdate( batch, entity, setName, elementValue, timestampUuid, true, true, removeFromSet,
+                        false );
+
+        // Update collections
+        Map<String, Set<CollectionInfo>> containers =
+                getDefaultSchema().getContainersIndexingDictionary( entity.getType(), setName );
+
+        if ( containers != null ) {
+            Map<EntityRef, Set<String>> containerEntities = getContainingCollections();
+            for ( EntityRef containerEntity : containerEntities.keySet() ) {
+                if ( containerEntity.getType().equals( TYPE_APPLICATION ) && Schema
+                        .isAssociatedEntityType( entity.getType() ) ) {
+                    logger.debug( "Extended properties for {} not indexed by application", entity.getType() );
+                    continue;
+                }
+                Set<String> collectionNames = containerEntities.get( containerEntity );
+                Set<CollectionInfo> collections = containers.get( containerEntity.getType() );
+
+                if ( collections != null ) {
+
+                    for ( CollectionInfo collection : collections ) {
+                        if ( collectionNames.contains( collection.getName() ) ) {
+
+                            batchUpdateCollectionIndex( indexUpdate, containerEntity, collection.getName() );
+                        }
+                    }
+                }
+            }
+        }
+
+        batchUpdateBackwardConnectionsDictionaryIndexes( indexUpdate );
+    }
+
+    /**
+     * Batch update collection index.
+     *
+     * @param indexUpdate The update to apply
+     * @param owner The entity that is the owner context of this entity update.  Can either be an application, or
+     * another entity
+     * @param collectionName the collection name
+     *
+     * @return The indexUpdate with batch mutations
+     *
+     * @throws Exception the exception
+     */
+    @Metered(group = "core", name = "RelationManager_batchUpdateCollectionIndex")
+    public IndexUpdate batchUpdateCollectionIndex( IndexUpdate indexUpdate, EntityRef owner, String collectionName )
+            throws Exception {
+
+        logger.debug( "batchUpdateCollectionIndex" );
+
+        Entity indexedEntity = indexUpdate.getEntity();
+
+        String bucketId = indexBucketLocator
+                .getBucket( applicationId, IndexBucketLocator.IndexType.COLLECTION, indexedEntity.getUuid(), indexedEntity.getType(),
+                        indexUpdate.getEntryName() );
+
+        // the root name without the bucket
+        // entity_id,collection_name,prop_name,
+        Object index_name = null;
+        // entity_id,collection_name,prop_name, bucketId
+        Object index_key = null;
+
+        // entity_id,collection_name,collected_entity_id,prop_name
+
+        for ( IndexUpdate.IndexEntry entry : indexUpdate.getPrevEntries() ) {
+
+            if ( entry.getValue() != null ) {
+
+                index_name = key( owner.getUuid(), collectionName, entry.getPath() );
+
+                index_key = key( index_name, bucketId );
+
+                addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, index_key, entry.getIndexComposite(),
+                        indexUpdate.getTimestamp() );
+
+                if ( "location.coordinates".equals( entry.getPath() ) ) {
+                    EntityLocationRef loc = new EntityLocationRef( indexUpdate.getEntity(), entry.getTimestampUuid(),
+                            entry.getValue().toString() );
+                    batchRemoveLocationFromCollectionIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                            index_name, loc );
+                }
+            }
+            else {
+                logger.error( "Unexpected condition - deserialized property value is null" );
+            }
+        }
+
+        if ( ( indexUpdate.getNewEntries().size() > 0 ) && ( !indexUpdate.isMultiValue() || ( indexUpdate.isMultiValue()
+                && !indexUpdate.isRemoveListEntry() ) ) ) {
+
+            for ( IndexUpdate.IndexEntry indexEntry : indexUpdate.getNewEntries() ) {
+
+                // byte valueCode = indexEntry.getValueCode();
+
+                index_name = key( owner.getUuid(), collectionName, indexEntry.getPath() );
+
+                index_key = key( index_name, bucketId );
+
+                // int i = 0;
+
+                addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, index_key, indexEntry.getIndexComposite(),
+                        null, indexUpdate.getTimestamp() );
+
+                if ( "location.coordinates".equals( indexEntry.getPath() ) ) {
+                    EntityLocationRef loc =
+                            new EntityLocationRef( indexUpdate.getEntity(), indexEntry.getTimestampUuid(),
+                                    indexEntry.getValue().toString() );
+                    batchStoreLocationInCollectionIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                            index_name, indexedEntity.getUuid(), loc );
+                }
+
+                // i++;
+            }
+        }
+
+        for ( String index : indexUpdate.getIndexesSet() ) {
+            addInsertToMutator( indexUpdate.getBatch(), ENTITY_DICTIONARIES,
+                    key( owner.getUuid(), collectionName, Schema.DICTIONARY_INDEXES ), index, null,
+                    indexUpdate.getTimestamp() );
+        }
+
+        return indexUpdate;
+    }
+
+
+    public IndexUpdate batchStartIndexUpdate( Mutator<ByteBuffer> batch, Entity entity, String entryName,
+                                              Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
+                                              boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed )
+            throws Exception {
+        return batchStartIndexUpdate( batch, entity, entryName, entryValue, timestampUuid, schemaHasProperty,
+                isMultiValue, removeListEntry, fulltextIndexed, false );
+    }
+
+
+    @Metered(group = "core", name = "RelationManager_batchStartIndexUpdate")
+    public IndexUpdate batchStartIndexUpdate( Mutator<ByteBuffer> batch, Entity entity, String entryName,
+                                              Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
+                                              boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed,
+                                              boolean skipRead ) throws Exception {
+
+        long timestamp = getTimestampInMicros( timestampUuid );
+
+        IndexUpdate indexUpdate =
+                new IndexUpdate( batch, entity, entryName, entryValue, schemaHasProperty, isMultiValue, removeListEntry,
+                        timestampUuid );
+
+        // entryName = entryName.toLowerCase();
+
+        // entity_id,connection_type,connected_entity_id,prop_name
+
+        if ( !skipRead ) {
+
+            List<HColumn<ByteBuffer, ByteBuffer>> entries = null;
+
+            if ( isMultiValue && validIndexableValue( entryValue ) ) {
+                entries = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_INDEX_ENTRIES,
+                        entity.getUuid(),
+                        new DynamicComposite( entryName, indexValueCode( entryValue ), toIndexableValue( entryValue ) ),
+                        setGreaterThanEqualityFlag( new DynamicComposite( entryName, indexValueCode( entryValue ),
+                                toIndexableValue( entryValue ) ) ), INDEX_ENTRY_LIST_COUNT, false );
+            }
+            else {
+                entries = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_INDEX_ENTRIES,
+                        entity.getUuid(), new DynamicComposite( entryName ),
+                        setGreaterThanEqualityFlag( new DynamicComposite( entryName ) ), INDEX_ENTRY_LIST_COUNT,
+                        false );
+            }
+
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Found {} previous index entries for {} of entity {}", new Object[] {
+                        entries.size(), entryName, entity.getUuid()
+                } );
+            }
+
+            // Delete all matching entries from entry list
+            for ( HColumn<ByteBuffer, ByteBuffer> entry : entries ) {
+                UUID prev_timestamp = null;
+                Object prev_value = null;
+                String prev_obj_path = null;
+
+                // new format:
+                // composite(entryName,
+                // value_code,prev_value,prev_timestamp,prev_obj_path) = null
+                DynamicComposite composite = DynamicComposite.fromByteBuffer( entry.getName().duplicate() );
+                prev_value = composite.get( 2 );
+                prev_timestamp = ( UUID ) composite.get( 3 );
+                if ( composite.size() > 4 ) {
+                    prev_obj_path = ( String ) composite.get( 4 );
+                }
+
+                if ( prev_value != null ) {
+
+                    String entryPath = entryName;
+                    if ( ( prev_obj_path != null ) && ( prev_obj_path.length() > 0 ) ) {
+                        entryPath = entryName + "." + prev_obj_path;
+                    }
+
+                    indexUpdate.addPrevEntry( entryPath, prev_value, prev_timestamp, entry.getName().duplicate() );
+
+                    // composite(property_value,connected_entity_id,entry_timestamp)
+                    // addDeleteToMutator(batch, ENTITY_INDEX_ENTRIES,
+                    // entity.getUuid(), entry.getName(), timestamp);
+
+                }
+                else {
+                    logger.error( "Unexpected condition - deserialized property value is null" );
+                }
+            }
+        }
+
+        if ( !isMultiValue || ( isMultiValue && !removeListEntry ) ) {
+
+            List<Map.Entry<String, Object>> list = IndexUtils.getKeyValueList( entryName, entryValue, fulltextIndexed );
+
+            if ( entryName.equalsIgnoreCase( "location" ) && ( entryValue instanceof Map ) ) {
+                @SuppressWarnings("rawtypes") double latitude =
+                        MapUtils.getDoubleValue( ( Map ) entryValue, "latitude" );
+                @SuppressWarnings("rawtypes") double longitude =
+                        MapUtils.getDoubleValue( ( Map ) entryValue, "longitude" );
+                list.add( new AbstractMap.SimpleEntry<String, Object>( "location.coordinates",
+                        latitude + "," + longitude ) );
+            }
+
+            for ( Map.Entry<String, Object> indexEntry : list ) {
+
+                if ( validIndexableValue( indexEntry.getValue() ) ) {
+                    indexUpdate.addNewEntry( indexEntry.getKey(), toIndexableValue( indexEntry.getValue() ) );
+                }
+            }
+
+            if ( isMultiValue ) {
+                addInsertToMutator( batch, ENTITY_INDEX_ENTRIES, entity.getUuid(),
+                        asList( entryName, indexValueCode( entryValue ), toIndexableValue( entryValue ),
+                                indexUpdate.getTimestampUuid() ), null, timestamp );
+            }
+            else {
+                // int i = 0;
+
+                for ( Map.Entry<String, Object> indexEntry : list ) {
+
+                    String name = indexEntry.getKey();
+                    if ( name.startsWith( entryName + "." ) ) {
+                        name = name.substring( entryName.length() + 1 );
+                    }
+                    else if ( name.startsWith( entryName ) ) {
+                        name = name.substring( entryName.length() );
+                    }
+
+                    byte code = indexValueCode( indexEntry.getValue() );
+                    Object val = toIndexableValue( indexEntry.getValue() );
+                    addInsertToMutator( batch, ENTITY_INDEX_ENTRIES, entity.getUuid(),
+                            asList( entryName, code, val, indexUpdate.getTimestampUuid(), name ), null, timestamp );
+
+                    indexUpdate.addIndex( indexEntry.getKey() );
+                }
+            }
+
+            indexUpdate.addIndex( entryName );
+        }
+
+        return indexUpdate;
+    }
+
+    /**
+     * Batch update backward connections set indexes.
+     *
+     * @param indexUpdate The index to update in the dictionary
+     *
+     * @return The index update
+     *
+     * @throws Exception the exception
+     */
+    @Metered(group = "core", name = "RelationManager_batchUpdateBackwardConnectionsDictionaryIndexes")
+    public IndexUpdate batchUpdateBackwardConnectionsDictionaryIndexes( IndexUpdate indexUpdate ) throws Exception {
+
+        logger.debug( "batchUpdateBackwardConnectionsListIndexes" );
+
+        boolean entityHasDictionary = getDefaultSchema()
+                .isDictionaryIndexedInConnections( indexUpdate.getEntity().getType(), indexUpdate.getEntryName() );
+
+        if ( !entityHasDictionary ) {
+            return indexUpdate;
+        }
+
+
+        return doBackwardConnectionsUpdate( indexUpdate );
+    }
+
+    /**
+     * Search each reverse connection type in the graph for connections.  If one is found, update the index
+     * appropriately
+     *
+     * @param indexUpdate The index update to use
+     *
+     * @return The updated index update
+     */
+    private IndexUpdate doBackwardConnectionsUpdate( IndexUpdate indexUpdate ) throws Exception {
+        final Entity targetEntity = indexUpdate.getEntity();
+
+        final ConnectionTypesIterator connectionTypes =
+                new ConnectionTypesIterator( cass, applicationId, targetEntity.getUuid(), false, 100 );
+
+        for ( String connectionType : connectionTypes ) {
+
+            PagingResultsIterator itr = getReversedConnectionsIterator( targetEntity, connectionType );
+
+            for ( Object connection : itr ) {
+
+                final ConnectedEntityRef sourceEntity = ( ConnectedEntityRef ) connection;
+
+                //we need to create a connection ref from the source entity (found via reverse edge) to the entity
+                // we're about to update.  This is the index that needs updated
+                final ConnectionRefImpl connectionRef =
+                        new ConnectionRefImpl( sourceEntity, connectionType, indexUpdate.getEntity() );
+
+                batchUpdateConnectionIndex( indexUpdate, connectionRef );
+            }
+        }
+
+        return indexUpdate;
+    }
+
+    /**
+     * Batch update connection index.
+     *
+     * @param indexUpdate The update operation to perform
+     * @param connection The connection to update
+     *
+     * @return The index with the batch mutation udpated
+     *
+     * @throws Exception the exception
+     */
+    @Metered(group = "core", name = "RelationManager_batchUpdateConnectionIndex")
+    public IndexUpdate batchUpdateConnectionIndex( IndexUpdate indexUpdate, ConnectionRefImpl connection )
+            throws Exception {
+
+        // UUID connection_id = connection.getUuid();
+
+        UUID[] index_keys = connection.getIndexIds();
+
+        // Delete all matching entries from entry list
+        for ( IndexUpdate.IndexEntry entry : indexUpdate.getPrevEntries() ) {
+
+            if ( entry.getValue() != null ) {
+
+                batchDeleteConnectionIndexEntries( indexUpdate, entry, connection, index_keys );
+
+                if ( "location.coordinates".equals( entry.getPath() ) ) {
+                    EntityLocationRef loc = new EntityLocationRef( indexUpdate.getEntity(), entry.getTimestampUuid(),
+                            entry.getValue().toString() );
+                    batchDeleteLocationInConnectionsIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                            index_keys, entry.getPath(), loc );
+                }
+            }
+            else {
+                logger.error( "Unexpected condition - deserialized property value is null" );
+            }
+        }
+
+        if ( ( indexUpdate.getNewEntries().size() > 0 ) && ( !indexUpdate.isMultiValue() || ( indexUpdate.isMultiValue()
+                && !indexUpdate.isRemoveListEntry() ) ) ) {
+
+            for ( IndexUpdate.IndexEntry indexEntry : indexUpdate.getNewEntries() ) {
+
+                batchAddConnectionIndexEntries( indexUpdate, indexEntry, connection, index_keys );
+
+                if ( "location.coordinates".equals( indexEntry.getPath() ) ) {
+                    EntityLocationRef loc =
+                            new EntityLocationRef( indexUpdate.getEntity(), indexEntry.getTimestampUuid(),
+                                    indexEntry.getValue().toString() );
+                    batchStoreLocationInConnectionsIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                            index_keys, indexEntry.getPath(), loc );
+                }
+            }
+
+      /*
+       * addInsertToMutator(batch, EntityCF.SETS, key(connection_id,
+       * Schema.INDEXES_SET), indexEntry.getKey(), null, false, timestamp); }
+       *
+       * addInsertToMutator(batch, EntityCF.SETS, key(connection_id,
+       * Schema.INDEXES_SET), entryName, null, false, timestamp);
+       */
+        }
+
+        for ( String index : indexUpdate.getIndexesSet() ) {
+            addInsertToMutator( indexUpdate.getBatch(), ENTITY_DICTIONARIES,
+                    key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ), index, null,
+                    indexUpdate.getTimestamp() );
+        }
+
+        return indexUpdate;
+    }
+
+    /**
+     * Get a paging results iterator.  Should return an iterator for all results
+     *
+     * @param targetEntity The target entity search connections from
+     *
+     * @return connectionType The name of the edges to search
+     */
+    private PagingResultsIterator getReversedConnectionsIterator( EntityRef targetEntity, String connectionType )
+            throws Exception {
+        return new PagingResultsIterator( getConnectingEntities( targetEntity, connectionType, null, Level.REFS ) );
+    }
+
+    /**
+     * Get all edges that are to the targetEntity
+     *
+     * @param targetEntity The target entity to search edges in
+     * @param connectionType The type of connection.  If not specified, all connections are returned
+     * @param connectedEntityType The connected entity type, if not specified all types are returned
+     * @param resultsLevel The results level to return
+     */
+    private Results getConnectingEntities( EntityRef targetEntity, String connectionType, String connectedEntityType,
+                                           Level resultsLevel ) throws Exception {
+        return getConnectingEntities(targetEntity, connectionType, connectedEntityType, resultsLevel, 0);
+    }
+
+    /**
+     * Get all edges that are to the targetEntity
+     *
+     * @param targetEntity The target entity to search edges in
+     * @param connectionType The type of connection.  If not specified, all connections are returned
+     * @param connectedEntityType The connected entity type, if not specified all types are returned
+     * @param count result limit
+     */
+    private Results getConnectingEntities(EntityRef targetEntity,
+                                          String connectionType, String connectedEntityType, Level level, int count) throws Exception {
+        Query query = new Query();
+        query.setResultsLevel( level );
+        query.setLimit(count);
+
+        final ConnectionRefImpl connectionRef =
+                new ConnectionRefImpl( new SimpleEntityRef( connectedEntityType, null ), connectionType, targetEntity );
+        final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
+
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
+        SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, false );
+
+        return qp.getResults( visitor );
+    }
+
+    @Metered(group = "core", name = "RelationManager_batchDeleteConnectionIndexEntries")
+    public Mutator<ByteBuffer> batchDeleteConnectionIndexEntries( IndexUpdate indexUpdate, IndexUpdate.IndexEntry entry,
+                                                                  ConnectionRefImpl connection, UUID[] index_keys )
+            throws Exception {
+
+        // entity_id,prop_name
+        Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
+                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL],
+                        entry.getPath() ) );
+
+        // entity_id,entity_type,prop_name
+        Object entity_type_prop_index_key =
+                key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], entry.getPath() ) );
+
+        // entity_id,connection_type,prop_name
+        Object connection_type_prop_index_key =
+                key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], entry.getPath() ) );
+
+        // entity_id,connection_type,entity_type,prop_name
+        Object connection_type_and_entity_type_prop_index_key =
+                key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], entry.getPath() ) );
+
+        // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
+        addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, property_index_key,
+                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectionType(),
+                        connection.getConnectedEntityType() ), indexUpdate.getTimestamp() );
+
+        // composite(property_value,connected_entity_id,connection_type,entry_timestamp)
+        addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, entity_type_prop_index_key,
+                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectionType() ),
+                indexUpdate.getTimestamp() );
+
+        // composite(property_value,connected_entity_id,entity_type,entry_timestamp)
+        addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_prop_index_key,
+                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectedEntityType() ),
+                indexUpdate.getTimestamp() );
+
+        // composite(property_value,connected_entity_id,entry_timestamp)
+        addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_and_entity_type_prop_index_key,
+                entry.getIndexComposite( connection.getConnectedEntityId() ), indexUpdate.getTimestamp() );
+
+        return indexUpdate.getBatch();
+    }
+
+
+    @Metered(group = "core", name = "RelationManager_batchAddConnectionIndexEntries")
+    public Mutator<ByteBuffer> batchAddConnectionIndexEntries( IndexUpdate indexUpdate, IndexUpdate.IndexEntry entry,
+                                                               ConnectionRefImpl connection, UUID[] index_keys ) {
+
+        // entity_id,prop_name
+        Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
+                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL],
+                        entry.getPath() ) );
+
+        // entity_id,entity_type,prop_name
+        Object entity_type_prop_index_key =
+                key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], entry.getPath() ) );
+
+        // entity_id,connection_type,prop_name
+        Object connection_type_prop_index_key =
+                key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], entry.getPath() ) );
+
+        // entity_id,connection_type,entity_type,prop_name
+        Object connection_type_and_entity_type_prop_index_key =
+                key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], entry.getPath() ) );
+
+        // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
+        addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, property_index_key,
+                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectionType(),
+                        connection.getConnectedEntityType() ), connection.getUuid(), indexUpdate.getTimestamp() );
+
+        // composite(property_value,connected_entity_id,connection_type,entry_timestamp)
+        addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, entity_type_prop_index_key,
+                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectionType() ),
+                connection.getUuid(), indexUpdate.getTimestamp() );
+
+        // composite(property_value,connected_entity_id,entity_type,entry_timestamp)
+        addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_prop_index_key,
+                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectedEntityType() ),
+                connection.getUuid(), indexUpdate.getTimestamp() );
+
+        // composite(property_value,connected_entity_id,entry_timestamp)
+        addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_and_entity_type_prop_index_key,
+                entry.getIndexComposite( connection.getConnectedEntityId() ), connection.getUuid(),
+                indexUpdate.getTimestamp() );
+
+        return indexUpdate.getBatch();
+    }
+
+    /**
+     * Simple search visitor that performs all the joining
+     *
+     * @author tnine
+     */
+    private class SearchConnectionVisitor extends SearchVisitor {
+
+        private final ConnectionRefImpl connection;
+
+        /** True if we should search from source->target edges.  False if we should search from target<-source edges */
+        private final boolean outgoing;
+
+
+        /**
+         * @param queryProcessor They query processor to use
+         * @param connection The connection refernce
+         * @param outgoing The direction to search.  True if we should search from source->target edges.  False if we
+         * should search from target<-source edges
+         */
+        public SearchConnectionVisitor( QueryProcessorImpl queryProcessor, ConnectionRefImpl connection,
+                                        boolean outgoing ) {
+            super( queryProcessor );
+            this.connection = connection;
+            this.outgoing = outgoing;
+        }
+
+
+        /* (non-Javadoc)
+     * @see org.apache.usergrid.persistence.query.ir.SearchVisitor#secondaryIndexScan(org.apache.usergrid.persistence.query.ir
+     * .QueryNode, org.apache.usergrid.persistence.query.ir.QuerySlice)
+     */
+        @Override
+        protected IndexScanner secondaryIndexScan( QueryNode node, QuerySlice slice ) throws Exception {
+
+            UUID id = ConnectionRefImpl.getIndexId( ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE, headEntity,
+                    connection.getConnectionType(), connection.getConnectedEntityType(), new ConnectedEntityRef[0] );
+
+            Object key = key( id, INDEX_CONNECTIONS );
+
+            // update the cursor and order before we perform the slice
+            // operation
+            queryProcessor.applyCursorAndSort( slice );
+
+            IndexScanner columns = null;
+
+            if ( slice.isComplete() ) {
+                columns = new NoOpIndexScanner();
+            }
+            else {
+                columns = searchIndex( key, slice, queryProcessor.getPageSizeHint( node ) );
+            }
+
+            return columns;
+        }
+
+
+        /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.usergrid.persistence.query.ir.NodeVisitor#visit(org.apache.usergrid.
+     * persistence.query.ir.WithinNode)
+     */
+        @Override
+        public void visit( WithinNode node ) throws Exception {
+
+            QuerySlice slice = node.getSlice();
+
+            queryProcessor.applyCursorAndSort( slice );
+
+            GeoIterator itr =
+                    new GeoIterator( new ConnectionGeoSearch( em, indexBucketLocator, cass, connection.getIndexId() ),
+                            query.getLimit(), slice, node.getPropertyName(),
+                            new Point( node.getLattitude(), node.getLongitude() ), node.getDistance() );
+
+            results.push( itr );
+        }
+
+
+        @Override
+        public void visit( AllNode node ) throws Exception {
+            QuerySlice slice = node.getSlice();
+
+            queryProcessor.applyCursorAndSort( slice );
+
+            int size = queryProcessor.getPageSizeHint( node );
+
+            ByteBuffer start = null;
+
+            if ( slice.hasCursor() ) {
+                start = slice.getCursor();
+            }
+
+
+            boolean skipFirst = !node.isForceKeepFirst() && slice.hasCursor();
+
+            UUID entityIdToUse;
+
+            //change our type depending on which direction we're loading
+            String dictionaryType;
+
+            //the target type
+            String targetType;
+
+            //this is on the "source" side of the edge
+            if ( outgoing ) {
+                entityIdToUse = connection.getConnectingEntityId();
+                dictionaryType = DICTIONARY_CONNECTED_ENTITIES;
+                targetType = connection.getConnectedEntityType();
+            }
+
+            //we're on the target side of the edge
+            else {
+                entityIdToUse = connection.getConnectedEntityId();
+                dictionaryType = DICTIONARY_CONNECTING_ENTITIES;
+                targetType = connection.getConnectingEntityType();
+            }
+
+            final String connectionType = connection.getConnectionType();
+
+
+            final ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser( targetType );
+
+
+            final Iterator<String> connectionTypes;
+
+            //use the provided connection type
+            if ( connectionType != null ) {
+                connectionTypes = Collections.singleton( connectionType ).iterator();
+            }
+
+            //we need to iterate all connection types
+            else {
+                connectionTypes = new ConnectionTypesIterator( cass, applicationId, entityIdToUse, outgoing, size );
+            }
+
+            IndexScanner connectionScanner =
+                    new ConnectedIndexScanner( cass, dictionaryType, applicationId, entityIdToUse, connectionTypes,
+                            start, slice.isReversed(), size, skipFirst );
+
+            this.results.push( new SliceIterator( slice, connectionScanner, connectionParser ) );
+        }
+
+
+        @Override
+        public void visit( NameIdentifierNode nameIdentifierNode ) throws Exception {
+            //TODO T.N. USERGRID-1919 actually validate this is connected
+            EntityRef ref = em.getAlias(connection.getConnectedEntityType(),nameIdentifierNode.getName() );
+
+            if ( ref == null ) {
+                this.results.push( new EmptyIterator() );
+                return;
+            }
+
+            this.results.push( new StaticIdIterator( ref.getUuid() ) );
+        }
+    }
+
+    private IndexScanner searchIndex( Object indexKey, QuerySlice slice, int pageSize ) throws Exception {
+
+        DynamicComposite[] range = slice.getRange();
+
+        Object keyPrefix = key( indexKey, slice.getPropertyName() );
+
+        IndexScanner scanner =
+                new IndexBucketScanner( cass, indexBucketLocator, ENTITY_INDEX, applicationId, IndexBucketLocator
+                        .IndexType.CONNECTION,
+                        keyPrefix, range[0], range[1], slice.isReversed(), pageSize, slice.hasCursor(), slice.getPropertyName() );
+
+        return scanner;
+    }
 
 
 }
