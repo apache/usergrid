@@ -35,11 +35,6 @@ sub set {
   $self->object->{'entities'}[0]->{$key} = $value;
 }
 
-sub count {
-  my $self = shift;
-  return scalar @{$self->object->{entities}};
-}
-
 __PACKAGE__->meta->make_immutable;
 
 1;

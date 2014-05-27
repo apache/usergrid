@@ -33,6 +33,35 @@ from CPAN as shown below:
 
 ### Getting started
 
+### Quick start
+
+```perl
+#!/usr/bin/perl
+use Usergrid::Client;
+
+my $client = Usergrid::Client->new(
+  organization => 'test-organization',
+  application  => 'test-app',
+  api_url      => 'http://localhost:8080'
+);
+
+$client->login('johndoe', 'Johndoe123$');
+
+$client->add_entity("books", { name => "Ulysses", author => "James Joyce" });
+
+my $books = $client->get_collection("books");
+
+while ($books->has_next_entity()) {
+  my $book = $books->get_next_entity();
+
+  print "Name: "   . $book->get('name')   . "\n";
+  print "Author: " . $book->get('author') . "\n";
+
+  $book->set("publisher", "Acme Publisher");
+  $client->update_entity($book);
+}
+```
+
 ### Developers
 
 Test coverage reporting requires Devel::Cover module which can be
