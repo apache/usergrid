@@ -25,25 +25,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 
 public class ElasticSearchNodeResponse {
+
     private String cluster_name;
     private Map<String, ElasticSearchNode> nodes;
+
 
     public Map<String, ElasticSearchNode> getNodes() {
         return nodes;
     }
 
+
     public void setNodes(Map<String, ElasticSearchNode> nodes) {
         this.nodes = nodes;
     }
 
-    public String getCluster_name() {
+
+    public String getClusterName() {
 
         return cluster_name;
     }
 
-    public void setCluster_name(String cluster_name) {
+
+    public void setClusterName( String cluster_name ) {
         this.cluster_name = cluster_name;
     }
+
 
     @Override
     public String toString() {

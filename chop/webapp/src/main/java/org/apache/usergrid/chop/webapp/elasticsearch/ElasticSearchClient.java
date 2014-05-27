@@ -54,9 +54,9 @@ public class ElasticSearchClient implements IElasticSearchClient {
     private String clusterName;
     private List<ElasticSearchNode> nodeList;
 
-
     @Inject
     private ElasticSearchFig elasticSearchFig;
+
 
     @Override
     public Client start() {
@@ -66,77 +66,80 @@ public class ElasticSearchClient implements IElasticSearchClient {
         clusterName = elasticSearchFig.getClusterName();
 
         Settings settings = ImmutableSettings.settingsBuilder().build();
-        LOG.info("Connecting Elasticsearch on {}", elasticSearchFig.getTransportHost() + ":" +
-                elasticSearchFig.getTransportPort());
+        LOG.info( "Connecting Elasticsearch on {}", elasticSearchFig.getTransportHost() + ":" +
+                elasticSearchFig.getTransportPort() );
         nodeList = getNodeList();
-        TransportClient transportClient = new TransportClient(settings);
-        for (ElasticSearchNode elasticSearchNode : nodeList) {
-            LOG.debug("Adding transport address with host {} and port {}", elasticSearchNode.getTransportHost()
-                    , elasticSearchNode.getTransportPort());
-            transportClient.addTransportAddress(new InetSocketTransportAddress(elasticSearchNode.getTransportHost(),
-                    elasticSearchNode.getTransportPort()));
+        TransportClient transportClient = new TransportClient( settings );
+        for ( ElasticSearchNode elasticSearchNode : nodeList ) {
+            LOG.debug( "Adding transport address with host {} and port {}", elasticSearchNode.getTransportHost()
+                    , elasticSearchNode.getTransportPort() );
+            transportClient.addTransportAddress( new InetSocketTransportAddress(elasticSearchNode.getTransportHost(),
+                    elasticSearchNode.getTransportPort() ) );
         }
 
         client = transportClient;
         return client;
     }
 
+
     @Override
-    public List<ElasticSearchNode> getNodeList()
-    {
+    public List<ElasticSearchNode> getNodeList() {
         List<ElasticSearchNode> nodeList = new ArrayList<ElasticSearchNode>();
-        String result = getHTTPResult("/_nodes");
+        String result = getHTTPResult( "/_nodes" );
         Gson gson = new Gson();
-        ElasticSearchNodeResponse response = gson.fromJson(result, ElasticSearchNodeResponse.class);
+        ElasticSearchNodeResponse response = gson.fromJson( result, ElasticSearchNodeResponse.class );
         Map<String, ElasticSearchNode> nodes = response.getNodes();
 
-        for (Map.Entry<String, ElasticSearchNode> entry : nodes.entrySet()) {
-            LOG.debug("Adding node {}",entry.getValue());
-            nodeList.add(entry.getValue());
+        for ( Map.Entry<String, ElasticSearchNode> entry : nodes.entrySet() ) {
+            LOG.debug( "Adding node {}",entry.getValue() );
+            nodeList.add( entry.getValue() );
         }
 
-        setNodeList(nodeList);
+        setNodeList( nodeList );
         return nodeList;
     }
 
+
     @Override
-    public String getHTTPResult(String query)
-    {
+    public String getHTTPResult( String query ) {
         URL url = null;
         try {
-            url = new URL("http://"+getHost()+":"+getHttpPort()+query);
-        } catch (MalformedURLException e) {
+            url = new URL("http://" + getHost() + ":" + getHttpPort() + query);
+        } catch ( MalformedURLException e ) {
             e.printStackTrace();
         }
         if (url != null) {
             try {
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("GET");
+                con.setRequestMethod( "GET" );
                 int responseCode = con.getResponseCode();
-                LOG.debug("Response Code : " + responseCode);
+                LOG.debug( "Response Code : " + responseCode );
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                BufferedReader in = new BufferedReader( new InputStreamReader( con.getInputStream() ) );
                 String inputLine;
                 StringBuilder response = new StringBuilder();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
+                while ( (inputLine = in.readLine() ) != null ) {
+                    response.append( inputLine );
                 }
                 in.close();
                 return response.toString();
-            } catch (IOException e) {
+            } catch ( IOException e ) {
                 e.printStackTrace();
             }
         }
         return null;
     }
 
-    public void setNodeList(List<ElasticSearchNode> nodeList) {
+
+    public void setNodeList( List<ElasticSearchNode> nodeList ) {
         this.nodeList = nodeList;
     }
+
 
     public int getHttpPort() {
         return httpPort;
     }
+
 
     @Override
     public Client getClient() {
@@ -161,11 +164,12 @@ public class ElasticSearchClient implements IElasticSearchClient {
         return clusterName;
     }
 
+
     @Override
     public String toString() {
         try {
-            return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(this);
-        } catch (JsonProcessingException e) {
+            return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString( this );
+        } catch ( JsonProcessingException e ) {
             e.printStackTrace();
             return "Failed serialization";
         }

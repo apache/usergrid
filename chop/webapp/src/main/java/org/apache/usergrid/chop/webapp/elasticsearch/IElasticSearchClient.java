@@ -43,7 +43,7 @@ public interface IElasticSearchClient {
 
     List<ElasticSearchNode> getNodeList();
 
-    String getHTTPResult(String query);
+    String getHTTPResult( String query );
 
     Client start();
 }
