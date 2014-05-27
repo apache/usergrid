@@ -15,13 +15,22 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 
 
 /**
- *
+ * This class holds different methods pertaining to the consolidation of an mvccentity. 
  *
  */
 public class RepairUtil {
 
     private static final ChangeLogGenerator changeLogGenerator = new ChangeLogGeneratorImpl();
 
+
+    /**
+     * Name of the operation to be done on the entity. Repair starts the process for determining whether an
+     * entity needs repair or not.
+     * @param results
+     * @param collectionScope
+     * @param entitySerializationStrategy
+     * @return
+     */
     public static MvccEntity repair( Iterator<MvccEntity> results, CollectionScope collectionScope,
                                      MvccEntitySerializationStrategy entitySerializationStrategy ) {
 
@@ -58,6 +67,14 @@ public class RepairUtil {
     }
 
 
+    /**
+     * Repairs the entity then overwrites the previous entity to become the new completed entity.
+     * @param partialEntities
+     * @param mvccEntity
+     * @param entitySerializationStrategy
+     * @param collectionScope
+     * @return
+     */
     private static MvccEntity repairAndWrite( List<MvccEntity> partialEntities, MvccEntity mvccEntity,
                                               MvccEntitySerializationStrategy entitySerializationStrategy,
                                               CollectionScope collectionScope ) {
@@ -78,6 +95,13 @@ public class RepairUtil {
     }
 
 
+    /**
+     * Applies the changelog to the completed entity.
+     * @param changeLogEntryList
+     * @param results
+     * @param completedEntity
+     * @return
+     */
     private static MvccEntity entityRepair( List<ChangeLogEntry> changeLogEntryList, List<MvccEntity> results,
                                             MvccEntity completedEntity ) {
         int changeLogIndex = 0;
