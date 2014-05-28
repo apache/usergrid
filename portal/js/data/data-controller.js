@@ -114,6 +114,12 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
 
     });
 
+    $scope.$on('query-error', function(event) {
+      $scope.loading = false;
+      $scope.applyScope();
+      $scope.queryBoxesSelected = false;
+    });
+
     $scope.$on('indexes-received', function(event, indexes) {
       //todo - do something with the indexes
       var fred = indexes;
