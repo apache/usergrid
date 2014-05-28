@@ -188,7 +188,9 @@ module.exports = function (grunt) {
       server: {
         options: {
           target: 'http://localhost:3000/index-debug.html', // target url to open
-       //   open: 'http://localhost:3000/index-debug.html',
+          open: 'http://localhost:3000/index-debug.html',
+          hostname:'*',
+          livereload:true,
           port: 3000,
           base: ''
         }
