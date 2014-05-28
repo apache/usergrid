@@ -15,8 +15,6 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import java.io.Serializable;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +38,6 @@ import org.springframework.util.Assert;
 
 import org.apache.usergrid.persistence.AggregateCounter;
 import org.apache.usergrid.persistence.AggregateCounterSet;
-
 import org.apache.usergrid.persistence.CollectionRef;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
@@ -83,7 +80,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
-
 import org.apache.usergrid.utils.ClassUtils;
 import org.apache.usergrid.utils.CompositeUtils;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -91,9 +87,12 @@ import org.apache.usergrid.utils.UUIDUtils;
 import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.CounterRow;
 import me.prettyprint.hector.api.beans.CounterRows;
 import me.prettyprint.hector.api.beans.CounterSlice;
+import me.prettyprint.hector.api.beans.DynamicComposite;
+import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HCounterColumn;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
@@ -102,18 +101,9 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
-
-import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.mutation.Mutator;
-
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
 
+import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_SETS;
@@ -128,8 +118,15 @@ import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
 import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.le;
@@ -137,16 +134,6 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.se;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 import static org.apache.usergrid.utils.ClassUtils.cast;
-import static org.apache.usergrid.utils.ConversionUtils.getLong;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
-import static org.apache.usergrid.persistence.cassandra.Serializers.be;
-import static org.apache.usergrid.persistence.cassandra.Serializers.se;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import static org.apache.usergrid.utils.ConversionUtils.object;
@@ -177,6 +164,9 @@ public class CpEntityManager implements EntityManager {
     private CounterUtils counterUtils;
 
     private boolean skipAggregateCounters;
+
+    @Resource
+    private IndexBucketLocator indexBucketLocator;
 
     public CpEntityManager() {}
 
@@ -214,7 +204,10 @@ public class CpEntityManager implements EntityManager {
 
         this.skipAggregateCounters = skipAggregateCounters;
 
-                try {
+        indexBucketLocator = ( IndexBucketLocator ) emf.getApplicationContext().getBean( "indexBucketLocator" );
+
+
+        try {
                     application = getApplication();
                 }
                 catch ( Exception ex ) {
@@ -289,8 +282,12 @@ public class CpEntityManager implements EntityManager {
 
         UUID timestampUuid = importId != null ?  importId : newTimeUUID();
 
-        Mutator<ByteBuffer> m = null; // ain't got one
+        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
+
         A entity = batchCreate( m, entityType, entityClass, properties, importId, timestampUuid );
+
+        batchExecute( m, CassandraService.RETRY_COUNT );
 
         return entity;
     }
@@ -605,7 +602,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public EntityRef getAlias(String aliasType, String alias) throws Exception {
 
-        return getAlias( new SimpleEntityRef("application", applicationId), aliasType, alias );
+        return getAlias( new SimpleEntityRef( "application", applicationId ), aliasType, alias );
     }
 
     @Override
@@ -774,7 +771,7 @@ public class CpEntityManager implements EntityManager {
             entity.setProperty(propertyName, propertyValue);
         }
 
-        update(entity);
+        update( entity );
     }
 
     @Override
@@ -1052,14 +1049,14 @@ public class CpEntityManager implements EntityManager {
     public boolean isCollectionMember(
             EntityRef owner, String collectionName, EntityRef entity) throws Exception {
 
-        return getRelationManager(owner).isCollectionMember(collectionName, entity);
+        return getRelationManager(owner).isCollectionMember( collectionName, entity );
     }
 
     @Override
     public boolean isConnectionMember(
             EntityRef owner, String connectionName, EntityRef entity) throws Exception {
 
-        return getRelationManager(owner).isConnectionMember(connectionName, entity);
+        return getRelationManager(owner).isConnectionMember( connectionName, entity );
     }
 
     @Override
@@ -1074,7 +1071,7 @@ public class CpEntityManager implements EntityManager {
             Level resultsLevel, boolean reversed) throws Exception {
 
         return getRelationManager(entityRef)
-                .getCollection(collectionName, startResult, count, resultsLevel, reversed);
+                .getCollection( collectionName, startResult, count, resultsLevel, reversed );
     }
 
     @Override
@@ -1143,7 +1140,7 @@ public class CpEntityManager implements EntityManager {
             throws Exception {
         
         return getRelationManager( connectingEntity )
-                .createConnection(connectionType, connectedEntityRef);
+                .createConnection( connectionType, connectedEntityRef );
     }
 
     @Override
@@ -1151,15 +1148,15 @@ public class CpEntityManager implements EntityManager {
             EntityRef connectingEntity, String pairedConnectionType, EntityRef pairedEntity, 
             String connectionType, EntityRef connectedEntityRef) throws Exception {
 
-        return getRelationManager(connectingEntity).createConnection(
-                pairedConnectionType, pairedEntity, connectionType, connectedEntityRef);
+        return getRelationManager(connectingEntity).createConnection( pairedConnectionType, pairedEntity,
+                connectionType, connectedEntityRef );
     }
 
     @Override
     public ConnectionRef createConnection(
             EntityRef connectingEntity, ConnectedEntityRef... connections) throws Exception {
 
-        return getRelationManager(connectingEntity).connectionRef(connections);
+        return getRelationManager(connectingEntity).connectionRef( connections );
     }
 
     @Override
@@ -1218,7 +1215,7 @@ public class CpEntityManager implements EntityManager {
             Level resultsLevel) throws Exception {
 
         return getRelationManager( entityRef )
-                .getConnectingEntities(connectionType, connectedEntityType, resultsLevel);
+                .getConnectingEntities( connectionType, connectedEntityType, resultsLevel );
     }
 
     @Override
@@ -1240,7 +1237,7 @@ public class CpEntityManager implements EntityManager {
     public Set<String> getConnectionIndexes(
             EntityRef entity, String connectionType) throws Exception {
 
-        return getRelationManager( entity ).getConnectionIndexes(connectionType);
+        return getRelationManager( entity ).getConnectionIndexes( connectionType );
     }
 
     @Override
@@ -1776,14 +1773,32 @@ public class CpEntityManager implements EntityManager {
         // Create collection name based on entity: i.e. "users"
         String collectionName = Schema.defaultCollectionName( eType );
 
-//        // Create collection key based collection name
-//        String bucketId = indexBucketLocator.getBucket( 
-//            applicationId, IndexBucketLocator.IndexType.COLLECTION, itemId, collection_name );
-//
-//        Object collection_key = key( applicationId, 
-//            Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId );
+       // emf.getApplicationContext().
+       // Create collection key based collection name
+        String bucketId = indexBucketLocator.getBucket(
+            applicationId, IndexBucketLocator.IndexType.COLLECTION, itemId, collectionName );
+
+        Object collection_key = key( applicationId,
+            Schema.DICTIONARY_COLLECTIONS, collectionName, bucketId );
 
         CollectionInfo collection = null;
+
+        if ( !is_application ) {
+            // Add entity to collection
+
+
+            if ( !emptyPropertyMap ) {
+                addInsertToMutator( ignored, ENTITY_ID_SETS, collection_key, itemId, null, timestamp );
+            }
+
+            // Add name of collection to dictionary property
+            // Application.collections
+            addInsertToMutator( ignored, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_COLLECTIONS ),
+                    collectionName, null, timestamp );
+
+            addInsertToMutator( ignored, ENTITY_COMPOSITE_DICTIONARIES, key( itemId, Schema.DICTIONARY_CONTAINER_ENTITIES ),
+                    asList( TYPE_APPLICATION, collectionName, applicationId ), null, timestamp );
+        }
 
         if ( emptyPropertyMap ) {
             return null;
