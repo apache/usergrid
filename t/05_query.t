@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 11;
+use Test::More tests => 9;
 
 # TEST DATA
 my $api_url         = 'http://localhost:8080';
@@ -12,7 +12,7 @@ my $username        = 'testuser';
 my $password        = 'Testuser123$';
 ###########
 
-my ($user, $token, $book, $collection);
+my ($user, $token, $book, $collection, $subset);
 
 BEGIN {
   use_ok 'Usergrid::Client'     || print "Bail out!\n";
@@ -37,26 +37,30 @@ eval {
 
   ok ( $collection->count() == 0, "count must be initially zero" );
 
-  $client->add_entity("books", { name => "Ulysses", author => "James Joyce" });
-  $client->add_entity("books", { name => "Neuromancer", author => "William Gibson" });
-  $client->add_entity("books", { name => "On the Road", author => "Jack Kerouac" });
-  $client->add_entity("books", { name => "Ubik", author => "Philip K. Dick" });
-  $client->add_entity("books", { name => "Reef", author => "Romesh Gunasekera" });
-
-  $collection = $client->get_collection("books");
-
-  ok ( $collection->count() == 5, "count must now be five" );
-
-  while ($collection->has_next_entity()) {
-    $book = $collection->get_next_entity();
-    ok ( length($book->get('name')) > 3, "check the book titles" );
+  for (my $i = 0; $i < 30; $i++) {
+    $client->add_entity("books", { name => "book $i", index => $i });
   }
 
-  $collection->reset_iterator();
+  $collection = $client->get_collection("books", 30);
 
-  ok ( $collection->iterator == -1, "iterator must be reset" );
+  ok ( $collection->count() == 30, "count must now be 30" );
 
-  ok ( $collection->count() == 5, "count must be five" );
+  $book = $collection->get_first_entity();
+
+  ok ( $book->get('index') eq '0', "first index should be 0");
+
+  $book = $collection->get_last_entity();
+
+  ok ( $book->get('index') eq '29', "last index should be 29");
+
+  $subset = $client->query_collection("books", "select * where index = '5'", 15 );
+
+  ok ( $subset->count() == 1, "subset is 1" );
+  ok ( $subset->object->{'params'}->{'limit'}[0] eq '15', "check limit override" );
+
+  $book = $subset->get_next_entity();
+
+  ok ( $book->get('index') eq '5', "query returned the fifth book" );
 
   while ($collection->has_next_entity()) {
     $book = $collection->get_next_entity();
@@ -72,5 +76,4 @@ eval {
 diag($@) if $@;
 
 # Cleanup
-$client->delete_entity($book);
 $client->delete_entity($user);

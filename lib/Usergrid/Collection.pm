@@ -38,12 +38,25 @@ sub get_next_entity {
 
 sub count {
   my $self = shift;
-  return scalar @{$self->object->{entities}};
+  return scalar @{$self->object->{'entities'}};
 }
 
 sub reset_iterator {
   my $self = shift;
   $self->iterator (-1);
+}
+
+sub get_first_entity {
+  my $self = shift;
+  return ($self->count() > 0) ? Usergrid::Entity->new (
+    object => $self->object->{'entities'}[0] ) : undef;
+}
+
+sub get_last_entity {
+  my $self = shift;
+  return ($self->count() > 0) ? Usergrid::Entity->new (
+    object => $self->object->{'entities'}[$self->count() - 1] ) : undef;
+
 }
 
 __PACKAGE__->meta->make_immutable;

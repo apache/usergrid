@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 # TEST DATA
 my $api_url         = 'http://localhost:8080';
@@ -37,29 +37,33 @@ eval {
 
   $book = $client->add_entity("books", { name => "Ulysses", author => "James Joyce" });
 
-  ok ( $book->get('author') eq "James Joyce", "check entity creation");
+  ok ( $book->get('author') eq "James Joyce", "check entity creation" );
 
   $book->set('genre', 'Modernist');
 
   $book = $client->update_entity($book);
 
-  ok ( $book->get('genre') eq "Modernist", "check for new attribute");
+  ok ( $book->get('genre') eq "Modernist", "check for new attribute" );
 
   $book->set('genre', 'Novel');
 
   $book = $client->update_entity($book);
 
-  ok ( $book->get('genre') eq "Novel", "check for updated attribute");
+  ok ( $book->get('genre') eq "Novel", "check for updated attribute" );
 
-  $book = $client->get_entity_by_uuid("books", $book->get('uuid'));
+  $book = $client->get_entity("books", $book->get('uuid'));
 
-  ok ( $book->get('genre') eq "Novel", "check again for updated attribute by uuid");
+  ok ( $book->get('genre') eq "Novel", "check again for updated attribute by uuid" );
 
-  $book = $client->delete_entity_by_uuid("books", $book->get('uuid'));
+  $book = $client->get_entity("books", "Ulysses");
 
-  $deleted_book = $client->get_entity_by_uuid("books", $book->get('uuid'));
+  ok ( $book->get('name') eq 'Ulysses', "get object by name") ;
 
-  ok ( (! defined $deleted_book), "deleted book cannot be found")
+  $book = $client->delete_entity_by_id("books", $book->get('uuid'));
+
+  $deleted_book = $client->get_entity("books", $book->get('uuid'));
+
+  ok ( (! defined $deleted_book), "deleted book cannot be found" );
 
 };
 

@@ -26,16 +26,16 @@ sub login {
   my ($self, $username, $password) = @_;
 
   my %request = (
-    grant_type=>"password",
-    username=>$username,
-    password=>$password
+    grant_type => "password",
+    username   => $username,
+    password   => $password
   );
 
   my $uri = URI::Template
     ->new('/{organization}/{application}/token')
     ->process(
-      organization=>$self->organization,
-      application=>$self->application
+      organization => $self->organization,
+      application  => $self->application
   );
 
   my $token = $self->POST($uri, \%request);
@@ -49,9 +49,10 @@ sub management_login {
   my ($self, $username, $password) = @_;
 
   my %request = (
-    grant_type=>"password",
-    username=>$username,
-    password=>$password);
+    grant_type => "password",
+    username   => $username,
+    password   => $password
+  );
 
   my $token = $self->POST('/management/token', \%request);
 
@@ -66,9 +67,9 @@ sub add_entity {
   my $uri = URI::Template
     ->new('/{organization}/{application}/{collection}')
     ->process(
-      organization=>$self->organization,
-      application=>$self->application,
-      collection=>$collection
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection
   );
 
   return Usergrid::Entity->new( object => $self->POST($uri, $entity));
@@ -80,26 +81,26 @@ sub update_entity {
   my $uri = URI::Template
     ->new('/{organization}/{application}/{collection}/{uuid}')
     ->process(
-      organization=>$self->organization,
-      application=>$self->application,
-      collection=>$entity->get('type'),
-      uuid=>$entity->get('uuid')
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $entity->get('type'),
+      uuid         => $entity->get('uuid')
   );
 
   return Usergrid::Entity->new( object => $self->PUT($uri,
     $entity->object->{'entities'}[0]) );
 }
 
-sub get_entity_by_uuid {
-  my ($self, $collection, $id) = @_;
+sub get_entity {
+  my ($self, $collection, $id_or_name) = @_;
 
   my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}/{id}')
+    ->new('/{organization}/{application}/{collection}/{id_or_name}')
     ->process(
-      organization=>$self->organization,
-      application=>$self->application,
-      collection=>$collection,
-      id=>$id
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection,
+      id_or_name   => $id_or_name
   );
 
   my $response = $self->GET($uri);
@@ -110,29 +111,46 @@ sub get_entity_by_uuid {
 }
 
 sub get_collection {
-  my ($self, $collection) = @_;
+  my ($self, $collection, $limit) = @_;
 
   my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}')
+    ->new('/{organization}/{application}/{collection}?limit={limit}')
     ->process(
-      organization=>$self->organization,
-      application=>$self->application,
-      collection=>$collection
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection,
+      limit        => ( defined $limit ) ? $limit: 10
   );
 
   return Usergrid::Collection->new( object => $self->GET($uri) );
 }
 
-sub delete_entity_by_uuid {
-  my ($self, $collection, $uuid) = @_;
+sub query_collection {
+  my ($self, $collection, $query, $limit) = @_;
 
   my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}/{uuid}')
+    ->new('/{organization}/{application}/{collection}?limit={limit}&ql={ql}')
     ->process(
-      organization=>$self->organization,
-      application=>$self->application,
-      collection=>$collection,
-      uuid=>$uuid
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection,
+      limit        => ( defined $limit ) ? $limit : 10,
+      ql           => $query
+  );
+
+  return Usergrid::Collection->new( object => $self->GET($uri) );
+}
+
+sub delete_entity_by_id {
+  my ($self, $collection, $id_or_name) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{id}')
+    ->process(
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection,
+      id           => $id_or_name
   );
 
   return Usergrid::Entity->new( object => $self->DELETE($uri) );
@@ -144,10 +162,10 @@ sub delete_entity {
   my $uri = URI::Template
     ->new('/{organization}/{application}/{collection}/{uuid}')
     ->process(
-      organization=>$self->organization,
-      application=>$self->application,
-      collection=>$entity->get('type'),
-      uuid=>$entity->get('uuid')
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $entity->get('type'),
+      uuid         => $entity->get('uuid')
   );
 
   return Usergrid::Entity->new( object => $self->DELETE($uri) );
