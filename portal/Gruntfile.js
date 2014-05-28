@@ -169,6 +169,9 @@ module.exports = function (grunt) {
       }
     },
     watch: {
+      options: {
+        livereload: true
+      },
       files: [
         'index-template.html',
         'css/**/*.css',
