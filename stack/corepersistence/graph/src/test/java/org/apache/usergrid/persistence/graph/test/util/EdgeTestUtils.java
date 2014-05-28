@@ -77,6 +77,22 @@ public class EdgeTestUtils {
      * @param sourceType The source type to use in the id
      * @param edgeType The edge type to use
      * @param targetType The target type to use
+     * @param timestamp the edge's timestamp
+     *
+     * @return an Edge for testing
+     */
+    public static MarkedEdge createEdge( final String sourceType, final String edgeType, final String targetType, final long timestamp ) {
+        return createEdge( createId( sourceType ), edgeType, createId( targetType ), timestamp );
+    }
+
+
+
+    /**
+     * Create an edge for testing
+     *
+     * @param sourceType The source type to use in the id
+     * @param edgeType The edge type to use
+     * @param targetType The target type to use
      *
      * @return an Edge for testing
      */
@@ -91,7 +107,7 @@ public class EdgeTestUtils {
      * Create an edge for testing
      */
     public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId ) {
-        return createEdge( sourceId, edgeType, targetId,System.currentTimeMillis() );
+        return createEdge( sourceId, edgeType, targetId, System.currentTimeMillis() );
     }
 
 
@@ -99,8 +115,16 @@ public class EdgeTestUtils {
      * Create an edge that is marked
      */
     public static MarkedEdge createMarkedEdge( final Id sourceId, final String edgeType, final Id targetId ) {
-        return createEdge( sourceId, edgeType, targetId,System.currentTimeMillis(), true );
+        return createEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), true );
     }
+
+
+    /**
+        * Create an edge that is marked
+        */
+       public static MarkedEdge createMarkedEdge( final Id sourceId, final String edgeType, final Id targetId, final long timestamp) {
+           return createEdge( sourceId, edgeType, targetId, timestamp, true );
+       }
 
 
     /**

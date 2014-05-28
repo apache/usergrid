@@ -137,20 +137,20 @@ public class EdgeDeleteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV2 = createMarkedEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId );
+        final long edgeTimestamp = 1000l;
+
+        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId, edgeTimestamp );
+        MarkedEdge edgeV2 = createMarkedEdge( sourceId, edgeType, targetId, edgeTimestamp + 1 );
+        MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId, edgeTimestamp + 2 );
 
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1, UUIDGenerator.newTimeUUID() ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, UUIDGenerator.newTimeUUID() ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3, UUIDGenerator.newTimeUUID() ).execute();
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
-
-        storageEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV1, UUIDGenerator.newTimeUUID() ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV2, UUIDGenerator.newTimeUUID() ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV3, UUIDGenerator.newTimeUUID() ).execute();
 
 
 
@@ -278,20 +278,22 @@ public class EdgeDeleteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV2 = createMarkedEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId );
+        final long timestamp = 1000l;
+
+        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId, timestamp );
+        MarkedEdge edgeV2 = createMarkedEdge( sourceId, edgeType, targetId, timestamp + 1 );
+        MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId, timestamp + 2);
 
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
+        final UUID foobar = UUIDGenerator.newTimeUUID();
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1, foobar ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, foobar ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3, foobar ).execute();
 
-        storageEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV1, foobar ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV2, foobar ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV3, foobar ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edgeV1 ).execute();
         edgeMetadataSerialization.writeEdge( scope, edgeV2 ).execute();

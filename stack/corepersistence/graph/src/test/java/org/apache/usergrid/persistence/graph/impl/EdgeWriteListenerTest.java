@@ -68,6 +68,7 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -130,16 +131,16 @@ public class EdgeWriteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId );
+        final long timestamp = 1000l;
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
+        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId, timestamp);
+        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId, timestamp + 1 );
+        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId, timestamp + 2 );
 
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1,  UUIDGenerator.newTimeUUID() ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2,  UUIDGenerator.newTimeUUID()).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3,  UUIDGenerator.newTimeUUID() ).execute();
 
         EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
 
@@ -260,16 +261,17 @@ public class EdgeWriteListenerTest {
         final String edgeType = "test";
         final Id targetId = createId( "target" );
 
-
-        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId );
+        final long timestamp = 10000;
 
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId, timestamp );
+        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId, timestamp+1 );
+        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId, timestamp+2 );
+
+
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1,  UUIDGenerator.newTimeUUID() ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2,  UUIDGenerator.newTimeUUID() ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3,  UUIDGenerator.newTimeUUID() ).execute();
 
         EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV2 );
 

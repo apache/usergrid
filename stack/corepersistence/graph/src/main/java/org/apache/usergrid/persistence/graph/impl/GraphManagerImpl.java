@@ -394,7 +394,7 @@ public class GraphManagerImpl implements GraphManager {
             final long edgeTimestamp = edge.getTimestamp();
 
             //our edge needs to not be deleted and have a version that's > max Version
-            if ( edge.isDeleted() || Long.compare( maxTimestamp, edgeTimestamp )> 0 ) {
+            if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxTimestamp )> 0 ) {
                 return false;
             }
 

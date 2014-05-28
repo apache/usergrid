@@ -162,9 +162,9 @@ public abstract class GraphManagerIT {
 
         GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
-        final long earlyVersion = System.currentTimeMillis();
+        final long earlyVersion = 1000l;
 
-        Edge edge = createEdge( "source", "test", "target" );
+        Edge edge = createEdge( "source", "test", "target", earlyVersion);
 
         gm.writeEdge( edge ).toBlockingObservable().last();
 
@@ -180,7 +180,7 @@ public abstract class GraphManagerIT {
         assertEquals( "Correct edge returned", edge, returned );
 
         //now test with an earlier version, we shouldn't get the edge back
-        search = createSearchByEdge( edge.getSourceNode(), edge.getType(), earlyVersion, null );
+        search = createSearchByEdge( edge.getSourceNode(), edge.getType(), earlyVersion-1, null );
 
         edges = gm.loadEdgesFromSource( search );
 
@@ -196,10 +196,10 @@ public abstract class GraphManagerIT {
 
         GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
-        final long earlyVersion = System.currentTimeMillis();
+        final long earlyVersion = 10000l;
 
 
-        Edge edge = createEdge( "source", "test", "target" );
+        Edge edge = createEdge( "source", "test", "target", earlyVersion);
 
         gm.writeEdge( edge ).toBlockingObservable().last();
 
@@ -215,7 +215,7 @@ public abstract class GraphManagerIT {
         assertEquals( "Correct edge returned", edge, returned );
 
         //change edge type to be invalid, shouldn't get a result
-        search = createSearchByEdge( edge.getTargetNode(), edge.getType(), earlyVersion, null );
+        search = createSearchByEdge( edge.getTargetNode(), edge.getType(), earlyVersion-1, null );
 
         edges = gm.loadEdgesToTarget( search );
 
@@ -234,10 +234,10 @@ public abstract class GraphManagerIT {
 
         GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
-        final long earlyVersion = System.currentTimeMillis();
+        final long earlyVersion = 10000l;
 
 
-        Edge edge1 = createEdge( "source", "test", "target" );
+        Edge edge1 = createEdge( "source", "test", "target", earlyVersion + 1 );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId = edge1.getTargetNode();
@@ -245,11 +245,11 @@ public abstract class GraphManagerIT {
 
         gm.writeEdge( edge1 ).toBlockingObservable().last();
 
-        Edge edge2 = createEdge( sourceId, edge1.getType(), targetId );
+        Edge edge2 = createEdge( sourceId, edge1.getType(), targetId, earlyVersion + 2 );
 
         gm.writeEdge( edge2 ).toBlockingObservable().last();
 
-        Edge edge3 = createEdge( sourceId, edge1.getType(), targetId );
+        Edge edge3 = createEdge( sourceId, edge1.getType(), targetId, earlyVersion + 3 );
 
         gm.writeEdge( edge3 ).toBlockingObservable().last();
 
@@ -305,13 +305,13 @@ public abstract class GraphManagerIT {
 
 
         GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
-        ;
 
 
-        final long earlyVersion = System.currentTimeMillis();
+
+        final long earlyVersion = 10000l;
 
 
-        Edge edge1 = createEdge( "source", "test", "target" );
+        Edge edge1 = createEdge( "source", "test", "target", earlyVersion+1 );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId = edge1.getTargetNode();
@@ -319,11 +319,11 @@ public abstract class GraphManagerIT {
 
         gm.writeEdge( edge1 ).toBlockingObservable().last();
 
-        Edge edge2 = createEdge( sourceId, edge1.getType(), targetId );
+        Edge edge2 = createEdge( sourceId, edge1.getType(), targetId, earlyVersion+2 );
 
         gm.writeEdge( edge2 ).toBlockingObservable().last();
 
-        Edge edge3 = createEdge( sourceId, edge1.getType(), targetId );
+        Edge edge3 = createEdge( sourceId, edge1.getType(), targetId, earlyVersion +3 );
 
         gm.writeEdge( edge3 ).toBlockingObservable().last();
 
@@ -977,6 +977,7 @@ public abstract class GraphManagerIT {
         Id sourceId = new SimpleId( "source" );
         Id targetId1 = new SimpleId( "target" );
         Id targetId2 = new SimpleId( "target2" );
+
 
         Edge edge1 = createEdge( sourceId, "test", targetId1, System.currentTimeMillis() );
 

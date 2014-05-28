@@ -34,6 +34,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import rx.Observable;
+import rx.Scheduler;
 import rx.Subscriber;
 import rx.functions.FuncN;
 import rx.schedulers.Schedulers;
@@ -53,23 +54,49 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
     private static final Logger LOG = LoggerFactory.getLogger( AsyncProcessor.class );
 
     protected final TimeoutQueue<T> queue;
-//    protected final ConsistencyFig consistencyFig;
+    protected final ConsistencyFig consistencyFig;
     protected final List<MessageListener<T, ?>> listeners = new ArrayList<>();
 
 
     protected List<ErrorListener<T>> errorListeners = new ArrayList<ErrorListener<T>>();
     protected List<CompleteListener<T>> completeListeners = new ArrayList<CompleteListener<T>>();
 
+    private Scheduler.Worker worker;
+
 
     @Inject
     public AsyncProcessorImpl( final TimeoutQueue<T> queue, final ConsistencyFig consistencyFig ) {
         this.queue = queue;
-//        this.consistencyFig = consistencyFig;
+        this.consistencyFig = consistencyFig;
+    }
 
-        //we purposefully use a new thread.  We don't want to use one of the I/O threads to run this task
-        //in the event the scheduler is full, we'll end up rejecting the reschedule of this task
-        Schedulers.newThread().createWorker().schedulePeriodically( new TimeoutTask<T>( this, consistencyFig ), consistencyFig.getTaskLoopTime(),
-                consistencyFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
+
+    @Override
+    public void start() {
+        synchronized ( this ) {
+            if ( worker != null ) {
+                return;
+            }
+
+
+            worker = Schedulers.newThread().createWorker();
+
+
+            worker.schedulePeriodically( new TimeoutTask<T>( this, consistencyFig ), consistencyFig.getTaskLoopTime(),
+                    consistencyFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
+        }
+    }
+
+
+    @Override
+    public void stop() {
+        synchronized ( this ) {
+            if ( worker == null ) {
+                return;
+            }
+
+            worker.unsubscribe();
+        }
     }
 
 
@@ -81,11 +108,17 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
 
     @Override
     public void start( final AsynchronousMessage<T> event ) {
+
+        if ( listeners.size() == 0 ) {
+            throw new RuntimeException( "Nothing is listening.  You're talking to /dev/null!" );
+        }
+
         final T data = event.getEvent();
         /**
          * Execute all listeners in parallel
          */
         List<Observable<?>> observables = new ArrayList<Observable<?>>( listeners.size() );
+
 
         for ( MessageListener<T, ?> listener : listeners ) {
             observables.add( HystrixObservable.async( listener.receive( data ) ).subscribeOn( Schedulers.io() ) );
@@ -134,8 +167,6 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
     public Collection<AsynchronousMessage<T>> getTimeouts( final int maxCount, final long timeout ) {
         return queue.take( maxCount, timeout );
     }
-
-
 
 
     @Override

@@ -34,8 +34,6 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.fasterxml.uuid.UUIDComparator;
-
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createSearchByEdge;
@@ -83,11 +81,16 @@ public class MergedEdgeReaderTest {
         final Id sourceId = createId( "source" );
         final String type = "test";
 
+        final long timestamp1 = 1000l;
+        final long timestamp2 = timestamp1 + 100l;
+        final long timestamp3 = timestamp2 + 100l;
+        final long timestamp4 = timestamp3 + 100l;
 
-        MarkedEdge commitLogEdge1 = createEdge( sourceId, type, createId( "target1" ) );
-        MarkedEdge storageEdge1 = createEdge( sourceId, type, createId( "target2" ) );
-        MarkedEdge commitLogEdge2 = createEdge( sourceId, type, createId( "target3" ) );
-        MarkedEdge storageEdge2 = createEdge( sourceId, type, createId( "target4" ) );
+
+        MarkedEdge commitLogEdge1 = createEdge( sourceId, type, createId( "target1" ), timestamp1 );
+        MarkedEdge storageEdge1 = createEdge( sourceId, type, createId( "target2" ), timestamp2 );
+        MarkedEdge commitLogEdge2 = createEdge( sourceId, type, createId( "target3" ), timestamp3 );
+        MarkedEdge storageEdge2 = createEdge( sourceId, type, createId( "target4" ), timestamp4 );
 
         //verify our versions are as expected
         assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) < 0 );
@@ -100,7 +103,7 @@ public class MergedEdgeReaderTest {
          * Mock up the commit log
          */
         when( commitLog.getEdgesFromSource( scope, searchByEdgeType ) )
-                .thenReturn( Arrays.asList( commitLogEdge2, commitLogEdge1).iterator() );
+                .thenReturn( Arrays.asList( commitLogEdge2, commitLogEdge1 ).iterator() );
 
         /**
          * Mock up the storage
@@ -136,13 +139,17 @@ public class MergedEdgeReaderTest {
         final String type = "test";
 
 
-        MarkedEdge commitLogEdge1 = createEdge( sourceId, type, createId( "target" ), System.currentTimeMillis(), true );
-        MarkedEdge storageEdge1 =   createEdge( sourceId, type, commitLogEdge1.getTargetNode(), commitLogEdge1.getTimestamp(), false );
-        MarkedEdge commitLogEdge2 =  createEdge( sourceId, type, createId( "target" ), System.currentTimeMillis(), true );
-        MarkedEdge storageEdge2 =  createEdge( sourceId, type, commitLogEdge2.getTargetNode(), commitLogEdge2.getTimestamp(), false );
+        MarkedEdge commitLogEdge1 =
+                createEdge( sourceId, type, createId( "target" ), System.currentTimeMillis(), true );
+        MarkedEdge storageEdge1 =
+                createEdge( sourceId, type, commitLogEdge1.getTargetNode(), commitLogEdge1.getTimestamp(), false );
+        MarkedEdge commitLogEdge2 =
+                createEdge( sourceId, type, createId( "target" ), System.currentTimeMillis(), true );
+        MarkedEdge storageEdge2 =
+                createEdge( sourceId, type, commitLogEdge2.getTargetNode(), commitLogEdge2.getTimestamp(), false );
 
         //verify our versions are as expected
-        assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) ==  0 );
+        assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) == 0 );
         assertTrue( Long.compare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) == 0 );
 
         SearchByEdgeType searchByEdgeType = createSearchByEdge( sourceId, type, System.currentTimeMillis(), null );
@@ -182,10 +189,15 @@ public class MergedEdgeReaderTest {
         final String type = "test";
         final String targetIdType = "target";
 
-        MarkedEdge commitLogEdge1 = createEdge( sourceId, type, createId( targetIdType ) );
-        MarkedEdge storageEdge1 = createEdge( sourceId, type, createId( targetIdType ) );
-        MarkedEdge commitLogEdge2 = createEdge( sourceId, type, createId( targetIdType ) );
-        MarkedEdge storageEdge2 = createEdge( sourceId, type, createId( targetIdType ) );
+        final long timestamp1 = 1000l;
+        final long timestamp2 = timestamp1 + 100l;
+        final long timestamp3 = timestamp2 + 100l;
+        final long timestamp4 = timestamp3 + 100l;
+
+        MarkedEdge commitLogEdge1 = createEdge( sourceId, type, createId( targetIdType ), timestamp1 );
+        MarkedEdge storageEdge1 = createEdge( sourceId, type, createId( targetIdType ), timestamp2 );
+        MarkedEdge commitLogEdge2 = createEdge( sourceId, type, createId( targetIdType ), timestamp3 );
+        MarkedEdge storageEdge2 = createEdge( sourceId, type, createId( targetIdType ), timestamp4 );
 
         //verify our versions are as expected
         assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) < 0 );
@@ -221,6 +233,7 @@ public class MergedEdgeReaderTest {
         assertFalse( marked.hasNext() );
     }
 
+
     @Test
     public void testOrderedMergeSourceTargetTypeDeleted() {
 
@@ -232,13 +245,17 @@ public class MergedEdgeReaderTest {
         final String type = "test";
         final String targetIdType = "target";
 
-        MarkedEdge commitLogEdge1 = createEdge( sourceId, type, createId( targetIdType ), System.currentTimeMillis(), true );
-        MarkedEdge storageEdge1 = createEdge( sourceId, type, commitLogEdge1.getTargetNode(), commitLogEdge1.getTimestamp(), false );
-        MarkedEdge commitLogEdge2 = createEdge( sourceId, type, createId( targetIdType ) , System.currentTimeMillis(), true);
-        MarkedEdge storageEdge2 = createEdge( sourceId, type, commitLogEdge2.getTargetNode(), commitLogEdge2.getTimestamp(), false );
+        MarkedEdge commitLogEdge1 =
+                createEdge( sourceId, type, createId( targetIdType ), System.currentTimeMillis(), true );
+        MarkedEdge storageEdge1 =
+                createEdge( sourceId, type, commitLogEdge1.getTargetNode(), commitLogEdge1.getTimestamp(), false );
+        MarkedEdge commitLogEdge2 =
+                createEdge( sourceId, type, createId( targetIdType ), System.currentTimeMillis(), true );
+        MarkedEdge storageEdge2 =
+                createEdge( sourceId, type, commitLogEdge2.getTargetNode(), commitLogEdge2.getTimestamp(), false );
 
         //verify our versions are as expected
-        assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) == 0  );
+        assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) == 0 );
         assertTrue( Long.compare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) == 0 );
 
         SearchByIdType searchByEdgeType =
@@ -268,9 +285,6 @@ public class MergedEdgeReaderTest {
     }
 
 
-
-
-
     @Test
     public void testOrderedMergeTarget() {
 
@@ -281,11 +295,15 @@ public class MergedEdgeReaderTest {
         final Id targetId = createId( "target" );
         final String type = "test";
 
+        final long timestamp1 = 1000l;
+        final long timestamp2 = timestamp1 + 100l;
+        final long timestamp3 = timestamp2 + 100l;
+        final long timestamp4 = timestamp3 + 100l;
 
-        MarkedEdge commitLogEdge1 = createEdge( createId( "source" ), type, targetId );
-        MarkedEdge storageEdge1 = createEdge( createId( "source" ), type, targetId );
-        MarkedEdge commitLogEdge2 = createEdge( createId( "source" ), type, targetId );
-        MarkedEdge storageEdge2 = createEdge( createId( "source" ), type, targetId );
+        MarkedEdge commitLogEdge1 = createEdge( createId( "source" ), type, targetId, timestamp1 );
+        MarkedEdge storageEdge1 = createEdge( createId( "source" ), type, targetId, timestamp2 );
+        MarkedEdge commitLogEdge2 = createEdge( createId( "source" ), type, targetId, timestamp3 );
+        MarkedEdge storageEdge2 = createEdge( createId( "source" ), type, targetId, timestamp4 );
 
         //verify our versions are as expected
         assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) < 0 );
@@ -333,16 +351,21 @@ public class MergedEdgeReaderTest {
         final Id targetId = createId( "target" );
         final String type = "test";
 
+        final long timestamp1 = 1000l;
+              final long timestamp2 = timestamp1 + 100l;
+
 
         MarkedEdge commitLogEdge1 =
-                createEdge( createId( "source" ), type, targetId, System.currentTimeMillis(), true );
-        MarkedEdge storageEdge1 = createEdge( commitLogEdge1.getSourceNode(), type, commitLogEdge1.getTargetNode(), commitLogEdge1.getTimestamp(), false );
+                createEdge( createId( "source" ), type, targetId, timestamp1, true );
+        MarkedEdge storageEdge1 = createEdge( commitLogEdge1.getSourceNode(), type, commitLogEdge1.getTargetNode(),
+                commitLogEdge1.getTimestamp(), false );
         MarkedEdge commitLogEdge2 =
-                createEdge( createId( "source" ), type, targetId, System.currentTimeMillis(), true );
-        MarkedEdge storageEdge2 = createEdge( commitLogEdge2.getSourceNode(), type, commitLogEdge2.getTargetNode(), commitLogEdge2.getTimestamp(), false );
+                createEdge( createId( "source" ), type, targetId, timestamp2, true );
+        MarkedEdge storageEdge2 = createEdge( commitLogEdge2.getSourceNode(), type, commitLogEdge2.getTargetNode(),
+                commitLogEdge2.getTimestamp(), false );
 
         //verify our versions are as expected
-        assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) ==  0 );
+        assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) == 0 );
         assertTrue( Long.compare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) == 0 );
 
         SearchByEdgeType searchByEdgeType = createSearchByEdge( targetId, type, System.currentTimeMillis(), null );
@@ -383,10 +406,16 @@ public class MergedEdgeReaderTest {
         final String type = "test";
         final String sourceIdType = "source";
 
-        MarkedEdge commitLogEdge1 = createEdge( createId( sourceIdType), type, targetId );
-        MarkedEdge storageEdge1 = createEdge( createId( sourceIdType ), type, targetId );
-        MarkedEdge commitLogEdge2 = createEdge( createId( sourceIdType), type, targetId );
-        MarkedEdge storageEdge2 = createEdge( createId( sourceIdType ), type, targetId );
+        final long timestamp1 = 1000l;
+        final long timestamp2 = timestamp1 + 100l;
+        final long timestamp3 = timestamp2 + 100l;
+        final long timestamp4 = timestamp3 + 100l;
+
+
+        MarkedEdge commitLogEdge1 = createEdge( createId( sourceIdType ), type, targetId, timestamp1 );
+        MarkedEdge storageEdge1 = createEdge( createId( sourceIdType ), type, targetId, timestamp2 );
+        MarkedEdge commitLogEdge2 = createEdge( createId( sourceIdType ), type, targetId, timestamp3 );
+        MarkedEdge storageEdge2 = createEdge( createId( sourceIdType ), type, targetId, timestamp4 );
 
         //verify our versions are as expected
         assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) < 0 );
@@ -415,8 +444,6 @@ public class MergedEdgeReaderTest {
                 read.getEdgesToTargetBySourceType( scope, searchByEdgeType ).toBlockingObservable().getIterator();
 
 
-
-
         assertEquals( storageEdge2, marked.next() );
         assertEquals( commitLogEdge2, marked.next() );
         assertEquals( storageEdge1, marked.next() );
@@ -424,6 +451,7 @@ public class MergedEdgeReaderTest {
 
         assertFalse( marked.hasNext() );
     }
+
 
     @Test
     public void testOrderedMergeTargetSourceTypeDeleted() {
@@ -436,13 +464,18 @@ public class MergedEdgeReaderTest {
         final String type = "test";
         final String sourceIdType = "target";
 
-        MarkedEdge commitLogEdge1 = createEdge( createId( sourceIdType), type, targetId, System.currentTimeMillis(), true );
-        MarkedEdge storageEdge1 = createEdge( commitLogEdge1.getSourceNode(), type, commitLogEdge1.getTargetNode(), commitLogEdge1.getTimestamp(), false );
-        MarkedEdge commitLogEdge2 = createEdge( createId( sourceIdType), type, targetId , System.currentTimeMillis(), true);
-        MarkedEdge storageEdge2 = createEdge( commitLogEdge2.getSourceNode(), type, commitLogEdge2.getTargetNode(), commitLogEdge2.getTimestamp(), false );
+        final long timestamp1 = 10000l;
+        final long timestamp2 = timestamp1 + 100;
+
+        MarkedEdge commitLogEdge1 = createEdge( createId( sourceIdType ), type, targetId, timestamp1, true );
+        MarkedEdge storageEdge1 = createEdge( commitLogEdge1.getSourceNode(), type, commitLogEdge1.getTargetNode(),
+                commitLogEdge1.getTimestamp(), false );
+        MarkedEdge commitLogEdge2 = createEdge( createId( sourceIdType ), type, targetId, timestamp2, true );
+        MarkedEdge storageEdge2 = createEdge( commitLogEdge2.getSourceNode(), type, commitLogEdge2.getTargetNode(),
+                commitLogEdge2.getTimestamp(), false );
 
         //verify our versions are as expected
-        assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) == 0  );
+        assertTrue( Long.compare( commitLogEdge1.getTimestamp(), storageEdge1.getTimestamp() ) == 0 );
         assertTrue( Long.compare( commitLogEdge2.getTimestamp(), storageEdge2.getTimestamp() ) == 0 );
 
         SearchByIdType searchByEdgeType =
@@ -471,5 +504,4 @@ public class MergedEdgeReaderTest {
 
         assertFalse( marked.hasNext() );
     }
-
 }

@@ -170,24 +170,28 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void testPaging() throws ConnectionException {
-        final MarkedEdge edge1 = createEdge( "source", "edge", "target" );
+
+        final MarkedEdge edge1 = createEdge( "source", "edge", "target", 0);
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId = edge1.getTargetNode();
 
 
-        final MarkedEdge edge2 = createEdge( sourceId, "edge", targetId );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", targetId, 1 );
 
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
-
-        serialization.writeEdge( scope, edge1, timestamp ).execute();
-        serialization.writeEdge( scope, edge2, timestamp ).execute();
+        serialization.writeEdge( scope, edge1, UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
 
         long now = System.currentTimeMillis();
 
         //get our edges out by name
+
+
+
+
+
 
         Iterator<MarkedEdge> results =
                 serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, "edge", now, edge2 ) );
@@ -219,13 +223,15 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void directEdgeGets() throws ConnectionException {
-        final MarkedEdge edgev1 = createEdge( "source", "edge1", "target" );
+
+        long timestamp = 1000;
+        final MarkedEdge edgev1 = createEdge( "source", "edge1", "target", timestamp );
 
         final Id sourceId = edgev1.getSourceNode();
         final Id targetId = edgev1.getTargetNode();
 
 
-        final MarkedEdge edgev2 = createEdge( sourceId, "edge1", targetId );
+        final MarkedEdge edgev2 = createEdge( sourceId, "edge1", targetId, timestamp+1 );
 
         //we shouldn't get this one back
         final MarkedEdge diffTarget = createEdge( sourceId, "edge1", createId( "newTarget" ) );
@@ -237,13 +243,11 @@ public abstract class EdgeSerializationTest {
         final MarkedEdge edgeType2V1 = createEdge( sourceId, "edge2", targetId );
 
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
 
-
-        serialization.writeEdge( scope, edgev1, timestamp ).execute();
-        serialization.writeEdge( scope, edgev2, timestamp ).execute();
-        serialization.writeEdge( scope, edgeType2V1, timestamp ).execute();
-        serialization.writeEdge( scope, diffTarget, timestamp ).execute();
+        serialization.writeEdge( scope, edgev1, UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, edgev2, UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, edgeType2V1, UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, diffTarget, UUIDGenerator.newTimeUUID() ).execute();
 
         final long now = System.currentTimeMillis();
 
@@ -327,20 +331,20 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void idTypesPaging() throws ConnectionException {
-        final MarkedEdge edge1 = createEdge( "source", "edge", "target" );
+        final long timestamp = 1000;
+        final MarkedEdge edge1 = createEdge( "source", "edge", "target", timestamp );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp+1 );
 
         final Id targetId2 = edge2.getTargetNode();
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
 
-        serialization.writeEdge( scope, edge1, timestamp ).execute();
-        serialization.writeEdge( scope, edge2, timestamp ).execute();
+        serialization.writeEdge( scope, edge1, UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
 
         long now = System.currentTimeMillis();
@@ -385,20 +389,20 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void delete() throws ConnectionException {
-        final MarkedEdge edge1 = createEdge( "source", "edge", "target" );
+        //we purposefully use the same timestamp
+        final long timestamp = 1000l;
+        final MarkedEdge edge1 = createEdge( "source", "edge", "target", timestamp );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp );
 
         final Id targetId2 = edge2.getTargetNode();
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
-
-        serialization.writeEdge( scope, edge1, timestamp ).execute();
-        serialization.writeEdge( scope, edge2, timestamp ).execute();
+        serialization.writeEdge( scope, edge1,  UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, edge2,  UUIDGenerator.newTimeUUID() ).execute();
 
 
         long now = System.currentTimeMillis();
@@ -494,20 +498,20 @@ public abstract class EdgeSerializationTest {
      */
     @Test
     public void mark() throws ConnectionException {
-        final MarkedEdge edge1 = createEdge( "source", "edge", "target" );
+        final long timestamp = 1000l;
+        final MarkedEdge edge1 = createEdge( "source", "edge", "target", timestamp );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId1 = edge1.getTargetNode();
 
 
-        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
+        final MarkedEdge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp+1 );
 
         final Id targetId2 = edge2.getTargetNode();
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
 
-        serialization.writeEdge( scope, edge1, timestamp ).execute();
-        serialization.writeEdge( scope, edge2, timestamp ).execute();
+        serialization.writeEdge( scope, edge1,  UUIDGenerator.newTimeUUID() ).execute();
+        serialization.writeEdge( scope, edge2,  UUIDGenerator.newTimeUUID() ).execute();
 
 
         long now = System.currentTimeMillis();
@@ -662,23 +666,23 @@ public abstract class EdgeSerializationTest {
         Set<Edge> edges = new HashSet<Edge>( size );
 
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
+       long timestamp = 0;
 
         for ( int i = 0; i < size; i++ ) {
-            final MarkedEdge edge = createEdge( sourceId, type, createId( "target" ) );
+            final MarkedEdge edge = createEdge( sourceId, type, createId( "target" ), timestamp );
 
-            serialization.writeEdge( scope, edge, timestamp ).execute();
+            serialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
             edges.add( edge );
+
+            timestamp++;
         }
 
 
-        long now = System.currentTimeMillis();
-
         //get our edges out by name
         Iterator<MarkedEdge> results =
-                serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, type, now, null ) );
+                serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, type, timestamp, null ) );
 
-        for ( MarkedEdge edge : new IterableWrapper<MarkedEdge>( results ) ) {
+        for ( MarkedEdge edge : new IterableWrapper<>( results ) ) {
             assertTrue( "Removed edge from write set", edges.remove( edge ) );
         }
 
@@ -704,17 +708,16 @@ public abstract class EdgeSerializationTest {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        long lastMax = 0;
-
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
+        long timestamp = 10000l;
 
         for ( int i = 0; i < writeCount; i++ ) {
 
-            final MarkedEdge edge = createEdge( sourceId, edgeType, targetId );
+            final MarkedEdge edge = createEdge( sourceId, edgeType, targetId, timestamp );
 
-            lastMax = edge.getTimestamp();
+            batch.mergeShallow( serialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ) );
 
-            batch.mergeShallow( serialization.writeEdge( scope, edge, timestamp ) );
+            //increment timestamp (not done inline on purpose) If we do System.currentMillis we get the same edge on fast systems
+            timestamp++;
         }
 
         log.info( "Flushing edges" );
@@ -722,30 +725,30 @@ public abstract class EdgeSerializationTest {
 
 
         Iterator<MarkedEdge> results =
-                serialization.getEdgeVersions( scope, createGetByEdge( sourceId, edgeType, targetId, lastMax, null ) );
+                serialization.getEdgeVersions( scope, createGetByEdge( sourceId, edgeType, targetId, timestamp, null ) );
 
         verify( results, writeCount );
 
 
         //get them all from source
-        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, edgeType, lastMax, null ) );
+        results = serialization.getEdgesFromSource( scope, createSearchByEdge( sourceId, edgeType, timestamp, null ) );
 
         verify( results, writeCount );
 
 
         results = serialization.getEdgesFromSourceByTargetType( scope,
-                createSearchByEdgeAndId( sourceId, edgeType, lastMax, targetId.getType(), null ) );
+                createSearchByEdgeAndId( sourceId, edgeType, timestamp, targetId.getType(), null ) );
 
         verify( results, writeCount );
 
 
-        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, edgeType, lastMax, null ) );
+        results = serialization.getEdgesToTarget( scope, createSearchByEdge( targetId, edgeType, timestamp, null ) );
 
         verify( results, writeCount );
 
 
         results = serialization.getEdgesToTargetBySourceType( scope,
-                createSearchByEdgeAndId( targetId, edgeType, lastMax, sourceId.getType(), null ) );
+                createSearchByEdgeAndId( targetId, edgeType, timestamp, sourceId.getType(), null ) );
 
         verify( results, writeCount );
     }

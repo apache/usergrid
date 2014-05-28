@@ -30,20 +30,21 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.apache.cassandra.db.marshal.BytesType;
+import org.apache.cassandra.db.marshal.DynamicCompositeType;
 
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
-import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
-import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
+import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdColDynamicCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -72,15 +73,17 @@ import com.netflix.astyanax.model.DynamicComposite;
 import com.netflix.astyanax.query.RowQuery;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.LongSerializer;
+import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
 import com.netflix.astyanax.util.RangeBuilder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.usergrid.persistence.core.astyanax.ColumnTypes.LONG_TYPE_REVERSED;
+import static org.apache.usergrid.persistence.core.astyanax.ColumnTypes.UUID_TYPE_REVERSED;
 
 
 /**
- *  Serialization for edges.  Delegates partitioning to the sharding strategy.
- *
+ * Serialization for edges.  Delegates partitioning to the sharding strategy.
  */
 @Singleton
 public class EdgeSerializationImpl implements EdgeSerialization, Migration {
@@ -98,6 +101,16 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
     private static final EdgeSerializer EDGE_SERIALIZER = new EdgeSerializer();
 
     private static final LongSerializer LONG_SERIALIZER = LongSerializer.get();
+
+
+    /**
+     * Constant for the dynamic composite comparator type we'll need
+     */
+    public static final String EDGE_DYNAMIC_COMPOSITE_TYPE =
+            //we purposefully associate lower case "l" and "u" with reversed types.  This way we can use
+            //the default serialization in Astayanax, but get reverse order in cassandra
+            DynamicCompositeType.class.getSimpleName() + "(s=>UTF8Type,l=>" + LONG_TYPE_REVERSED + ",u=>"
+                    + UUID_TYPE_REVERSED + ")";
 
 
     /**
@@ -154,31 +167,26 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         this.edgeShardStrategy = edgeShardStrategy;
 
         //initialize the CF's from our implementation
-        sourceNodeEdgesCf = new MultiTennantColumnFamily<ApplicationScope, RowKey, DirectedEdge>(
-                edgeShardStrategy.getSourceNodeCfName(),
-                new OrganizationScopedRowKeySerializer<RowKey>( ROW_SERIALIZER ), EDGE_SERIALIZER );
+        sourceNodeEdgesCf = new MultiTennantColumnFamily<>( edgeShardStrategy.getSourceNodeCfName(),
+                new OrganizationScopedRowKeySerializer<>( ROW_SERIALIZER ), EDGE_SERIALIZER );
 
 
-        targetNodeEdgesCf = new MultiTennantColumnFamily<ApplicationScope, RowKey, DirectedEdge>(
-                edgeShardStrategy.getTargetNodeCfName(),
-                new OrganizationScopedRowKeySerializer<RowKey>( ROW_SERIALIZER ), EDGE_SERIALIZER );
+        targetNodeEdgesCf = new MultiTennantColumnFamily<>( edgeShardStrategy.getTargetNodeCfName(),
+                new OrganizationScopedRowKeySerializer<>( ROW_SERIALIZER ), EDGE_SERIALIZER );
 
 
-        sourceNodeTargetTypeCf = new MultiTennantColumnFamily<ApplicationScope, RowKeyType, DirectedEdge>(
-                edgeShardStrategy.getSourceNodeTargetTypeCfName(),
-                new OrganizationScopedRowKeySerializer<RowKeyType>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
+        sourceNodeTargetTypeCf = new MultiTennantColumnFamily<>( edgeShardStrategy.getSourceNodeTargetTypeCfName(),
+                new OrganizationScopedRowKeySerializer<>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
 
 
         /**
          * The edges that are to the target node with the source type.  The target node is the row key
          */
-        targetNodeSourceTypeCf = new MultiTennantColumnFamily<ApplicationScope, RowKeyType, DirectedEdge>(
-                edgeShardStrategy.getTargetNodeSourceTypeCfName(),
-                new OrganizationScopedRowKeySerializer<RowKeyType>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
+        targetNodeSourceTypeCf = new MultiTennantColumnFamily<>( edgeShardStrategy.getTargetNodeSourceTypeCfName(),
+                new OrganizationScopedRowKeySerializer<>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
 
-        graphEdgeVersionsCf = new MultiTennantColumnFamily<ApplicationScope, EdgeRowKey, Long>(
-                edgeShardStrategy.getGraphEdgeVersions(),
-                new OrganizationScopedRowKeySerializer<EdgeRowKey>( EDGE_ROW_KEY_SERIALIZER ), LONG_SERIALIZER );
+        graphEdgeVersionsCf = new MultiTennantColumnFamily<>( edgeShardStrategy.getGraphEdgeVersions(),
+                new OrganizationScopedRowKeySerializer<>( EDGE_ROW_KEY_SERIALIZER ), LONG_SERIALIZER );
     }
 
 
@@ -189,8 +197,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         ValidationUtils.verifyTimeUuid( timestamp, "timestamp" );
 
 
-        final MutationBatch batch =
-                keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() ).withTimestamp( timestamp.timestamp() );
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() )
+                                            .withTimestamp( timestamp.timestamp() );
 
         final boolean isDeleted = markedEdge.isDeleted();
 
@@ -211,7 +219,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             @Override
             public void writeVersion( final MultiTennantColumnFamily<ApplicationScope, EdgeRowKey, Long> columnFamily,
-                                      final EdgeRowKey rowKey, final long timestamp) {
+                                      final EdgeRowKey rowKey, final long timestamp ) {
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).putColumn( timestamp, isDeleted );
             }
         } );
@@ -228,8 +236,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         ValidationUtils.verifyTimeUuid( timestamp, "timestamp" );
 
 
-        final MutationBatch batch =
-                keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() ).withTimestamp( timestamp.timestamp() );
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() )
+                                            .withTimestamp( timestamp.timestamp() );
 
 
         doWrite( scope, markedEdge, new RowOp<RowKey>() {
@@ -248,7 +256,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             @Override
             public void writeVersion( final MultiTennantColumnFamily<ApplicationScope, EdgeRowKey, Long> columnFamily,
-                                      final EdgeRowKey rowKey, final long timestamp) {
+                                      final EdgeRowKey rowKey, final long timestamp ) {
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).deleteColumn( timestamp );
             }
         } );
@@ -271,7 +279,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
         final Id sourceNodeId = edge.getSourceNode();
         final Id targetNodeId = edge.getTargetNode();
-        final long timestamp= edge.getTimestamp();
+        final long timestamp = edge.getTimestamp();
         final String type = edge.getType();
 
 
@@ -279,8 +287,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
          * Key in the serializers based on the edge
          */
 
-        final RowKey sourceRowKey =
-                new RowKey( sourceNodeId, type, edgeShardStrategy.getWriteShard( scope, sourceNodeId, timestamp, type ) );
+        final RowKey sourceRowKey = new RowKey( sourceNodeId, type,
+                edgeShardStrategy.getWriteShard( scope, sourceNodeId, timestamp, type ) );
 
         final RowKeyType sourceRowKeyType = new RowKeyType( sourceNodeId, type, targetNodeId,
                 edgeShardStrategy.getWriteShard( scope, sourceNodeId, timestamp, type, targetNodeId.getType() ) );
@@ -288,8 +296,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         final DirectedEdge sourceEdge = new DirectedEdge( targetNodeId, timestamp );
 
 
-        final RowKey targetRowKey =
-                new RowKey( targetNodeId, type, edgeShardStrategy.getWriteShard( scope, targetNodeId, timestamp, type ) );
+        final RowKey targetRowKey = new RowKey( targetNodeId, type,
+                edgeShardStrategy.getWriteShard( scope, targetNodeId, timestamp, type ) );
 
         final RowKeyType targetRowKeyType = new RowKeyType( targetNodeId, type, sourceNodeId,
                 edgeShardStrategy.getWriteShard( scope, targetNodeId, timestamp, type, sourceNodeId.getType() ) );
@@ -376,7 +384,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                     protected MarkedEdge createEdge( final Long column, final boolean marked ) {
                         return new SimpleMarkedEdge( sourceId, type, targetId, column.longValue(), marked );
                     }
-
                 };
 
         return new ShardRowIterator<>( searcher, graphEdgeVersionsCf );
@@ -559,11 +566,12 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
     @Override
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
-        return Arrays.asList( graphCf( sourceNodeEdgesCf ), graphCf( targetNodeEdgesCf ),
-                graphCf( sourceNodeTargetTypeCf ), graphCf( targetNodeSourceTypeCf ),
-                new MultiTennantColumnFamilyDefinition( graphEdgeVersionsCf, BytesType.class.getSimpleName(),
-                        ColumnTypes.LONG_TYPE_REVERSED, BytesType.class.getSimpleName(),
-                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
+        return Arrays
+                .asList( graphCf( sourceNodeEdgesCf ), graphCf( targetNodeEdgesCf ), graphCf( sourceNodeTargetTypeCf ),
+                        graphCf( targetNodeSourceTypeCf ),
+                        new MultiTennantColumnFamilyDefinition( graphEdgeVersionsCf, BytesType.class.getSimpleName(),
+                                ColumnTypes.LONG_TYPE_REVERSED, BytesType.class.getSimpleName(),
+                                MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
     }
 
 
@@ -571,9 +579,8 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
      * Helper to generate an edge definition by the type
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
-        return new MultiTennantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(),
-                ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+        return new MultiTennantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(), EDGE_DYNAMIC_COMPOSITE_TYPE,
+                BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
     }
 
 
@@ -586,7 +593,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         public final Id id;
 
 
-        private DirectedEdge( final Id id, final long timestamp) {
+        private DirectedEdge( final Id id, final long timestamp ) {
             this.timestamp = timestamp;
             this.id = id;
         }
@@ -599,13 +606,33 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
      */
     private static class EdgeSerializer extends AbstractSerializer<DirectedEdge> {
 
-        private static final IdColDynamicCompositeSerializer ID_COL_SERIALIZER = IdColDynamicCompositeSerializer.get();
+                private static final IdColDynamicCompositeSerializer ID_COL_SERIALIZER =  IdColDynamicCompositeSerializer.get();
+//        private static final UUIDSerializer UUID_SERIALIZER = UUIDSerializer.get();
+//        private static final StringSerializer STRING_SERIALIZER = StringSerializer.get().getString(;
+//        )
+
 
         @Override
         public ByteBuffer toByteBuffer( final DirectedEdge edge ) {
-            final DynamicComposite colValue = createComposite( edge, AbstractComposite.ComponentEquality.EQUAL );
 
-            return colValue.serialize();
+            DynamicComposite composite = new DynamicComposite();
+
+//            //add our edge
+//            composite.addComponent( edge.timestamp, LONG_SERIALIZER, LONG_TYPE_REVERSED,
+//                    AbstractComposite.ComponentEquality.EQUAL );
+
+//            //we do this explicity instead of re-using the id composite serializer b/c we want high order
+//            //time uuids first, not second. In this column family, there is no sort
+//            composite.addComponent( edge.id.getUuid(), UUID_SERIALIZER, UUID_TYPE_REVERSED,
+//                    AbstractComposite.ComponentEquality.EQUAL );
+//
+//            composite.addComponent( edge.id.getType(), STRING_SERIALIZER );
+
+            composite.addComponent( edge.timestamp, LONG_SERIALIZER );
+
+            ID_COL_SERIALIZER.toComposite( composite, edge.id);
+
+            return composite.serialize();
         }
 
 
@@ -617,7 +644,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             //return the version
-            final long timestamp= composite.get( 0, LONG_SERIALIZER );
+            final long timestamp = composite.get( 0, LONG_SERIALIZER );
 
 
             //parse our id
@@ -625,23 +652,6 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
 
             return new DirectedEdge( id, timestamp );
-        }
-
-
-        /**
-         * Create the dynamic composite for this directed edge
-         */
-        private DynamicComposite createComposite( DirectedEdge edge, AbstractComposite.ComponentEquality equality ) {
-            DynamicComposite composite = new DynamicComposite();
-
-            //add our edge
-            composite.addComponent( edge.timestamp, LONG_SERIALIZER, ColumnTypes.LONG_TYPE_REVERSED, equality );
-
-
-            ID_COL_SERIALIZER.toComposite( composite, edge.id );
-
-
-            return composite;
         }
     }
 
@@ -952,7 +962,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
          * Write the edge into the version cf
          */
         void writeVersion( final MultiTennantColumnFamily<ApplicationScope, EdgeRowKey, Long> columnFamily,
-                           EdgeRowKey rowKey, long timestamp);
+                           EdgeRowKey rowKey, long timestamp );
     }
 
 
@@ -1038,8 +1048,7 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
                             .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 
 
-            currentColumnIterator =
-                    new ColumnNameIterator<C, T>( query, searcher, searcher.hasPage() );
+            currentColumnIterator = new ColumnNameIterator<C, T>( query, searcher, searcher.hasPage() );
         }
     }
 }

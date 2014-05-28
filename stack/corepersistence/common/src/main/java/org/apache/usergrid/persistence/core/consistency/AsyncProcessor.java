@@ -27,6 +27,15 @@ import java.util.Collection;
  */
 public interface AsyncProcessor<T> {
 
+    /**
+     * Start the consumption of the timeout events
+     */
+    public void start();
+
+    /**
+     * Stop consumption
+     */
+    public void stop();
 
     /**
      * The processor implementation is responsible for guaranteeing the events fire in the runtime environment. This

@@ -58,7 +58,7 @@ public class EdgeUtils {
      * @param fieldName
      */
     public static void validateTimestamp(final long value, final String fieldName){
-        Preconditions.checkArgument( value > 0, fieldName );
+        Preconditions.checkArgument( value > -1, fieldName );
     }
 
     /**
