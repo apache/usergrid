@@ -622,7 +622,7 @@ public class Query {
     }
 
 
-    boolean isMergeSelectResults() {
+    public boolean isMergeSelectResults() {
         return mergeSelectResults;
     }
 

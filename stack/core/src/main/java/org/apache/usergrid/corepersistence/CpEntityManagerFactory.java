@@ -40,6 +40,8 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -286,7 +288,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public CollectionScope getApplicationScope( UUID applicationId ) {
+    public ApplicationScope getApplicationScope( UUID applicationId ) {
 
         Query q = Query.fromQL( PROPERTY_UUID + " = '" + applicationId.toString() + "'");
 
@@ -302,11 +304,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Entity appEntity = em.load( candidateResult.getId() ).toBlockingObservable().last();
 
-        return new CollectionScopeImpl(
-            new SimpleId( ((UUID)(appEntity.getField("organizationUuid")).getValue()), "organization"),
-            new SimpleId( appEntity.getId().getUuid(), "application"),
-            appEntity.getField(PROPERTY_NAME).getValue().toString()
-        );
+        return new ApplicationScopeImpl(
+            new SimpleId( appEntity.getId().getUuid(), "application"));
     }
     
 

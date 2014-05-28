@@ -27,45 +27,66 @@ import rx.Observable;
 
 
 /**
- * A utility class that creates graph observables wrapped in Hystrix for timeouts and circuit breakers.
+ * A utility class that creates graph observables wrapped in Hystrix for 
+ * timeouts and circuit breakers.
  */
 public class HystrixObservable {
+
+//    static {
+//        // TODO: can't we put these in the our normal properties file?
+//        ConfigurationManager.getConfigInstance()
+//            .setProperty("hystrix.command.default.execution.isolation.strategy","THREAD");
+//        ConfigurationManager.getConfigInstance()
+//            .setProperty("hystrix.threadpool.default.coreSize", 1032);
+//    }
 
     /**
      * Command group used for realtime user commands
      */
-    private static final HystrixCommandGroupKey USER_GROUP = HystrixCommandGroupKey.Factory.asKey( "user" );
+    private static final HystrixCommandGroupKey USER_GROUP = 
+            HystrixCommandGroupKey.Factory.asKey( "user" );
 
     /**
      * Command group for asynchronous operations
      */
-    private static final HystrixCommandGroupKey ASYNC_GROUP = HystrixCommandGroupKey.Factory.asKey( "async" );
+    private static final HystrixCommandGroupKey ASYNC_GROUP = 
+            HystrixCommandGroupKey.Factory.asKey( "async" );
 
 
     /**
-     * Wrap the observable in the timeout for user facing operation.  This is for user reads and deletes.
+     * Wrap the observable in the timeout for user facing operation.  
+     * This is for user reads and deletes.
      */
     public static <T> Observable<T> user( final Observable<T> observable ) {
-//        return new HystrixObservableCommand<T>( USER_GROUP ) {
+
+//        HystrixCommandProperties.Setter hcpSetter = HystrixCommandProperties.Setter()
+//            .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.THREAD);
 //
-//            @Override
-//            protected Observable<T> run() {
+//        final HystrixObservableCommand.Setter setter = HystrixObservableCommand.Setter
+//            .withGroupKey(USER_GROUP)
+//            .andCommandPropertiesDefaults(hcpSetter);
+
+        return new HystrixObservableCommand<T>( USER_GROUP ) {
+
+            @Override
+            protected Observable<T> run() {
                 return observable;
-//            }
-//        }.observe();
+            }
+        }.observe();
     }
 
 
     /**
-     * Wrap the observable in the timeout for asynchronous operations.  This is for compaction and cleanup processing.
+     * Wrap the observable in the timeout for asynchronous operations.  
+     * This is for compaction and cleanup processing.
      */
     public static <T> Observable<T> async( final Observable<T> observable ) {
-//        return new HystrixObservableCommand<T>( ASYNC_GROUP ) {
-//
-//            @Override
-//            protected Observable<T> run() {
+        return new HystrixObservableCommand<T>( ASYNC_GROUP ) {
+
+            @Override
+            protected Observable<T> run() {
                 return observable;
-//            }
-//        }.observe();
+            }
+        }.observe();
     }
 }

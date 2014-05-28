@@ -15,8 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-
-package org.apache.usergrid.persistence.collection.mvcc.entity.impl;
+package org.apache.usergrid.corepersistence;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,11 +24,12 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -41,19 +41,18 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Listens for delete entity event then deletes entity for real this time
+ * Listener for cleans up old entities and deletes from data store
  */
 @Singleton
-public class MvccEntityDeleteListener implements MessageListener<MvccEntityDeleteEvent, EntityVersion> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(MvccEntityDeleteListener.class);
+public class CpEntityDeleteListener implements MessageListener<MvccEntityDeleteEvent, EntityVersion> {
+    private static final Logger LOG = LoggerFactory.getLogger(CpEntityDeleteListener.class);
 
     private final MvccEntitySerializationStrategy entityMetadataSerialization;
     private final Keyspace keyspace;
     private final SerializationFig serializationFig;
 
     @Inject
-    public MvccEntityDeleteListener(final MvccEntitySerializationStrategy entityMetadataSerialization,
+    public CpEntityDeleteListener(final MvccEntitySerializationStrategy entityMetadataSerialization,
                                     final AsyncProcessorFactory asyncProcessorFactory,
                                     final Keyspace keyspace,
                                     final SerializationFig serializationFig){
@@ -66,13 +65,13 @@ public class MvccEntityDeleteListener implements MessageListener<MvccEntityDelet
     @Override
     public Observable<EntityVersion> receive(final MvccEntityDeleteEvent entityEvent) {
         final MvccEntity entity = entityEvent.getEntity();
-         return Observable.create( new ObservableIterator<MvccEntity>( "deleteEntities" ) {
-                @Override
-                protected Iterator<MvccEntity> getIterator() {
-                    Iterator<MvccEntity> iterator = entityMetadataSerialization.loadHistory( entityEvent.getCollectionScope(), entity.getId(), entity.getVersion(), serializationFig.getHistorySize() );
-                    return iterator;
-                }
-            } ).subscribeOn(Schedulers.io())
+        return Observable.create( new ObservableIterator<MvccEntity>( "deleteEntities" ) {
+            @Override
+            protected Iterator<MvccEntity> getIterator() {
+                Iterator<MvccEntity> iterator = entityMetadataSerialization.loadHistory( entityEvent.getCollectionScope(), entity.getId(), entity.getVersion(), serializationFig.getHistorySize() );
+                return iterator;
+            }
+        } ).subscribeOn(Schedulers.io())
                 .buffer(serializationFig.getBufferSize())
                 .flatMap(new Func1<List<MvccEntity>, Observable<EntityVersion>>() {
                     @Override

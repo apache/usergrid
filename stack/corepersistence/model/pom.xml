@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>model</artifactId>
+    <name>Usergrid Model</name>
 
   <properties>
     <jackson-2-version>2.3.1</jackson-2-version>

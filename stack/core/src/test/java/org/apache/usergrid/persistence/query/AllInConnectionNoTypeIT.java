@@ -38,14 +38,11 @@ public class AllInConnectionNoTypeIT extends AbstractIteratingQueryIT {
             super( app );
         }
 
-
-        /*
-                 * (non-Javadoc)
-                 *
-                 * @see
-                 * org.apache.usergrid.persistence.query.SingleOrderByMaxLimitCollection.ConnectionHelper#getResults
-                 * (org.apache.usergrid.persistence.Query)
-                 */
+       /**
+        * (non-Javadoc) @see
+        * org.apache.usergrid.persistence.query.SingleOrderByMaxLimitCollection.ConnectionHelper#getResults
+        * (org.apache.usergrid.persistence.Query)
+        */
         @Override
         public Results getResults( Query query ) throws Exception {
             query.setConnectionType( CONNECTION );

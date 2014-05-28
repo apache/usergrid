@@ -414,7 +414,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
     public EntityManager getEm() {
         if ( em == null  ) {
-            this.em = emf.getEntityManager( emf.getManagementAppId());
+            this.em = emf.getEntityManager( emf.getManagementAppId() );
         }
         return em;
     }

@@ -46,8 +46,11 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractIteratingQueryIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractIteratingQueryIT.class );
 
+    public static final long WRITE_DELAY = 200; // milliseconds to delay between writes in loop
+
     @ClassRule
-    public static CoreITSetup setup = new CoreITSetupImpl( ConcurrentCoreIteratorITSuite.cassandraResource );
+    public static CoreITSetup setup = new CoreITSetupImpl( 
+            ConcurrentCoreIteratorITSuite.cassandraResource );
 
     @Rule
     public CoreApplication app = new CoreApplication( setup );
@@ -1246,7 +1249,12 @@ public abstract class AbstractIteratingQueryIT {
 
         @Override
         public Entity writeEntity( Map<String, Object> entity ) throws Exception {
-            return app.getEm().create( "test", entity );
+
+            Entity e = app.getEm().create( "test", entity );
+
+            Thread.sleep( WRITE_DELAY );
+
+            return e;
         }
 
 
@@ -1282,9 +1290,12 @@ public abstract class AbstractIteratingQueryIT {
 
         @Override
         public Entity writeEntity( Map<String, Object> entity ) throws Exception {
+
             // write to the collection
             Entity created = super.writeEntity( entity );
             app.getEm().createConnection( rootEntity, CONNECTION, created );
+
+            Thread.sleep( WRITE_DELAY );
 
             return created;
         }
@@ -1299,9 +1310,11 @@ public abstract class AbstractIteratingQueryIT {
          */
         @Override
         public Results getResults( Query query ) throws Exception {
+
             app.getEm().refreshIndex();
             query.setConnectionType( CONNECTION );
             query.setEntityType( "test" );
+
             return app.getEm().searchConnectedEntities( rootEntity, query );
         }
     }
