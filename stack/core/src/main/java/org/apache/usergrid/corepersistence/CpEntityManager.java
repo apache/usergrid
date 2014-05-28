@@ -15,6 +15,7 @@
  */
 package org.apache.usergrid.corepersistence;
 
+import com.netflix.hystrix.exception.HystrixRuntimeException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -126,7 +127,7 @@ import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 public class CpEntityManager implements EntityManager {
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManager.class );
 
-    public static String COLLECTION_SUFFIX = "zzzcollectionzzz"; 
+    private static final String COLL_SUFFIX = "zzzcollzzz"; 
 
     private UUID applicationId;
     private Application application;
@@ -159,10 +160,16 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    static String getCollectionScopeName( String type) {
-        String csn = Schema.defaultCollectionName( type ) + COLLECTION_SUFFIX;
+    static String getCollectionScopeNameFromEntityType( String type) {
+        String csn = Schema.defaultCollectionName( type ) + COLL_SUFFIX;
         return csn;
     }
+
+
+   static String getCollectionScopeNameFromCollectionName( String name ) {
+       String csn = name + COLL_SUFFIX;
+       return csn;
+   }
 
 
     @Override
@@ -236,7 +243,7 @@ public class CpEntityManager implements EntityManager {
     public Entity get( EntityRef entityRef ) throws Exception {
 
         Id id = new SimpleId(  entityRef.getUuid(), entityRef.getType() );
-        String collectionName = getCollectionScopeName( entityRef.getType() );
+        String collectionName = getCollectionScopeNameFromEntityType( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), appScope.getApplication(), collectionName );
@@ -300,7 +307,7 @@ public class CpEntityManager implements EntityManager {
         String type = getDefaultSchema().getEntityType( entityClass );
 
         Id id = new SimpleId( entityId, type );
-        String collectionName = getCollectionScopeName( type );
+        String collectionName = getCollectionScopeNameFromEntityType( type );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), appScope.getApplication(), collectionName );
@@ -369,7 +376,7 @@ public class CpEntityManager implements EntityManager {
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), 
             appScope.getApplication(), 
-            getCollectionScopeName( entity.getType() ) );
+            getCollectionScopeNameFromEntityType( entity.getType() ) );
 
         IndexScope indexScope = new IndexScopeImpl( 
             appScope.getApplication(), appScope.getApplication(), entity.getType());
@@ -385,7 +392,21 @@ public class CpEntityManager implements EntityManager {
         cpEntity = CpEntityMapUtils.fromMap( 
                 cpEntity, entity.getProperties(), entity.getType(), true );
 
-        cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+        try {
+            cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+
+        } catch ( WriteUniqueVerifyException wuve ) {
+                handleWriteUniqueVerifyException( entity, wuve );
+
+        } catch ( HystrixRuntimeException hre ) {
+
+            if ( hre.getCause() instanceof WriteUniqueVerifyException ) {
+                WriteUniqueVerifyException wuve = (WriteUniqueVerifyException)hre.getCause();
+                handleWriteUniqueVerifyException( entity, wuve );
+            }
+
+        }
+
         ei.index( cpEntity );
 
         // next, update entity in every collection and connection scope in which it is indexed 
@@ -417,7 +438,7 @@ public class CpEntityManager implements EntityManager {
                     IndexScope indexScope = new IndexScopeImpl( 
                         appScope.getApplication(), 
                         new SimpleId(uuid, ownerType), 
-                        coll + COLLECTION_SUFFIX);
+                        getCollectionScopeNameFromCollectionName( coll ));
 
                     EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
@@ -434,7 +455,7 @@ public class CpEntityManager implements EntityManager {
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), 
             appScope.getApplication(), 
-            getCollectionScopeName( entityRef.getType() ) );
+            getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
 
@@ -457,13 +478,13 @@ public class CpEntityManager implements EntityManager {
                 Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
 
                 for ( UUID uuid : collectionsByUuid.keySet() ) {
-                    Set<String> collections = collectionsByUuid.get( uuid );
-                    for ( String coll : collections ) {
+                    Set<String> collectionNames = collectionsByUuid.get( uuid );
+                    for ( String coll : collectionNames ) {
 
                         IndexScope indexScope = new IndexScopeImpl( 
                             appScope.getApplication(), 
                             new SimpleId(uuid, ownerType), 
-                            coll + COLLECTION_SUFFIX);
+                            coll );
 
                         EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
@@ -476,7 +497,7 @@ public class CpEntityManager implements EntityManager {
             IndexScope defaultIndexScope = new IndexScopeImpl(
                 appScope.getApplication(), 
                 appScope.getApplication(), 
-                getCollectionScopeName( entityRef.getType() ) );
+                getCollectionScopeNameFromEntityType( entityRef.getType() ) );
             EntityIndex entityIndex = managerCache.getEntityIndex(defaultIndexScope);
 
             entityIndex.deindex( entity );
@@ -737,7 +758,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void deleteProperty(EntityRef entityRef, String propertyName) throws Exception {
 
-        String collectionName = getCollectionScopeName( entityRef.getType() );
+        String collectionName = getCollectionScopeNameFromEntityType( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), appScope.getApplication(), collectionName );
@@ -1617,7 +1638,9 @@ public class CpEntityManager implements EntityManager {
 
         // prepare to write and index Core Persistence Entity into default scope
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            appScope.getApplication(), appScope.getApplication(), getCollectionScopeName( eType ));
+            appScope.getApplication(), 
+            appScope.getApplication(), 
+            getCollectionScopeNameFromEntityType( eType ));
 
         if ( logger.isDebugEnabled() ) {
             logger.debug("Writing entity {}:{} into scope\n   app {}\n   owner {}\n   name {}", 
@@ -1639,15 +1662,18 @@ public class CpEntityManager implements EntityManager {
         try {
             cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
 
-        } catch (WriteUniqueVerifyException wuve) {
+        } catch ( WriteUniqueVerifyException wuve ) {
+                handleWriteUniqueVerifyException( entity, wuve );
 
-            // we may have multiple conflicts, but caller expects only one 
-            Map<String, Field> violiations = wuve.getVioliations();
-            Field conflict = violiations.get( violiations.keySet().iterator().next() );
+        } catch ( HystrixRuntimeException hre ) {
 
-            throw new DuplicateUniquePropertyExistsException( 
-                entity.getType(), conflict.getName(), conflict.getValue());
+            if ( hre.getCause() instanceof WriteUniqueVerifyException ) {
+                WriteUniqueVerifyException wuve = (WriteUniqueVerifyException)hre.getCause();
+                handleWriteUniqueVerifyException( entity, wuve );
+            }
+
         }
+
         ei.index( cpEntity );
 
         // reflect changes in the legacy Entity
@@ -1663,6 +1689,19 @@ public class CpEntityManager implements EntityManager {
 
         return entity;
     }
+
+
+    private void handleWriteUniqueVerifyException( Entity entity, WriteUniqueVerifyException wuve) 
+            throws DuplicateUniquePropertyExistsException {
+
+        // we may have multiple conflicts, but caller expects only one 
+        Map<String, Field> violiations = wuve.getVioliations();
+        Field conflict = violiations.get( violiations.keySet().iterator().next() );
+
+        throw new DuplicateUniquePropertyExistsException( 
+            entity.getType(), conflict.getName(), conflict.getValue()); 
+    }
+    
 
     @Override
     public void batchCreateRole(
@@ -1811,13 +1850,11 @@ public class CpEntityManager implements EntityManager {
         // refresh system indexes 
         emf.refreshIndex();
 
-        // refresh application entity index
-        IndexScope indexScope = new IndexScopeImpl(
-            appScope.getApplication(), new SimpleId("dummy"), "dummy");
+        // refresh this Entity Manager's application's index
+        IndexScope indexScope = new IndexScopeImpl( 
+            appScope.getApplication(), appScope.getApplication(), "dummy" );
         EntityIndex ei = managerCache.getEntityIndex( indexScope );
         ei.refresh();
-
-        logger.debug("Refreshed index for system and application: " + applicationId);
     }
 
 
@@ -1835,9 +1872,6 @@ public class CpEntityManager implements EntityManager {
 
         return cpEntity;
     }
-
-
-
 }
 
 

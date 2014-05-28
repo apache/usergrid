@@ -2854,11 +2854,6 @@ public class EntityManagerImpl implements EntityManager {
     }
 
     @Override
-    public void refreshIndex() {
-        // no action necessary
-    }
-
-    @Override
     public Results getEntities(List<UUID> ids, String type) {
 
         ArrayList<Entity> entities = new ArrayList<Entity>();
@@ -2878,6 +2873,11 @@ public class EntityManagerImpl implements EntityManager {
         }
 
         return Results.fromEntities( entities );
+    }
+
+    @Override
+    public void refreshIndex() {
+        // no action necessary
     }
 
 }

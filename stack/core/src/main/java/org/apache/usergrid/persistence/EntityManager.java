@@ -681,6 +681,7 @@ public interface EntityManager {
 
     // things added for Core Persistence
 
+    // testing only
     void refreshIndex();
 
     public void init( EntityManagerFactory emf, UUID applicationId);
