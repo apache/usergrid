@@ -16,23 +16,13 @@
 package org.apache.usergrid.corepersistence;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 
 import javax.annotation.Resource;
 
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.Group;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -1167,15 +1157,66 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void resetRoles() throws Exception {
-        // TODO
+        try {
+            createRole( "admin", "Administrator", 0 );
+        }
+        catch ( Exception e ) {
+            logger.error( "Could not create admin role, may already exist", e );
+        }
+
+        try {
+            createRole( "default", "Default", 0 );
+        }
+        catch ( Exception e ) {
+            logger.error( "Could not create default role, may already exist", e );
+        }
+
+        try {
+            createRole( "guest", "Guest", 0 );
+        }
+        catch ( Exception e ) {
+            logger.error( "Could not create guest role, may already exist", e );
+        }
+
+        try {
+            grantRolePermissions( "default", Arrays.asList("get,put,post,delete:/**") );
+        }
+        catch ( Exception e ) {
+            logger.error( "Could not populate default role", e );
+        }
+
+        try {
+            grantRolePermissions( "guest", Arrays.asList( "post:/users", "post:/devices", "put:/devices/*" ) );
+        }
+        catch ( Exception e ) {
+            logger.error( "Could not populate guest role", e );
+        }
     }
 
     @Override
     public Entity createRole(String roleName, String roleTitle, long inactivity) throws Exception {
         UUID timestampUuid = newTimeUUID();
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
-        batchCreateRole( batch, null, roleName, roleTitle, inactivity, null, timestampUuid );
+        long timestamp = getTimestampInMicros( timestampUuid );
+
+
+        Map<String, Object> properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+        properties.put( PROPERTY_TYPE, Role.ENTITY_TYPE );
+        properties.put( PROPERTY_NAME, roleName );
+        properties.put( "roleName", roleName );
+        properties.put( "title", roleTitle );
+        properties.put( PROPERTY_INACTIVITY, inactivity );
+
+        batchCreate( batch, Role.ENTITY_TYPE, null, properties,  UUIDGenerator.newTimeUUID(), timestampUuid );
+
+        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_ROLENAMES ),
+                roleName, roleTitle, timestamp );
+        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_ROLETIMES ),
+                roleName, inactivity, timestamp );
+        addInsertToMutator( batch, ENTITY_DICTIONARIES, key(  applicationId, DICTIONARY_SETS ),
+                Schema.DICTIONARY_ROLENAMES, null, timestamp );
         batchExecute( batch, CassandraService.RETRY_COUNT );
+
         return get( roleRef( roleName ) );
     }
 
@@ -1657,53 +1698,8 @@ public class CpEntityManager implements EntityManager {
         return entity;
     }
 
-    @Override
-    public void batchCreateRole(
-            Mutator<ByteBuffer> batch, UUID groupId, String roleName, String roleTitle, 
-            long inactivity, RoleRef roleRef, UUID timestampUuid) throws Exception {
 
-        long timestamp = getTimestampInMicros( timestampUuid );
 
-        if ( roleRef == null ) {
-            roleRef = new SimpleRoleRef( groupId, roleName );
-        }
-        if ( roleTitle == null ) {
-            roleTitle = roleRef.getRoleName();
-        }
-
-        EntityRef ownerRef = null;
-        if ( roleRef.getGroupId() != null ) {
-            ownerRef = new SimpleEntityRef( Group.ENTITY_TYPE, roleRef.getGroupId() );
-        }
-        else {
-            ownerRef = new SimpleEntityRef( Application.ENTITY_TYPE, applicationId );
-        }
-
-        Map<String, Object> properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
-        properties.put( PROPERTY_TYPE, Role.ENTITY_TYPE );
-        if(roleRef.getGroupId()!=null) {
-            properties.put("group", roleRef.getGroupId());
-        }
-        properties.put( PROPERTY_NAME, roleRef.getApplicationRoleName() );
-        properties.put( "roleName", roleRef.getRoleName() );
-        properties.put( "title", roleTitle );
-        properties.put( PROPERTY_INACTIVITY, inactivity );
-
-        Entity role = batchCreate( batch, Role.ENTITY_TYPE, null, properties, roleRef.getUuid(), timestampUuid );
-
-        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( ownerRef.getUuid(), Schema.DICTIONARY_ROLENAMES ),
-                roleRef.getRoleName(), roleTitle, timestamp );
-
-        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( ownerRef.getUuid(), Schema.DICTIONARY_ROLETIMES ),
-                roleRef.getRoleName(), inactivity, timestamp );
-
-        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( ownerRef.getUuid(), DICTIONARY_SETS ),
-                Schema.DICTIONARY_ROLENAMES, null, timestamp );
-
-        if ( roleRef.getGroupId() != null ) {
-        //    getRelationManager( ownerRef ).addToCollection( batch, COLLECTION_ROLES, role, timestampUuid );
-        }
-    }
 
     @Override
     public Mutator<ByteBuffer> batchSetProperty(
