@@ -126,6 +126,8 @@ import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 public class CpEntityManager implements EntityManager {
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManager.class );
 
+    public static String COLLECTION_SUFFIX = "zzzcollectionzzz"; 
+
     private UUID applicationId;
     private Application application;
    
@@ -149,18 +151,17 @@ public class CpEntityManager implements EntityManager {
         this.applicationId = applicationId;
 
         appScope = this.emf.getApplicationScope(applicationId);
-
-        try {
-            application = getApplication();
-        }
-        catch ( Exception ex ) {
-            logger.error("Getting application", ex);
-        }
     }
 
 
     public CpManagerCache getManagerCache() {
         return managerCache;
+    }
+
+
+    static String getCollectionScopeName( String type) {
+        String csn = Schema.defaultCollectionName( type ) + COLLECTION_SUFFIX;
+        return csn;
     }
 
 
@@ -235,22 +236,32 @@ public class CpEntityManager implements EntityManager {
     public Entity get( EntityRef entityRef ) throws Exception {
 
         Id id = new SimpleId(  entityRef.getUuid(), entityRef.getType() );
-        String collectionName = Schema.defaultCollectionName( entityRef.getType() );
+        String collectionName = getCollectionScopeName( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), appScope.getApplication(), collectionName );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
 
-        // logger.debug("Loading entity {} type {} to {}", 
-        //      new String[] { entityId.toString(), type, collectionName });
-
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] { 
+                    id.getType(), 
+                    id.getUuid(), 
+                    collectionScope.getApplication(), 
+                    collectionScope.getOwner(), 
+                    collectionScope.getName() 
+            });
+        }
+       
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
             ecm.load( id ).toBlockingObservable().last();
 
         if ( cpEntity == null ) {
+            logger.debug("   entity null");
             return null;
         }
+        logger.debug("   entity found");
 
         Class clazz = Schema.getDefaultSchema().getEntityClass(entityRef.getType());
 
@@ -289,22 +300,32 @@ public class CpEntityManager implements EntityManager {
         String type = getDefaultSchema().getEntityType( entityClass );
 
         Id id = new SimpleId( entityId, type );
-        String collectionName = Schema.defaultCollectionName( type );
+        String collectionName = getCollectionScopeName( type );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), appScope.getApplication(), collectionName );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
 
-//        logger.debug("Loading entity {} type {} to {}", 
-//            new String[] { entityId.toString(), type, collectionName });
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] { 
+                    id.getType(), 
+                    id.getUuid(), 
+                    collectionScope.getApplication(), 
+                    collectionScope.getOwner(), 
+                    collectionScope.getName() 
+            });
+        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
             ecm.load( id ).toBlockingObservable().last();
 
         if ( cpEntity == null ) {
+            logger.debug("   entity null");
             return null;
         }
+        logger.debug("   entity found");
 
         A entity = EntityFactory.newEntity( entityId, type, entityClass );
         entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
@@ -345,10 +366,10 @@ public class CpEntityManager implements EntityManager {
     public void update( Entity entity ) throws Exception {
 
         // first, update entity index in its own collection scope
-        String collectionName = Schema.defaultCollectionName( entity.getType() );
-
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            appScope.getApplication(), appScope.getApplication(), collectionName );
+            appScope.getApplication(), 
+            appScope.getApplication(), 
+            getCollectionScopeName( entity.getType() ) );
 
         IndexScope indexScope = new IndexScopeImpl( 
             appScope.getApplication(), appScope.getApplication(), entity.getType());
@@ -396,7 +417,7 @@ public class CpEntityManager implements EntityManager {
                     IndexScope indexScope = new IndexScopeImpl( 
                         appScope.getApplication(), 
                         new SimpleId(uuid, ownerType), 
-                        coll + CpRelationManager.COLLECTION_SUFFIX);
+                        coll + COLLECTION_SUFFIX);
 
                     EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
@@ -410,10 +431,10 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
 
-        String collectionName = Schema.defaultCollectionName( entityRef.getType() );
-
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            appScope.getApplication(), appScope.getApplication(), collectionName );
+            appScope.getApplication(), 
+            appScope.getApplication(), 
+            getCollectionScopeName( entityRef.getType() ) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collectionScope);
 
@@ -442,7 +463,7 @@ public class CpEntityManager implements EntityManager {
                         IndexScope indexScope = new IndexScopeImpl( 
                             appScope.getApplication(), 
                             new SimpleId(uuid, ownerType), 
-                            coll + CpRelationManager.COLLECTION_SUFFIX);
+                            coll + COLLECTION_SUFFIX);
 
                         EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
@@ -453,8 +474,9 @@ public class CpEntityManager implements EntityManager {
            
             // deindex from default index scope
             IndexScope defaultIndexScope = new IndexScopeImpl(
-                appScope.getApplication(), appScope.getApplication(), 
-                collectionName + CpRelationManager.COLLECTION_SUFFIX);
+                appScope.getApplication(), 
+                appScope.getApplication(), 
+                getCollectionScopeName( entityRef.getType() ) );
             EntityIndex entityIndex = managerCache.getEntityIndex(defaultIndexScope);
 
             entityIndex.deindex( entity );
@@ -715,7 +737,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void deleteProperty(EntityRef entityRef, String propertyName) throws Exception {
 
-        String collectionName = Schema.defaultCollectionName( entityRef.getType() );
+        String collectionName = getCollectionScopeName( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), appScope.getApplication(), collectionName );
@@ -1532,8 +1554,6 @@ public class CpEntityManager implements EntityManager {
         }
 
         // Create collection name based on entity: i.e. "users"
-        String collectionName = Schema.defaultCollectionName( eType );
-
 //        // Create collection key based collection name
 //        String bucketId = indexBucketLocator.getBucket( 
 //            applicationId, IndexBucketLocator.IndexType.COLLECTION, itemId, collection_name );
@@ -1597,7 +1617,18 @@ public class CpEntityManager implements EntityManager {
 
         // prepare to write and index Core Persistence Entity into default scope
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            appScope.getApplication(), appScope.getApplication(), collectionName );
+            appScope.getApplication(), appScope.getApplication(), getCollectionScopeName( eType ));
+
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Writing entity {}:{} into scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] {
+                    entity.getType(), 
+                    entity.getUuid(), 
+                    collectionScope.getApplication(), 
+                    collectionScope.getOwner(), 
+                    collectionScope.getName() 
+            });
+        }
 
         IndexScope defaultIndexScope = new IndexScopeImpl(
             appScope.getApplication(), appScope.getApplication(), entity.getType());
@@ -1624,7 +1655,9 @@ public class CpEntityManager implements EntityManager {
         Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
         entity.addProperties( entityMap );
 
+        // add to and index in collection of the application
         if ( !is_application ) {
+            String collectionName = Schema.defaultCollectionName( eType );  
             getRelationManager( getApplication() ).addToCollection( collectionName, entity );
         }
 
@@ -1668,16 +1701,19 @@ public class CpEntityManager implements EntityManager {
             elementCoValue = ByteBuffer.allocate( 0 );
         }
 
-        boolean entityHasDictionary = getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
+        boolean entityHasDictionary = 
+            getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
 
         // Don't index dynamic dictionaries not defined by the schema
         if ( entityHasDictionary ) {
             getRelationManager( entity )
-                    .batchUpdateSetIndexes( batch, dictionaryName, elementValue, removeFromDictionary, timestampUuid );
+                .batchUpdateSetIndexes( 
+                    batch, dictionaryName, elementValue, removeFromDictionary, timestampUuid );
 
         }
 
-        ApplicationCF dictionary_cf = entityHasDictionary ? ENTITY_DICTIONARIES : ENTITY_COMPOSITE_DICTIONARIES;
+        ApplicationCF dictionary_cf = entityHasDictionary ? 
+            ENTITY_DICTIONARIES : ENTITY_COMPOSITE_DICTIONARIES;
 
         if ( elementValue != null ) {
             if ( !removeFromDictionary ) {
@@ -1686,11 +1722,12 @@ public class CpEntityManager implements EntityManager {
                 elementCoValue = toStorableBinaryValue( elementCoValue, !entityHasDictionary );
 
                 addInsertToMutator( batch, dictionary_cf, key( entity.getUuid(), dictionaryName ),
-                        entityHasDictionary ? elementValue : asList( elementValue ), elementCoValue, timestamp );
+                    entityHasDictionary ? 
+                        elementValue : asList( elementValue ), elementCoValue, timestamp );
 
                 if ( !entityHasDictionary ) {
-                    addInsertToMutator( batch, ENTITY_DICTIONARIES, key( entity.getUuid(), DICTIONARY_SETS ),
-                            dictionaryName, null, timestamp );
+                    addInsertToMutator( batch, ENTITY_DICTIONARIES, key( entity.getUuid(), 
+                        DICTIONARY_SETS ), dictionaryName, null, timestamp );
                 }
             }
             else {
@@ -1707,8 +1744,8 @@ public class CpEntityManager implements EntityManager {
             Mutator<ByteBuffer> batch, EntityRef entity, String dictionaryName, Object elementValue, 
             boolean removeFromDictionary, UUID timestampUuid) throws Exception {
 
-        return batchUpdateDictionary( batch, entity, dictionaryName, elementValue, null, removeFromDictionary,
-                timestampUuid );
+        return batchUpdateDictionary( batch, entity, dictionaryName, elementValue, null, 
+                removeFromDictionary, timestampUuid );
     }
 
     @Override
@@ -1722,10 +1759,13 @@ public class CpEntityManager implements EntityManager {
     //TODO: ask what the difference is.
     @Override
     public Set<String> getDictionaryNames(EntityRef entity) throws Exception {
+
         Set<String> dictionaryNames = new TreeSet<String>( CASE_INSENSITIVE_ORDER );
+
         List<HColumn<String, ByteBuffer>> results =
-                cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
-                        key( entity.getUuid(), DICTIONARY_SETS ) );
+            cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
+                key( entity.getUuid(), DICTIONARY_SETS ) );
+
         for ( HColumn<String, ByteBuffer> result : results ) {
             String str = string( result.getName() );
             if ( str != null ) {

@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractIteratingQueryIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractIteratingQueryIT.class );
 
-    public static final long WRITE_DELAY = 50; // milliseconds to delay between writes in loop
+    public static final long WRITE_DELAY = 200; // milliseconds to delay between writes in loop
 
     @ClassRule
     public static CoreITSetup setup = new CoreITSetupImpl( 

@@ -106,6 +106,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import rx.Observable;
 
 import static java.util.Arrays.asList;
+import static org.apache.usergrid.corepersistence.CpEntityManager.COLLECTION_SUFFIX;
 
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_ENTITIES;
@@ -113,7 +114,6 @@ import static org.apache.usergrid.persistence.Schema.INDEX_CONNECTIONS;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.defaultCollectionName;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
@@ -142,8 +142,6 @@ public class CpRelationManager implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
 
-    public static String COLLECTION_SUFFIX = ""; // TODO: do we need a suffix at all?
-
     public static String ALL_TYPES = "zzzalltypesnzzz";
 
     private CpEntityManagerFactory emf;
@@ -171,40 +169,42 @@ public class CpRelationManager implements RelationManager {
 
 
     public CpRelationManager init( 
-        EntityManager em, CpEntityManagerFactory emf, UUID applicationId,
-        EntityRef headEntity, IndexBucketLocator indexBucketLocator ) {
+        EntityManager em, 
+        CpEntityManagerFactory emf, 
+        UUID applicationId,
+        EntityRef headEntity, 
+        IndexBucketLocator indexBucketLocator ) {
 
         Assert.notNull( em, "Entity manager cannot be null" );
+        Assert.notNull( emf, "Entity manager factory cannot be null" );
         Assert.notNull( applicationId, "Application Id cannot be null" );
         Assert.notNull( headEntity, "Head entity cannot be null" );
         Assert.notNull( headEntity.getUuid(), "Head entity uuid cannot be null" );
+       
+        // TODO: this assert should not be failing
+        //Assert.notNull( indexBucketLocator, "indexBucketLocator cannot be null" );
 
         this.em = em;
-        this.emf =emf;
+        this.emf = emf;
         this.applicationId = applicationId;
         this.headEntity = headEntity;
         this.managerCache = emf.getManagerCache();
-
-
-        this.indexBucketLocator = indexBucketLocator;
-
-        String collectionName = Schema.defaultCollectionName( headEntity.getType() ); 
-
         this.applicationScope = emf.getApplicationScope(applicationId);
 
+        this.cass = em.getCass(); // TODO: eliminate need for this via Core Persistence
+        this.indexBucketLocator = indexBucketLocator; // TODO: this also
+
+
+        // load the Core Persistence version of the head entity as well
         this.headEntityScope = new CollectionScopeImpl( 
             this.applicationScope.getApplication(), 
             this.applicationScope.getApplication(), 
-            collectionName + COLLECTION_SUFFIX );
+            CpEntityManager.getCollectionScopeName( headEntity.getType()));
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(headEntityScope);
-        
         this.cpHeadEntity = ecm.load( new SimpleId( 
             headEntity.getUuid(), headEntity.getType() )).toBlockingObservable().last();
-
         Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
-
-        this.cass = em.getCass();
 
         return this;
     }
@@ -291,7 +291,8 @@ public class CpRelationManager implements RelationManager {
 
         EntityRef applicationRef = new SimpleEntityRef( TYPE_APPLICATION, applicationId );
         if ( !results.containsKey( applicationRef ) ) {
-            addMapSet( results, applicationRef, defaultCollectionName( headEntity.getType() ) );
+            addMapSet( results, applicationRef, 
+                    CpEntityManager.getCollectionScopeName( headEntity.getType() ) );
         }
         return results;
     }
@@ -302,22 +303,22 @@ public class CpRelationManager implements RelationManager {
     @Override
     public boolean isCollectionMember(String collName, EntityRef entity) throws Exception {
 
-        // TODO: review & determine if this implementation is correct
-
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
-        Observable<Edge> edges = gm.loadEdgeVersions(
-                new SimpleSearchByEdge(new SimpleId(headEntity.getUuid(), headEntity.getType()), collName, entityId, UUIDGenerator.newTimeUUID(), null)
-        );
+        Observable<Edge> edges = gm.loadEdgeVersions( 
+                new SimpleSearchByEdge(
+                    new SimpleId(headEntity.getUuid(), headEntity.getType()), 
+                    collName,  
+                    entityId, 
+                    UUIDGenerator.newTimeUUID(), 
+                    null));
 
         return edges.toBlockingObservable().firstOrDefault(null) != null;
     }
 
     @Override
     public boolean isConnectionMember(String connectionName, EntityRef entity) throws Exception {
-
-        // TODO: review / determine if this implementation is correct, it does not look right
 
         return isCollectionMember(connectionName, entity);
     }
@@ -362,8 +363,19 @@ public class CpRelationManager implements RelationManager {
         CollectionScope memberScope = new CollectionScopeImpl( 
             applicationScope.getApplication(), 
             applicationScope.getApplication(), 
-            Schema.defaultCollectionName( memberRef.getType()) + COLLECTION_SUFFIX);
+            CpEntityManager.getCollectionScopeName( memberRef.getType()));
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
+
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Loading member entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] { 
+                    memberRef.getType(), 
+                    memberRef.getUuid(), 
+                    memberScope.getApplication(), 
+                    memberScope.getOwner(), 
+                    memberScope.getName() 
+            });
+        }
 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
             new SimpleId( memberRef.getUuid(), memberRef.getType() )).toBlockingObservable().last();
@@ -477,20 +489,24 @@ public class CpRelationManager implements RelationManager {
     @Override
     public void removeFromCollection(String collName, EntityRef memberRef) throws Exception {
 
-//        if ( !collectionEntityExists(collName) ) {
-//            return;
-//        }
-//
-//        // look up collection entity in system collections scope 
-//        org.apache.usergrid.persistence.model.entity.Entity collectionEntity = 
-//            getCollectionEntity(collName);
-
-        // load the entity to be added to the collection
+        // load the entity to be removed to the collection
         CollectionScope memberScope = new CollectionScopeImpl( 
             this.applicationScope.getApplication(), 
             this.applicationScope.getApplication(), 
-            Schema.defaultCollectionName( memberRef.getType() ) + COLLECTION_SUFFIX );
+            CpEntityManager.getCollectionScopeName( memberRef.getType() ));
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
+
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Loading entity to remove from collection "
+                    + "{}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] { 
+                    memberRef.getType(), 
+                    memberRef.getUuid(), 
+                    memberScope.getApplication(), 
+                    memberScope.getOwner(), 
+                    memberScope.getName() 
+            });
+        }
 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
             new SimpleId( memberRef.getUuid(), memberRef.getType() )).toBlockingObservable().last();
@@ -500,13 +516,17 @@ public class CpRelationManager implements RelationManager {
             cpHeadEntity.getId(), 
             collName + COLLECTION_SUFFIX);
 
+        // remove from collection index
         EntityIndex ei = managerCache.getEntityIndex(indexScope);
         ei.deindex( memberEntity );
 
+        // remove collection edge
         Edge edge = new SimpleMarkedEdge( cpHeadEntity.getId(), collName + COLLECTION_SUFFIX, 
             memberEntity.getId(), UUIDGenerator.newTimeUUID(), false );
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.deleteEdge(edge).toBlockingObservable().last();
+
+        // does not actually remove the entity itself
     }
 
 
@@ -572,9 +592,21 @@ public class CpRelationManager implements RelationManager {
         CollectionScope targetScope = new CollectionScopeImpl( 
             applicationScope.getApplication(), 
             applicationScope.getApplication(), 
-            Schema.defaultCollectionName( connectedEntityRef.getType() ) + COLLECTION_SUFFIX);
+            CpEntityManager.getCollectionScopeName( connectedEntityRef.getType() ));
 
         EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager(targetScope);
+
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Loading connection target entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] { 
+                    connectedEntityRef.getType(), 
+                    connectedEntityRef.getUuid(), 
+                    targetScope.getApplication(), 
+                    targetScope.getOwner(), 
+                    targetScope.getName() 
+            });
+        }
+
         org.apache.usergrid.persistence.model.entity.Entity targetEntity = targetEcm.load(
             new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ))
                 .toBlockingObservable().last();
@@ -590,7 +622,7 @@ public class CpRelationManager implements RelationManager {
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
-            connectionType + COLLECTION_SUFFIX);
+            CpEntityManager.getCollectionScopeName( connectionType ) );
         EntityIndex ei = managerCache.getEntityIndex(indexScope);
         ei.index( targetEntity );
 
@@ -853,9 +885,17 @@ public class CpRelationManager implements RelationManager {
             CollectionScope collScope = new CollectionScopeImpl( 
                 applicationScope.getApplication(), 
                 applicationScope.getApplication(), 
-                Schema.defaultCollectionName( query.getEntityType() ) + COLLECTION_SUFFIX);
-
+                CpEntityManager.getCollectionScopeName( query.getEntityType() ));
             EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
+
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Loading entities from scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] { 
+                    collScope.getApplication(), 
+                    collScope.getOwner(), 
+                    collScope.getName() 
+                });
+            }
 
             // first, build map of latest versions of entities
             Map<Id, org.apache.usergrid.persistence.model.entity.Entity> latestVersions = 
@@ -1048,26 +1088,27 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    public IndexUpdate batchStartIndexUpdate( Mutator<ByteBuffer> batch, Entity entity, String entryName,
-                                              Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
-                                              boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed )
+    public IndexUpdate batchStartIndexUpdate( 
+            Mutator<ByteBuffer> batch, Entity entity, String entryName,
+            Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
+             boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed )
             throws Exception {
-        return batchStartIndexUpdate( batch, entity, entryName, entryValue, timestampUuid, schemaHasProperty,
-                isMultiValue, removeListEntry, fulltextIndexed, false );
+        return batchStartIndexUpdate( batch, entity, entryName, entryValue, timestampUuid, 
+                schemaHasProperty, isMultiValue, removeListEntry, fulltextIndexed, false );
     }
 
 
     @Metered(group = "core", name = "RelationManager_batchStartIndexUpdate")
-    public IndexUpdate batchStartIndexUpdate( Mutator<ByteBuffer> batch, Entity entity, String entryName,
-                                              Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
-                                              boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed,
-                                              boolean skipRead ) throws Exception {
+    public IndexUpdate batchStartIndexUpdate( 
+        Mutator<ByteBuffer> batch, Entity entity, String entryName,
+        Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
+        boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed,
+        boolean skipRead ) throws Exception {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
-        IndexUpdate indexUpdate =
-                new IndexUpdate( batch, entity, entryName, entryValue, schemaHasProperty, isMultiValue, removeListEntry,
-                        timestampUuid );
+        IndexUpdate indexUpdate = new IndexUpdate( batch, entity, entryName, entryValue, 
+                schemaHasProperty, isMultiValue, removeListEntry, timestampUuid );
 
         // entryName = entryName.toLowerCase();
 
@@ -1078,17 +1119,21 @@ public class CpRelationManager implements RelationManager {
             List<HColumn<ByteBuffer, ByteBuffer>> entries = null;
 
             if ( isMultiValue && validIndexableValue( entryValue ) ) {
-                entries = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_INDEX_ENTRIES,
-                        entity.getUuid(),
-                        new DynamicComposite( entryName, indexValueCode( entryValue ), toIndexableValue( entryValue ) ),
-                        setGreaterThanEqualityFlag( new DynamicComposite( entryName, indexValueCode( entryValue ),
-                                toIndexableValue( entryValue ) ) ), INDEX_ENTRY_LIST_COUNT, false );
+                entries = cass.getColumns( 
+                    cass.getApplicationKeyspace( applicationId ), ENTITY_INDEX_ENTRIES,
+                        entity.getUuid(), new DynamicComposite( 
+                            entryName, indexValueCode( entryValue), toIndexableValue( entryValue )),
+                        setGreaterThanEqualityFlag( 
+                            new DynamicComposite( entryName, indexValueCode( entryValue ),
+                        toIndexableValue( entryValue ) ) ), INDEX_ENTRY_LIST_COUNT, false );
             }
             else {
-                entries = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_INDEX_ENTRIES,
-                        entity.getUuid(), new DynamicComposite( entryName ),
-                        setGreaterThanEqualityFlag( new DynamicComposite( entryName ) ), INDEX_ENTRY_LIST_COUNT,
-                        false );
+                entries = cass.getColumns( 
+                    cass.getApplicationKeyspace( applicationId ), ENTITY_INDEX_ENTRIES,
+                        entity.getUuid(), 
+                        new DynamicComposite( entryName ),
+                        setGreaterThanEqualityFlag( 
+                            new DynamicComposite( entryName ) ), INDEX_ENTRY_LIST_COUNT, false );
             }
 
             if ( logger.isDebugEnabled() ) {
@@ -1106,7 +1151,8 @@ public class CpRelationManager implements RelationManager {
                 // new format:
                 // composite(entryName,
                 // value_code,prev_value,prev_timestamp,prev_obj_path) = null
-                DynamicComposite composite = DynamicComposite.fromByteBuffer( entry.getName().duplicate() );
+                DynamicComposite composite = 
+                        DynamicComposite.fromByteBuffer( entry.getName().duplicate() );
                 prev_value = composite.get( 2 );
                 prev_timestamp = ( UUID ) composite.get( 3 );
                 if ( composite.size() > 4 ) {
@@ -1120,7 +1166,8 @@ public class CpRelationManager implements RelationManager {
                         entryPath = entryName + "." + prev_obj_path;
                     }
 
-                    indexUpdate.addPrevEntry( entryPath, prev_value, prev_timestamp, entry.getName().duplicate() );
+                    indexUpdate.addPrevEntry( 
+                            entryPath, prev_value, prev_timestamp, entry.getName().duplicate() );
 
                     // composite(property_value,connected_entity_id,entry_timestamp)
                     // addDeleteToMutator(batch, ENTITY_INDEX_ENTRIES,
@@ -1135,7 +1182,8 @@ public class CpRelationManager implements RelationManager {
 
         if ( !isMultiValue || ( isMultiValue && !removeListEntry ) ) {
 
-            List<Map.Entry<String, Object>> list = IndexUtils.getKeyValueList( entryName, entryValue, fulltextIndexed );
+            List<Map.Entry<String, Object>> list = IndexUtils.getKeyValueList( 
+                    entryName, entryValue, fulltextIndexed );
 
             if ( entryName.equalsIgnoreCase( "location" ) && ( entryValue instanceof Map ) ) {
                 @SuppressWarnings("rawtypes") double latitude =
@@ -1149,14 +1197,18 @@ public class CpRelationManager implements RelationManager {
             for ( Map.Entry<String, Object> indexEntry : list ) {
 
                 if ( validIndexableValue( indexEntry.getValue() ) ) {
-                    indexUpdate.addNewEntry( indexEntry.getKey(), toIndexableValue( indexEntry.getValue() ) );
+                    indexUpdate.addNewEntry( 
+                            indexEntry.getKey(), toIndexableValue( indexEntry.getValue() ) );
                 }
             }
 
             if ( isMultiValue ) {
                 addInsertToMutator( batch, ENTITY_INDEX_ENTRIES, entity.getUuid(),
-                        asList( entryName, indexValueCode( entryValue ), toIndexableValue( entryValue ),
-                                indexUpdate.getTimestampUuid() ), null, timestamp );
+                        asList( entryName, 
+                            indexValueCode( entryValue ), 
+                            toIndexableValue( entryValue ),
+                            indexUpdate.getTimestampUuid() ),
+                        null, timestamp );
             }
             else {
                 // int i = 0;
@@ -1174,7 +1226,8 @@ public class CpRelationManager implements RelationManager {
                     byte code = indexValueCode( indexEntry.getValue() );
                     Object val = toIndexableValue( indexEntry.getValue() );
                     addInsertToMutator( batch, ENTITY_INDEX_ENTRIES, entity.getUuid(),
-                            asList( entryName, code, val, indexUpdate.getTimestampUuid(), name ), null, timestamp );
+                            asList( entryName, code, val, indexUpdate.getTimestampUuid(), name ), 
+                            null, timestamp );
 
                     indexUpdate.addIndex( indexEntry.getKey() );
                 }
@@ -1196,12 +1249,14 @@ public class CpRelationManager implements RelationManager {
      * @throws Exception the exception
      */
     @Metered(group = "core", name = "RelationManager_batchUpdateBackwardConnectionsDictionaryIndexes")
-    public IndexUpdate batchUpdateBackwardConnectionsDictionaryIndexes( IndexUpdate indexUpdate ) throws Exception {
+    public IndexUpdate batchUpdateBackwardConnectionsDictionaryIndexes( 
+            IndexUpdate indexUpdate ) throws Exception {
 
         logger.debug( "batchUpdateBackwardConnectionsListIndexes" );
 
         boolean entityHasDictionary = getDefaultSchema()
-                .isDictionaryIndexedInConnections( indexUpdate.getEntity().getType(), indexUpdate.getEntryName() );
+                .isDictionaryIndexedInConnections( 
+                        indexUpdate.getEntity().getType(), indexUpdate.getEntryName() );
 
         if ( !entityHasDictionary ) {
             return indexUpdate;
@@ -1212,8 +1267,8 @@ public class CpRelationManager implements RelationManager {
     }
 
     /**
-     * Search each reverse connection type in the graph for connections.  If one is found, update the index
-     * appropriately
+     * Search each reverse connection type in the graph for connections.  
+     * If one is found, update the index appropriately
      *
      * @param indexUpdate The index update to use
      *
@@ -1223,20 +1278,21 @@ public class CpRelationManager implements RelationManager {
         final Entity targetEntity = indexUpdate.getEntity();
 
         final ConnectionTypesIterator connectionTypes =
-                new ConnectionTypesIterator( cass, applicationId, targetEntity.getUuid(), false, 100 );
+            new ConnectionTypesIterator( cass, applicationId, targetEntity.getUuid(), false, 100 );
 
         for ( String connectionType : connectionTypes ) {
 
-            PagingResultsIterator itr = getReversedConnectionsIterator( targetEntity, connectionType );
+            PagingResultsIterator itr = 
+                    getReversedConnectionsIterator( targetEntity, connectionType );
 
             for ( Object connection : itr ) {
 
                 final ConnectedEntityRef sourceEntity = ( ConnectedEntityRef ) connection;
 
-                //we need to create a connection ref from the source entity (found via reverse edge) to the entity
-                // we're about to update.  This is the index that needs updated
+                //we need to create a connection ref from the source entity (found via reverse edge) 
+                // to the entity we're about to update.  This is the index that needs updated
                 final ConnectionRefImpl connectionRef =
-                        new ConnectionRefImpl( sourceEntity, connectionType, indexUpdate.getEntity() );
+                    new ConnectionRefImpl( sourceEntity, connectionType, indexUpdate.getEntity() );
 
                 batchUpdateConnectionIndex( indexUpdate, connectionRef );
             }
@@ -1256,8 +1312,8 @@ public class CpRelationManager implements RelationManager {
      * @throws Exception the exception
      */
     @Metered(group = "core", name = "RelationManager_batchUpdateConnectionIndex")
-    public IndexUpdate batchUpdateConnectionIndex( IndexUpdate indexUpdate, ConnectionRefImpl connection )
-            throws Exception {
+    public IndexUpdate batchUpdateConnectionIndex( 
+            IndexUpdate indexUpdate, ConnectionRefImpl connection ) throws Exception {
 
         // UUID connection_id = connection.getUuid();
 
@@ -1271,10 +1327,12 @@ public class CpRelationManager implements RelationManager {
                 batchDeleteConnectionIndexEntries( indexUpdate, entry, connection, index_keys );
 
                 if ( "location.coordinates".equals( entry.getPath() ) ) {
-                    EntityLocationRef loc = new EntityLocationRef( indexUpdate.getEntity(), entry.getTimestampUuid(),
-                            entry.getValue().toString() );
-                    batchDeleteLocationInConnectionsIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
-                            index_keys, entry.getPath(), loc );
+                    EntityLocationRef loc = 
+                        new EntityLocationRef( indexUpdate.getEntity(), entry.getTimestampUuid(),
+                        entry.getValue().toString() );
+                    batchDeleteLocationInConnectionsIndex( 
+                        indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                        index_keys, entry.getPath(), loc );
                 }
             }
             else {
@@ -1282,7 +1340,8 @@ public class CpRelationManager implements RelationManager {
             }
         }
 
-        if ( ( indexUpdate.getNewEntries().size() > 0 ) && ( !indexUpdate.isMultiValue() || ( indexUpdate.isMultiValue()
+        if ( ( indexUpdate.getNewEntries().size() > 0 ) 
+                && ( !indexUpdate.isMultiValue() || ( indexUpdate.isMultiValue()
                 && !indexUpdate.isRemoveListEntry() ) ) ) {
 
             for ( IndexUpdate.IndexEntry indexEntry : indexUpdate.getNewEntries() ) {
@@ -1291,9 +1350,12 @@ public class CpRelationManager implements RelationManager {
 
                 if ( "location.coordinates".equals( indexEntry.getPath() ) ) {
                     EntityLocationRef loc =
-                            new EntityLocationRef( indexUpdate.getEntity(), indexEntry.getTimestampUuid(),
+                            new EntityLocationRef( 
+                                    indexUpdate.getEntity(), 
+                                    indexEntry.getTimestampUuid(),
                                     indexEntry.getValue().toString() );
-                    batchStoreLocationInConnectionsIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                    batchStoreLocationInConnectionsIndex( 
+                            indexUpdate.getBatch(), indexBucketLocator, applicationId,
                             index_keys, indexEntry.getPath(), loc );
                 }
             }
@@ -1309,7 +1371,7 @@ public class CpRelationManager implements RelationManager {
 
         for ( String index : indexUpdate.getIndexesSet() ) {
             addInsertToMutator( indexUpdate.getBatch(), ENTITY_DICTIONARIES,
-                    key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ), index, null,
+                    key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES), index, null,
                     indexUpdate.getTimestamp() );
         }
 
@@ -1323,9 +1385,11 @@ public class CpRelationManager implements RelationManager {
      *
      * @return connectionType The name of the edges to search
      */
-    private PagingResultsIterator getReversedConnectionsIterator( EntityRef targetEntity, String connectionType )
-            throws Exception {
-        return new PagingResultsIterator( getConnectingEntities( targetEntity, connectionType, null, Level.REFS ) );
+    private PagingResultsIterator getReversedConnectionsIterator( 
+            EntityRef targetEntity, String connectionType ) throws Exception {
+
+        return new PagingResultsIterator( 
+                getConnectingEntities( targetEntity, connectionType, null, Level.REFS ) );
     }
 
     /**
@@ -1336,9 +1400,12 @@ public class CpRelationManager implements RelationManager {
      * @param connectedEntityType The connected entity type, if not specified all types are returned
      * @param resultsLevel The results level to return
      */
-    private Results getConnectingEntities( EntityRef targetEntity, String connectionType, String connectedEntityType,
-                                           Level resultsLevel ) throws Exception {
-        return getConnectingEntities(targetEntity, connectionType, connectedEntityType, resultsLevel, 0);
+    private Results getConnectingEntities( 
+            EntityRef targetEntity, String connectionType, String connectedEntityType,
+            Level resultsLevel ) throws Exception {
+
+        return getConnectingEntities(
+                targetEntity, connectionType, connectedEntityType, resultsLevel, 0);
     }
 
     /**
@@ -1349,8 +1416,9 @@ public class CpRelationManager implements RelationManager {
      * @param connectedEntityType The connected entity type, if not specified all types are returned
      * @param count result limit
      */
-    private Results getConnectingEntities(EntityRef targetEntity,
-                                          String connectionType, String connectedEntityType, Level level, int count) throws Exception {
+    private Results getConnectingEntities( EntityRef targetEntity, String connectionType, 
+            String connectedEntityType, Level level, int count) throws Exception {
+
         Query query = new Query();
         query.setResultsLevel( level );
         query.setLimit(count);
