@@ -32,17 +32,11 @@ public enum TokenCategory {
     private final String prefix;
     private final String base64Prefix;
     private final boolean expires;
-    private static Map<String, TokenCategory> prefixes;
-    private static Map<String, TokenCategory> base64Prefixes;
+    private static final Map<String, TokenCategory> prefixes = new ConcurrentHashMap<String, TokenCategory>();
+    private static final Map<String, TokenCategory> base64Prefixes = new ConcurrentHashMap<String, TokenCategory>();
 
 
     private synchronized static void register( TokenCategory type ) {
-        if ( prefixes == null ) {
-            prefixes = new ConcurrentHashMap<String, TokenCategory>();
-        }
-        if ( base64Prefixes == null ) {
-            base64Prefixes = new ConcurrentHashMap<String, TokenCategory>();
-        }
         prefixes.put( type.getPrefix(), type );
         base64Prefixes.put( type.getBase64Prefix(), type );
     }
