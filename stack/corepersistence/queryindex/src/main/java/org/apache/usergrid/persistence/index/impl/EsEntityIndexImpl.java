@@ -269,9 +269,16 @@ public class EsEntityIndexImpl implements EntityIndex {
     @Override
     public void index( Entity entity ) {
 
-        log.debug("Indexing entity:  " + entity.getId().toString());
-                log.debug("    Index Name:   " + this.indexName);
-                log.debug("    ES Type:      " + this.indexType);
+        if ( log.isDebugEnabled() ) {
+            log.debug("Indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] { 
+                    entity.getId().getType(), 
+                    entity.getId().getUuid(), 
+                    indexScope.getApplication(), 
+                    indexScope.getOwner(), 
+                    indexScope.getName() 
+            });
+        }
 
         ValidationUtils.verifyEntityWrite(entity);
 
@@ -320,13 +327,21 @@ public class EsEntityIndexImpl implements EntityIndex {
     @Override
     public void deindex( final Id id, final UUID version) {
 
+        if ( log.isDebugEnabled() ) {
+            log.debug("De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] { 
+                    id.getType(), 
+                    id.getUuid(), 
+                    indexScope.getApplication(), 
+                    indexScope.getOwner(), 
+                    indexScope.getName() 
+            });
+        }
 
-        String indexId = createIndexDocId( id, version );
-
-        client
-                .prepareDelete( indexName, indexType, indexId )
-                .setRefresh( refresh )
-                .execute().actionGet();
+        String indexId = createIndexDocId( id, version ); 
+        client.prepareDelete( indexName, indexType, indexId )
+            .setRefresh( refresh )
+            .execute().actionGet();
 
         log.debug("Deindexed Entity with index id " + indexId);
     }
@@ -348,12 +363,15 @@ public class EsEntityIndexImpl implements EntityIndex {
     public CandidateResults search(Query query) {
 
         QueryBuilder qb = query.createQueryBuilder();
-        
-        log.debug("Search");
-        log.debug("    Index Name: " + this.indexName);
-        log.debug("    ES Type:    " + this.indexType);
-        log.debug("    Query:      " + qb.toString().replace("\n", " ") );
-        
+
+        if ( log.isDebugEnabled() ) {
+            log.debug("Searching index {}\n   type {}\n   query {}", 
+                new Object[] { 
+                    this.indexName,
+                    this.indexType,
+                    qb.toString().replace("\n", " ") 
+            });
+        }
             
         SearchResponse searchResponse;
         if (query.getCursor() == null) {

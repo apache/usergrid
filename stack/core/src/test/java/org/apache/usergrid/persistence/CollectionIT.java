@@ -1796,7 +1796,6 @@ public class CollectionIT extends AbstractCoreIT {
         Entity createdRestaurant = em.create( "restaurant", restaurant.getProperties() );
         assertNotNull( createdRestaurant );
 
-
         //we create 2 entities, otherwise this test will pass when it shouldn't
         DynamicEntity restaurant2 = new DynamicEntity();
         restaurant2.setName( "4peaks" );

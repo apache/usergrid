@@ -2,7 +2,7 @@
     <li class="option {{item.active ? 'active' : ''}}" ng-cloak="" ng-repeat="item in menuItems"><a data-ng-href="{{item.path}}"><i class="pictogram" ng-bind-html="item.pic"></i>{{item.title}}</a>
         <ul class="nav nav-list" ng-if="item.items">
             <li ng-repeat="subItem in item.items"><a data-ng-href="{{subItem.path}}"><i class="pictogram sub" ng-bind-html="subItem.pic"></i>{{subItem.title}}</a>
-            </li>
+            </li> 
         </ul>
     </li>
 </ul>

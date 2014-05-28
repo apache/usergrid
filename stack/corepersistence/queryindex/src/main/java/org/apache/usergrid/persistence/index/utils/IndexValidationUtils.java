@@ -19,16 +19,13 @@
 package org.apache.usergrid.persistence.index.utils;
 
 
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.index.IndexScope;
 
 import com.google.common.base.Preconditions;
 
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.validateApplicationScope;
-import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyEntityWrite;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyIdentity;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyString;
-import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyTimeUuid;
 
 
 /**
