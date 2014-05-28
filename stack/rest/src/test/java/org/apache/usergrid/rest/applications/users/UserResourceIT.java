@@ -27,6 +27,7 @@ import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,6 +152,7 @@ public class UserResourceIT extends AbstractRestIT {
     /**
      * Tests that when a full text index is run on a field that isn't full text indexed an error is thrown
      */
+    @Ignore("This test is being ignored as users ")
     @Test(expected = UniformInterfaceException.class)
     public void fullQueryNotIndexed() {
 
