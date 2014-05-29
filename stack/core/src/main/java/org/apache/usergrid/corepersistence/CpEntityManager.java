@@ -86,6 +86,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.se;
+import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
@@ -1409,20 +1410,25 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Set<String> getUserRoles(UUID userId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public Set<String> getUserRoles( UUID userId ) throws Exception {
+        return cast( getDictionaryAsSet( userRef( userId ), DICTIONARY_ROLENAMES ) );
     }
 
     @Override
     public void addUserToRole(UUID userId, String roleName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        addToDictionary( userRef(userId), DICTIONARY_ROLENAMES, roleName, roleName );
+        addToCollection( userRef( userId ), COLLECTION_ROLES, getRoleRef(roleName) );
     }
 
+    private EntityRef userRef(UUID userId){
+        return new SimpleEntityRef(User.ENTITY_TYPE,userId);
+    }
     @Override
     public void removeUserFromRole(UUID userId, String roleName) throws Exception {
         roleName = roleName.toLowerCase();
-        removeFromDictionary( new SimpleEntityRef(User.ENTITY_TYPE, userId ), DICTIONARY_ROLENAMES, roleName );
-        removeFromCollection( new SimpleEntityRef(User.ENTITY_TYPE, userId ), COLLECTION_ROLES, getRoleRef( roleName ) );
+        removeFromDictionary( userRef(userId), DICTIONARY_ROLENAMES, roleName );
+        removeFromCollection( userRef(userId), COLLECTION_ROLES, getRoleRef(roleName) );
     }
 
     @Override
@@ -1433,20 +1439,20 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void grantUserPermission(UUID userId, String permission) throws Exception {
         permission = permission.toLowerCase();
-        addToDictionary( new SimpleEntityRef(User.ENTITY_TYPE, userId ), DICTIONARY_PERMISSIONS, permission );
+        addToDictionary( userRef(userId), DICTIONARY_PERMISSIONS, permission );
     }
 
     @Override
     public void revokeUserPermission( UUID userId, String permission ) throws Exception {
         permission = permission.toLowerCase();
-        removeFromDictionary( new SimpleEntityRef(User.ENTITY_TYPE, userId ), DICTIONARY_PERMISSIONS, permission );
+        removeFromDictionary( userRef(userId), DICTIONARY_PERMISSIONS, permission );
     }
 
 
     @Override
     public Map<String, String> getUserGroupRoles( UUID userId, UUID groupId ) throws Exception {
         // TODO this never returns anything - write path not invoked
-        EntityRef userRef =  new SimpleEntityRef(User.ENTITY_TYPE, userId );
+        EntityRef userRef =  userRef(userId);
         return cast( getDictionaryAsMap( userRef, DICTIONARY_ROLENAMES ) );
     }
 
@@ -1454,7 +1460,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void addUserToGroupRole(UUID userId, UUID groupId, String roleName) throws Exception {
         roleName = roleName.toLowerCase();
-        EntityRef userRef =  new SimpleEntityRef(User.ENTITY_TYPE, userId );
+        EntityRef userRef =  userRef(userId);
                 //new SimpleCollectionRef( new SimpleEntityRef(Group.ENTITY_TYPE, groupId ), COLLECTION_USERS,userRef );
         EntityRef roleRef =getRoleRef(roleName);
         addToDictionary( userRef, DICTIONARY_ROLENAMES, roleName, roleName );
@@ -1465,7 +1471,12 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void removeUserFromGroupRole(UUID userId, UUID groupId, String roleName) 
             throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        EntityRef memberRef = userRef(userId);
+        EntityRef roleRef = getRoleRef(roleName);
+        removeFromDictionary( memberRef, DICTIONARY_ROLENAMES, roleName );
+        removeFromCollection( memberRef, COLLECTION_ROLES, roleRef );
+        removeFromCollection( roleRef, COLLECTION_USERS, userRef( userId ) );
     }
 
     @Override
@@ -1520,13 +1531,55 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public EntityRef getUserByIdentifier(Identifier identifier) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public EntityRef getUserByIdentifier( Identifier identifier ) throws Exception {
+        if ( identifier == null ) {
+            return null;
+        }
+        if ( identifier.isUUID() ) {
+            return new SimpleEntityRef( "user", identifier.getUUID() );
+        }
+        if ( identifier.isName() ) {
+            return this.getAlias(
+                    new SimpleEntityRef("application", applicationId),
+                    "user", identifier.getName() );
+        }
+        if ( identifier.isEmail() ) {
+
+            Query query = new Query();
+            query.setEntityType( "user" );
+            query.addEqualityFilter( "email", identifier.getEmail() );
+            query.setLimit( 1 );
+            query.setResultsLevel( REFS );
+
+            Results r = getRelationManager( ref( applicationId ) ).searchCollection( "users", query );
+            if ( r != null && r.getRef() != null ) {
+                return r.getRef();
+            }
+            else {
+                // look-aside as it might be an email in the name field
+                return this.getAlias(
+                        new SimpleEntityRef("application", applicationId),
+                        "user", identifier.getEmail() );
+            }
+        }
+        return null;
     }
 
+
     @Override
-    public EntityRef getGroupByIdentifier(Identifier identifier) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public EntityRef getGroupByIdentifier( Identifier identifier ) throws Exception {
+        if ( identifier == null ) {
+            return null;
+        }
+        if ( identifier.isUUID() ) {
+            return new SimpleEntityRef( "group", identifier.getUUID() );
+        }
+        if ( identifier.isName() ) {
+            return this.getAlias(
+                    new SimpleEntityRef("application", applicationId),
+                    "group", identifier.getName() );
+        }
+        return null;
     }
 
     @Override
@@ -1650,39 +1703,57 @@ public class CpEntityManager implements EntityManager {
         return title;
     }
 
+    @SuppressWarnings( "unchecked" )
     @Override
-    public Map<String, Role> getUserRolesWithTitles(UUID userId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public Map<String, Role> getUserRolesWithTitles( UUID userId ) throws Exception {
+        return getRolesWithTitles(
+                ( Set<String> ) cast( getDictionaryAsSet( userRef( userId ), DICTIONARY_ROLENAMES ) ) );
+    }
+
+    @SuppressWarnings( "unchecked" )
+    @Override
+    public Map<String, Role> getGroupRolesWithTitles( UUID groupId ) throws Exception {
+        return getRolesWithTitles(
+                ( Set<String> ) cast( getDictionaryAsSet( groupRef( groupId ), DICTIONARY_ROLENAMES ) ) );
     }
 
     @Override
-    public Map<String, Role> getGroupRolesWithTitles(UUID userId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public void addGroupToRole( UUID groupId, String roleName ) throws Exception {
+        roleName = roleName.toLowerCase();
+        addToDictionary( groupRef( groupId ), DICTIONARY_ROLENAMES, roleName, roleName );
+        addToCollection( groupRef( groupId ), COLLECTION_ROLES, getRoleRef( roleName ) );
     }
 
-    @Override
-    public void addGroupToRole(UUID userId, String roleName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
-    }
 
     @Override
-    public void removeGroupFromRole(UUID userId, String roleName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public void removeGroupFromRole( UUID groupId, String roleName ) throws Exception {
+        roleName = roleName.toLowerCase();
+        removeFromDictionary( groupRef( groupId ), DICTIONARY_ROLENAMES, roleName );
+        removeFromCollection( groupRef( groupId ), COLLECTION_ROLES, getRoleRef( roleName ) );
     }
 
-    @Override
-    public Set<String> getGroupPermissions(UUID groupId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
-    }
 
     @Override
-    public void grantGroupPermission(UUID groupId, String permission) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public Set<String> getGroupPermissions( UUID groupId ) throws Exception {
+        return cast( getDictionaryAsSet( groupRef( groupId ), Schema.DICTIONARY_PERMISSIONS ) );
     }
 
+
     @Override
-    public void revokeGroupPermission(UUID groupId, String permission) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public void grantGroupPermission( UUID groupId, String permission ) throws Exception {
+        permission = permission.toLowerCase();
+        addToDictionary( groupRef( groupId ), DICTIONARY_PERMISSIONS, permission );
+    }
+
+
+    @Override
+    public void revokeGroupPermission( UUID groupId, String permission ) throws Exception {
+        permission = permission.toLowerCase();
+        removeFromDictionary( groupRef( groupId ), DICTIONARY_PERMISSIONS, permission );
+    }
+
+    private EntityRef groupRef(UUID groupId){
+        return new SimpleEntityRef( Group.ENTITY_TYPE, groupId );
     }
 
     @Override
