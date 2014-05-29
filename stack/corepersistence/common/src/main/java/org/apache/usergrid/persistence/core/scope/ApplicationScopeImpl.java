@@ -29,16 +29,16 @@ import org.apache.usergrid.persistence.model.entity.Id;
  */
 public class ApplicationScopeImpl implements ApplicationScope {
 
-    protected final Id organization;
+    protected final Id application;
 
 
-    public ApplicationScopeImpl( final Id organization ) {
-        this.organization = organization;}
+    public ApplicationScopeImpl( final Id application ) {
+        this.application = application;}
 
 
     @Override
     public Id getApplication() {
-        return this.organization;
+        return this.application;
     }
 
 
@@ -53,7 +53,7 @@ public class ApplicationScopeImpl implements ApplicationScope {
 
         final ApplicationScopeImpl that = ( ApplicationScopeImpl ) o;
 
-        if ( !organization.equals( that.organization ) ) {
+        if ( !application.equals( that.application ) ) {
             return false;
         }
 
@@ -63,14 +63,14 @@ public class ApplicationScopeImpl implements ApplicationScope {
 
     @Override
     public int hashCode() {
-        return organization.hashCode();
+        return application.hashCode();
     }
 
 
     @Override
     public String toString() {
         return "ApplicationScopeImpl{" +
-                "organization=" + organization +
+                "application=" + application +
                 '}';
     }
 }
