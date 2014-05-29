@@ -90,6 +90,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
+import java.util.HashSet;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -1349,26 +1350,33 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void incrementAggregateCounters(
             UUID userId, UUID groupId, String category, String counterName, long value) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        // TODO: add an implementation here...
     }
 
     @Override
     public Results getAggregateCounters(
             UUID userId, UUID groupId, String category, String counterName, 
             CounterResolution resolution, long start, long finish, boolean pad) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        // TODO: add an implementation here...
+        return Results.fromEntities( new ArrayList<Entity>() );
     }
 
     @Override
     public Results getAggregateCounters(
             UUID userId, UUID groupId, UUID queueId, String category, String counterName, 
             CounterResolution resolution, long start, long finish, boolean pad) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        // TODO: add an implementation here...
+        return Results.fromEntities( new ArrayList<Entity>() );
     }
 
     @Override
     public Results getAggregateCounters(Query query) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        // TODO: add an implementation here...
+        return Results.fromEntities( new ArrayList<Entity>() );
     }
 
     @Override
@@ -1383,29 +1391,37 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Set<String> getCounterNames() throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        // TODO: add an implementation here...
+        return new HashSet<String>();
     }
 
     @Override
     public Map<String, Long> getEntityCounters(UUID entityId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        // TODO: add an implementation here...
+        return new HashMap<String, Long>();
     }
 
     @Override
     public Map<String, Long> getApplicationCounters() throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        // TODO: add an implementation here...
+        return new HashMap<String, Long>();
     }
 
     @Override
     public void incrementAggregateCounters(
             UUID userId, UUID groupId, String category, Map<String, Long> counters) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        // TODO: add an implementation here...
     }
 
     @Override
     public boolean isPropertyValueUniqueForEntity(
             String entityType, String propertyName, Object propertyValue) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+
+        return true; // TODO: is it OK to rely on Core Persistence write-time check for this?
     }
 
     @Override

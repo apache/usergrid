@@ -379,7 +379,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     
     @Override
     public void setup() throws Exception {
-        // no op?
+        getSetup().init();
     }
 
     
@@ -489,6 +489,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.applicationContext = applicationContext;
+        try {
+            setup();
+        } catch (Exception ex) {
+            logger.error("Error setting up EMF", ex);
+        }
     }
 
     /**

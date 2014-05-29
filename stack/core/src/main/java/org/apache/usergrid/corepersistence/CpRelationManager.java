@@ -205,7 +205,6 @@ public class CpRelationManager implements RelationManager {
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(headEntityScope);
         this.cpHeadEntity = ecm.load( new SimpleId( 
             headEntity.getUuid(), headEntity.getType() )).toBlockingObservable().last();
-        Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
 
         return this;
     }
