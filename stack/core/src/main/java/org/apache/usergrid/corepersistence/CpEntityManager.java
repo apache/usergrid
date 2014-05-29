@@ -1461,7 +1461,6 @@ public class CpEntityManager implements EntityManager {
     public void addUserToGroupRole(UUID userId, UUID groupId, String roleName) throws Exception {
         roleName = roleName.toLowerCase();
         EntityRef userRef =  userRef(userId);
-                //new SimpleCollectionRef( new SimpleEntityRef(Group.ENTITY_TYPE, groupId ), COLLECTION_USERS,userRef );
         EntityRef roleRef =getRoleRef(roleName);
         addToDictionary( userRef, DICTIONARY_ROLENAMES, roleName, roleName );
         addToCollection( userRef, COLLECTION_ROLES, roleRef );
