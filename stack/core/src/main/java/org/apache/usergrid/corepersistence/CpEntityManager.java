@@ -21,34 +21,32 @@ import java.util.*;
 
 import javax.annotation.Resource;
 
+import javafx.beans.*;
+import javafx.beans.property.SimpleMapProperty;
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.entities.Group;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.cassandra.*;
+import org.apache.usergrid.persistence.entities.*;
+import org.apache.usergrid.persistence.index.query.*;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.cassandra.ApplicationCF;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
-import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.entities.Event;
-import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
-import org.apache.usergrid.persistence.index.query.CounterResolution;
-import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -64,6 +62,10 @@ import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
+import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
@@ -72,6 +74,7 @@ import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.persistence.Schema.*;
 import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
+import static org.apache.usergrid.persistence.SimpleRoleRef.getIdForGroupIdAndRoleName;
 import static org.apache.usergrid.persistence.SimpleRoleRef.getIdForRoleName;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
@@ -423,6 +426,10 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
+        deleteAsync( entityRef ).toBlockingObservable().last();
+    }
+
+    private Observable deleteAsync( EntityRef entityRef ) throws Exception {
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
             appScope.getApplication(), 
@@ -475,7 +482,9 @@ public class CpEntityManager implements EntityManager {
             entityIndex.deindex( entity );
 
             // and finally...
-            ecm.delete( entityId ).toBlockingObservable().last();
+            return ecm.delete( entityId );
+        }else{
+            return Observable.empty();
         }
     }
 
@@ -1238,91 +1247,164 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Entity createRole(String roleName, String roleTitle, long inactivity) throws Exception {
+
+        String propertyName = roleName;
+        UUID ownerId = applicationId;
+        String batchRoleName = StringUtils.stringOrSubstringAfterLast(roleName.toLowerCase(), ':');
+        return batchCreateRole(batchRoleName, roleTitle, inactivity, propertyName, ownerId,null);
+    }
+
+    private Entity batchCreateRole(String roleName, String roleTitle, long inactivity, String propertyName, UUID ownerId,Map<String, Object> additionalProperties ) throws Exception {
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
-        long timestamp = getTimestampInMicros( timestampUuid );
+        long timestamp = getTimestampInMicros(timestampUuid);
 
-
-        Map<String, Object> properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+        Map<String, Object> properties = new TreeMap<>( CASE_INSENSITIVE_ORDER );
         properties.put( PROPERTY_TYPE, Role.ENTITY_TYPE );
-        properties.put( PROPERTY_NAME, roleName );
+        properties.put( PROPERTY_NAME, propertyName );
         properties.put( "roleName", roleName );
         properties.put( "title", roleTitle );
         properties.put( PROPERTY_INACTIVITY, inactivity );
+        if(additionalProperties!=null) {
+            for (String key : additionalProperties.keySet()) {
+                properties.put(key, additionalProperties.get(key));
+            }
+        }
 
-        batchCreate( batch, Role.ENTITY_TYPE, null, properties,  UUIDGenerator.newTimeUUID(), timestampUuid );
+        UUID id = UUIDGenerator.newTimeUUID();
+        batchCreate( null, Role.ENTITY_TYPE, null, properties,  id, timestampUuid );
 
-        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_ROLENAMES ),
+        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( ownerId, Schema.DICTIONARY_ROLENAMES ),
                 roleName, roleTitle, timestamp );
-        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_ROLETIMES ),
+        addInsertToMutator( batch, ENTITY_DICTIONARIES, key( ownerId, Schema.DICTIONARY_ROLETIMES ),
                 roleName, inactivity, timestamp );
-        addInsertToMutator( batch, ENTITY_DICTIONARIES, key(  applicationId, DICTIONARY_SETS ),
+        addInsertToMutator( batch, ENTITY_DICTIONARIES, key(  ownerId, DICTIONARY_SETS ),
                 Schema.DICTIONARY_ROLENAMES, null, timestamp );
+
         batchExecute( batch, CassandraService.RETRY_COUNT );
 
-        return get( roleRef( roleName ) );
+        return get( id ,Role.class );
     }
 
-    private EntityRef roleRef( String roleName ) {
-        return ref( TYPE_ROLE, getIdForRoleName( roleName ) );
-    }
 
     @Override
     public void grantRolePermission(String roleName, String permission) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        permission = permission.toLowerCase();
+        long timestamp = cass.createTimestamp();
+        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( roleName ), permission,
+                ByteBuffer.allocate( 0 ), timestamp );
+        batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
     @Override
     public void grantRolePermissions(
             String roleName, Collection<String> permissions) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        long timestamp = cass.createTimestamp();
+        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        for ( String permission : permissions ) {
+            permission = permission.toLowerCase();
+            addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( roleName ), permission,
+                    ByteBuffer.allocate( 0 ), timestamp );
+        }
+        batchExecute( batch, CassandraService.RETRY_COUNT );
+    }
+
+    private Object getRolePermissionsKey( String roleName ) {
+        return key( getIdForRoleName( roleName ), DICTIONARY_PERMISSIONS );
+    }
+
+    private Object getRolePermissionsKey( UUID groupId, String roleName ) {
+        return key( getIdForGroupIdAndRoleName( groupId, roleName ), DICTIONARY_PERMISSIONS );
     }
 
     @Override
     public void revokeRolePermission(String roleName, String permission) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        permission = permission.toLowerCase();
+        long timestamp = cass.createTimestamp();
+        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        CassandraPersistenceUtils
+                .addDeleteToMutator(batch, ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey(roleName),
+                        permission, timestamp);
+        batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
     @Override
     public Set<String> getRolePermissions(String roleName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
+                getRolePermissionsKey( roleName ) );
     }
 
     @Override
     public void deleteRole(String roleName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        removeFromDictionary( getApplicationRef(), DICTIONARY_ROLENAMES, roleName );
+        removeFromDictionary( getApplicationRef(), DICTIONARY_ROLETIMES, roleName );
+        EntityRef entity = getRoleRef(roleName);
+        if(entity != null) {
+            delete(entity);
+        }
     }
 
     @Override
     public Map<String, String> getGroupRoles(UUID groupId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return cast(getDictionaryAsMap(new SimpleEntityRef(Group.ENTITY_TYPE, groupId), DICTIONARY_ROLENAMES));
     }
 
     @Override
     public Entity createGroupRole(UUID groupId, String roleName, long inactivity) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        String batchRoleName = StringUtils.stringOrSubstringAfterLast(roleName.toLowerCase(), ':');
+        String roleTitle = batchRoleName;
+        String propertyName = groupId + ":" + batchRoleName;
+        Map<String, Object> properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+        properties.put( "group", groupId );
+
+        Entity entity =  batchCreateRole(roleName,roleTitle,inactivity,propertyName,groupId,properties);
+        getRelationManager(  new SimpleEntityRef(Group.ENTITY_TYPE,groupId) ).addToCollection(COLLECTION_ROLES, entity);
+
+        return entity;
     }
 
     @Override
-    public void grantGroupRolePermission(
-            UUID groupId, String roleName, String permission) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public void grantGroupRolePermission( UUID groupId, String roleName, String permission ) throws Exception {
+        roleName = roleName.toLowerCase();
+        permission = permission.toLowerCase();
+        long timestamp = cass.createTimestamp();
+        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        addInsertToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES, getRolePermissionsKey( groupId, roleName ),
+                permission, ByteBuffer.allocate( 0 ), timestamp );
+        batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
+
     @Override
-    public void revokeGroupRolePermission(
-            UUID groupId, String roleName, String permission) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public void revokeGroupRolePermission( UUID groupId, String roleName, String permission ) throws Exception {
+        roleName = roleName.toLowerCase();
+        permission = permission.toLowerCase();
+        long timestamp = cass.createTimestamp();
+        Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+        CassandraPersistenceUtils.addDeleteToMutator( batch, ApplicationCF.ENTITY_DICTIONARIES,
+                getRolePermissionsKey( groupId, roleName ), permission, timestamp );
+        batchExecute( batch, CassandraService.RETRY_COUNT );
     }
 
     @Override
     public Set<String> getGroupRolePermissions(UUID groupId, String roleName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        return cass.getAllColumnNames( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
+                getRolePermissionsKey( groupId, roleName ) );
     }
 
     @Override
     public void deleteGroupRole(UUID groupId, String roleName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        removeFromDictionary( new SimpleEntityRef(Group.ENTITY_TYPE ,groupId ), DICTIONARY_ROLENAMES, roleName );
+        cass.deleteRow( cass.getApplicationKeyspace( applicationId ), ApplicationCF.ENTITY_DICTIONARIES,
+                getIdForGroupIdAndRoleName( groupId, roleName ) );
     }
 
     @Override
@@ -1337,32 +1419,46 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void removeUserFromRole(UUID userId, String roleName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        removeFromDictionary( new SimpleEntityRef(User.ENTITY_TYPE, userId ), DICTIONARY_ROLENAMES, roleName );
+        removeFromCollection( new SimpleEntityRef(User.ENTITY_TYPE, userId ), COLLECTION_ROLES, getRoleRef( roleName ) );
     }
 
     @Override
     public Set<String> getUserPermissions(UUID userId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return cast( getDictionaryAsSet( new SimpleEntityRef( User.ENTITY_TYPE,userId ), Schema.DICTIONARY_PERMISSIONS ) );
     }
 
     @Override
     public void grantUserPermission(UUID userId, String permission) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        permission = permission.toLowerCase();
+        addToDictionary( new SimpleEntityRef(User.ENTITY_TYPE, userId ), DICTIONARY_PERMISSIONS, permission );
     }
 
     @Override
-    public void revokeUserPermission(UUID userId, String permission) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public void revokeUserPermission( UUID userId, String permission ) throws Exception {
+        permission = permission.toLowerCase();
+        removeFromDictionary( new SimpleEntityRef(User.ENTITY_TYPE, userId ), DICTIONARY_PERMISSIONS, permission );
     }
 
+
     @Override
-    public Map<String, String> getUserGroupRoles(UUID userId, UUID groupId) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public Map<String, String> getUserGroupRoles( UUID userId, UUID groupId ) throws Exception {
+        // TODO this never returns anything - write path not invoked
+        EntityRef userRef =  new SimpleEntityRef(User.ENTITY_TYPE, userId );
+        return cast( getDictionaryAsMap( userRef, DICTIONARY_ROLENAMES ) );
     }
+
 
     @Override
     public void addUserToGroupRole(UUID userId, UUID groupId, String roleName) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        roleName = roleName.toLowerCase();
+        EntityRef userRef =  new SimpleEntityRef(User.ENTITY_TYPE, userId );
+                //new SimpleCollectionRef( new SimpleEntityRef(Group.ENTITY_TYPE, groupId ), COLLECTION_USERS,userRef );
+        EntityRef roleRef =getRoleRef(roleName);
+        addToDictionary( userRef, DICTIONARY_ROLENAMES, roleName, roleName );
+        addToCollection( userRef, COLLECTION_ROLES, roleRef );
+        addToCollection( roleRef, COLLECTION_USERS, userRef );
     }
 
     @Override
@@ -1374,7 +1470,20 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Results getUsersInGroupRole(
             UUID groupId, String roleName, Level level) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return this.getCollection( getRoleRef(roleName), COLLECTION_USERS, null, 10000, level, false );
+    }
+    private EntityRef getRoleRef(String roleName) throws Exception{
+        Results results = this.searchCollection(
+                new SimpleEntityRef("application", applicationId),
+                Schema.defaultCollectionName(Role.ENTITY_TYPE),
+                Query.findForProperty("roleName", roleName)
+        );
+        Iterator<Entity> iterator = results.iterator();
+        EntityRef roleRef = null;
+        while(iterator.hasNext()) {
+            roleRef = iterator.next();
+        }
+        return roleRef;
     }
 
     @Override
