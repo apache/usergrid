@@ -78,12 +78,12 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
                 return;
             }
 
-//TODO: Restore this code after profiling
-//            worker = Schedulers.newThread().createWorker();
-//
-//
-//            worker.schedulePeriodically( new TimeoutTask<T>( this, consistencyFig ), consistencyFig.getTaskLoopTime(),
-//                    consistencyFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
+
+            worker = Schedulers.newThread().createWorker();
+
+
+            worker.schedulePeriodically( new TimeoutTask<T>( this, consistencyFig ), consistencyFig.getTaskLoopTime(),
+                    consistencyFig.getTaskLoopTime(), TimeUnit.MILLISECONDS );
         }
     }
 
