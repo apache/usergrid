@@ -126,18 +126,35 @@ sub get_collection {
 }
 
 sub update_collection {
-  my ($self, $collection, $properties, $query) = @_;
+  my ($self, $collection, $properties, $query, $limit) = @_;
 
   my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}/?ql={query}')
+    ->new('/{organization}/{application}/{collection}/?limit={limit}&ql={query}')
     ->process(
       organization => $self->organization,
       application  => $self->application,
       collection   => $collection,
+      limit        => ( defined $limit ) ? $limit : 10,
       query        => ( defined $query ) ? $query : undef
   );
 
   return Usergrid::Collection->new( object => $self->PUT($uri, $properties) );
+}
+
+sub delete_collection {
+  my ($self, $collection, $query, $limit) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/?limit={limit}&ql={query}')
+    ->process(
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection,
+      limit        => ( defined $limit ) ? $limit : 10,
+      query        => ( defined $query ) ? $query : undef
+  );
+
+  return Usergrid::Collection->new( object => $self->DELETE($uri) );
 }
 
 sub query_collection {
