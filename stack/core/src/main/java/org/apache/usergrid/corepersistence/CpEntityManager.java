@@ -21,8 +21,6 @@ import java.util.*;
 
 import javax.annotation.Resource;
 
-import javafx.beans.*;
-import javafx.beans.property.SimpleMapProperty;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
@@ -1461,7 +1459,7 @@ public class CpEntityManager implements EntityManager {
     public void addUserToGroupRole(UUID userId, UUID groupId, String roleName) throws Exception {
         roleName = roleName.toLowerCase();
         EntityRef userRef =  userRef(userId);
-        EntityRef roleRef =getRoleRef(roleName);
+        EntityRef roleRef = getRoleRef(roleName);
         addToDictionary( userRef, DICTIONARY_ROLENAMES, roleName, roleName );
         addToCollection( userRef, COLLECTION_ROLES, roleRef );
         addToCollection( roleRef, COLLECTION_USERS, userRef );
