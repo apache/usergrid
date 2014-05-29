@@ -110,7 +110,7 @@ public class EdgeMetaRepairTest {
 
         final Id targetId = createId( "target" );
         final String test = "test";
-        final UUID version = UUIDGenerator.newTimeUUID();
+        final long version = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairTargets( scope, targetId, test, version ).toBlockingObservable().single();
 
@@ -126,7 +126,7 @@ public class EdgeMetaRepairTest {
 
         edgeMetadataSerialization.writeEdge( scope, edge ).execute();
 
-        int value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getVersion() )
+        int value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getTimestamp() )
                                   .toBlockingObservable().single();
 
         assertEquals( "No subtypes removed, edge exists", 1, value );
@@ -135,7 +135,7 @@ public class EdgeMetaRepairTest {
 
         storageEdgeSerialization.deleteEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
-        value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getVersion() )
+        value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getTimestamp() )
                               .toBlockingObservable().single();
 
         assertEquals( "Single subtype should be removed", 0, value );
@@ -180,7 +180,7 @@ public class EdgeMetaRepairTest {
         edgeMetadataSerialization.writeEdge( scope, edge3 ).execute();
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairTargets( scope, edge1.getTargetNode(), edge1.getType(), cleanupVersion )
                                   .toBlockingObservable().single();
@@ -248,7 +248,7 @@ public class EdgeMetaRepairTest {
         }
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairTargets( scope, targetId, edgeType, cleanupVersion ).toBlockingObservable()
                                   .single();
@@ -289,7 +289,7 @@ public class EdgeMetaRepairTest {
 
         edgeMetadataSerialization.writeEdge( scope, edge ).execute();
 
-        int value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getVersion() )
+        int value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getTimestamp() )
                                   .toBlockingObservable().single();
 
         assertEquals( "No subtypes removed, edge exists", 1, value );
@@ -298,7 +298,7 @@ public class EdgeMetaRepairTest {
 
         storageEdgeSerialization.deleteEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
-        value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getVersion() )
+        value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getTimestamp() )
                               .toBlockingObservable().single();
 
         assertEquals( "Single subtype should be removed", 0, value );
@@ -343,7 +343,7 @@ public class EdgeMetaRepairTest {
         edgeMetadataSerialization.writeEdge( scope, edge3 ).execute();
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairSources( scope, edge1.getSourceNode(), edge1.getType(), cleanupVersion )
                                   .toBlockingObservable().single();
@@ -412,7 +412,7 @@ public class EdgeMetaRepairTest {
         }
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairSources( scope, sourceId, edgeType, cleanupVersion ).toBlockingObservable()
                                   .single();

@@ -53,5 +53,5 @@ public interface Edge extends Serializable {
     /**
      * Get the version (as a type 1 time uuid) of this edge
      */
-    UUID getVersion();
+    long getTimestamp();
 }

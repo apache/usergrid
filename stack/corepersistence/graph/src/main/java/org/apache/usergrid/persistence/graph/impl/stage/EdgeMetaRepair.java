@@ -39,12 +39,12 @@ public interface EdgeMetaRepair {
      * @param scope The scope to use
      * @param sourceId The source Id to use
      * @param edgeType The edge type
-     * @param version The max version to clean
+     * @param maxTimestamp The max timestamp to clean
      *
      * @return An observable that emits the total number of sub types still in use.  0 implies the type and subtypes
      *         have been removed.  Anything > 0 implies the edgeType and subTypes are still in use
      */
-    public Observable<Integer> repairSources( ApplicationScope scope, Id sourceId, String edgeType, UUID version );
+    public Observable<Integer> repairSources( ApplicationScope scope, Id sourceId, String edgeType, long maxTimestamp );
 
 
     /**
@@ -53,10 +53,10 @@ public interface EdgeMetaRepair {
      * @param scope The scope to use
      * @param targetId The target Id to use
      * @param edgeType The edge type
-     * @param version The max version to clean
+     * @param maxTimestamp The max version to clean
      *
      * @return An observable that emits the total number of sub types still in use.  0 implies the type and subtypes
      *         have been removed.  Anything > 0 implies the edgeType and subTypes are still in use
      */
-    public Observable<Integer> repairTargets( ApplicationScope scope, Id targetId, String edgeType, UUID version );
+    public Observable<Integer> repairTargets( ApplicationScope scope, Id targetId, String edgeType, long maxTimestamp );
 }

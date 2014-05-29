@@ -52,7 +52,7 @@ public interface SearchByEdgeType {
      * This should always be a type 1 time uuid.
      * @return
      */
-    UUID getMaxVersion();
+    long getMaxTimestamp();
 
     /**
      * The optional start parameter.  All edges emitted with be > the specified start edge.

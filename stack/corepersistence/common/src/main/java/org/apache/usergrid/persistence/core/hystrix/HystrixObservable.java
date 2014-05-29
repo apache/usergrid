@@ -20,11 +20,8 @@
 package org.apache.usergrid.persistence.core.hystrix;
 
 
-import com.netflix.config.ConfigurationManager;
 import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
-import com.netflix.hystrix.HystrixThreadPoolProperties.Setter;
 
 import rx.Observable;
 

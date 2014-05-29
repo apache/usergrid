@@ -141,7 +141,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         final Id source = edge.getSourceNode();
         final Id target = edge.getTargetNode();
         final String edgeType = edge.getType();
-        final long timestamp = CassUtils.getTimestamp( edge.getVersion() );
+        final long timestamp = edge.getTimestamp();
 
         final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() ).withTimestamp( timestamp );
 
@@ -184,13 +184,13 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
     @Override
     public MutationBatch removeEdgeTypeFromSource( final ApplicationScope scope, final Edge edge ) {
-        return removeEdgeTypeFromSource( scope, edge.getSourceNode(), edge.getType(), edge.getVersion() );
+        return removeEdgeTypeFromSource( scope, edge.getSourceNode(), edge.getType(), edge.getTimestamp() );
     }
 
 
     @Override
     public MutationBatch removeEdgeTypeFromSource( final ApplicationScope scope, final Id sourceNode,
-                                                   final String type, final UUID version ) {
+                                                   final String type, final long version ) {
         return removeEdgeType( scope, sourceNode, type, version, CF_SOURCE_EDGE_TYPES );
     }
 
@@ -198,26 +198,26 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     @Override
     public MutationBatch removeIdTypeFromSource( final ApplicationScope scope, final Edge edge ) {
         return removeIdTypeFromSource( scope, edge.getSourceNode(), edge.getType(), edge.getTargetNode().getType(),
-                edge.getVersion() );
+                edge.getTimestamp() );
     }
 
 
     @Override
     public MutationBatch removeIdTypeFromSource( final ApplicationScope scope, final Id sourceNode, final String type,
-                                                 final String idType, final UUID version ) {
+                                                 final String idType, final long version ) {
         return removeIdType( scope, sourceNode, idType, type, version, CF_SOURCE_EDGE_ID_TYPES );
     }
 
 
     @Override
     public MutationBatch removeEdgeTypeToTarget( final ApplicationScope scope, final Edge edge ) {
-        return removeEdgeTypeToTarget( scope, edge.getTargetNode(), edge.getType(), edge.getVersion() );
+        return removeEdgeTypeToTarget( scope, edge.getTargetNode(), edge.getType(), edge.getTimestamp() );
     }
 
 
     @Override
     public MutationBatch removeEdgeTypeToTarget( final ApplicationScope scope, final Id targetNode, final String type,
-                                                 final UUID version ) {
+                                                 final long version ) {
         return removeEdgeType( scope, targetNode, type, version, CF_TARGET_EDGE_TYPES );
     }
 
@@ -225,13 +225,13 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     @Override
     public MutationBatch removeIdTypeToTarget( final ApplicationScope scope, final Edge edge ) {
         return removeIdTypeToTarget( scope, edge.getTargetNode(), edge.getType(), edge.getSourceNode().getType(),
-                edge.getVersion() );
+                edge.getTimestamp() );
     }
 
 
     @Override
     public MutationBatch removeIdTypeToTarget( final ApplicationScope scope, final Id targetNode, final String type,
-                                               final String idType, final UUID version ) {
+                                               final String idType, final long version ) {
         return removeIdType( scope, targetNode, idType, type, version, CF_TARGET_EDGE_ID_TYPES );
     }
 
@@ -246,17 +246,16 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      * @param cf The column family
      */
     private MutationBatch removeEdgeType( final ApplicationScope scope, final Id rowKeyId, final String edgeType,
-                                          final UUID version,
+                                          final long version,
                                           final MultiTennantColumnFamily<ApplicationScope, Id, String> cf ) {
 
-        final long timestamp = CassUtils.getTimestamp( version );
+
 
 
         //write target<--source edge type meta data
         final ScopedRowKey<ApplicationScope, Id> rowKey = new ScopedRowKey<ApplicationScope, Id>( scope, rowKeyId );
 
-
-        final MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( timestamp );
+        final MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( version );
 
         batch.withRow( cf, rowKey ).deleteColumn( edgeType );
 
@@ -277,14 +276,11 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
      * @return A populated mutation with the remove operations
      */
     private MutationBatch removeIdType( final ApplicationScope scope, final Id rowId, final String idType,
-                                        final String edgeType, final UUID version,
+                                        final String edgeType, final long version,
                                         final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> cf ) {
 
 
-
-        final long timestamp = CassUtils.getTimestamp( version );
-
-        final   MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( timestamp );
+          final   MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( version );
 
 
 

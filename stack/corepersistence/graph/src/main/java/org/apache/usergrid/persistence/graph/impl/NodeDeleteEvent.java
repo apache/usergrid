@@ -30,7 +30,11 @@ import org.apache.usergrid.persistence.model.entity.Id;
  * Event for when a node is deleted
  */
 public class NodeDeleteEvent extends EdgeEvent<Id> {
-    public NodeDeleteEvent( final ApplicationScope applicationScope, final UUID version, final Id id ) {
-        super( applicationScope, version, id );
+
+    private final long timestamp;
+
+    public NodeDeleteEvent( final ApplicationScope applicationScope, final UUID eventTime, final long timestamp, final Id id ) {
+        super( applicationScope, eventTime, id );
+        this.timestamp = timestamp;
     }
 }

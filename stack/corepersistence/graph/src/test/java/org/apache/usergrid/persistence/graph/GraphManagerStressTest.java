@@ -108,7 +108,7 @@ public class GraphManagerStressTest {
             public Observable<Edge> doSearch( final GraphManager manager ) {
 
 
-                final UUID uuid = UUIDGenerator.newTimeUUID();
+                final long timestamp = System.currentTimeMillis();
 
 
                 return Observable.create( new Observable.OnSubscribe<Edge>() {
@@ -119,7 +119,7 @@ public class GraphManagerStressTest {
                             for ( Id sourceId : sourceIds ) {
 
                                 final Iterable<Edge> edges = manager.loadEdgesFromSource(
-                                        new SimpleSearchByEdgeType( sourceId, "test", uuid, null ) )
+                                        new SimpleSearchByEdgeType( sourceId, "test", timestamp, null ) )
                                                                     .toBlockingObservable().toIterable();
 
                                 for ( Edge edge : edges ) {
@@ -193,9 +193,7 @@ public class GraphManagerStressTest {
 
             @Override
             public Observable<Edge> doSearch( final GraphManager manager ) {
-                UUID uuid = UUIDGenerator.newTimeUUID();
-
-                return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", uuid, null ) );
+                return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", System.currentTimeMillis(), null ) );
             }
         };
 
@@ -222,9 +220,8 @@ public class GraphManagerStressTest {
 
             @Override
             public Observable<Edge> doSearch( final GraphManager manager ) {
-                UUID uuid = UUIDGenerator.newTimeUUID();
 
-                return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", uuid, null ) );
+                return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", System.currentTimeMillis(), null ) );
             }
         };
 
@@ -251,7 +248,7 @@ public class GraphManagerStressTest {
             Edge returned = manager.writeEdge( edge ).toBlockingObservable().last();
 
 
-            assertNotNull( "Returned has a version", returned.getVersion() );
+            assertNotNull( "Returned has a version", returned.getTimestamp() );
 
             ids.add( returned );
 

@@ -44,14 +44,14 @@ public class TimebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     @Override
-    public long getWriteShard( final ApplicationScope scope, final Id rowKeyId, final UUID version,
+    public long getWriteShard( final ApplicationScope scope, final Id rowKeyId, final long timestamp,
                                final String... types ) {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
 
     @Override
-    public Iterator<Long> getReadShards( final ApplicationScope scope, final Id rowKeyId, final UUID maxVersion,
+    public Iterator<Long> getReadShards( final ApplicationScope scope, final Id rowKeyId, final long maxTimestamp,
                                          final String... types ) {
         return Collections.singleton(0l).iterator();
     }

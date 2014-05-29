@@ -44,9 +44,9 @@ public interface NodeSerialization extends Migration {
      *
      * @param scope The org scope of the graph
      * @param node The node to mark
-     * @param version The version to mark for deletion
+     * @param timestamp The timestamp to mark for deletion.  Anything <= this time is considered deleted from the graph
      */
-    MutationBatch mark( ApplicationScope scope, Id node, UUID version );
+    MutationBatch mark( ApplicationScope scope, Id node, long timestamp );
 
 
     /**
@@ -55,16 +55,16 @@ public interface NodeSerialization extends Migration {
      * @param node
      * @return
      */
-    MutationBatch delete( ApplicationScope scope, Id node, UUID version );
+    MutationBatch delete( ApplicationScope scope, Id node, long timestamp );
 
     /**
-     * Get the maximum version of a node marked for deletion.  If the node has no mark
+     * Get the maximum timestamp of a node marked for deletion.  If the node has no mark
      * the optional will return empty
      * @param scope The scope to search in
      * @param nodeId The node id
-     * @return The optional uuid.  If none is present, the node is not currently marked
+     * @return The optional timestamp.  If none is present, the node is not currently marked
      */
-    Optional<UUID> getMaxVersion(ApplicationScope scope, Id nodeId);
+    Optional<Long> getMaxVersion(ApplicationScope scope, Id nodeId);
 
     /**
      * Return a map with all max versions from the specified nodeIds.  If no max version is present
@@ -74,5 +74,5 @@ public interface NodeSerialization extends Migration {
      * @param edges The collection of edges we need to check against.  Both the source and target Id's will be added
      * @return A map of all marked Id's, with the mark version as the value
      */
-    Map<Id, UUID> getMaxVersions(ApplicationScope scope, Collection<? extends Edge> edges);
+    Map<Id, Long> getMaxVersions(ApplicationScope scope, Collection<? extends Edge> edges);
 }
