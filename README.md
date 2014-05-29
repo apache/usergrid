@@ -76,14 +76,46 @@ from CPAN as shown below:
 
 ### Getting started
 
-### Developers
+In order to login to Usergrid using the API, create a Usergrid::Client object
+as shown below and invoke the login function.
 
-Test coverage reporting requires Devel::Cover module which can be
+```perl
+# Create the client object that will be used for all subsequent requests
+my $client = Usergrid::Client->new(
+  organization => $organization,
+  application  => $application,
+  api_url      => $api_url
+);
+
+$client->login($username, $password);
+```
+
+For troubleshooting the requests and responses, tracing can be enabled, which
+will log all requests and responses to standard output.
+
+```perl
+# Create the client object that will be used for all subsequent requests
+my $client = Usergrid::Client->new(
+  organization => $organization,
+  application  => $application,
+  api_url      => $api_url,
+  trace        => 1
+);
+```
+
+To view API documentation:
+
+    $ perldoc Usergrid::Client
+
+
+### Code Coverage
+
+Code coverage reporting requires Devel::Cover module which can be
 installed from CPAN as shown:
 
     $ sudo cpan install Devel::Cover
 
-For generating reports on test coverage:
+For generating reports on code coverage:
 
     $ ./Build testcover
 
@@ -92,7 +124,11 @@ The generated report artifacts are located in cover_db/.
 ## Release notes
 
 ### 0.1
+
 * Initial release
+* Application and admin authentication
+* Support for collections and entities (CRUD & queries)
+* Query, create and delete connections
 
 ## License
 Licensed to the Apache Software Foundation (ASF) under one or more
