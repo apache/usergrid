@@ -280,7 +280,7 @@ public class CpRelationManager implements RelationManager {
             String edgeType = edgeTypes.next();
 
             Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType( 
-                cpHeadEntity.getId(), edgeType, cpHeadEntity.getVersion(), null ));
+                cpHeadEntity.getId(), edgeType, cpHeadEntity.getVersion().timestamp(), null ));
 
             Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
             while ( iter.hasNext() ) {
@@ -327,7 +327,7 @@ public class CpRelationManager implements RelationManager {
                     new SimpleId(headEntity.getUuid(), headEntity.getType()), 
                     collName,  
                     entityId, 
-                    UUIDGenerator.newTimeUUID(), 
+                    UUIDGenerator.newTimeUUID().timestamp(), 
                     null));
 
         return edges.toBlockingObservable().firstOrDefault(null) != null;
@@ -404,7 +404,7 @@ public class CpRelationManager implements RelationManager {
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleMarkedEdge( 
             cpHeadEntity.getId(), getEdgeTypeFromCollectionName( collName ), memberEntity.getId(), 
-            UUIDGenerator.newTimeUUID(), false );
+            UUIDGenerator.newTimeUUID().timestamp(), false );
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
@@ -540,7 +540,7 @@ public class CpRelationManager implements RelationManager {
         // remove collection edge
         Edge edge = new SimpleMarkedEdge( cpHeadEntity.getId(), 
             getEdgeTypeFromCollectionName( collName ), memberEntity.getId(), 
-            UUIDGenerator.newTimeUUID(), false );
+            UUIDGenerator.newTimeUUID().timestamp(), false );
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.deleteEdge(edge).toBlockingObservable().last();
 
@@ -631,7 +631,7 @@ public class CpRelationManager implements RelationManager {
 
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleMarkedEdge( cpHeadEntity.getId(), connectionType, 
-            targetEntity.getId(), UUIDGenerator.newTimeUUID(), false );
+            targetEntity.getId(), UUIDGenerator.newTimeUUID().timestamp(), false );
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
