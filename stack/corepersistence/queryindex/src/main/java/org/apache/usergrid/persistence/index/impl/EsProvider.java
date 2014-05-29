@@ -18,19 +18,21 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
-import org.apache.usergrid.persistence.index.IndexFig;
+
 import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
+import org.apache.usergrid.persistence.index.IndexFig;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 
 /**
  * Provides access to ElasticSearch client.
@@ -38,69 +40,66 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class EsProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(EsProvider.class);
+    private static final Logger log = LoggerFactory.getLogger( EsProvider.class );
 
     private final IndexFig indexFig;
     private static Client client;
 
+
     @Inject
-    public EsProvider(IndexFig fig) {
+    public EsProvider( IndexFig fig ) {
         this.indexFig = fig;
     }
 
+
     public synchronized Client getClient() {
-        if (client == null) {
-            client = getClient(indexFig);
+        if ( client == null ) {
+            client = getClient( indexFig );
         }
         return client;
     }
 
-    public static synchronized Client getClient(IndexFig fig) {
 
-        if (client == null) {
+    public static synchronized Client getClient( IndexFig fig ) {
+
+        if ( client == null ) {
 
             Client newClient = null;
 
-            if (fig.isEmbedded()) {
+            if ( fig.isEmbedded() ) {
 
                 int port = AvailablePortFinder.getNextAvailable( 2000 );
 
-                Settings settings = ImmutableSettings.settingsBuilder()
-                        .put("node.http.enabled", true)
-                        .put("transport.tcp.port", port)
-                        .put("path.logs", "target/elasticsearch/logs_" + port)
-                        .put("path.data", "target/elasticsearch/data_" + port)
-                        .put("gateway.type", "none")
-                        .put("index.store.type", "memory")
-                        .put("index.number_of_shards", 1)
-                        .put("index.number_of_replicas", 1)
-                        .build();
+                Settings settings = ImmutableSettings.settingsBuilder().put( "node.http.enabled", true )
+                                                     .put( "transport.tcp.port", port )
+                                                     .put( "path.logs", "target/elasticsearch/logs_" + port )
+                                                     .put( "path.data", "target/elasticsearch/data_" + port )
+                                                     .put( "gateway.type", "none" ).put( "index.store.type", "memory" )
+                                                     .put( "index.number_of_shards", 1 )
+                                                     .put( "index.number_of_replicas", 1 ).build();
 
-                log.info("Starting ElasticSearch embedded with settings: " +  settings.getAsMap());
+                log.info( "Starting ElasticSearch embedded with settings: " + settings.getAsMap() );
 
-                Node node = NodeBuilder.nodeBuilder().local(true).settings(settings).node();
+                Node node = NodeBuilder.nodeBuilder().local( true ).settings( settings ).node();
+                newClient = node.client();
+            }
+            else { // build client that connects to all hosts
+                final String hosts = fig.getHosts();
+
+                Settings settings =
+                        ImmutableSettings.settingsBuilder().put( "client.transport.ping_timeout", 2000 ) // milliseconds
+                                .put( "client.transport.nodes_sampler_interval", 100 ).put( "http.enabled", false )
+
+                                //this assumes that we're using zen for host discovery.  Putting an explicit set of
+                                // bootstrap hosts ensures we connect to a valid cluster.
+                                .put( "discovery.zen.ping.unicast.hosts", hosts ).build();
+
+                Node node = NodeBuilder.nodeBuilder().settings( settings ).clusterName( fig.getClusterName() )
+                                       .client( true ).node();
+
                 newClient = node.client();
 
-            } else { // build client that connects to all hosts
 
-                Settings settings = ImmutableSettings.settingsBuilder()
-                        .put("cluster.name", fig.getClusterName() )
-                        // TODO: consider making these configurable
-                        .put("client.transport.ignore_cluster_name", true )
-                        .put("client.transport.ping_timeout", 2000) // milliseconds
-                        .put("client.transport.nodes_sampler_interval", 100 )
-                        .build();
-
-                log.info("Creating ElasticSearch client with settings: " +  settings.getAsMap());
-
-                TransportClient transportClient = new TransportClient(settings);
-
-                for (String host : fig.getHosts().split(",")) {
-                    transportClient.addTransportAddress(
-                            new InetSocketTransportAddress(host.trim(), fig.getPort()));
-                    log.info("   Added transport for ElasticSearch host {}:{}", host.trim(), fig.getPort() ) ;
-                }
-                newClient = transportClient;
             }
             client = newClient;
         }

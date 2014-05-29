@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
+import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -39,7 +40,7 @@ public class SimpleSearchByEdge implements SearchByEdge {
     private final Id sourceNode;
     private final Id targetNode;
     private final String type;
-    private final UUID maxVersion;
+    private final long maxTimestamp;
     private final Optional<Edge> last;
 
 
@@ -48,20 +49,20 @@ public class SimpleSearchByEdge implements SearchByEdge {
      * @param sourceNode The source node of the edge
      * @param targetNode The target node of the edge
      * @param type The edge type
-     * @param maxVersion The maximum version to return
+     * @param maxTimestamp The maximum timestamp to seek from
      * @param last The value to start seeking from.  Must be >= this value
      */
-    public SimpleSearchByEdge( final Id sourceNode, final String type, final Id targetNode, final UUID maxVersion, final Edge last ) {
+    public SimpleSearchByEdge( final Id sourceNode, final String type, final Id targetNode, final long maxTimestamp, final Edge last ) {
         ValidationUtils.verifyIdentity(sourceNode);
         ValidationUtils.verifyIdentity(targetNode);
         ValidationUtils.verifyString( type, "type" );
-        ValidationUtils.verifyTimeUuid( maxVersion, "maxVersion" );
+        EdgeUtils.validateTimestamp(  maxTimestamp, "maxTimestamp" );
 
 
         this.sourceNode = sourceNode;
         this.targetNode = targetNode;
         this.type = type;
-        this.maxVersion = maxVersion;
+        this.maxTimestamp = maxTimestamp;
         this.last = Optional.fromNullable(last);
     }
 
@@ -85,8 +86,8 @@ public class SimpleSearchByEdge implements SearchByEdge {
 
 
     @Override
-    public UUID getMaxVersion() {
-        return maxVersion;
+    public long getMaxTimestamp() {
+        return maxTimestamp;
     }
 
 

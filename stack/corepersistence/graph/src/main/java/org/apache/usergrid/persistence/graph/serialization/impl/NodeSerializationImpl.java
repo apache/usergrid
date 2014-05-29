@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -44,6 +43,7 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -112,29 +112,29 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     @Override
-    public MutationBatch mark( final ApplicationScope scope, final Id node, final UUID version ) {
+    public MutationBatch mark( final ApplicationScope scope, final Id node, final long timestamp ) {
         ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
-        ValidationUtils.verifyTimeUuid( version, "version" );
+        EdgeUtils.validateTimestamp(timestamp, "timestamp");
 
         MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
-        batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp( version.timestamp() )
-             .putColumn( COLUMN_NAME, version );
+        batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp(timestamp )
+             .putColumn( COLUMN_NAME, timestamp );
 
         return batch;
     }
 
 
     @Override
-    public MutationBatch delete( final ApplicationScope scope, final Id node, final UUID version ) {
+    public MutationBatch delete( final ApplicationScope scope, final Id node, final long timestamp ) {
         ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
-        ValidationUtils.verifyTimeUuid( version, "version" );
+        EdgeUtils.validateTimestamp( timestamp, "timestamp" );
 
         MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
-        batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp( version.timestamp() )
+        batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp( timestamp )
              .deleteColumn( COLUMN_NAME );
 
         return batch;
@@ -142,7 +142,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     @Override
-    public Optional<UUID> getMaxVersion( final ApplicationScope scope, final Id node ) {
+    public Optional<Long> getMaxVersion( final ApplicationScope scope, final Id node ) {
         ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
 
@@ -154,7 +154,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
             Column<Boolean> result =
                     query.getKey( ScopedRowKey.fromKey( scope, node ) ).getColumn( COLUMN_NAME ).execute().getResult();
 
-            return Optional.of( result.getUUIDValue() );
+            return Optional.of( result.getLongValue() );
         }
         catch ( NotFoundException e ) {
             //swallow, there's just no column
@@ -167,7 +167,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     @Override
-    public Map<Id, UUID> getMaxVersions( final ApplicationScope scope, final Collection<? extends Edge> nodeIds ) {
+    public Map<Id, Long> getMaxVersions( final ApplicationScope scope, final Collection<? extends Edge> nodeIds ) {
         ValidationUtils.validateApplicationScope( scope );
         Preconditions.checkNotNull( nodeIds, "nodeIds cannot be null" );
 
@@ -178,7 +178,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         final List<ScopedRowKey<ApplicationScope, Id>> keys = new ArrayList<ScopedRowKey<ApplicationScope, Id>>(nodeIds.size());
 
         //worst case all are marked
-        final Map<Id, UUID> versions = new HashMap<Id, UUID>(nodeIds.size());
+        final Map<Id, Long> versions = new HashMap<>(nodeIds.size());
 
         for(final Edge edge: nodeIds){
             keys.add( ScopedRowKey.fromKey( scope, edge.getSourceNode() ) );
@@ -193,7 +193,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
                 Column<Boolean> column = row.getColumns().getColumnByName( COLUMN_NAME );
 
                 if(column != null){
-                    versions.put( row.getKey().getKey(), column.getUUIDValue() );
+                    versions.put( row.getKey().getKey(), column.getLongValue() );
                 }
 
 
