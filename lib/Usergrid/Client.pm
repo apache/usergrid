@@ -125,6 +125,21 @@ sub get_collection {
   return Usergrid::Collection->new( object => $self->GET($uri) );
 }
 
+sub update_collection {
+  my ($self, $collection, $properties, $query) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/?ql={query}')
+    ->process(
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection,
+      query        => ( defined $query ) ? $query : undef
+  );
+
+  return Usergrid::Collection->new( object => $self->PUT($uri, $properties) );
+}
+
 sub query_collection {
   my ($self, $collection, $query, $limit) = @_;
 

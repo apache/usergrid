@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 11;
+use Test::More tests => 35;
 
 # TEST DATA
 my $api_url         = 'http://localhost:8080';
@@ -12,7 +12,7 @@ my $username        = 'testuser';
 my $password        = 'Testuser123$';
 ###########
 
-my ($user, $token, $book, $collection);
+my ($user, $token, $book, $collection, $count);
 
 BEGIN {
   use_ok 'Usergrid::Client'     || print "Bail out!\n";
@@ -37,31 +37,34 @@ eval {
 
   ok ( $collection->count() == 0, "count must be initially zero" );
 
-  $client->add_entity("books", { name => "Ulysses", author => "James Joyce" });
-  $client->add_entity("books", { name => "Neuromancer", author => "William Gibson" });
-  $client->add_entity("books", { name => "On the Road", author => "Jack Kerouac" });
-  $client->add_entity("books", { name => "Ubik", author => "Philip K. Dick" });
-  $client->add_entity("books", { name => "Reef", author => "Romesh Gunasekera" });
-
-  $collection = $client->get_collection("books");
-
-  ok ( $collection->count() == 5, "count must now be five" );
-
-  while ($collection->has_next_entity()) {
-    $book = $collection->get_next_entity();
-    ok ( length($book->get('name')) > 3, "check the book titles" );
+  for (my $i = 0; $i < 30; $i++) {
+    $client->add_entity("books", { name => "book $i", index => $i });
   }
 
-  $collection->reset_iterator();
+  $collection = $client->get_collection("books", 30);
 
-  ok ( $collection->iterator == -1, "iterator must be reset" );
+  ok ( $collection->count() == 30, "count must now be 30" );
 
-  ok ( $collection->count() == 5, "count must be five" );
+  $client->update_collection("books", { in_stock => 1 });
+
+  $collection = $client->get_collection("books", 30);
 
   while ($collection->has_next_entity()) {
     $book = $collection->get_next_entity();
+    ok ( $book->get('in_stock') == 1 );
+  }
+
+  $client->update_collection("books", { in_stock => 0 }, "select * where index = '1' or index = '2' or index = '3' or index = '4' or index = '5'");
+
+  $collection = $client->get_collection("books", 30);
+
+  while ($collection->has_next_entity()) {
+    $book = $collection->get_next_entity();
+    $count++ if ($book->get('index') =~ /[12345]/ && $book->get('in_stock') == 0);
     $client->delete_entity($book);
   }
+
+  ok ( $count == 5, "batch update only 5 entities" );
 
   $collection = $client->get_collection("books");
 
