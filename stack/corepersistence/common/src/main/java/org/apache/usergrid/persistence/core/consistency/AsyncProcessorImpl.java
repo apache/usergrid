@@ -109,9 +109,9 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
     @Override
     public void start( final AsynchronousMessage<T> event ) {
 
-        if ( listeners.size() == 0 ) {
-            throw new RuntimeException( "Nothing is listening.  You're talking to /dev/null!" );
-        }
+//        if ( listeners.size() == 0 ) {
+//            throw new RuntimeException( "Nothing is listening.  You're talking to /dev/null!" );
+//        }
 
         final T data = event.getEvent();
         /**
