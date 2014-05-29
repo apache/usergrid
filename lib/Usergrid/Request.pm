@@ -21,12 +21,24 @@ use Carp qw(confess);
 
 use REST::Client;
 
-sub is_token_required {
+=head1 NAME
+
+Usergrid::Request - Role that provides HTTP invocations methods
+
+=head1 DESCRIPTION
+
+Provides methods for easily invoking HTTP methods.
+
+=cut
+
+# Private method
+sub _is_token_required {
   my ($self, $resource) = @_;
   return 0 if $resource =~ m/\/management\/token/;
   1;
 }
 
+#Private method
 sub _api_request {
   my ($self, $method, $resource, $request) = @_;
 
@@ -36,7 +48,7 @@ sub _api_request {
   my $client = REST::Client->new();
   $client->setHost($self->api_url);
 
-  if ($self->is_token_required($resource) == 1 && defined $self->user_token) {
+  if ($self->_is_token_required($resource) == 1 && defined $self->user_token) {
      $client->addHeader('Authorization',
         'Bearer ' . $self->user_token->{'access_token'});
   }
@@ -62,24 +74,69 @@ sub _api_request {
   return $self->json_decode($response);
 }
 
+=head1 METHODS
+
+=over 4
+
+=item DELETE ($resource)
+
+Invokes the specified resource with the HTTP DELETE method.
+
+=cut
 sub DELETE {
   my ($self, $resource) = @_;
   $self->_api_request('DELETE', $resource);
 }
 
+=item GET ($resource)
+
+Invokes the specified resource with the HTTP GET method.
+
+=cut
 sub GET {
   my ($self, $resource) = @_;
   $self->_api_request('GET', $resource);
 }
 
+=item POST ($resource, $request)
+
+Invokes the specified resource with the HTTP POST method and passes in the
+JSON request.
+
+=cut
 sub POST {
   my ($self, $resource, $request) = @_;
   $self->_api_request('POST', $resource, $request);
 }
 
+=item POST ($resource, $request)
+
+Invokes the specified resource with the HTTP PUT method and passes in the
+JSON request.
+
+=cut
 sub PUT {
   my ($self, $resource, $request) = @_;
   $self->_api_request('PUT', $resource, $request);
 }
 
 1;
+
+
+__END__
+
+=back
+
+=head1 SEE ALSO
+
+L<Usergrid::Client>, L<Usergrid::Core>, L<Usergrid::Collection>, L<Usergrid::Entity>
+
+=head1 LICENSE
+
+This software is distributed under the Apache 2 license.
+
+=head1 AUTHOR
+
+Anuradha Weeraman <anuradha@cpan.org>
+
+=cut

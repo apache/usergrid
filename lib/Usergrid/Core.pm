@@ -29,17 +29,51 @@ with (
   'Usergrid::Request',
 );
 
+=head1 NAME
+
+Usergrid::Core - Common functionality
+
+
+=head1 DESCRIPTION
+
+Usergrid::Core is the base class for Usergrid::Client and contains common
+functionality and attributes.
+
+=head1 ATTRIBUTES
+
+=over
+
+=item organization
+
+Organization name (Read/Write, String, Required).
+
+=item application
+
+Application name (Read/Write, String, Required).
+
+=item api_url
+
+The URL for the API server (Read/Write, String, Required).
+
+=item trace
+
+Enable/disable request and response tracing for debugging and troubleshooting
+(Read/Write, Boolean, Optional).
+
+=item user_token
+
+The logged in user context (Read/Write).
+
+=cut
 has 'organization'  => ( is => 'rw', isa => 'Str', required => 1);
 has 'application'   => ( is => 'rw', isa => 'Str', required => 1);
 has 'api_url'       => ( is => 'rw', isa => 'Str', required => 1);
-
-has 'username'      => ( is => 'rw', isa => 'Str');
-has 'password'      => ( is => 'rw', isa => 'Str');
 
 has 'trace'         => ( is => 'rw', isa => 'Bool', trigger => \&_enable_tracing);
 
 has 'user_token'    => ( is => 'rw');
 
+# internal method
 sub _enable_tracing {
   my ($self, $state, $old_state) = @_;
   if ($state) {
@@ -48,24 +82,64 @@ sub _enable_tracing {
   }
 }
 
+=head1 METHODS
+
+=item trace_message ($message)
+
+Utility method to log a message to console if tracing is enabled.
+
+=cut
 sub trace_message {
   my ($self, $message) = @_;
   $Usergrid::Core::logger->debug($message) if (defined $Usergrid::Core::logger);
 }
 
+=item prettify ($message)
+
+Returns a prettified string representation for a JSON encoded object.
+
+=cut
 sub prettify {
   my ($self, $json_obj) = @_;
   return $json->pretty->encode($json_obj);
 }
 
+=item json_encode ($hashref)
+
+Returns a JSON object from a hash reference.
+
+=cut
 sub json_encode {
   my ($self, $json_obj) = @_;
   $json->encode($json_obj);
 }
 
+=item json_decode ($json_object)
+
+Returns a hash reference from a JSON object.
+
+=cut
 sub json_decode {
   my ($self, $json_obj) = @_;
   $json->decode($json_obj);
 }
 
 1;
+
+__END__
+
+=back
+
+=head1 SEE ALSO
+
+L<Usergrid::Client>, L<Usergrid::Collection>, L<Usergrid::Entity>, L<Usergrid::Request>
+
+=head1 LICENSE
+
+This software is distributed under the Apache 2 license.
+
+=head1 AUTHOR
+
+Anuradha Weeraman <anuradha@cpan.org>
+
+=cut

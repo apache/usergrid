@@ -18,15 +18,49 @@ package Usergrid::Collection;
 use Moose;
 use namespace::autoclean;
 
+=head1 NAME
+
+Usergrid::Collection - Encapsulates collection functionality
+
+=head1 DESCRIPTION
+
+Provides support for encapsulating collection data and for iterating through
+them easily.
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item object
+
+A hash reference with the collection data (Read/Write, Required).
+
+=back
+=cut
 has 'object'      => ( is => 'rw', required => 1 );
 has 'iterator'    => ( is => 'rw', isa => 'Int', default => sub { -1 } );
 
+=head1 METHODS
+
+=over 4
+
+=item has_next_entity
+
+Returns true if there's another entity available during iteration.
+
+=cut
 sub has_next_entity {
   my $self = shift;
   my $next = $self->iterator + 1;
   return ($next >= 0 && $next < $self->count());
 }
 
+=item get_next_entity
+
+Returns the next available entity. Checks to see if there's an entity available
+to return, and if not returns an undef.
+
+=cut
 sub get_next_entity {
   my $self = shift;
   if ($self->has_next_entity()) {
@@ -36,22 +70,42 @@ sub get_next_entity {
   return undef;
 }
 
+=item count
+
+Returns the count of the items in the collection.
+
+=cut
 sub count {
   my $self = shift;
   return scalar @{$self->object->{'entities'}};
 }
 
+=item reset_iterator
+
+Rewinds the iterator back to the beginning.
+
+=cut
 sub reset_iterator {
   my $self = shift;
   $self->iterator (-1);
 }
 
+=item get_first_entity
+
+Returns the first entity in the collection
+
+=cut
 sub get_first_entity {
   my $self = shift;
   return ($self->count() > 0) ? Usergrid::Entity->new (
     object => $self->object->{'entities'}[0] ) : undef;
 }
 
+=item get_last_entity
+
+Returns the last entity in the collection
+
+=cut
 sub get_last_entity {
   my $self = shift;
   return ($self->count() > 0) ? Usergrid::Entity->new (
@@ -62,3 +116,21 @@ sub get_last_entity {
 __PACKAGE__->meta->make_immutable;
 
 1;
+
+__END__
+
+=back
+
+=head1 SEE ALSO
+
+L<Usergrid::Client>, L<Usergrid::Core>, L<Usergrid::Entity>, L<Usergrid::Request>
+
+=head1 LICENSE
+
+This software is distributed under the Apache 2 license.
+
+=head1 AUTHOR
+
+Anuradha Weeraman <anuradha@cpan.org>
+
+=cut

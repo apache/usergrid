@@ -103,10 +103,12 @@ my $client = Usergrid::Client->new(
 );
 ```
 
-To view API documentation:
+To get more details on the API, read the following perldocs:
 
-    $ perldoc Usergrid::Client
-
+    Usergrid::Client
+    Usergrid::Core
+    Usergrid::Collection
+    Usergrid::Entity
 
 ### Code Coverage
 

@@ -18,14 +18,46 @@ package Usergrid::Entity;
 use Moose;
 use namespace::autoclean;
 
+=head1 NAME
+
+Usergrid::Entity - Encapsulates entity functionality
+
+=head1 DESCRIPTION
+
+Provides support for encapsulating entity data and for accessing it easily.
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item object
+
+A hash reference with the entity data (Read/Write, Required).
+
+=back
+=cut
 has 'object'      => ( is => 'rw', required => 1);
 
+=head1 METHODS
+
+=over 4
+
+=item get ($attribute)
+
+Returns the value of the specified attribute.
+
+=cut
 sub get {
   my ($self, $key) = @_;
   return $self->object->{$key} if (defined $self->object->{$key});
   return $self->object->{'entities'}[0]->{$key};
 }
 
+=item set ($attribute, $value)
+
+Sets the value of the specified attribute.
+
+=cut
 sub set {
   my ($self, $key, $value) = @_;
   if (defined $self->object->{$key}) {
@@ -38,3 +70,21 @@ sub set {
 __PACKAGE__->meta->make_immutable;
 
 1;
+
+__END__
+
+=back
+
+=head1 SEE ALSO
+
+L<Usergrid::Client>, L<Usergrid::Core>, L<Usergrid::Collection>, L<Usergrid::Request>
+
+=head1 LICENSE
+
+This software is distributed under the Apache 2 license.
+
+=head1 AUTHOR
+
+Anuradha Weeraman <anuradha@cpan.org>
+
+=cut
