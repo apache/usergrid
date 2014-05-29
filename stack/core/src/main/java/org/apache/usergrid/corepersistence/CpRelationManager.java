@@ -64,7 +64,7 @@ import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
@@ -403,9 +403,9 @@ public class CpRelationManager implements RelationManager {
         }
 
         // create graph edge connection from head entity to member entity
-        Edge edge = new SimpleMarkedEdge( 
+        Edge edge = new SimpleEdge(
             cpHeadEntity.getId(), getEdgeTypeFromCollectionName( collName ), memberEntity.getId(), 
-            UUIDGenerator.newTimeUUID(), false );
+           memberEntity.getId().getUuid().timestamp() );
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
@@ -539,9 +539,9 @@ public class CpRelationManager implements RelationManager {
         ei.deindex( memberEntity );
 
         // remove collection edge
-        Edge edge = new SimpleMarkedEdge( cpHeadEntity.getId(), 
+        Edge edge = new SimpleEdge( cpHeadEntity.getId(),
             getEdgeTypeFromCollectionName( collName ), memberEntity.getId(), 
-            UUIDGenerator.newTimeUUID(), false );
+           memberEntity.getId().getUuid().timestamp() );
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.deleteEdge(edge).toBlockingObservable().last();
 
