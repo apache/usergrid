@@ -61,9 +61,6 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
@@ -103,6 +100,7 @@ public class CpEntityManager implements EntityManager {
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManager.class );
 
     private static final String COLL_SUFFIX = "zzzcollzzz"; 
+    private static final String CONN_SUFFIX = "zzzconnzzz"; 
 
     private UUID applicationId;
     private Application application;
@@ -141,10 +139,16 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-   static String getCollectionScopeNameFromCollectionName( String name ) {
-       String csn = name + COLL_SUFFIX;
-       return csn;
-   }
+    static String getCollectionScopeNameFromCollectionName( String name ) {
+        String csn = name + COLL_SUFFIX;
+        return csn;
+    }
+
+
+    static String getConnectionScopeName( String connectionType ) {
+        String csn = connectionType + CONN_SUFFIX;
+        return csn;
+    }
 
 
     @Override
