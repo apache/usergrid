@@ -19,17 +19,13 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import java.nio.ByteBuffer;
 import java.util.Iterator;
-import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 import org.jukito.All;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -39,9 +35,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
-import com.netflix.astyanax.serializers.UUIDSerializer;
 
 import rx.Observable;
 
@@ -164,7 +158,7 @@ public abstract class GraphManagerIT {
 
         final long earlyVersion = 1000l;
 
-        Edge edge = createEdge( "source", "test", "target", earlyVersion);
+        Edge edge = createEdge( "source", "test", "target", earlyVersion );
 
         gm.writeEdge( edge ).toBlockingObservable().last();
 
@@ -180,7 +174,7 @@ public abstract class GraphManagerIT {
         assertEquals( "Correct edge returned", edge, returned );
 
         //now test with an earlier version, we shouldn't get the edge back
-        search = createSearchByEdge( edge.getSourceNode(), edge.getType(), earlyVersion-1, null );
+        search = createSearchByEdge( edge.getSourceNode(), edge.getType(), earlyVersion - 1, null );
 
         edges = gm.loadEdgesFromSource( search );
 
@@ -199,7 +193,7 @@ public abstract class GraphManagerIT {
         final long earlyVersion = 10000l;
 
 
-        Edge edge = createEdge( "source", "test", "target", earlyVersion);
+        Edge edge = createEdge( "source", "test", "target", earlyVersion );
 
         gm.writeEdge( edge ).toBlockingObservable().last();
 
@@ -215,7 +209,7 @@ public abstract class GraphManagerIT {
         assertEquals( "Correct edge returned", edge, returned );
 
         //change edge type to be invalid, shouldn't get a result
-        search = createSearchByEdge( edge.getTargetNode(), edge.getType(), earlyVersion-1, null );
+        search = createSearchByEdge( edge.getTargetNode(), edge.getType(), earlyVersion - 1, null );
 
         edges = gm.loadEdgesToTarget( search );
 
@@ -307,11 +301,10 @@ public abstract class GraphManagerIT {
         GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
 
 
-
         final long earlyVersion = 10000l;
 
 
-        Edge edge1 = createEdge( "source", "test", "target", earlyVersion+1 );
+        Edge edge1 = createEdge( "source", "test", "target", earlyVersion + 1 );
 
         final Id sourceId = edge1.getSourceNode();
         final Id targetId = edge1.getTargetNode();
@@ -319,11 +312,11 @@ public abstract class GraphManagerIT {
 
         gm.writeEdge( edge1 ).toBlockingObservable().last();
 
-        Edge edge2 = createEdge( sourceId, edge1.getType(), targetId, earlyVersion+2 );
+        Edge edge2 = createEdge( sourceId, edge1.getType(), targetId, earlyVersion + 2 );
 
         gm.writeEdge( edge2 ).toBlockingObservable().last();
 
-        Edge edge3 = createEdge( sourceId, edge1.getType(), targetId, earlyVersion +3 );
+        Edge edge3 = createEdge( sourceId, edge1.getType(), targetId, earlyVersion + 3 );
 
         gm.writeEdge( edge3 ).toBlockingObservable().last();
 
@@ -590,7 +583,8 @@ public abstract class GraphManagerIT {
         assertEquals( "Correct edge returned", edge, returned );
 
         final SearchByEdge searchByEdge =
-                createGetByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getTimestamp(), null );
+                createGetByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getTimestamp(),
+                        null );
 
         returned = gm.loadEdgeVersions( searchByEdge ).toBlockingObservable().single();
 
@@ -600,7 +594,6 @@ public abstract class GraphManagerIT {
 
         //now delete it
         returned = gm.deleteEdge( edge ).toBlockingObservable().last();
-
 
 
         //now test retrieval, should be null
@@ -708,7 +701,7 @@ public abstract class GraphManagerIT {
 
         //get our 2 edge types
         Observable<String> edges =
-                gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(),null, null ) );
+                gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null, null ) );
 
 
         Iterator<String> results = edges.toBlockingObservable().getIterator();
@@ -723,7 +716,7 @@ public abstract class GraphManagerIT {
 
         //now test sub edges
 
-        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test",null, null ) );
+        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -735,7 +728,8 @@ public abstract class GraphManagerIT {
         assertFalse( "No results", results.hasNext() );
 
         //now get types for test2
-        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test2",null, null ) );
+        edges = gm.getIdTypesFromSource(
+                new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test2", null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -770,7 +764,7 @@ public abstract class GraphManagerIT {
 
 
         //get our 2 edge types
-        final SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(),null, null );
+        final SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), null, null );
 
         Observable<String> edges = gm.getEdgeTypesToTarget( edgeTypes );
 
@@ -787,7 +781,7 @@ public abstract class GraphManagerIT {
 
         //now test sub edges
 
-        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test",null, null ) );
+        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -799,7 +793,7 @@ public abstract class GraphManagerIT {
 
 
         //now get types for test2
-        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test2",null, null ) );
+        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test2", null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -836,7 +830,7 @@ public abstract class GraphManagerIT {
 
 
         //get our 2 edge types
-        SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(),null, null );
+        SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null, null );
 
         Observable<String> edges = gm.getEdgeTypesFromSource( edgeTypes );
 
@@ -850,13 +844,13 @@ public abstract class GraphManagerIT {
 
         //now load the next page
 
-        edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(),null, "test" );
+        //tests that even if a prefix is specified, the last takes precedence
+        edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null, "test" );
 
         edges = gm.getEdgeTypesFromSource( edgeTypes );
 
 
         results = edges.toBlockingObservable().getIterator();
-
 
         assertEquals( "Edges correct", "test2", results.next() );
         assertFalse( "No more edges", results.hasNext() );
@@ -864,7 +858,7 @@ public abstract class GraphManagerIT {
 
         //now test sub edges
 
-        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test",null, null ) );
+        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -877,7 +871,7 @@ public abstract class GraphManagerIT {
         //now get the next page
 
         edges = gm.getIdTypesFromSource(
-                new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test",null, targetId1.getType() ) );
+                new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null, targetId1.getType() ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -913,7 +907,7 @@ public abstract class GraphManagerIT {
 
 
         //get our 2 edge types
-        SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(),null, null );
+        SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), null, null );
 
         Observable<String> edges = gm.getEdgeTypesToTarget( edgeTypes );
 
@@ -929,7 +923,7 @@ public abstract class GraphManagerIT {
 
         //now load the next page
 
-        edgeTypes = new SimpleSearchEdgeType( testTargetEdge2.getTargetNode(),null, "test" );
+        edgeTypes = new SimpleSearchEdgeType( testTargetEdge2.getTargetNode(), null, "test" );
 
         edges = gm.getEdgeTypesToTarget( edgeTypes );
 
@@ -944,7 +938,7 @@ public abstract class GraphManagerIT {
 
         //now test sub edges
 
-        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test",null, null ) );
+        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -958,7 +952,7 @@ public abstract class GraphManagerIT {
         //now get the next page
 
         edges = gm.getIdTypesToTarget(
-                new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test",null, sourceId1.getType() ) );
+                new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null, sourceId1.getType() ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -991,11 +985,8 @@ public abstract class GraphManagerIT {
         final long maxVersion = System.currentTimeMillis();
 
 
-
-        assertTrue( Long.compare( maxVersion, edge2.getTimestamp() ) > 0);
-        assertTrue( Long.compare( maxVersion, edge1.getTimestamp() ) > 0);
-
-
+        assertTrue( Long.compare( maxVersion, edge2.getTimestamp() ) > 0 );
+        assertTrue( Long.compare( maxVersion, edge1.getTimestamp() ) > 0 );
 
 
         //get our 2 edges
@@ -1006,7 +997,7 @@ public abstract class GraphManagerIT {
         Iterator<Edge> results = edges.toBlockingObservable().getIterator();
 
 
-        System.out.println("\n\n\n\n\n\n\n\n\n\n");
+        System.out.println( "\n\n\n\n\n\n\n\n\n\n" );
 
         assertEquals( "Edges correct", edge2, results.next() );
 
@@ -1016,11 +1007,11 @@ public abstract class GraphManagerIT {
 
         //now delete one of the edges
 
-        System.out.println("\n\n\n\n\n\n\n\n\n\n");
+        System.out.println( "\n\n\n\n\n\n\n\n\n\n" );
 
         gm.deleteEdge( edge1 ).toBlockingObservable().last();
 
-        System.out.println("\n\n\n\n\n\n\n\n\n\n");
+        System.out.println( "\n\n\n\n\n\n\n\n\n\n" );
 
 
         edges = gm.loadEdgesFromSource(
@@ -1034,13 +1025,13 @@ public abstract class GraphManagerIT {
 
         assertFalse( "No more edges", results.hasNext() );
 
-        System.out.println("\n\n\n\n\n\n\n\n\n\n");
+        System.out.println( "\n\n\n\n\n\n\n\n\n\n" );
 
         //now delete one of the edges
 
         gm.deleteEdge( edge2 ).toBlockingObservable().last();
 
-        System.out.println("\n\n\n\n\n\n\n\n\n\n");
+        System.out.println( "\n\n\n\n\n\n\n\n\n\n" );
 
         edges = gm.loadEdgesFromSource(
                 createSearchByEdge( edge1.getSourceNode(), edge1.getType(), maxVersion, null ) );
@@ -1441,6 +1432,204 @@ public abstract class GraphManagerIT {
 
 
         assertFalse( "No more edges", results.hasNext() );
+    }
+
+
+    @Test
+    public void testWriteReadEdgeTypesSourceTypesPrefix() {
+
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+
+        Id sourceId = new SimpleId( "source" );
+        Id targetId = new SimpleId( "target" );
+
+        Edge testTargetEdge = createEdge( sourceId, "test1edge1", targetId, System.currentTimeMillis() );
+
+        gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
+
+        Edge testTarget2Edge = createEdge( sourceId, "test1edge2", targetId, System.currentTimeMillis() );
+
+        gm.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
+
+
+        Edge test2TargetEdge = createEdge( sourceId, "test2edge1", targetId, System.currentTimeMillis() );
+
+        gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
+
+
+        //get our 2 edge types
+        Observable<String> edges =
+                gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), "test1", null ) );
+
+
+        Iterator<String> results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", "test1edge1", results.next() );
+
+        assertEquals( "Edges correct", "test1edge2", results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        edges = gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), "test2", null ) );
+
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", "test2edge1", results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+    }
+
+
+    @Test
+    public void testSourceSubTypes() {
+
+        //now test sub edges
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+
+        Id sourceId = new SimpleId( "source" );
+        Id targetId1target1 = new SimpleId( "type1target1" );
+        Id targetId1target2 = new SimpleId( "type1target2" );
+        Id targetId2 = new SimpleId( "type2target2" );
+
+        Edge testTargetEdge = createEdge( sourceId, "test", targetId1target1, System.currentTimeMillis() );
+
+        gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
+
+        Edge testTarget2Edge = createEdge( sourceId, "test", targetId1target2, System.currentTimeMillis() );
+
+        gm.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
+
+
+        Edge test2TargetEdge = createEdge( sourceId, "test", targetId2, System.currentTimeMillis() );
+
+        gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
+
+
+        Observable<String> edges = gm.getIdTypesFromSource(
+                new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", "type1", null ) );
+
+        Iterator<String> results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Types correct", targetId1target1.getType(), results.next() );
+
+        assertEquals( "Types correct", targetId1target2.getType(), results.next() );
+
+        assertFalse( "No results", results.hasNext() );
+
+        //now get types for test2
+        edges = gm.getIdTypesFromSource(
+                new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", "type2", null ) );
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Types correct", targetId2.getType(), results.next() );
+
+        assertFalse( "No results", results.hasNext() );
+    }
+
+
+    @Test
+    public void testWriteReadEdgeTypesTargetTypesPrefix() {
+
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+
+        Id targetId = new SimpleId( "target" );
+        Id sourceId = new SimpleId( "source" );
+
+        Edge testTargetEdge = createEdge( sourceId, "test1edge1", targetId, System.currentTimeMillis() );
+
+        gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
+
+        Edge testTarget2Edge = createEdge( sourceId, "test1edge2", targetId, System.currentTimeMillis() );
+
+        gm.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
+
+
+        Edge test2TargetEdge = createEdge( sourceId, "test2edge1", targetId, System.currentTimeMillis() );
+
+        gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
+
+
+        //get our 2 edge types
+        Observable<String> edges =
+                gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), "test1", null ) );
+
+
+        Iterator<String> results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", "test1edge1", results.next() );
+
+        assertEquals( "Edges correct", "test1edge2", results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+
+
+        edges = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), "test2", null ) );
+
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Edges correct", "test2edge1", results.next() );
+
+        assertFalse( "No more edges", results.hasNext() );
+    }
+
+
+    @Test
+    public void testTargetSubTypes() {
+
+        //now test sub edges
+        final GraphManager gm = getHelper( emf.createEdgeManager( scope ) );
+
+        Id targetId = new SimpleId( "target" );
+        Id sourceId1target1 = new SimpleId( "type1source1" );
+        Id sourceId1target2 = new SimpleId( "type1source2" );
+        Id sourceId2 = new SimpleId( "type2source2" );
+
+        Edge testTargetEdge = createEdge( sourceId1target1, "test", targetId, System.currentTimeMillis() );
+
+        gm.writeEdge( testTargetEdge ).toBlockingObservable().singleOrDefault( null );
+
+        Edge testTarget2Edge = createEdge( sourceId1target2, "test", targetId, System.currentTimeMillis() );
+
+        gm.writeEdge( testTarget2Edge ).toBlockingObservable().singleOrDefault( null );
+
+
+        Edge test2TargetEdge = createEdge( sourceId2, "test", targetId, System.currentTimeMillis() );
+
+        gm.writeEdge( test2TargetEdge ).toBlockingObservable().singleOrDefault( null );
+
+
+        Observable<String> edges = gm.getIdTypesToTarget(
+                new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", "type1", null ) );
+
+        Iterator<String> results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Types correct", sourceId1target1.getType(), results.next() );
+
+        assertEquals( "Types correct", sourceId1target2.getType(), results.next() );
+
+        assertFalse( "No results", results.hasNext() );
+
+        //now get types for test2
+        edges = gm.getIdTypesToTarget(
+                new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", "type2", null ) );
+
+        results = edges.toBlockingObservable().getIterator();
+
+
+        assertEquals( "Types correct", sourceId2.getType(), results.next() );
+
+        assertFalse( "No results", results.hasNext() );
     }
 
 
