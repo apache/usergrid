@@ -708,7 +708,7 @@ public abstract class GraphManagerIT {
 
         //get our 2 edge types
         Observable<String> edges =
-                gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null ) );
+                gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( testTargetEdge.getSourceNode(),null, null ) );
 
 
         Iterator<String> results = edges.toBlockingObservable().getIterator();
@@ -723,7 +723,7 @@ public abstract class GraphManagerIT {
 
         //now test sub edges
 
-        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
+        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test",null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -735,7 +735,7 @@ public abstract class GraphManagerIT {
         assertFalse( "No results", results.hasNext() );
 
         //now get types for test2
-        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test2", null ) );
+        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test2",null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -770,7 +770,7 @@ public abstract class GraphManagerIT {
 
 
         //get our 2 edge types
-        final SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), null );
+        final SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(),null, null );
 
         Observable<String> edges = gm.getEdgeTypesToTarget( edgeTypes );
 
@@ -787,7 +787,7 @@ public abstract class GraphManagerIT {
 
         //now test sub edges
 
-        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
+        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test",null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -799,7 +799,7 @@ public abstract class GraphManagerIT {
 
 
         //now get types for test2
-        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test2", null ) );
+        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test2",null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -836,7 +836,7 @@ public abstract class GraphManagerIT {
 
 
         //get our 2 edge types
-        SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), null );
+        SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(),null, null );
 
         Observable<String> edges = gm.getEdgeTypesFromSource( edgeTypes );
 
@@ -850,7 +850,7 @@ public abstract class GraphManagerIT {
 
         //now load the next page
 
-        edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(), "test" );
+        edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getSourceNode(),null, "test" );
 
         edges = gm.getEdgeTypesFromSource( edgeTypes );
 
@@ -864,7 +864,7 @@ public abstract class GraphManagerIT {
 
         //now test sub edges
 
-        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", null ) );
+        edges = gm.getIdTypesFromSource( new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test",null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -877,7 +877,7 @@ public abstract class GraphManagerIT {
         //now get the next page
 
         edges = gm.getIdTypesFromSource(
-                new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test", targetId1.getType() ) );
+                new SimpleSearchIdType( testTargetEdge.getSourceNode(), "test",null, targetId1.getType() ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -913,7 +913,7 @@ public abstract class GraphManagerIT {
 
 
         //get our 2 edge types
-        SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(), null );
+        SearchEdgeType edgeTypes = new SimpleSearchEdgeType( testTargetEdge.getTargetNode(),null, null );
 
         Observable<String> edges = gm.getEdgeTypesToTarget( edgeTypes );
 
@@ -929,7 +929,7 @@ public abstract class GraphManagerIT {
 
         //now load the next page
 
-        edgeTypes = new SimpleSearchEdgeType( testTargetEdge2.getTargetNode(), "test" );
+        edgeTypes = new SimpleSearchEdgeType( testTargetEdge2.getTargetNode(),null, "test" );
 
         edges = gm.getEdgeTypesToTarget( edgeTypes );
 
@@ -944,7 +944,7 @@ public abstract class GraphManagerIT {
 
         //now test sub edges
 
-        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", null ) );
+        edges = gm.getIdTypesToTarget( new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test",null, null ) );
 
         results = edges.toBlockingObservable().getIterator();
 
@@ -958,7 +958,7 @@ public abstract class GraphManagerIT {
         //now get the next page
 
         edges = gm.getIdTypesToTarget(
-                new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test", sourceId1.getType() ) );
+                new SimpleSearchIdType( testTargetEdge.getTargetNode(), "test",null, sourceId1.getType() ) );
 
         results = edges.toBlockingObservable().getIterator();
 

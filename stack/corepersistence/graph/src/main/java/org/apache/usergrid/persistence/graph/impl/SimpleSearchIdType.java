@@ -33,8 +33,8 @@ public class SimpleSearchIdType extends SimpleSearchEdgeType implements SearchId
     private final String edgeType;
 
 
-    public SimpleSearchIdType( final Id node, final String edgeType, final String last ) {
-        super( node, last );
+    public SimpleSearchIdType( final Id node, final String edgeType, final String prefix, final String last ) {
+        super( node, prefix, last );
 
         ValidationUtils.verifyString( edgeType, "edgeType" );
         this.edgeType = edgeType;

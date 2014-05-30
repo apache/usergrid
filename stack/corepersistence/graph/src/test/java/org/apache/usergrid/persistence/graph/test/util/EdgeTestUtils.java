@@ -200,7 +200,7 @@ public class EdgeTestUtils {
      * @return
      */
     public static SearchEdgeType createSearchEdge( final Id sourceId, final String last ) {
-        return new SimpleSearchEdgeType( sourceId, last );
+        return new SimpleSearchEdgeType( sourceId, null, last );
     }
 
 
@@ -208,7 +208,7 @@ public class EdgeTestUtils {
      * Create the search by Id type
      */
     public static SimpleSearchIdType createSearchIdType( final Id sourceId, final String type, final String last ) {
-        return new SimpleSearchIdType( sourceId, type, last );
+        return new SimpleSearchIdType( sourceId, type, null, last );
     }
 
 

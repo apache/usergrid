@@ -143,13 +143,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes = edgeMetadataSerialization
-                .getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( edge.getTargetNode(), null ) );
+                .getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( edge.getTargetNode(), null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesToTarget( scope, new SimpleSearchIdType( edge.getTargetNode(), edge.getType(), null ) );
+                .getIdTypesToTarget( scope, new SimpleSearchIdType( edge.getTargetNode(), edge.getType(), null, null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }
@@ -214,13 +214,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes = edgeMetadataSerialization
-                .getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( edge1.getTargetNode(), null ) );
+                .getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( edge1.getTargetNode(), null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesToTarget( scope, new SimpleSearchIdType( edge1.getTargetNode(), edge1.getType(), null ) );
+                .getIdTypesToTarget( scope, new SimpleSearchIdType( edge1.getTargetNode(), edge1.getType(), null, null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }
@@ -269,13 +269,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes =
-                edgeMetadataSerialization.getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( targetId, null ) );
+                edgeMetadataSerialization.getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( targetId, null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesToTarget( scope, new SimpleSearchIdType( targetId, edgeType, null ) );
+                .getIdTypesToTarget( scope, new SimpleSearchIdType( targetId, edgeType, null,  null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }
@@ -306,13 +306,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes = edgeMetadataSerialization
-                .getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( edge.getSourceNode(), null ) );
+                .getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( edge.getSourceNode(), null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesFromSource( scope, new SimpleSearchIdType( edge.getSourceNode(), edge.getType(), null ) );
+                .getIdTypesFromSource( scope, new SimpleSearchIdType( edge.getSourceNode(), edge.getType(),null, null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }
@@ -377,13 +377,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes = edgeMetadataSerialization
-                .getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( edge1.getSourceNode(), null ) );
+                .getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( edge1.getSourceNode(),null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesFromSource( scope, new SimpleSearchIdType( edge1.getSourceNode(), edge1.getType(), null ) );
+                .getIdTypesFromSource( scope, new SimpleSearchIdType( edge1.getSourceNode(), edge1.getType(),null, null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }
@@ -434,13 +434,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes =
-                edgeMetadataSerialization.getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( sourceId, null ) );
+                edgeMetadataSerialization.getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( sourceId,null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesFromSource( scope, new SimpleSearchIdType( sourceId, edgeType, null ) );
+                .getIdTypesFromSource( scope, new SimpleSearchIdType( sourceId, edgeType,null, null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }

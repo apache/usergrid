@@ -276,7 +276,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
-                            .getIdTypesToTarget( scope, new SimpleSearchIdType( nodeId, edgeType, null ) );
+                            .getIdTypesToTarget( scope, new SimpleSearchIdType( nodeId, edgeType, null, null ) );
                 }
             } );
         }
@@ -316,7 +316,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
-                            .getIdTypesFromSource( scope, new SimpleSearchIdType( nodeId, edgeType, null ) );
+                            .getIdTypesFromSource( scope, new SimpleSearchIdType( nodeId, edgeType, null,  null ) );
                 }
             } );
         }
