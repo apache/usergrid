@@ -28,6 +28,10 @@ import org.antlr.runtime.Token;
  */
 public abstract class EqualityOperand extends Operand {
 
+    /**
+     * @param property
+     * @param literal
+     */
     public EqualityOperand( Token t ) {
         super( t );
     }

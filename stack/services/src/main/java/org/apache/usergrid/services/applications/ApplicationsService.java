@@ -103,7 +103,7 @@ public class ApplicationsService extends AbstractService {
             }
             else if ( context.parameterCount() > 0 ) {
                 if ( context.getParameters().get( 0 ) instanceof QueryParameter ) {
-                    return getApplicationCounters( context.getParameters().get( 0 ).getQuery() );
+                    return getApplicationCounters( ( ( QueryParameter ) context.getParameters().get( 0 ) ).getQuery() );
                 }
             }
         }
@@ -166,9 +166,12 @@ public class ApplicationsService extends AbstractService {
 
 
     private boolean isReservedCollection( String collection ) {
-        return StringUtils.equalsIgnoreCase("applications", collection) || StringUtils
-                .equalsIgnoreCase("application", collection);
+        if ( StringUtils.equalsIgnoreCase( "applications", collection ) || StringUtils
+                .equalsIgnoreCase( "application", collection ) ) {
+            return true;
+        }
 
+        return false;
     }
 
 

@@ -277,7 +277,7 @@ public class Realm extends AuthorizingRealm {
                 // They have access to organizations and organization
                 // applications
 
-                UserInfo user = principal.getUser();
+                UserInfo user = ( ( AdminUserPrincipal ) principal ).getUser();
 
                 if ( superUserEnabled && ( superUser != null ) && superUser.equals( user.getUsername() ) ) {
                     // The system user has access to everything
@@ -350,7 +350,7 @@ public class Realm extends AuthorizingRealm {
                 UUID applicationId = ( ( ApplicationUserPrincipal ) principal ).getApplicationId();
 
                 AccessTokenCredentials tokenCredentials =
-                        principal.getAccessTokenCredentials();
+                        ( ( ApplicationUserPrincipal ) principal ).getAccessTokenCredentials();
                 TokenInfo token = null;
                 if ( tokenCredentials != null ) {
                     try {
@@ -389,7 +389,7 @@ public class Realm extends AuthorizingRealm {
                     logger.error( "Unable to get user default role permissions", e );
                 }
 
-                UserInfo user = principal.getUser();
+                UserInfo user = ( ( ApplicationUserPrincipal ) principal ).getUser();
                 try {
                     Set<String> permissions = em.getUserPermissions( user.getUuid() );
                     grant( info, principal, applicationId, permissions );

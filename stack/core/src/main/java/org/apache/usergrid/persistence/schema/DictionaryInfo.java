@@ -28,6 +28,7 @@ public class DictionaryInfo {
     private boolean keysIndexedInConnections;
     private boolean publicVisible = true;
     private boolean includedInExport = true;
+    ;
 
     public DictionaryInfo() {
     }

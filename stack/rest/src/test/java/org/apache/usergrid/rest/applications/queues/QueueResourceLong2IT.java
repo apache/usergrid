@@ -74,15 +74,15 @@ public class QueueResourceLong2IT extends AbstractQueueResourceIT {
         List<String> originalMessageIds = transHandler.getMessageIds();
         BiMap<String, String> transactionInfo = transHandler.getTransactionToMessageId();
 
-        for (String originalMessageId : originalMessageIds) {
+        for ( int i = 0; i < originalMessageIds.size(); i++ ) {
             // check the messages come back in the same order, they should
-            assertEquals(originalMessageId, originalMessageId);
+            assertEquals( originalMessageIds.get( i ), originalMessageIds.get( i ) );
 
-            assertNotNull(transactionInfo.get(originalMessageId));
+            assertNotNull( transactionInfo.get( originalMessageIds.get( i ) ) );
 
             // ack the transaction we were returned
             Transaction transaction =
-                    queue.transactions().transaction(transactionInfo.get(originalMessageId));
+                    queue.transactions().transaction( transactionInfo.get( originalMessageIds.get( i ) ) );
             transaction.delete();
         }
 

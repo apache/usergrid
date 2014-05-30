@@ -186,7 +186,10 @@ public class CustomPermission extends WildcardPermission {
             if ( matcher.match( p1, p2 ) ) {
                 return true;
             }
-            return matcher.match(normalizeIfPath(p1), normalizeIfPath(p2));
+            if ( matcher.match( normalizeIfPath( p1 ), normalizeIfPath( p2 ) ) ) {
+                return true;
+            }
+            return false;
         }
         return p1.equalsIgnoreCase( p2 );
     }

@@ -907,7 +907,7 @@ public class EntityManagerImpl implements EntityManager {
 
     private void incrementEntityCollection( String collection_name, long cassandraTimestamp ) {
         try {
-            incrementAggregateCounters( null, null, null, APPLICATION_COLLECTION + collection_name,
+            incrementAggregateCounters( null, null, null, new String( APPLICATION_COLLECTION + collection_name ),
                     ONE_COUNT, cassandraTimestamp );
         }
         catch ( Exception e ) {
@@ -1022,7 +1022,9 @@ public class EntityManagerImpl implements EntityManager {
             column_names.add( PROPERTY_TYPE );
             column_names.add( PROPERTY_UUID );
 
-            Collections.addAll(column_names, propertyNames);
+            for ( String propertyName : propertyNames ) {
+                column_names.add( propertyName );
+            }
 
             results = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, key( entityId ),
                     column_names, se, be );
@@ -2248,14 +2250,14 @@ public class EntityManagerImpl implements EntityManager {
 
         if ( roleNames != null ) {
             nameResults = getDictionaryElementValues( getApplicationRef(), DICTIONARY_ROLENAMES,
-                    roleNames.toArray(new String[roleNames.size()]));
+                    roleNames.toArray( new String[0] ) );
         }
         else {
             nameResults = cast( getDictionaryAsMap( getApplicationRef(), DICTIONARY_ROLENAMES ) );
             roleNames = nameResults.keySet();
         }
         Map<String, Object> timeResults = getDictionaryElementValues( getApplicationRef(), DICTIONARY_ROLETIMES,
-                roleNames.toArray(new String[roleNames.size()]));
+                roleNames.toArray( new String[0] ) );
 
         for ( String roleName : roleNames ) {
 

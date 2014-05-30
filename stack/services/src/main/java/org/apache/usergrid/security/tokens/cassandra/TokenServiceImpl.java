@@ -18,7 +18,12 @@ package org.apache.usergrid.security.tokens.cassandra;
 
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,23 +96,21 @@ public class TokenServiceImpl implements TokenService {
 
     private static final String TOKEN_TYPE_ACCESS = "access";
 
+    private static final HashSet<String> TOKEN_PROPERTIES = new HashSet<String>();
 
-    private static final Set<String> TOKEN_PROPERTIES;
 
 
     static {
-        HashSet<String> set = new HashSet<String>();
-        set.add( TOKEN_UUID );
-        set.add( TOKEN_TYPE );
-        set.add( TOKEN_CREATED );
-        set.add( TOKEN_ACCESSED );
-        set.add( TOKEN_INACTIVE );
-        set.add( TOKEN_PRINCIPAL_TYPE );
-        set.add( TOKEN_ENTITY );
-        set.add( TOKEN_APPLICATION );
-        set.add( TOKEN_STATE );
-        set.add( TOKEN_DURATION );
-        TOKEN_PROPERTIES = Collections.unmodifiableSet(set);
+        TOKEN_PROPERTIES.add( TOKEN_UUID );
+        TOKEN_PROPERTIES.add( TOKEN_TYPE );
+        TOKEN_PROPERTIES.add( TOKEN_CREATED );
+        TOKEN_PROPERTIES.add( TOKEN_ACCESSED );
+        TOKEN_PROPERTIES.add( TOKEN_INACTIVE );
+        TOKEN_PROPERTIES.add( TOKEN_PRINCIPAL_TYPE );
+        TOKEN_PROPERTIES.add( TOKEN_ENTITY );
+        TOKEN_PROPERTIES.add( TOKEN_APPLICATION );
+        TOKEN_PROPERTIES.add( TOKEN_STATE );
+        TOKEN_PROPERTIES.add( TOKEN_DURATION );
     }
 
 

@@ -18,7 +18,10 @@ package org.apache.usergrid.services;
 
 
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -123,7 +126,9 @@ public class ServiceManager {
 
     private void setServicePackagePrefixes( String packages ) {
         List<String> packagePrefixes = new ArrayList<String>();
-        Collections.addAll(packagePrefixes, package_prefixes);
+        for ( String prefix : package_prefixes ) {
+            packagePrefixes.add( prefix );
+        }
 
         String[] prefixes = packages.split( ";" );
         for ( String prefix : prefixes ) {

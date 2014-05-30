@@ -43,8 +43,6 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.services.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,9 +56,16 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
+import org.apache.usergrid.services.ServiceAction;
+import org.apache.usergrid.services.ServiceManager;
+import org.apache.usergrid.services.ServiceParameter;
+import org.apache.usergrid.services.ServicePayload;
+import org.apache.usergrid.services.ServiceRequest;
+import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.apache.usergrid.services.assets.data.BinaryStore;
 import org.apache.usergrid.utils.InflectionUtils;
+
 import org.apache.commons.lang.StringUtils;
 
 import com.sun.jersey.api.json.JSONWithPadding;
@@ -190,7 +195,7 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
-    @Path(RootResource.ENTITY_ID_PATH)
+    @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
             throws Exception {
 
@@ -238,8 +243,8 @@ public class ServiceResource extends AbstractContextResource {
         boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
         boolean collectionGet = false;
         if ( action == ServiceAction.GET ) {
-            collectionGet = (getServiceParameters().size() == 1 && InflectionUtils
-                    .isPlural(getServiceParameters().get(0)));
+            collectionGet = ( getServiceParameters().size() == 1 && InflectionUtils
+                    .isPlural( getServiceParameters().get( 0 ) ) ) ? true : false;
         }
         addQueryParams( getServiceParameters(), ui );
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload );

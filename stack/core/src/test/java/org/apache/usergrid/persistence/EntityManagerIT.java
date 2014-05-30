@@ -245,9 +245,9 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertNotNull( "properties should not be null", props );
         assertEquals( "wrong number of properties", 8, props.size() );
 
-        assertEquals( "wrong value for property alpha", (long) 1, props.get( "alpha" ) );
-        assertEquals( "wrong value for property beta", (long) 2, props.get( "beta" ) );
-        assertEquals( "wrong value for property gamma", (long) 3, props.get( "gamma" ) );
+        assertEquals( "wrong value for property alpha", new Long( 1 ), props.get( "alpha" ) );
+        assertEquals( "wrong value for property beta", new Long( 2 ), props.get( "beta" ) );
+        assertEquals( "wrong value for property gamma", new Long( 3 ), props.get( "gamma" ) );
 
         for ( Entry<String, Object> entry : props.entrySet() ) {
             LOG.info( entry.getKey() + " : " + entry.getValue() );
