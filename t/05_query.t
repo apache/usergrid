@@ -1,22 +1,34 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-
-use Test::More tests => 9;
+use Usergrid::Client;
+use IO::Socket::INET;
+use Test::More;
 
 # TEST DATA
-my $api_url         = 'http://localhost:8080';
+my $hostname        = 'localhost';
+my $port            = '8080';
+my $api_url         = "http://$hostname:$port";
 my $organization    = 'test-organization';
 my $application     = 'test-app';
 my $username        = 'testuser';
 my $password        = 'Testuser123$';
 ###########
 
-my ($user, $token, $book, $collection, $subset);
-
-BEGIN {
-  use_ok 'Usergrid::Client'     || print "Bail out!\n";
+if (_check_port($hostname, $port)) {
+  plan tests => 8;
+} else {
+  plan skip_all => "server $api_url not reachable"
 }
+
+sub _check_port {
+  my ($hostname, $port) = @_;
+  new IO::Socket::INET ( PeerAddr => $hostname, PeerPort => $port,
+    Proto => 'tcp' ) || return 0;
+  return 1;
+}
+
+my ($user, $token, $book, $collection, $subset);
 
 # Create the client object that will be used for all subsequent requests
 my $client = Usergrid::Client->new(
