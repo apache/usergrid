@@ -15,7 +15,6 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.netflix.hystrix.exception.HystrixRuntimeException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,8 +29,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-
-import javax.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +82,7 @@ import org.apache.usergrid.utils.ClassUtils;
 import org.apache.usergrid.utils.CompositeUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
@@ -122,7 +120,6 @@ import static org.apache.usergrid.persistence.cassandra.ApplicationCF.APPLICATIO
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
@@ -151,7 +148,10 @@ import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 public class CpEntityManager implements EntityManager {
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManager.class );
 
-    private static final String COLL_SUFFIX = "zzzcollzzz"; 
+    private static final String COLL_SUFFIX = "zzzcollzzz";
+    public static final String APPLICATION_COLLECTION = "application.collection.";
+    public static final String APPLICATION_ENTITIES = "application.entities";
+    public static final long ONE_COUNT = 1L;
 
     private UUID applicationId;
     private Application application;
@@ -168,8 +168,8 @@ public class CpEntityManager implements EntityManager {
 
     private boolean skipAggregateCounters;
 
-    @Resource
-    private IndexBucketLocator indexBucketLocator;
+//    @Resource
+//    private IndexBucketLocator indexBucketLocator;
 
     public CpEntityManager() {}
 
@@ -207,7 +207,7 @@ public class CpEntityManager implements EntityManager {
 
         this.skipAggregateCounters = skipAggregateCounters;
 
-        indexBucketLocator = ( IndexBucketLocator ) emf.getApplicationContext().getBean( "indexBucketLocator" );
+       // indexBucketLocator = ( IndexBucketLocator ) emf.getApplicationContext().getBean( "indexBucketLocator" );
 
         appScope = this.emf.getApplicationScope(applicationId);
 
@@ -292,12 +292,12 @@ public class CpEntityManager implements EntityManager {
 
         UUID timestampUuid = importId != null ?  importId : newTimeUUID();
 
-        Keyspace ko = cass.getApplicationKeyspace( applicationId );
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+//        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        Mutator<ByteBuffer> m = null; //createMutator( ko, be );
 
         A entity = batchCreate( m, entityType, entityClass, properties, importId, timestampUuid );
 
-        batchExecute( m, CassandraService.RETRY_COUNT );
+//        batchExecute( m, CassandraService.RETRY_COUNT );
 
         return entity;
     }
@@ -553,6 +553,7 @@ public class CpEntityManager implements EntityManager {
                         EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
                         ei.deindex( entity );
+
                     }
                 }
             }
@@ -566,8 +567,35 @@ public class CpEntityManager implements EntityManager {
 
             entityIndex.deindex( entity );
 
+            decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
+
+
             // and finally...
             ecm.delete( entityId ).toBlockingObservable().last();
+        }
+    }
+
+
+    public void decrementEntityCollection( String collection_name ) {
+
+        long cassandraTimestamp = cass.createTimestamp();
+        decrementEntityCollection( collection_name, cassandraTimestamp );
+    }
+
+
+    public void decrementEntityCollection( String collection_name, long cassandraTimestamp ) {
+        try {
+            incrementAggregateCounters( null, null, null, APPLICATION_COLLECTION + collection_name, -ONE_COUNT,
+                    cassandraTimestamp );
+        }
+        catch ( Exception e ) {
+            logger.error( "Unable to decrement counter application.collection: {}.", new Object[]{collection_name, e} );
+        }
+        try {
+            incrementAggregateCounters( null, null, null, APPLICATION_ENTITIES, -ONE_COUNT, cassandraTimestamp );
+        }
+        catch ( Exception e ) {
+            logger.error( "Unable to decrement counter application.entities for collection: {} with timestamp: {}", new Object[]{collection_name, cassandraTimestamp,e} );
         }
     }
 
@@ -1820,32 +1848,32 @@ public class CpEntityManager implements EntityManager {
 
        // emf.getApplicationContext().
        // Create collection key based collection name
-        String bucketId = indexBucketLocator.getBucket(
-            applicationId, IndexBucketLocator.IndexType.COLLECTION, itemId, collectionName );
-
-        Object collection_key = key( applicationId,
-            Schema.DICTIONARY_COLLECTIONS, collectionName, bucketId );
+//        String bucketId = indexBucketLocator.getBucket(
+//            applicationId, IndexBucketLocator.IndexType.COLLECTION, itemId, collectionName );
+//
+//        Object collection_key = key( applicationId,
+//            Schema.DICTIONARY_COLLECTIONS, collectionName, bucketId );
 
 
 
         CollectionInfo collection = null;
 
-        if ( !is_application ) {
-            // Add entity to collection
-
-
-            if ( !emptyPropertyMap ) {
-                addInsertToMutator( ignored, ENTITY_ID_SETS, collection_key, itemId, null, timestamp );
-            }
-
-            // Add name of collection to dictionary property
-            // Application.collections
-            addInsertToMutator( ignored, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_COLLECTIONS ),
-                    collectionName, null, timestamp );
-
-            addInsertToMutator( ignored, ENTITY_COMPOSITE_DICTIONARIES, key( itemId, Schema.DICTIONARY_CONTAINER_ENTITIES ),
-                    asList( TYPE_APPLICATION, collectionName, applicationId ), null, timestamp );
-        }
+//        if ( !is_application ) {
+//            // Add entity to collection
+//
+//
+//            if ( !emptyPropertyMap ) {
+//                addInsertToMutator( ignored, ENTITY_ID_SETS, collection_key, itemId, null, timestamp );
+//            }
+//
+//            // Add name of collection to dictionary property
+//            // Application.collections
+//            addInsertToMutator( ignored, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_COLLECTIONS ),
+//                    collectionName, null, timestamp );
+//
+//            addInsertToMutator( ignored, ENTITY_COMPOSITE_DICTIONARIES, key( itemId, Schema.DICTIONARY_CONTAINER_ENTITIES ),
+//                    asList( TYPE_APPLICATION, collectionName, applicationId ), null, timestamp );
+//        }
 
         if ( emptyPropertyMap ) {
             return null;
@@ -1892,7 +1920,7 @@ public class CpEntityManager implements EntityManager {
                 }
             }
 //            Message message = storeEventAsMessage( m, event, timestamp );
-//            incrementEntityCollection( "events", timestamp );
+            incrementEntityCollection( "events", timestamp );
 //            entity.setUuid( message.getUuid() );
             return entity;
         }
@@ -1948,11 +1976,30 @@ public class CpEntityManager implements EntityManager {
         if ( !is_application ) {
             String collectionName2 = Schema.defaultCollectionName( eType );
             getRelationManager( getApplication() ).addToCollection( collectionName2, entity );
+            //Added counters code.
+            incrementEntityCollection( collectionName2, timestamp );
         }
+
+
 
         return entity;
     }
 
+    private void incrementEntityCollection( String collection_name, long cassandraTimestamp ) {
+        try {
+            incrementAggregateCounters( null, null, null, APPLICATION_COLLECTION + collection_name,
+                    ONE_COUNT, cassandraTimestamp );
+        }
+        catch ( Exception e ) {
+            logger.error( "Unable to increment counter application.collection: {}.", new Object[]{ collection_name, e} );
+        }
+        try {
+            incrementAggregateCounters( null, null, null, APPLICATION_ENTITIES, ONE_COUNT, cassandraTimestamp );
+        }
+        catch ( Exception e ) {
+            logger.error( "Unable to increment counter application.entities for collection: {} with timestamp: {}", new Object[]{collection_name, cassandraTimestamp,e} );
+        }
+    }
 
     private void handleWriteUniqueVerifyException( Entity entity, WriteUniqueVerifyException wuve) 
             throws DuplicateUniquePropertyExistsException {
