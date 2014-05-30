@@ -48,16 +48,16 @@ public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     @Override
-    public long getWriteShard( final ApplicationScope scope, final Id rowKeyId, final UUID version,
+    public long getWriteShard( final ApplicationScope scope, final Id rowKeyId, final long timestamp,
                                final String... types ) {
-        return shardCache.getSlice( scope, rowKeyId, version, types );
+        return shardCache.getSlice( scope, rowKeyId, timestamp, types );
     }
 
 
     @Override
-    public Iterator<Long> getReadShards( final ApplicationScope scope, final Id rowKeyId, final UUID maxVersion,
+    public Iterator<Long> getReadShards( final ApplicationScope scope, final Id rowKeyId, final long maxTimestamp,
                                          final String... types ) {
-        return shardCache.getVersions( scope, rowKeyId, maxVersion, types );
+        return shardCache.getVersions( scope, rowKeyId, maxTimestamp, types );
     }
 
 

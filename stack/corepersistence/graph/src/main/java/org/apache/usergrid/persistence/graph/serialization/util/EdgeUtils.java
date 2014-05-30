@@ -47,9 +47,19 @@ public class EdgeUtils {
         ValidationUtils.verifyIdentity( e.getSourceNode() );
         ValidationUtils.verifyIdentity( e.getTargetNode() );
         ValidationUtils.verifyString( e.getType(), "type" );
-        ValidationUtils.verifyTimeUuid( e.getVersion(), "version" );
+        validateTimestamp( e.getTimestamp(), "timestamp" );
+
     }
 
+
+    /**
+     * Validate the timestamp is set
+     * @param value
+     * @param fieldName
+     */
+    public static void validateTimestamp(final long value, final String fieldName){
+        Preconditions.checkArgument( value > -1, fieldName );
+    }
 
     /**
      * Validate the search edge
@@ -80,7 +90,7 @@ public class EdgeUtils {
 
         ValidationUtils.verifyIdentity( search.getNode() );
         ValidationUtils.verifyString( search.getType(), "type" );
-        ValidationUtils.verifyTimeUuid( search.getMaxVersion(), "maxVersion" );
+        validateTimestamp( search.getMaxTimestamp(), "maxTimestamp" );
 
         //only validate if the value is present
         if(search.last().isPresent()){
@@ -98,7 +108,7 @@ public class EdgeUtils {
            ValidationUtils.verifyIdentity( search.sourceNode() );
            ValidationUtils.verifyIdentity( search.targetNode() );
            ValidationUtils.verifyString( search.getType(), "type" );
-           ValidationUtils.verifyTimeUuid( search.getMaxVersion(), "maxVersion" );
+           validateTimestamp( search.getMaxTimestamp(), "maxTimestamp" );
 
            //only validate if the value is present
            if(search.last().isPresent()){

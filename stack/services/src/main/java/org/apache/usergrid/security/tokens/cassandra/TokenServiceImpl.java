@@ -499,13 +499,7 @@ public class TokenServiceImpl implements TokenService {
 
 
     private UUID getUUIDForToken( String token ) throws ExpiredTokenException, BadTokenException {
-
         TokenCategory tokenCategory = TokenCategory.getFromBase64String( token );
-
-        if( tokenCategory == null){
-            return null;
-        }
-
         byte[] bytes = decodeBase64( token.substring( TokenCategory.BASE64_PREFIX_LENGTH ) );
         UUID uuid = uuid( bytes );
         int i = 16;
