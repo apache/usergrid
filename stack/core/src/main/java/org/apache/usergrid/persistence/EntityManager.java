@@ -59,7 +59,7 @@ public interface EntityManager {
     /**
      * Creates an entity of the specified type attached to the specified application.
      *
-     * @param type the type of the entity to create.
+     * @param entityType the type of the entity to create.
      * @param properties property values to create in the new entity or null.
      *
      * @return the newly created entity object.
@@ -75,7 +75,7 @@ public interface EntityManager {
      * Creates an entity of the specified type attached to the specified application.
      *
      * @param importId the UUID to assign to the imported entity
-     * @param type the type of the entity to create.
+     * @param entityType the type of the entity to create.
      * @param properties property values to create in the new entity or null.
      *
      * @return the newly created entity object.
@@ -126,7 +126,7 @@ public interface EntityManager {
     /**
      * Retrieves the entity for the specified entity reference.
      *
-     * @param entity an Entity reference
+     * @param entityRef an Entity reference
      *
      * @return an Entity object for the specified entity reference.
      */
@@ -142,7 +142,7 @@ public interface EntityManager {
      * This method will be deprecated in future releases in favor of a version that supports paging.
      *
      * @param entityIds a list of entity UUIDs.
-     * @param includeProperties whether to retrieve properties for the specified entities.
+     * @param resultsLevel whether to retrieve properties for the specified entities.
      *
      * @return a list of entity objects.
      */
@@ -156,7 +156,6 @@ public interface EntityManager {
      * This method will be deprecated in future releases in favor of a version that supports paging.
      *
      * @param entityIds a list of entity UUIDs.
-     * @param includeProperties whether to retrieve properties for the specified entities.
      *
      * @return a list of entity objects.
      */
@@ -188,7 +187,7 @@ public interface EntityManager {
     /**
      * Gets the value for a named entity property. Entity properties must be defined in the schema
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param propertyName the property name to retrieve.
      *
      * @return the value of the named property or null.
@@ -207,7 +206,7 @@ public interface EntityManager {
     /**
      * Gets the properties for the specified entity property.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      *
      * @return the property values.
      *
@@ -219,7 +218,7 @@ public interface EntityManager {
      * Sets the value for a named entity property. If the property is being index, the index is updated to remove the
      * old value and add the new value.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param propertyName the property to set.
      * @param propertyValue new value for property.
      *
@@ -240,7 +239,7 @@ public interface EntityManager {
     /**
      * Updates the properties for the specified entity.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param properties the properties
      *
      * @throws Exception the exception
@@ -253,7 +252,7 @@ public interface EntityManager {
      * Gets the values from an entity list property. Lists are a special type of entity property that can contain an
      * unordered set of non-duplicate values.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param dictionaryName the property list name to retrieve.
      *
      * @return the value of the named property or null.
@@ -266,7 +265,7 @@ public interface EntityManager {
      * Adds the specified value to the named entity list property. Lists are a special type of entity property that can
      * contain an unordered set of non-duplicate values.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param dictionaryName the property to set.
      * @param elementValue new value for property.
      *
@@ -291,7 +290,7 @@ public interface EntityManager {
      * Removes the specified value to the named entity list property. Lists are a special type of entity property that
      * can contain an unordered set of non-duplicate values.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param dictionaryName the property to set.
      * @param elementValue new value for property.
      *
@@ -305,7 +304,7 @@ public interface EntityManager {
     /**
      * Deletes the specified entity.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      *
      * @throws Exception the exception
      */
@@ -314,7 +313,7 @@ public interface EntityManager {
     /**
      * Gets the entities and collections that the specified entity is a member of.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      *
      * @return a map of entity references to set of collection names for the entities and collections that this entity
      *         is a member of.
@@ -336,7 +335,7 @@ public interface EntityManager {
      * Return true if the owner entity ref is an owner of the entity;
      *
      * @param owner The owner of the collection
-     * @param collectionName The collection name
+     * @param connectionName The collection name
      * @param entity The entity in the collection
      */
     public boolean isConnectionMember( EntityRef owner, String connectionName, EntityRef entity ) throws Exception;
@@ -346,7 +345,7 @@ public interface EntityManager {
      * Gets the collections for the specified entity. Collection for a given type are encoded in the schema, this method
      * loads the entity type and returns the collections from the schema.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      *
      * @return the collections for the entity type of the given entity.
      *
@@ -357,7 +356,7 @@ public interface EntityManager {
     /**
      * Gets a list of entities in the specified collection belonging to the specified entity.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param collectionName the collection name.
      * @param startResult the start result
      * @param count the count
@@ -376,9 +375,9 @@ public interface EntityManager {
     /**
      * Adds an entity to the specified collection belonging to the specified entity entity.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param collectionName the collection name.
-     * @param item an entity to be added to the collection.
+     * @param itemRef an entity to be added to the collection.
      *
      * @throws Exception the exception
      */
@@ -401,9 +400,9 @@ public interface EntityManager {
     /**
      * Removes an entity to the specified collection belonging to the specified entity.
      *
-     * @param entity an entity reference
+     * @param entityRef an entity reference
      * @param collectionName the collection name.
-     * @param item a entity to be removed from the collection.
+     * @param itemRef a entity to be removed from the collection.
      *
      * @throws Exception the exception
      */
@@ -419,10 +418,6 @@ public interface EntityManager {
     /**
      * Connect the specified entity to another entity with the specified connection type. Connections are directional
      * relationships that can be traversed in either direction.
-     *
-     * @param entity an entity reference
-     * @param connectionType type of connection to make.
-     * @param connectedEntity the entity to connect.
      *
      * @throws Exception the exception
      */
@@ -450,9 +445,6 @@ public interface EntityManager {
      * Disconnects two connected entities with the specified connection type. Connections are directional relationships
      * that can be traversed in either direction.
      *
-     * @param entity an entity reference
-     * @param connectionType type of connection to make.
-     * @param connectedEntity the entity to connect
      *
      * @throws Exception the exception
      */
@@ -466,7 +458,7 @@ public interface EntityManager {
      * Gets the entities of the specified type connected to the specified entity, optionally matching the specified
      * connection types and/or entity types. Returns a list of entity ids.
      *
-     * @param entity an entity reference
+     * @param entityId an entity reference
      * @param connectionType type of connection or null.
      * @param connectedEntityType type of entity or null.
      *
@@ -482,9 +474,9 @@ public interface EntityManager {
      * <p/>
      * e.g. "get users who have favorited this place"
      *
-     * @param entity an entity reference
+     * @param entityId an entity reference
      * @param connectionType type of connection or null.
-     * @param connectingEntityType type of entity or null.
+     * @param connectedEntityType type of entity or null.
      *
      * @return a list of entities connecting to this one.
      *

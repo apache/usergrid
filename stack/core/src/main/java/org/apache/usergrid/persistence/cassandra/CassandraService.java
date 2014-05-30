@@ -42,12 +42,6 @@ import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
 
 import me.prettyprint.cassandra.connection.HConnectionManager;
 import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.BytesArraySerializer;
-import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 import me.prettyprint.cassandra.service.ThriftKsDef;
 import me.prettyprint.hector.api.Cluster;
@@ -89,6 +83,7 @@ import static org.apache.usergrid.utils.ConversionUtils.bytebuffers;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.asMap;
 import static org.apache.usergrid.utils.MapUtils.filter;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class CassandraService {
@@ -134,12 +129,6 @@ public class CassandraService {
 
     private Map<String, String> accessMap;
 
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-    public static final BytesArraySerializer bae = new BytesArraySerializer();
-    public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
-    public static final LongSerializer le = new LongSerializer();
 
     public static final UUID NULL_ID = new UUID( 0, 0 );
 
@@ -404,7 +393,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      *
@@ -460,7 +449,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param start the start
@@ -582,7 +571,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param keys the keys
      *
@@ -621,7 +610,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param columnNames the column names
@@ -666,7 +655,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param keys the keys
      * @param columnNames the column names
@@ -709,7 +698,7 @@ public class CassandraService {
     /**
      * Gets the column.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param column the column
@@ -825,7 +814,7 @@ public class CassandraService {
     /**
      * Sets the columns.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param map the map
@@ -892,7 +881,7 @@ public class CassandraService {
     /**
      * Delete column.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param column the column
@@ -913,7 +902,7 @@ public class CassandraService {
     /**
      * Gets the row keys.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      *
      * @return set of keys
@@ -951,7 +940,7 @@ public class CassandraService {
     /**
      * Gets the row keys as uui ds.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      *
      * @return list of row key UUIDs
@@ -983,7 +972,7 @@ public class CassandraService {
     /**
      * Delete row.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      *
@@ -1012,7 +1001,7 @@ public class CassandraService {
     /**
      * Delete row.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param timestamp the timestamp
@@ -1088,13 +1077,11 @@ public class CassandraService {
     /**
      * Sets the id list.
      *
-     * @param keyspace the keyspace
+     * @param ko the keyspace
      * @param targetId the target id
-     * @param columnFamily the column family
      * @param keyPrefix the key prefix
      * @param keySuffix the key suffix
      * @param keyIds the key ids
-     * @param setColumnValue the set column value
      *
      * @throws Exception the exception
      */

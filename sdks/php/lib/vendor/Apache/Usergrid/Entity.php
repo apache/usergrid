@@ -288,16 +288,21 @@ class Entity {
 
     $endpoint = $connectorType . '/' . $connector . '/' . $connection . '/';
     $result=$this->client->get($endpoint, array());
-    $this->set($connection,array());
 
-    $length = count($result->entities);
+    $connected_entities = array();
+
+    $response_data = $result->get_data();
+    $length        = count($response_data['entities']);
+    
     for ($i = 0; $i < $length; $i++) {
-      if ($result['entities'][$i]['type'] == 'user') {
-        $this[$connection][$result['entities'][$i]['username']] = $result['entities'][$i];
+      $tmp_entity = $response_data['entities'][$i];
+      if ($tmp_entity['type'] == 'user') {
+          $connected_entities[$tmp_entity['username']] = $tmp_entity;
       } else {
-        $this[$connection][$result['entities'][$i]['name']] = $result['entities'][$i];
+          $connected_entities[$tmp_entity['name']]     = $tmp_entity;
       }
     }
+    $this->set($connection, $connected_entities);
   }
 
   public function get_connecting($connection) {

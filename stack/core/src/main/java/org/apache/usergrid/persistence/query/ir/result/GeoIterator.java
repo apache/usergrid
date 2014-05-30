@@ -35,8 +35,7 @@ import org.apache.usergrid.persistence.geo.GeoIndexSearcher.SearchResults;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 
-import me.prettyprint.cassandra.serializers.StringSerializer;
-
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * Simple wrapper around list results until the geo library is updated so support iteration and set returns
@@ -50,9 +49,6 @@ public class GeoIterator implements ResultIterator {
      */
     private static final String DELIM = "+";
     private static final String TILE_DELIM = "TILE";
-
-    private static final StringSerializer STR_SER = StringSerializer.get();
-
 
     private final GeoIndexSearcher searcher;
     private final int resultSize;
@@ -262,7 +258,7 @@ public class GeoIterator implements ResultIterator {
             builder.delete( length - TILE_DELIM.length() - 1, length );
         }
 
-        ByteBuffer buff = STR_SER.toByteBuffer( builder.toString() );
+        ByteBuffer buff = se.toByteBuffer( builder.toString() );
 
 
         cache.setNextCursor( sliceHash, buff );
@@ -280,7 +276,7 @@ public class GeoIterator implements ResultIterator {
             return;
         }
 
-        String string = STR_SER.fromByteBuffer( slice.getCursor() );
+        String string = se.fromByteBuffer( slice.getCursor() );
 
         // was set to the end, set the no op flag
         if ( string.length() == 0 ) {

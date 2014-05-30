@@ -46,7 +46,6 @@ public class EntityInfo {
 
     private boolean includedInExport = true;
 
-
     public EntityInfo() {
     }
 

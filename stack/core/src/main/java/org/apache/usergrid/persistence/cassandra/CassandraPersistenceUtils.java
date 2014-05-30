@@ -38,9 +38,6 @@ import org.apache.cassandra.thrift.ColumnDef;
 import org.apache.cassandra.thrift.IndexType;
 import org.apache.commons.lang.StringUtils;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.cassandra.service.ThriftColumnDef;
 import me.prettyprint.hector.api.ClockResolution;
 import me.prettyprint.hector.api.beans.DynamicComposite;
@@ -71,6 +68,7 @@ import static org.apache.usergrid.utils.JsonUtils.toJsonNode;
 import static org.apache.usergrid.utils.StringUtils.replaceAll;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /** @author edanuff */
 public class CassandraPersistenceUtils {
@@ -100,11 +98,6 @@ public class CassandraPersistenceUtils {
      *
      */
     public static final UUID NULL_ID = new UUID( 0, 0 );
-
-    public static final StringSerializer se = new StringSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-
 
     /**
      * @param operation

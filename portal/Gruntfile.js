@@ -169,6 +169,9 @@ module.exports = function (grunt) {
       }
     },
     watch: {
+      options: {
+        livereload: true
+      },
       files: [
         'index-template.html',
         'css/**/*.css',
@@ -188,7 +191,9 @@ module.exports = function (grunt) {
       server: {
         options: {
           target: 'http://localhost:3000/index-debug.html', // target url to open
-       //   open: 'http://localhost:3000/index-debug.html',
+          open: 'http://localhost:3000/index-debug.html',
+          hostname:'*',
+          livereload:true,
           port: 3000,
           base: ''
         }
@@ -423,7 +428,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('build-release', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy']);
   grunt.registerTask('build', ['bower:install','ngtemplates', 'uglify','cssmin','dom_munger','karma:unit']);
-  grunt.registerTask('build-dev', [ 'ngtemplates','uglify:usergrid-dev','uglify:usergrid', 'cssmin','dom_munger','karma:unit']);
+  grunt.registerTask('build-dev', [ 'build']);
   grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
 
   grunt.registerTask('default', ['build']);

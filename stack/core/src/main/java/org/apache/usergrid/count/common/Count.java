@@ -28,7 +28,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 
 import me.prettyprint.cassandra.serializers.SerializerTypeInferer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Serializer;
 
 import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
@@ -41,7 +40,6 @@ import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
  */
 @JsonAutoDetect(creatorVisibility = Visibility.PUBLIC_ONLY)
 public class Count<K, C> {
-    private static final StringSerializer se = StringSerializer.get();
 
     @JsonProperty
     private final String tableName;

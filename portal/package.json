@@ -1,6 +1,6 @@
 {
   "name": "usergrid",
-  "version": "2.0.8",
+  "version": "2.0.14", 
   "packageName": "appsvc-ui",
   "description": "full usergrid portal",
   "main": "./scripts/web-server.js",
@@ -29,7 +29,7 @@
     "karma-phantomjs-launcher": "~0.1.1",
     "karma": "~0.10.8",
     "grunt-karma": "~0.6.2",
-    "protractor": "~0.20.1",
+    "protractor": "~0.22.0",
     "grunt-protractor-runner": "~0.2.0",
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-compress": "~0.5.3",
