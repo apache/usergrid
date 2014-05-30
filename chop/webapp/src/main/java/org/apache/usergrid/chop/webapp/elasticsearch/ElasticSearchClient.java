@@ -65,7 +65,7 @@ public class ElasticSearchClient implements IElasticSearchClient {
         host = elasticSearchFig.getTransportHost();
         clusterName = elasticSearchFig.getClusterName();
 
-        Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", clusterName).build();
+        Settings settings = ImmutableSettings.settingsBuilder().put( "cluster.name", clusterName ).build();
         LOG.info( "Connecting Elasticsearch on {}", elasticSearchFig.getTransportHost() + ":" +
                 elasticSearchFig.getTransportPort() );
         nodeList = getNodeList();
@@ -73,7 +73,7 @@ public class ElasticSearchClient implements IElasticSearchClient {
         for ( ElasticSearchNode elasticSearchNode : nodeList ) {
             LOG.debug( "Adding transport address with host {} and port {}", elasticSearchNode.getTransportHost()
                     , elasticSearchNode.getTransportPort() );
-            transportClient.addTransportAddress( new InetSocketTransportAddress(elasticSearchNode.getTransportHost(),
+            transportClient.addTransportAddress( new InetSocketTransportAddress( elasticSearchNode.getTransportHost(),
                     elasticSearchNode.getTransportPort() ) );
         }
 
@@ -104,9 +104,10 @@ public class ElasticSearchClient implements IElasticSearchClient {
     public String getHTTPResult( String query ) {
         URL url = null;
         try {
-            url = new URL("http://" + getHost() + ":" + getHttpPort() + query);
+            url = new URL( "http://" + getHost() + ":" + getHttpPort() + query );
         } catch ( MalformedURLException e ) {
             e.printStackTrace();
+            LOG.error( "Failed to create url {}", url , e );
         }
         if (url != null) {
             try {
@@ -118,13 +119,14 @@ public class ElasticSearchClient implements IElasticSearchClient {
                 BufferedReader in = new BufferedReader( new InputStreamReader( con.getInputStream() ) );
                 String inputLine;
                 StringBuilder response = new StringBuilder();
-                while ( (inputLine = in.readLine() ) != null ) {
+                while ( ( inputLine = in.readLine() ) != null ) {
                     response.append( inputLine );
                 }
                 in.close();
                 return response.toString();
             } catch ( IOException e ) {
                 e.printStackTrace();
+                LOG.error( "Failed to get the result for {}", url , e );
             }
         }
         return null;

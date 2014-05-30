@@ -128,7 +128,6 @@ public class ChopUiConfig extends GuiceServletContextListener {
             LOG.info("Operating in UNIT environment");
         }
 
-        //        ConfigurationManager.install( ccc );
         try {
             ConfigurationManager.loadCascadedPropertiesFromResources("chop-ui");
         } catch (IOException e) {

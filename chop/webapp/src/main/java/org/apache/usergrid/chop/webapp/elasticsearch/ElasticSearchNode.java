@@ -46,11 +46,11 @@ public class ElasticSearchNode {
      * @return host ip address
      */
     public String getTransportHost() {
-        int host_begin;
-        int host_end;
-        host_begin = transportAddress.indexOf( "/" )+1;
-        host_end = transportAddress.indexOf( ":" );
-        return transportAddress.substring( host_begin, host_end );
+        int hostBegin;
+        int hostEnd;
+        hostBegin = transportAddress.indexOf( "/" ) + 1;
+        hostEnd = transportAddress.indexOf( ":" );
+        return transportAddress.substring( hostBegin, hostEnd );
     }
 
 
@@ -59,11 +59,11 @@ public class ElasticSearchNode {
      * @return host port number
      */
     public int getTransportPort() {
-        int port_begin;
-        int port_end;
-        port_begin = transportAddress.indexOf( ":" ) + 1;
-        port_end = transportAddress.indexOf( "]" );
-        return Integer.parseInt( transportAddress.substring( port_begin, port_end ));
+        int portBegin;
+        int portEnd;
+        portBegin = transportAddress.indexOf( ":" ) + 1;
+        portEnd = transportAddress.indexOf( "]" );
+        return Integer.parseInt( transportAddress.substring( portBegin, portEnd ));
     }
 
 
@@ -72,11 +72,11 @@ public class ElasticSearchNode {
      * @return host port number
      */
     public int getHTTPPort() {
-        int port_begin;
-        int port_end;
-        port_begin = httpAddress.indexOf( ":" ) + 1;
-        port_end = httpAddress.indexOf( "]" );
-        return Integer.parseInt( httpAddress.substring( port_begin, port_end ));
+        int portBegin;
+        int portEnd;
+        portBegin = httpAddress.indexOf( ":" ) + 1;
+        portEnd = httpAddress.indexOf( "]" );
+        return Integer.parseInt( httpAddress.substring( portBegin, portEnd ));
     }
 
 
