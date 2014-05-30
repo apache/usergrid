@@ -292,12 +292,12 @@ public class CpEntityManager implements EntityManager {
 
         UUID timestampUuid = importId != null ?  importId : newTimeUUID();
 
-        Keyspace ko = cass.getApplicationKeyspace( applicationId );
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+//        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        Mutator<ByteBuffer> m = null; //createMutator( ko, be );
 
         A entity = batchCreate( m, entityType, entityClass, properties, importId, timestampUuid );
 
-        batchExecute( m, CassandraService.RETRY_COUNT );
+//        batchExecute( m, CassandraService.RETRY_COUNT );
 
         return entity;
     }
@@ -1919,8 +1919,7 @@ public class CpEntityManager implements EntityManager {
                     event.setProperty( prop_name, propertyValue );
                 }
             }
-            counterUtils.addEventCounterMutations( ignored, applicationId, event, timestamp );
-            ignored.execute();
+//            Message message = storeEventAsMessage( m, event, timestamp );
             incrementEntityCollection( "events", timestamp );
 //            entity.setUuid( message.getUuid() );
             return entity;
