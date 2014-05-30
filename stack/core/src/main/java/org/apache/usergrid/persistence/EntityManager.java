@@ -604,10 +604,6 @@ public interface EntityManager {
     <A extends Entity> A batchCreate(Mutator<ByteBuffer> m, String entityType, 
             Class<A> entityClass, Map<String, Object> properties, 
             UUID importId, UUID timestampUuid) throws Exception;
-
-    void batchCreateRole(Mutator<ByteBuffer> batch, UUID groupId, String roleName, 
-            String roleTitle, long inactivity, RoleRef roleRef, UUID timestampUuid) throws Exception;
-
     /**
      * Batch dictionary property.
      *

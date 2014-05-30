@@ -109,9 +109,10 @@ public class AsyncProcessorImpl<T extends Serializable> implements AsyncProcesso
     @Override
     public void start( final AsynchronousMessage<T> event ) {
 
-//        if ( listeners.size() == 0 ) {
-//            throw new RuntimeException( "Nothing is listening.  You're talking to /dev/null!" );
-//        }
+//        This is helpful for detecting wiring issues.  Uncomment this to find the issue at queue time
+        if ( listeners.size() == 0 ) {
+            LOG.warn( "Nothing is listening for event of class {}.  You're talking to /dev/null!", event.getEvent().getClass() );
+        }
 
         final T data = event.getEvent();
         /**

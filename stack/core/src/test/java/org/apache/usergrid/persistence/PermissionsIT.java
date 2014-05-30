@@ -147,8 +147,10 @@ public class PermissionsIT extends AbstractCoreIT {
         assertEquals( "proper number of group roles not set", 1, roles.size() );
         dump( "group roles", roles );
 
+        em.refreshIndex();
         em.addUserToGroupRole( user.getUuid(), group.getUuid(), "admin" );
 
+        em.refreshIndex();
         Results r = em.getUsersInGroupRole( group.getUuid(), "admin", Level.ALL_PROPERTIES );
         assertEquals( "proper number of users in group role not set", 1, r.size() );
         dump( "entities", r.getEntities() );
