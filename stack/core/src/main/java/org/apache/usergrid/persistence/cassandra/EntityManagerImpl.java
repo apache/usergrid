@@ -664,12 +664,13 @@ public class EntityManagerImpl implements EntityManager {
         Assert.notEmpty( aliases, "aliases are required" );
 
         String propertyName = Schema.getDefaultSchema().aliasProperty( collectionName );
+        String entityType = Schema.getDefaultSchema().getCollectionType(ownerRef.getType(), collectionName);
 
         Map<String, EntityRef> results = new HashMap<String, EntityRef>();
 
         for ( String alias : aliases ) {
             for ( UUID id : getUUIDsForUniqueProperty( ownerRef, collectionName, propertyName, alias ) ) {
-                results.put( alias, new SimpleEntityRef( collectionName, id ) );
+                results.put( alias, new SimpleEntityRef( entityType, id ) );
             }
         }
 
