@@ -234,7 +234,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
         Observable<String> types= gm.getEdgeTypesFromSource( 
-            new SimpleSearchEdgeType( cpHeadEntity.getId(), null ));
+            new SimpleSearchEdgeType( cpHeadEntity.getId(), null,  null ));
 
         Iterator<String> iter = types.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {
@@ -274,7 +274,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
         Iterator<String> edgeTypes = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
-            cpHeadEntity.getId(), null) ).toBlockingObservable().getIterator();
+            cpHeadEntity.getId(), null, null) ).toBlockingObservable().getIterator();
 
         while ( edgeTypes.hasNext() ) {
 
