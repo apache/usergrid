@@ -65,7 +65,7 @@ public class ElasticSearchClient implements IElasticSearchClient {
         host = elasticSearchFig.getTransportHost();
         clusterName = elasticSearchFig.getClusterName();
 
-        Settings settings = ImmutableSettings.settingsBuilder().build();
+        Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", clusterName).build();
         LOG.info( "Connecting Elasticsearch on {}", elasticSearchFig.getTransportHost() + ":" +
                 elasticSearchFig.getTransportPort() );
         nodeList = getNodeList();

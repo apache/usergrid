@@ -19,14 +19,22 @@
  */
 package org.apache.usergrid.chop.webapp.elasticsearch;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.Map;
 
+import org.safehaus.guicyfig.Key;
+
+
 public class ElasticSearchNodeResponse {
 
-    private String cluster_name;
+    final String CLUSTER_NAME = "cluster_name";
+
+    @SerializedName( CLUSTER_NAME )
+    private String clusterName;
     private Map<String, ElasticSearchNode> nodes;
 
 
@@ -42,12 +50,12 @@ public class ElasticSearchNodeResponse {
 
     public String getClusterName() {
 
-        return cluster_name;
+        return clusterName;
     }
 
 
     public void setClusterName( String cluster_name ) {
-        this.cluster_name = cluster_name;
+        this.clusterName = cluster_name;
     }
 
 

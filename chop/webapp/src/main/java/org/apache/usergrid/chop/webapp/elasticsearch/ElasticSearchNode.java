@@ -19,16 +19,26 @@
  */
 package org.apache.usergrid.chop.webapp.elasticsearch;
 
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.annotations.SerializedName;
+
 
 public class ElasticSearchNode {
+
+    final String TRANSPORT_ADDRESS = "transport_address";
+    final String HTTP_ADDRESS = "http_address";
 
     private String name;
     private String host;
     private String ip;
-    private String transport_address;
-    private String http_address;
+
+    @SerializedName( TRANSPORT_ADDRESS )
+    private String transportAddress;
+
+    @SerializedName( HTTP_ADDRESS )
+    private String httpAddress;
 
 
     /**
@@ -38,9 +48,9 @@ public class ElasticSearchNode {
     public String getTransportHost() {
         int host_begin;
         int host_end;
-        host_begin = transport_address.indexOf( "/" )+1;
-        host_end = transport_address.indexOf( ":" );
-        return transport_address.substring( host_begin, host_end );
+        host_begin = transportAddress.indexOf( "/" )+1;
+        host_end = transportAddress.indexOf( ":" );
+        return transportAddress.substring( host_begin, host_end );
     }
 
 
@@ -51,9 +61,9 @@ public class ElasticSearchNode {
     public int getTransportPort() {
         int port_begin;
         int port_end;
-        port_begin = transport_address.indexOf( ":" ) + 1;
-        port_end = transport_address.indexOf( "]" );
-        return Integer.parseInt( transport_address.substring( port_begin, port_end ));
+        port_begin = transportAddress.indexOf( ":" ) + 1;
+        port_end = transportAddress.indexOf( "]" );
+        return Integer.parseInt( transportAddress.substring( port_begin, port_end ));
     }
 
 
@@ -64,9 +74,9 @@ public class ElasticSearchNode {
     public int getHTTPPort() {
         int port_begin;
         int port_end;
-        port_begin = http_address.indexOf( ":" ) + 1;
-        port_end = http_address.indexOf( "]" );
-        return Integer.parseInt( http_address.substring( port_begin, port_end ));
+        port_begin = httpAddress.indexOf( ":" ) + 1;
+        port_end = httpAddress.indexOf( "]" );
+        return Integer.parseInt( httpAddress.substring( port_begin, port_end ));
     }
 
 
@@ -77,6 +87,16 @@ public class ElasticSearchNode {
 
     public void setName( String name ) {
         this.name = name;
+    }
+
+
+    public String getTransportAddress() {
+        return transportAddress;
+    }
+
+
+    public String getHttpAddress() {
+        return httpAddress;
     }
 
 
