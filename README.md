@@ -19,7 +19,7 @@ use Usergrid::Client;
 my $client = Usergrid::Client->new(
   organization => 'test-organization',
   application  => 'test-app',
-  api_url      => 'http://localhost:8080/ROOT',
+  api_url      => 'http://localhost:8080',
   trace        => 0
 );
 
