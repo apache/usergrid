@@ -105,20 +105,19 @@
         <property name="defaultWriteConsistencyLevel" value="${cassandra.writecl}"/>
     </bean>
 	
-	<bean id="entityManagerFactory"
-		class="org.apache.usergrid.corepersistence.CpEntityManagerFactory" scope="singleton">
-		<constructor-arg ref="cassandraService" />
-        <constructor-arg ref="counterUtils"/>
-        <constructor-arg value="${usergrid.counter.skipAggregate}"/>
-    </bean>
-<!--
+	<!--<bean id="entityManagerFactory"-->
+		<!--class="org.apache.usergrid.corepersistence.CpEntityManagerFactory" scope="singleton">-->
+		<!--<constructor-arg ref="cassandraService" />-->
+        <!--<constructor-arg ref="counterUtils"/>-->
+        <!--<constructor-arg value="${usergrid.counter.skipAggregate}"/>-->
+    <!--</bean>-->
+
     <bean id="entityManagerFactory"
 		class="org.apache.usergrid.persistence.cassandra.EntityManagerFactoryImpl">
 		<constructor-arg ref="cassandraService" />
         <constructor-arg ref="counterUtils"/>
         <constructor-arg value="${usergrid.counter.skipAggregate}"/>
     </bean>
--->
 
     <bean id="queueManagerFactory"
           class="org.apache.usergrid.mq.cassandra.QueueManagerFactoryImpl">
@@ -163,16 +162,17 @@
     
     <bean id="mailUtils" class="org.apache.usergrid.utils.MailUtils" />
 
-    <bean id="entityManager" class="org.apache.usergrid.corepersistence.CpEntityManager" scope="prototype"/>
-<!--
-    <bean id="entityManager" 
-        class="org.apache.usergrid.cassandra.EntityManagerImpl" 
+    <!--<bean id="entityManager" class="org.apache.usergrid.corepersistence.CpEntityManager" scope="prototype"/>-->
+
+
+    <bean id="entityManager"
+        class="org.apache.usergrid.persistence.cassandra.EntityManagerImpl"
         scope="prototype"/>
 
-    <bean id="relationManager" 
-        class="org.apache.usergrid.persistence.cassandra.RelationManagerImpl" 
+    <bean id="relationManager"
+        class="org.apache.usergrid.persistence.cassandra.RelationManagerImpl"
         scope="prototype"/>
--->
+
 
     <bean id="traceTagAspect" class="org.apache.usergrid.persistence.cassandra.util.TraceTagAspect"/>
 

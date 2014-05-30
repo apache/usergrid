@@ -57,7 +57,6 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
@@ -147,7 +146,6 @@ import static org.apache.usergrid.persistence.cassandra.ApplicationCF.APPLICATIO
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_PROPERTIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
@@ -832,28 +830,28 @@ public class EntityManagerImpl implements EntityManager {
         // Create collection name based on entity: i.e. "users"
         String collection_name = Schema.defaultCollectionName( eType );
         // Create collection key based collection name
-        String bucketId = indexBucketLocator.getBucket( applicationId, IndexType.COLLECTION, itemId, collection_name );
-
-        Object collection_key = key( applicationId, Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId );
+//        String bucketId = indexBucketLocator.getBucket( applicationId, IndexType.COLLECTION, itemId, collection_name );
+//
+//        Object collection_key = key( applicationId, Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId );
 
         CollectionInfo collection = null;
 
-        if ( !is_application ) {
-            // Add entity to collection
-
-
-            if ( !emptyPropertyMap ) {
-                addInsertToMutator( m, ENTITY_ID_SETS, collection_key, itemId, null, timestamp );
-            }
-
-            // Add name of collection to dictionary property
-            // Application.collections
-            addInsertToMutator( m, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_COLLECTIONS ),
-                    collection_name, null, timestamp );
-
-            addInsertToMutator( m, ENTITY_COMPOSITE_DICTIONARIES, key( itemId, Schema.DICTIONARY_CONTAINER_ENTITIES ),
-                    asList( TYPE_APPLICATION, collection_name, applicationId ), null, timestamp );
-        }
+//        if ( !is_application ) {
+//            // Add entity to collection
+//
+//
+//            if ( !emptyPropertyMap ) {
+//                addInsertToMutator( m, ENTITY_ID_SETS, collection_key, itemId, null, timestamp );
+//            }
+//
+//            // Add name of collection to dictionary property
+//            // Application.collections
+//            addInsertToMutator( m, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_COLLECTIONS ),
+//                    collection_name, null, timestamp );
+//
+//            addInsertToMutator( m, ENTITY_COMPOSITE_DICTIONARIES, key( itemId, Schema.DICTIONARY_CONTAINER_ENTITIES ),
+//                    asList( TYPE_APPLICATION, collection_name, applicationId ), null, timestamp );
+//        }
 
         if ( emptyPropertyMap ) {
             return null;
