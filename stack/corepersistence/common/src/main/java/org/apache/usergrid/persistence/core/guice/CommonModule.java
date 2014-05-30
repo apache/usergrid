@@ -69,7 +69,7 @@ public abstract class CommonModule extends AbstractModule {
 
         bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
 
-        bind(AsyncProcessorFactory.class).to( AsyncProcessorFactoryImpl.class );
+        bind(AsyncProcessorFactory.class).to( AsyncProcessorFactoryImpl.class ).asEagerSingleton();
 
         bindTimeoutQueueFactory();
 

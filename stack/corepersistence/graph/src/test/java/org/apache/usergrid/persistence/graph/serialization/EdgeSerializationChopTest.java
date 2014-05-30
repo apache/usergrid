@@ -110,7 +110,7 @@ public class EdgeSerializationChopTest {
         serialization.writeEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         //get our edges out by name
 

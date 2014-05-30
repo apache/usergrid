@@ -63,7 +63,7 @@ public class EdgeDeleteListener implements MessageListener<EdgeDeleteEvent, Edge
 
         final MarkedEdge edge = delete.getData();
         final ApplicationScope scope = delete.getApplicationScope();
-        final UUID maxVersion = edge.getVersion();
+        final long maxTimestamp = edge.getTimestamp();
 
 
         return edgeDeleteRepair.repair( scope, edge, delete.getTimestamp() )
@@ -73,11 +73,11 @@ public class EdgeDeleteListener implements MessageListener<EdgeDeleteEvent, Edge
 
                                        Observable<Integer> sourceDelete = edgeMetaRepair
                                                .repairSources( scope, edge.getSourceNode(), edge.getType(),
-                                                       maxVersion );
+                                                       maxTimestamp );
 
                                        Observable<Integer> targetDelete = edgeMetaRepair
                                                .repairTargets( scope, edge.getTargetNode(), edge.getType(),
-                                                       maxVersion );
+                                                       maxTimestamp );
 
                                        return Observable.zip( sourceDelete, targetDelete,
                                                new Func2<Integer, Integer, Integer>() {

@@ -41,13 +41,13 @@ public class SimpleSearchByIdType extends SimpleSearchByEdgeType implements Sear
      *
      * @param node The node to search from
      * @param type The edge type
-     * @param maxVersion The maximum version to return
+     * @param maxTimestamp The maximum version to search
      * @param idType The id type on the edge
      * @param last The value to start seeking from.  Must be >= this value
 
      */
-    public SimpleSearchByIdType( final Id node, final String type, final UUID maxVersion, final String idType, final Edge last  ) {
-        super( node, type, maxVersion, last );
+    public SimpleSearchByIdType( final Id node, final String type, final long maxTimestamp, final String idType, final Edge last  ) {
+        super( node, type, maxTimestamp, last );
 
         ValidationUtils.verifyString( idType, "idType" );
         this.idType = idType;

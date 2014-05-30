@@ -54,11 +54,11 @@ public interface SearchByEdge {
     String getType();
 
     /**
-     * Get the Maximum Version of an edge we can return.
-     * This should always be a type 1 time uuid.
-     * @return
+     * Get the Maximum timestamp of an edge we can return.
+
+     * @return The max timestamp as a long
      */
-    UUID getMaxVersion();
+    long getMaxTimestamp();
 
     /**
      * The optional start parameter.  All edges emitted with be > the specified start edge.

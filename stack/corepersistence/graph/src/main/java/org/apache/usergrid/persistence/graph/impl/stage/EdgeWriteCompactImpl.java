@@ -78,10 +78,10 @@ public class EdgeWriteCompactImpl implements EdgeWriteCompact {
        }
 
     @Override
-    public Observable<Integer> compact( final ApplicationScope scope, final MarkedEdge edge, final UUID timestamp ) {
+    public Observable<Integer> compact( final ApplicationScope scope, final MarkedEdge edge, final UUID operationTimestamp ) {
         final Edge writtenEdge = edge;
 
-              final UUID writeVersion = edge.getVersion();
+              final long timestamp = edge.getTimestamp();
 
               return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeVersions" ) {
                   @Override
@@ -89,7 +89,7 @@ public class EdgeWriteCompactImpl implements EdgeWriteCompact {
                       //get our edge as it exists in the commit log
                       return commitLog.getEdgeVersions( scope,
                               new SimpleSearchByEdge( writtenEdge.getSourceNode(), writtenEdge.getType(),
-                                      writtenEdge.getTargetNode(), writeVersion, null ) );
+                                      writtenEdge.getTargetNode(), timestamp, null ) );
                   }
               } )
                               //buffer them, then execute mutations in batch
@@ -106,10 +106,10 @@ public class EdgeWriteCompactImpl implements EdgeWriteCompact {
                                   LOG.debug( "Buffering edge {} to permanent storage and removing from commitlog", edge );
 
                                   //batch the write
-                                  storageWriteBatch.mergeShallow( permanentStorage.writeEdge( scope, edge, timestamp ) );
+                                  storageWriteBatch.mergeShallow( permanentStorage.writeEdge( scope, edge, operationTimestamp ) );
 
                                   //batch the cleanup
-                                  commitlogCleanBatch.mergeShallow( commitLog.deleteEdge( scope, edge, timestamp ) );
+                                  commitlogCleanBatch.mergeShallow( commitLog.deleteEdge( scope, edge, operationTimestamp ) );
                               }
 
 

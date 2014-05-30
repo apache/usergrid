@@ -381,7 +381,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
      * want descending ordering
      */
     public static int compareVersions( final MarkedEdge o1, final MarkedEdge o2 ) {
-        return UUIDComparator.staticCompare( o1.getVersion(), o2.getVersion() );
+        return Long.compare( o1.getTimestamp(), o2.getTimestamp() );
     }
 
 
@@ -437,7 +437,7 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
         @Override
         public EdgeKey call( final MarkedEdge markedEdge ) {
             return new EdgeKey( markedEdge.getSourceNode(), markedEdge.getType(), markedEdge.getTargetNode(),
-                    markedEdge.getVersion() );
+                    markedEdge.getTimestamp() );
         }
     }
 
@@ -449,14 +449,14 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
         private final Id sourceNode;
         private final String type;
         private final Id targetNode;
-        private final UUID version;
+        private final long timestamp;
 
 
-        private EdgeKey( final Id sourceNode, final String type, final Id targetNode, final UUID version ) {
+        private EdgeKey( final Id sourceNode, final String type, final Id targetNode, final long timestamp ) {
             this.sourceNode = sourceNode;
             this.type = type;
             this.targetNode = targetNode;
-            this.version = version;
+            this.timestamp = timestamp;
         }
 
 
@@ -465,12 +465,15 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
             if ( this == o ) {
                 return true;
             }
-            if ( !( o instanceof EdgeKey ) ) {
+            if ( o == null || getClass() != o.getClass() ) {
                 return false;
             }
 
             final EdgeKey edgeKey = ( EdgeKey ) o;
 
+            if ( timestamp != edgeKey.timestamp ) {
+                return false;
+            }
             if ( !sourceNode.equals( edgeKey.sourceNode ) ) {
                 return false;
             }
@@ -478,9 +481,6 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
                 return false;
             }
             if ( !type.equals( edgeKey.type ) ) {
-                return false;
-            }
-            if ( !version.equals( edgeKey.version ) ) {
                 return false;
             }
 
@@ -493,8 +493,9 @@ public class MergedEdgeReaderImpl implements MergedEdgeReader {
             int result = sourceNode.hashCode();
             result = 31 * result + type.hashCode();
             result = 31 * result + targetNode.hashCode();
-            result = 31 * result + version.hashCode();
+            result = 31 * result + ( int ) ( timestamp ^ ( timestamp >>> 32 ) );
             return result;
         }
     }
+
 }

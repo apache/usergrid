@@ -83,7 +83,7 @@ public class NodeShardCacheTest {
         final String otherIdType = "type";
 
 
-        UUID newTime = UUIDGenerator.newTimeUUID();
+        final long newTime = 10000l;
 
 
         NodeShardCache cache = new NodeShardCacheImpl( allocation, graphFig );
@@ -128,7 +128,7 @@ public class NodeShardCacheTest {
         final String otherIdType = "type";
 
 
-        UUID newTime = UUIDGenerator.newTimeUUID();
+        final long newTime = 10000l;
 
         final long min = 0;
 
@@ -196,20 +196,20 @@ public class NodeShardCacheTest {
 
         //check getting equal to our min, mid and max
 
-        long slice = cache.getSlice( scope, id, EdgeTestUtils.setTimestamp(min), edgeType, otherIdType );
+        long slice = cache.getSlice( scope, id, min, edgeType, otherIdType );
 
 
         //we return the min UUID possible, all edges should start by writing to this edge
         assertEquals( min, slice );
 
-        slice = cache.getSlice( scope, id, EdgeTestUtils.setTimestamp(mid),
+        slice = cache.getSlice( scope, id, mid,
                 edgeType, otherIdType );
 
 
         //we return the mid UUID possible, all edges should start by writing to this edge
         assertEquals( mid, slice );
 
-        slice = cache.getSlice( scope, id, EdgeTestUtils.setTimestamp(max) ,
+        slice = cache.getSlice( scope, id, max ,
                 edgeType, otherIdType );
 
 
@@ -217,33 +217,33 @@ public class NodeShardCacheTest {
         assertEquals( max, slice );
 
         //now test in between
-        slice = cache.getSlice( scope, id, EdgeTestUtils.setTimestamp( min+1 ), edgeType, otherIdType );
+        slice = cache.getSlice( scope, id, min+1, edgeType, otherIdType );
 
 
         //we return the min UUID possible, all edges should start by writing to this edge
         assertEquals( min, slice );
 
-        slice = cache.getSlice( scope, id,  EdgeTestUtils.setTimestamp(  mid-1 ), edgeType, otherIdType );
+        slice = cache.getSlice( scope, id,   mid-1, edgeType, otherIdType );
 
 
         //we return the min UUID possible, all edges should start by writing to this edge
         assertEquals( min, slice );
 
 
-        slice = cache.getSlice( scope, id,  EdgeTestUtils.setTimestamp(  mid+1 ), edgeType, otherIdType );
+        slice = cache.getSlice( scope, id,   mid+1, edgeType, otherIdType );
 
 
         //we return the mid UUID possible, all edges should start by writing to this edge
         assertEquals( mid, slice );
 
-        slice = cache.getSlice( scope, id,  EdgeTestUtils.setTimestamp( max-1), edgeType, otherIdType );
+        slice = cache.getSlice( scope, id,  max-1, edgeType, otherIdType );
 
 
         //we return the mid UUID possible, all edges should start by writing to this edge
         assertEquals( mid, slice );
 
 
-        slice = cache.getSlice( scope, id,  EdgeTestUtils.setTimestamp(  max ), edgeType, otherIdType );
+        slice = cache.getSlice( scope, id,   max, edgeType, otherIdType );
 
 
         //we return the mid UUID possible, all edges should start by writing to this edge
@@ -295,7 +295,7 @@ public class NodeShardCacheTest {
         //check getting equal to our min, mid and max
 
         Iterator<Long> slice =
-                cache.getVersions( scope, id,  EdgeTestUtils.setTimestamp(  max ), edgeType, otherIdType );
+                cache.getVersions( scope, id,   max, edgeType, otherIdType );
 
 
         assertEquals( max, slice.next().longValue() );
@@ -303,14 +303,14 @@ public class NodeShardCacheTest {
         assertEquals( min, slice.next().longValue() );
 
 
-        slice = cache.getVersions( scope, id,  EdgeTestUtils.setTimestamp(  mid ),
+        slice = cache.getVersions( scope, id,   mid,
                 edgeType, otherIdType );
 
         assertEquals( mid, slice.next().longValue() );
         assertEquals( min, slice.next().longValue() );
 
 
-        slice = cache.getVersions( scope, id,  EdgeTestUtils.setTimestamp(  min ),
+        slice = cache.getVersions( scope, id,   min,
                 edgeType, otherIdType );
 
         assertEquals( min, slice.next().longValue() );

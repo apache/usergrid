@@ -73,6 +73,8 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( firstUserEntity, "likes", secondUserEntity );
 
+        em.refreshIndex();
+
         Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.IDS );
 
         List<ConnectionRef> connections = r.getConnections();
@@ -139,6 +141,8 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         LOG.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catB.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catB );
 
+        em.refreshIndex();
+
         // List forward connections for cat A
 
         // Thread.sleep(5000);
@@ -157,6 +161,8 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         LOG.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catA.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catA );
+
+        em.refreshIndex();
 
         // List forward connections for cat A
 
@@ -266,6 +272,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( secondUserEntity, "likes", arrogantbutcher );
 
+        em.refreshIndex();
 
         Results r = em.getConnectedEntities( firstUserEntity, "likes", "restaurant", Level.IDS );
 

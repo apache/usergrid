@@ -27,6 +27,8 @@ import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
@@ -54,6 +56,7 @@ import rx.Observable;
 @UseModules( { TestGraphModule.class } )
 public class StorageGraphManagerIT extends GraphManagerIT {
 
+    private static final Logger LOG = LoggerFactory.getLogger( StorageGraphManagerIT.class );
 
     @Inject
     protected AsyncProcessor<EdgeDeleteEvent> edgeDelete;
@@ -150,22 +153,22 @@ public class StorageGraphManagerIT extends GraphManagerIT {
 
         @Override
         public Observable<Edge> writeEdge( final Edge edge ) {
-            completeInvocations.decrementAndGet();
+            completeInvocations.incrementAndGet();
             return graphManager.writeEdge( edge );
         }
 
 
         @Override
         public Observable<Edge> deleteEdge( final Edge edge ) {
-            completeInvocations.decrementAndGet();
+            completeInvocations.incrementAndGet();
             return graphManager.deleteEdge( edge );
         }
 
 
         @Override
-        public Observable<Id> deleteNode( final Id node ) {
-            completeInvocations.decrementAndGet();
-            return graphManager.deleteNode( node );
+        public Observable<Id> deleteNode( final Id node, final long timestamp ) {
+            completeInvocations.incrementAndGet();
+            return graphManager.deleteNode( node, timestamp );
         }
 
 
@@ -233,13 +236,13 @@ public class StorageGraphManagerIT extends GraphManagerIT {
 
 
         public void complete() {
-            completeInvocations.incrementAndGet();
+            completeInvocations.decrementAndGet();
             tryWake();
         }
 
 
         public void error() {
-            errorInvocations.incrementAndGet();
+            errorInvocations.decrementAndGet();
             tryWake();
         }
 
@@ -255,12 +258,13 @@ public class StorageGraphManagerIT extends GraphManagerIT {
          * Away for our invocations to be 0
          */
         public void await() {
-            while (  completeInvocations.get() != 0 ) {
+            while (  completeInvocations.get() > 0 ) {
+
+                LOG.info( "Waiting for more invocations, count is {} ", completeInvocations.get() );
 
                 synchronized ( mutex ) {
                     try {
-
-                        mutex.wait();
+                        mutex.wait(1000 );
                     }
                     catch ( InterruptedException e ) {
                         //no op

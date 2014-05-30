@@ -37,20 +37,20 @@ public interface NodeShardCache {
     /**
      * Get the time meta data for the given node
      * @param nodeId
-     * @param version The time to select the slice for.
+     * @param timestamp The time to select the slice for.
      * @param edgeType
      */
-    public long getSlice(final ApplicationScope scope, final Id nodeId, final UUID version, final String... edgeType);
+    public long getSlice(final ApplicationScope scope, final Id nodeId, final long timestamp, final String... edgeType);
 
     /**
      * Get an iterator of all versions <= the version
      * @param scope
      * @param nodeId
-     * @param maxVersion
+     * @param maxTimestamp The highest timestamp
      * @param edgeType
      * @return
      */
-    public Iterator<Long> getVersions(final ApplicationScope scope, final Id nodeId, final UUID maxVersion, final String... edgeType);
+    public Iterator<Long> getVersions(final ApplicationScope scope, final Id nodeId, final long  maxTimestamp, final String... edgeType);
 
 
     /**

@@ -259,13 +259,14 @@ public class EdgeMetadataSerializationTest {
      */
     @Test
     public void deleteTargetEdgeTypes() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge", "target" );
+        final long timestamp = 1000l;
+        final Edge edge1 = createEdge( "source", "edge", "target", timestamp );
 
         final Id sourceId = edge1.getSourceNode();
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target2" ) );
+        final Edge edge2 = createEdge( sourceId, "edge", createId( "target2" ), timestamp + 1 );
 
-        final Edge edge3 = createEdge( sourceId, "edge2", createId( "target3" ) );
+        final Edge edge3 = createEdge( sourceId, "edge2", createId( "target3" ), timestamp + 2 );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();
@@ -365,13 +366,16 @@ public class EdgeMetadataSerializationTest {
      */
     @Test
     public void deleteTargetIdTypes() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge", "target" );
+
+        final long timestamp = 1000l;
+
+        final Edge edge1 = createEdge( "source", "edge", "target", timestamp );
 
         final Id sourceId = edge1.getSourceNode();
 
-        final Edge edge2 = createEdge( sourceId, "edge", createId( "target" ) );
+        final Edge edge2 = createEdge( sourceId, "edge", createId( "target" ), timestamp + 1 );
 
-        final Edge edge3 = createEdge( sourceId, "edge", createId( "target2" ) );
+        final Edge edge3 = createEdge( sourceId, "edge", createId( "target2" ), timestamp + 2 );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();
@@ -419,13 +423,16 @@ public class EdgeMetadataSerializationTest {
      */
     @Test
     public void deleteSourceIdTypes() throws ConnectionException {
-        final Edge edge1 = createEdge( "source", "edge", "target" );
+
+        final long timestamp = 1000l;
+
+        final Edge edge1 = createEdge( "source", "edge", "target", timestamp );
 
         final Id targetId = edge1.getTargetNode();
 
-        final Edge edge2 = createEdge( createId( "source" ), "edge", targetId );
+        final Edge edge2 = createEdge( createId( "source" ), "edge", targetId, timestamp+1 );
 
-        final Edge edge3 = createEdge( createId( "source2" ), "edge", targetId );
+        final Edge edge3 = createEdge( createId( "source2" ), "edge", targetId, timestamp+2 );
 
         //set writing the edge
         serialization.writeEdge( scope, edge1 ).execute();

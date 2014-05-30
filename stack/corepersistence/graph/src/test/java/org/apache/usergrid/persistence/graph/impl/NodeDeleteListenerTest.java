@@ -134,21 +134,17 @@ public class NodeDeleteListenerTest {
 
         Id targetNode = edge.getTargetNode();
 
-        UUID version = UUIDGenerator.newTimeUUID();
+        UUID eventTime = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
 
-        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, version, sourceNode );
+        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, eventTime, now, sourceNode );
 
         int count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
 
         assertEquals( "Mark was not set, no delete should be executed", 0, count );
 
 
-        deleteEvent = new NodeDeleteEvent( scope, version, targetNode );
-
-        count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
-
-        assertEquals( "Mark was not set, no delete should be executed", 0, count );
     }
 
 
@@ -175,11 +171,12 @@ public class NodeDeleteListenerTest {
 
 
         //mark the node so
-        UUID deleteVersion = UUIDGenerator.newTimeUUID();
+        UUID deleteEventTimestamp = UUIDGenerator.newTimeUUID();
+        long timestamp = System.currentTimeMillis();
 
-        nodeSerialization.mark( scope, sourceNode, deleteVersion ).execute();
+        nodeSerialization.mark( scope, sourceNode, timestamp ).execute();
 
-        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, deleteVersion, sourceNode );
+        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, deleteEventTimestamp, timestamp, sourceNode );
 
 
         int count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
@@ -188,7 +185,7 @@ public class NodeDeleteListenerTest {
 
         //now verify we can't get any of the info back
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
 
         Iterator<MarkedEdge> returned = edgeSerialization
@@ -263,11 +260,12 @@ public class NodeDeleteListenerTest {
 
 
         //mark the node so
-        UUID deleteVersion = UUIDGenerator.newTimeUUID();
+        UUID deleteEventTimestamp = UUIDGenerator.newTimeUUID();
+        long deleteTimestamp = System.currentTimeMillis();
 
-        nodeSerialization.mark( scope, targetNode, deleteVersion ).execute();
+        nodeSerialization.mark( scope, targetNode, deleteTimestamp ).execute();
 
-        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, deleteVersion, targetNode );
+        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, deleteEventTimestamp, deleteTimestamp, targetNode );
 
 
         int count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
@@ -276,7 +274,7 @@ public class NodeDeleteListenerTest {
 
         //now verify we can't get any of the info back
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
 
         Iterator<MarkedEdge> returned = edgeSerialization
@@ -376,11 +374,11 @@ public class NodeDeleteListenerTest {
         log.info( "Saved {} source edges", sourceCount );
         log.info( "Saved {} target edges", targetCount );
 
-        UUID deleteVersion = UUID.fromString( "ffffffff-ffff-1fff-bfff-ffffffffffff" );
+        long deleteVersion = Long.MAX_VALUE;
 
         nodeSerialization.mark( scope, toDelete, deleteVersion ).execute();
 
-        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, deleteVersion, toDelete );
+        NodeDeleteEvent deleteEvent = new NodeDeleteEvent( scope, UUIDGenerator.newTimeUUID(), deleteVersion, toDelete );
 
 
         int count = deleteListener.receive( deleteEvent ).toBlockingObservable().last();
@@ -390,7 +388,7 @@ public class NodeDeleteListenerTest {
 
         //now verify we can't get any of the info back
 
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
 
            //validate it's not returned by the

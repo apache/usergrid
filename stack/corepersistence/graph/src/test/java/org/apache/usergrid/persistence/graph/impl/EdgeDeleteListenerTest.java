@@ -137,20 +137,20 @@ public class EdgeDeleteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV2 = createMarkedEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId );
+        final long edgeTimestamp = 1000l;
+
+        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId, edgeTimestamp );
+        MarkedEdge edgeV2 = createMarkedEdge( sourceId, edgeType, targetId, edgeTimestamp + 1 );
+        MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId, edgeTimestamp + 2 );
 
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1, UUIDGenerator.newTimeUUID() ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, UUIDGenerator.newTimeUUID() ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3, UUIDGenerator.newTimeUUID() ).execute();
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
-
-        storageEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV1, UUIDGenerator.newTimeUUID() ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV2, UUIDGenerator.newTimeUUID() ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV3, UUIDGenerator.newTimeUUID() ).execute();
 
 
 
@@ -163,7 +163,7 @@ public class EdgeDeleteListenerTest {
         assertEquals( edgeV3, returned.getData() );
 
         //now validate there's nothing in the commit log.
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         /******
          * Ensure everything is removed from the commit log
@@ -278,20 +278,22 @@ public class EdgeDeleteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV2 = createMarkedEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId );
+        final long timestamp = 1000l;
+
+        MarkedEdge edgeV1 = createMarkedEdge( sourceId, edgeType, targetId, timestamp );
+        MarkedEdge edgeV2 = createMarkedEdge( sourceId, edgeType, targetId, timestamp + 1 );
+        MarkedEdge edgeV3 = createMarkedEdge( sourceId, edgeType, targetId, timestamp + 2);
 
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
+        final UUID foobar = UUIDGenerator.newTimeUUID();
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1, foobar ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2, foobar ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3, foobar ).execute();
 
-        storageEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
-        storageEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV1, foobar ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV2, foobar ).execute();
+        storageEdgeSerialization.writeEdge( scope, edgeV3, foobar ).execute();
 
         edgeMetadataSerialization.writeEdge( scope, edgeV1 ).execute();
         edgeMetadataSerialization.writeEdge( scope, edgeV2 ).execute();
@@ -317,7 +319,7 @@ public class EdgeDeleteListenerTest {
 
 
         //now validate there's nothing in the commit log.
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         /******
          * Ensure everything is removed from the commit log
@@ -472,7 +474,7 @@ public class EdgeDeleteListenerTest {
         when(edgeProcessor.getProcessor( EdgeWriteEvent.class )).thenReturn( processor );
 
 
-        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, edgeV1.getVersion(), edgeV1 );
+        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope,  UUIDGenerator.newTimeUUID(), edgeV1 );
 
         Keyspace keyspace = mock( Keyspace.class );
 
@@ -489,7 +491,7 @@ public class EdgeDeleteListenerTest {
          */
         when( commitLog.getEdgeVersions( same( scope ), any( SearchByEdge.class ) ) ).thenReturn( Collections
                 .singletonList( createEdge( edgeV1.getSourceNode(), edgeV1.getType(), edgeV1.getTargetNode(),
-                        edgeV1.getVersion() ) ).iterator() );
+                        edgeV1.getTimestamp() ) ).iterator() );
 
 
         /**
