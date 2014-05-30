@@ -130,7 +130,6 @@ The generated report artifacts are located in cover_db/.
 * Initial release
 * Application and admin authentication
 * Support for collections and entities (CRUD & queries)
-* Query, create and delete connections
 
 ## License
 Licensed to the Apache Software Foundation (ASF) under one or more
