@@ -1485,12 +1485,11 @@ Usergrid.Entity.prototype.save = function(callback) {
  *
  * Updates the user's password
  */
-Usergrid.Entity.prototype.changePassword = function(oldpassword, password, newpassword, callback) {
+Usergrid.Entity.prototype.changePassword = function(oldpassword, newpassword, callback) {
     var self = this;
     if ("function" === typeof oldpassword && callback === undefined) {
         callback = oldpassword;
-        oldpassword = self.get("oldpassword");
-        password = self.get("password");
+        oldpassword = self.get("oldpassword");        
         newpassword = self.get("newpassword");
     }
     self.set({
@@ -1504,8 +1503,7 @@ Usergrid.Entity.prototype.changePassword = function(oldpassword, password, newpa
             endpoint: "users/" + self.get("uuid") + "/password",
             body: {
                 uuid: self.get("uuid"),
-                username: self.get("username"),
-                password: password,
+                username: self.get("username"),                
                 oldpassword: oldpassword,
                 newpassword: newpassword
             }
