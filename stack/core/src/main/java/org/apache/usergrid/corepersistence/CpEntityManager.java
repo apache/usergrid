@@ -430,7 +430,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
-        deleteAsync( entityRef ).toBlockingObservable().last();
+        deleteAsync( entityRef ).toBlockingObservable().lastOrDefault(null);
     }
 
     private Observable deleteAsync( EntityRef entityRef ) throws Exception {
