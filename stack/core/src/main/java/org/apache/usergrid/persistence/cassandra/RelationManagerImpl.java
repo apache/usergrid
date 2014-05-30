@@ -136,6 +136,7 @@ import static org.apache.usergrid.utils.MapUtils.addMapSet;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
@@ -2314,7 +2315,7 @@ public class RelationManagerImpl implements RelationManager {
         @Override
         public void visit( NameIdentifierNode nameIdentifierNode ) throws Exception {
             //TODO T.N. USERGRID-1919 actually validate this is connected
-            EntityRef ref = em.getAlias( new SimpleEntityRef("applicaion", applicationId), 
+            EntityRef ref = em.getAlias( new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), 
                     connection.getConnectedEntityType(), nameIdentifierNode.getName() );
 
             if ( ref == null ) {

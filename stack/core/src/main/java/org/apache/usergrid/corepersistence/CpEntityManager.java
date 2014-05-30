@@ -549,7 +549,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void updateApplication(Map<String, Object> properties) throws Exception {
-        this.updateProperties( new SimpleEntityRef( "application", applicationId ), properties );
+        this.updateProperties( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ), properties );
         this.application = get( applicationId, Application.class );
     }
 
@@ -584,7 +584,7 @@ public class CpEntityManager implements EntityManager {
     @Override
     public EntityRef getAlias(String aliasType, String alias) throws Exception {
 
-        return getAlias( new SimpleEntityRef("application", applicationId), aliasType, alias );
+        return getAlias( new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), aliasType, alias );
     }
 
     @Override
@@ -617,7 +617,7 @@ public class CpEntityManager implements EntityManager {
     public Map<String, EntityRef> getAlias(
             String aliasType, List<String> aliases) throws Exception {
 
-        return getAlias( new SimpleEntityRef("application", applicationId), aliasType, aliases );
+        return getAlias( new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), aliasType, aliases );
     }
 
     @Override

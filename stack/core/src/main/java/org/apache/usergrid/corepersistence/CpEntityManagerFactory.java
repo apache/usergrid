@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -509,7 +510,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private Id generateApplicationId(UUID id){
-        return new SimpleId( id, "application" );
+        return new SimpleId( id, Application.ENTITY_TYPE );
     }
     
     /**

@@ -271,7 +271,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public void updateApplication( Map<String, Object> properties ) throws Exception {
-        this.updateProperties( applicationId, "application", properties );
+        this.updateProperties( applicationId, Application.ENTITY_TYPE, properties );
         this.application = get( applicationId, Application.class );
     }
 
@@ -1562,14 +1562,15 @@ public class EntityManagerImpl implements EntityManager {
             query.setLimit( 1 );
             query.setResultsLevel( REFS );
 
-            Results r = getRelationManager( ref( applicationId ) ).searchCollection( "users", query );
+            Results r = getRelationManager( 
+                ref( Application.ENTITY_TYPE, applicationId ) ).searchCollection( "users", query );
             if ( r != null && r.getRef() != null ) {
                 return r.getRef();
             }
             else {
                 // look-aside as it might be an email in the name field
                 return this.getAlias( 
-                        new SimpleEntityRef("application", applicationId), 
+                        new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), 
                         "user", identifier.getEmail() );
             }
         }
@@ -1587,7 +1588,7 @@ public class EntityManagerImpl implements EntityManager {
         }
         if ( identifier.isName() ) {
             return this.getAlias( 
-                    new SimpleEntityRef("application", applicationId), 
+                    new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), 
                     "group", identifier.getName() );
         }
         return null;
@@ -1770,7 +1771,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public EntityRef getAlias( String aliasType, String alias ) throws Exception {
-        return getAlias( new SimpleEntityRef("application", applicationId), aliasType, alias );
+        return getAlias( new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), aliasType, alias );
     }
 
 
