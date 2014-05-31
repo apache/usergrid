@@ -5,7 +5,7 @@ Apache Usergrid's REST API.
 
 ## Quickstart
 
-Install Usergrid::Client from CPAN (not yet available):
+Install Usergrid::Client from CPAN:
 
     $ sudo cpan install Usergrid::Client
 
