@@ -17,12 +17,12 @@ my $builder = Module::Build->new(
         'Test::More'    => 0,
     },
     requires => {
-        'Moose'               => 0,
-        'JSON'                => 0,
-        'REST::Client'        => 0,
-        'URI::Template'       => 0,
-        'Log::Log4perl'       => 0,
-        'namespace::autoclean => 0
+        'Moose'                => 0,
+        'JSON'                 => 0,
+        'REST::Client'         => 0,
+        'URI::Template'        => 0,
+        'Log::Log4perl'        => 0,
+        'namespace::autoclean' => 0
     },
     add_to_cleanup      => [ 'Usergrid-Client-*' ]
 );
