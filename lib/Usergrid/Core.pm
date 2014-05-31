@@ -21,7 +21,7 @@ use Log::Log4perl qw(:easy);
 use URI::Template;
 use JSON;
 
-our $VERSION = '0.1';
+our $VERSION = '0.11';
 
 my $json = JSON->new->allow_nonref;
 

@@ -125,6 +125,11 @@ The generated report artifacts are located in cover_db/.
 
 ## Release notes
 
+### 0.11
+
+* Added namespace::autoclean.pm as a dependency to fix build break on some
+  platforms
+
 ### 0.1
 
 * Initial release
