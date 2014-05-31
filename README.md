@@ -7,7 +7,7 @@ Apache Usergrid's REST API.
 
 Install Usergrid::Client from CPAN:
 
-    $ sudo cpan install Usergrid::Client
+    $ sudo cpan Usergrid::Client
 
 Write a perl script that uses the Perl API to talk to Usergrid. Here's an example:
 
@@ -57,6 +57,7 @@ from CPAN as shown below:
     $ sudo cpan install REST::Client
     $ sudo cpan install URI::Template
     $ sudo cpan install Log::Log4perl
+    $ sudo cpan install namespace::autoclean
 
 ### Build and install
 
