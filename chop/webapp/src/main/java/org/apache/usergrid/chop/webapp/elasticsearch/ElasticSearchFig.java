@@ -52,6 +52,14 @@ public interface ElasticSearchFig extends GuicyFig {
     int getTransportPort();
 
 
+    String HTTP_PORT_DEFAULT = "9200";
+    String HTTP_PORT_KEY = "es.http.port";
+
+    @Default(HTTP_PORT_DEFAULT)
+    @Key(HTTP_PORT_KEY)
+    int getHttpPort();
+
+
     String DATA_DIR_DEFAULT = "target/data";
     String DATA_DIR_KEY = "es.data.directory";
 
