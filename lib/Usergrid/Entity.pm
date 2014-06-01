@@ -77,7 +77,7 @@ __END__
 
 =head1 SEE ALSO
 
-L<Usergrid::Client>, L<Usergrid::Core>, L<Usergrid::Collection>, L<Usergrid::Request>
+L<Usergrid::Client>, L<Usergrid::Collection>, L<Usergrid::Request>
 
 =head1 LICENSE
 

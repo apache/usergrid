@@ -18,6 +18,10 @@ package Usergrid::Collection;
 use Moose;
 use namespace::autoclean;
 
+with (
+  'Usergrid::Request',
+);
+
 =head1 NAME
 
 Usergrid::Collection - Encapsulates collection functionality
@@ -38,6 +42,7 @@ A hash reference with the collection data (Read/Write, Required).
 =back
 =cut
 has 'object'      => ( is => 'rw', required => 1 );
+has 'uri'         => ( is => 'rw', required => 1 );
 has 'iterator'    => ( is => 'rw', isa => 'Int', default => sub { -1 } );
 
 =head1 METHODS
@@ -113,6 +118,13 @@ sub get_last_entity {
 
 }
 
+sub get_next_page {
+  my $self = shift;
+  return $self->collection(
+    $self->GET($self->uri . "&cursor=". $self->object->{'cursor'}), $self->uri
+  );
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;
@@ -123,7 +135,7 @@ __END__
 
 =head1 SEE ALSO
 
-L<Usergrid::Client>, L<Usergrid::Core>, L<Usergrid::Entity>, L<Usergrid::Request>
+L<Usergrid::Client>, L<Usergrid::Entity>, L<Usergrid::Request>
 
 =head1 LICENSE
 

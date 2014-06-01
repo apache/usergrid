@@ -18,18 +18,54 @@ package Usergrid::Request;
 use Moose::Role;
 use namespace::autoclean;
 use Carp qw(confess);
-
+use Log::Log4perl qw(:easy);
 use REST::Client;
+use URI::Template;
+use JSON;
+
+my $json = JSON->new->allow_nonref;
 
 =head1 NAME
 
-Usergrid::Request - Role that provides HTTP invocations methods
+Usergrid::Request - Role that provides HTTP invocation and utility methods
 
 =head1 DESCRIPTION
 
 Provides methods for easily invoking HTTP methods.
 
+=head1 ATTRIBUTES
+
+=over
+
+=item organization
+
+Organization name (Read/Write, String, Required).
+
+=item application
+
+Application name (Read/Write, String, Required).
+
+=item api_url
+
+The URL for the API server (Read/Write, String, Required).
+
+=item trace
+
+Enable/disable request and response tracing for debugging and troubleshooting
+(Read/Write, Boolean, Optional).
+
+=item user_token
+
+The logged in user context (Read/Write).
+
 =cut
+has 'organization'  => ( is => 'rw', isa => 'Str', required => 1);
+has 'application'   => ( is => 'rw', isa => 'Str', required => 1);
+has 'api_url'       => ( is => 'rw', isa => 'Str', required => 1);
+
+has 'trace'         => ( is => 'rw', isa => 'Bool', trigger => \&_enable_tracing);
+
+has 'user_token'    => ( is => 'rw');
 
 # Private method
 sub _is_token_required {
@@ -66,9 +102,9 @@ sub _api_request {
 
   return undef if ($client->responseCode() eq "404");
 
-  confess "Bad request" if ($client->responseCode() eq "400");
+  confess "Bad request"  if ($client->responseCode() eq "400");
   confess "Unauthorized" if ($client->responseCode() eq "401");
-  confess "Forbidden" if ($client->responseCode() eq "403");
+  confess "Forbidden"    if ($client->responseCode() eq "403");
   confess "Server error" if ($client->responseCode() eq "500");
 
   return $self->json_decode($response);
@@ -120,6 +156,77 @@ sub PUT {
   $self->_api_request('PUT', $resource, $request);
 }
 
+# internal method
+sub _enable_tracing {
+  my ($self, $state, $old_state) = @_;
+  if ($state) {
+    Log::Log4perl::easy_init($DEBUG);
+    our $logger = Log::Log4perl->get_logger();
+  }
+}
+
+=head1 METHODS
+
+=item trace_message ($message)
+
+Utility method to log a message to console if tracing is enabled.
+
+=cut
+sub trace_message {
+  my ($self, $message) = @_;
+  $Usergrid::Core::logger->debug($message) if (defined $Usergrid::Core::logger);
+}
+
+=item prettify ($message)
+
+Returns a prettified string representation for a JSON encoded object.
+
+=cut
+sub prettify {
+  my ($self, $json_obj) = @_;
+  return $json->pretty->encode($json_obj);
+}
+
+=item json_encode ($hashref)
+
+Returns a JSON object from a hash reference.
+
+=cut
+sub json_encode {
+  my ($self, $json_obj) = @_;
+  $json->encode($json_obj);
+}
+
+=item json_decode ($json_object)
+
+Returns a hash reference from a JSON object.
+
+=cut
+sub json_decode {
+  my ($self, $json_obj) = @_;
+  $json->decode($json_obj);
+}
+
+=item collection ($object, $uri)
+
+Returns a L<Usergrid::Collection> object that encapsulates the given hashref
+and the URI that resulted in it.
+
+=cut
+sub collection {
+  my ($self, $object, $uri) = @_;
+
+  return Usergrid::Collection->new (
+    object       => $object,
+    uri          => $uri,
+    organization => $self->organization,
+    application  => $self->application,
+    api_url      => $self->api_url,
+    trace        => $self->trace,
+    user_token   => $self->user_token
+  );
+}
+
 1;
 
 
@@ -129,7 +236,7 @@ __END__
 
 =head1 SEE ALSO
 
-L<Usergrid::Client>, L<Usergrid::Core>, L<Usergrid::Collection>, L<Usergrid::Entity>
+L<Usergrid::Client>, L<Usergrid::Collection>, L<Usergrid::Entity>
 
 =head1 LICENSE
 

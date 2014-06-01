@@ -18,3 +18,4 @@ t/04_collection.t
 t/05_query.t
 t/06_batch_update.t
 t/07_batch_delete.t
+t/08_connections.t

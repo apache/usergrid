@@ -20,7 +20,9 @@ use namespace::autoclean;
 use Usergrid::Entity;
 use Usergrid::Collection;
 
-extends 'Usergrid::Core';
+with (
+  'Usergrid::Request',
+);
 
 our $VERSION = '0.11';
 
@@ -198,7 +200,7 @@ sub get_collection {
       limit        => ( defined $limit ) ? $limit: 10
   );
 
-  return Usergrid::Collection->new( object => $self->GET($uri) );
+  return $self->collection($self->GET($uri), $uri);
 }
 
 =item update_collection ($collection, $properties, [$query], [$limit])
@@ -222,7 +224,7 @@ sub update_collection {
       query        => ( defined $query ) ? $query : undef
   );
 
-  return Usergrid::Collection->new( object => $self->PUT($uri, $properties) );
+  return $self->collection($self->PUT($uri, $properties), $uri);
 }
 
 =item delete_collection ($collection, [$query], [$limit])
@@ -245,7 +247,7 @@ sub delete_collection {
       query        => ( defined $query ) ? $query : undef
   );
 
-  return Usergrid::Collection->new( object => $self->DELETE($uri) );
+  return $self->collection($self->DELETE($uri), $uri);
 }
 
 =item query_collection ($collection, $query, [$limit])
@@ -267,7 +269,7 @@ sub query_collection {
       ql           => $query
   );
 
-  return Usergrid::Collection->new( object => $self->GET($uri) );
+  return $self->collection($self->GET($uri), $uri);
 }
 
 =item delete_entity_by_id ($collection, $id)
@@ -355,7 +357,7 @@ sub query_connections {
       ql           => $query
   );
 
-  return Usergrid::Collection->new( object => $self->GET($uri) );
+  return $self->collection($self->GET($uri), $uri);
 }
 
 =item disconnect_entities ($connecting_entity, $relationship, $connected_entity)
@@ -392,7 +394,7 @@ __END__
 
 =head1 SEE ALSO
 
-L<Usergrid::Core>, L<Usergrid::Collection>, L<Usergrid::Entity>, L<Usergrid::Request>
+L<Usergrid::Collection>, L<Usergrid::Entity>, L<Usergrid::Request>
 
 =head1 LICENSE
 
