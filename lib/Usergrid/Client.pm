@@ -22,6 +22,8 @@ use Usergrid::Collection;
 
 extends 'Usergrid::Core';
 
+our $VERSION = '0.11';
+
 =head1 NAME
 
 Usergrid::Client - Usergrid Perl Client

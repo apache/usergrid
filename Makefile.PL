@@ -10,7 +10,7 @@ WriteMakefile(
   AUTHOR            => 'Anuradha Weeraman <anuradha@cpan.org',
   ABSTRACT          => 'Client API for Apache Usergrid',
   NAME              => 'Usergrid::Client',
-  VERSION_FROM      => 'lib/Usergrid/Core.pm',
+  VERSION_FROM      => 'lib/Usergrid/Client.pm',
   PREREQ_PM => {
     'Moose'                => 0,
     'JSON'                 => 0,
