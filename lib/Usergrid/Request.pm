@@ -35,7 +35,7 @@ Provides methods for easily invoking HTTP methods.
 
 =head1 ATTRIBUTES
 
-=over
+=over 4
 
 =item organization
 
@@ -110,6 +110,8 @@ sub _api_request {
   return $self->json_decode($response);
 }
 
+=back
+
 =head1 METHODS
 
 =over 4
@@ -165,8 +167,6 @@ sub _enable_tracing {
   }
 }
 
-=head1 METHODS
-
 =item trace_message ($message)
 
 Utility method to log a message to console if tracing is enabled.
@@ -174,7 +174,7 @@ Utility method to log a message to console if tracing is enabled.
 =cut
 sub trace_message {
   my ($self, $message) = @_;
-  $Usergrid::Core::logger->debug($message) if (defined $Usergrid::Core::logger);
+  $Usergrid::Request::logger->debug($message) if (defined $Usergrid::Request::logger);
 }
 
 =item prettify ($message)
