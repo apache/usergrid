@@ -2,7 +2,6 @@ Build.PL
 examples/books.pl
 lib/Usergrid/Client.pm
 lib/Usergrid/Collection.pm
-lib/Usergrid/Core.pm
 lib/Usergrid/Entity.pm
 lib/Usergrid/Request.pm
 LICENSE
@@ -19,3 +18,4 @@ t/05_query.t
 t/06_batch_update.t
 t/07_batch_delete.t
 t/08_connections.t
+t/09_paging.t

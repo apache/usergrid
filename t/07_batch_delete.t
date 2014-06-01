@@ -16,7 +16,7 @@ my $password        = 'Testuser123$';
 ###########
 
 if (_check_port($hostname, $port)) {
-  plan tests => 4;
+  plan tests => 3;
 } else {
   plan skip_all => "server $api_url not reachable"
 }
@@ -62,16 +62,10 @@ eval {
   $collection = $client->get_collection("books", 30);
 
   ok ( $collection->count() == 25, "deleted 5 entities" );
-
-  $collection = $client->delete_collection("books", undef, 30);
-
-  $collection = $client->get_collection("books", 30);
-
-  ok ( $collection->count() == 0, "count must now be again zero" );
-
 };
 
 diag($@) if $@;
 
 # Cleanup
+$collection = $client->delete_collection("books", undef, 30);
 $client->delete_entity($user);

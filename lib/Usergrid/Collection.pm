@@ -22,6 +22,8 @@ with (
   'Usergrid::Request',
 );
 
+my @stack;
+
 =head1 NAME
 
 Usergrid::Collection - Encapsulates collection functionality
@@ -118,11 +120,56 @@ sub get_last_entity {
 
 }
 
+=item get_next_page
+
+Fetches the next page in the collection. Returns false when there are no more reults.
+
+=cut
 sub get_next_page {
   my $self = shift;
-  return $self->collection(
-    $self->GET($self->uri . "&cursor=". $self->object->{'cursor'}), $self->uri
-  );
+
+  my $csr = $self->object->{'cursor'};
+
+  my $object = $self->GET($self->uri . "&cursor=". $csr);
+
+  if ($object->{'count'} > 0) {
+    push @stack, "1" if (scalar @stack == 0);
+    push @stack, $csr;
+
+    $self->object( $object );
+    $self->reset_iterator();
+
+    return $self;
+  } else {
+    return 0;
+  }
+}
+
+=item get_prev_page
+
+Fetches the previous page in the collection. Returns false when there are no more reults.
+
+=cut
+sub get_prev_page {
+  my $self = shift;
+  my $object;
+
+  if (scalar @stack > 0) {
+    my $csr = pop @stack;
+
+    if ($csr eq "1") {
+      $object = $self->GET($self->uri);
+    } else {
+      $object = $self->GET($self->uri . "&cursor=" . $csr);
+    }
+
+    $self->object( $object );
+    $self->reset_iterator();
+
+    return $self;
+  } else {
+    return 0;
+  }
 }
 
 __PACKAGE__->meta->make_immutable;

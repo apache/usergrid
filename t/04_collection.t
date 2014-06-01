@@ -84,4 +84,5 @@ eval {
 diag($@) if $@;
 
 # Cleanup
+$collection = $client->delete_collection("books", undef, 30);
 $client->delete_entity($user);

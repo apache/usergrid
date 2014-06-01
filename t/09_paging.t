@@ -16,7 +16,7 @@ my $password        = 'Testuser123$';
 ###########
 
 if (_check_port($hostname, $port)) {
-  plan tests => 14;
+  plan tests => 24;
 } else {
   plan skip_all => "server $api_url not reachable"
 }
@@ -61,42 +61,64 @@ eval {
 
   ok ( $collection->count == 10, "checking first page count" );
   ok ( $collection->get_first_entity()->get('name') eq 'book 0', "Check first entity of first page");
-  ok ( $collection->get_last_entity()->get('name') eq 'book 9', "Check last entity of first page");
+  ok ( $collection->get_last_entity()->get('name')  eq 'book 9', "Check last entity of first page");
 
-  $collection = $collection->get_next_page();
+  $collection->get_next_page();
 
   ok ( $collection->count == 10, "checking second page count" );
   ok ( $collection->get_first_entity()->get('name') eq 'book 10', "Check first entity of second page");
-  ok ( $collection->get_last_entity()->get('name') eq 'book 19', "Check last entity of second page");
+  ok ( $collection->get_last_entity()->get('name')  eq 'book 19', "Check last entity of second page");
 
-  $collection = $collection->get_next_page();
+  $collection->get_next_page();
 
   ok ( $collection->count == 10, "checking third page count" );
   ok ( $collection->get_first_entity()->get('name') eq 'book 20', "Check first entity of third page");
-  ok ( $collection->get_last_entity()->get('name') eq 'book 29', "Check last entity of third page");
+  ok ( $collection->get_last_entity()->get('name')  eq 'book 29', "Check last entity of third page");
 
-  $collection = $collection->get_next_page();
+  if (! $collection->get_next_page()) {
+    pass ( "no more results" );
+  }
 
-  ok ( $collection->count == 0, "no more results" );
+  $collection->get_prev_page();
+
+  ok ( $collection->count == 10, "checking third page count" );
+  ok ( $collection->get_first_entity()->get('name') eq 'book 20', "Check first entity of third page in reverse");
+  ok ( $collection->get_last_entity()->get('name')  eq 'book 29', "Check last entity of third page in reverse");
+
+  $collection->get_prev_page();
+
+  ok ( $collection->count == 10, "checking second page count" );
+  ok ( $collection->get_first_entity()->get('name') eq 'book 10', "Check first entity of second page in reverse");
+  ok ( $collection->get_last_entity()->get('name')  eq 'book 19', "Check last entity of second page in reverse");
+
+  $collection->get_prev_page();
+
+  ok ( $collection->count == 10, "checking first page count" );
+  ok ( $collection->get_first_entity()->get('name') eq 'book 0', "Check first entity of first page in reverse");
+  ok ( $collection->get_last_entity()->get('name')  eq 'book 9', "Check last entity of first page in reverse");
+
+  if (! $collection->get_prev_page()) {
+    pass ( "no more results in reverse" );
+  }
 
   $count = 0;
   $collection = $client->get_collection("books", 10);
   do {
     $count += $collection->count();
-    $collection = $collection->get_next_page();
-  } while ($collection->count != 0);
+  } while ($collection->get_next_page());
 
-  ok ( $count == 30, "should return 30 entities" );
+  ok ( $count == 30, "should return 30 entities in forward" );
 
-  $client->delete_collection("books", undef, 30);
+  $count = 0;
+  while ($collection->get_prev_page()) {
+    $count += $collection->count();
+  }
 
-  $collection = $client->get_collection("books");
-
-  ok ( $collection->count() == 0, "count must now be again zero" );
-
+  ok ( $count == 30, "should return 30 entities in reverse" );
 };
 
 diag($@) if $@;
 
 # Cleanup
+$client->delete_collection("books", undef, 30);
 $client->delete_entity($user);

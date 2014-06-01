@@ -69,11 +69,10 @@ eval {
   $book = $collection->get_next_entity();
 
   ok ( $book->get('name') eq 'Mona Lisa Overdrive', "check remaining connection");
-
-  $client->delete_collection("books", undef, 10);
 };
 
 diag($@) if $@;
 
 # Cleanup
+$client->delete_collection("books", undef, 10);
 $client->delete_entity($user);
