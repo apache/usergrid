@@ -138,8 +138,115 @@ Similarly, an entity can be deleted by UUID or by name:
 ```perl
 $client->delete_entity_by_id("books", $uuid_or_name);
 
-# An entity can be also deleted by passing an entity object as shown below
+# An entity can be also deleted by passing an entity object
 $client->delete_entity($entity);
+```
+
+### Collections
+
+A collection can be retrieved as shown below:
+
+```perl
+$collection = $client->get_collection("books");
+
+# Outputs the number of records in the collection
+print "$collection->count()\n";
+```
+
+To iterate over the collection:
+
+```perl
+while ($collection->has_next_entity()) {
+  $book = $collection->get_next_entity();
+  print "$book->get('name')\n";
+}
+```
+
+Note that by default a collection returns a maximum of 10 records per page. This
+can be overridden when retrieving the collection as shown below:
+
+```perl
+$collection = $client->get_collection("books", 30);
+
+# Retrieve the first book in the collection's current page
+$first_book = $collection->get_first_entity();
+
+# Retrieve the last book in the collection's current page
+$last_book  = $collection->get_last_entity();
+```
+
+To navigate the pages in the collection:
+
+```perl
+$collection->get_next_page();
+
+$collection->get_prev_page();
+```
+
+Both of the above return FALSE if the end or the beginning of the collection
+is reached.
+
+### Querying & Batch Updates
+
+Collections can be queried using a SQL-like query language for greater control
+over the data set that is returned.
+
+```perl
+$collection = $client->query_collection("books", "select * where genre = 'Cyberpunk'", $limit );
+```
+
+Queries can also be used when deleting collections:
+
+```perl
+$collection = $client->delete_collection("books", "select * where genre = 'Cyberpunk'", $limit);
+```
+
+If the $limit is omitted in the above method calls, a default of 10 is assumed.
+
+A collection can be batch updated as shown below:
+
+```perl
+$client->update_collection("books", { in_stock => 1 });
+```
+
+A query can be used to fine-tune the update:
+
+```perl
+$client->update_collection("books", { in_stock => 0 }, "select * where genre = 'Cyberpunk'", $limit);
+```
+
+Similarly, entities can be deleted in batch:
+
+```perl
+$client->delete_collection("books", "select * where genre = 'Novel'", $limit);
+```
+
+### Entity Connections
+
+Connections can be created between entities through relationships as shown below:
+
+```perl
+$book1 = $client->add_entity("books", { name => "Neuromancer", author => "William Gibson" });
+$book2 = $client->add_entity("books", { name => "Count Zero", author => "William Gibson" });
+$book3 = $client->add_entity("books", { name => "Mona Lisa Overdrive", author => "William Gibson" });
+
+$client->connect_entities($book1, "similar_to", $book2);
+$client->connect_entities($book1, "similar_to", $book3);
+```
+
+They can also be queried just like any other collection:
+
+```perl
+$collection = $client->query_connections($book1, "similar_to");
+
+# Queries and limits can also be passed in
+$collection = $client->query_connections($book1, "similar_to", $query, $limit);
+```
+
+To delete a connection:
+
+```perl
+$client->disconnect_entities($book1, "similar_to", $book2);
 ```
 
 ### Code Coverage
