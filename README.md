@@ -110,6 +110,38 @@ To get more details on the API, read the following perldocs:
     Usergrid::Collection
     Usergrid::Entity
 
+### Entities
+
+Creating and updating an entity is easy. Here's how:
+
+```perl
+$book = $client->add_entity("books", { name => "Neuromancer", author => "William Gibson" });
+$book->set('genre', 'Cyberpunk');
+
+$client->update_entity($book);
+```
+
+Querying an entity can be done by UUID:
+
+```perl
+$book = $client->get_entity("books", $uuid);
+```
+
+or by name:
+
+```perl
+$book = $client->get_entity("books", "Neuromancer");
+```
+
+Similarly, an entity can be deleted by UUID or by name:
+
+```perl
+$client->delete_entity_by_id("books", $uuid_or_name);
+
+# An entity can be also deleted by passing an entity object as shown below
+$client->delete_entity($entity);
+```
+
 ### Code Coverage
 
 Code coverage reporting requires Devel::Cover module which can be
