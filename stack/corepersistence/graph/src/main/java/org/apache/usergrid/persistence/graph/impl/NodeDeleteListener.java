@@ -171,7 +171,7 @@ public class NodeDeleteListener implements MessageListener<NodeDeleteEvent, Inte
 
         //get all edges pointing to the target node and buffer then into groups for deletion
         Observable<MarkedEdge> targetEdges =
-                getEdgesTypesToTarget( scope, new SimpleSearchEdgeType( node, null ) ).subscribeOn( Schedulers.io() )
+                getEdgesTypesToTarget( scope, new SimpleSearchEdgeType( node, null, null ) ).subscribeOn( Schedulers.io() )
                         .flatMap( new Func1<String, Observable<MarkedEdge>>() {
                             @Override
                             public Observable<MarkedEdge> call( final String edgeType ) {
@@ -183,7 +183,7 @@ public class NodeDeleteListener implements MessageListener<NodeDeleteEvent, Inte
 
         //get all edges pointing to the source node and buffer them into groups for deletion
         Observable<MarkedEdge> sourceEdges =
-                getEdgesTypesFromSource( scope, new SimpleSearchEdgeType( node, null ) ).subscribeOn( Schedulers.io() )
+                getEdgesTypesFromSource( scope, new SimpleSearchEdgeType( node, null, null ) ).subscribeOn( Schedulers.io() )
                         .flatMap( new Func1<String, Observable<MarkedEdge>>() {
                             @Override
                             public Observable<MarkedEdge> call( final String edgeType ) {

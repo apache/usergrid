@@ -119,6 +119,7 @@
         <!--<constructor-arg value="${usergrid.counter.skipAggregate}"/>-->
     <!--</bean>-->
 
+
     <bean id="queueManagerFactory"
           class="org.apache.usergrid.mq.cassandra.QueueManagerFactoryImpl">
         <constructor-arg ref="cassandraService" />
@@ -164,7 +165,6 @@
 
     <bean id="entityManager" class="org.apache.usergrid.corepersistence.CpEntityManager" scope="prototype"/>
 
-
     <!--<bean id="entityManager"-->
         <!--class="org.apache.usergrid.persistence.cassandra.EntityManagerImpl"-->
         <!--scope="prototype"/>-->
@@ -172,7 +172,6 @@
     <!--<bean id="relationManager"-->
         <!--class="org.apache.usergrid.persistence.cassandra.RelationManagerImpl"-->
         <!--scope="prototype"/>-->
-
 
     <bean id="traceTagAspect" class="org.apache.usergrid.persistence.cassandra.util.TraceTagAspect"/>
 

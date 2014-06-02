@@ -276,7 +276,7 @@ public class CollectionServiceIT extends AbstractServiceIT {
             app.testRequest( ServiceAction.POST, 0, "roles" );
             Assert.fail();
         }
-        catch ( IllegalArgumentException iae ) {
+        catch ( RequiredPropertyNotFoundException ex ) {
             //ok
         }
 

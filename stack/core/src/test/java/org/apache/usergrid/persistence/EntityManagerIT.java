@@ -559,6 +559,8 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         Entity createdDevice = em.createItemInCollection( createdUser, "devices", "device", device );
 
+        em.refreshIndex();
+
         Entity returnedDevice = em.get( new SimpleEntityRef("device", createdDevice.getUuid()));
 
         assertNotNull( createdDevice );

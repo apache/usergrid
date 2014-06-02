@@ -233,7 +233,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
         Observable<String> types= gm.getEdgeTypesFromSource( 
-            new SimpleSearchEdgeType( cpHeadEntity.getId(), null ));
+            new SimpleSearchEdgeType( cpHeadEntity.getId(), null,  null ));
 
         Iterator<String> iter = types.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {
@@ -273,7 +273,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
         Iterator<String> edgeTypes = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
-            cpHeadEntity.getId(), null) ).toBlockingObservable().getIterator();
+            cpHeadEntity.getId(), null, null) ).toBlockingObservable().getIterator();
 
         while ( edgeTypes.hasNext() ) {
 
@@ -325,7 +325,7 @@ public class CpRelationManager implements RelationManager {
         Observable<Edge> edges = gm.loadEdgeVersions( 
                 new SimpleSearchByEdge(
                     new SimpleId(headEntity.getUuid(), headEntity.getType()), 
-                    collName,  
+                    getEdgeTypeFromCollectionName( collName ),  
                     entityId, 
                     Long.MAX_VALUE,
                     null));
@@ -403,9 +403,10 @@ public class CpRelationManager implements RelationManager {
 
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge(
-            cpHeadEntity.getId(), getEdgeTypeFromCollectionName( collName ), memberEntity.getId(), 
-           memberEntity.getId().getUuid().timestamp() );
-
+            cpHeadEntity.getId(), 
+            getEdgeTypeFromCollectionName( collName ), 
+            memberEntity.getId(), 
+            memberEntity.getId().getUuid().timestamp() );
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
@@ -538,9 +539,11 @@ public class CpRelationManager implements RelationManager {
         ei.deindex( memberEntity );
 
         // remove collection edge
-        Edge edge = new SimpleEdge( cpHeadEntity.getId(),
-            getEdgeTypeFromCollectionName( collName ), memberEntity.getId(), 
-           memberEntity.getId().getUuid().timestamp() );
+        Edge edge = new SimpleEdge( 
+            cpHeadEntity.getId(),
+            getEdgeTypeFromCollectionName( collName ), 
+            memberEntity.getId(), 
+            memberEntity.getId().getUuid().timestamp() );
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.deleteEdge(edge).toBlockingObservable().last();
 
@@ -573,12 +576,11 @@ public class CpRelationManager implements RelationManager {
             CpEntityManager.getCollectionScopeNameFromCollectionName( collName ));
         EntityIndex ei = managerCache.getEntityIndex(indexScope);
       
-        logger.debug("Searching collection {}", collName);
-        logger.debug("Searching head entity scope {}:{}:{}",
+        logger.debug("Searching scope {}:{}:{}",
             new String[] { 
-                headEntityScope.getApplication().toString(), 
-                headEntityScope.getOwner().toString(),
-                collName }); 
+                indexScope.getApplication().toString(), 
+                indexScope.getOwner().toString(),
+                indexScope.getName() }); 
 
         query.setEntityType( collection.getType() );
         query = adjustQuery( query );
@@ -630,9 +632,11 @@ public class CpRelationManager implements RelationManager {
                 .toBlockingObservable().last();
 
         // create graph edge connection from head entity to member entity
-        Edge edge = new SimpleEdge( cpHeadEntity.getId(), connectionType,
-            targetEntity.getId(), System.currentTimeMillis() );
-
+        Edge edge = new SimpleEdge( 
+            cpHeadEntity.getId(), 
+            connectionType,
+            targetEntity.getId(), 
+            System.currentTimeMillis() );
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 

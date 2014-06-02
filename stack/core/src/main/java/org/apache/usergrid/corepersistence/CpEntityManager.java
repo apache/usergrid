@@ -497,7 +497,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
-        deleteAsync( entityRef ).toBlockingObservable().last();
+        deleteAsync( entityRef ).toBlockingObservable().lastOrDefault(null);
     }
 
 
@@ -678,7 +678,9 @@ public class CpEntityManager implements EntityManager {
         Assert.notNull( collectionType, "collectionType is required" );
         Assert.notNull( aliasValue, "aliasValue is required" );
 
-        Map<String, EntityRef> results = getAlias( ownerRef, collectionType, Collections.singletonList( aliasValue ) );
+        String collName = Schema.defaultCollectionName( collectionType );
+
+        Map<String, EntityRef> results = getAlias( ownerRef, collName, Collections.singletonList( aliasValue ) );
 
         if ( results == null || results.size() == 0 ) {
             return null;
@@ -740,6 +742,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public EntityRef validate( EntityRef entityRef ) throws Exception {
+
         // all entity refs should have type in CP
         return entityRef;
     }
@@ -747,7 +750,9 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Object getProperty( EntityRef entityRef, String propertyName ) throws Exception {
-        throw new UnsupportedOperationException( "Not supported yet." );
+
+        Entity entity = get( entityRef );
+        return entity.getProperty( propertyName );
     }
 
 
@@ -1023,7 +1028,7 @@ public class CpEntityManager implements EntityManager {
             }
         }
         else {
-            logger.info( "Results of EntityManagerImpl.getDictionaryElementValue is null" );
+            logger.info( "Results of CpEntityManagerImpl.getDictionaryElementValue is null" );
         }
 
         return value;
@@ -1074,7 +1079,7 @@ public class CpEntityManager implements EntityManager {
             }
         }
         else {
-            logger.error( "Results of EntityManagerImpl.getDictionaryElementValues is null" );
+            logger.error( "Results of CpEntityManagerImpl.getDictionaryElementValues is null" );
         }
 
         return values;
@@ -1143,24 +1148,32 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Results getCollection( UUID entityId, String collectionName, Query query, Level resultsLevel )
-            throws Exception {
+    public Results getCollection( 
+        UUID entityId, String collectionName, Query query, Level resultsLevel ) throws Exception {
 
         throw new UnsupportedOperationException( "Cannot get entity by UUID alone" );
     }
 
 
     @Override
-    public Entity addToCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception {
+    public Entity addToCollection( 
+            EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception {
 
         return getRelationManager( entityRef ).addToCollection( collectionName, itemRef );
     }
 
 
     @Override
-    public Entity addToCollections( List<EntityRef> ownerEntities, String collectionName, EntityRef itemRef )
-            throws Exception {
-        throw new UnsupportedOperationException( "Not supported yet." );
+    public Entity addToCollections( 
+        List<EntityRef> ownerEntities, String collectionName, EntityRef itemRef ) throws Exception {
+
+        Entity entity = get( itemRef );
+
+        for ( EntityRef eref : ownerEntities ) {
+            addToCollection( eref, collectionName, entity );
+        }
+
+        return entity;
     }
 
 
