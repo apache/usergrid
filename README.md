@@ -45,6 +45,29 @@ while ($books->has_next_entity()) {
 }
 ```
 
+## What is Apache Usergrid
+
+Usergrid is an open-source Backend-as-a-Service (“BaaS” or “mBaaS”) composed of
+an integrated distributed NoSQL database, application layer and client tier with
+SDKs for developers looking to rapidly build web and/or mobile applications.
+It provides elementary services (user registration & management, data storage,
+file storage, queues) and retrieval features (full text search, geolocation
+search, joins) to power common app features.
+
+It is a multi-tenant system designed for deployment to public cloud environments
+(such as Amazon Web Services, Rackspace, etc.) or to run on traditional server
+infrastructures so that anyone can run their own private BaaS deployment.
+
+For architects and back-end teams, it aims to provide a distributed, easily
+extendable, operationally predictable and highly scalable solution. For
+front-end developers, it aims to simplify the development process by enabling
+them to rapidly build and operate mobile and web applications without requiring
+backend expertise.
+
+Source: [Usergrid Documentation](https://usergrid.incubator.apache.org/docs/)
+
+For more information, visit [http://www.usergrid.org](http://www.usergrid.org)
+
 ## Installation
 
 ### Prerequisites
