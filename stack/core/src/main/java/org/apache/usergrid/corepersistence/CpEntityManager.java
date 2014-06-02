@@ -2157,10 +2157,11 @@ public class CpEntityManager implements EntityManager {
                 }
             }
 
+            //doesn't allow the mutator to be ignored.
             counterUtils.addEventCounterMutations( ignored, applicationId, event, timestamp );
 
             incrementEntityCollection( "events", timestamp );
-            //            entity.setUuid( message.getUuid() );
+
             return entity;
         }
 
