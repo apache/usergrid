@@ -288,9 +288,13 @@ public class CpEntityManager implements EntityManager {
 
         UUID timestampUuid = importId != null ? importId : newTimeUUID();
 
-        Mutator<ByteBuffer> m = null;
+        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
+
 
         A entity = batchCreate( m, entityType, entityClass, properties, importId, timestampUuid );
+
+        m.execute();
 
         return entity;
     }
@@ -2139,7 +2143,9 @@ public class CpEntityManager implements EntityManager {
                     event.setProperty( prop_name, propertyValue );
                 }
             }
-            //            Message message = storeEventAsMessage( m, event, timestamp );
+
+            counterUtils.addEventCounterMutations( ignored, applicationId, event, timestamp );
+
             incrementEntityCollection( "events", timestamp );
             //            entity.setUuid( message.getUuid() );
             return entity;
