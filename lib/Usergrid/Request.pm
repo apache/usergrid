@@ -31,32 +31,30 @@ Usergrid::Request - Role that provides HTTP invocation and utility methods
 
 =head1 DESCRIPTION
 
-Provides methods for easily invoking HTTP methods.
+This is a Role that is applied to L<Usergrid::Client> and L<Usergrid::Collection>
+which provides methods that relate to HTTP invocation as well as some utility
+functions.
 
 =head1 ATTRIBUTES
 
 =over 4
 
-=item organization
+=item organization (String)
 
-Organization name (Read/Write, String, Required).
+Organization name
 
-=item application
+=item application (String)
 
-Application name (Read/Write, String, Required).
+Application name
 
-=item api_url
+=item api_url (String)
 
-The URL for the API server (Read/Write, String, Required).
+URL of the Usergrid instance
 
-=item trace
+=item trace (Boolean)
 
 Enable/disable request and response tracing for debugging and troubleshooting
-(Read/Write, Boolean, Optional).
-
-=item user_token
-
-The logged in user context (Read/Write).
+(Optional)
 
 =cut
 has 'organization'  => ( is => 'rw', isa => 'Str', required => 1);
@@ -67,14 +65,14 @@ has 'trace'         => ( is => 'rw', isa => 'Bool', trigger => \&_enable_tracing
 
 has 'user_token'    => ( is => 'rw');
 
-# Private method
+# internal method
 sub _is_token_required {
   my ($self, $resource) = @_;
   return 0 if $resource =~ m/\/management\/token/;
   1;
 }
 
-#Private method
+# internal method
 sub _api_request {
   my ($self, $method, $resource, $request) = @_;
 
@@ -110,54 +108,6 @@ sub _api_request {
   return $self->json_decode($response);
 }
 
-=back
-
-=head1 METHODS
-
-=over 4
-
-=item DELETE ($resource)
-
-Invokes the specified resource with the HTTP DELETE method.
-
-=cut
-sub DELETE {
-  my ($self, $resource) = @_;
-  $self->_api_request('DELETE', $resource);
-}
-
-=item GET ($resource)
-
-Invokes the specified resource with the HTTP GET method.
-
-=cut
-sub GET {
-  my ($self, $resource) = @_;
-  $self->_api_request('GET', $resource);
-}
-
-=item POST ($resource, $request)
-
-Invokes the specified resource with the HTTP POST method and passes in the
-JSON request.
-
-=cut
-sub POST {
-  my ($self, $resource, $request) = @_;
-  $self->_api_request('POST', $resource, $request);
-}
-
-=item POST ($resource, $request)
-
-Invokes the specified resource with the HTTP PUT method and passes in the
-JSON request.
-
-=cut
-sub PUT {
-  my ($self, $resource, $request) = @_;
-  $self->_api_request('PUT', $resource, $request);
-}
-
 # internal method
 sub _enable_tracing {
   my ($self, $state, $old_state) = @_;
@@ -167,53 +117,8 @@ sub _enable_tracing {
   }
 }
 
-=item trace_message ($message)
-
-Utility method to log a message to console if tracing is enabled.
-
-=cut
-sub trace_message {
-  my ($self, $message) = @_;
-  $Usergrid::Request::logger->debug($message) if (defined $Usergrid::Request::logger);
-}
-
-=item prettify ($message)
-
-Returns a prettified string representation for a JSON encoded object.
-
-=cut
-sub prettify {
-  my ($self, $json_obj) = @_;
-  return $json->pretty->encode($json_obj);
-}
-
-=item json_encode ($hashref)
-
-Returns a JSON object from a hash reference.
-
-=cut
-sub json_encode {
-  my ($self, $json_obj) = @_;
-  $json->encode($json_obj);
-}
-
-=item json_decode ($json_object)
-
-Returns a hash reference from a JSON object.
-
-=cut
-sub json_decode {
-  my ($self, $json_obj) = @_;
-  $json->decode($json_obj);
-}
-
-=item collection ($object, $uri)
-
-Returns a L<Usergrid::Collection> object that encapsulates the given hashref
-and the URI that resulted in it.
-
-=cut
-sub collection {
+# internal method
+sub _collection {
   my ($self, $object, $uri) = @_;
 
   return Usergrid::Collection->new (
@@ -227,8 +132,103 @@ sub collection {
   );
 }
 
-1;
+=back
 
+=head1 METHODS
+
+=head2 HTTP Invocation Methods
+
+=over 4
+
+=item DELETE ( $resource )
+
+Invokes HTTP DELETE on the specified resource.
+
+=cut
+sub DELETE {
+  my ($self, $resource) = @_;
+  $self->_api_request('DELETE', $resource);
+}
+
+=item GET ( $resource )
+
+Invokes HTTP GET on the specified resource.
+
+=cut
+sub GET {
+  my ($self, $resource) = @_;
+  $self->_api_request('GET', $resource);
+}
+
+=item POST ( $resource, \%request )
+
+Invokes HTTP POST on the specified resource and passes in the payload
+for the request.
+
+=cut
+sub POST {
+  my ($self, $resource, $request) = @_;
+  $self->_api_request('POST', $resource, $request);
+}
+
+=item PUT ( $resource, \%request )
+
+Invokes HTTP PUT on the specified resource and passes in the payload
+for the request.
+
+=cut
+sub PUT {
+  my ($self, $resource, $request) = @_;
+  $self->_api_request('PUT', $resource, $request);
+}
+
+=back
+
+=head2 Utility Methods
+
+=over 4
+
+=item trace_message ( $message )
+
+Utility method to log a message to console if tracing is enabled.
+
+=cut
+sub trace_message {
+  my ($self, $message) = @_;
+  $Usergrid::Request::logger->debug($message) if (defined $Usergrid::Request::logger);
+}
+
+=item prettify ( $message, \%object )
+
+Returns a prettified string representation hash reference.
+
+=cut
+sub prettify {
+  my ($self, $json_obj) = @_;
+  return $json->pretty->encode($json_obj);
+}
+
+=item json_encode ( \%hashref )
+
+Returns a JSON object from a hash reference.
+
+=cut
+sub json_encode {
+  my ($self, $json_obj) = @_;
+  $json->encode($json_obj);
+}
+
+=item json_decode ( $json_object )
+
+Returns a hash reference from a JSON object.
+
+=cut
+sub json_decode {
+  my ($self, $json_obj) = @_;
+  $json->decode($json_obj);
+}
+
+1;
 
 __END__
 

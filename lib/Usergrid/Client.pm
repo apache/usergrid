@@ -59,17 +59,70 @@ Usergrid::Client - Usergrid Perl Client
 
 =head1 DESCRIPTION
 
-Usergrid::Client is the client SDK for Apache Usergrid. It provides a Perl
-object based wrapper for the Usergrid REST-ful APIs.
+Usergrid::Client provides an easy to use Perl API for Apache Usergrid.
+
+=head1 WHAT IS APACHE USERGRID
+
+Usergrid is an open-source Backend-as-a-Service ("BaaS" or "mBaaS") composed of
+an integrated distributed NoSQL database, application layer and client tier with
+SDKs for developers looking to rapidly build web and/or mobile applications.
+It provides elementary services (user registration & management, data storage,
+file storage, queues) and retrieval features (full text search, geolocation
+search, joins) to power common app features.
+
+It is a multi-tenant system designed for deployment to public cloud environments
+(such as Amazon Web Services, Rackspace, etc.) or to run on traditional server
+infrastructures so that anyone can run their own private BaaS deployment.
+
+For architects and back-end teams, it aims to provide a distributed, easily
+extendable, operationally predictable and highly scalable solution. For
+front-end developers, it aims to simplify the development process by enabling
+them to rapidly build and operate mobile and web applications without requiring
+backend expertise.
+
+Source: L<https://usergrid.incubator.apache.org/docs/>
+
+For more information, visit L<http://www.usergrid.org>
+
+=head1 ATTRIBUTES
+
+The following attributes are made available via the L<Usergrid::Request> role:
+
+=over 4
+
+=item organization (String)
+
+Organization name
+
+=item application (String)
+
+Application name
+
+=item api_url (String)
+
+URL of the Usergrid instance
+
+=item trace (Boolean)
+
+Enable/disable request and response tracing for debugging and troubleshooting
+(Optional)
+
+=back
 
 =head1 METHODS
 
-=over
+The following methods are provided in this API for interacting with the Apache
+Usergrid backend.
 
-=item login ($username, $password)
+=head2 Authentication
 
-Logs into Usergrid with the provided username and password using application
-authentication.
+=over 4
+
+=item login ( $username, $password )
+
+Performs application user authentication. Returns the user token for the
+logged in user. The token is also kept in memory and used for subsequent
+authentication of requests.
 
 =cut
 sub login {
@@ -95,9 +148,11 @@ sub login {
   return $self->user_token;
 }
 
-=item management_login ($username, $password)
+=item admin_login ( $username, $password )
 
-Used for obtaining a management token for performing privileged operations.
+Performs admin user authentication. Returns the user token for the
+logged in user. The token is also kept in memory and used for subsequent
+authentication of requests.
 
 =cut
 sub management_login {
@@ -116,10 +171,20 @@ sub management_login {
   return $self->user_token;
 }
 
-=item add_entity ($collection, $entity)
+=back
 
-Creates a new entity with the attributes specified in the $entity hash reference
-in the given collection.
+=head2 Entities
+
+This section covers some of the entity level methods available in the API.
+Entities form one of the basic building blocks of Usergrid and is analogous to
+a row in an RDBMS table.
+
+=over 4
+
+=item add_entity ( $collection, \%entity )
+
+Creates a new entity within the specified collection. Returns a L<Usergrid::Entity>
+for the newly added entity.
 
 =cut
 sub add_entity {
@@ -136,9 +201,9 @@ sub add_entity {
   return Usergrid::Entity->new( object => $self->POST($uri, $entity));
 }
 
-=item update_entity ($entity)
+=item update_entity ( L<Usergrid::Entity> )
 
-Saves changes to the entity.
+Saves changes to the given entity. Returns the updated L<Usergrid::Entity>.
 
 =cut
 sub update_entity {
@@ -157,10 +222,10 @@ sub update_entity {
     $entity->object->{'entities'}[0]) );
 }
 
-=item get_entity ($collection, $id)
+=item get_entity ( $collection, $id )
 
-Returns the entity by either id or name for the given collection. If the entity
-does not exist, the method returns an undef.
+Returns a L<Usergrid::Entity> identified by either UUID or name.
+If the entity does not exist, the method returns FALSE.
 
 =cut
 sub get_entity {
@@ -182,99 +247,10 @@ sub get_entity {
   return Usergrid::Entity->new( object => $response );
 }
 
-=item get_collection ($collection, [$limit])
+=item delete_entity_by_id ( $collection, $id )
 
-Returns a L<Usergrid::Collection> with the list of entities up to a maximum
-specified by $limit, which is 10 if not specified.
-
-=cut
-sub get_collection {
-  my ($self, $collection, $limit) = @_;
-
-  my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}?limit={limit}')
-    ->process(
-      organization => $self->organization,
-      application  => $self->application,
-      collection   => $collection,
-      limit        => ( defined $limit ) ? $limit: 10
-  );
-
-  return $self->collection($self->GET($uri), $uri);
-}
-
-=item update_collection ($collection, $properties, [$query], [$limit])
-
-Updates all the entities in the specified collection with attributes in the
-$properties hash reference. Optionally pass in the $query to narrow the scope of
-the objects that are affected and the $limit to specify the maximum number of
-records.
-
-=cut
-sub update_collection {
-  my ($self, $collection, $properties, $query, $limit) = @_;
-
-  my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}/?limit={limit}&ql={query}')
-    ->process(
-      organization => $self->organization,
-      application  => $self->application,
-      collection   => $collection,
-      limit        => ( defined $limit ) ? $limit : 10,
-      query        => ( defined $query ) ? $query : undef
-  );
-
-  return $self->collection($self->PUT($uri, $properties), $uri);
-}
-
-=item delete_collection ($collection, [$query], [$limit])
-
-Deletes all the entities in the specified collection. Optionally pass in the
-$query to narrow the scope of the objects that are affected and the $limit to
-specify the maximum number of records.
-
-=cut
-sub delete_collection {
-  my ($self, $collection, $query, $limit) = @_;
-
-  my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}/?limit={limit}&ql={query}')
-    ->process(
-      organization => $self->organization,
-      application  => $self->application,
-      collection   => $collection,
-      limit        => ( defined $limit ) ? $limit : 10,
-      query        => ( defined $query ) ? $query : undef
-  );
-
-  return $self->collection($self->DELETE($uri), $uri);
-}
-
-=item query_collection ($collection, $query, [$limit])
-
-Queries all the entities in the specified collection. Optionally pass in the
-$limit to specify the maximum number of records returned.
-
-=cut
-sub query_collection {
-  my ($self, $collection, $query, $limit) = @_;
-
-  my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}?limit={limit}&ql={ql}')
-    ->process(
-      organization => $self->organization,
-      application  => $self->application,
-      collection   => $collection,
-      limit        => ( defined $limit ) ? $limit : 10,
-      ql           => $query
-  );
-
-  return $self->collection($self->GET($uri), $uri);
-}
-
-=item delete_entity_by_id ($collection, $id)
-
-Deletes an entity from the collection, specified by either UUID or name.
+Deletes an entity from the collection identified by either UUID or name. Returns
+a L<Usergrid::Entity> of the deleted entity.
 
 =cut
 sub delete_entity_by_id {
@@ -292,9 +268,10 @@ sub delete_entity_by_id {
   return Usergrid::Entity->new( object => $self->DELETE($uri) );
 }
 
-=item delete_entity ($entity)
+=item delete_entity ( L<Usergrid::Entity> )
 
-Deletes the specified instance of L<Usergrid::Entity>.
+Deletes the specified L<Usergrid::Entity>. Returns an instance of the deleted
+L<Usergrid::Entity> if successful.
 
 =cut
 sub delete_entity {
@@ -312,9 +289,13 @@ sub delete_entity {
   return Usergrid::Entity->new( object => $self->DELETE($uri) );
 }
 
-=item connect_entities ($connecting_entity, $relationship, $connected_entity)
+=item connect_entities ( L<Usergrid::Entity>, $relationship, L<Usergrid::Entity> )
 
-Creates a connection between the two entities signified by the relationship.
+Creates a connection from Entity #1 to Entity #2 signified by the relationship.
+The first entity in this relationship is identified as the connecting entity and
+the second as the connected entity. The relationship is a string that signifies
+the type of connection. This returns a L<Usergrid::Entity> of the connecting
+entity.
 
 =cut
 sub connect_entities {
@@ -335,34 +316,12 @@ sub connect_entities {
     return Usergrid::Entity->new ( object => $self->POST($uri));
 }
 
-=item query_connections ($entity, $relationship, [$query], [$limit])
-
-Returns a collection of entities for the given relationship, optionally filtered
-by a query and limited to the maximum number of records specified. If no limit
-is provided, a default of 10 is assumed.
-
-=cut
-sub query_connections {
-  my ($self, $entity, $relationship, $query, $limit) = @_;
-
-  my $uri = URI::Template
-    ->new('/{organization}/{application}/{collection}/{id}/{relationship}?limit={limit}&ql={ql}')
-    ->process(
-      organization => $self->organization,
-      application  => $self->application,
-      collection   => $entity->get('type'),
-      id           => $entity->get('uuid'),
-      relationship => $relationship,
-      limit        => ( defined $limit ) ? $limit : 10,
-      ql           => $query
-  );
-
-  return $self->collection($self->GET($uri), $uri);
-}
-
-=item disconnect_entities ($connecting_entity, $relationship, $connected_entity)
+=item disconnect_entities ( L<Usergrid::Entity>, $relationship, L<Usergrid::Entity> )
 
 Removes the connection between the two entities signified by the relationship.
+This does not affect the entities in any other way apart from the removal of the
+connection that is depicted by the relationship. This returns a L<Usergrid::Entity>
+of the connecting entity with the given relationship removed.
 
 =cut
 sub disconnect_entities {
@@ -381,7 +340,133 @@ my $uri = URI::Template
   );
 
   return Usergrid::Entity->new ( object => $self->DELETE($uri));
+}
 
+=back
+
+=head2 Collections
+
+This section covers the methods related to retrieving and working with
+collections in the Usergrid API. Collections contains groups of entities and is
+analogous to a table in an RDBMS.
+
+=over 4
+
+=item get_collection ( $collection, [ $limit ] )
+
+Returns a L<Usergrid::Collection> with the list of entities up to the maximum
+specified limit, which is 10 if not provided.
+
+=cut
+sub get_collection {
+  my ($self, $collection, $limit) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}?limit={limit}')
+    ->process(
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection,
+      limit        => ( defined $limit ) ? $limit: 10
+  );
+
+  return $self->_collection($self->GET($uri), $uri);
+}
+
+=item update_collection ( $collection, \%attributes, [ $query ], [ $limit ] )
+
+Updates all the entities in the specified collection with the provided attributes.
+Optionally pass in the SQL-like query to narrow the scope of the objects that
+are affected. This also supports specifying a limit to restrict the maximum number of
+records that are updated. If not specified, the limit defaults to 10 entities.
+
+=cut
+sub update_collection {
+  my ($self, $collection, $properties, $query, $limit) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/?limit={limit}&ql={query}')
+    ->process(
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection,
+      limit        => ( defined $limit ) ? $limit : 10,
+      query        => ( defined $query ) ? $query : undef
+  );
+
+  return $self->_collection($self->PUT($uri, $properties), $uri);
+}
+
+=item delete_collection ( $collection, [ $query ], [ $limit ] )
+
+Batch delete entities in the specified collection. Optionally pass in a SQL-like
+query to narrow the scope of the objects that are affected and a limit to restrict
+the maximum number of records that are deleted. If not specified, the limit
+defaults to 10 entities.
+
+=cut
+sub delete_collection {
+  my ($self, $collection, $query, $limit) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/?limit={limit}&ql={query}')
+    ->process(
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection,
+      limit        => ( defined $limit ) ? $limit : 10,
+      query        => ( defined $query ) ? $query : undef
+  );
+
+  return $self->_collection($self->DELETE($uri), $uri);
+}
+
+=item query_collection ( $collection, $query, [ $limit ] )
+
+Queries all the entities in the specified collection using a SQL-like query string.
+This also supports specifying a limit to restrict the maximum number of
+records that are returned. If not specified, the limit defaults to 10 entities.
+
+=cut
+sub query_collection {
+  my ($self, $collection, $query, $limit) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}?limit={limit}&ql={ql}')
+    ->process(
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $collection,
+      limit        => ( defined $limit ) ? $limit : 10,
+      ql           => $query
+  );
+
+  return $self->_collection($self->GET($uri), $uri);
+}
+
+=item query_connections ( $entity, $relationship, [ $query ], [ $limit ] )
+
+Returns a collection of entities for the given relationship, optionally filtered
+by a SQL-like query and limited to the maximum number of records specified. If no limit
+is provided, a default of 10 entities is assumed.
+
+=cut
+sub query_connections {
+  my ($self, $entity, $relationship, $query, $limit) = @_;
+
+  my $uri = URI::Template
+    ->new('/{organization}/{application}/{collection}/{id}/{relationship}?limit={limit}&ql={ql}')
+    ->process(
+      organization => $self->organization,
+      application  => $self->application,
+      collection   => $entity->get('type'),
+      id           => $entity->get('uuid'),
+      relationship => $relationship,
+      limit        => ( defined $limit ) ? $limit : 10,
+      ql           => $query
+  );
+
+  return $self->_collection($self->GET($uri), $uri);
 }
 
 __PACKAGE__->meta->make_immutable;

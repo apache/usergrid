@@ -20,11 +20,12 @@ use namespace::autoclean;
 
 =head1 NAME
 
-Usergrid::Entity - Encapsulates entity functionality
+Usergrid::Entity - a Usergrid entity
 
 =head1 DESCRIPTION
 
-Provides support for encapsulating entity data and for accessing it easily.
+Encapsulates Usergrid entities and provides methods for accessing the underlying
+data.
 
 =head1 ATTRIBUTES
 
@@ -32,9 +33,10 @@ Provides support for encapsulating entity data and for accessing it easily.
 
 =item object
 
-A hash reference with the entity data (Read/Write, Required).
+A hash reference with the entity data
 
 =back
+
 =cut
 has 'object'      => ( is => 'rw', required => 1);
 
@@ -42,7 +44,7 @@ has 'object'      => ( is => 'rw', required => 1);
 
 =over 4
 
-=item get ($attribute)
+=item get ( $attribute_name )
 
 Returns the value of the specified attribute.
 
@@ -53,7 +55,7 @@ sub get {
   return $self->object->{'entities'}[0]->{$key};
 }
 
-=item set ($attribute, $value)
+=item set ( $attribute_name, $value )
 
 Sets the value of the specified attribute.
 

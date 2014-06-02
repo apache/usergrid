@@ -26,12 +26,12 @@ my @stack;
 
 =head1 NAME
 
-Usergrid::Collection - Encapsulates collection functionality
+Usergrid::Collection - a Usergrid collection
 
 =head1 DESCRIPTION
 
-Provides support for encapsulating collection data and for iterating through
-them easily.
+Encapsulates Usergrid collections and provides methods for iterating and paging
+through them.
 
 =head1 ATTRIBUTES
 
@@ -39,9 +39,14 @@ them easily.
 
 =item object
 
-A hash reference with the collection data (Read/Write, Required).
+A hash reference with the collection data
+
+=item uri
+
+The URI from which this collection was retrieved
 
 =back
+
 =cut
 has 'object'      => ( is => 'rw', required => 1 );
 has 'uri'         => ( is => 'rw', required => 1 );
@@ -64,8 +69,8 @@ sub has_next_entity {
 
 =item get_next_entity
 
-Returns the next available entity. Checks to see if there's an entity available
-to return, and if not returns an undef.
+Returns the next available L<Usergrid::Entity>. If there's no entity available
+to return, it returns a FALSE.
 
 =cut
 sub get_next_entity {
@@ -99,7 +104,8 @@ sub reset_iterator {
 
 =item get_first_entity
 
-Returns the first entity in the collection
+Returns the first entity in the collection. This is only applicable for the
+current page of the collection.
 
 =cut
 sub get_first_entity {
@@ -110,7 +116,8 @@ sub get_first_entity {
 
 =item get_last_entity
 
-Returns the last entity in the collection
+Returns the last entity in the collection. This is only applicable for the
+current page of the collection.
 
 =cut
 sub get_last_entity {
@@ -140,9 +147,9 @@ sub get_next_page {
     $self->reset_iterator();
 
     return $self;
-  } else {
-    return 0;
   }
+
+  0;
 }
 
 =item get_prev_page
@@ -167,9 +174,9 @@ sub get_prev_page {
     $self->reset_iterator();
 
     return $self;
-  } else {
-    return 0;
   }
+
+  0;
 }
 
 __PACKAGE__->meta->make_immutable;
