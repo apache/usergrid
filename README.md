@@ -1,7 +1,6 @@
 # Usergrid Perl Client
 
-Usergrid::Client provides a modular object oriented interface to
-Apache Usergrid's REST API.
+Usergrid::Client provides an easy to use Perl API for Apache Usergrid.
 
 ## Quickstart
 
