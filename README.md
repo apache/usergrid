@@ -286,6 +286,10 @@ The generated report artifacts are located in cover_db/.
 
 ## Release notes
 
+### 0.2.1
+
+* Documentation updates
+
 ### 0.2
 
 * Creating, querying and deleting entity connections
