@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.collection.exception;
 import java.util.Map;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 
@@ -32,24 +33,24 @@ public class WriteUniqueVerifyException extends CollectionRuntimeException {
     private Map<String, Field> violations;
 
     
-    public WriteUniqueVerifyException( Entity entity, CollectionScope scope, Map<String, Field> violations ) {
+    public WriteUniqueVerifyException( MvccEntity entity, CollectionScope scope, Map<String, Field> violations ) {
         super( entity, scope, "Error: one or more duplicate fields detected");
         this.violations = violations;
     }
 
 
-    public WriteUniqueVerifyException( Entity entity, CollectionScope scope, 
+    public WriteUniqueVerifyException( MvccEntity entity, CollectionScope scope,
             final String message, final Throwable cause ) {
         super( entity, scope, message, cause );
     }
 
 
-    public WriteUniqueVerifyException( Entity entity, CollectionScope scope, final Throwable cause ) {
+    public WriteUniqueVerifyException( MvccEntity entity, CollectionScope scope, final Throwable cause ) {
         super( entity, scope, cause );
     }
 
 
-    public WriteUniqueVerifyException( Entity entity, CollectionScope scope, 
+    public WriteUniqueVerifyException( MvccEntity entity, CollectionScope scope,
             final String message, final Throwable cause, final boolean enableSuppression,
             final boolean writableStackTrace ) {
         super( entity, scope, message, cause, enableSuppression, writableStackTrace );

@@ -14,11 +14,10 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
@@ -38,15 +37,18 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
     private final MvccLogEntrySerializationStrategy logStrategy;
 
+    MvccEntity.Status status;
+
 
     /**
-     * Create a new stage with the current context
+     * Create a new stage with the current context and status for entity.
      */
-    @Inject
-    public WriteStart( final MvccLogEntrySerializationStrategy logStrategy ) {
-        Preconditions.checkNotNull( logStrategy, "logStrategy is required" );
 
+    @Inject
+    public WriteStart ( final MvccLogEntrySerializationStrategy logStrategy, MvccEntity.Status status) {
         this.logStrategy = logStrategy;
+        this.status = status;
+
     }
 
 
@@ -56,11 +58,8 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             final Entity entity = ioEvent.getEvent();
             final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
-
-            ValidationUtils.verifyEntityWrite( entity );
-
             final Id entityId = entity.getId();
-            final UUID version = entity.getVersion();
+            final UUID version = UUIDGenerator.newTimeUUID();
 
             //TODO update this when merged with George's changes
             final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version,
@@ -68,21 +67,27 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
             MutationBatch write = logStrategy.write( collectionScope, startEntry );
 
+            final MvccEntityImpl nextStage =
+                             new MvccEntityImpl( entityId, version, status, entity );
+
 
             try {
                 write.execute();
             }
             catch ( ConnectionException e ) {
                 LOG.error( "Failed to execute write ", e );
-                throw new WriteStartException( entity, collectionScope, 
+                throw new WriteStartException( nextStage, collectionScope,
                         "Failed to execute write ", e );
+            }
+            catch ( NullPointerException e) {
+                LOG.error( "Failed to execute write ", e );
+                throw new WriteStartException( nextStage, collectionScope,
+                        "Failed to execute write", e);
             }
 
 
             //create the mvcc entity for the next stage
             //todo, we need to create a complete or partial update here (or sooner)
-            final MvccEntityImpl nextStage = 
-                    new MvccEntityImpl( entityId, version, MvccEntity.Status.COMPLETE, entity );
 
             return new CollectionIoEvent<MvccEntity>( collectionScope, nextStage );
         }

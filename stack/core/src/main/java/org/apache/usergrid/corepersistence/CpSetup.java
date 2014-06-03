@@ -34,8 +34,11 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICA
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_ORGANIZATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.PRINCIPAL_TOKEN_CF;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.STATIC_APPLICATION_KEYSPACE;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.SYSTEM_KEYSPACE;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
 import org.apache.usergrid.persistence.cassandra.Setup;
@@ -139,7 +142,22 @@ public class CpSetup implements Setup {
 
     @Override
     public void setupSystemKeyspace() throws Exception {
-        // no-op
+
+        logger.info( "Initialize system keyspace" );
+
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+                SYSTEM_KEYSPACE, APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
+
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+                SYSTEM_KEYSPACE, PROPERTIES_CF, ComparatorType.BYTESTYPE ) );
+
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+                SYSTEM_KEYSPACE, TOKENS_CF, ComparatorType.BYTESTYPE ) );
+
+        cass.createColumnFamily( SYSTEM_KEYSPACE, createColumnFamilyDefinition( 
+                SYSTEM_KEYSPACE, PRINCIPAL_TOKEN_CF, ComparatorType.UUIDTYPE ) );
+
+        logger.info( "System keyspace initialized" );
     }
 
     

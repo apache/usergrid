@@ -67,8 +67,24 @@ public class EdgeTestUtils {
      * @return an Edge for testing
      */
     public static MarkedEdge createEdge( final String sourceType, final String edgeType, final String targetType ) {
-        return createEdge( createId( sourceType ), edgeType, createId( targetType ), UUIDGenerator.newTimeUUID() );
+        return createEdge( createId( sourceType ), edgeType, createId( targetType ), System.currentTimeMillis() );
     }
+
+
+    /**
+     * Create an edge for testing
+     *
+     * @param sourceType The source type to use in the id
+     * @param edgeType The edge type to use
+     * @param targetType The target type to use
+     * @param timestamp the edge's timestamp
+     *
+     * @return an Edge for testing
+     */
+    public static MarkedEdge createEdge( final String sourceType, final String edgeType, final String targetType, final long timestamp ) {
+        return createEdge( createId( sourceType ), edgeType, createId( targetType ), timestamp );
+    }
+
 
 
     /**
@@ -82,7 +98,7 @@ public class EdgeTestUtils {
      */
     public static MarkedEdge createMarkedEdge( final String sourceType, final String edgeType,
                                                final String targetType ) {
-        return createEdge( createId( sourceType ), edgeType, createId( targetType ), UUIDGenerator.newTimeUUID(),
+        return createEdge( createId( sourceType ), edgeType, createId( targetType ), System.currentTimeMillis(),
                 true );
     }
 
@@ -91,7 +107,7 @@ public class EdgeTestUtils {
      * Create an edge for testing
      */
     public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId ) {
-        return createEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID() );
+        return createEdge( sourceId, edgeType, targetId, System.currentTimeMillis() );
     }
 
 
@@ -99,7 +115,24 @@ public class EdgeTestUtils {
      * Create an edge that is marked
      */
     public static MarkedEdge createMarkedEdge( final Id sourceId, final String edgeType, final Id targetId ) {
-        return createEdge( sourceId, edgeType, targetId, UUIDGenerator.newTimeUUID(), true );
+        return createEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), true );
+    }
+
+
+    /**
+        * Create an edge that is marked
+        */
+       public static MarkedEdge createMarkedEdge( final Id sourceId, final String edgeType, final Id targetId, final long timestamp) {
+           return createEdge( sourceId, edgeType, targetId, timestamp, true );
+       }
+
+
+    /**
+     * Create an edge with the specified params
+     */
+    public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId,
+                                         final long timestamp ) {
+        return createEdge( sourceId, edgeType, targetId, timestamp, false );
     }
 
 
@@ -107,17 +140,8 @@ public class EdgeTestUtils {
      * Create an edge with the specified params
      */
     public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId,
-                                         final UUID version ) {
-        return createEdge( sourceId, edgeType, targetId, version, false );
-    }
-
-
-    /**
-     * Create an edge with the specified params
-     */
-    public static MarkedEdge createEdge( final Id sourceId, final String edgeType, final Id targetId,
-                                         final UUID version, final boolean deleted ) {
-        return new SimpleMarkedEdge( sourceId, edgeType, targetId, version, deleted );
+                                         final long timestamp, final boolean deleted ) {
+        return new SimpleMarkedEdge( sourceId, edgeType, targetId, timestamp, deleted );
     }
 
 
@@ -125,7 +149,7 @@ public class EdgeTestUtils {
      * Create the id
      */
     public static Id createId( String type ) {
-        return createId( UUIDGenerator.newTimeUUID(), type );
+        return createId(UUIDGenerator.newTimeUUID(), type );
     }
 
 
@@ -148,7 +172,7 @@ public class EdgeTestUtils {
      * @param last
      * @return
      */
-    public static SearchByEdgeType createSearchByEdge( final Id sourceId, final String type, final UUID maxVersion,
+    public static SearchByEdgeType createSearchByEdge( final Id sourceId, final String type, final long maxVersion,
                                                        final Edge last ) {
         return new SimpleSearchByEdgeType( sourceId, type, maxVersion, last );
     }
@@ -163,7 +187,7 @@ public class EdgeTestUtils {
      * @param last
      * @return
      */
-    public static SearchByIdType createSearchByEdgeAndId( final Id sourceId, final String type, final UUID maxVersion,
+    public static SearchByIdType createSearchByEdgeAndId( final Id sourceId, final String type, final long maxVersion,
                                                           final String idType, final Edge last ) {
         return new SimpleSearchByIdType( sourceId, type, maxVersion, idType, last );
     }
@@ -176,7 +200,7 @@ public class EdgeTestUtils {
      * @return
      */
     public static SearchEdgeType createSearchEdge( final Id sourceId, final String last ) {
-        return new SimpleSearchEdgeType( sourceId, last );
+        return new SimpleSearchEdgeType( sourceId, null, last );
     }
 
 
@@ -184,7 +208,7 @@ public class EdgeTestUtils {
      * Create the search by Id type
      */
     public static SimpleSearchIdType createSearchIdType( final Id sourceId, final String type, final String last ) {
-        return new SimpleSearchIdType( sourceId, type, last );
+        return new SimpleSearchIdType( sourceId, type, null, last );
     }
 
 
@@ -192,98 +216,98 @@ public class EdgeTestUtils {
      * Get the edge by type
      */
     public static SearchByEdge createGetByEdge( final Id sourceId, final String type, final Id targetId,
-                                                final UUID maxVersion, final Edge last ) {
+                                                final long maxVersion, final Edge last ) {
         return new SimpleSearchByEdge( sourceId, type, targetId, maxVersion, last );
     }
 
-
-    /**
-     * NEVER USE THIS IN A REAL ENV.  Setting timestamps in anything but the present can result in collections Copied
-     * from fasterxml uuid utils
-     */
-    public static UUID setTimestamp( long timestamp ) {
-
-        byte[] uuidBytes = new byte[16];
-        EthernetAddress _ethernetAddress = EthernetAddress.constructMulticastAddress();
-        _ethernetAddress.toByteArray( uuidBytes, 10 );
-        // and add clock sequence
-        int clockSeq = timer.getClockSequence();
-        uuidBytes[UUIDUtil.BYTE_OFFSET_CLOCK_SEQUENCE] = ( byte ) ( clockSeq >> 8 );
-        uuidBytes[UUIDUtil.BYTE_OFFSET_CLOCK_SEQUENCE + 1] = ( byte ) clockSeq;
-        long l2 = gatherLong( uuidBytes, 8 );
-        long _uuidL2 = UUIDUtil.initUUIDSecondLong( l2 );
-
-
-        final long rawTimestamp = timestamp;
-        // Time field components are kind of shuffled, need to slice:
-        int clockHi = ( int ) ( rawTimestamp >>> 32 );
-        int clockLo = ( int ) rawTimestamp;
-        // and dice
-        int midhi = ( clockHi << 16 ) | ( clockHi >>> 16 );
-        // need to squeeze in type (4 MSBs in byte 6, clock hi)
-        midhi &= ~0xF000; // remove high nibble of 6th byte
-        midhi |= 0x1000; // type 1
-        long midhiL = ( long ) midhi;
-        midhiL = ( ( midhiL << 32 ) >>> 32 ); // to get rid of sign extension
-        // and reconstruct
-        long l1 = ( ( ( long ) clockLo ) << 32 ) | midhiL;
-        // last detail: must force 2 MSB to be '10'
-        return new UUID( l1, _uuidL2 );
-    }
-
-    /*
-    /********************************************************************************
-    /* Internal helper methods
-    /********************************************************************************
-     */
-
-
-    protected final static long gatherLong( byte[] buffer, int offset ) {
-        long hi = ( ( long ) _gatherInt( buffer, offset ) ) << 32;
-        //long lo = ((long) _gatherInt(buffer, offset+4)) & MASK_LOW_INT;
-        long lo = ( ( ( long ) _gatherInt( buffer, offset + 4 ) ) << 32 ) >>> 32;
-        return hi | lo;
-    }
-
-
-    private final static int _gatherInt( byte[] buffer, int offset ) {
-        return ( buffer[offset] << 24 ) | ( ( buffer[offset + 1] & 0xFF ) << 16 ) | ( ( buffer[offset + 2] & 0xFF )
-                << 8 ) | ( buffer[offset + 3] & 0xFF );
-    }
-
-
-    private static final Random random = new Random();
-    private static final UUIDTimer timer;
-
-
-    /**
-     * Lame, but required
-     */
-    static {
-        try {
-            timer = new UUIDTimer( random, new TimestampSynchronizer() {
-                @Override
-                protected long initialize() throws IOException {
-                    return System.currentTimeMillis();
-                }
-
-
-                @Override
-                protected void deactivate() throws IOException {
-
-                }
-
-
-                @Override
-                protected long update( final long now ) throws IOException {
-                    return now;
-                }
-            } );
-        }
-        catch ( IOException e ) {
-            throw new RuntimeException( "Couldn't intialize timer", e );
-        }
-    }
+//
+//    /**
+//     * NEVER USE THIS IN A REAL ENV.  Setting timestamps in anything but the present can result in collections Copied
+//     * from fasterxml uuid utils
+//     */
+//    public static UUID setTimestamp( long timestamp ) {
+//
+//        byte[] uuidBytes = new byte[16];
+//        EthernetAddress _ethernetAddress = EthernetAddress.constructMulticastAddress();
+//        _ethernetAddress.toByteArray( uuidBytes, 10 );
+//        // and add clock sequence
+//        int clockSeq = timer.getClockSequence();
+//        uuidBytes[UUIDUtil.BYTE_OFFSET_CLOCK_SEQUENCE] = ( byte ) ( clockSeq >> 8 );
+//        uuidBytes[UUIDUtil.BYTE_OFFSET_CLOCK_SEQUENCE + 1] = ( byte ) clockSeq;
+//        long l2 = gatherLong( uuidBytes, 8 );
+//        long _uuidL2 = UUIDUtil.initUUIDSecondLong( l2 );
+//
+//
+//        final long rawTimestamp = timestamp;
+//        // Time field components are kind of shuffled, need to slice:
+//        int clockHi = ( int ) ( rawTimestamp >>> 32 );
+//        int clockLo = ( int ) rawTimestamp;
+//        // and dice
+//        int midhi = ( clockHi << 16 ) | ( clockHi >>> 16 );
+//        // need to squeeze in type (4 MSBs in byte 6, clock hi)
+//        midhi &= ~0xF000; // remove high nibble of 6th byte
+//        midhi |= 0x1000; // type 1
+//        long midhiL = ( long ) midhi;
+//        midhiL = ( ( midhiL << 32 ) >>> 32 ); // to get rid of sign extension
+//        // and reconstruct
+//        long l1 = ( ( ( long ) clockLo ) << 32 ) | midhiL;
+//        // last detail: must force 2 MSB to be '10'
+//        return new UUID( l1, _uuidL2 );
+//    }
+//
+//    /*
+//    /********************************************************************************
+//    /* Internal helper methods
+//    /********************************************************************************
+//     */
+//
+//
+//    protected final static long gatherLong( byte[] buffer, int offset ) {
+//        long hi = ( ( long ) _gatherInt( buffer, offset ) ) << 32;
+//        //long lo = ((long) _gatherInt(buffer, offset+4)) & MASK_LOW_INT;
+//        long lo = ( ( ( long ) _gatherInt( buffer, offset + 4 ) ) << 32 ) >>> 32;
+//        return hi | lo;
+//    }
+//
+//
+//    private final static int _gatherInt( byte[] buffer, int offset ) {
+//        return ( buffer[offset] << 24 ) | ( ( buffer[offset + 1] & 0xFF ) << 16 ) | ( ( buffer[offset + 2] & 0xFF )
+//                << 8 ) | ( buffer[offset + 3] & 0xFF );
+//    }
+//
+//
+//    private static final Random random = new Random();
+//    private static final UUIDTimer timer;
+//
+//
+//    /**
+//     * Lame, but required
+//     */
+//    static {
+//        try {
+//            timer = new UUIDTimer( random, new TimestampSynchronizer() {
+//                @Override
+//                protected long initialize() throws IOException {
+//                    return System.currentTimeMillis();
+//                }
+//
+//
+//                @Override
+//                protected void deactivate() throws IOException {
+//
+//                }
+//
+//
+//                @Override
+//                protected long update( final long now ) throws IOException {
+//                    return now;
+//                }
+//            } );
+//        }
+//        catch ( IOException e ) {
+//            throw new RuntimeException( "Couldn't intialize timer", e );
+//        }
+//    }
 }
 
 

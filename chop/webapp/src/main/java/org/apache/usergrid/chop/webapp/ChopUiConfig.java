@@ -117,6 +117,10 @@ public class ChopUiConfig extends GuiceServletContextListener {
                     elasticSearchFig.bypass( ElasticSearchFig.SERVERS_KEY, serverHost );
                     elasticSearchFig.bypass( ElasticSearchFig.PORT_KEY, serverPort );
                 }
+                if( cl.hasOption( 'n' ) ) {
+                    String clusterName = cl.getOptionValue( 'n' );
+                    elasticSearchFig.bypass( ElasticSearchFig.CLUSTER_NAME_KEY, clusterName );
+                }
             } else {
                 LOG.warn("ChopUi not started via Launcher - no command line argument processing will take place.");
             }
@@ -124,7 +128,6 @@ public class ChopUiConfig extends GuiceServletContextListener {
             LOG.info("Operating in UNIT environment");
         }
 
-//        ConfigurationManager.install( ccc );
         try {
             ConfigurationManager.loadCascadedPropertiesFromResources("chop-ui");
         } catch (IOException e) {

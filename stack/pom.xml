@@ -187,6 +187,7 @@
 
   <modules>
     <module>config</module>
+    <module>corepersistence</module>
     <module>core</module>
     <module>services</module>
     <module>tools</module>
@@ -1836,6 +1837,7 @@
                     <exclude>**/src/main/dist/webapps/**</exclude>
 
                     <!-- TODO: need to add headers to many files in corepersistence -->
+                    <exclude>**/launcher-vagrant/**</exclude>
                     <exclude>**/corepersistence/**</exclude>
                     <exclude>**/awscluster/**</exclude>
 

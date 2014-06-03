@@ -506,12 +506,12 @@
 	    <type>jar</type>
     </dependency>
 
-    <dependency>
-      <artifactId>lucene-core</artifactId>
-      <groupId>org.apache.lucene</groupId>
-      <type>jar</type>
-      <version>4.7.2</version>
-    </dependency>
+    <!--<dependency>-->
+      <!--<artifactId>lucene-core</artifactId>-->
+      <!--<groupId>org.apache.lucene</groupId>-->
+      <!--<type>jar</type>-->
+      <!--<version>4.7.2</version>-->
+    <!--</dependency>-->
 
     <dependency>
         <groupId>org.jukito</groupId>

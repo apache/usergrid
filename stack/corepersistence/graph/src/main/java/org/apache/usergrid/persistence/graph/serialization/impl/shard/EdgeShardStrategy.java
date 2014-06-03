@@ -31,23 +31,32 @@ public interface EdgeShardStrategy {
 
     /**
      * Get the shard key used for writing this shard.  CUD operations should use this
+     *
+     * @param scope The application's scope
+     * @param rowKeyId The id being used in the row key
+     * @param timestamp The timestamp on the edge
+     * @param types The types in the edge
      */
-    public long getWriteShard(final ApplicationScope scope, final Id rowKeyId, final  UUID version, final String... types );
+    public long getWriteShard(final ApplicationScope scope, final Id rowKeyId, final  long timestamp, final String... types );
 
 
     /**
      * Get the iterator of all shards for this entity
+     *
+     * @param scope The application scope
+     * @param rowKeyId The id used in the row key
+     * @param maxTimestamp The max timestamp to use
+     * @param types the types in the edge
      */
-    public Iterator<Long> getReadShards(final ApplicationScope scope,final  Id rowKeyId, final UUID maxVersion,final  String... types );
+    public Iterator<Long> getReadShards(final ApplicationScope scope,final  Id rowKeyId, final long maxTimestamp,final  String... types );
 
     /**
      * Increment our count meta data by the passed value.  Can be a positive or a negative number.
-     * @param batch The batch to add the count to
-     * @param scope
-     * @param rowKeyId
+     * @param scope The scope in the application
+     * @param rowKeyId The row key id
      * @param shardId The shard id to use
      * @param count The amount to increment or decrement
-     * @param types
+     * @param types The types
      * @return
      */
     public void increment(final ApplicationScope scope,final  Id rowKeyId, long shardId, long count ,final  String... types );

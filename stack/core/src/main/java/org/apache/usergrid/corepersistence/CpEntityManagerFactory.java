@@ -40,6 +40,8 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -231,8 +233,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         if ( orgUuid == null ) {
           
             // organization does not exist, create it.
-            Entity orgInfoEntity = new Entity(
-                new SimpleId(UUIDGenerator.newTimeUUID(), "organization" ));
+            Entity orgInfoEntity = new Entity(generateOrgId( UUIDGenerator.newTimeUUID() ));
 
             orgUuid = orgInfoEntity.getId().getUuid();
 
@@ -256,8 +257,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         properties.put( PROPERTY_NAME, appName );
 
-        Entity appInfoEntity = new Entity(
-            new SimpleId(UUIDGenerator.newTimeUUID(), "application" ));
+        Entity appInfoEntity = new Entity(generateApplicationId( UUIDGenerator.newTimeUUID() ));
 
         long timestamp = System.currentTimeMillis();
         appInfoEntity.setField( new LongField( PROPERTY_CREATED, (long)(timestamp / 1000)));
@@ -286,27 +286,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public CollectionScope getApplicationScope( UUID applicationId ) {
+    public ApplicationScope getApplicationScope( UUID applicationId ) {
 
-        Query q = Query.fromQL( PROPERTY_UUID + " = '" + applicationId.toString() + "'");
+        //We can always generate a scope, it doesn't matter if  the application exists yet or not.
 
-        EntityCollectionManager em= getManagerCache().getEntityCollectionManager(SYSTEM_APP_SCOPE);
-        EntityIndex ei = getManagerCache().getEntityIndex( SYSTEM_APPS_INDEX_SCOPE );
-        CandidateResults results = ei.search( q );
+        final ApplicationScopeImpl scope = new ApplicationScopeImpl( generateApplicationId( applicationId ) );
 
-        if ( results.isEmpty() ) {
-            return null;
-        }
-
-        CandidateResult candidateResult = results.iterator().next(); 
-
-        Entity appEntity = em.load( candidateResult.getId() ).toBlockingObservable().last();
-
-        return new CollectionScopeImpl(
-            new SimpleId( ((UUID)(appEntity.getField("organizationUuid")).getValue()), "organization"),
-            new SimpleId( appEntity.getId().getUuid(), "application"),
-            appEntity.getField(PROPERTY_NAME).getValue().toString()
-        );
+        return scope;
     }
     
 
@@ -380,7 +366,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     
     @Override
     public void setup() throws Exception {
-        // no op?
+        getSetup().init();
     }
 
     
@@ -490,6 +476,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.applicationContext = applicationContext;
+        try {
+            setup();
+        } catch (Exception ex) {
+            logger.error("Error setting up EMF", ex);
+        }
     }
 
     /**
@@ -512,6 +503,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         return DEFAULT_APPLICATION_ID; 
     }
 
+    private Id generateOrgId(UUID id){
+        return new SimpleId( id, "organization" );
+    }
+
+
+    private Id generateApplicationId(UUID id){
+        return new SimpleId( id, "application" );
+    }
     
     /**
      * Gets the setup.

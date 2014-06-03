@@ -110,7 +110,7 @@ public class EdgeMetaRepairTest {
 
         final Id targetId = createId( "target" );
         final String test = "test";
-        final UUID version = UUIDGenerator.newTimeUUID();
+        final long version = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairTargets( scope, targetId, test, version ).toBlockingObservable().single();
 
@@ -126,7 +126,7 @@ public class EdgeMetaRepairTest {
 
         edgeMetadataSerialization.writeEdge( scope, edge ).execute();
 
-        int value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getVersion() )
+        int value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getTimestamp() )
                                   .toBlockingObservable().single();
 
         assertEquals( "No subtypes removed, edge exists", 1, value );
@@ -135,7 +135,7 @@ public class EdgeMetaRepairTest {
 
         storageEdgeSerialization.deleteEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
-        value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getVersion() )
+        value = edgeMetaRepair.repairTargets( scope, edge.getTargetNode(), edge.getType(), edge.getTimestamp() )
                               .toBlockingObservable().single();
 
         assertEquals( "Single subtype should be removed", 0, value );
@@ -143,13 +143,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes = edgeMetadataSerialization
-                .getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( edge.getTargetNode(), null ) );
+                .getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( edge.getTargetNode(), null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesToTarget( scope, new SimpleSearchIdType( edge.getTargetNode(), edge.getType(), null ) );
+                .getIdTypesToTarget( scope, new SimpleSearchIdType( edge.getTargetNode(), edge.getType(), null, null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }
@@ -180,7 +180,7 @@ public class EdgeMetaRepairTest {
         edgeMetadataSerialization.writeEdge( scope, edge3 ).execute();
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairTargets( scope, edge1.getTargetNode(), edge1.getType(), cleanupVersion )
                                   .toBlockingObservable().single();
@@ -214,13 +214,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes = edgeMetadataSerialization
-                .getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( edge1.getTargetNode(), null ) );
+                .getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( edge1.getTargetNode(), null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesToTarget( scope, new SimpleSearchIdType( edge1.getTargetNode(), edge1.getType(), null ) );
+                .getIdTypesToTarget( scope, new SimpleSearchIdType( edge1.getTargetNode(), edge1.getType(), null, null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }
@@ -248,7 +248,7 @@ public class EdgeMetaRepairTest {
         }
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairTargets( scope, targetId, edgeType, cleanupVersion ).toBlockingObservable()
                                   .single();
@@ -269,13 +269,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes =
-                edgeMetadataSerialization.getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( targetId, null ) );
+                edgeMetadataSerialization.getEdgeTypesToTarget( scope, new SimpleSearchEdgeType( targetId, null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesToTarget( scope, new SimpleSearchIdType( targetId, edgeType, null ) );
+                .getIdTypesToTarget( scope, new SimpleSearchIdType( targetId, edgeType, null,  null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }
@@ -289,7 +289,7 @@ public class EdgeMetaRepairTest {
 
         edgeMetadataSerialization.writeEdge( scope, edge ).execute();
 
-        int value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getVersion() )
+        int value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getTimestamp() )
                                   .toBlockingObservable().single();
 
         assertEquals( "No subtypes removed, edge exists", 1, value );
@@ -298,7 +298,7 @@ public class EdgeMetaRepairTest {
 
         storageEdgeSerialization.deleteEdge( scope, edge, UUIDGenerator.newTimeUUID() ).execute();
 
-        value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getVersion() )
+        value = edgeMetaRepair.repairSources( scope, edge.getSourceNode(), edge.getType(), edge.getTimestamp() )
                               .toBlockingObservable().single();
 
         assertEquals( "Single subtype should be removed", 0, value );
@@ -306,13 +306,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes = edgeMetadataSerialization
-                .getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( edge.getSourceNode(), null ) );
+                .getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( edge.getSourceNode(), null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesFromSource( scope, new SimpleSearchIdType( edge.getSourceNode(), edge.getType(), null ) );
+                .getIdTypesFromSource( scope, new SimpleSearchIdType( edge.getSourceNode(), edge.getType(),null, null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }
@@ -343,7 +343,7 @@ public class EdgeMetaRepairTest {
         edgeMetadataSerialization.writeEdge( scope, edge3 ).execute();
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairSources( scope, edge1.getSourceNode(), edge1.getType(), cleanupVersion )
                                   .toBlockingObservable().single();
@@ -377,13 +377,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes = edgeMetadataSerialization
-                .getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( edge1.getSourceNode(), null ) );
+                .getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( edge1.getSourceNode(),null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesFromSource( scope, new SimpleSearchIdType( edge1.getSourceNode(), edge1.getType(), null ) );
+                .getIdTypesFromSource( scope, new SimpleSearchIdType( edge1.getSourceNode(), edge1.getType(),null, null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }
@@ -412,7 +412,7 @@ public class EdgeMetaRepairTest {
         }
 
 
-        UUID cleanupVersion = UUIDGenerator.newTimeUUID();
+        long cleanupVersion = System.currentTimeMillis();
 
         int value = edgeMetaRepair.repairSources( scope, sourceId, edgeType, cleanupVersion ).toBlockingObservable()
                                   .single();
@@ -434,13 +434,13 @@ public class EdgeMetaRepairTest {
         //now verify they're gone
 
         Iterator<String> edgeTypes =
-                edgeMetadataSerialization.getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( sourceId, null ) );
+                edgeMetadataSerialization.getEdgeTypesFromSource( scope, new SimpleSearchEdgeType( sourceId,null, null ) );
 
         assertFalse( "No edge types exist", edgeTypes.hasNext() );
 
 
         Iterator<String> sourceTypes = edgeMetadataSerialization
-                .getIdTypesFromSource( scope, new SimpleSearchIdType( sourceId, edgeType, null ) );
+                .getIdTypesFromSource( scope, new SimpleSearchIdType( sourceId, edgeType,null, null ) );
 
         assertFalse( "No edge types exist", sourceTypes.hasNext() );
     }

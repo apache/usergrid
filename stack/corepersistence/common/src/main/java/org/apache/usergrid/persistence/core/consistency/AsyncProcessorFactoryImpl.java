@@ -20,14 +20,12 @@ package org.apache.usergrid.persistence.core.consistency;
 
 
 import java.io.Serializable;
-import java.util.concurrent.ExecutionException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -43,19 +41,8 @@ public class AsyncProcessorFactoryImpl implements AsyncProcessorFactory {
     private final TimeoutQueueFactory queueFactory;
     private final ConsistencyFig consistencyFig;
 
-    private final LoadingCache<Class<? extends Serializable>, AsyncProcessor<? extends Serializable>> loadedProcessors = CacheBuilder.newBuilder()
-           .maximumSize( 1000 )
-           .build( new CacheLoader<Class<? extends Serializable>, AsyncProcessor<? extends Serializable>>() {
-
-               @Override
-               public AsyncProcessor<? extends Serializable> load( final Class<? extends Serializable> key ) throws Exception {
-                   LOG.info( "Creating queue from factory for event key {}", key );
-
-                   final TimeoutQueue queue = queueFactory.getQueue( key );
-
-                   return  new AsyncProcessorImpl( queue, consistencyFig );
-               }
-           } );
+    private final Map<Class<? extends Serializable>, AsyncProcessor<? extends Serializable>> instances =
+            new HashMap( 100 );
 
 
     @Inject
@@ -67,11 +54,31 @@ public class AsyncProcessorFactoryImpl implements AsyncProcessorFactory {
 
     @Override
     public <T extends Serializable> AsyncProcessor<T> getProcessor( final Class<T> eventClass ) {
-        try {
-            return ( AsyncProcessor<T> ) loadedProcessors.get( eventClass );
+
+        AsyncProcessor<T> processor = ( AsyncProcessor<T> ) instances.get( eventClass );
+
+
+        if ( processor != null ) {
+            return processor;
         }
-        catch ( ExecutionException e ) {
-            throw new RuntimeException( "Unable to load from cache", e );
+
+
+        synchronized ( this ) {
+            processor = ( AsyncProcessor<T> ) instances.get( eventClass );
+
+
+            if ( processor != null ) {
+                return processor;
+            }
+
+            TimeoutQueue queue = queueFactory.getQueue( eventClass );
+            AsyncProcessorImpl newProcessor = new AsyncProcessorImpl( queue, consistencyFig );
+
+            instances.put( eventClass, newProcessor );
+
+            newProcessor.start();
+
+            return newProcessor;
         }
     }
 }

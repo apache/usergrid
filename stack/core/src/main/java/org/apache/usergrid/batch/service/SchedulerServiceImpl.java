@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.entities.JobStat;
@@ -140,7 +141,8 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
          */
         try {
             LOG.debug( "deleteJob {}", jobId );
-            getEm().delete( new SimpleEntityRef( "jobData", jobId ) );
+            getEm().delete( new SimpleEntityRef( 
+                Schema.getDefaultSchema().getEntityType(JobData.class), jobId ) );
         }
         catch ( Exception e ) {
             throw new JobRuntimeException( e );
@@ -313,7 +315,10 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
             query = new Query();
         }
 
-        return getEm().searchCollection( getEm().getApplicationRef(), "job_data", query );
+        String jobDataType = Schema.getDefaultSchema().getEntityType(JobData.class);
+
+        return getEm().searchCollection( getEm().getApplicationRef(), 
+                Schema.defaultCollectionName(jobDataType), query );
     }
 
 
@@ -414,7 +419,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
     public EntityManager getEm() {
         if ( em == null  ) {
-            this.em = emf.getEntityManager( emf.getManagementAppId());
+            this.em = emf.getEntityManager( emf.getManagementAppId() );
         }
         return em;
     }
