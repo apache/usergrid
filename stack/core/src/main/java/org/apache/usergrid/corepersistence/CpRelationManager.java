@@ -325,7 +325,7 @@ public class CpRelationManager implements RelationManager {
         Observable<Edge> edges = gm.loadEdgeVersions( 
                 new SimpleSearchByEdge(
                     new SimpleId(headEntity.getUuid(), headEntity.getType()), 
-                    getEdgeTypeFromCollectionName( collName ),  
+                    collName,
                     entityId, 
                     Long.MAX_VALUE,
                     null));
