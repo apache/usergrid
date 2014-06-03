@@ -40,7 +40,7 @@ public class UniqueValueImpl implements UniqueValue {
 
         Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( field, "field is required" );
-        Preconditions.checkNotNull( version, "version is required" );
+//        Preconditions.checkNotNull( version, "version is required" );
         Preconditions.checkNotNull( entityId, "entityId is required" );
 
         this.collectionScope = scope;

@@ -73,6 +73,10 @@ public class WriteOptimisticVerify
 
         CollectionScope collectionScope = ioevent.getEntityCollection();
 
+        if(entity.getVersion() == null){
+            return ioevent;
+        }
+
         try {
             List<MvccLogEntry> versions = logEntryStrat.load( 
                 collectionScope, entity.getId(), entity.getVersion(), 2 );
@@ -84,13 +88,13 @@ public class WriteOptimisticVerify
                 log.debug("Conflict writing entity id {} version {}", 
                     entity.getId().toString(), entity.getVersion().toString());
             
-                throw new WriteOptimisticVerifyException( entity, collectionScope, 
+                throw new WriteOptimisticVerifyException( mvccEntity, collectionScope,
                     "Change conflict, not first writer");
             }
 
         } catch ( ConnectionException e ) {
             log.error( "Error reading entity log", e );
-            throw new CollectionRuntimeException( entity, collectionScope, 
+            throw new CollectionRuntimeException( mvccEntity, collectionScope,
                 "Error reading entity log", e );
         }
 
