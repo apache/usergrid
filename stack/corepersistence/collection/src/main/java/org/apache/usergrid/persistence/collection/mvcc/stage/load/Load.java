@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.load;
 
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -31,11 +30,11 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationSt
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
+import org.apache.usergrid.persistence.collection.util.RepairUtil;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -57,10 +56,8 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
 
 
     @Inject
-    public Load( final UUIDService uuidService, 
-            final MvccEntitySerializationStrategy entitySerializationStrategy ) {
-        Preconditions.checkNotNull( entitySerializationStrategy, 
-                "entitySerializationStrategy is required" );
+    public Load( final UUIDService uuidService, final MvccEntitySerializationStrategy entitySerializationStrategy ) {
+        Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
         Preconditions.checkNotNull( uuidService, "uuidService is required" );
 
 
@@ -68,7 +65,14 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         this.entitySerializationStrategy = entitySerializationStrategy;
     }
 
-
+    //TODO: do reads partial merges in batches. maybe 5 or 10 at a time.
+    /**
+     * for example
+     so if like v1 is a full
+     and you have v1 -> v20, where v2->20 is all partial
+     you merge up to 10, then flush
+     then process 10->20, then flush
+     */
     @Override
     public Entity call( final CollectionIoEvent<Id> idIoEvent ) {
         final Id entityId = idIoEvent.getEvent();
@@ -84,24 +88,11 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         Iterator<MvccEntity> results = entitySerializationStrategy.load(
                 collectionScope, entityId, versionMax, 1 );
 
-        //nothing to do, we didn't get a result back
-        if ( !results.hasNext() ) {
+        MvccEntity repairedEntity = RepairUtil.repair( results,collectionScope,entitySerializationStrategy );
+        if(repairedEntity == null)
             return null;
-        }
 
-        MvccEntity mvccEntity = results.next();
-        final Optional<Entity> targetVersion = mvccEntity.getEntity();
+        return repairedEntity.getEntity().get();
 
-        //this entity has been marked as cleared.  
-        //The version exists, but does not have entity data
-        if ( !targetVersion.isPresent() ) {
-
-            //TODO, a lazy org.apache.usergrid.persistence.core.consistency repair/cleanup here?
-
-            return null;
-        }
-
-
-        return targetVersion.get();
     }
 }

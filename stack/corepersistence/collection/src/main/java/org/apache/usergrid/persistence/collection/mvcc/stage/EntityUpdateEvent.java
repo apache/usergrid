@@ -16,48 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection;
+package org.apache.usergrid.persistence.collection.mvcc.stage;
 
 
-import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Id;
-
-import rx.Observable;
 
 
 /**
- *
- *
- * @author: tnine
- *
+ * Simple event to signal entity update
  */
-public interface EntityCollectionManager {
+public class EntityUpdateEvent extends CollectionIoEvent<Id> {
 
-    /**
-     * Write the entity in the entity collection.
-     *
-     * @param entity The entity to update
-     */
-    public Observable<Entity> write( Entity entity );
-
-
-    /**
-     * MarkCommit the entity and remove it's indexes with the given entity id
-     */
-    public Observable<Void> delete( Id entityId );
-
-    /**
-     * Load the entity with the given entity Id
-     */
-    public Observable<Entity> load( Id entityId );
-
-
-    //TODO add partial update
-
-    /**
-     * Takes the change and reloads an entity with all changes applied.
-     * @param entity
-     * @return
-     */
-    public Observable<Entity> update ( Entity entity );
+    public EntityUpdateEvent( final CollectionScope context, final Id event ) {
+        super( context, event );
+    }
 }

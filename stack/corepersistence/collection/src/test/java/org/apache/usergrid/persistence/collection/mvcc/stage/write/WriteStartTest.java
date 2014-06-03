@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
+import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.netflix.astyanax.MutationBatch;
@@ -58,14 +59,15 @@ public class WriteStartTest extends AbstractEntityStageTest {
 
         final MutationBatch mutation = mock( MutationBatch.class );
 
-        when( logStrategy.write( same( context ), logEntry.capture() ) ).thenReturn( mutation );
+        final UUIDService uuidService = mock ( UUIDService.class );
 
+        when( logStrategy.write( same( context ), logEntry.capture() ) ).thenReturn( mutation );
 
         //set up the mock to return the entity from the start phase
         final Entity entity = TestEntityGenerator.generateEntity();
 
         //run the stage
-        WriteStart newStage = new WriteStart( logStrategy );
+        WriteStart newStage = new WriteStart( logStrategy, MvccEntity.Status.COMPLETE);
 
 
         //verify the observable is correct
@@ -76,7 +78,6 @@ public class WriteStartTest extends AbstractEntityStageTest {
         MvccLogEntry entry = logEntry.getValue();
 
         assertEquals( "id correct", entity.getId(), entry.getEntityId() );
-        assertEquals( "version did not not match entityId", entity.getVersion(), entry.getVersion() );
         assertEquals( "EventStage is correct", Stage.ACTIVE, entry.getStage() );
 
 
@@ -86,7 +87,6 @@ public class WriteStartTest extends AbstractEntityStageTest {
         //assertSame is used on purpose.  We want to make sure the same instance is used, not a copy.
         //this way the caller's runtime type is retained.
         assertSame( "id correct", entity.getId(), created.getId() );
-        assertSame( "version did not not match entityId", entity.getVersion(), created.getVersion() );
         assertSame( "Entity correct", entity, created.getEntity().get() );
     }
 
@@ -94,7 +94,8 @@ public class WriteStartTest extends AbstractEntityStageTest {
     @Override
     protected void validateStage( final CollectionIoEvent<Entity> event ) {
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
-        new WriteStart( logStrategy ).call( event );
+
+        new WriteStart( logStrategy, MvccEntity.Status.COMPLETE ).call( event );
     }
 }
 

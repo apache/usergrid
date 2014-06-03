@@ -84,7 +84,7 @@ public class WriteUniqueVerifyIT {
             fail("Write should have thrown an exception");
 
         } catch ( Exception ex ) {
-            WriteUniqueVerifyException e = (WriteUniqueVerifyException)ex.getCause();
+            WriteUniqueVerifyException e = (WriteUniqueVerifyException)ex;
 
             // verify two unique value violations
             assertEquals( 2, e.getVioliations().size() );
