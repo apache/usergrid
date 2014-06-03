@@ -19,7 +19,6 @@
 package org.apache.usergrid.chop.example;
 
 
-import org.apache.usergrid.chop.example.Mainspring;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertFalse;
