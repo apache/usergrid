@@ -45,11 +45,17 @@ A hash reference with the collection data
 
 The URI from which this collection was retrieved
 
+=item auto_page
+
+When set, the collection will automatically move to the next page when iterating
+through the collection
+
 =back
 
 =cut
 has 'object'      => ( is => 'rw', required => 1 );
 has 'uri'         => ( is => 'rw', required => 1 );
+has 'auto_page'   => ( is => 'rw', isa => 'Bool' );
 has 'iterator'    => ( is => 'rw', isa => 'Int', default => sub { -1 } );
 
 =head1 METHODS
@@ -64,13 +70,17 @@ Returns true if there's another entity available during iteration.
 sub has_next_entity {
   my $self = shift;
   my $next = $self->iterator + 1;
+  if ( $self->auto_page && $next >= $self->count()) {
+    return $self->get_next_page();
+  }
   return ($next >= 0 && $next < $self->count());
 }
 
 =item get_next_entity
 
 Returns the next available L<Usergrid::Entity>. If there's no entity available
-to return, it returns a FALSE.
+to return, it returns a FALSE. If the auto_page attribute it set, the next page
+is automatically fetched and the next entity is returned.
 
 =cut
 sub get_next_entity {
