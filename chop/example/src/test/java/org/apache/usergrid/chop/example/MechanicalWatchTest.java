@@ -24,6 +24,10 @@ import org.jukito.UseModules;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.apache.usergrid.chop.api.TimeChop;
+import org.apache.usergrid.chop.stack.ChopCluster;
+import org.apache.usergrid.chop.stack.ICoordinatedCluster;
+import org.apache.usergrid.chop.stack.Instance;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +51,9 @@ public class MechanicalWatchTest {
 
     @Inject
     Watch watch;
+
+    @ChopCluster( name = "TestCluster" )
+    public static ICoordinatedCluster testCluster;
 
 
     @Test
@@ -77,5 +84,21 @@ public class MechanicalWatchTest {
         ( (MechanicalWatch) watch ).wind( 1000L );
         assertFalse( watch.isDead() );
         watch.getTime();
+    }
+
+
+    @Test
+    public void testCluster() {
+        if( testCluster == null ) {
+            LOG.info( "Test cluster is null, skipping testCluster()..." );
+            return;
+        }
+        assertEquals( "TestCluster", testCluster.getName() );
+        assertEquals( 2, testCluster.getSize() );
+        assertEquals( 2, testCluster.getInstances().size() );
+
+        for( Instance instance : testCluster.getInstances() ) {
+            LOG.info( "Instance is at {} {}", instance.getPublicDnsName(), instance.getPublicIpAddress() );
+        }
     }
 }
