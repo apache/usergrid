@@ -150,6 +150,17 @@
 
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>2.12.1</version>
+          <configuration>
+            <encoding>UTF-8</encoding>
+            <configLocation>check_style.xml</configLocation>
+            <linkXRef>false</linkXRef>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>2.4</version>
         </plugin>
