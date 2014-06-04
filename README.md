@@ -1,4 +1,4 @@
-# Usergrid Perl Client
+# Usergrid Perl Client ![CI status](https://travis-ci.org/aweeraman/usergrid-perl-sdk.svg?branch=master "CI Status")
 
 Usergrid::Client provides an easy to use Perl API for Apache Usergrid.
 
