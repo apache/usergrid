@@ -13,6 +13,7 @@
   <description>The module for handling all scope I/O</description>
 
   <artifactId>collection</artifactId>
+  <name>Usergrid Collection</name>
 
   <build>
 

@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -36,7 +37,6 @@ import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
-import org.apache.usergrid.persistence.graph.guice.NodeDelete;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
@@ -60,7 +60,7 @@ import rx.schedulers.Schedulers;
 /**
  * Construct the asynchronous node delete from the q
  */
-public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Integer> {
+public class NodeDeleteListener implements MessageListener<NodeDeleteEvent, Integer> {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( NodeDeleteListener.class );
@@ -82,7 +82,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     public NodeDeleteListener( final NodeSerialization nodeSerialization,
                                final EdgeMetadataSerialization edgeMetadataSerialization,
                                final EdgeMetaRepair edgeMetaRepair, final GraphFig graphFig,
-                               @NodeDelete final AsyncProcessor nodeDelete,
+                               final AsyncProcessorFactory asyncProcessorFactory,
                                @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
                                @StorageEdgeSerialization final EdgeSerialization storageSerialization,
                                final MergedEdgeReader mergedEdgeReader, final Keyspace keyspace ) {
@@ -97,23 +97,23 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
         this.graphFig = graphFig;
         this.keyspace = keyspace;
 
-        nodeDelete.addListener( this );
+        asyncProcessorFactory.getProcessor( NodeDeleteEvent.class ).addListener( this );
     }
 
 
     /**
      * Removes this node from the graph.
      *
-     * @param edgeEvent The edge event that was fired.
+     * @param nodeDeleteEvent The edge event that was fired.
      *
      * @return An observable that emits the total number of edges that have been removed with this node both as the
      *         target and source
      */
     @Override
-    public Observable<Integer> receive( final EdgeEvent<Id> edgeEvent ) {
+    public Observable<Integer> receive( final NodeDeleteEvent nodeDeleteEvent ) {
 
-        final Id node = edgeEvent.getData();
-        final ApplicationScope scope = edgeEvent.getApplicationScope();
+        final Id node = nodeDeleteEvent.getData();
+        final ApplicationScope scope = nodeDeleteEvent.getApplicationScope();
 
 
         return Observable.from( node )
@@ -123,7 +123,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                     @Override
                     public Observable<Integer> call( final Id node ) {
 
-                        final Optional<UUID> maxVersion = nodeSerialization.getMaxVersion( scope, node );
+                        final Optional<Long> maxVersion = nodeSerialization.getMaxVersion( scope, node );
 
                         LOG.debug( "Node with id {} has max version of {}", node, maxVersion.orNull() );
 
@@ -132,26 +132,26 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                             return Observable.empty();
                         }
 
-                        maxVersion.get();
+
 
                         //do all the delete, then when done, delete the node
-                        return doDeletes( node, scope, maxVersion.get() ).count()
+                        return doDeletes( node, scope, maxVersion.get(), nodeDeleteEvent.getTimestamp() ).count()
                                 //if nothing is ever emitted, emit 0 so that we know no operations took place.
                                 // Finally remove
                                 // the
                                 // target node in the mark
                                .doOnCompleted( new Action0() {
-                                    @Override
-                                    public void call() {
-                                        try {
-                                            nodeSerialization.delete( scope, node, maxVersion.get() ).execute();
-                                        }
-                                        catch ( ConnectionException e ) {
-                                            throw new RuntimeException( "Unable to delete marked graph node " + node,
-                                                    e );
-                                        }
-                                    }
-                                } );
+                                   @Override
+                                   public void call() {
+                                       try {
+                                           nodeSerialization.delete( scope, node, maxVersion.get() ).execute();
+                                       }
+                                       catch ( ConnectionException e ) {
+                                           throw new RuntimeException( "Unable to delete marked graph node " + node,
+                                                   e );
+                                       }
+                                   }
+                               } );
                     }
                 } ).defaultIfEmpty( 0 );
     }
@@ -160,7 +160,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
     /**
      * Do the deletes
      */
-    private Observable<MarkedEdge> doDeletes( final Id node, final ApplicationScope scope, final UUID version ) {
+    private Observable<MarkedEdge> doDeletes( final Id node, final ApplicationScope scope, final long maxVersion, final UUID eventTimestamp ) {
         /**
          * Note that while we're processing, returned edges could be moved from the commit log to storage.  As a result,
          * we need to issue a delete with the same version as the node delete on both commit log and storage for
@@ -171,24 +171,24 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
 
         //get all edges pointing to the target node and buffer then into groups for deletion
         Observable<MarkedEdge> targetEdges =
-                getEdgesTypesToTarget( scope, new SimpleSearchEdgeType( node, null ) ).subscribeOn( Schedulers.io() )
+                getEdgesTypesToTarget( scope, new SimpleSearchEdgeType( node, null, null ) ).subscribeOn( Schedulers.io() )
                         .flatMap( new Func1<String, Observable<MarkedEdge>>() {
                             @Override
                             public Observable<MarkedEdge> call( final String edgeType ) {
                                 return mergedEdgeReader.getEdgesToTarget( scope,
-                                        new SimpleSearchByEdgeType( node, edgeType, version, null ) );
+                                        new SimpleSearchByEdgeType( node, edgeType, maxVersion, null ) );
                             }
                         } );
 
 
         //get all edges pointing to the source node and buffer them into groups for deletion
         Observable<MarkedEdge> sourceEdges =
-                getEdgesTypesFromSource( scope, new SimpleSearchEdgeType( node, null ) ).subscribeOn( Schedulers.io() )
+                getEdgesTypesFromSource( scope, new SimpleSearchEdgeType( node, null, null ) ).subscribeOn( Schedulers.io() )
                         .flatMap( new Func1<String, Observable<MarkedEdge>>() {
                             @Override
                             public Observable<MarkedEdge> call( final String edgeType ) {
                                 return mergedEdgeReader.getEdgesFromSource( scope,
-                                        new SimpleSearchByEdgeType( node, edgeType, version, null ) );
+                                        new SimpleSearchByEdgeType( node, edgeType, maxVersion, null ) );
                             }
                         } );
 
@@ -213,8 +213,8 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
 
                             //we use the version specified on the delete purposefully.  If these edges are re-written
                             //at a greater time we want them to exit
-                            batch.mergeShallow( commitLogSerialization.deleteEdge( scope, edge, version ) );
-                            batch.mergeShallow( storageSerialization.deleteEdge( scope, edge, version ) );
+                            batch.mergeShallow( commitLogSerialization.deleteEdge( scope, edge, eventTimestamp ) );
+                            batch.mergeShallow( storageSerialization.deleteEdge( scope, edge, eventTimestamp ) );
 
                             sourceNodes.add( new TargetPair( edge.getSourceNode(), edge.getType() ) );
                             targetNodes.add( new TargetPair( edge.getTargetNode(), edge.getType() ) );
@@ -243,7 +243,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                                     @Override
                                     public Observable<Integer> call( final TargetPair targetPair ) {
                                         return edgeMetaRepair
-                                                .repairSources( scope, targetPair.id, targetPair.edgeType, version );
+                                                .repairSources( scope, targetPair.id, targetPair.edgeType, maxVersion );
                                     }
                                 } ).last();
 
@@ -255,7 +255,7 @@ public class NodeDeleteListener implements MessageListener<EdgeEvent<Id>, Intege
                                     @Override
                                     public Observable<Integer> call( final TargetPair targetPair ) {
                                         return edgeMetaRepair
-                                                .repairTargets( scope, targetPair.id, targetPair.edgeType, version );
+                                                .repairTargets( scope, targetPair.id, targetPair.edgeType, maxVersion );
                                     }
                                 } ).last();
 

@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -38,7 +39,7 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
 
     private final Id node;
     private final String type;
-    private final UUID maxVersion;
+    private final long maxTimestamp;
     private final Optional<Edge> last;
 
 
@@ -46,18 +47,18 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
      * Create the search modules
      * @param node The node to search from
      * @param type The edge type
-     * @param maxVersion The maximum version to return
+     * @param maxTimestamp The maximum timestamp to return
      * @param last The value to start seeking from.  Must be >= this value
      */
-    public SimpleSearchByEdgeType( final Id node, final String type, final UUID maxVersion, final Edge last ) {
+    public SimpleSearchByEdgeType( final Id node, final String type, final long maxTimestamp, final Edge last ) {
         ValidationUtils.verifyIdentity(node);
         ValidationUtils.verifyString( type, "type" );
-        ValidationUtils.verifyTimeUuid( maxVersion, "maxVersion" );
+        EdgeUtils.validateTimestamp(maxTimestamp, "maxTimestamp");
 
 
         this.node = node;
         this.type = type;
-        this.maxVersion = maxVersion;
+        this.maxTimestamp = maxTimestamp;
         this.last = Optional.fromNullable(last);
     }
 
@@ -75,8 +76,8 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
 
 
     @Override
-    public UUID getMaxVersion() {
-        return maxVersion;
+    public long getMaxTimestamp() {
+        return maxTimestamp;
     }
 
 
@@ -91,16 +92,16 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
         if ( this == o ) {
             return true;
         }
-        if ( o == null || getClass() != o.getClass() ) {
+        if ( !( o instanceof SimpleSearchByEdgeType ) ) {
             return false;
         }
 
         final SimpleSearchByEdgeType that = ( SimpleSearchByEdgeType ) o;
 
-        if ( !last.equals( that.last ) ) {
+        if ( maxTimestamp != that.maxTimestamp ) {
             return false;
         }
-        if ( !maxVersion.equals( that.maxVersion ) ) {
+        if ( !last.equals( that.last ) ) {
             return false;
         }
         if ( !node.equals( that.node ) ) {
@@ -118,7 +119,7 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
     public int hashCode() {
         int result = node.hashCode();
         result = 31 * result + type.hashCode();
-        result = 31 * result + maxVersion.hashCode();
+        result = 31 * result + ( int ) ( maxTimestamp ^ ( maxTimestamp >>> 32 ) );
         result = 31 * result + last.hashCode();
         return result;
     }

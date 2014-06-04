@@ -20,6 +20,9 @@ package org.apache.usergrid.persistence.graph.guice;
 
 
 import org.apache.usergrid.persistence.collection.guice.TestModule;
+import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueueFactory;
+import org.apache.usergrid.persistence.core.consistency.TimeoutQueueFactory;
+import org.apache.usergrid.persistence.core.guice.CommonModule;
 
 
 /**
@@ -29,6 +32,12 @@ public class TestGraphModule extends TestModule {
 
     @Override
     protected void configure() {
+        install( new CommonModule() {
+                   @Override
+                   protected void bindTimeoutQueueFactory() {
+                      bind(TimeoutQueueFactory.class).to(LocalTimeoutQueueFactory.class);
+                   }
+               } );
         install( new GraphModule() );
     }
 }

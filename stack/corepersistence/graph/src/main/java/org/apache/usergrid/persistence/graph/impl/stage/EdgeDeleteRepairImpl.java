@@ -138,7 +138,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
                 final SimpleSearchByEdge search =
                         new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(),
-                                edge.getVersion(), null );
+                                edge.getTimestamp(), null );
 
                 return serialization.getEdgeVersions( scope, search );
             }

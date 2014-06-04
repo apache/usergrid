@@ -34,7 +34,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.management.exceptions.ManagementException;
 import org.apache.usergrid.rest.RootResource;
+import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -76,8 +78,7 @@ public class UsersResource extends AbstractContextResource {
     @Path(RootResource.USER_ID_PATH)
     public UserResource getUserById( @Context UriInfo ui, @PathParam( "userId" ) String userIdStr ) throws Exception {
 
-        return getSubResource( UserResource.class )
-                .init( management.getAdminUserByUuid( UUID.fromString( userIdStr ) ) );
+        return getUserResource(management.getAdminUserByUuid(UUID.fromString(userIdStr)), "user id", userIdStr);
     }
 
 
@@ -93,14 +94,21 @@ public class UsersResource extends AbstractContextResource {
             throw mappableSecurityException( "unauthorized", "No admin identity for access credentials provided" );
         }
 
-        return getSubResource( UserResource.class ).init( management.getAdminUserByUsername( username ) );
+        return getUserResource(management.getAdminUserByUsername(username), "username", username);
+    }
+
+    private UserResource getUserResource(UserInfo user, String type, String value) throws ManagementException {
+        if (user == null) {
+            throw new ManagementException("Could not find organization for " + type + " : " + value);
+        }
+        return getSubResource(UserResource.class).init(user);
     }
 
 
     @Path(RootResource.EMAIL_PATH)
     public UserResource getUserByEmail( @Context UriInfo ui, @PathParam( "email" ) String email ) throws Exception {
 
-        return getSubResource( UserResource.class ).init( management.getAdminUserByEmail( email ) );
+        return getUserResource(management.getAdminUserByEmail(email), "email", email);
     }
 
 

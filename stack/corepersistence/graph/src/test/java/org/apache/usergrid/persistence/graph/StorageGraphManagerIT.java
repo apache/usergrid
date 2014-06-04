@@ -25,18 +25,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
+import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
 import org.apache.usergrid.persistence.core.consistency.CompleteListener;
 import org.apache.usergrid.persistence.core.consistency.ErrorListener;
-import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
-import org.apache.usergrid.persistence.graph.guice.EdgeWrite;
-import org.apache.usergrid.persistence.graph.guice.NodeDelete;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
-import org.apache.usergrid.persistence.graph.impl.EdgeEvent;
+import org.apache.usergrid.persistence.graph.impl.EdgeDeleteEvent;
+import org.apache.usergrid.persistence.graph.impl.EdgeWriteEvent;
+import org.apache.usergrid.persistence.graph.impl.NodeDeleteEvent;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
@@ -53,19 +56,28 @@ import rx.Observable;
 @UseModules( { TestGraphModule.class } )
 public class StorageGraphManagerIT extends GraphManagerIT {
 
+    private static final Logger LOG = LoggerFactory.getLogger( StorageGraphManagerIT.class );
 
     @Inject
-    @EdgeDelete
-    protected AsyncProcessor<EdgeEvent<MarkedEdge>> edgeDelete;
+    protected AsyncProcessor<EdgeDeleteEvent> edgeDelete;
 
 
     @Inject
-    @NodeDelete
-    public AsyncProcessor<EdgeEvent<Id>> nodeDelete;
+    public AsyncProcessor<NodeDeleteEvent> nodeDelete;
 
     @Inject
-    @EdgeWrite
-    public AsyncProcessor<EdgeEvent<MarkedEdge>> edgeWrite;
+    public AsyncProcessor<EdgeWriteEvent> edgeWrite;
+
+    @Inject
+    public AsyncProcessorFactory factory;
+
+    @Before
+    public void setup(){
+        edgeDelete = factory.getProcessor( EdgeDeleteEvent.class );
+        edgeWrite = factory.getProcessor( EdgeWriteEvent.class );
+        nodeDelete = factory.getProcessor( NodeDeleteEvent.class );
+    }
+
 
 
     @Override
@@ -74,46 +86,46 @@ public class StorageGraphManagerIT extends GraphManagerIT {
 
         final ComittedGraphTestHelper helper = new ComittedGraphTestHelper( gm );
 
-        edgeDelete.addCompleteListener( new CompleteListener<EdgeEvent<MarkedEdge>>() {
+        edgeDelete.addCompleteListener( new CompleteListener<EdgeDeleteEvent>() {
             @Override
-            public void onComplete( final AsynchronousMessage<EdgeEvent<MarkedEdge>> event ) {
+            public void onComplete( final AsynchronousMessage<EdgeDeleteEvent> event ) {
                 helper.complete();
             }
         } );
 
-        edgeDelete.addErrorListener( new ErrorListener<EdgeEvent<MarkedEdge>>() {
+        edgeDelete.addErrorListener( new ErrorListener<EdgeDeleteEvent>() {
             @Override
-            public void onError( final AsynchronousMessage<EdgeEvent<MarkedEdge>> event, final Throwable t ) {
-                helper.complete();
-                helper.error();
-            }
-        } );
-
-        nodeDelete.addCompleteListener( new CompleteListener<EdgeEvent<Id>>() {
-            @Override
-            public void onComplete( final AsynchronousMessage<EdgeEvent<Id>> event ) {
-                helper.complete();
-            }
-        } );
-
-        nodeDelete.addErrorListener( new ErrorListener<EdgeEvent<Id>>() {
-            @Override
-            public void onError( final AsynchronousMessage<EdgeEvent<Id>> event, final Throwable t ) {
+            public void onError( final AsynchronousMessage<EdgeDeleteEvent> event, final Throwable t ) {
                 helper.complete();
                 helper.error();
             }
         } );
 
-        edgeWrite.addCompleteListener( new CompleteListener<EdgeEvent<MarkedEdge>>() {
+        nodeDelete.addCompleteListener( new CompleteListener<NodeDeleteEvent>() {
             @Override
-            public void onComplete( final AsynchronousMessage<EdgeEvent<MarkedEdge>> event ) {
+            public void onComplete( final AsynchronousMessage<NodeDeleteEvent> event ) {
                 helper.complete();
             }
         } );
 
-        edgeWrite.addErrorListener( new ErrorListener<EdgeEvent<MarkedEdge>>() {
+        nodeDelete.addErrorListener( new ErrorListener<NodeDeleteEvent>() {
             @Override
-            public void onError( final AsynchronousMessage<EdgeEvent<MarkedEdge>> event, final Throwable t ) {
+            public void onError( final AsynchronousMessage<NodeDeleteEvent> event, final Throwable t ) {
+                helper.complete();
+                helper.error();
+            }
+        } );
+
+        edgeWrite.addCompleteListener( new CompleteListener<EdgeWriteEvent>() {
+            @Override
+            public void onComplete( final AsynchronousMessage<EdgeWriteEvent> event ) {
+                helper.complete();
+            }
+        } );
+
+        edgeWrite.addErrorListener( new ErrorListener<EdgeWriteEvent>() {
+            @Override
+            public void onError( final AsynchronousMessage<EdgeWriteEvent> event, final Throwable t ) {
                 helper.complete();
                 helper.error();
             }
@@ -141,22 +153,22 @@ public class StorageGraphManagerIT extends GraphManagerIT {
 
         @Override
         public Observable<Edge> writeEdge( final Edge edge ) {
-            completeInvocations.decrementAndGet();
+            completeInvocations.incrementAndGet();
             return graphManager.writeEdge( edge );
         }
 
 
         @Override
         public Observable<Edge> deleteEdge( final Edge edge ) {
-            completeInvocations.decrementAndGet();
+            completeInvocations.incrementAndGet();
             return graphManager.deleteEdge( edge );
         }
 
 
         @Override
-        public Observable<Id> deleteNode( final Id node ) {
-            completeInvocations.decrementAndGet();
-            return graphManager.deleteNode( node );
+        public Observable<Id> deleteNode( final Id node, final long timestamp ) {
+            completeInvocations.incrementAndGet();
+            return graphManager.deleteNode( node, timestamp );
         }
 
 
@@ -224,13 +236,13 @@ public class StorageGraphManagerIT extends GraphManagerIT {
 
 
         public void complete() {
-            completeInvocations.incrementAndGet();
+            completeInvocations.decrementAndGet();
             tryWake();
         }
 
 
         public void error() {
-            errorInvocations.incrementAndGet();
+            errorInvocations.decrementAndGet();
             tryWake();
         }
 
@@ -246,12 +258,13 @@ public class StorageGraphManagerIT extends GraphManagerIT {
          * Away for our invocations to be 0
          */
         public void await() {
-            while (  completeInvocations.get() != 0 ) {
+            while (  completeInvocations.get() > 0 ) {
+
+                LOG.info( "Waiting for more invocations, count is {} ", completeInvocations.get() );
 
                 synchronized ( mutex ) {
                     try {
-
-                        mutex.wait();
+                        mutex.wait(1000 );
                     }
                     catch ( InterruptedException e ) {
                         //no op

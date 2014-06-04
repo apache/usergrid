@@ -21,6 +21,7 @@ package org.apache.usergrid.chop.runner;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.core.MediaType;
@@ -30,6 +31,8 @@ import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.spi.RunnerRegistry;
+import org.apache.usergrid.chop.stack.ICoordinatedCluster;
+
 import org.safehaus.jettyjam.utils.CertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,5 +159,31 @@ public class RunnerRegistryImpl implements RunnerRegistry {
                                 .type( MediaType.TEXT_PLAIN ).post( String.class );
 
         LOG.debug( "Got back results from unregister post = {}", result );
+    }
+
+
+    @Override
+    public List<ICoordinatedCluster> getClusters() {
+        if( RunnerConfig.isTestMode() ) {
+            return Collections.emptyList();
+        }
+
+        WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
+        StringBuilder sb = new StringBuilder();
+        sb.append( coordinatorFig.getUsername() )
+          .append( "/" )
+          .append( project.getGroupId() )
+          .append( "/" )
+          .append( project.getArtifactId() )
+          .append( "/" )
+          .append( project.getVersion() )
+          .append( "/" )
+          .append( project.getVcsVersion() );
+
+       return resource.path( coordinatorFig.getPropertiesPath() )
+                .path( sb.toString() )
+                .type( MediaType.APPLICATION_JSON )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( new GenericType<List<ICoordinatedCluster>>() { } );
     }
 }

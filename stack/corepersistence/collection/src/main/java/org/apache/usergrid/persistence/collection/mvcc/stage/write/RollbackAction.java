@@ -24,9 +24,11 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -37,23 +39,23 @@ import rx.schedulers.Schedulers;
 
 
 /**
- * Reverses any changes made on behalf of the specified entity. When an exception is thrown
- * during a write operation this action is called to rollback any changes made. 
+ * Reverses any changes made on behalf of the specified entity. When an exception is thrown during a write operation
+ * this action is called to rollback any changes made.
  */
 public class RollbackAction implements Action1<Throwable> {
 
-    private static final Logger log = LoggerFactory.getLogger(RollbackAction.class);
+    private static final Logger log = LoggerFactory.getLogger( RollbackAction.class );
 
     private final Scheduler scheduler;
     private final UniqueValueSerializationStrategy uniqueValueStrat;
     private final MvccLogEntrySerializationStrategy logEntryStrat;
 
-    @Inject
-    public RollbackAction( 
-            MvccLogEntrySerializationStrategy logEntryStrat, 
-            UniqueValueSerializationStrategy uniqueValueStrat ) {
 
-        scheduler = Schedulers.io(); 
+    @Inject
+    public RollbackAction( MvccLogEntrySerializationStrategy logEntryStrat,
+                           UniqueValueSerializationStrategy uniqueValueStrat ) {
+
+        scheduler = Schedulers.io();
         this.uniqueValueStrat = uniqueValueStrat;
         this.logEntryStrat = logEntryStrat;
     }
@@ -63,55 +65,62 @@ public class RollbackAction implements Action1<Throwable> {
 
         if ( t instanceof CollectionRuntimeException ) {
 
-            CollectionRuntimeException cre = (CollectionRuntimeException)t;
-            final Entity entity = cre.getEntity();
+            CollectionRuntimeException cre = ( CollectionRuntimeException ) t;
+            final MvccEntity mvccEntity = cre.getEntity();
             final CollectionScope scope = cre.getCollectionScope();
 
             // one batch to handle rollback
             MutationBatch rollbackMb = null;
+            final Optional<Entity> entity = mvccEntity.getEntity();
 
-            for (final Field field : entity.getFields()) {
+            if ( entity.isPresent() ) {
+                for ( final Field field : entity.get().getFields() ) {
 
-                // if it's unique, add its deletion to the rollback batch
-                if (field.isUnique()) {
+                    // if it's unique, add its deletion to the rollback batch
+                    if ( field.isUnique() ) {
 
-                    UniqueValue toDelete = new UniqueValueImpl(
-                        scope, field, entity.getId(), entity.getVersion());
+                        UniqueValue toDelete =
+                                new UniqueValueImpl( scope, field, entity.get().getId(), mvccEntity.getVersion() );
 
-                    MutationBatch deleteMb = uniqueValueStrat.delete(toDelete);
+                        MutationBatch deleteMb = uniqueValueStrat.delete( toDelete );
 
-                    if ( rollbackMb == null ) {
-                        rollbackMb = deleteMb;
-                    } else { 
-                        rollbackMb.mergeShallow( deleteMb );
+                        if ( rollbackMb == null ) {
+                            rollbackMb = deleteMb;
+                        }
+                        else {
+                            rollbackMb.mergeShallow( deleteMb );
+                        }
                     }
                 }
-            }
 
-            if ( rollbackMb != null ) {
-                try {
-                    rollbackMb.execute();
 
-                } catch (ConnectionException ex) {
-                    throw new RuntimeException("Error rolling back changes", ex);
+                if ( rollbackMb != null ) {
+                    try {
+                        rollbackMb.execute();
+                    }
+                    catch ( ConnectionException ex ) {
+                        throw new RuntimeException( "Error rolling back changes", ex );
+                    }
                 }
-            }
 
-            logEntryStrat.delete( scope, entity.getId(), entity.getVersion() );
+                logEntryStrat.delete( scope, entity.get().getId(), mvccEntity.getVersion() );
+            }
         }
     }
+
 
     class FieldDeleteResult {
 
         private final String name;
 
-        public FieldDeleteResult(String name) {
+
+        public FieldDeleteResult( String name ) {
             this.name = name;
         }
+
 
         public String getName() {
             return this.name;
         }
     }
-
 }

@@ -30,8 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
@@ -42,7 +40,6 @@ import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
-import org.apache.usergrid.persistence.index.query.EntityResults;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -74,8 +71,6 @@ public class EntityConnectionIndexImplTest extends BaseIT {
     @Inject
     public EntityIndexFactory ecif;
 
-    @Inject
-    public EntityCollectionManagerFactory ecmf;
 
 
     @Test
@@ -92,8 +87,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
             put( "flavor", "Blueberry" );
         }} );
         EntityUtils.setVersion( muffin, UUIDGenerator.newTimeUUID() );
-        EntityCollectionManager muffinMgr = ecmf.createCollectionManager( muffinScope );
-        muffin = muffinMgr.write( muffin ).toBlockingObservable().last();
+
 
 
         // create a person who likes muffins
@@ -104,8 +98,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
             put( "hometown", "Chapel Hill" );
         }} );
         EntityUtils.setVersion( person, UUIDGenerator.newTimeUUID() );
-        EntityCollectionManager peopleMgr = ecmf.createCollectionManager( peopleScope );
-        person = peopleMgr.write( person ).toBlockingObservable().last();
+
 
         assertNotNull( person.getId() );
         assertNotNull( person.getId().getUuid() );
@@ -122,12 +115,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         // now, let's search for things that Dave likes
         CandidateResults likes = personLikesIndex.search( Query.fromQL( "select *" ) );
         assertEquals( 1, likes.size() );
+        assertEquals(muffin.getId(), likes.get(0).getId());
 
-
-        //cause retrieval from cassandra
-        EntityResults entityResults = new EntityResults( likes, muffinMgr, UUIDGenerator.newTimeUUID() );
-
-
-        assertEquals( "Blueberry", entityResults.next().getField( "flavor" ).getValue() );
     }
 }

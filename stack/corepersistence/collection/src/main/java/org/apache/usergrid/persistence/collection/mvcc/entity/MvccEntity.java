@@ -31,7 +31,7 @@ import com.google.common.base.Optional;
 public interface MvccEntity extends EntityVersion{
 
     /**
-     * The possible Status of the mvccEntity
+     * The possible State of the mvccEntity
      */
     public enum Status {
 

@@ -28,8 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -73,7 +73,9 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( firstUserEntity, "likes", secondUserEntity );
 
-        Results r = em.getConnectedEntities( firstUserEntity.getUuid(), "likes", null, Level.IDS );
+        em.refreshIndex();
+
+        Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.IDS );
 
         List<ConnectionRef> connections = r.getConnections();
 
@@ -139,6 +141,8 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         LOG.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catB.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catB );
 
+        em.refreshIndex();
+
         // List forward connections for cat A
 
         // Thread.sleep(5000);
@@ -157,6 +161,8 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         LOG.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catA.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catA );
+
+        em.refreshIndex();
 
         // List forward connections for cat A
 
@@ -187,10 +193,11 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         Entity en = em.get( new SimpleEntityRef( entityType, entityId));
 
-        Results results = em.getConnectedEntities( en.getUuid(), null, null, Results.Level.REFS );
+        Results results = em.getConnectedEntities( en, null, null, Level.REFS );
 
         LOG.info( "----------------------------------------------------" );
-        assertEquals( "Expected " + expectedCount + " connections", expectedCount, results.getConnections().size() );
+        assertEquals( "Expected " + expectedCount + " connections", 
+                expectedCount, results.getConnections().size() );
         // return connections;
         return null;
     }
@@ -214,7 +221,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         Entity en = em.get( new SimpleEntityRef( entityType, entityId ));
 
         int i = 0;
-        Results entities = em.getCollection( en, collectionName, null, 100, Results.Level.IDS, false );
+        Results entities = em.getCollection( en, collectionName, null, 100, Level.IDS, false );
         for ( UUID id : entities.getIds() ) {
             LOG.info( ( i++ ) + " " + id.toString() );
         }
@@ -265,8 +272,9 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( secondUserEntity, "likes", arrogantbutcher );
 
+        em.refreshIndex();
 
-        Results r = em.getConnectedEntities( firstUserEntity.getUuid(), "likes", "restaurant", Level.IDS );
+        Results r = em.getConnectedEntities( firstUserEntity, "likes", "restaurant", Level.IDS );
 
         List<ConnectionRef> connections = r.getConnections();
 
@@ -280,7 +288,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         assertFalse( em.isConnectionMember( firstUserEntity, "likes", arrogantbutcher ) );
 
         // check we don't get the restaurant from the second user
-        r = em.getConnectedEntities( secondUserEntity.getUuid(), "likes", "restaurant", Level.IDS );
+        r = em.getConnectedEntities( secondUserEntity, "likes", "restaurant", Level.IDS );
 
         connections = r.getConnections();
 

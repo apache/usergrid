@@ -13,6 +13,7 @@
     <description>Module provates indexing and query of Entities via ElasticSearch</description>
 
     <artifactId>queryindex</artifactId>
+    <name>Usergrid Queryindex</name>
 
     <build>
 

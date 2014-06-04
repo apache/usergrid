@@ -19,7 +19,7 @@ package org.apache.usergrid.persistence.query;
 
 import org.junit.Test;
 import org.apache.usergrid.CoreApplication;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 
 
@@ -38,14 +38,11 @@ public class AllInConnectionNoTypeIT extends AbstractIteratingQueryIT {
             super( app );
         }
 
-
-        /*
-                 * (non-Javadoc)
-                 *
-                 * @see
-                 * org.apache.usergrid.persistence.query.SingleOrderByMaxLimitCollection.ConnectionHelper#getResults
-                 * (org.apache.usergrid.persistence.Query)
-                 */
+       /**
+        * (non-Javadoc) @see
+        * org.apache.usergrid.persistence.query.SingleOrderByMaxLimitCollection.ConnectionHelper#getResults
+        * (org.apache.usergrid.persistence.Query)
+        */
         @Override
         public Results getResults( Query query ) throws Exception {
             query.setConnectionType( CONNECTION );

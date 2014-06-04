@@ -1,21 +1,21 @@
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  The ASF licenses this file to You
- * under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.  For additional information regarding
- * copyright in this work, please see the NOTICE file in the top level
- * directory of this distribution.
+ * limitations under the License.
  */
 package org.apache.usergrid.persistence.index.query;
+
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -24,25 +24,24 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.Token;
 import org.antlr.runtime.TokenRewriteStream;
-import static org.apache.commons.codec.binary.Base64.decodeBase64;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.commons.lang.StringUtils;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.split;
-import org.apache.usergrid.persistence.index.exceptions.PersistenceException;
-import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
+
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
-import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
-import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
 import org.apache.usergrid.persistence.index.query.tree.Equal;
 import org.apache.usergrid.persistence.index.query.tree.EqualityOperand;
 import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
@@ -50,10 +49,19 @@ import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.LessThan;
 import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.Operand;
+
+import static org.apache.commons.codec.binary.Base64.decodeBase64;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.split;
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
+import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
 import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import static org.apache.usergrid.persistence.index.utils.ClassUtils.cast;
+import static org.apache.usergrid.persistence.index.utils.ConversionUtils.uuid;
 import org.apache.usergrid.persistence.index.utils.JsonUtils;
-import org.apache.usergrid.persistence.index.utils.ListUtils;
 import static org.apache.usergrid.persistence.index.utils.ListUtils.first;
 import static org.apache.usergrid.persistence.index.utils.ListUtils.firstBoolean;
 import static org.apache.usergrid.persistence.index.utils.ListUtils.firstInteger;
@@ -61,22 +69,24 @@ import static org.apache.usergrid.persistence.index.utils.ListUtils.firstLong;
 import static org.apache.usergrid.persistence.index.utils.ListUtils.firstUuid;
 import static org.apache.usergrid.persistence.index.utils.ListUtils.isEmpty;
 import static org.apache.usergrid.persistence.index.utils.MapUtils.toMapList;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 
 public class Query {
     private static final Logger logger = LoggerFactory.getLogger( Query.class );
 
-    public static final int PAGE_SIZE = 1000;
+    public enum Level {
+        IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
+    }
 
     public static final int DEFAULT_LIMIT = 10;
+
     public static final int MAX_LIMIT = 1000;
-    public static final String PROPERTY_ID = "id";
+
+    public static final String PROPERTY_UUID = "uuid";
 
     private String type;
     private List<SortPredicate> sortPredicates = new ArrayList<SortPredicate>();
@@ -87,6 +97,7 @@ public class Query {
 
     private Map<String, String> selectAssignments = new LinkedHashMap<String, String>();
     private boolean mergeSelectResults = false;
+    private Level level = Level.ALL_PROPERTIES;
     private String connection;
     private List<String> permissions;
     private boolean reversed;
@@ -94,11 +105,13 @@ public class Query {
     private Long startTime;
     private Long finishTime;
     private boolean pad;
+    private CounterResolution resolution = CounterResolution.ALL;
+    private List<Identifier> identifiers;
+    private List<CounterFilterPredicate> counterFilters;
     private String collection;
     private String ql;
 
-    private List<Operand> filterClauses = new ArrayList<Operand>();
-
+    List<Operand> filterClauses = new ArrayList<Operand>();
 
     public Query() {
     }
@@ -107,22 +120,26 @@ public class Query {
     public Query( Query q ) {
         if ( q != null ) {
             type = q.type;
-            sortPredicates = q.sortPredicates != null 
-                    ? new ArrayList<SortPredicate>( q.sortPredicates ) : null;
+            sortPredicates = q.sortPredicates != null ? new ArrayList<SortPredicate>( q.sortPredicates ) : null;
             startResult = q.startResult;
             cursor = q.cursor;
             limit = q.limit;
-            selectAssignments = q.selectAssignments != null 
-                    ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
+            selectAssignments =
+                    q.selectAssignments != null ? new LinkedHashMap<String, String>( q.selectAssignments ) : null;
             mergeSelectResults = q.mergeSelectResults;
+            //level = q.level;
             connection = q.connection;
             permissions = q.permissions != null ? new ArrayList<String>( q.permissions ) : null;
             reversed = q.reversed;
             reversedSet = q.reversedSet;
             startTime = q.startTime;
             finishTime = q.finishTime;
+            resolution = q.resolution;
             pad = q.pad;
             rootOperand = q.rootOperand;
+            identifiers = q.identifiers != null ? new ArrayList<Identifier>( q.identifiers ) : null;
+            counterFilters =
+                    q.counterFilters != null ? new ArrayList<CounterFilterPredicate>( q.counterFilters ) : null;
             collection = q.collection;
         }
     }
@@ -137,7 +154,7 @@ public class Query {
             try {
                 getRootOperand().visit( v );
 
-            } catch ( PersistenceException ex ) {
+            } catch ( IndexException ex ) {
                 throw new RuntimeException( "Error building ElasticSearch query", ex );
             }
             queryBuilder = v.getQueryBuilder();
@@ -159,7 +176,7 @@ public class Query {
             try {
                 getRootOperand().visit( v );
 
-            } catch ( PersistenceException ex ) {
+            } catch ( IndexException ex ) {
                 throw new RuntimeException( "Error building ElasticSearch query", ex );
             }
             filterBuilder = v.getFilterBuilder();
@@ -177,10 +194,10 @@ public class Query {
         ql = ql.trim();
 
         String qlt = ql.toLowerCase();
-        if ( !qlt.startsWith( "select" ) 
+        if (       !qlt.startsWith( "select" ) 
                 && !qlt.startsWith( "insert" ) 
-                && !qlt.startsWith( "update" ) 
-                && !qlt.startsWith( "delete" ) ) {
+                && !qlt.startsWith( "update" ) && !qlt.startsWith( "delete" ) ) {
+
             if ( qlt.startsWith( "order by" ) ) {
                 ql = "select * " + ql;
             }
@@ -198,15 +215,17 @@ public class Query {
             Query q = parser.ql().query;
             q.setQl( originalQl );
             return q;
-
-        } catch ( RecognitionException e ) {
+        }
+        catch ( RecognitionException e ) {
             logger.error( "Unable to parse \"{}\"", ql, e );
+
             int index = e.index;
             int lineNumber = e.line;
             Token token = e.token;
-            String message = String.format("The query cannot be parsed. "
-                    + "The token '%s' at column %d on line %d cannot be parsed", 
-                    token.getText(), index, lineNumber );
+
+            String message = String.format("The query cannot be parsed. The token '%s' at "
+                + "column %d on line %d cannot be " + "parsed", token.getText(), index, lineNumber);
+
             throw new QueryParseException( message, e );
         }
     }
@@ -231,13 +250,13 @@ public class Query {
     }
 
 
-    public static Query fromQueryParams( 
-            Map<String, List<String>> params ) throws QueryParseException {
-
+    public static Query fromQueryParams( Map<String, List<String>> params ) throws QueryParseException {
         Query q = null;
-//        List<Id> identifiers = null;
+        CounterResolution resolution = null;
+        List<Identifier> identifiers = null;
+        List<CounterFilterPredicate> counterFilters = null;
 
-        String ql = Query.queryStrFrom( params );
+        String ql = QueryUtils.queryStrFrom( params );
         String type = first( params.get( "type" ) );
         Boolean reversed = firstBoolean( params.get( "reversed" ) );
         String connection = first( params.get( "connection" ) );
@@ -248,25 +267,36 @@ public class Query {
         Long startTime = firstLong( params.get( "start_time" ) );
         Long finishTime = firstLong( params.get( "end_time" ) );
 
+        List<String> l = params.get( "resolution" );
+        if ( !isEmpty( l ) ) {
+            resolution = CounterResolution.fromString( l.get( 0 ) );
+        }
+
+        l = params.get( "counter" );
+
+        if ( !isEmpty( l ) ) {
+            counterFilters = CounterFilterPredicate.fromList( l );
+        }
+
         Boolean pad = firstBoolean( params.get( "pad" ) );
 
-//        for ( Entry<String, List<String>> param : params.entrySet() ) {
-//            Id identifier = null;
-//            if ( ( param.getValue() == null ) || ( param.getValue().size() == 0 ) ) {
-//                if ( identifier != null ) {
-//                    if ( identifiers == null ) {
-//                        identifiers = new ArrayList<Id>();
-//                    }
-//                    identifiers.add( identifier );
-//                }
-//            }
-//        }
+        for ( Entry<String, List<String>> param : params.entrySet() ) {
+            Identifier identifier = Identifier.from( param.getKey() );
+            if ( ( param.getValue() == null ) || ( param.getValue().size() == 0 ) || identifier.isUUID() ) {
+                if ( identifier != null ) {
+                    if ( identifiers == null ) {
+                        identifiers = new ArrayList<Identifier>();
+                    }
+                    identifiers.add( identifier );
+                }
+            }
+        }
 
         if ( ql != null ) {
             q = Query.fromQL( decode( ql ) );
         }
 
-        List<String> l = params.get( "filter" );
+        l = params.get( "filter" );
 
         if ( !isEmpty( l ) ) {
             q = newQueryIfNull( q );
@@ -323,9 +353,24 @@ public class Query {
             q.setFinishTime( finishTime );
         }
 
+        if ( resolution != null ) {
+            q = newQueryIfNull( q );
+            q.setResolution( resolution );
+        }
+
+        if ( counterFilters != null ) {
+            q = newQueryIfNull( q );
+            q.setCounterFilters( counterFilters );
+        }
+
         if ( pad != null ) {
             q = newQueryIfNull( q );
             q.setPad( pad );
+        }
+
+        if ( identifiers != null ) {
+            q = newQueryIfNull( q );
+            q.setIdentifiers( identifiers );
         }
 
         if ( reversed != null ) {
@@ -352,8 +397,80 @@ public class Query {
     }
 
 
+    public static Query fromUUID( UUID uuid ) {
+        Query q = new Query();
+        q.addIdentifier( Identifier.fromUUID( uuid ) );
+        return q;
+    }
+
+
+    public static Query fromIdentifier( Object id ) {
+        Query q = new Query();
+        q.addIdentifier( Identifier.from( id ) );
+        return q;
+    }
+
+
     public boolean hasQueryPredicates() {
         return rootOperand != null;
+    }
+
+
+    public boolean containsNameOrEmailIdentifiersOnly() {
+        if ( hasQueryPredicates() ) {
+            return false;
+        }
+        if ( ( identifiers == null ) || identifiers.isEmpty() ) {
+            return false;
+        }
+        for ( Identifier identifier : identifiers ) {
+            if ( !identifier.isEmail() && !identifier.isName() ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    @JsonIgnore
+    public String getSingleNameOrEmailIdentifier() {
+        if ( !containsSingleNameOrEmailIdentifier() ) {
+            return null;
+        }
+        return ( identifiers.get( 0 ).toString() );
+    }
+
+
+    public boolean containsSingleNameOrEmailIdentifier() {
+        return containsNameOrEmailIdentifiersOnly() && ( identifiers.size() == 1 );
+    }
+
+
+    @JsonIgnore
+    public Identifier getSingleIdentifier() {
+        return identifiers != null && identifiers.size() == 1 ? identifiers.get( 0 ) : null;
+    }
+
+
+    public boolean containsSingleUuidIdentifier() {
+        return containsUuidIdentifiersOnly() && ( identifiers.size() == 1 );
+    }
+
+
+    boolean containsUuidIdentifiersOnly() {
+        if ( hasQueryPredicates() ) {
+            return false;
+        }
+        if ( ( identifiers == null ) || identifiers.isEmpty() ) {
+            return false;
+        }
+
+        for ( Identifier identifier : identifiers ) {
+            if ( !identifier.isUUID() ) {
+                return false;
+            }
+        }
+        return true;
     }
 
 
@@ -365,11 +482,60 @@ public class Query {
         for ( SortPredicate s : sortPredicates ) {
             if ( s.getPropertyName().equals( sort.getPropertyName() ) ) {
                 throw new QueryParseException(
-                    String.format( 
-                        "Attempted to set sort order for %s more than once", s.getPropertyName()));
+                        String.format( "Attempted to set sort order for %s more than once", s.getPropertyName() ) );
             }
         }
         sortPredicates.add( sort );
+        return this;
+    }
+
+
+    @JsonIgnore
+    public UUID getSingleUuidIdentifier() {
+        if ( !containsSingleUuidIdentifier() ) {
+            return null;
+        }
+        return ( identifiers.get( 0 ).getUUID() );
+    }
+
+
+    @JsonIgnore
+    boolean isIdsOnly() {
+        if ( ( selectAssignments.size() == 1 ) && selectAssignments.containsKey( PROPERTY_UUID ) ) {
+            level = Level.IDS;
+            return true;
+        }
+        return false;
+    }
+
+    private void setIdsOnly( boolean idsOnly ) {
+        if ( idsOnly ) {
+            selectAssignments = new LinkedHashMap<String, String>();
+            selectAssignments.put( PROPERTY_UUID, PROPERTY_UUID );
+            level = Level.IDS;
+        }
+        else if ( isIdsOnly() ) {
+            selectAssignments = new LinkedHashMap<String, String>();
+            level = Level.ALL_PROPERTIES;
+        }
+    }
+
+
+    public Level getResultsLevel() {
+        isIdsOnly();
+        return level;
+    }
+
+
+    public void setResultsLevel( Level level ) {
+        setIdsOnly( level == Level.IDS );
+        this.level = level;
+    }
+
+
+    public Query withResultsLevel( Level level ) {
+        setIdsOnly( level == Level.IDS );
+        this.level = level;
         return this;
     }
 
@@ -456,7 +622,7 @@ public class Query {
     }
 
 
-    boolean isMergeSelectResults() {
+    public boolean isMergeSelectResults() {
         return mergeSelectResults;
     }
 
@@ -503,7 +669,8 @@ public class Query {
         for ( SortPredicate s : sortPredicates ) {
             if ( s.getPropertyName().equals( propertyName ) ) {
                 logger.error(
-                        "Attempted to set sort order for " + s.getPropertyName() + " more than once, discarding..." );
+                        "Attempted to set sort order for " + s.getPropertyName() 
+                                + " more than once, discarding..." );
                 return this;
             }
         }
@@ -535,7 +702,7 @@ public class Query {
             root = parser.ql().query.getRootOperand();
         }
         catch ( RecognitionException e ) {
-            // TODO: should we create a specific Exception for this? checked?
+            // todo: should we create a specific Exception for this? checked?
             throw new RuntimeException( "Unknown operation: " + filter, e );
         }
 
@@ -616,19 +783,22 @@ public class Query {
     }
 
 
-    private void addClause( Operand equals ) {
+    private void addClause( Operand clause ) {
+        filterClauses.add(clause);
 
         if ( rootOperand == null ) {
-            rootOperand = equals;
+            rootOperand = clause;
             return;
         }
 
         AndOperand and = new AndOperand();
         and.addChild( rootOperand );
-        and.addChild( equals );
+        and.addChild( clause );
+
 
         // redirect the root to new && clause
         rootOperand = and;
+
     }
 
 
@@ -654,6 +824,11 @@ public class Query {
     }
 
 
+    public List<Operand> getFilterClauses() {
+        return filterClauses;
+    }
+
+
     void setStartResult( UUID startResult ) {
         this.startResult = startResult;
     }
@@ -669,7 +844,7 @@ public class Query {
         if ( ( startResult == null ) && ( cursor != null ) ) {
             byte[] cursorBytes = decodeBase64( cursor );
             if ( ( cursorBytes != null ) && ( cursorBytes.length == 16 ) ) {
-                startResult = null; 
+                startResult = uuid( cursorBytes );
             }
         }
         return startResult;
@@ -712,7 +887,7 @@ public class Query {
 
     public void setLimit( int limit ) {
 
-        //      tnine.  After users have had time to change their query limits,
+        //      TODO tnine.  After users have had time to change their query limits,
         // this needs to be uncommented and enforced.
         //        if(limit > MAX_LIMIT){
         //          throw new IllegalArgumentException(String.format("Query limit must be <= to %d", MAX_LIMIT));
@@ -777,6 +952,52 @@ public class Query {
         this.pad = pad;
     }
 
+
+    public void setResolution( CounterResolution resolution ) {
+        this.resolution = resolution;
+    }
+
+
+    public CounterResolution getResolution() {
+        return resolution;
+    }
+
+
+    public void addIdentifier( Identifier identifier ) {
+        if ( identifiers == null ) {
+            identifiers = new ArrayList<Identifier>();
+        }
+        identifiers.add( identifier );
+    }
+
+
+    void setIdentifiers( List<Identifier> identifiers ) {
+        this.identifiers = identifiers;
+    }
+
+
+    public List<CounterFilterPredicate> getCounterFilters() {
+        return counterFilters;
+    }
+
+
+    public void addCounterFilter( String counter ) {
+        CounterFilterPredicate p = CounterFilterPredicate.fromString( counter );
+        if ( p == null ) {
+            return;
+        }
+        if ( counterFilters == null ) {
+            counterFilters = new ArrayList<CounterFilterPredicate>();
+        }
+        counterFilters.add( p );
+    }
+
+
+    void setCounterFilters( List<CounterFilterPredicate> counterFilters ) {
+        this.counterFilters = counterFilters;
+    }
+
+
     @Override
     public String toString() {
         if ( ql != null ) {
@@ -823,6 +1044,17 @@ public class Query {
                 first = false;
             }
         }
+        //      if (!filterPredicates.isEmpty()) {
+        //        s.append(" where ");
+        //        boolean first = true;
+        //        for (FilterPredicate f : filterPredicates) {
+        //          if (!first) {
+        //            s.append(" and ");
+        //          }
+        //          s.append(f.toString());
+        //          first = false;
+        //        }
+        //      }
         return s.toString();
     }
 
@@ -922,6 +1154,171 @@ public class Query {
     }
 
 
+    public static final class CounterFilterPredicate implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+        private final String name;
+        private final Identifier user;
+        private final Identifier group;
+        private final String queue;
+        private final String category;
+
+
+        public CounterFilterPredicate( String name, Identifier user, Identifier group, String queue, String category ) {
+            this.name = name;
+            this.user = user;
+            this.group = group;
+            this.queue = queue;
+            this.category = category;
+        }
+
+
+        public Identifier getUser() {
+            return user;
+        }
+
+
+        public Identifier getGroup() {
+            return group;
+        }
+
+
+        public String getQueue() {
+            return queue;
+        }
+
+
+        public String getCategory() {
+            return category;
+        }
+
+
+        public String getName() {
+            return name;
+        }
+
+
+        public static CounterFilterPredicate fromString( String s ) {
+            Identifier user = null;
+            Identifier group = null;
+            String category = null;
+            String name = null;
+            String[] l = split( s, ':' );
+
+            if ( l.length > 0 ) {
+                if ( !"*".equals( l[0] ) ) {
+                    name = l[0];
+                }
+            }
+
+            if ( l.length > 1 ) {
+                if ( !"*".equals( l[1] ) ) {
+                    user = Identifier.from( l[1] );
+                }
+            }
+
+            if ( l.length > 2 ) {
+                if ( !"*".equals( l[2] ) ) {
+                    group = Identifier.from( l[3] );
+                }
+            }
+
+            if ( l.length > 3 ) {
+                if ( !"*".equals( l[3] ) ) {
+                    category = l[3];
+                }
+            }
+
+            if ( ( user == null ) && ( group == null ) && ( category == null ) && ( name == null ) ) {
+                return null;
+            }
+
+            return new CounterFilterPredicate( name, user, group, null, category );
+        }
+
+
+        public static List<CounterFilterPredicate> fromList( List<String> l ) {
+            if ( ( l == null ) || ( l.size() == 0 ) ) {
+                return null;
+            }
+            List<CounterFilterPredicate> counterFilters = new ArrayList<CounterFilterPredicate>();
+            for ( String s : l ) {
+                CounterFilterPredicate filter = CounterFilterPredicate.fromString( s );
+                if ( filter != null ) {
+                    counterFilters.add( filter );
+                }
+            }
+            if ( counterFilters.size() == 0 ) {
+                return null;
+            }
+            return counterFilters;
+        }
+    }
+
+
+//    public List<Object> getSelectionResults( Results rs ) {
+//
+//        List<Entity> entities = rs.getEntities();
+//        if ( entities == null ) {
+//            return null;
+//        }
+//
+//        if ( !hasSelectSubjects() ) {
+//            return cast( entities );
+//        }
+//
+//        List<Object> results = new ArrayList<Object>();
+//
+//        for ( Entity entity : entities ) {
+//            if ( isMergeSelectResults() ) {
+//                boolean include = false;
+//                Map<String, Object> result = new LinkedHashMap<String, Object>();
+//                Map<String, String> selects = getSelectAssignments();
+//                for ( Map.Entry<String, String> select : selects.entrySet() ) {
+//                    Object obj = JsonUtils.select( entity, select.getValue(), false );
+//                    if ( obj != null ) {
+//                        include = true;
+//                    }
+//                    result.put( select.getKey(), obj );
+//                }
+//                if ( include ) {
+//                    results.add( result );
+//                }
+//            }
+//            else {
+//                boolean include = false;
+//                List<Object> result = new ArrayList<Object>();
+//                Set<String> selects = getSelectSubjects();
+//                for ( String select : selects ) {
+//                    Object obj = JsonUtils.select( entity, select );
+//                    if ( obj != null ) {
+//                        include = true;
+//                    }
+//                    result.add( obj );
+//                }
+//                if ( include ) {
+//                    results.add( result );
+//                }
+//            }
+//        }
+//
+//        if ( results.size() == 0 ) {
+//            return null;
+//        }
+//
+//        return results;
+//    }
+
+
+//    public Object getSelectionResult( Results rs ) {
+//        List<Object> r = getSelectionResults( rs );
+//        if ( ( r != null ) && ( r.size() > 0 ) ) {
+//            return r.get( 0 );
+//        }
+//        return null;
+//    }
+
+
     private static String decode( String input ) {
         try {
             return URLDecoder.decode( input, "UTF-8" );
@@ -955,6 +1352,11 @@ public class Query {
     }
 
 
+    public List<Identifier> getIdentifiers() {
+        return identifiers;
+    }
+
+
     public String getConnection() {
         return connection;
     }
@@ -964,21 +1366,8 @@ public class Query {
         return type;
     }
 
-    
-    public static final String PARAM_QL = "ql";
-    public static final String PARAM_Q = "q";
-    public static final String PARAM_QUERY = "query";
 
-    public static String queryStrFrom( Map<String, List<String>> params ) {
-        if ( params.containsKey( PARAM_QL ) ) {
-            return ListUtils.first( params.get( PARAM_QL ) );
-        }
-        else if ( params.containsKey( PARAM_Q ) ) {
-            return ListUtils.first( params.get( PARAM_Q ) );
-        }
-        else if ( params.containsKey( PARAM_QUERY ) ) {
-            return ListUtils.first( params.get( PARAM_QUERY ) );
-        }
-        return null;
+    public Level getLevel() {
+        return level;
     }
 }

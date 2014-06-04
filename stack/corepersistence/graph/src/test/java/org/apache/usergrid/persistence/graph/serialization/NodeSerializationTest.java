@@ -87,13 +87,13 @@ public class NodeSerializationTest {
     public void writeReadDelete() throws ConnectionException {
 
         final Id nodeId = createId( "test" );
-        final UUID version = UUIDGenerator.newTimeUUID();
+        final long version = System.currentTimeMillis();
 
         serialization.mark( scope, nodeId, version ).execute();
 
-        Optional<UUID> returned = serialization.getMaxVersion( scope, nodeId );
+        Optional<Long> returned = serialization.getMaxVersion( scope, nodeId );
 
-        assertEquals( version, returned.get() );
+        assertEquals( version, returned.get().longValue() );
 
         serialization.delete( scope, nodeId, returned.get() ).execute();
 
@@ -114,7 +114,7 @@ public class NodeSerializationTest {
 
         final Id nodeId = createId( "test" );
 
-        Optional<UUID> returned = serialization.getMaxVersion( scope, nodeId );
+        Optional<Long>returned = serialization.getMaxVersion( scope, nodeId );
 
         /**
          * Verifies we didnt' get anything back when nothing has been marked
@@ -130,14 +130,14 @@ public class NodeSerializationTest {
     public void oldVersionDiscarded() throws ConnectionException {
 
         final Id nodeId = createId( "test" );
-        final UUID version1 = UUIDGenerator.newTimeUUID();
-        final UUID version2 = UUIDGenerator.newTimeUUID();
+        final long version1 = System.currentTimeMillis();
+        final long version2 = version1+1;
 
         serialization.mark( scope, nodeId, version2 ).execute();
 
-        Optional<UUID> returned = serialization.getMaxVersion( scope, nodeId );
+        Optional<Long>returned = serialization.getMaxVersion( scope, nodeId );
 
-        assertEquals( version2, returned.get() );
+        assertEquals( version2, returned.get().longValue() );
 
         //now write version1, it should be discarded
 
@@ -148,14 +148,14 @@ public class NodeSerializationTest {
         /**
          * Verifies that it is deleted
          */
-        assertEquals( version2, returned.get() );
+        assertEquals( version2, returned.get().longValue() );
 
         //perform a delete with v1, we shouldn't lose the column
         serialization.delete( scope, nodeId, version1 ).execute();
 
         returned = serialization.getMaxVersion( scope, nodeId );
 
-        assertEquals( version2, returned.get() );
+        assertEquals( version2, returned.get().longValue() );
 
         //now delete v2
         serialization.delete( scope, nodeId, version2 ).execute();
@@ -177,17 +177,17 @@ public class NodeSerializationTest {
         final Id nodeId3 = createId( "test" );
 
 
-        final UUID version = UUIDGenerator.newTimeUUID();
+        final long version = System.currentTimeMillis();
 
         serialization.mark( scope, nodeId1, version ).execute();
         serialization.mark( scope, nodeId2, version ).execute();
 
-        Map<Id, UUID> marks = serialization.getMaxVersions( scope,
+        Map<Id, Long> marks = serialization.getMaxVersions( scope,
                 Arrays.asList( createEdge( nodeId1, "test", nodeId2 ), createEdge( nodeId2, "test", nodeId3 ) ) );
 
 
-        assertEquals( version, marks.get( nodeId1 ) );
-        assertEquals( version, marks.get( nodeId2 ) );
+        assertEquals( version, marks.get( nodeId1 ).longValue() );
+        assertEquals( version, marks.get( nodeId2 ).longValue() );
         assertFalse( marks.containsKey( nodeId3 ) );
     }
 }

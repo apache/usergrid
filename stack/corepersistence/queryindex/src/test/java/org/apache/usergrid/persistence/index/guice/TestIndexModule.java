@@ -18,13 +18,27 @@
  */
 package org.apache.usergrid.persistence.index.guice;
 
+
+import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.guice.TestModule;
+import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueueFactory;
+import org.apache.usergrid.persistence.core.consistency.TimeoutQueueFactory;
+import org.apache.usergrid.persistence.core.guice.CommonModule;
 
 
 public class TestIndexModule extends TestModule {
 
     @Override
     protected void configure() {
+        install( new CommonModule() {
+            @Override
+            protected void bindTimeoutQueueFactory() {
+                bind( TimeoutQueueFactory.class ).to( LocalTimeoutQueueFactory.class );
+            }
+        } );
+
+        // configure collections and our core astyanax framework
+        install( new CollectionModule() );
         install( new IndexModule() );
     }
 }

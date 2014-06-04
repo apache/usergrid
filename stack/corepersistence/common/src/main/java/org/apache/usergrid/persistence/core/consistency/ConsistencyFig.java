@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.core.consistency;
 
 
 import org.safehaus.guicyfig.Default;
+import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
@@ -27,21 +28,21 @@ import org.safehaus.guicyfig.Key;
 /**
  * Configuration for the consistency queueing system
  */
+@FigSingleton
 public interface ConsistencyFig extends GuicyFig {
 
 
-    public static final String TIMEOUT_TASK_TIME = "usergrid.graph.timeout.task.time";
+    public static final String TIMEOUT_TASK_TIMER = "usergrid.async.timeout.task.timer";
 
-    public static final String TIMEOUT_SIZE = "usergrid.graph.timeout.page.size";
+    public static final String TIMEOUT_SIZE = "usergrid.async.timeout.page.size";
 
-
-    public static final String REPAIR_TIMEOUT = "usergrid.graph.repair.timeout";
+    public static final String REPAIR_TIMEOUT = "usergrid.async.repair.timeout";
 
 
 
 
     @Default("500")
-    @Key(TIMEOUT_TASK_TIME)
+    @Key(TIMEOUT_TASK_TIMER)
     long getTaskLoopTime();
 
 

@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.index.exceptions;
  *
  * @author tnine
  */
-public class NoIndexException extends PersistenceException {
+public class NoIndexException extends IndexException {
 
     /**
      *

@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
 
@@ -116,7 +116,10 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
 
             Entity saved =  io.writeEntity( entity );
 
-            LOG.info("Writing entity with id '{}'", saved.getUuid());
+            LOG.debug("Writing entity with id '{}'", saved.getUuid());
+
+            try { Thread.sleep( WRITE_DELAY ); } catch (Exception ignored) {}
+
         }
 
         long stop = System.currentTimeMillis();
@@ -127,14 +130,14 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
     }
 
 
-    private void testUnionPaging( final IoHelper io, final String queryString, final Set<String> expectedResults )
-            throws Exception {
-
+    private void testUnionPaging( final IoHelper io, final String queryString, 
+            final Set<String> expectedResults ) throws Exception {
 
         Set<String> newSets = new HashSet<String>( expectedResults );
 
-        //our field1Or has a result size < our page size, so it shouldn't blow up when the cursor is getting created
-        //the leaf iterator should insert it's own "no value left" into the cursor
+        //our field1Or has a result size < our page size, so it shouldn't blow up when the 
+        // cursor is getting created the leaf iterator should insert it's own "no value left" i
+        // not the cursor
         Query query = Query.fromQL( queryString );
         query.setLimit( PAGE_SIZE );
 

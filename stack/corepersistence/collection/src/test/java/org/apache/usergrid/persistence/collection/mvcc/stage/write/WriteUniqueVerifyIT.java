@@ -83,7 +83,9 @@ public class WriteUniqueVerifyIT {
             entityManager.write( entity2 ).toBlockingObservable().last();
             fail("Write should have thrown an exception");
 
-        } catch ( WriteUniqueVerifyException e ) {
+        } catch ( Exception ex ) {
+            WriteUniqueVerifyException e = (WriteUniqueVerifyException)ex;
+
             // verify two unique value violations
             assertEquals( 2, e.getVioliations().size() );
         }

@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -67,6 +68,7 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -129,18 +131,18 @@ public class EdgeWriteListenerTest {
         final Id targetId = createId( "target" );
 
 
-        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId );
+        final long timestamp = 1000l;
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
+        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId, timestamp);
+        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId, timestamp + 1 );
+        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId, timestamp + 2 );
 
 
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1,  UUIDGenerator.newTimeUUID() ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2,  UUIDGenerator.newTimeUUID()).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3,  UUIDGenerator.newTimeUUID() ).execute();
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
+        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
 
         //now perform the listener execution
         Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
@@ -148,7 +150,7 @@ public class EdgeWriteListenerTest {
         assertEquals( 3, returned.intValue() );
 
         //now validate there's nothing in the commit log.
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         /******
          * Ensure everything is removed from the commit log
@@ -259,18 +261,19 @@ public class EdgeWriteListenerTest {
         final String edgeType = "test";
         final Id targetId = createId( "target" );
 
-
-        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId );
-        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId );
+        final long timestamp = 10000;
 
 
-        final UUID timestamp = UUIDGenerator.newTimeUUID();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV1, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV2, timestamp ).execute();
-        commitLogEdgeSerialization.writeEdge( scope, edgeV3, timestamp ).execute();
+        MarkedEdge edgeV1 = createEdge( sourceId, edgeType, targetId, timestamp );
+        MarkedEdge edgeV2 = createEdge( sourceId, edgeType, targetId, timestamp+1 );
+        MarkedEdge edgeV3 = createEdge( sourceId, edgeType, targetId, timestamp+2 );
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, UUIDGenerator.newTimeUUID(), edgeV2 );
+
+        commitLogEdgeSerialization.writeEdge( scope, edgeV1,  UUIDGenerator.newTimeUUID() ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV2,  UUIDGenerator.newTimeUUID() ).execute();
+        commitLogEdgeSerialization.writeEdge( scope, edgeV3,  UUIDGenerator.newTimeUUID() ).execute();
+
+        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV2 );
 
         //now perform the listener execution, should only clean up to edge v2
         Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
@@ -278,7 +281,7 @@ public class EdgeWriteListenerTest {
         assertEquals( 2, returned.intValue() );
 
         //now validate there's nothing in the commit log.
-        UUID now = UUIDGenerator.newTimeUUID();
+        long now = System.currentTimeMillis();
 
         /******
          * Ensure everything is removed from the commit log
@@ -404,10 +407,14 @@ public class EdgeWriteListenerTest {
         EdgeSerialization commitLog = mock( EdgeSerialization.class );
         EdgeSerialization storage = mock( EdgeSerialization.class );
 
-        AsyncProcessor<EdgeEvent<MarkedEdge>> edgeProcessor = mock( AsyncProcessor.class );
+        AsyncProcessorFactory edgeProcessor = mock( AsyncProcessorFactory.class );
+
+        AsyncProcessor<EdgeWriteEvent> processor = mock(AsyncProcessor.class);
+
+        when(edgeProcessor.getProcessor( EdgeWriteEvent.class )).thenReturn( processor );
 
 
-        EdgeEvent<MarkedEdge> edgeWriteEvent = new EdgeEvent<>( scope, edgeV1.getVersion(), edgeV1 );
+        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV1 );
 
         Keyspace keyspace = mock( Keyspace.class );
 
@@ -425,7 +432,7 @@ public class EdgeWriteListenerTest {
          */
         when( commitLog.getEdgeVersions( same(scope), any( SearchByEdge.class ) ) ).thenReturn( Collections
                 .singletonList( createEdge( edgeV1.getSourceNode(), edgeV1.getType(), edgeV1.getTargetNode(),
-                        edgeV1.getVersion() ) ).iterator() );
+                        edgeV1.getTimestamp() ) ).iterator() );
 
 
         /**

@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.mq.Message;
 import org.apache.usergrid.mq.cassandra.QueuesCF;
-import org.apache.usergrid.persistence.CounterResolution;
 import org.apache.usergrid.persistence.entities.Event;
 
 import org.apache.commons.lang.StringUtils;
@@ -51,6 +50,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
 
 
 public class CounterUtils {

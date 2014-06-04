@@ -25,14 +25,21 @@ import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactoryImpl;
 import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
+import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueueFactory;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
+import org.apache.usergrid.persistence.core.consistency.TimeoutQueueFactory;
 import org.apache.usergrid.persistence.core.migration.MigrationManager;
 import org.apache.usergrid.persistence.core.migration.MigrationManagerFig;
 import org.apache.usergrid.persistence.core.migration.MigrationManagerImpl;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.netflix.astyanax.Keyspace;
 
@@ -41,7 +48,7 @@ import com.netflix.astyanax.Keyspace;
  * Simple module for configuring our core services.  Cassandra etc
  *
  */
-public class CommonModule extends AbstractModule {
+public abstract class CommonModule extends AbstractModule {
 
 
     @Override
@@ -49,7 +56,8 @@ public class CommonModule extends AbstractModule {
         //noinspection unchecked
         install( new GuicyFigModule(
                 MigrationManagerFig.class,
-                CassandraFig.class, ConsistencyFig.class) );
+                CassandraFig.class,
+                ConsistencyFig.class) );
 
              // bind our keyspace to the AstyanaxKeyspaceProvider
         bind( Keyspace.class ).toProvider( AstyanaxKeyspaceProvider.class ).asEagerSingleton();
@@ -61,7 +69,19 @@ public class CommonModule extends AbstractModule {
 
         bind( CassandraConfig.class ).to( CassandraConfigImpl.class );
 
+        bind(AsyncProcessorFactory.class).to( AsyncProcessorFactoryImpl.class ).asEagerSingleton();
+
+        bindTimeoutQueueFactory();
 
 
     }
+
+
+    /**
+     * Bind the timeoutqueue factory to an implementation
+     * @return
+     */
+    protected abstract void bindTimeoutQueueFactory();
+
+
 }

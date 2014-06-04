@@ -77,7 +77,9 @@ public class WriteUniqueVerify implements
 
         MvccValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
 
-        final Entity entity = ioevent.getEvent().getEntity().get();
+        final MvccEntity mvccEntity = ioevent.getEvent();
+
+        final Entity entity = mvccEntity.getEntity().get();
 
         // use simple thread pool to verify fields in parallel
 
@@ -118,7 +120,7 @@ public class WriteUniqueVerify implements
                         }
                         catch ( ConnectionException ex ) {
                             throw new WriteUniqueVerifyException( 
-                                entity, ioevent.getEntityCollection(), 
+                                    mvccEntity, ioevent.getEntityCollection(),
                                     "Error writing unique value " + field.toString(), ex );
                         }
 
@@ -128,7 +130,7 @@ public class WriteUniqueVerify implements
                             loaded = uniqueValueStrat.load( ioevent.getEntityCollection(), field );
                         }
                         catch ( ConnectionException ex ) {
-                            throw new WriteUniqueVerifyException( entity, ioevent.getEntityCollection(), 
+                            throw new WriteUniqueVerifyException( mvccEntity, ioevent.getEntityCollection(),
                                     "Error verifying write", ex );
                         }
 
@@ -167,7 +169,7 @@ public class WriteUniqueVerify implements
 
                 if ( !uniquenessVioloations.isEmpty() ) {
                     throw new WriteUniqueVerifyException( 
-                        entity, ioevent.getEntityCollection(), uniquenessVioloations );
+                            mvccEntity, ioevent.getEntityCollection(), uniquenessVioloations );
                 }
                     
                 //return the original event

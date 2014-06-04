@@ -20,11 +20,11 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -37,19 +37,16 @@ public class SimpleEdge implements Edge {
     protected final Id sourceNode;
     protected final String type;
     protected final Id targetNode;
-    protected final UUID version;
+    protected final long timestamp;
 
 
-    public SimpleEdge( final Id sourceNode, final String type, final Id targetNode, final UUID version ) {
-
-        ValidationUtils.verifyIdentity( sourceNode );
-        ValidationUtils.verifyString( type, "type" );
-        ValidationUtils.verifyIdentity( targetNode );
-        ValidationUtils.verifyTimeUuid( version, "version" );
+    public SimpleEdge( final Id sourceNode, final String type, final Id targetNode, final long timestamp ) {
         this.sourceNode = sourceNode;
         this.type = type;
         this.targetNode = targetNode;
-        this.version = version;
+        this.timestamp = timestamp;
+
+        EdgeUtils.validateEdge( this );
     }
 
 
@@ -71,17 +68,10 @@ public class SimpleEdge implements Edge {
     }
 
 
-    public UUID getVersion() {
-        return version;
+    public long getTimestamp() {
+        return timestamp;
     }
 
-
-
-    /**
-     * Test if the 2 edges are equal to one another.  Note that this is an edge comparison, not a marked edge comparison
-     * @param o
-     * @return
-     */
 
     @Override
     public boolean equals( final Object o ) {
@@ -92,19 +82,18 @@ public class SimpleEdge implements Edge {
             return false;
         }
 
-        final Edge that = ( Edge ) o;
+        final SimpleEdge that = ( SimpleEdge ) o;
 
-
-        if ( !sourceNode.equals( that.getSourceNode() ) ) {
+        if ( timestamp != that.timestamp ) {
             return false;
         }
-        if ( !targetNode.equals( that.getTargetNode() ) ) {
+        if ( !sourceNode.equals( that.sourceNode ) ) {
             return false;
         }
-        if ( !type.equals( that.getType() ) ) {
+        if ( !targetNode.equals( that.targetNode ) ) {
             return false;
         }
-        if ( !version.equals( that.getVersion() ) ) {
+        if ( !type.equals( that.type ) ) {
             return false;
         }
 
@@ -117,18 +106,18 @@ public class SimpleEdge implements Edge {
         int result = sourceNode.hashCode();
         result = 31 * result + type.hashCode();
         result = 31 * result + targetNode.hashCode();
-        result = 31 * result + version.hashCode();
+        result = 31 * result + ( int ) ( timestamp ^ ( timestamp >>> 32 ) );
         return result;
     }
 
 
     @Override
     public String toString() {
-        return "SimpleMarkedEdge{" +
+        return "SimpleEdge{" +
                 "sourceNode=" + sourceNode +
                 ", type='" + type + '\'' +
                 ", targetNode=" + targetNode +
-                ", version=" + version +
+                ", timestamp=" + timestamp +
                 '}';
     }
 }

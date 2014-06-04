@@ -27,6 +27,11 @@ Icon
 /portal/test/coverage/instrument/js/usergrid-coverage.min.js
 /portal/test/coverage/instrument/js/usergrid.min.js
 /stack/corepersistence/priamcluster/aws.properties
+# Eclipse IDE files
+.project
+.classpath
+.settings/
+.metadata/
 #Webstorm artifacts
 .idea/
 stack/corepersistence/collection/nbactions.xml

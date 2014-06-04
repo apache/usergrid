@@ -17,8 +17,14 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.apache.usergrid.persistence.index.query.Query;
+import static org.apache.usergrid.utils.ClassUtils.cast;
+import org.apache.usergrid.utils.JsonUtils;
 
 import org.apache.usergrid.utils.ListUtils;
 
@@ -47,4 +53,67 @@ public class QueryUtils {
         }
         return null;
     }
+
+    public static List<Object> getSelectionResults( Query q, Results rs ) {
+
+        List<Entity> entities = rs.getEntities();
+        if ( entities == null ) {
+            return null;
+        }
+
+        if ( !q.hasSelectSubjects() ) {
+            return cast( entities );
+        }
+
+        List<Object> results = new ArrayList<Object>();
+
+        for ( Entity entity : entities ) {
+            if ( q.isMergeSelectResults() ) {
+                boolean include = false;
+                Map<String, Object> result = new LinkedHashMap<String, Object>();
+                Map<String, String> selects = q.getSelectAssignments();
+                for ( Map.Entry<String, String> select : selects.entrySet() ) {
+                    Object obj = JsonUtils.select( entity, select.getValue(), false );
+                    if ( obj != null ) {
+                        include = true;
+                    }
+                    result.put( select.getKey(), obj );
+                }
+                if ( include ) {
+                    results.add( result );
+                }
+            }
+            else {
+                boolean include = false;
+                List<Object> result = new ArrayList<Object>();
+                Set<String> selects = q.getSelectSubjects();
+                for ( String select : selects ) {
+                    Object obj = JsonUtils.select( entity, select );
+                    if ( obj != null ) {
+                        include = true;
+                    }
+                    result.add( obj );
+                }
+                if ( include ) {
+                    results.add( result );
+                }
+            }
+        }
+
+        if ( results.size() == 0 ) {
+            return null;
+        }
+
+        return results;
+    }
+
+
+    public static Object getSelectionResult( Query q, Results rs ) {
+        List<Object> r = QueryUtils.getSelectionResults( q, rs );
+        if ( ( r != null ) && ( r.size() > 0 ) ) {
+            return r.get( 0 );
+        }
+        return null;
+    }
+
 }

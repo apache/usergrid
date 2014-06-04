@@ -31,6 +31,11 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.shiro.UnavailableSecurityManagerException;
+
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.management.AccountCreationProps;
@@ -54,10 +59,9 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.PagingResultsIterator;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
@@ -91,14 +95,8 @@ import org.apache.usergrid.utils.MailUtils;
 import org.apache.usergrid.utils.StringUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.shiro.UnavailableSecurityManagerException;
-
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-
-import static java.lang.Boolean.parseBoolean;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
@@ -161,6 +159,7 @@ import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_TYPE;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_TITLE;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_VERB;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import static org.apache.usergrid.security.AuthPrincipalType.ADMIN_USER;
 import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION;
 import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION_USER;
@@ -178,6 +177,8 @@ import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.utils.ListUtils.anyNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.PasswordUtils.mongoPassword;
+
+import static java.lang.Boolean.parseBoolean;
 
 
 public class ManagementServiceImpl implements ManagementService {
@@ -1647,7 +1648,11 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Results r = em.getConnectingEntities( applicationId, "owns", "group", Level.ALL_PROPERTIES );
+
+        Results r = em.getConnectingEntities( 
+                new SimpleEntityRef("application", applicationId), 
+                "owns", "group", Level.ALL_PROPERTIES );
+
         Entity entity = r.getEntity();
         if ( entity != null ) {
             return new OrganizationInfo( entity.getUuid(), ( String ) entity.getProperty( "path" ) );
@@ -1665,9 +1670,12 @@ public class ManagementServiceImpl implements ManagementService {
         }
         final BiMap<UUID, String> applications = HashBiMap.create();
         final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        final Results results = em.getConnectedEntities( organizationId, "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
-        final PagingResultsIterator itr = new PagingResultsIterator( results );
 
+        final Results results = em.getConnectedEntities( 
+                new SimpleEntityRef("organization", organizationId), 
+                "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
+
+        final PagingResultsIterator itr = new PagingResultsIterator( results );
 
         String entityName;
 

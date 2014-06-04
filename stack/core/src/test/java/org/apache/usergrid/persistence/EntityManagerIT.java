@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -32,10 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import static org.apache.usergrid.AbstractCoreIT.setup;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-@Concurrent()
+//@Concurrent()
 public class EntityManagerIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( EntityManagerIT.class );
 
@@ -76,7 +76,11 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
         assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ));
 
-        EntityRef userRef = em.getAlias( applicationId, "user", "edanuff" );
+        em.refreshIndex();
+
+        EntityRef userRef = em.getAlias( 
+            new SimpleEntityRef("application", applicationId), "users", "edanuff" );
+
         assertNotNull( userRef );
         assertEquals( "userRef.id not expected value", user.getUuid(), userRef.getUuid() );
         assertEquals( "userRef.type not expected value", "user", userRef.getType() );
@@ -323,7 +327,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         // now search by username, no results should be returned
 
         Results r = em.searchCollection( em.getApplicationRef(), "users",
-                new Query().addEqualityFilter( "username", name ) );
+            new Query().addEqualityFilter( "username", name ) );
 
         assertEquals( 0, r.size() );
 
@@ -554,6 +558,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         device.put( "name", "device1" );
 
         Entity createdDevice = em.createItemInCollection( createdUser, "devices", "device", device );
+
+        em.refreshIndex();
 
         Entity returnedDevice = em.get( new SimpleEntityRef("device", createdDevice.getUuid()));
 

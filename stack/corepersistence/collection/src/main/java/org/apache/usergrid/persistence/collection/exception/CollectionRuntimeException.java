@@ -18,37 +18,38 @@
 package org.apache.usergrid.persistence.collection.exception;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 
 public class CollectionRuntimeException extends RuntimeException {
 
-    private Entity entity;
+    private MvccEntity entity;
     private CollectionScope collectionScope;
 
 
-    public CollectionRuntimeException( Entity entity, CollectionScope scope, final String message ) {
+    public CollectionRuntimeException( MvccEntity entity, CollectionScope scope, final String message ) {
         super( message ); 
         this.entity = entity;
         this.collectionScope = scope; 
     }
 
 
-    public CollectionRuntimeException( Entity entity, CollectionScope scope, final String message, final Throwable cause ) {
+    public CollectionRuntimeException( MvccEntity entity, CollectionScope scope, final String message, final Throwable cause ) {
         super( message, cause );
         this.entity = entity;
         this.collectionScope = scope; 
     }
 
 
-    public CollectionRuntimeException( Entity entity, CollectionScope scope, final Throwable cause ) {
+    public CollectionRuntimeException( MvccEntity entity, CollectionScope scope, final Throwable cause ) {
         super( cause );
         this.entity = entity;
         this.collectionScope = scope; 
     }
 
 
-    public CollectionRuntimeException( Entity entity, CollectionScope scope, 
+    public CollectionRuntimeException( MvccEntity entity, CollectionScope scope,
             final String message, final Throwable cause, final boolean enableSuppression,
             final boolean writableStackTrace ) {
         super( message, cause, enableSuppression, writableStackTrace );
@@ -65,7 +66,7 @@ public class CollectionRuntimeException extends RuntimeException {
      * Entity involved in operation.
      * @return Entity or null if entity not instantiated yet in operation. 
      */
-    public Entity getEntity() {
+    public MvccEntity getEntity() {
         return entity;
     }
 }

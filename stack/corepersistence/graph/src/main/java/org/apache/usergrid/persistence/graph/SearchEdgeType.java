@@ -41,6 +41,12 @@ public interface SearchEdgeType {
 
 
     /**
+     * Search edge types with an optional prefix
+     * @return
+     */
+    Optional<String> prefix();
+
+    /**
      * Return the last value returned.  All returned types will be >= this value
      * @return
      */

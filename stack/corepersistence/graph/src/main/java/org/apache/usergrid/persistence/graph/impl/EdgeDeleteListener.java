@@ -21,11 +21,10 @@ package org.apache.usergrid.persistence.graph.impl;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
+import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.guice.EdgeDelete;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 
@@ -41,7 +40,7 @@ import rx.functions.Func2;
  * Construct the asynchronous delete operation from the listener
  */
 @Singleton
-public class EdgeDeleteListener implements MessageListener<EdgeEvent<MarkedEdge>, EdgeEvent<MarkedEdge>> {
+public class EdgeDeleteListener implements MessageListener<EdgeDeleteEvent, EdgeDeleteEvent> {
 
 
     private final EdgeDeleteRepair edgeDeleteRepair;
@@ -49,36 +48,36 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<MarkedEdge>
 
 
     @Inject
-    public EdgeDeleteListener( @EdgeDelete final AsyncProcessor edgeDelete, final EdgeDeleteRepair edgeDeleteRepair,
-                               final EdgeMetaRepair edgeMetaRepair ) {
+    public EdgeDeleteListener( final AsyncProcessorFactory asyncProcessorFactory,
+                               final EdgeDeleteRepair edgeDeleteRepair, final EdgeMetaRepair edgeMetaRepair ) {
 
         this.edgeDeleteRepair = edgeDeleteRepair;
         this.edgeMetaRepair = edgeMetaRepair;
 
-        edgeDelete.addListener( this );
+        asyncProcessorFactory.getProcessor( EdgeDeleteEvent.class ).addListener( this );
     }
 
 
     @Override
-    public Observable<EdgeEvent<MarkedEdge>> receive( final EdgeEvent<MarkedEdge> delete ) {
+    public Observable<EdgeDeleteEvent> receive( final EdgeDeleteEvent delete ) {
 
         final MarkedEdge edge = delete.getData();
         final ApplicationScope scope = delete.getApplicationScope();
-        final UUID maxVersion = edge.getVersion();
+        final long maxTimestamp = edge.getTimestamp();
 
 
         return edgeDeleteRepair.repair( scope, edge, delete.getTimestamp() )
-
                                .flatMap( new Func1<MarkedEdge, Observable<Integer>>() {
                                    @Override
                                    public Observable<Integer> call( final MarkedEdge markedEdge ) {
+
                                        Observable<Integer> sourceDelete = edgeMetaRepair
                                                .repairSources( scope, edge.getSourceNode(), edge.getType(),
-                                                       maxVersion );
+                                                       maxTimestamp );
 
                                        Observable<Integer> targetDelete = edgeMetaRepair
                                                .repairTargets( scope, edge.getTargetNode(), edge.getType(),
-                                                       maxVersion );
+                                                       maxTimestamp );
 
                                        return Observable.zip( sourceDelete, targetDelete,
                                                new Func2<Integer, Integer, Integer>() {
@@ -89,10 +88,9 @@ public class EdgeDeleteListener implements MessageListener<EdgeEvent<MarkedEdge>
                                                    }
                                                } );
                                    }
-                               } ).map( new Func1<Integer, EdgeEvent<MarkedEdge>>() {
-
+                               } ).map( new Func1<Integer, EdgeDeleteEvent>() {
                     @Override
-                    public EdgeEvent<MarkedEdge> call( final Integer integer ) {
+                    public EdgeDeleteEvent call( final Integer integer ) {
                         return delete;
                     }
                 } );

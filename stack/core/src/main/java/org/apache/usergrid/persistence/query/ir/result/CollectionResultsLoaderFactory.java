@@ -18,15 +18,17 @@ package org.apache.usergrid.persistence.query.ir.result;
 
 
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Query.Level;
+import static org.apache.usergrid.persistence.index.query.Query.Level.IDS;
+import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 
 
 /** Implementation for loading collection results */
 public class CollectionResultsLoaderFactory implements ResultsLoaderFactory {
 
     @Override
-    public ResultsLoader getResultsLoader( EntityManager em, Query query, Results.Level level ) {
+    public ResultsLoader getResultsLoader( EntityManager em, Query query, Level level ) {
         switch ( level ) {
             case IDS:
                 return new IDLoader();
