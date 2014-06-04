@@ -178,6 +178,8 @@ import static org.apache.usergrid.utils.ListUtils.anyNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.PasswordUtils.mongoPassword;
 
+import static java.lang.Boolean.parseBoolean;
+
 
 public class ManagementServiceImpl implements ManagementService {
     private static final Logger logger = LoggerFactory.getLogger( ManagementServiceImpl.class );
