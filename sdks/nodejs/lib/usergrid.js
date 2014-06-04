@@ -2102,7 +2102,7 @@ Usergrid.Client.prototype.delete = function(opts, callback) {
 
     var options = {
       method:"DELETE",
-      endpoint:"groups/"+this._path+"/users/"+options.user.get('username')
+      endpoint:"groups/"+this._path+"/users/"+options.user.username
     }
 
     this._client.request(options, function(error, data){
