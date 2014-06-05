@@ -21,8 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
-import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueueFactory;
-import org.apache.usergrid.persistence.core.consistency.TimeoutQueueFactory;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
@@ -39,12 +37,7 @@ public class GuiceModule  extends AbstractModule {
     @Override
     protected void configure() {
 
-        install(new CommonModule() {
-            @Override
-            protected void bindTimeoutQueueFactory() {
-                bind(TimeoutQueueFactory.class).to( LocalTimeoutQueueFactory.class );
-            }
-        });
+        install(new CommonModule());
         install(new CollectionModule());
         install(new GraphModule());
         install(new IndexModule());
