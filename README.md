@@ -300,6 +300,10 @@ The generated report artifacts are located in cover_db/.
 
 ## Release notes
 
+### 0.22
+
+* Auto paging for collections
+
 ### 0.21
 
 * Documentation updates
