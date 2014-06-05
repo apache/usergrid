@@ -16,25 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl;
+package org.apache.usergrid.persistence.core.consistency;
 
 
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.model.entity.Id;
+import rx.Subscriber;
 
 
 /**
- * Event for when a node is deleted
+ * Interface to create subscriptions.  Useful for creating custom listeners or composite functionality
+ * @param <T>
  */
-public class NodeDeleteEvent extends EdgeEvent<Id> {
+public interface SubscriberFactory<T> {
 
-    private final long timestamp;
 
-    public NodeDeleteEvent( final ApplicationScope applicationScope, final UUID eventTime, final long timestamp, final Id id ) {
-        super( applicationScope, eventTime, id );
-        this.timestamp = timestamp;
-    }
+    public Subscriber<T> getSubcriber();
 }

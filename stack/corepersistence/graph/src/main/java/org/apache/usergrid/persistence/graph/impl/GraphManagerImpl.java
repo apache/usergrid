@@ -28,11 +28,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
-import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
-import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
-import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.hystrix.HystrixObservable;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -47,6 +42,9 @@ import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteListener;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompact;
+import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListener;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
@@ -63,6 +61,8 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
+import rx.Observer;
+import rx.Subscriber;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -84,22 +84,26 @@ public class GraphManagerImpl implements GraphManager {
 
     private final NodeSerialization nodeSerialization;
 
-    private final AsyncProcessor<EdgeDeleteEvent> edgeDeleteAsyncProcessor;
-    private final AsyncProcessor<EdgeWriteEvent> edgeWriteAsyncProcessor;
-    private final AsyncProcessor<NodeDeleteEvent> nodeDeleteAsyncProcessor;
+    private final EdgeWriteCompact edgeWriteCompact;
+
+    //TODO TN fix this
+    private final EdgeDeleteListener edgeDeleteListener;
+    private final NodeDeleteListener nodeDeleteListener;
+
+    private Observer<Integer> edgeWriteSubcriber;
+    private Observer<Integer> edgeDeleteSubcriber;
+    private Observer<Integer> nodeDelete;
+
+
 
     private final GraphFig graphFig;
-    private final ConsistencyFig consistencyFig;
 
     @Inject
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
                              @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
-                             final NodeSerialization nodeSerialization, final GraphFig graphFig,
-                             final AsyncProcessorFactory asyncProcessorFactory, final MergedEdgeReader mergedEdgeReader,
-                             final ConsistencyFig consistencyFig,
-                             @Assisted final ApplicationScope scope
-                             ) {
-
+                             final NodeSerialization nodeSerialization, final GraphFig graphFig, final MergedEdgeReader mergedEdgeReader,
+                             @Assisted final ApplicationScope scope, final EdgeWriteCompact edgeWriteCompact,
+                             final EdgeDeleteListener edgeDeleteListener, final NodeDeleteListener nodeDeleteListener ) {
 
 
         ValidationUtils.validateApplicationScope( scope );
@@ -108,9 +112,7 @@ public class GraphManagerImpl implements GraphManager {
         Preconditions.checkNotNull( commitLogSerialization, "commitLogSerialization must not be null" );
         Preconditions.checkNotNull( nodeSerialization, "nodeSerialization must not be null" );
         Preconditions.checkNotNull( graphFig, "consistencyFig must not be null" );
-        Preconditions.checkNotNull( asyncProcessorFactory, "asyncProcessorFactory must not be null" );
         Preconditions.checkNotNull( scope, "scope must not be null" );
-        Preconditions.checkNotNull( consistencyFig, "consistencyFig must not be null" );
 
         this.scope = scope;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
@@ -118,14 +120,14 @@ public class GraphManagerImpl implements GraphManager {
         this.commitLogSerialization = commitLogSerialization;
         this.nodeSerialization = nodeSerialization;
         this.graphFig = graphFig;
-        this.consistencyFig = consistencyFig;
+        this.edgeWriteCompact = edgeWriteCompact;
+        this.edgeDeleteListener = edgeDeleteListener;
+        this.nodeDeleteListener = nodeDeleteListener;
 
+        this.edgeWriteSubcriber = MetricSubscriber.INSTANCE;
+        this.edgeDeleteSubcriber = MetricSubscriber.INSTANCE;
+        this.nodeDelete = MetricSubscriber.INSTANCE;
 
-        this.edgeDeleteAsyncProcessor = asyncProcessorFactory.getProcessor( EdgeDeleteEvent.class );
-
-        this.nodeDeleteAsyncProcessor = asyncProcessorFactory.getProcessor( NodeDeleteEvent.class );
-
-        this.edgeWriteAsyncProcessor = asyncProcessorFactory.getProcessor( EdgeWriteEvent.class );
     }
 
 
@@ -149,9 +151,6 @@ public class GraphManagerImpl implements GraphManager {
 
                         mutation.mergeShallow( edgeMutation );
 
-                        final AsynchronousMessage<EdgeWriteEvent> event = edgeWriteAsyncProcessor
-                                .setVerification( new EdgeWriteEvent( scope, timestamp, edge ), getTimeout() );
-
 
                         try {
                             LOG.debug( "Writing edge {} to metadata and commit log", edge );
@@ -161,8 +160,9 @@ public class GraphManagerImpl implements GraphManager {
                             throw new RuntimeException( "Unable to connect to cassandra", e );
                         }
 
-                        edgeWriteAsyncProcessor.start( event );
 
+                        //subscribe and execute the action
+                        HystrixObservable.async( edgeWriteCompact.compact( scope, edge, timestamp )).subscribe( edgeWriteSubcriber, Schedulers.io() );
 
                         return edge;
                     }
@@ -188,9 +188,6 @@ public class GraphManagerImpl implements GraphManager {
 
                         final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge, timestamp );
 
-                        final AsynchronousMessage<EdgeDeleteEvent> event = edgeDeleteAsyncProcessor
-                                .setVerification( new EdgeDeleteEvent( scope, timestamp, edge ), getTimeout() );
-
 
                         try {
                             LOG.debug( "Marking edge {} as deleted to commit log", edge );
@@ -200,7 +197,8 @@ public class GraphManagerImpl implements GraphManager {
                             throw new RuntimeException( "Unable to connect to cassandra", e );
                         }
 
-                        edgeDeleteAsyncProcessor.start( event );
+
+                        HystrixObservable.async( edgeDeleteListener.receive( scope, markedEdge, timestamp )).subscribe( edgeWriteSubcriber, Schedulers.io() );
 
 
                         return edge;
@@ -219,10 +217,10 @@ public class GraphManagerImpl implements GraphManager {
                         //mark the node as deleted
 
 
+                        final UUID eventTimestamp = UUIDGenerator.newTimeUUID();
+
                         final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
 
-                        final AsynchronousMessage<NodeDeleteEvent> event = nodeDeleteAsyncProcessor
-                                .setVerification( new NodeDeleteEvent( scope, UUIDGenerator.newTimeUUID(), timestamp, node ), getTimeout() );
 
 
                         try {
@@ -233,7 +231,7 @@ public class GraphManagerImpl implements GraphManager {
                             throw new RuntimeException( "Unable to connect to cassandra", e );
                         }
 
-                        nodeDeleteAsyncProcessor.start( event );
+                        HystrixObservable.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribe( nodeDelete,  Schedulers.io() );
 
                         return id;
                     }
@@ -334,12 +332,6 @@ public class GraphManagerImpl implements GraphManager {
     }
 
 
-    /**
-     * Get our timeout for write org.apache.usergrid.persistence.core.consistency
-     */
-    private long getTimeout() {
-        return consistencyFig.getRepairTimeout() * 2;
-    }
 
 
     /**
@@ -417,6 +409,68 @@ public class GraphManagerImpl implements GraphManager {
 
 
             return true;
+        }
+    }
+
+    /**
+     * Used for testing and callback hooks.  TODO: Refactor
+     */
+
+    /**
+     * Set the subcription for the edge write
+     * @param edgeWriteSubcriber
+     */
+    public void setEdgeWriteSubcriber( final Observer<Integer> edgeWriteSubcriber ) {
+        Preconditions.checkNotNull( edgeWriteSubcriber, "Subscriber cannot be null" );
+        this.edgeWriteSubcriber = edgeWriteSubcriber;
+    }
+
+
+    /**
+     * Set the subscription for the edge delete
+     * @param edgeDeleteSubcriber
+     */
+    public void setEdgeDeleteSubcriber( final Observer<Integer> edgeDeleteSubcriber ) {
+        Preconditions.checkNotNull( edgeDeleteSubcriber, "Subscriber cannot be null" );
+        this.edgeDeleteSubcriber = edgeDeleteSubcriber;
+    }
+
+
+    /**
+     * Set the subscription for the node delete
+     * @param nodeDelete
+     */
+    public void setNodeDelete( final Observer<Integer> nodeDelete ) {
+        Preconditions.checkNotNull( nodeDelete, "Subscriber cannot be null" );
+        this.nodeDelete = nodeDelete;
+    }
+
+
+    /**
+     * Simple subscriber that can be used to gather metrics.  Needs to be refactored to use codehale metrics
+     */
+    private static class MetricSubscriber extends Subscriber<Integer> {
+
+
+        private static final MetricSubscriber INSTANCE = new MetricSubscriber();
+
+        private final Logger logger = LoggerFactory.getLogger( MetricSubscriber.class );
+
+        @Override
+        public void onCompleted() {
+             logger.debug( "Event completed" );
+        }
+
+
+        @Override
+        public void onError( final Throwable e ) {
+            logger.error( "Failed to execute event", e );
+        }
+
+
+        @Override
+        public void onNext( final Integer integer ) {
+            logger.debug( "Next received {}", integer );
         }
     }
 }

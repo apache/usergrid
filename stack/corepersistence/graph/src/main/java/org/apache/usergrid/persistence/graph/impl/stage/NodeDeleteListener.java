@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl;
+package org.apache.usergrid.persistence.graph.impl.stage;
 
 
 import java.util.HashSet;
@@ -28,9 +28,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
-import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -38,7 +35,8 @@ import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
@@ -60,7 +58,7 @@ import rx.schedulers.Schedulers;
 /**
  * Construct the asynchronous node delete from the q
  */
-public class NodeDeleteListener implements MessageListener<NodeDeleteEvent, Integer> {
+public class NodeDeleteListener  {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( NodeDeleteListener.class );
@@ -82,7 +80,6 @@ public class NodeDeleteListener implements MessageListener<NodeDeleteEvent, Inte
     public NodeDeleteListener( final NodeSerialization nodeSerialization,
                                final EdgeMetadataSerialization edgeMetadataSerialization,
                                final EdgeMetaRepair edgeMetaRepair, final GraphFig graphFig,
-                               final AsyncProcessorFactory asyncProcessorFactory,
                                @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
                                @StorageEdgeSerialization final EdgeSerialization storageSerialization,
                                final MergedEdgeReader mergedEdgeReader, final Keyspace keyspace ) {
@@ -96,24 +93,21 @@ public class NodeDeleteListener implements MessageListener<NodeDeleteEvent, Inte
         this.edgeMetaRepair = edgeMetaRepair;
         this.graphFig = graphFig;
         this.keyspace = keyspace;
-
-        asyncProcessorFactory.getProcessor( NodeDeleteEvent.class ).addListener( this );
     }
 
 
     /**
      * Removes this node from the graph.
      *
-     * @param nodeDeleteEvent The edge event that was fired.
+     * @param scope The scope of the application
+     * @param node The node that was deleted
+     * @param timestamp The timestamp of the event
      *
      * @return An observable that emits the total number of edges that have been removed with this node both as the
      *         target and source
      */
-    @Override
-    public Observable<Integer> receive( final NodeDeleteEvent nodeDeleteEvent ) {
 
-        final Id node = nodeDeleteEvent.getData();
-        final ApplicationScope scope = nodeDeleteEvent.getApplicationScope();
+    public Observable<Integer> receive( final ApplicationScope scope, final Id node, final UUID timestamp ) {
 
 
         return Observable.from( node )
@@ -135,7 +129,7 @@ public class NodeDeleteListener implements MessageListener<NodeDeleteEvent, Inte
 
 
                         //do all the delete, then when done, delete the node
-                        return doDeletes( node, scope, maxVersion.get(), nodeDeleteEvent.getTimestamp() ).count()
+                        return doDeletes( node, scope, maxVersion.get(), timestamp ).count()
                                 //if nothing is ever emitted, emit 0 so that we know no operations took place.
                                 // Finally remove
                                 // the
