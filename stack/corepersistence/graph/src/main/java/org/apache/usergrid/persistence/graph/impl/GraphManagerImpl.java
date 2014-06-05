@@ -162,7 +162,7 @@ public class GraphManagerImpl implements GraphManager {
 
 
                         //subscribe and execute the action
-                        HystrixObservable.async( edgeWriteCompact.compact( scope, edge, timestamp )).subscribe( edgeWriteSubcriber, Schedulers.io() );
+                        HystrixObservable.async( edgeWriteCompact.compact( scope, edge, timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeWriteSubcriber );
 
                         return edge;
                     }
@@ -198,7 +198,7 @@ public class GraphManagerImpl implements GraphManager {
                         }
 
 
-                        HystrixObservable.async( edgeDeleteListener.receive( scope, markedEdge, timestamp )).subscribe( edgeWriteSubcriber, Schedulers.io() );
+                        HystrixObservable.async( edgeDeleteListener.receive( scope, markedEdge, timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
 
 
                         return edge;
@@ -231,7 +231,7 @@ public class GraphManagerImpl implements GraphManager {
                             throw new RuntimeException( "Unable to connect to cassandra", e );
                         }
 
-                        HystrixObservable.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribe( nodeDelete,  Schedulers.io() );
+                        HystrixObservable.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn( Schedulers.io() ).subscribe( nodeDelete );
 
                         return id;
                     }
