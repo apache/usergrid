@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.impl.GraphManagerImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteListener;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteListenerImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepairImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
@@ -37,6 +38,7 @@ import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepairImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompact;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompactImpl;
 import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListener;
+import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListenerImpl;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
@@ -124,8 +126,8 @@ public class GraphModule extends AbstractModule {
         /**
          * Add our listeners
          */
-        bind(NodeDeleteListener.class).asEagerSingleton();
-        bind(EdgeDeleteListener.class).asEagerSingleton();
+        bind( NodeDeleteListener.class ).to( NodeDeleteListenerImpl.class );
+        bind( EdgeDeleteListener.class).to( EdgeDeleteListenerImpl.class );
 
 
 

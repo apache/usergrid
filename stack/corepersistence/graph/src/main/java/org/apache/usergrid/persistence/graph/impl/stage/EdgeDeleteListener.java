@@ -23,68 +23,24 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import rx.Observable;
-import rx.functions.Func1;
-import rx.functions.Func2;
 
 
 /**
- * Construct the asynchronous delete operation from the listener
+ * Listener to execute after an edge delete
  */
-@Singleton
-public class EdgeDeleteListener  {
+public interface EdgeDeleteListener {
+
+    /**
+     * Perform all cleanup.  Returns the number of edge types and subtypes returned.
+     *
+     * @param scope
+     * @param edge
+     * @param eventTimestamp
+     * @return
+     */
+    public Observable<Integer> receive( final ApplicationScope scope, final MarkedEdge edge, final UUID eventTimestamp );
 
 
-    private final EdgeDeleteRepair edgeDeleteRepair;
-    private final EdgeMetaRepair edgeMetaRepair;
-
-
-    @Inject
-    public EdgeDeleteListener(
-                               final EdgeDeleteRepair edgeDeleteRepair, final EdgeMetaRepair edgeMetaRepair ) {
-
-        this.edgeDeleteRepair = edgeDeleteRepair;
-        this.edgeMetaRepair = edgeMetaRepair;
-
-    }
-
-
-    public Observable<Integer> receive( final ApplicationScope scope, final MarkedEdge edge,
-                                        final UUID eventTimestamp ) {
-
-        final long maxTimestamp = edge.getTimestamp();
-
-
-
-
-        return edgeDeleteRepair.repair( scope, edge, eventTimestamp )
-                               .flatMap( new Func1<MarkedEdge, Observable<Integer>>() {
-                                   @Override
-                                   public Observable<Integer> call( final MarkedEdge markedEdge ) {
-
-                                       Observable<Integer> sourceDelete = edgeMetaRepair
-                                               .repairSources( scope, edge.getSourceNode(), edge.getType(),
-                                                       maxTimestamp );
-
-                                       Observable<Integer> targetDelete = edgeMetaRepair
-                                               .repairTargets( scope, edge.getTargetNode(), edge.getType(),
-                                                       maxTimestamp );
-
-                                       return Observable.zip( sourceDelete, targetDelete,
-                                               new Func2<Integer, Integer, Integer>() {
-                                                   @Override
-                                                   public Integer call( final Integer sourceCount,
-                                                                        final Integer targetCount ) {
-                                                       return sourceCount + targetCount;
-                                                   }
-                                               } );
-                                   }
-                               } );
-    }
 }
