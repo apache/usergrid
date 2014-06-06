@@ -1433,7 +1433,7 @@ public class EntityManagerImpl implements EntityManager {
         long timestamp = getTimestampInMicros( timestampUuid );
 
         // get all connections and disconnect them
-        getRelationManager( ref( entityId ) ).batchDisconnect( m, timestampUuid );
+        getRelationManager( ref( type, entityId ) ).batchDisconnect( m, timestampUuid );
 
         // delete all core properties and any dynamic property that's ever been
         // dictionary for this entity
@@ -1559,7 +1559,8 @@ public class EntityManagerImpl implements EntityManager {
             query.setLimit( 1 );
             query.setResultsLevel( REFS );
 
-            Results r = getRelationManager( ref( applicationId ) ).searchCollection( "users", query );
+            Results r = getRelationManager( 
+                ref( Application.ENTITY_TYPE, applicationId ) ).searchCollection( "users", query );
             if ( r != null && r.getRef() != null ) {
                 return r.getRef();
             }
@@ -1808,6 +1809,12 @@ public class EntityManagerImpl implements EntityManager {
             return entity.getType();
         }
         return getEntityType( entity.getUuid() );
+    }
+
+
+    @Override
+    public Entity get(UUID id) throws Exception {
+        return getEntity( id, null );
     }
 
 

@@ -108,6 +108,7 @@ public class SetupImpl implements Setup {
      *
      * @throws Exception the exception
      */
+    @Override
     public void setupApplicationKeyspace( 
             final UUID applicationId, String applicationName ) throws Exception {
 

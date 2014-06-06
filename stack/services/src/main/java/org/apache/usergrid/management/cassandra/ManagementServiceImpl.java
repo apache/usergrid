@@ -645,12 +645,12 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         properties.setProperty( "name", buildAppName( application.getName(), organization ) );
-        Entity app = em.create( applicationId, APPLICATION_INFO, application.getProperties() );
+        Entity appInfo = em.create( applicationId, APPLICATION_INFO, application.getProperties() );
 
-        writeUserToken( smf.getManagementAppId(), app, encryptionService
+        writeUserToken( smf.getManagementAppId(), appInfo, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null, applicationId ) );
 
-        addApplicationToOrganization( organizationId, applicationId );
+        addApplicationToOrganization( organizationId, applicationId, appInfo );
         return applicationId;
     }
 
@@ -1030,9 +1030,9 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    public User getUserEntityByIdentifier( UUID applicationId, Identifier indentifier ) throws Exception {
+    public User getUserEntityByIdentifier( UUID applicationId, Identifier identifier ) throws Exception {
         EntityManager em = emf.getEntityManager( applicationId );
-        return em.get( em.getUserByIdentifier( indentifier ), User.class );
+        return em.get( em.getUserByIdentifier( identifier ), User.class );
     }
 
 
@@ -1083,35 +1083,36 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    public User findUserEntity( UUID applicationId, String identifier ) {
+    public User findUserEntity( UUID applicationId, String identifierString ) {
 
         User user = null;
-        if ( UUIDUtils.isUUID( identifier ) ) {
+        if ( UUIDUtils.isUUID( identifierString ) ) {
             try {
                 Entity entity = getUserEntityByIdentifier( applicationId,
-                        Identifier.fromUUID( UUID.fromString( identifier ) ) );
+                        Identifier.fromUUID( UUID.fromString( identifierString ) ) );
                 if ( entity != null ) {
                     user = ( User ) entity.toTypedEntity();
-                    logger.info( "Found user {} as a UUID", identifier );
+                    logger.info( "Found user {} as a UUID", identifierString );
                 }
             }
             catch ( Exception e ) {
-                logger.warn( "Unable to get user " + identifier + " as a UUID, trying username..." );
+                logger.warn( "Unable to get user " + identifierString + " as a UUID, trying username..." );
             }
             return user;
         }
         // now we are either an email or a username. Let Indentifier handle the parsing of such.
-        Identifier id = Identifier.from( identifier );
+        Identifier identifier = Identifier.from( identifierString );
 
         try {
-            Entity entity = getUserEntityByIdentifier( applicationId, id );
+            Entity entity = getUserEntityByIdentifier( applicationId, identifier );
             if ( entity != null ) {
                 user = ( User ) entity.toTypedEntity();
-                logger.info( "Found user {} as an {}", identifier, id.getType() );
+                logger.info( "Found user {} as an {}", identifierString, identifier.getType() );
             }
         }
         catch ( Exception e ) {
-            logger.warn( "Unable to get user {} as a {}", identifier, id.getType() );
+            logger.warn( "Unable to get user {} as a {}", identifierString, identifier.getType());
+            logger.warn( "Exception", e);
         }
         if ( user != null ) {
             return user;
@@ -1615,12 +1616,13 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         properties.put( "name", buildAppName( applicationName, organizationInfo ) );
-        Entity applicationEntity = em.create( applicationId, APPLICATION_INFO, properties );
+        properties.put( "appUuid", applicationId );
+        Entity appInfo = em.create( applicationId, APPLICATION_INFO, properties );
 
-        writeUserToken( smf.getManagementAppId(), applicationEntity, encryptionService
+        writeUserToken( smf.getManagementAppId(), appInfo, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null,
                         smf.getManagementAppId() ) );
-        addApplicationToOrganization( organizationId, applicationId );
+        addApplicationToOrganization( organizationId, applicationId, appInfo );
 
         UserInfo user = null;
         // if we call this method before the full stack is initialized
@@ -1631,11 +1633,11 @@ public class ManagementServiceImpl implements ManagementService {
         catch ( UnavailableSecurityManagerException e ) {
         }
         if ( ( user != null ) && user.isAdminUser() ) {
-            postOrganizationActivity( organizationId, user, "create", applicationEntity, "Application", applicationName,
+            postOrganizationActivity( organizationId, user, "create", appInfo, "Application", applicationName,
                     "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
                             + ")</a> created a new application named " + applicationName, null );
         }
-        return new ApplicationInfo( applicationId, applicationEntity.getName() );
+        return new ApplicationInfo( applicationId, appInfo.getName() );
     }
 
 
@@ -1711,15 +1713,14 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public UUID addApplicationToOrganization( UUID organizationId, UUID applicationId ) throws Exception {
+    public UUID addApplicationToOrganization( UUID organizationId, UUID applicationId, Entity appInfo ) throws Exception {
 
         if ( ( organizationId == null ) || ( applicationId == null ) ) {
             return null;
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        em.createConnection( new SimpleEntityRef( "group", organizationId ), "owns",
-                new SimpleEntityRef( APPLICATION_INFO, applicationId ) );
+        em.createConnection( new SimpleEntityRef( "group", organizationId ), "owns", appInfo );
 
         return applicationId;
     }
