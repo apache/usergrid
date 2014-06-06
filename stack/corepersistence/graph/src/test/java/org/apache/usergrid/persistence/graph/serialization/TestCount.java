@@ -80,7 +80,7 @@ public class TestCount {
 
                        return Observable.from( integers );
                    }
-               } ).count().defaultIfEmpty( 0 ).toBlockingObservable().last();
+               } ).count().defaultIfEmpty( 0 ).toBlocking().last();
 
 
         assertEquals("Count was correct", sizePerObservable*2*100, returned);

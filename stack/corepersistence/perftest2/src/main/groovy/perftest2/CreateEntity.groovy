@@ -75,7 +75,7 @@ public class CreateEntity {
         entity.setField( new LongField("timestamp", new Date().getTime()))
 
         // write and index entity
-        ecm.write( entity ).toBlockingObservable().last()
+        ecm.write( entity ).toBlocking().last()
         eci.index( entity )
 
         eci.refresh()
@@ -84,7 +84,7 @@ public class CreateEntity {
         eci = ecif.createCollectionIndex( scope )
 
         // get back entity
-        def got = ecm.load( entity.getId() ).toBlockingObservable().last()
+        def got = ecm.load( entity.getId() ).toBlocking().last()
 
         def returnedName = got.getField("name").getValue()
         def timestamp = got.getField("timestamp").getValue()

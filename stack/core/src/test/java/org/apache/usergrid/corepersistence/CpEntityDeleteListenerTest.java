@@ -85,7 +85,7 @@ public class CpEntityDeleteListenerTest {
         when(mvccEntitySerializationStrategy.loadHistory(scope, entityId, id, serializationFig.getHistorySize())).thenReturn(entityList.iterator());
 
         Observable<EntityVersion> observable = listener.receive(entityEvent);
-        EntityVersion entityEventReturned = observable.toBlockingObservable().last();
+        EntityVersion entityEventReturned = observable.toBlocking().last();
         assertEquals(entity.getVersion(), entityEventReturned.getVersion());
     }
 

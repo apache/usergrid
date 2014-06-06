@@ -120,7 +120,7 @@ public class GraphManagerStressTest {
 
                                 final Iterable<Edge> edges = manager.loadEdgesFromSource(
                                         new SimpleSearchByEdgeType( sourceId, "test", timestamp, null ) )
-                                                                    .toBlockingObservable().toIterable();
+                                                                    .toBlocking().toIterable();
 
                                 for ( Edge edge : edges ) {
                                     log.debug( "Firing on next for edge {}", edge );
@@ -245,7 +245,7 @@ public class GraphManagerStressTest {
 
             Edge edge = generator.newEdge();
 
-            Edge returned = manager.writeEdge( edge ).toBlockingObservable().last();
+            Edge returned = manager.writeEdge( edge ).toBlocking().last();
 
 
             assertNotNull( "Returned has a version", returned.getTimestamp() );

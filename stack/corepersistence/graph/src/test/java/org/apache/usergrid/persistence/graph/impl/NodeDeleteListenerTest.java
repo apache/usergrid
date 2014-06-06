@@ -127,7 +127,7 @@ public class NodeDeleteListenerTest {
         Edge edge = createEdge( "source", "test", "target" );
 
         //write the edge
-        Edge last = em.writeEdge( edge ).toBlockingObservable().last();
+        Edge last = em.writeEdge( edge ).toBlocking().last();
 
         assertEquals( edge, last );
 
@@ -137,7 +137,7 @@ public class NodeDeleteListenerTest {
         UUID eventTime = UUIDGenerator.newTimeUUID();
 
 
-        int count = deleteListener.receive( scope, sourceNode, eventTime ).toBlockingObservable().last();
+        int count = deleteListener.receive( scope, sourceNode, eventTime ).toBlocking().last();
 
         assertEquals( "Mark was not set, no delete should be executed", 0, count );
 
@@ -157,7 +157,7 @@ public class NodeDeleteListenerTest {
         Edge edge = createEdge( "source", "test", "target" );
 
         //write the edge
-        Edge last = em.writeEdge( edge ).toBlockingObservable().last();
+        Edge last = em.writeEdge( edge ).toBlocking().last();
 
 
         assertEquals( edge, last );
@@ -173,7 +173,7 @@ public class NodeDeleteListenerTest {
 
         nodeSerialization.mark( scope, sourceNode, timestamp ).execute();
 
-        int count = deleteListener.receive( scope, sourceNode, deleteEventTimestamp ).toBlockingObservable().last();
+        int count = deleteListener.receive( scope, sourceNode, deleteEventTimestamp ).toBlocking().last();
 
         assertEquals( 1, count );
 
@@ -243,7 +243,7 @@ public class NodeDeleteListenerTest {
         Edge edge = createEdge( "source", "test", "target" );
 
         //write the edge
-        Edge last = em.writeEdge( edge ).toBlockingObservable().last();
+        Edge last = em.writeEdge( edge ).toBlocking().last();
 
 
         assertEquals( edge, last );
@@ -258,7 +258,7 @@ public class NodeDeleteListenerTest {
 
         nodeSerialization.mark( scope, targetNode, deleteBefore ).execute();
 
-        int count = deleteListener.receive( scope, targetNode, UUIDGenerator.newTimeUUID() ).toBlockingObservable().last();
+        int count = deleteListener.receive( scope, targetNode, UUIDGenerator.newTimeUUID() ).toBlocking().last();
 
         assertEquals( 1, count );
 
@@ -351,7 +351,7 @@ public class NodeDeleteListenerTest {
             }
 
             //write the edge
-            Edge last = em.writeEdge( edge ).toBlockingObservable().last();
+            Edge last = em.writeEdge( edge ).toBlocking().last();
 
 
             assertEquals( edge, last );
@@ -368,7 +368,7 @@ public class NodeDeleteListenerTest {
 
         nodeSerialization.mark( scope, toDelete, deleteVersion ).execute();
 
-        int count = deleteListener.receive( scope, toDelete, UUIDGenerator.newTimeUUID() ).toBlockingObservable().last();
+        int count = deleteListener.receive( scope, toDelete, UUIDGenerator.newTimeUUID() ).toBlocking().last();
 
         //TODO T.N. THIS SHOULD WORK!!!!  It fails intermittently with RX 0.17.1 with too many scheduler threads (which was wrong), try this again after the next release
         assertEquals( edgeCount, count );

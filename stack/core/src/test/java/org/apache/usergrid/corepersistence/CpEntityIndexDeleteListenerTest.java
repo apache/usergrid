@@ -96,7 +96,7 @@ public class CpEntityIndexDeleteListenerTest {
 
         MvccEntityDeleteEvent event = new MvccEntityDeleteEvent(scope,uuid,mvccEntity);
         Observable<EntityVersion> o = esEntityIndexDeleteListener.receive(event);
-        EntityVersion testEntity = o.toBlockingObservable().last();
+        EntityVersion testEntity = o.toBlocking().last();
         assertEquals(testEntity.getId(),mvccEntity.getId());
         verify(entityIndex).deindex(entity.getId(),entity.getVersion());
     }

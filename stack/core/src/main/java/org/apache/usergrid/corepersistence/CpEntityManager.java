@@ -318,7 +318,7 @@ public class CpEntityManager implements EntityManager {
             } );
         }
 
-        org.apache.usergrid.persistence.model.entity.Entity cpEntity = ecm.load( id ).toBlockingObservable().last();
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity = ecm.load( id ).toBlocking().last();
 
         if ( cpEntity == null ) {
             logger.debug( "   entity null" );
@@ -378,7 +378,7 @@ public class CpEntityManager implements EntityManager {
             } );
         }
 
-        org.apache.usergrid.persistence.model.entity.Entity cpEntity = ecm.load( id ).toBlockingObservable().last();
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity = ecm.load( id ).toBlocking().last();
 
         if ( cpEntity == null ) {
             logger.debug( "   entity null" );
@@ -437,12 +437,12 @@ public class CpEntityManager implements EntityManager {
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
-                ecm.load( entityId ).toBlockingObservable().last();
+                ecm.load( entityId ).toBlocking().last();
 
         cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
 
         try {
-            cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+            cpEntity = ecm.write( cpEntity ).toBlocking().last();
         }
         catch ( WriteUniqueVerifyException wuve ) {
             handleWriteUniqueVerifyException( entity, wuve );
@@ -497,7 +497,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
-        deleteAsync( entityRef ).toBlockingObservable().lastOrDefault(null);
+        deleteAsync( entityRef ).toBlocking().lastOrDefault(null);
     }
 
 
@@ -510,7 +510,7 @@ public class CpEntityManager implements EntityManager {
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
-        org.apache.usergrid.persistence.model.entity.Entity entity = ecm.load( entityId ).toBlockingObservable().last();
+        org.apache.usergrid.persistence.model.entity.Entity entity = ecm.load( entityId ).toBlocking().last();
 
         if ( entity != null ) {
 
@@ -857,11 +857,11 @@ public class CpEntityManager implements EntityManager {
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
-                ecm.load( entityId ).toBlockingObservable().last();
+                ecm.load( entityId ).toBlocking().last();
 
         cpEntity.removeField( propertyName );
 
-        cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+        cpEntity = ecm.write( cpEntity ).toBlocking().last();
         ei.index( cpEntity );
 
         // update entity in every collection and connection scope in which it is indexed
@@ -2185,7 +2185,7 @@ public class CpEntityManager implements EntityManager {
         EntityIndex ei = managerCache.getEntityIndex( defaultIndexScope );
 
         try {
-            cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+            cpEntity = ecm.write( cpEntity ).toBlocking().last();
         }
         catch ( WriteUniqueVerifyException wuve ) {
             handleWriteUniqueVerifyException( entity, wuve );

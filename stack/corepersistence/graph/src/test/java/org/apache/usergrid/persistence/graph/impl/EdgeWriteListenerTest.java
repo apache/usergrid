@@ -139,7 +139,7 @@ public class EdgeWriteListenerTest {
 
          //now perform the listener execution
 
-        int returned =  edgeWriteCompact.compact( scope, edgeV3, UUIDGenerator.newTimeUUID() ).toBlockingObservable().single();
+        int returned =  edgeWriteCompact.compact( scope, edgeV3, UUIDGenerator.newTimeUUID() ).toBlocking().single();
 
         assertEquals( 3, returned );
 
@@ -268,7 +268,7 @@ public class EdgeWriteListenerTest {
         commitLogEdgeSerialization.writeEdge( scope, edgeV3,  UUIDGenerator.newTimeUUID() ).execute();
 
 
-        int returned =  edgeWriteCompact.compact( scope, edgeV2, UUIDGenerator.newTimeUUID() ).toBlockingObservable().single();
+        int returned =  edgeWriteCompact.compact( scope, edgeV2, UUIDGenerator.newTimeUUID() ).toBlocking().single();
 
         assertEquals( 2, returned );
 
@@ -435,7 +435,7 @@ public class EdgeWriteListenerTest {
 
         try {
 
-            compact.compact( scope, edgeV1, UUIDGenerator.newTimeUUID() ).toBlockingObservable().single();
+            compact.compact( scope, edgeV1, UUIDGenerator.newTimeUUID() ).toBlocking().single();
             fail( "I should have thrown an exception" );
         }
         catch ( RuntimeException re ) {

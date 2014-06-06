@@ -155,7 +155,7 @@ public class EdgeDeleteListenerTest {
 
 
         //now perform the listener execution
-        edgeDeleteListener.receive(scope,  edgeV3, UUIDGenerator.newTimeUUID() ).toBlockingObservable().single();
+        edgeDeleteListener.receive(scope,  edgeV3, UUIDGenerator.newTimeUUID() ).toBlocking().single();
 
         //now validate there's nothing in the commit log.
         long now = System.currentTimeMillis();
@@ -298,13 +298,13 @@ public class EdgeDeleteListenerTest {
         //now perform the listener execution, should only clean up to edge v2
 
                 edgeDeleteListener.receive( scope,  edgeV2, UUIDGenerator.newTimeUUID() )
-                                  .toBlockingObservable().single();
+                                  .toBlocking().single();
 
        edgeDeleteListener.receive(  scope,edgeV1,  UUIDGenerator.newTimeUUID() )
-                                     .toBlockingObservable().single();
+                                     .toBlocking().single();
 
         edgeDeleteListener.receive( scope, edgeV3, UUIDGenerator.newTimeUUID() )
-                                     .toBlockingObservable().single();
+                                     .toBlocking().single();
 
 
 
@@ -493,7 +493,7 @@ public class EdgeDeleteListenerTest {
 
 
         try {
-            compact.compact( scope,  edgeV1, UUIDGenerator.newTimeUUID()).toBlockingObservable().last();
+            compact.compact( scope,  edgeV1, UUIDGenerator.newTimeUUID()).toBlocking().last();
             fail( "I should have thrown an exception" );
         }
         catch ( RuntimeException re ) {
