@@ -264,7 +264,8 @@ public class CpRelationManager implements RelationManager {
 
         Map<EntityRef, Set<String>> containerEntities = getContainingCollections();
 
-        Map<String, Map<UUID, Set<String>>> owners = new LinkedHashMap<String, Map<UUID, Set<String>>>();
+        Map<String, Map<UUID, Set<String>>> owners = 
+                new LinkedHashMap<String, Map<UUID, Set<String>>>();
 
         for ( EntityRef owner : containerEntities.keySet() ) {
             Set<String> collections = containerEntities.get( owner );
@@ -408,7 +409,8 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Set<String> getCollections() throws Exception {
 
-        Map<String, CollectionInfo> collections = getDefaultSchema().getCollections( headEntity.getType() );
+        Map<String, CollectionInfo> collections = 
+                getDefaultSchema().getCollections( headEntity.getType() );
         if ( collections == null ) {
             return null;
         }
@@ -1301,7 +1303,8 @@ public class CpRelationManager implements RelationManager {
 
         Entity entity = getHeadEntity();
 
-        elementValue = getDefaultSchema().validateEntitySetValue( entity.getType(), setName, elementValue );
+        elementValue = getDefaultSchema().validateEntitySetValue( 
+                entity.getType(), setName, elementValue );
 
         IndexUpdate indexUpdate = batchStartIndexUpdate( batch, entity, setName, elementValue, 
                 timestampUuid, true, true, removeFromSet, false );
@@ -1315,7 +1318,8 @@ public class CpRelationManager implements RelationManager {
             for ( EntityRef containerEntity : containerEntities.keySet() ) {
                 if ( containerEntity.getType().equals( TYPE_APPLICATION ) && Schema
                         .isAssociatedEntityType( entity.getType() ) ) {
-                    logger.debug( "Extended properties for {} not indexed by application", entity.getType() );
+                    logger.debug( "Extended properties for {} not indexed by application", 
+                            entity.getType() );
                     continue;
                 }
                 Set<String> collectionNames = containerEntities.get( containerEntity );
@@ -1325,8 +1329,8 @@ public class CpRelationManager implements RelationManager {
 
                     for ( CollectionInfo collection : collections ) {
                         if ( collectionNames.contains( collection.getName() ) ) {
-
-                            batchUpdateCollectionIndex( indexUpdate, containerEntity, collection.getName() );
+                            batchUpdateCollectionIndex( 
+                                    indexUpdate, containerEntity, collection.getName() );
                         }
                     }
                 }
@@ -1340,7 +1344,8 @@ public class CpRelationManager implements RelationManager {
      * Batch update collection index.
      *
      * @param indexUpdate The update to apply
-     * @param owner The entity that is the owner context of this entity update.  Can either be an application, or
+     * @param owner The entity that is the owner context of this entity update.  
+     * Can either be an application, or
      * another entity
      * @param collectionName the collection name
      *
@@ -1830,51 +1835,55 @@ public class CpRelationManager implements RelationManager {
 
 
     @Metered(group = "core", name = "RelationManager_batchAddConnectionIndexEntries")
-    public Mutator<ByteBuffer> batchAddConnectionIndexEntries( IndexUpdate indexUpdate, IndexUpdate.IndexEntry entry,
-                                                               ConnectionRefImpl connection, UUID[] index_keys ) {
+    public Mutator<ByteBuffer> batchAddConnectionIndexEntries( IndexUpdate indexUpdate, 
+        IndexUpdate.IndexEntry entry, ConnectionRefImpl conn, UUID[] index_keys ) {
 
         // entity_id,prop_name
-        Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
-                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL],
+        Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], 
+                INDEX_CONNECTIONS, entry.getPath(),
+                indexBucketLocator.getBucket( applicationId, 
+                        IndexBucketLocator.IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL],
                         entry.getPath() ) );
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key =
-                key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
-                                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], entry.getPath() ) );
+            key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], entry.getPath() ) );
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key =
-                key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
-                                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], entry.getPath() ) );
+            key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], entry.getPath() ) );
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key =
-                key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
-                                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], entry.getPath() ) );
+            key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], 
+                INDEX_CONNECTIONS, entry.getPath(),
+                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], entry.getPath() ) );
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, property_index_key,
-                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectionType(),
-                        connection.getConnectedEntityType() ), connection.getUuid(), indexUpdate.getTimestamp() );
+            entry.getIndexComposite( conn.getConnectedEntityId(), conn.getConnectionType(),
+                conn.getConnectedEntityType() ), conn.getUuid(), indexUpdate.getTimestamp() );
 
         // composite(property_value,connected_entity_id,connection_type,entry_timestamp)
         addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, entity_type_prop_index_key,
-                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectionType() ),
-                connection.getUuid(), indexUpdate.getTimestamp() );
+            entry.getIndexComposite( conn.getConnectedEntityId(), conn.getConnectionType() ),
+            conn.getUuid(), indexUpdate.getTimestamp() );
 
         // composite(property_value,connected_entity_id,entity_type,entry_timestamp)
         addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_prop_index_key,
-                entry.getIndexComposite( connection.getConnectedEntityId(), connection.getConnectedEntityType() ),
-                connection.getUuid(), indexUpdate.getTimestamp() );
+            entry.getIndexComposite( conn.getConnectedEntityId(), conn.getConnectedEntityType() ),
+            conn.getUuid(), indexUpdate.getTimestamp() );
 
         // composite(property_value,connected_entity_id,entry_timestamp)
-        addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_and_entity_type_prop_index_key,
-                entry.getIndexComposite( connection.getConnectedEntityId() ), connection.getUuid(),
-                indexUpdate.getTimestamp() );
+        addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, 
+            connection_type_and_entity_type_prop_index_key,
+            entry.getIndexComposite( conn.getConnectedEntityId() ), conn.getUuid(),
+            indexUpdate.getTimestamp() );
 
         return indexUpdate.getBatch();
     }
@@ -1949,10 +1958,10 @@ public class CpRelationManager implements RelationManager {
 
             queryProcessor.applyCursorAndSort( slice );
 
-            GeoIterator itr =
-                    new GeoIterator( new ConnectionGeoSearch( em, indexBucketLocator, cass, connection.getIndexId() ),
-                            query.getLimit(), slice, node.getPropertyName(),
-                            new Point( node.getLattitude(), node.getLongitude() ), node.getDistance() );
+            GeoIterator itr = new GeoIterator( 
+                new ConnectionGeoSearch( em, indexBucketLocator, cass, connection.getIndexId() ),
+                query.getLimit(), slice, node.getPropertyName(),
+                new Point( node.getLattitude(), node.getLongitude() ), node.getDistance() );
 
             results.push( itr );
         }
@@ -1999,9 +2008,8 @@ public class CpRelationManager implements RelationManager {
 
             final String connectionType = connection.getConnectionType();
 
-
-            final ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser( targetType );
-
+            final ConnectionIndexSliceParser connectionParser = 
+                    new ConnectionIndexSliceParser( targetType );
 
             final Iterator<String> connectionTypes;
 
@@ -2012,12 +2020,13 @@ public class CpRelationManager implements RelationManager {
 
             //we need to iterate all connection types
             else {
-                connectionTypes = new ConnectionTypesIterator( cass, applicationId, entityIdToUse, outgoing, size );
+                connectionTypes = new ConnectionTypesIterator( 
+                        cass, applicationId, entityIdToUse, outgoing, size );
             }
 
-            IndexScanner connectionScanner =
-                    new ConnectedIndexScanner( cass, dictionaryType, applicationId, entityIdToUse, connectionTypes,
-                            start, slice.isReversed(), size, skipFirst );
+            IndexScanner connectionScanner = new ConnectedIndexScanner( 
+                cass, dictionaryType, applicationId, entityIdToUse, connectionTypes, start, 
+                slice.isReversed(), size, skipFirst );
 
             this.results.push( new SliceIterator( slice, connectionScanner, connectionParser ) );
         }
@@ -2025,8 +2034,10 @@ public class CpRelationManager implements RelationManager {
 
         @Override
         public void visit( NameIdentifierNode nameIdentifierNode ) throws Exception {
+
             //TODO T.N. USERGRID-1919 actually validate this is connected
-            EntityRef ref = em.getAlias(connection.getConnectedEntityType(),nameIdentifierNode.getName() );
+            EntityRef ref = em.getAlias(
+                    connection.getConnectedEntityType(),nameIdentifierNode.getName() );
 
             if ( ref == null ) {
                 this.results.push( new EmptyIterator() );
@@ -2037,16 +2048,17 @@ public class CpRelationManager implements RelationManager {
         }
     }
 
-    private IndexScanner searchIndex( Object indexKey, QuerySlice slice, int pageSize ) throws Exception {
+    private IndexScanner searchIndex( 
+            Object indexKey, QuerySlice slice, int pageSize ) throws Exception {
 
         DynamicComposite[] range = slice.getRange();
 
         Object keyPrefix = key( indexKey, slice.getPropertyName() );
 
-        IndexScanner scanner =
-                new IndexBucketScanner( cass, indexBucketLocator, ENTITY_INDEX, applicationId, IndexBucketLocator
-                        .IndexType.CONNECTION,
-                        keyPrefix, range[0], range[1], slice.isReversed(), pageSize, slice.hasCursor(), slice.getPropertyName() );
+        IndexScanner scanner = new IndexBucketScanner( 
+            cass, indexBucketLocator, ENTITY_INDEX, applicationId, 
+            IndexBucketLocator.IndexType.CONNECTION, keyPrefix, range[0], range[1], 
+            slice.isReversed(), pageSize, slice.hasCursor(), slice.getPropertyName() );
 
         return scanner;
     }
