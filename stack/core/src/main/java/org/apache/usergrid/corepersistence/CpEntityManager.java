@@ -222,8 +222,8 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    static String getConnectionScopeName( String connectionType ) {
-        String csn = connectionType + CONN_SUFFIX;
+    static String getConnectionScopeName( String entityType, String connectionType ) {
+        String csn = entityType + connectionType + CONN_SUFFIX;
         return csn;
     }
 
@@ -445,6 +445,16 @@ public class CpEntityManager implements EntityManager {
         EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
+
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Updating entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] {
+                    entityId.getType(), entityId.getUuid(), 
+                    collectionScope.getApplication(), 
+                    collectionScope.getOwner(),
+                    collectionScope.getName()
+            } );
+        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
                 ecm.load( entityId ).toBlockingObservable().last();

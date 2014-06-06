@@ -46,8 +46,6 @@ public class ServiceInvocationIT extends AbstractServiceIT {
         Entity user = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
         assertNotNull( user );
 
-        app.getEm().refreshIndex();
-
         app.testRequest( ServiceAction.GET, 1, "users" );
 
         app.testRequest( ServiceAction.GET, 1, "users", user.getUuid() );

@@ -403,7 +403,18 @@ public class CpRelationManager implements RelationManager {
     @Override
     public boolean isConnectionMember(String connectionName, EntityRef entity) throws Exception {
 
-        return isCollectionMember(connectionName, entity);
+        Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
+
+        GraphManager gm = managerCache.getGraphManager(applicationScope);
+        Observable<Edge> edges = gm.loadEdgeVersions( 
+            new SimpleSearchByEdge(
+                new SimpleId(headEntity.getUuid(), headEntity.getType()), 
+                getEdgeTypeFromConnectionType( connectionName ),  
+                entityId, 
+                Long.MAX_VALUE,
+                null));
+
+        return edges.toBlockingObservable().firstOrDefault(null) != null;
     }
 
     @Override
@@ -662,7 +673,8 @@ public class CpRelationManager implements RelationManager {
     @Override
     @Metered(group = "core", name = "RelationManager_createConnection_connection_ref")
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        
+        return createConnection( connection.getConnectionType(), connection.getConnectedEntity() );
     }
 
 
@@ -707,7 +719,7 @@ public class CpRelationManager implements RelationManager {
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge( 
             cpHeadEntity.getId(), 
-            connectionType,
+            getEdgeTypeFromConnectionType( connectionType ),
             targetEntity.getId(), 
             System.currentTimeMillis() );
         GraphManager gm = managerCache.getGraphManager(applicationScope);
@@ -717,7 +729,7 @@ public class CpRelationManager implements RelationManager {
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
-            CpEntityManager.getConnectionScopeName( connectionType ));
+            CpEntityManager.getConnectionScopeName( connectedEntityRef.getType(), connectionType ));
         EntityIndex ei = managerCache.getEntityIndex(indexScope);
         ei.index( targetEntity );
 
@@ -941,7 +953,8 @@ public class CpRelationManager implements RelationManager {
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
-            CpEntityManager.getConnectionScopeName( connectionType ));
+            CpEntityManager.getConnectionScopeName( 
+                    targetEntity.getId().getType(), connectionType ));
         EntityIndex ei = managerCache.getEntityIndex(indexScope);
         ei.deindex(targetEntity );
 
@@ -992,7 +1005,7 @@ public class CpRelationManager implements RelationManager {
             IndexScope indexScope = new IndexScopeImpl(
                 applicationScope.getApplication(), 
                 cpHeadEntity.getId(), 
-                CpEntityManager.getConnectionScopeName( connectionType ));
+                CpEntityManager.getConnectionScopeName( connectedEntityType, connectionType ));
             EntityIndex ei = managerCache.getEntityIndex(indexScope);
         
             logger.debug("Searching connections from all-types scope {}:{}:{}", new String[] { 
@@ -1061,14 +1074,34 @@ public class CpRelationManager implements RelationManager {
 
         headEntity = em.validate( headEntity );
 
-        // search across all types of collections of the head-entity
+        if ( query.getEntityType() == null ) {
+
+            // search across all types of collections of the head-entity
+            IndexScope indexScope = new IndexScopeImpl(
+                applicationScope.getApplication(), 
+                cpHeadEntity.getId(), 
+                ALL_TYPES);
+            EntityIndex ei = managerCache.getEntityIndex(indexScope);
+        
+            logger.debug("Searching connections from the all-types scope {}:{}:{}", new String[] { 
+                indexScope.getApplication().toString(), 
+                indexScope.getOwner().toString(),
+                indexScope.getName()}); 
+
+            query = adjustQuery( query );
+            CandidateResults crs = ei.search( query );
+
+            return buildConnectionResults(query , crs, query.getConnectionType() );
+        }
+
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
-            ALL_TYPES);
+            CpEntityManager.getConnectionScopeName( 
+                    query.getEntityType(), query.getConnectionType() ));
         EntityIndex ei = managerCache.getEntityIndex(indexScope);
-      
-        logger.debug("Searching connections from all-types scope {}:{}:{}", new String[] { 
+    
+        logger.debug("Searching connections from the '{}' scope {}:{}:{}", new String[] { 
             indexScope.getApplication().toString(), 
             indexScope.getOwner().toString(),
             indexScope.getName()}); 
@@ -1250,7 +1283,7 @@ public class CpRelationManager implements RelationManager {
                 org.apache.usergrid.persistence.model.entity.Entity e =
                     ecm.load( cr.getId() ).toBlockingObservable().last();
 
-                if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
+                if ( cr.getVersion().compareTo( e.getVersion()) > 0 )  {
                     logger.debug("Stale version uuid:{} type:{} version:{}", 
                         new Object[] {cr.getId().getUuid(), cr.getId().getType(), cr.getVersion()});
                     continue;

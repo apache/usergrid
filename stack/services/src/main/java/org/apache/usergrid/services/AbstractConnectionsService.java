@@ -239,8 +239,8 @@ public class AbstractConnectionsService extends AbstractService {
             throw new ServiceResourceNotFoundException( context );
         }
 
-        if ( results.size() == 1 && !em
-                .isConnectionMember( context.getOwner(), context.getCollectionName(), results.getEntity() ) ) {
+        if ( results.size() == 1 && !em.isConnectionMember( 
+                context.getOwner(), context.getCollectionName(), results.getEntity() ) ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
