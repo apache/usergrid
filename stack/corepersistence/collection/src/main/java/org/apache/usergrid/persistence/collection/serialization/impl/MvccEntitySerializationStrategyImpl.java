@@ -19,25 +19,28 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.UUID;
 
-import com.netflix.astyanax.query.RowQuery;
-import com.netflix.astyanax.util.RangeBuilder;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
-
-import org.apache.usergrid.persistence.core.astyanax.*;
+import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
+import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
+import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.migration.Migration;
-
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -53,15 +56,14 @@ import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.model.Column;
-import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.model.Composites;
+import com.netflix.astyanax.query.RowQuery;
 import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.ByteBufferSerializer;
 import com.netflix.astyanax.serializers.BytesArraySerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 /**
  * @author tnine
@@ -113,7 +115,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 } catch ( Exception e ) {
                     // throw better exception if we can
                     if ( entity != null || entity.getEntity().get() != null ) {
-                        throw new CollectionRuntimeException( entity.getEntity().get(), collectionScope, e );
+                        throw new CollectionRuntimeException( entity, collectionScope, e );
                     }
                     throw e;
                 }

@@ -46,7 +46,10 @@ public class ValidationUtils {
 
         verifyIdentity( entity.getId() );
 
-        verifyTimeUuid( entity.getVersion(), "version" );
+    }
+
+    public static void verifyVersion( UUID version ){
+        verifyTimeUuid( version, "version" );
     }
 
 

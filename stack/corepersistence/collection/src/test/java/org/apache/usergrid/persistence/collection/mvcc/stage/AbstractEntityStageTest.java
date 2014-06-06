@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage;
 
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -46,6 +47,7 @@ public abstract class AbstractEntityStageTest {
 
 
     /** Test every Entity with */
+    @Ignore
     @Test( expected = IllegalArgumentException.class )
     @Theory
     public void testWrongEntityType(@InvalidEntityGenerator.IllegalFields final Entity entity, @InvalidIdGenerator.IllegalFields final Id id) throws Exception {

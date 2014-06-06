@@ -53,6 +53,22 @@ public class TestEntityGenerator {
         return mvccEntity;
     }
 
+    /**
+     * Return an MvccEntityMock with valid inputs from the supplied entity
+     * @param entity
+     * @return
+     */
+    public static MvccEntity fromEntityStatus(Entity entity,MvccEntity.Status status){
+
+        final MvccEntity mvccEntity = mock(MvccEntity.class);
+        when(mvccEntity.getId()).thenReturn( entity.getId());
+        when(mvccEntity.getVersion()).thenReturn( entity.getVersion() );
+        when( mvccEntity.getEntity() ).thenReturn( Optional.of( entity ) );
+        when( mvccEntity.getStatus() ).thenReturn( status );
+
+        return mvccEntity;
+    }
+
 
     /**
      * Generate a valid entity

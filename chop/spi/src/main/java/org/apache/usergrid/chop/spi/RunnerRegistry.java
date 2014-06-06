@@ -20,10 +20,10 @@ package org.apache.usergrid.chop.spi;
 
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.usergrid.chop.api.Runner;
+import org.apache.usergrid.chop.stack.ICoordinatedCluster;
+
 
 /**
  * A registry service for Runners.
@@ -62,5 +62,11 @@ public interface RunnerRegistry {
      * @param runner the runners information
      */
     void unregister( Runner runner );
+
+
+    /**
+     * @return all set up clusters list from coordinator
+     */
+    List<ICoordinatedCluster> getClusters();
 }
 

@@ -27,6 +27,10 @@ import org.apache.usergrid.chop.api.IterationChop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.chop.stack.ChopCluster;
+import org.apache.usergrid.chop.stack.ICoordinatedCluster;
+import org.apache.usergrid.chop.stack.Instance;
+
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
@@ -41,6 +45,9 @@ import static junit.framework.TestCase.assertEquals;
 @IterationChop( iterations = 10, threads = 4 )
 public class DigitalWatchTest {
     private static final Logger LOG = LoggerFactory.getLogger( DigitalWatchTest.class );
+
+    @ChopCluster( name = "TestCluster" )
+    public static ICoordinatedCluster testCluster;
 
 
     @Test
@@ -69,5 +76,21 @@ public class DigitalWatchTest {
         watch.addPowerSource( new RechargeableBattery() );
         assertFalse( watch.isDead() );
         watch.getTime();
+    }
+
+
+    @Test
+    public void testCluster() {
+        if( testCluster == null ) {
+            LOG.info( "Test cluster is null, skipping testCluster()..." );
+            return;
+        }
+        assertEquals( "TestCluster", testCluster.getName() );
+        assertEquals( 2, testCluster.getSize() );
+        assertEquals( 2, testCluster.getInstances().size() );
+
+        for( Instance instance : testCluster.getInstances() ) {
+            LOG.info( "Instance is at {} {}", instance.getPublicDnsName(), instance.getPublicIpAddress() );
+        }
     }
 }

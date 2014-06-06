@@ -21,9 +21,19 @@ package org.apache.usergrid.chop.stack;
 
 import java.util.Collection;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+
+@JsonDeserialize( using = CoordinatedClusterDeserializer.class )
+@JsonSerialize( using = CoordinatedClusterSerializer.class)
 public interface ICoordinatedCluster extends Cluster {
+
+    @JsonProperty
     Collection<Instance> getInstances();
 
+    @JsonIgnore
     boolean add( Instance instance );
 }

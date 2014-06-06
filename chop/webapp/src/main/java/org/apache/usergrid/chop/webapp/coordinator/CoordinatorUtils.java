@@ -240,7 +240,10 @@ public class CoordinatorUtils {
               .append( "\";" );
         }
 
-        /** export instance IPs and host names as a space separated list with ClusterName suffixed by _HOSTS and _ADDRS   */
+        /*
+         * Export instance IPs and host names as a space separated list
+         * with ClusterName suffixed by _HOSTS and _ADDRS
+         */
         StringBuilder ipList = new StringBuilder();
         StringBuilder privateIpList = new StringBuilder();
         StringBuilder hostList = new StringBuilder();

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,45 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.chop.stack;
+package org.apache.usergrid.persistence.collection.mvcc.stage;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
- * A virtual machine or lxc instance.
+ * Simple event to signal entity update
  */
-@JsonDeserialize( as = BasicInstance.class )
-public interface Instance {
+public class EntityUpdateEvent extends CollectionIoEvent<Id> {
 
-
-    @JsonProperty
-    String getId();
-
-
-    @JsonIgnore
-    InstanceSpec getSpec();
-
-
-    @JsonIgnore
-    InstanceState getState();
-
-
-    @JsonProperty
-    String getPrivateDnsName();
-
-
-    @JsonProperty
-    String getPublicDnsName();
-
-
-    @JsonProperty
-    String getPrivateIpAddress();
-
-
-    @JsonProperty
-    String getPublicIpAddress();
+    public EntityUpdateEvent( final CollectionScope context, final Id event ) {
+        super( context, event );
+    }
 }

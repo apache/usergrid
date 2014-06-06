@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.usergrid.chop.stack.BasicInstance;
 import org.apache.usergrid.chop.stack.ICoordinatedCluster;
 import org.apache.usergrid.chop.stack.ICoordinatedStack;
 import org.apache.usergrid.chop.stack.Instance;
@@ -415,7 +416,7 @@ public class EC2InstanceManager implements InstanceManager {
 
 
     /**
-     * Constructs and returns an AmazonInstance object, using information from <code>ec2</code>
+     * Constructs and returns an BasicInstance object, using information from <code>ec2</code>
      *
      * @param ec2
      * @return
@@ -429,7 +430,7 @@ public class EC2InstanceManager implements InstanceManager {
         spec.setKeyName( ec2.getKeyName() );
         spec.setType( ec2.getInstanceType() );
 
-        instance = new AmazonInstance(
+        instance = new BasicInstance(
                         ec2.getInstanceId(),
                         spec,
                         InstanceState.fromValue( ec2.getState().getName() ),

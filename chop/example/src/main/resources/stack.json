@@ -2,7 +2,7 @@
   "name" : "ExampleStack",
   "id" : "adb51dfa-ed4f-4a36-9cbf-6b5a7b6da31e",
   "clusters" : [ {
-    "name" : "ElasticSearch",
+    "name" : "TestCluster",
     "instanceSpec" : {
       "imageId" : "ami-56a0463e",
       "type" : "m1.large",

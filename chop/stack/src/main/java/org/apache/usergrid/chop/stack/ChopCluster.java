@@ -19,42 +19,23 @@
 package org.apache.usergrid.chop.stack;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 
 /**
- * A virtual machine or lxc instance.
+ * This is used in chopped test classes to inject runtime cluster information.
  */
-@JsonDeserialize( as = BasicInstance.class )
-public interface Instance {
+@Retention( RetentionPolicy.RUNTIME )
+@Target( ElementType.FIELD )
+public @interface ChopCluster {
 
-
-    @JsonProperty
-    String getId();
-
-
-    @JsonIgnore
-    InstanceSpec getSpec();
-
-
-    @JsonIgnore
-    InstanceState getState();
-
-
-    @JsonProperty
-    String getPrivateDnsName();
-
-
-    @JsonProperty
-    String getPublicDnsName();
-
-
-    @JsonProperty
-    String getPrivateIpAddress();
-
-
-    @JsonProperty
-    String getPublicIpAddress();
+    /**
+     * This should be one of the names defined inside stack.json
+     *
+     * @return  Name of the defined cluster to be injected
+     */
+    String name();
 }

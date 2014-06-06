@@ -19,9 +19,14 @@
 package org.apache.usergrid.chop.runner;
 
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.usergrid.chop.runner.drivers.Driver;
@@ -37,6 +42,10 @@ import org.apache.usergrid.chop.api.TimeChop;
 import org.apache.usergrid.chop.spi.RunManager;
 import org.apache.usergrid.chop.spi.RunnerRegistry;
 import org.apache.usergrid.chop.runner.drivers.IterationDriver;
+import org.apache.usergrid.chop.stack.ChopCluster;
+import org.apache.usergrid.chop.stack.ICoordinatedCluster;
+import org.apache.usergrid.chop.stack.Instance;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +70,7 @@ public class Controller implements IController, Runnable {
     private State state = State.INACTIVE;
     private Driver<?> currentDriver;
 
+    private Map<String, ICoordinatedCluster> clusterMap = new HashMap<String, ICoordinatedCluster>();
     private List<Runner> otherRunners;
     private RunManager runManager;
     private Project project;
@@ -75,6 +85,22 @@ public class Controller implements IController, Runnable {
         if ( state != State.INACTIVE ) {
             runNumber = runManager.getNextRunNumber( project );
             otherRunners = registry.getRunners( me );
+
+            List<ICoordinatedCluster> clusters = registry.getClusters();
+            if ( clusters == null ) {
+                LOG.debug( "Returned clusters list is null" );
+            }
+            else {
+                LOG.info( "{} clusters total", clusters.size() );
+                for ( ICoordinatedCluster cluster : clusters ) {
+                    clusterMap.put( cluster.getName(), cluster );
+                    LOG.info( "Cluster name {}, {} instances", cluster.getName(), cluster.getInstances().size() );
+                    for ( Instance i : cluster.getInstances() ) {
+                        LOG.debug( "Public: {}, Private: {}", i.getPublicIpAddress(), i.getPrivateIpAddress() );
+                    }
+                }
+                injectClusters();
+            }
         }
     }
 
@@ -127,6 +153,50 @@ public class Controller implements IController, Runnable {
     private void setRunManager( RunManager runManager ) {
         Preconditions.checkNotNull( runManager, "The RunManager cannot be null." );
         this.runManager = runManager;
+    }
+
+
+    /**
+     * Scans all @IterationChop and @TimeChop annotated test classes in code base
+     * and sets @ChopCluster annotated fields in these classes to their runtime values.
+     * <p>
+     * For this to work properly, fields in test classes should be declared as follows:
+     * <p>
+     *     <code>@ChopCluster( name = "ClusterName" )</code>
+     *     <code>public static ICoordinatedCluster clusterToBeInjected;</code>
+     * </p>
+     * In this case, <code>clusterToBeInjected</code> field will be set to the cluster object
+     * taken from the coordinator, if indeed a cluster with a name of "ClusterName" exists.
+     */
+    private void injectClusters() {
+        Collection<Class<?>> testClasses = new LinkedList<Class<?>>();
+        testClasses.addAll( iterationChopClasses );
+        testClasses.addAll( timeChopClasses );
+        for( Class<?> iterationTest : testClasses ) {
+            LOG.info( "Scanning test class {} for annotations", iterationTest.getName() );
+            for( Field f : iterationTest.getDeclaredFields() ) {
+                if( f.getType().isAssignableFrom( ICoordinatedCluster.class ) ) {
+                    for( Annotation annotation : f.getDeclaredAnnotations() ) {
+                        if( annotation.annotationType().equals( ChopCluster.class )  ) {
+                            String clusterName = ( ( ChopCluster ) annotation).name();
+                            ICoordinatedCluster cluster;
+                            if ( ! clusterMap.containsKey( clusterName ) ||
+                                    ( cluster = clusterMap.get( clusterName ) ) == null ) {
+                                LOG.warn( "No clusters found with name: {}", clusterName );
+                                continue;
+                            }
+                            try {
+                                LOG.info( "Setting cluster {} on {} field", clusterName, f.getName() );
+                                f.set( null, cluster );
+                            }
+                            catch ( IllegalAccessException e ) {
+                                LOG.error( "Cannot access field {}", f.getName(), e );
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
 

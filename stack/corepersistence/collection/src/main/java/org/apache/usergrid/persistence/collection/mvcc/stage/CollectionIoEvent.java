@@ -18,13 +18,15 @@
  */
 package org.apache.usergrid.persistence.collection.mvcc.stage;
 
+import java.io.Serializable;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 
 
 /**
  * @author tnine
  */
-public class CollectionIoEvent<T> {
+public class CollectionIoEvent<T> implements Serializable {
 
     private CollectionScope context;
 

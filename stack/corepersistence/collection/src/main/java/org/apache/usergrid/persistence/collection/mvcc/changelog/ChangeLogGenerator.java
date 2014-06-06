@@ -31,7 +31,7 @@ public interface ChangeLogGenerator {
 
     /**
      * This change log generator takes one or more entity versions and generates the change-log.
-     * The log is designed to be bring an index to a "current" state and allow for is allows 
+     * The log is designed to be bring an index to a "current" state and  allows
      * for retrieving all deleted properties, all new properties, and all properties that have 
      * not changes, but now have a newer version. Changes should be ordered from lowest time 
      * uuid to highest timeuuid.
