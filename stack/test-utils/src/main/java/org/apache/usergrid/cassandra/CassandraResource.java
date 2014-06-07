@@ -292,6 +292,7 @@ public class CassandraResource extends ExternalResource {
             System.setProperty( "log4j.configuration", "log4j.properties" );
             System.setProperty( "cassandra.ring_delay_ms", "100" );
             System.setProperty( "cassandra.config", newYamlUrl.toString() );
+            System.setProperty( "cassandra.tempName", tempDir.getName() );
 
             
             //while ( !AvailablePortFinder.available( rpcPort ) || rpcPort == 9042 ) {

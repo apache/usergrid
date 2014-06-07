@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence;
 
 import org.apache.usergrid.persistence.index.query.Query;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -43,6 +44,7 @@ import org.apache.usergrid.persistence.cassandra.QueryProcessor;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ConversionUtils.bytes;
+import org.elasticsearch.common.collect.Lists;
 
 
 @XmlRootElement
@@ -209,6 +211,7 @@ public class Results implements Iterable<Entity> {
     public static Results fromEntity( Entity e ) {
         Results r = new Results();
         r.setEntity( e );
+        r.setEntities( Collections.singletonList(e) );
         return r;
     }
 

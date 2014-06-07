@@ -58,7 +58,7 @@ public class AbstractCollectionService extends AbstractService {
         if ( !isRootService() ) {
             return null;
         }
-        Entity entity = em.get( new SimpleEntityRef( this.getEntityType(), uuid));
+        Entity entity = em.get( uuid );
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -92,12 +92,12 @@ public class AbstractCollectionService extends AbstractService {
         EntityRef entity = null;
 
         if ( !context.moreParameters() ) {
-            entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
+            entity = em.get( id );
 
             entity = importEntity( context, ( Entity ) entity );
         }
         else {
-            entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
+            entity = em.get( id );
         }
 
         if ( entity == null ) {
@@ -271,7 +271,8 @@ public class AbstractCollectionService extends AbstractService {
 
         checkPermissionsForEntity( context, id );
 
-        Entity item = em.get( new SimpleEntityRef( this.getEntityType(), id));
+        Entity item = em.get( id );
+
         if ( item != null ) {
             validateEntityType( item, id );
             updateEntity( context, item, context.getPayload() );

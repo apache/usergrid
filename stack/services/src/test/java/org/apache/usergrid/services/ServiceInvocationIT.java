@@ -46,8 +46,6 @@ public class ServiceInvocationIT extends AbstractServiceIT {
         Entity user = app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
         assertNotNull( user );
 
-        app.getEm().refreshIndex();
-
         app.testRequest( ServiceAction.GET, 1, "users" );
 
         app.testRequest( ServiceAction.GET, 1, "users", user.getUuid() );
@@ -188,9 +186,11 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.GET, 1, "projects" );
         
-        app.testRequest( ServiceAction.POST, 1, "projects", project.getName(), "contains", "contributors", contributor.getName());
+        app.testRequest( ServiceAction.POST, 1, 
+                "projects", project.getName(), "contains", "contributors", contributor.getName());
 
-        app.testRequest( ServiceAction.GET, 1, "projects", project.getName(), "contains", "contributors", contributor.getName());
+        app.testRequest( ServiceAction.GET, 1, 
+                "projects", project.getName(), "contains", "contributors", contributor.getName());
     }
     
     //Making sure that names without spaces are still intact (See above test case comments).
@@ -207,8 +207,10 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.GET, 1, "projects" );
         
-        app.testRequest( ServiceAction.POST, 1, "projects", project.getName(), "contains", "contributors", contributor.getName());
+        app.testRequest( ServiceAction.POST, 1, 
+                "projects", project.getName(), "contains", "contributors", contributor.getName());
 
-        app.testRequest( ServiceAction.GET, 1, "projects", project.getName(), "contains", "contributors", contributor.getName());
+        app.testRequest( ServiceAction.GET, 1, 
+                "projects", project.getName(), "contains", "contributors", contributor.getName());
     }
 }

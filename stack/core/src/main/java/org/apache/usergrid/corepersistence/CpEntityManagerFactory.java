@@ -36,12 +36,14 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
+import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -78,10 +80,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private ApplicationContext applicationContext;
 
+    private Setup setup = null;
+
     public static final Class<DynamicEntity> APPLICATION_ENTITY_CLASS = DynamicEntity.class;
 
     // The System Application where we store app and org metadata
     public static final String SYSTEM_APPS_UUID = "b6768a08-b5d5-11e3-a495-10ddb1de66c3";
+    
+    public static final  UUID MANAGEMENT_APPLICATION_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
+
+    public static final  UUID DEFAULT_APPLICATION_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
+
 
     // Three types of things we store in System Application
     public static final String SYSTEM_APPS_TYPE = "zzzappszzz";
@@ -490,8 +499,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.managerCache = managerCache;
     }
 
-    static UUID MANAGEMENT_APPLICATION_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
-    static UUID DEFAULT_APPLICATION_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
 
     @Override
     public UUID getManagementAppId() {
@@ -509,17 +516,21 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private Id generateApplicationId(UUID id){
-        return new SimpleId( id, "application" );
+        return new SimpleId( id, Application.ENTITY_TYPE );
     }
-    
+   
+
     /**
      * Gets the setup.
-     *
      * @return Setup helper
      */
-    public CpSetup getSetup() {
-        return new CpSetup( this, cass );
+    public Setup getSetup() {
+        if ( setup == null ) {
+            setup = new CpSetup( this, cass );
+        }
+        return setup;
     }
+
 
     void refreshIndex() {
         managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_APPS_INDEX_SCOPE ).refresh();
