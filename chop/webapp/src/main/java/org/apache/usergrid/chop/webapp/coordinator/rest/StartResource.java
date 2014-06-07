@@ -120,7 +120,7 @@ public class StartResource extends TestableResource implements RestParams {
         Collection<Runner> runners = runnerCoordinator.getRunners( user, commitId, moduleId );
         Map<Runner, State> states = runnerCoordinator.getStates( runners );
 
-        CoordinatedStack stack = stackCoordinator.findCoordinatedStack(commitId, artifactId, groupId, version, user);
+        CoordinatedStack stack = stackCoordinator.findCoordinatedStack( commitId, artifactId, groupId, version, user );
 
         int notReady = 0;
         StringBuilder sb = new StringBuilder();
