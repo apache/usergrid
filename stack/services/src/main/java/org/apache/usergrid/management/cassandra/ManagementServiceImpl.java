@@ -575,7 +575,7 @@ public class ManagementServiceImpl implements ManagementService {
     public void updateOrganization( OrganizationInfo organizationInfo ) throws Exception {
         Map<String, Object> properties = organizationInfo.getProperties();
         if ( properties != null ) {
-            EntityRef organizationEntity = new SimpleEntityRef( organizationInfo.getUuid() );
+            EntityRef organizationEntity = new SimpleEntityRef( "organization", organizationInfo.getUuid() );
             EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
             for ( Map.Entry<String, Object> entry : properties.entrySet() ) {
                 if ( "".equals( entry.getValue() ) ) {
@@ -1622,6 +1622,8 @@ public class ManagementServiceImpl implements ManagementService {
         properties.put( "appUuid", applicationId );
         Entity appInfo = em.create( applicationId, APPLICATION_INFO, properties );
 
+        em.refreshIndex();
+
         writeUserToken( smf.getManagementAppId(), appInfo, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null,
                         smf.getManagementAppId() ) );
@@ -1640,6 +1642,9 @@ public class ManagementServiceImpl implements ManagementService {
                     "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
                             + ")</a> created a new application named " + applicationName, null );
         }
+
+        em.refreshIndex();
+
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
 
@@ -1762,7 +1767,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Entity entity = em.get( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ));
+        Entity entity = em.get( new SimpleEntityRef( APPLICATION_INFO, applicationId ));
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );

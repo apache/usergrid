@@ -263,7 +263,17 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Entity create( 
         UUID importId, String entityType, Map<String, Object> properties ) throws Exception {
-        return create( entityType, properties );
+
+        UUID timestampUuid = importId != null ? importId : newTimeUUID();
+
+        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
+
+        Entity entity = batchCreate( m, entityType, null, properties, importId, timestampUuid );
+
+        m.execute();
+
+        return entity;
     }
 
 
@@ -301,6 +311,10 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Entity get( EntityRef entityRef ) throws Exception {
+
+        if ( entityRef == null ) {
+            return null;
+        }
 
         Id id = new SimpleId( entityRef.getUuid(), entityRef.getType() );
         String collectionName = getCollectionScopeNameFromEntityType( entityRef.getType() );
@@ -561,7 +575,7 @@ public class CpEntityManager implements EntityManager {
                         IndexScope indexScope = new IndexScopeImpl( 
                                 appScope.getApplication(), 
                                 new SimpleId( uuid, ownerType ), 
-                                coll );
+                                CpEntityManager.getCollectionScopeNameFromCollectionName(coll) );
 
                         EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
@@ -1302,7 +1316,8 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void removeFromCollection( 
             EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception {
-        throw new UnsupportedOperationException( "Not supported yet." );
+
+        getRelationManager( entityRef ).removeFromCollection(collectionName, itemRef);
     }
 
 
@@ -1492,6 +1507,10 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Entity createRole( String roleName, String roleTitle, long inactivity) throws Exception {
+
+        if ( roleName == null || roleName.isEmpty() ) {
+            throw new IllegalArgumentException( "Role name must be specified");
+        }
 
         String propertyName = roleName;
         UUID ownerId = applicationId;
@@ -2069,6 +2088,10 @@ public class CpEntityManager implements EntityManager {
     @Override
     public <A extends Entity> A get( EntityRef entityRef, Class<A> entityClass ) throws Exception {
 
+        if ( entityRef == null ) {
+            return null;
+        }
+
         Entity entity = get( entityRef );
 
         if ( entity == null ) {
@@ -2220,7 +2243,8 @@ public class CpEntityManager implements EntityManager {
             String entityType, 
             Class<A> entityClass, 
             Map<String, Object> properties, 
-            UUID importId, UUID timestampUuid )
+            UUID importId, 
+            UUID timestampUuid )
             throws Exception {
 
         String eType = Schema.normalizeEntityType( entityType );
@@ -2346,7 +2370,7 @@ public class CpEntityManager implements EntityManager {
             return entity;
         }
 
-        org.apache.usergrid.persistence.model.entity.Entity cpEntity = entityToCpEntity( entity );
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity = entityToCpEntity( entity, importId );
 
         // prepare to write and index Core Persistence Entity into default scope
         CollectionScope collectionScope = new CollectionScopeImpl( 
@@ -2599,11 +2623,13 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    private org.apache.usergrid.persistence.model.entity.Entity entityToCpEntity( Entity entity ) {
+    private org.apache.usergrid.persistence.model.entity.Entity entityToCpEntity( Entity entity, UUID importId ) {
+
+        UUID uuid = importId != null ? importId : entity.getUuid();
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
                 new org.apache.usergrid.persistence.model.entity.Entity(
-                        new SimpleId( entity.getUuid(), entity.getType() ) );
+                        new SimpleId( uuid, entity.getType() ) );
 
         cpEntity = CpEntityMapUtils.fromMap( 
                 cpEntity, entity.getProperties(), entity.getType(), true );

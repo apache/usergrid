@@ -555,6 +555,7 @@ public class ManagementServiceIT {
         EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         User storedUser = em.create( user );
+        em.refreshIndex();
 
 
         UUID userId = storedUser.getUuid();

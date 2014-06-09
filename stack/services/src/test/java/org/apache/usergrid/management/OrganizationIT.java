@@ -121,6 +121,8 @@ public class OrganizationIT {
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[0] );
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[0] );
 
+        setup.getEmf().refreshIndex();
+
         // set history to 4
         Map<String, Object> props = new HashMap<String, Object>();
         props.put( OrganizationInfo.PASSWORD_HISTORY_SIZE_KEY, 3 );

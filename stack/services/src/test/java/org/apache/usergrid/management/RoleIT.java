@@ -64,6 +64,8 @@ public class RoleIT {
         UUID applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app" ).getId();
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
+        em.refreshIndex();
+
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "username", "edanuff5" );
         properties.put( "email", "ed@anuff.com5" );

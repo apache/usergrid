@@ -105,6 +105,7 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import me.prettyprint.hector.api.mutation.Mutator;
+import org.apache.usergrid.persistence.RoleRef;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import rx.Observable;
 
@@ -121,6 +122,7 @@ import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
 import static org.apache.usergrid.persistence.Schema.TYPE_ROLE;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import org.apache.usergrid.persistence.SimpleRoleRef;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
@@ -458,20 +460,20 @@ public class CpRelationManager implements RelationManager {
 
     // add to a named collection of the head entity
     @Override
-    public Entity addToCollection(String collName, EntityRef memberRef) throws Exception {
+    public Entity addToCollection(String collName, EntityRef itemRef) throws Exception {
 
         // load the new member entity to be added to the collection from its default scope
         CollectionScope memberScope = new CollectionScopeImpl( 
             applicationScope.getApplication(), 
             applicationScope.getApplication(), 
-            CpEntityManager.getCollectionScopeNameFromEntityType( memberRef.getType()));
+            CpEntityManager.getCollectionScopeNameFromEntityType( itemRef.getType()));
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
         if ( logger.isDebugEnabled() ) {
             logger.debug("Loading member entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
                 new Object[] { 
-                    memberRef.getType(), 
-                    memberRef.getUuid(), 
+                    itemRef.getType(), 
+                    itemRef.getUuid(), 
                     memberScope.getApplication(), 
                     memberScope.getOwner(), 
                     memberScope.getName() 
@@ -479,11 +481,11 @@ public class CpRelationManager implements RelationManager {
         }
 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
-            new SimpleId( memberRef.getUuid(), memberRef.getType() )).toBlockingObservable().last();
+            new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlockingObservable().last();
 
         if ( memberEntity == null ) {
             throw new RuntimeException("Unable to load entity uuid=" 
-                + memberRef.getUuid() + " type=" + memberRef.getType());
+                + itemRef.getUuid() + " type=" + itemRef.getType());
         }
 
         // create graph edge connection from head entity to member entity
@@ -512,14 +514,14 @@ public class CpRelationManager implements RelationManager {
         allCollectionIndex.index( memberEntity );
 
         logger.debug("Added entity {}:{} to collection {}", new String[] { 
-            memberRef.getUuid().toString(), memberRef.getType(), collName }); 
+            itemRef.getUuid().toString(), itemRef.getType(), collName }); 
 
         logger.debug("With head entity scope is {}:{}:{}", new String[] { 
             headEntityScope.getApplication().toString(), 
             headEntityScope.getOwner().toString(),
             headEntityScope.getName()}); 
 
-        return em.get( memberRef );
+        return em.get( itemRef );
     }
 
 
@@ -586,21 +588,37 @@ public class CpRelationManager implements RelationManager {
     }
 
     @Override
-    public void removeFromCollection(String collName, EntityRef memberRef) throws Exception {
+    public void removeFromCollection(String collName, EntityRef itemRef) throws Exception {
+
+        // special handling for roles collection of the application
+        if ( headEntity.getUuid().equals( applicationId ) ) {
+            if ( collName.equals( COLLECTION_ROLES ) ) {
+                Entity itemEntity = em.get( itemRef );
+                if ( itemEntity != null ) {
+                    RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
+                    em.deleteRole( roleRef.getApplicationRoleName() );
+                    return;
+                }
+                em.delete( itemEntity );
+                return;
+            }
+            em.delete( itemRef );
+            return;
+       }
 
         // load the entity to be removed to the collection
         CollectionScope memberScope = new CollectionScopeImpl( 
             this.applicationScope.getApplication(), 
             this.applicationScope.getApplication(), 
-            CpEntityManager.getCollectionScopeNameFromEntityType( memberRef.getType() ));
+            CpEntityManager.getCollectionScopeNameFromEntityType( itemRef.getType() ));
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
         if ( logger.isDebugEnabled() ) {
             logger.debug("Loading entity to remove from collection "
                     + "{}:{} from scope\n   app {}\n   owner {}\n   name {}", 
                 new Object[] { 
-                    memberRef.getType(), 
-                    memberRef.getUuid(), 
+                    itemRef.getType(), 
+                    itemRef.getUuid(), 
                     memberScope.getApplication(), 
                     memberScope.getOwner(), 
                     memberScope.getName() 
@@ -608,7 +626,7 @@ public class CpRelationManager implements RelationManager {
         }
 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
-            new SimpleId( memberRef.getUuid(), memberRef.getType() )).toBlockingObservable().last();
+            new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlockingObservable().last();
 
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
@@ -628,7 +646,21 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.deleteEdge(edge).toBlockingObservable().last();
 
-        // does not actually remove the entity itself
+        // special handling for roles collection of a group
+        if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
+            if ( collName.equals( COLLECTION_ROLES ) ) {
+                String path = (String)( (Entity)itemRef ).getMetadata( "path" );
+
+                if ( path.startsWith( "/roles/" ) ) {
+
+                    Entity itemEntity = em.get( new SimpleEntityRef( 
+                        memberEntity.getId().getType(), memberEntity.getId().getUuid() ) );
+
+                    RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
+                    em.deleteRole( roleRef.getApplicationRoleName() );
+                }
+            }
+        }
     }
 
 
@@ -923,18 +955,13 @@ public class CpRelationManager implements RelationManager {
         EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager(targetScope);
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug("Deleting connection '{}' from source entity {}:{} \n"
-                    + "   to target entity {}:{}" 
-                    + "   from scope\n      app {}\n      owner {}\n      name {}", 
+            logger.debug("Deleting connection '{}' from source {}:{} \n   to target {}:{}",
                 new Object[] { 
                     connectionType,
                     connectingEntityRef.getType(), 
                     connectingEntityRef.getUuid(), 
                     connectedEntityRef.getType(), 
-                    connectedEntityRef.getUuid(), 
-                    targetScope.getApplication(), 
-                    targetScope.getOwner(), 
-                    targetScope.getName() 
+                    connectedEntityRef.getUuid()
             });
         }
 
@@ -942,28 +969,27 @@ public class CpRelationManager implements RelationManager {
             new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ))
                 .toBlockingObservable().last();
 
-        // create graph edge connection from head entity to member entity
+        // Delete graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge( 
-            cpHeadEntity.getId(), 
+            new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
             connectionType,
             targetEntity.getId(), 
             System.currentTimeMillis() );
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.deleteEdge(edge).toBlockingObservable().last();
 
-        // Index the new connection in app|source|type context
+        // Deindex the connection in app|source|type context
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
-            cpHeadEntity.getId(), 
-            CpEntityManager.getConnectionScopeName( 
-                    targetEntity.getId().getType(), connectionType ));
-        EntityIndex ei = managerCache.getEntityIndex(indexScope);
-        ei.deindex(targetEntity );
+            new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
+            CpEntityManager.getConnectionScopeName( targetEntity.getId().getType(), connectionType ));
+        EntityIndex ei = managerCache.getEntityIndex( indexScope );
+        ei.deindex( targetEntity );
 
-        // Index the new connection in app|source|type context
+        // Deindex the connection in app|source|type context
         IndexScope allTypesIndexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
-            cpHeadEntity.getId(), 
+            new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
             ALL_TYPES);
         EntityIndex aei = managerCache.getEntityIndex(allTypesIndexScope);
         aei.deindex( targetEntity );
@@ -1010,7 +1036,7 @@ public class CpRelationManager implements RelationManager {
                 CpEntityManager.getConnectionScopeName( connectedEntityType, connectionType ));
             EntityIndex ei = managerCache.getEntityIndex(indexScope);
         
-            logger.debug("Searching connections from all-types scope {}:{}:{}", new String[] { 
+            logger.debug("Searching connections from scope {}:{}:{}", new String[] { 
                 indexScope.getApplication().toString(), 
                 indexScope.getOwner().toString(),
                 indexScope.getName()}); 
@@ -1039,8 +1065,8 @@ public class CpRelationManager implements RelationManager {
     }
 
     @Override
-    public Results getConnectingEntities(String connectionType, String entityType, 
-            Level level, int count) throws Exception {
+    public Results getConnectingEntities(
+            String connectionType, String entityType, Level level, int count) throws Exception {
 
         Map<EntityRef, Set<String>> containers = getContainingCollections( count );
 
