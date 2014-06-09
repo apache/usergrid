@@ -526,6 +526,8 @@ public class ManagementServiceImpl implements ManagementService {
 
         em.addToCollection( organizationEntity, "users", new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() ) );
 
+        em.refreshIndex();
+
         writeUserToken( smf.getManagementAppId(), organizationEntity, encryptionService
                 .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.ORGANIZATION ), user.getUuid(),
                         smf.getManagementAppId() ) );

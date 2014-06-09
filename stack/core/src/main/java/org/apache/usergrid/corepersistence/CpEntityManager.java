@@ -698,7 +698,6 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void createApplicationCollection( String entityType ) throws Exception {
-        throw new UnsupportedOperationException( "Not supported yet." );
     }
 
 
@@ -2059,7 +2058,7 @@ public class CpEntityManager implements EntityManager {
     public Entity get( UUID id ) throws Exception {
 
         Results r = getRelationManager( getApplication() ).searchConnectedEntities(
-            Query.fromQL("select * where " + PROPERTY_UUID + " = " + id.toString() ));
+            Query.fromQL("select * where " + PROPERTY_UUID + " = '" + id.toString() + "'"));
 
         return r.getEntity();
     } 

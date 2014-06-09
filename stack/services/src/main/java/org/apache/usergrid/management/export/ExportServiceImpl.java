@@ -81,7 +81,6 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     public UUID schedule( final Map<String, Object> config ) throws Exception {
-        ApplicationInfo defaultExportApp = null;
 
         if ( config == null ) {
             logger.error( "export information cannot be null" );

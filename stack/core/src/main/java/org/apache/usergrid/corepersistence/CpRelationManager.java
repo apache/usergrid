@@ -105,6 +105,7 @@ import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import me.prettyprint.hector.api.mutation.Mutator;
+import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import rx.Observable;
 
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
@@ -113,8 +114,12 @@ import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_ENTIT
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_TYPES;
 import static org.apache.usergrid.persistence.Schema.INDEX_CONNECTIONS;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TITLE;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
+import static org.apache.usergrid.persistence.Schema.TYPE_ROLE;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
@@ -133,6 +138,7 @@ import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCo
 import static org.apache.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
 import static org.apache.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
+import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import static org.apache.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
@@ -539,27 +545,23 @@ public class CpRelationManager implements RelationManager {
                 itemType = singularize( collName );
             }
 
-// TODO: complete when Role support is ready 
-//
-//            if ( itemType.equals( TYPE_ROLE ) ) {
-//                Long inactivity = ( Long ) properties.get( PROPERTY_INACTIVITY );
-//                if ( inactivity == null ) {
-//                    inactivity = 0L;
-//                }
-//                return em.createRole( ( String ) properties.get( PROPERTY_NAME ),
-//                        ( String ) properties.get( PROPERTY_TITLE ), inactivity );
-//            }
+            if ( itemType.equals( TYPE_ROLE ) ) {
+                Long inactivity = ( Long ) properties.get( PROPERTY_INACTIVITY );
+                if ( inactivity == null ) {
+                    inactivity = 0L;
+                }
+                return em.createRole( ( String ) properties.get( PROPERTY_NAME ),
+                        ( String ) properties.get( PROPERTY_TITLE ), inactivity );
+            }
             return em.create( itemType, properties );
         }
 
-// TODO: complete when Role support is ready 
-//
-//        else if ( headEntity.getType().equals( Group.ENTITY_TYPE ) 
-//                && ( collectionName.equals( COLLECTION_ROLES ) ) ) {
-//            UUID groupId = headEntity.getUuid();
-//            String roleName = ( String ) properties.get( PROPERTY_NAME );
-//            return em.createGroupRole( groupId, roleName, ( Long ) properties.get( PROPERTY_INACTIVITY ) );
-//        }
+        else if ( headEntity.getType().equals( Group.ENTITY_TYPE ) 
+                && ( collName.equals( COLLECTION_ROLES ) ) ) {
+            UUID groupId = headEntity.getUuid();
+            String roleName = ( String ) properties.get( PROPERTY_NAME );
+            return em.createGroupRole( groupId, roleName, ( Long ) properties.get( PROPERTY_INACTIVITY ) );
+        }
 
         CollectionInfo collection = getDefaultSchema().getCollection(headEntity.getType(),collName);
         if ( ( collection != null ) && !collection.getType().equals( itemType ) ) {
