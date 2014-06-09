@@ -517,6 +517,8 @@ public class ManagementServiceIT {
 
         em.addToDictionary( storedUser, DICTIONARY_CREDENTIALS, "password", info );
 
+        em.refreshIndex();
+
 
         //verify authorization works
         User authedUser =

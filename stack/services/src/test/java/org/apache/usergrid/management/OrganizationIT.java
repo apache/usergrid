@@ -59,6 +59,8 @@ public class OrganizationIT {
         OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "OrganizationIT", user, false );
         assertNotNull( organization );
 
+        setup.getEmf().refreshIndex();
+
         Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser( user.getUuid() );
         assertEquals( "wrong number of organizations", 1, userOrganizations.size() );
 
@@ -111,6 +113,8 @@ public class OrganizationIT {
 
         OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "OrganizationTest2", user, true );
         assertNotNull( organization );
+
+        setup.getEmf().refreshIndex();
 
         // no history, no problem
         setup.getMgmtSvc().setAdminUserPassword( user.getUuid(), passwords[1] );

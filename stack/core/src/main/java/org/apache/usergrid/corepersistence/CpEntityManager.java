@@ -135,6 +135,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.ClassUtils;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import org.apache.usergrid.utils.CompositeUtils;
@@ -680,7 +681,8 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public Set<String> getApplicationCollections() throws Exception {
-        throw new UnsupportedOperationException( "Not supported yet." );
+
+        return getRelationManager( getApplication() ).getCollections();
     }
 
 

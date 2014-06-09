@@ -407,4 +407,9 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         return DEFAULT_APPLICATION_ID; 
     }
 
+    @Override
+    public void refreshIndex() {
+        // no op
+    }
+
 }

@@ -101,6 +101,8 @@ public class ExportServiceIT {
         adminUser = setup.getMgmtSvc().createAdminUser( "grey", "George Reyes", "george@reyes.com", "test", false, false );
         organization = setup.getMgmtSvc().createOrganization( "george-organization", adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "george-application" ).getId();
+
+        setup.getEmf().refreshIndex();
     }
 
 
@@ -515,10 +517,13 @@ public class ExportServiceIT {
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         em.createApplicationCollection( "baconators" );
+        em.refreshIndex();
+
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
         entity = new Entity[entitiesToCreate];
+
         //creates entities
         for ( int i = 0; i < entitiesToCreate; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
@@ -529,16 +534,16 @@ public class ExportServiceIT {
 
         S3Export s3Export = new MockS3ExportImpl("exportOneCollectionWQuery.json");
         ExportService exportService = setup.getExportService();
+
         HashMap<String, Object> payload = payloadBuilder();
         payload.put( "query", "select * where username contains 'billybob0'" );
-
         payload.put( "organizationId", organization.getUuid() );
         payload.put( "applicationId", applicationId );
         payload.put( "collectionName", "baconators" );
 
         UUID exportUUID = exportService.schedule( payload );
 
-        JobData jobData = jobDataCreator(payload,exportUUID,s3Export);
+        JobData jobData = jobDataCreator( payload, exportUUID, s3Export );
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );

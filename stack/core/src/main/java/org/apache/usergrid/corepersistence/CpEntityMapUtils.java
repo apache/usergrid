@@ -101,7 +101,7 @@ class CpEntityMapUtils {
             } else if ( value instanceof Map ) {
                 processMapValue( value, fieldName, entity, entityType);
 	
-			} else {
+			} else if ( value != null ) {
                 byte[] valueSerialized;
                 try {
                     valueSerialized = objectMapper.writeValueAsBytes( value );

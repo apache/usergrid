@@ -1762,7 +1762,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Entity entity = em.get( new SimpleEntityRef( "applicationId", applicationId ));
+        Entity entity = em.get( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ));
 
         if ( entity != null ) {
             return new ApplicationInfo( applicationId, entity.getName() );
