@@ -365,7 +365,7 @@ public class GeoIT extends AbstractCoreIT {
         Query query = new Query();
         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
         // just to be save
-        query.addFilter( "location within 0 of -90, -180" );
+        query.addFilter( "location within 50000000 of -90, -180" );
         query.setLimit( 100 );
 
         int count = 0;
@@ -455,7 +455,7 @@ public class GeoIT extends AbstractCoreIT {
 
         // save objects in a diagonal line from -90 -180 to 90 180
 
-        int numEntities = 500;
+        int numEntities = 250;
 
         float minLattitude = 48.32455f;
         float maxLattitude = 48.46481f;
