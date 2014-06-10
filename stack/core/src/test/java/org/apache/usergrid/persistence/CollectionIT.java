@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.index.query.Query;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -36,6 +35,7 @@ import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -387,7 +387,7 @@ public class CollectionIT extends AbstractCoreIT {
         em.refreshIndex();
 
         Results r = em.searchCollection( group, "users", 
-            new Query().addEqualityFilter( "member.nickname", "ed" )
+            new Query().addEqualityFilter( "nickname", "ed" )
                 .withResultsLevel(Level.LINKED_PROPERTIES ) );
 
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
