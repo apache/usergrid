@@ -166,7 +166,7 @@ public class StackCoordinator {
 
     public void destroyStack( Stack stack, User user, Commit commit, Module module ) {
         CoordinatedStack coordinatedStack = getCoordinatedStack( stack, user, commit, module );
-        if ( coordinatedStack == null || coordinatedStack.getSetupState() == SetupStackState.NotFound ) {
+        if ( coordinatedStack == null || coordinatedStack.getSetupState() == SetupStackState.JarNotFound ) {
             LOG.info( "No such stack was found." );
             return;
         }
@@ -302,7 +302,7 @@ public class StackCoordinator {
                     version, commitId );
 
             if( ! runnerJar.exists() ) {
-                return SetupStackState.NotFound;
+                return SetupStackState.JarNotFound;
             }
 
             return SetupStackState.NotSetUp;

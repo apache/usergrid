@@ -80,6 +80,7 @@ public class DeployMojo extends MainMojo {
         if ( ! isReadyToDeploy() ) {
             LOG.info( "{} is NOT present to upload, calling chop:runner goal now...", RUNNER_JAR );
             RunnerMojo runnerMojo = new RunnerMojo( this );
+            runnerMojo.finalName = this.finalName;
             runnerMojo.execute();
         }
 
