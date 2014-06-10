@@ -330,7 +330,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         em.refreshIndex();
 
         assertEquals( 1, 
-            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size() );
+            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).connections.size() );
 
         assertEquals( 1, 
             em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES ).size() );
