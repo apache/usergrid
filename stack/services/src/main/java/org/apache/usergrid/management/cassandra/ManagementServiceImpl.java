@@ -466,7 +466,7 @@ public class ManagementServiceImpl implements ManagementService {
          * node is trying to set the property do a different value
          */
         Lock groupLock =
-                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", "path" );
+                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", PROPERTY_PATH );
 
         Lock userLock = getUniqueUpdateLock( lockManager, smf.getManagementAppId(), username, "users", "username" );
 
@@ -481,8 +481,8 @@ public class ManagementServiceImpl implements ManagementService {
             userLock.lock();
             emailLock.lock();
             EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-            if ( !em.isPropertyValueUniqueForEntity( "group", "path", organizationName ) ) {
-                throw new DuplicateUniquePropertyExistsException( "group", "path", organizationName );
+            if ( !em.isPropertyValueUniqueForEntity( "group", PROPERTY_PATH, organizationName ) ) {
+                throw new DuplicateUniquePropertyExistsException( "group", PROPERTY_PATH, organizationName );
             }
             if ( !validateAdminInfo( username, name, email, password ) ) {
                 return null;
@@ -556,10 +556,10 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         Lock groupLock =
-                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", "path" );
+                getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", PROPERTY_PATH );
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        if ( !em.isPropertyValueUniqueForEntity( "group", "path", organizationName ) ) {
-            throw new DuplicateUniquePropertyExistsException( "group", "path", organizationName );
+        if ( !em.isPropertyValueUniqueForEntity( "group", PROPERTY_PATH, organizationName ) ) {
+            throw new DuplicateUniquePropertyExistsException( "group", PROPERTY_PATH, organizationName );
         }
         try {
             groupLock.lock();
@@ -575,7 +575,7 @@ public class ManagementServiceImpl implements ManagementService {
     public void updateOrganization( OrganizationInfo organizationInfo ) throws Exception {
         Map<String, Object> properties = organizationInfo.getProperties();
         if ( properties != null ) {
-            EntityRef organizationEntity = new SimpleEntityRef( "organization", organizationInfo.getUuid() );
+            EntityRef organizationEntity = new SimpleEntityRef( Group.ENTITY_TYPE, organizationInfo.getUuid() );
             EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
             for ( Map.Entry<String, Object> entry : properties.entrySet() ) {
                 if ( "".equals( entry.getValue() ) ) {
@@ -596,8 +596,8 @@ public class ManagementServiceImpl implements ManagementService {
                                                 Map<String, Object> properties ) throws Exception {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        if ( !em.isPropertyValueUniqueForEntity( "group", "path", organizationInfo.getName() ) ) {
-            throw new DuplicateUniquePropertyExistsException( "group", "path", organizationInfo.getName() );
+        if ( !em.isPropertyValueUniqueForEntity( "group", PROPERTY_PATH, organizationInfo.getName() ) ) {
+            throw new DuplicateUniquePropertyExistsException( "group", PROPERTY_PATH, organizationInfo.getName() );
         }
         if ( properties == null ) {
             properties = new HashMap<String, Object>();
@@ -648,6 +648,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         properties.setProperty( "name", buildAppName( application.getName(), organization ) );
+        properties.setProperty( PROPERTY_PATH, organization.getName() );
         Entity appInfo = em.create( applicationId, APPLICATION_INFO, application.getProperties() );
 
         writeUserToken( smf.getManagementAppId(), appInfo, encryptionService
@@ -679,7 +680,7 @@ public class ManagementServiceImpl implements ManagementService {
         for ( Entity entity : results.getEntities() ) {
             // TODO T.N. temporary hack to deal with duplicate orgs. Revert this
             // commit after migration
-            String path = ( String ) entity.getProperty( "path" );
+            String path = ( String ) entity.getProperty( PROPERTY_PATH );
 
             if ( organizations.containsValue( path ) ) {
                 path += "DUPLICATE";
@@ -812,11 +813,8 @@ public class ManagementServiceImpl implements ManagementService {
             user.getDynamicProperties(), true );
 
         // special case for sysadmin and test account only
-        if ( !user.getEmail().equals( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ) ) && !user.getEmail()
-                                                                                                          .equals(
-                                                                                                                  properties
-                                                                                                                          .getProperty(
-                                                                                                                                  PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ) ) ) {
+        if (    !user.getEmail().equals( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ) ) 
+             && !user.getEmail().equals( properties .getProperty( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ) ) ) {
             this.startAdminUserActivationFlow( userInfo );
         }
 
@@ -1160,6 +1158,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         User user = em.get( userId, User.class );
+        em.refreshIndex();
 
         CredentialsInfo newCredentials =
                 encryptionService.defaultEncryptedCredentials( newPassword, user.getUuid(), smf.getManagementAppId() );
@@ -1212,17 +1211,22 @@ public class ManagementServiceImpl implements ManagementService {
 
     public int calculatePasswordHistorySizeForUser( UUID userId ) throws Exception {
 
+        logger.debug( "calculatePasswordHistorySizeForUser " + userId.toString() );
+
         int size = 0;
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
-        Results orgResults =
-                em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "groups", null, 10000, Level.REFS,
-                        false );
+        Results orgResults = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), 
+                "groups", null, 10000, Level.REFS, false );
+
+        logger.debug( "    orgResults.size() = " +  orgResults.size() );
 
         for ( EntityRef orgRef : orgResults.getRefs() ) {
             Map properties = em.getDictionaryAsMap( orgRef, ORGANIZATION_PROPERTIES_DICTIONARY );
             if ( properties != null ) {
-                size = Math.max( new OrganizationInfo( null, null, properties ).getPasswordHistorySize(), size );
+                OrganizationInfo orgInfo = new OrganizationInfo( null, null, properties );
+                logger.debug( "    orgInfo.getPasswordHistorySize() = " +  orgInfo.getPasswordHistorySize() );
+                size = Math.max( orgInfo.getPasswordHistorySize(), size );
             }
         }
 
@@ -1458,7 +1462,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         for ( Entity entity : results.getEntities() ) {
 
-            path = ( String ) entity.getProperty( "path" );
+            path = ( String ) entity.getProperty( PROPERTY_PATH );
 
             if ( path != null ) {
                 path = path.toLowerCase();
@@ -1659,7 +1663,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Results r = em.getConnectingEntities( 
-                new SimpleEntityRef("application", applicationId), 
+                new SimpleEntityRef(APPLICATION_INFO, applicationId), 
                 "owns", "group", Level.ALL_PROPERTIES );
 
         Entity entity = r.getEntity();
@@ -1681,7 +1685,7 @@ public class ManagementServiceImpl implements ManagementService {
         final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         final Results results = em.getConnectedEntities( 
-                new SimpleEntityRef("organization", organizationId), 
+                new SimpleEntityRef(Group.ENTITY_TYPE, organizationId), 
                 "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
 
         final PagingResultsIterator itr = new PagingResultsIterator( results );
@@ -1728,7 +1732,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        em.createConnection( new SimpleEntityRef( "group", organizationId ), "owns", appInfo );
+        em.createConnection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "owns", appInfo );
 
         return applicationId;
     }

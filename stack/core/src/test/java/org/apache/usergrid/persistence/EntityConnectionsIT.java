@@ -301,4 +301,38 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         assertTrue( em.isConnectionMember( secondUserEntity, "likes", arrogantbutcher ) );
         assertFalse( em.isConnectionMember( secondUserEntity, "likes", fourpeaks ) );
     }
+
+    
+    @Test
+    public void testGetConnectingEntities() throws Exception {
+
+        UUID applicationId = setup.createApplication( 
+            "EntityConnectionsIT", "testGetConnectingEntities" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+        User fred = new User();
+        fred.setUsername( "fred" );
+        fred.setEmail( "fred@flintstones.com" );
+        Entity fredEntity = em.create( fred );
+        assertNotNull( fredEntity );
+
+        User wilma = new User();
+        wilma.setUsername( "wilma" );
+        wilma.setEmail( "wilma@flintstones.com" );
+        Entity wilmaEntity = em.create( wilma );
+        assertNotNull( wilmaEntity );
+
+        em.createConnection( fredEntity, "likes", wilmaEntity );
+
+        em.refreshIndex();
+
+        assertEquals( 1, 
+            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size() );
+
+        assertEquals( 1, 
+            em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES ).size() );
+    }
 }

@@ -17,6 +17,7 @@
 package org.apache.usergrid.services;
 
 
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -117,7 +119,7 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.GET, 1, null, "users", "edanuff", "likes", "restaurants" );
 
-        UUID uuid = UUID.randomUUID();
+        UUID uuid = UUIDGenerator.newTimeUUID();
         app.put( "visits", 5 );
         app.testRequest( ServiceAction.PUT, 1, "devices", uuid );
     }
