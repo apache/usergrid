@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.index.query.Query;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -25,20 +24,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.geo.CollectionGeoSearch;
 import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.geo.model.Point;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.utils.MapUtils;
 
-import static junit.framework.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import org.junit.Ignore;
 
 
 @Concurrent()
@@ -501,12 +501,6 @@ public class GeoIT extends AbstractCoreIT {
             // assertEquals( 1, cells.size() );
             // assertEquals( 4, cells.get( 0 ).length() );
 
-            Query query = Query.fromQL( "select * where location within " 
-                    + distance + " of " + longtitude + ", " + latitude );
-            Results results = em.searchCollection( em.getApplicationRef(), "stores", query);
-
-            assertFalse( results.isEmpty() );
-            assertEquals( 1, results.size() );
         }
 
         {
