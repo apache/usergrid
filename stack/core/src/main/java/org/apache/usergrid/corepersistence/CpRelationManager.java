@@ -1074,10 +1074,17 @@ public class CpRelationManager implements RelationManager {
 
             headEntity = em.validate( headEntity );
 
+            String scopeName = null;
+            if ( connectedEntityType != null ) {
+                scopeName = CpEntityManager.getConnectionScopeName( connectedEntityType, connectionType );
+            } else {
+                scopeName = ALL_TYPES;
+            }
+
             IndexScope indexScope = new IndexScopeImpl(
                 applicationScope.getApplication(), 
                 cpHeadEntity.getId(), 
-                CpEntityManager.getConnectionScopeName( connectedEntityType, connectionType ));
+                scopeName);
             EntityIndex ei = managerCache.getEntityIndex(indexScope);
         
             logger.debug("Searching connected entities from scope {}:{}:{}", new String[] { 
@@ -1091,27 +1098,34 @@ public class CpRelationManager implements RelationManager {
             raw = buildResults( query , crs, query.getConnectionType() );
         }
 
-        if ( Level.REFS.equals(level ) ) {
-            List<EntityRef> refList = new ArrayList<EntityRef>( raw.getEntities() );
-            return Results.fromRefList( refList );
-        } 
+//        if ( Level.REFS.equals(level ) ) {
+//            List<EntityRef> refList = new ArrayList<EntityRef>( raw.getEntities() );
+//            return Results.fromRefList( refList );
+//        } 
+//        if ( Level.IDS.equals(level ) ) {
+//            // TODO: someday this should return a list of Core Persistence Ids
+//            List<UUID> idList = new ArrayList<UUID>();
+//            for ( EntityRef ref : raw.getEntities() ) {
+//                idList.add( ref.getUuid() );
+//            }
+//            return Results.fromIdList( idList );
+//        }
+//
+//        List<Entity> entities = new ArrayList<Entity>();
+//        for ( EntityRef ref : raw.getEntities() ) {
+//            Entity entity = em.get( ref );
+//            entities.add( entity );
+//        }
+//        return Results.fromEntities( entities );
 
-        if ( Level.IDS.equals(level ) ) {
-            // TODO: someday this should return a list of Core Persistence Ids
-            List<UUID> idList = new ArrayList<UUID>();
-            for ( EntityRef ref : raw.getEntities() ) {
-                idList.add( ref.getUuid() );
-            }
-            return Results.fromIdList( idList );
+        List<ConnectionRef> crefs = new ArrayList<ConnectionRef>();
+        for ( Entity e : raw.getEntities() ) {
+            ConnectionRef cref = new ConnectionRefImpl( headEntity, connectionType, e );
+            crefs.add( cref );
         }
 
-        List<Entity> entities = new ArrayList<Entity>();
-        for ( EntityRef ref : raw.getEntities() ) {
-            Entity entity = em.get( ref );
-            entities.add( entity );
-        }
-        
-        return Results.fromEntities( entities );
+        return Results.fromConnections( crefs );
+
     }
 
 
