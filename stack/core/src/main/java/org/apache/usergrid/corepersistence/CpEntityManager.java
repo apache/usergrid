@@ -135,7 +135,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.ClassUtils;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import org.apache.usergrid.utils.CompositeUtils;
@@ -149,6 +148,7 @@ import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.aspectj.weaver.MemberImpl.field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -324,28 +324,37 @@ public class CpEntityManager implements EntityManager {
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
-                new Object[] {
-                    id.getType(), id.getUuid(), 
-                    collectionScope.getApplication(), 
-                    collectionScope.getOwner(),
-                    collectionScope.getName()
-            } );
-        }
-
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
                 ecm.load( id ).toBlockingObservable().last();
 
         if ( cpEntity == null ) {
-            logger.debug( "   Entity NOT found" );
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                    new Object[] {
+                        id.getType(), id.getUuid(), 
+                        collectionScope.getApplication(), 
+                        collectionScope.getOwner(),
+                        collectionScope.getName()
+                } );
+            }
             return null;
         }
+
+//        if ( entityRef.getType().equals("group") ) {
+//            logger.debug("Reading Group");
+//            for ( Field field : cpEntity.getFields() ) {
+//                logger.debug("   Reading prop name={} value={}", field.getName(), field.getValue() );
+//            }
+//        }
 
         Class clazz = Schema.getDefaultSchema().getEntityClass( entityRef.getType() );
 
         Entity entity = EntityFactory.newEntity( entityRef.getUuid(), entityRef.getType(), clazz );
         entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
+
+        if ( entityRef.getType().equals("group") ) {
+            logger.debug("Reading Group " + entity.getProperties());
+        }
 
         return entity;
     }
@@ -387,24 +396,22 @@ public class CpEntityManager implements EntityManager {
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
-                new Object[] {
-                    id.getType(), id.getUuid(), 
-                    collectionScope.getApplication(), 
-                    collectionScope.getOwner(),
-                    collectionScope.getName()
-            } );
-        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
                 ecm.load( id ).toBlockingObservable().last();
 
         if ( cpEntity == null ) {
-            logger.debug( "   entity null" );
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Failed entity load {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                    new Object[] {
+                        id.getType(), id.getUuid(), 
+                        collectionScope.getApplication(), 
+                        collectionScope.getOwner(),
+                        collectionScope.getName()
+                } );
+            }
             return null;
         }
-        logger.debug( "   entity found" );
 
         A entity = EntityFactory.newEntity( entityId, type, entityClass );
         entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
@@ -2387,6 +2394,13 @@ public class CpEntityManager implements EntityManager {
                     collectionScope.getOwner(),
                     collectionScope.getName()
             } );
+//
+//            if ( entity.getType().equals("group")) {
+//                logger.debug("Writing Group");
+//                for ( Field field : cpEntity.getFields() ) {
+//                    logger.debug("   Writing Group name={} value={}", field.getName(), field.getValue() );
+//                }
+//            }
         }
 
         try {

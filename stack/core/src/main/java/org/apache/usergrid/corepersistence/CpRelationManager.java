@@ -209,7 +209,6 @@ public class CpRelationManager implements RelationManager {
         this.cass = em.getCass(); // TODO: eliminate need for this via Core Persistence
         this.indexBucketLocator = indexBucketLocator; // TODO: this also
 
-
         // load the Core Persistence version of the head entity as well
         this.headEntityScope = new CollectionScopeImpl( 
             this.applicationScope.getApplication(), 
@@ -217,6 +216,17 @@ public class CpRelationManager implements RelationManager {
             CpEntityManager.getCollectionScopeNameFromEntityType( headEntity.getType()));
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(headEntityScope);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Loading head entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] {
+                    headEntity.getType(), 
+                    headEntity.getUuid(), 
+                    headEntityScope.getApplication(), 
+                    headEntityScope.getOwner(),
+                    headEntityScope.getName()
+            } );
+        }
+        
         this.cpHeadEntity = ecm.load( new SimpleId( 
             headEntity.getUuid(), headEntity.getType() )).toBlockingObservable().last();
 
@@ -285,11 +295,11 @@ public class CpRelationManager implements RelationManager {
 
 
     private Map<EntityRef, Set<String>> getContainingCollections() {
-        return getContainingCollections( -1 );
+        return getContainingCollections( -1, null );
     }
 
 
-    private Map<EntityRef, Set<String>> getContainingCollections( int limit ) {
+    private Map<EntityRef, Set<String>> getContainingCollections( int limit, String containingEntityType ) {
 
         Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
 
@@ -302,7 +312,7 @@ public class CpRelationManager implements RelationManager {
 
             String edgeType = edgeTypes.next();
 
-            Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType( 
+            Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
                 cpHeadEntity.getId(), edgeType, Long.MAX_VALUE, null ));
 
             Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
@@ -315,6 +325,10 @@ public class CpRelationManager implements RelationManager {
 
                 EntityRef eref = new SimpleEntityRef( 
                     edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
+
+                if ( containingEntityType != null && !containingEntityType.equals( eref.getType() )) {
+                    continue;
+                }
 
                 String connectionName = null;
                 if ( isConnectionEdgeType( edge.getType() )) {
@@ -330,8 +344,11 @@ public class CpRelationManager implements RelationManager {
 
         EntityRef applicationRef = new SimpleEntityRef( TYPE_APPLICATION, applicationId );
         if ( !results.containsKey( applicationRef ) ) {
-            addMapSet( results, applicationRef, 
+
+            if ( containingEntityType != null && !containingEntityType.equals( applicationRef.getType())) {
+                addMapSet( results, applicationRef, 
                     CpEntityManager.getCollectionScopeNameFromEntityType( headEntity.getType() ) );
+            }
         }
         return results;
     }
@@ -459,6 +476,28 @@ public class CpRelationManager implements RelationManager {
     // add to a named collection of the head entity
     @Override
     public Entity addToCollection(String collName, EntityRef itemRef) throws Exception {
+       
+        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
+        if ( ( collection != null ) && !collection.getType().equals( itemRef.getType() ) ) {
+            return null;
+        }
+
+        return addToCollection( collName, itemRef, collection.getLinkedCollection() != null );
+    }
+
+    public Entity addToCollection(String collName, EntityRef itemRef, boolean connectBack ) throws Exception {
+
+        Entity itemEntity = em.get( itemRef );
+
+        if ( itemEntity == null ) {
+            return null;
+        }
+
+        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
+        if ( ( collection != null ) && !collection.getType().equals( itemRef.getType() ) ) {
+            return null;
+        }
+
 
         // load the new member entity to be added to the collection from its default scope
         CollectionScope memberScope = new CollectionScopeImpl( 
@@ -519,7 +558,12 @@ public class CpRelationManager implements RelationManager {
             headEntityScope.getOwner().toString(),
             headEntityScope.getName()}); 
 
-        return em.get( itemRef );
+        if ( connectBack ) {
+            getRelationManager( itemEntity )
+                    .addToCollection( collection.getLinkedCollection(), headEntity, false );
+        }
+
+        return itemEntity;
     }
 
 
@@ -826,7 +870,7 @@ public class CpRelationManager implements RelationManager {
 
             //check out inbound edges of the given type.  If we have more than the 1 specified,
             // we shouldn't delete the connection types from our outbound index
-            if ( !moreThanOneOutboundConnection( 
+            if ( !moreThanOneInboundConnection( 
                connection.getConnectingEntity(), connection.getConnectionType() ) ) {
 
                 addDeleteToMutator( batch, ENTITY_DICTIONARIES,
@@ -1020,7 +1064,7 @@ public class CpRelationManager implements RelationManager {
 
     @Override
     public Results getConnectedEntities( 
-        String connectionType, String connectedEntityType, Level resultsLevel) throws Exception {
+        String connectionType, String connectedEntityType, Level level) throws Exception {
 
         Results raw = null;
 
@@ -1035,13 +1079,20 @@ public class CpRelationManager implements RelationManager {
 
             headEntity = em.validate( headEntity );
 
+            String scopeName = null;
+            if ( connectedEntityType != null ) {
+                scopeName = CpEntityManager.getConnectionScopeName( connectedEntityType, connectionType );
+            } else {
+                scopeName = ALL_TYPES;
+            }
+
             IndexScope indexScope = new IndexScopeImpl(
                 applicationScope.getApplication(), 
                 cpHeadEntity.getId(), 
-                CpEntityManager.getConnectionScopeName( connectedEntityType, connectionType ));
+                scopeName);
             EntityIndex ei = managerCache.getEntityIndex(indexScope);
         
-            logger.debug("Searching connections from scope {}:{}:{}", new String[] { 
+            logger.debug("Searching connected entities from scope {}:{}:{}", new String[] { 
                 indexScope.getApplication().toString(), 
                 indexScope.getOwner().toString(),
                 indexScope.getName()}); 
@@ -1052,6 +1103,26 @@ public class CpRelationManager implements RelationManager {
             raw = buildResults( query , crs, query.getConnectionType() );
         }
 
+//        if ( Level.REFS.equals(level ) ) {
+//            List<EntityRef> refList = new ArrayList<EntityRef>( raw.getEntities() );
+//            return Results.fromRefList( refList );
+//        } 
+//        if ( Level.IDS.equals(level ) ) {
+//            // TODO: someday this should return a list of Core Persistence Ids
+//            List<UUID> idList = new ArrayList<UUID>();
+//            for ( EntityRef ref : raw.getEntities() ) {
+//                idList.add( ref.getUuid() );
+//            }
+//            return Results.fromIdList( idList );
+//        }
+//
+//        List<Entity> entities = new ArrayList<Entity>();
+//        for ( EntityRef ref : raw.getEntities() ) {
+//            Entity entity = em.get( ref );
+//            entities.add( entity );
+//        }
+//        return Results.fromEntities( entities );
+
         List<ConnectionRef> crefs = new ArrayList<ConnectionRef>();
         for ( Entity e : raw.getEntities() ) {
             ConnectionRef cref = new ConnectionRefImpl( headEntity, connectionType, e );
@@ -1059,6 +1130,7 @@ public class CpRelationManager implements RelationManager {
         }
 
         return Results.fromConnections( crefs );
+
     }
 
 
@@ -1073,7 +1145,7 @@ public class CpRelationManager implements RelationManager {
     public Results getConnectingEntities(
             String connectionType, String entityType, Level level, int count) throws Exception {
 
-        Map<EntityRef, Set<String>> containers = getContainingCollections( count );
+        Map<EntityRef, Set<String>> containers = getContainingCollections( count, entityType );
 
         if ( Level.REFS.equals(level ) ) {
             List<EntityRef> refList = new ArrayList<EntityRef>( containers.keySet() );
@@ -1092,6 +1164,7 @@ public class CpRelationManager implements RelationManager {
         List<Entity> entities = new ArrayList<Entity>();
         for ( EntityRef ref : containers.keySet() ) {
             Entity entity = em.get( ref );
+            logger.debug("   Found connecting entity: " + entity.getProperties());
             entities.add( entity );
         }
         return Results.fromEntities( entities );
