@@ -63,6 +63,7 @@ public class SetupMojo extends MainMojo {
         this.plugin = mojo.plugin;
         this.project = mojo.project;
         this.runnerCount = mojo.runnerCount;
+        this.finalName = mojo.finalName;
     }
 
 
@@ -130,7 +131,6 @@ public class SetupMojo extends MainMojo {
         if ( responseMessage.equals( SetupStackState.JarNotFound.getMessage() ) ) {
             LOG.info( "No runner jar found, deploying now..." );
             DeployMojo deployMojo = new DeployMojo( this );
-            deployMojo.finalName = this.finalName;
             deployMojo.execute();
             this.execute();
         }

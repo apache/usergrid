@@ -106,7 +106,6 @@ public class StartMojo extends MainMojo {
         if ( result.contains( "is in " + State.STOPPED + " state" ) ) {
             LOG.info( "Resetting the runners before starting..." );
             ResetMojo resetMojo = new ResetMojo( this );
-            resetMojo.finalName = this.finalName;
             resetMojo.execute();
             this.execute();
         }
