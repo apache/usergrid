@@ -1784,6 +1784,29 @@ Usergrid.Entity.prototype.getFollowers = function(callback) {
     });
 };
 
+Usergrid.Client.prototype.createRole = function(roleName, permissions, callback) {
+    
+    var options = {
+        type: 'role',
+        name: roleName        
+    };
+
+    this.createEntity(options, function(err, response, entity) {
+        if (err) {
+            doCallback(callback, [ err, response, self ]);    
+        } else {
+            entity.assignPermissions(permissions, function (err, data) {
+                if (err) {
+                    doCallback(callback, [ err, response, self ]);    
+                } else {
+                    doCallback(callback, [ err, data, data.data ], self);
+                }
+            })
+        }        
+    });
+
+};
+
 Usergrid.Entity.prototype.getRoles = function(callback) {
     var self = this;
     var endpoint = this.get("type") + "/" + this.get("uuid") + "/roles";
@@ -1805,8 +1828,8 @@ Usergrid.Entity.prototype.assignPermissions = function(permissions, callback) {
     var entityID;
     var type = this.get("type");
 
-    if (type != 'user' && type != 'users' && type != 'group' && type != 'groups') {
-        doCallback(callback, [ new UsergridError("entity must be a group or user", "invalid_entity_type"), null, this ], this);
+    if (type != 'user' && type != 'users' && type != 'group' && type != 'groups' && type != 'role' && type != 'roles') {
+        doCallback(callback, [ new UsergridError("entity must be a group, user, or role", "invalid_entity_type"), null, this ], this);
     }
 
     if (type == 'user' && this.get("username") != null) {
@@ -1838,8 +1861,8 @@ Usergrid.Entity.prototype.removePermissions = function(permissions, callback) {
     var entityID;
     var type = this.get("type");
 
-    if (type != 'user' && type != 'users' && type != 'group' && type != 'groups') {
-        doCallback(callback, [ new UsergridError("entity must be a group or user", "invalid_entity_type"), null, this ], this);
+    if (type != 'user' && type != 'users' && type != 'group' && type != 'groups' && type != 'role' && type != 'roles') {
+        doCallback(callback, [ new UsergridError("entity must be a group, user, or role", "invalid_entity_type"), null, this ], this);
     }
 
     if (type == 'user' && this.get("username") != null) {
