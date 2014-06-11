@@ -1654,16 +1654,16 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public OrganizationInfo getOrganizationForApplication( UUID applicationId ) throws Exception {
+    public OrganizationInfo getOrganizationForApplication( UUID applicationInfoId ) throws Exception {
 
-        if ( applicationId == null ) {
+        if ( applicationInfoId == null ) {
             return null;
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Results r = em.getConnectingEntities( 
-                new SimpleEntityRef(APPLICATION_INFO, applicationId), 
+                new SimpleEntityRef(APPLICATION_INFO, applicationInfoId), 
                 "owns", "group", Level.ALL_PROPERTIES );
 
         Entity entity = r.getEntity();
@@ -1676,16 +1676,16 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public BiMap<UUID, String> getApplicationsForOrganization( UUID organizationId ) throws Exception {
+    public BiMap<UUID, String> getApplicationsForOrganization( UUID organizationGroupId ) throws Exception {
 
-        if ( organizationId == null ) {
+        if ( organizationGroupId == null ) {
             return null;
         }
         final BiMap<UUID, String> applications = HashBiMap.create();
         final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         final Results results = em.getConnectedEntities( 
-                new SimpleEntityRef(Group.ENTITY_TYPE, organizationId), 
+                new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId), 
                 "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
 
         final PagingResultsIterator itr = new PagingResultsIterator( results );

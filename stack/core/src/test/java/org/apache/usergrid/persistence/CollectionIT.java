@@ -382,7 +382,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         properties = new LinkedHashMap<String, Object>();
         properties.put( "nickname", "ed" );
-        em.updateProperties( new SimpleCollectionRef( group, "users", user1 ), properties );
+        em.updateProperties( user1, properties );
 
         em.refreshIndex();
 

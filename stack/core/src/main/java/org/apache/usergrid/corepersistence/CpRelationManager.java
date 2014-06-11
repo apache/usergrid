@@ -242,7 +242,7 @@ public class CpRelationManager implements RelationManager {
     static String getEdgeTypeFromConnectionType( String connectionType, String targetEntityType ) {
 
         if ( connectionType != null && targetEntityType != null ) {
-            String csn = connectionType + targetEntityType + EDGE_CONN_SUFFIX;
+            String csn = connectionType + "|" + targetEntityType + "|" + EDGE_CONN_SUFFIX;
             return csn;
         }
 
@@ -259,7 +259,7 @@ public class CpRelationManager implements RelationManager {
     static String getEdgeTypeFromCollectionName( String collectionName, String targetEntityType ) {
 
         if ( collectionName != null && targetEntityType != null ) {
-            String csn = collectionName + targetEntityType + EDGE_COLL_SUFFIX;
+            String csn = collectionName + "|" + targetEntityType + "|" + EDGE_COLL_SUFFIX;
             return csn;
         }
 
@@ -279,18 +279,26 @@ public class CpRelationManager implements RelationManager {
 
     
     public String getConnectionName( String edgeType ) {
-        return edgeType.substring( 0, edgeType.indexOf(EDGE_COLL_SUFFIX));
+        String[] parts = edgeType.split("\\|");
+        return parts[0];
     }
 
 
     @Override
-    public Set<String> getCollectionIndexes(String collectionName) throws Exception {
+    public Set<String> getCollectionIndexes( String collectionName ) throws Exception {
         final Set<String> indexes = new HashSet<String>();
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
+        String edgeTypePrefix = getEdgeTypeFromCollectionName( collectionName, null );
+
+        logger.debug("getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}", 
+            new Object[] {
+                edgeTypePrefix, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid()
+        });
+
         Observable<String> types= gm.getEdgeTypesFromSource( 
-            new SimpleSearchEdgeType( cpHeadEntity.getId(), null,  null ));
+            new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeTypePrefix,  null ));
 
         Iterator<String> iter = types.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {
@@ -331,7 +339,14 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
         Iterator<String> edgeTypes = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
-            cpHeadEntity.getId(), containingEntityType, null) ).toBlockingObservable().getIterator();
+            cpHeadEntity.getId(), null, null) ).toBlockingObservable().getIterator();
+
+        logger.debug("getContainingCollections(): Searching for edges to target {}:{} found: {}", 
+            new Object[] {
+                cpHeadEntity.getId().getType(), 
+                cpHeadEntity.getId().getUuid(), 
+                edgeTypes.hasNext()
+        });
 
         while ( edgeTypes.hasNext() ) {
 
@@ -345,6 +360,11 @@ public class CpRelationManager implements RelationManager {
                 Edge edge = iter.next();
 
                 if ( !isConnectionEdgeType( edge.getType()) ) {
+                    continue;
+                }
+
+                if ( containingEntityType != null 
+                        && !containingEntityType.equals( edge.getSourceNode().getType() )) {
                     continue;
                 }
 
@@ -363,10 +383,11 @@ public class CpRelationManager implements RelationManager {
             }
         }
 
-        EntityRef applicationRef = new SimpleEntityRef( TYPE_APPLICATION, applicationId );
-        if ( !results.containsKey( applicationRef ) ) {
+        if ( containingEntityType == null ) {
 
-            if ( containingEntityType != null && !containingEntityType.equals( applicationRef.getType())) {
+            EntityRef applicationRef = new SimpleEntityRef( TYPE_APPLICATION, applicationId );
+            if ( !results.containsKey( applicationRef ) ) {
+
                 addMapSet( results, applicationRef, 
                     CpEntityManager.getCollectionScopeNameFromEntityType( headEntity.getType() ) );
             }
