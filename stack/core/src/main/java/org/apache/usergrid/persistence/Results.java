@@ -1073,6 +1073,9 @@ public class Results implements Iterable<Entity> {
         if ( entity != null ) {
             return 1;
         }
+        if ( connections != null ) {
+            return connections.size();
+        }
         if ( ref != null ) {
             return 1;
         }

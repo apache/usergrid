@@ -224,7 +224,7 @@ public class CpEntityManager implements EntityManager {
 
 
     static String getConnectionScopeName( String entityType, String connectionType ) {
-        String csn = entityType + connectionType + CONN_SUFFIX;
+        String csn = connectionType + entityType + CONN_SUFFIX;
         return csn;
     }
 
