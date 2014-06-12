@@ -508,13 +508,19 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Set<String> getCollections() throws Exception {
 
-        Map<String, CollectionInfo> collections = 
-                getDefaultSchema().getCollections( headEntity.getType() );
-        if ( collections == null ) {
-            return null;
+        final Set<String> indexes = new HashSet<String>();
+
+        GraphManager gm = managerCache.getGraphManager(applicationScope);
+
+        Observable<String> str = gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(),null , null ));
+
+        Iterator<String> iter = str.toBlockingObservable().getIterator();
+        while ( iter.hasNext() ) {
+            indexes.add( iter.next() );
         }
 
-        return collections.keySet();
+        return indexes;
+
     }
 
     @Override

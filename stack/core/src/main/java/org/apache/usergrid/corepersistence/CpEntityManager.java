@@ -711,6 +711,7 @@ public class CpEntityManager implements EntityManager {
     public Set<String> getApplicationCollections() throws Exception {
 
         return getRelationManager( getApplication() ).getCollections();
+
     }
 
 
@@ -754,6 +755,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void createApplicationCollection( String entityType ) throws Exception {
+        create(entityType,null);
     }
 
 
