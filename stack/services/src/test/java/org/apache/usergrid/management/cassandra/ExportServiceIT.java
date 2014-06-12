@@ -430,12 +430,13 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+        Thread.sleep( 1000 );
+
         exportService.doExport( jobExecution );
 
         JSONParser parser = new JSONParser();
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-
         assertEquals( 1, a.size() );
         for ( int i = 0; i < a.size(); i++ ) {
             org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
@@ -490,6 +491,8 @@ public class ExportServiceIT {
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        Thread.sleep( 1000 );
 
         exportService.doExport( jobExecution );
 
@@ -548,6 +551,8 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+        Thread.sleep( 1000 );
+
         exportService.doExport( jobExecution );
 
         JSONParser parser = new JSONParser();
@@ -560,7 +565,7 @@ public class ExportServiceIT {
 
 
     //@Ignore("file created won't be deleted when running tests")
-    @Ignore
+    @Test
     public void testExportOneOrganization() throws Exception {
 
         //File f = new File( "exportOneOrganization.json" );
@@ -624,6 +629,8 @@ public class ExportServiceIT {
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        Thread.sleep( 1000 );
 
         exportService.doExport( jobExecution );
 
