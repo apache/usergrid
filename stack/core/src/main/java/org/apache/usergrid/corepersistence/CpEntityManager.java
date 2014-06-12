@@ -339,7 +339,7 @@ public class CpEntityManager implements EntityManager {
                 logger.debug( "Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
                     new Object[] {
                         id.getType(), id.getUuid(), 
-                        collectionScope.getApplication(), 
+                        collectionScope.getApplication(),
                         collectionScope.getOwner(),
                         collectionScope.getName()
                 } );

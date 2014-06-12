@@ -240,7 +240,7 @@ public class CpRelationManager implements RelationManager {
     static String getEdgeTypeFromConnectionType( String connectionType, String targetEntityType ) {
 
         if ( connectionType != null && targetEntityType != null ) {
-            String csn = connectionType + targetEntityType + EDGE_CONN_SUFFIX;
+            String csn = connectionType + "|" + targetEntityType + "|" + EDGE_CONN_SUFFIX;
             return csn;
         }
 
@@ -257,7 +257,7 @@ public class CpRelationManager implements RelationManager {
     static String getEdgeTypeFromCollectionName( String collectionName, String targetEntityType ) {
 
         if ( collectionName != null && targetEntityType != null ) {
-            String csn = collectionName + targetEntityType + EDGE_COLL_SUFFIX;
+            String csn = collectionName + "|" + targetEntityType + "|" + EDGE_COLL_SUFFIX;
             return csn;
         }
 
@@ -277,18 +277,26 @@ public class CpRelationManager implements RelationManager {
 
     
     public String getConnectionName( String edgeType ) {
-        return edgeType.substring( 0, edgeType.indexOf(EDGE_COLL_SUFFIX));
+        String[] parts = edgeType.split("\\|");
+        return parts[0];
     }
 
 
     @Override
-    public Set<String> getCollectionIndexes(String collectionName) throws Exception {
+    public Set<String> getCollectionIndexes( String collectionName ) throws Exception {
         final Set<String> indexes = new HashSet<String>();
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
+        String edgeTypePrefix = getEdgeTypeFromCollectionName( collectionName, null );
+
+        logger.debug("getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}", 
+            new Object[] {
+                edgeTypePrefix, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid()
+        });
+
         Observable<String> types= gm.getEdgeTypesFromSource( 
-            new SimpleSearchEdgeType( cpHeadEntity.getId(), null,  null ));
+            new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeTypePrefix,  null ));
 
         Iterator<String> iter = types.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {
@@ -301,7 +309,9 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Map<String, Map<UUID, Set<String>>> getOwners() throws Exception {
 
-        Map<EntityRef, Set<String>> containerEntities = getContainingCollections();
+        // TODO: do we need to restrict this to edges prefixed with owns?
+        //Map<EntityRef, Set<String>> containerEntities = getContainers(-1, "owns", null);
+        Map<EntityRef, Set<String>> containerEntities = getContainers();
 
         Map<String, Map<UUID, Set<String>>> owners = 
                 new LinkedHashMap<String, Map<UUID, Set<String>>>();
@@ -317,32 +327,49 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    private Map<EntityRef, Set<String>> getContainingCollections() {
-        return getContainingCollections( -1, null );
+    private Map<EntityRef, Set<String>> getContainers() {
+        return getContainers( -1, null, null );
     }
 
 
-    private Map<EntityRef, Set<String>> getContainingCollections( int limit, String containingEntityType ) {
+    /**
+     * Gets containing collections and/or connections depending on the edge type you pass in
+     * @param limit Max number to return
+     * @param edgeType Edge type, edge type prefix or null to allow any edge type
+     * @param fromEntityType Only consider edges from entities of this type
+     */
+    private Map<EntityRef, Set<String>> getContainers( int limit, String edgeType, String fromEntityType ) {
 
         Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
         Iterator<String> edgeTypes = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
-            cpHeadEntity.getId(), containingEntityType, null) ).toBlockingObservable().getIterator();
+            cpHeadEntity.getId(), edgeType, null) ).toBlockingObservable().getIterator();
+
+        logger.debug("getContainers(): "
+                + "Searched for edges of type {}\n   to target {}:{}\n   in scope {}\n   found: {}", 
+            new Object[] {
+                edgeType,
+                cpHeadEntity.getId().getType(), 
+                cpHeadEntity.getId().getUuid(), 
+                applicationScope.getApplication(),
+                edgeTypes.hasNext()
+        });
 
         while ( edgeTypes.hasNext() ) {
 
-            String edgeType = edgeTypes.next();
+            String etype = edgeTypes.next();
 
             Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
-                cpHeadEntity.getId(), edgeType, Long.MAX_VALUE, null ));
+                cpHeadEntity.getId(), etype, Long.MAX_VALUE, null ));
 
             Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
             while ( iter.hasNext() ) {
                 Edge edge = iter.next();
 
-                if ( !isConnectionEdgeType( edge.getType()) ) {
+                if ( fromEntityType != null && !fromEntityType.equals( edge.getSourceNode().getType() )) {
+                    logger.debug("Ignoring edge from entity type {}", edge.getSourceNode().getType());
                     continue;
                 }
 
@@ -361,14 +388,16 @@ public class CpRelationManager implements RelationManager {
             }
         }
 
-        EntityRef applicationRef = new SimpleEntityRef( TYPE_APPLICATION, applicationId );
-        if ( !results.containsKey( applicationRef ) ) {
-
-            if ( containingEntityType != null && !containingEntityType.equals( applicationRef.getType())) {
-                addMapSet( results, applicationRef, 
-                    CpEntityManager.getCollectionScopeNameFromEntityType( headEntity.getType() ) );
-            }
-        }
+        // should not need to do this
+//        if ( connType == null ) {
+//
+//            EntityRef applicationRef = new SimpleEntityRef( TYPE_APPLICATION, applicationId );
+//            if ( !results.containsKey( applicationRef ) ) {
+//
+//                addMapSet( results, applicationRef, 
+//                    CpEntityManager.getCollectionScopeNameFromEntityType( headEntity.getType() ) );
+//            }
+//        }
         return results;
     }
 
@@ -518,7 +547,8 @@ public class CpRelationManager implements RelationManager {
             return null;
         }
 
-        return addToCollection( collName, itemRef, collection.getLinkedCollection() != null );
+        return addToCollection( collName, itemRef, 
+                (collection != null && collection.getLinkedCollection() != null) );
     }
 
     public Entity addToCollection(String collName, EntityRef itemRef, boolean connectBack ) throws Exception {
@@ -572,7 +602,7 @@ public class CpRelationManager implements RelationManager {
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge(
             cpHeadEntity.getId(), 
-            getEdgeTypeFromCollectionName( collName, memberEntity.getId().getType() ), 
+            edgeType, 
             memberEntity.getId(), 
             memberEntity.getId().getUuid().timestamp() );
         GraphManager gm = managerCache.getGraphManager(applicationScope);
@@ -610,9 +640,9 @@ public class CpRelationManager implements RelationManager {
             headEntityScope.getOwner().toString(),
             headEntityScope.getName()}); 
 
-        if ( connectBack ) {
+        if ( connectBack && collection != null && collection.getLinkedCollection() != null ) {
             getRelationManager( itemEntity )
-                    .addToCollection( collection.getLinkedCollection(), headEntity, false );
+                .addToCollection( collection.getLinkedCollection(), headEntity, false );
         }
 
         return itemEntity;
@@ -672,7 +702,7 @@ public class CpRelationManager implements RelationManager {
 
             addToCollection( collName, itemEntity );
 
-            if ( collection.getLinkedCollection() != null ) {
+            if ( collection != null && collection.getLinkedCollection() != null ) {
                 getRelationManager(  getHeadEntity() )
                     .addToCollection( collection.getLinkedCollection(),itemEntity);
             }
@@ -825,9 +855,9 @@ public class CpRelationManager implements RelationManager {
         EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager(targetScope);
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug("Creating connection '{}' from source {}:{}]\n"
-                    + "   to target {}:{}"
-                    + "   from scope\n      app {}\n      owner {}\n      name {}", 
+            logger.debug("createConnection(): "
+                    + "Indexing connection type '{}'\n   from source {}:{}]\n"
+                    + "   to target {}:{}\n   from scope\n   app {}\n   owner {}\n   name {}", 
                 new Object[] { 
                     connectionType,
                     headEntity.getType(), 
@@ -847,11 +877,16 @@ public class CpRelationManager implements RelationManager {
         String edgeType = CpRelationManager
                 .getEdgeTypeFromConnectionType( connectionType, connectedEntityRef.getType() );
 
-        logger.debug("createConnection(): Creating edge type {} from {}:{} to {}:{}", 
-            new Object[] { 
-                edgeType, 
-                headEntity.getType(), headEntity.getUuid(), 
-                connectedEntityRef.getType(), connectedEntityRef.getUuid() });
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("createConnection(): "
+                    + "Creating edge type {} \n   from {}:{}\n   to {}:{}\n   in scope {}", 
+                new Object[] { 
+                    edgeType, 
+                    headEntity.getType(), headEntity.getUuid(), 
+                    connectedEntityRef.getType(), connectedEntityRef.getUuid(),
+                    applicationScope.getApplication()
+            });
+        }
 
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge( 
@@ -1197,17 +1232,22 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results getConnectingEntities(String connectionType, String connectedEntityType, 
-            Level resultsLevel) throws Exception {
+    public Results getConnectingEntities(
+            String connType, String fromEntityType, Level resultsLevel) throws Exception {
 
-        return getConnectingEntities( connectionType, connectedEntityType, resultsLevel, -1 );
+        return getConnectingEntities( connType, fromEntityType, resultsLevel, -1 );
     }
 
     @Override
     public Results getConnectingEntities(
-            String connectionType, String entityType, Level level, int count) throws Exception {
+            String connType, String fromEntityType, Level level, int count) throws Exception {
 
-        Map<EntityRef, Set<String>> containers = getContainingCollections( count, entityType );
+        // looking for edges to the head entity
+        String edgeType = 
+                CpRelationManager.getEdgeTypeFromConnectionType( connType, headEntity.getType() );
+
+        Map<EntityRef, Set<String>> containers = 
+            getContainers( count, edgeType, fromEntityType );
 
         if ( Level.REFS.equals(level ) ) {
             List<EntityRef> refList = new ArrayList<EntityRef>( containers.keySet() );
@@ -1515,7 +1555,7 @@ public class CpRelationManager implements RelationManager {
                 getDefaultSchema().getContainersIndexingDictionary( entity.getType(), setName );
 
         if ( containers != null ) {
-            Map<EntityRef, Set<String>> containerEntities = getContainingCollections();
+            Map<EntityRef, Set<String>> containerEntities = getContainers();
             for ( EntityRef containerEntity : containerEntities.keySet() ) {
                 if ( containerEntity.getType().equals( TYPE_APPLICATION ) && Schema
                         .isAssociatedEntityType( entity.getType() ) ) {

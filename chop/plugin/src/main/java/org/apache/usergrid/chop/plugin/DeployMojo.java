@@ -62,6 +62,7 @@ public class DeployMojo extends MainMojo {
         this.plugin = mojo.plugin;
         this.project = mojo.project;
         this.runnerCount = mojo.runnerCount;
+        this.finalName = mojo.finalName;
     }
 
 

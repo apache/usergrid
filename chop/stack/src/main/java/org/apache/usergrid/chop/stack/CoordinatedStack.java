@@ -49,7 +49,7 @@ public class CoordinatedStack implements ICoordinatedStack {
     private String dataCenter;
 
     private StackState state = StackState.INACTIVE;
-    private SetupStackState setupState = SetupStackState.NotFound;
+    private SetupStackState setupState = SetupStackState.JarNotFound;
     private Set<Runner> runners;
     private Collection<Instance> runnerInstances = new LinkedList<Instance>();
 

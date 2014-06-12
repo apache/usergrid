@@ -27,10 +27,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.project.MavenProjectHelper;
 
 import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.RestParams;
+import org.apache.usergrid.chop.stack.SetupStackState;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -40,6 +43,10 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 @Mojo( name = "setup" )
 public class SetupMojo extends MainMojo {
+
+    @Component
+    private MavenProjectHelper projectHelper;
+
 
     public SetupMojo() {
 
@@ -56,6 +63,7 @@ public class SetupMojo extends MainMojo {
         this.plugin = mojo.plugin;
         this.project = mojo.project;
         this.runnerCount = mojo.runnerCount;
+        this.finalName = mojo.finalName;
     }
 
 
@@ -97,15 +105,18 @@ public class SetupMojo extends MainMojo {
         LOG.info( "Username: {}", username );
 
         ClientResponse resp = resource.path( "/stack" )
-                .queryParam( RestParams.COMMIT_ID, props.getProperty( Project.GIT_UUID_KEY ) )
-                .queryParam( RestParams.MODULE_ARTIFACTID, props.getProperty( Project.ARTIFACT_ID_KEY ) )
-                .queryParam( RestParams.MODULE_GROUPID, props.getProperty( Project.GROUP_ID_KEY ) )
-                .queryParam( RestParams.MODULE_VERSION, props.getProperty( Project.PROJECT_VERSION_KEY ) )
-                .queryParam( RestParams.USERNAME, username )
-                .queryParam( RestParams.RUNNER_COUNT, runnerCount.toString() )
-                .type( MediaType.APPLICATION_JSON )
-                .accept( MediaType.APPLICATION_JSON )
-                .post( ClientResponse.class );
+                                      .queryParam( RestParams.COMMIT_ID, props.getProperty( Project.GIT_UUID_KEY ) )
+                                      .queryParam( RestParams.MODULE_ARTIFACTID,
+                                              props.getProperty( Project.ARTIFACT_ID_KEY ) )
+                                      .queryParam( RestParams.MODULE_GROUPID,
+                                              props.getProperty( Project.GROUP_ID_KEY ) )
+                                      .queryParam( RestParams.MODULE_VERSION,
+                                              props.getProperty( Project.PROJECT_VERSION_KEY ) )
+                                      .queryParam( RestParams.USERNAME, username )
+                                      .queryParam( RestParams.RUNNER_COUNT, runnerCount.toString() )
+                                      .type( MediaType.APPLICATION_JSON )
+                                      .accept( MediaType.APPLICATION_JSON )
+                                      .post( ClientResponse.class );
 
         if( resp.getStatus() != Response.Status.OK.getStatusCode() &&
                 resp.getStatus() != Response.Status.CREATED.getStatusCode() ) {
@@ -115,8 +126,22 @@ public class SetupMojo extends MainMojo {
             throw new MojoExecutionException( "Setup plugin goal has failed" );
         }
 
-        LOG.info( "====== Response from the coordinator ======" );
-        LOG.info( resp.getEntity( String.class ) );
-        LOG.info( "===========================================" );
+        String responseMessage = resp.getEntity( String.class );
+
+        if ( responseMessage.equals( SetupStackState.JarNotFound.getMessage() ) ) {
+            LOG.info( "No runner jar found, deploying now..." );
+            DeployMojo deployMojo = new DeployMojo( this );
+            deployMojo.execute();
+            this.execute();
+        }
+        else {
+            LOG.info( "====== Response from the coordinator ======" );
+            LOG.info( responseMessage );
+            LOG.info( "===========================================" );
+        }
+
+
+
+
     }
 }
