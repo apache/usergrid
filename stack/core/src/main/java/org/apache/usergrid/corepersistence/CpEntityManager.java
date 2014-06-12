@@ -115,6 +115,7 @@ import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.corepersistence.CpRelationManager.ALL_TYPES;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
@@ -464,14 +465,7 @@ public class CpEntityManager implements EntityManager {
             appScope.getApplication(), 
             appScope.getApplication(),
             getCollectionScopeNameFromEntityType( entity.getType() ) );
-
-        IndexScope indexScope = new IndexScopeImpl( 
-            appScope.getApplication(), 
-            appScope.getApplication(), 
-            entity.getType() );
-
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-        EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
@@ -504,8 +498,20 @@ public class CpEntityManager implements EntityManager {
                 handleWriteUniqueVerifyException( entity, wuve );
             }
         }
-
+        
+        IndexScope indexScope = new IndexScopeImpl( 
+            appScope.getApplication(), 
+            appScope.getApplication(), 
+            entity.getType() );
+        EntityIndex ei = managerCache.getEntityIndex( indexScope );
         ei.index( cpEntity );
+
+        IndexScope allTypesIndexScope = new IndexScopeImpl( 
+            appScope.getApplication(), 
+            appScope.getApplication(), 
+            ALL_TYPES);
+        EntityIndex aei = managerCache.getEntityIndex( allTypesIndexScope );
+        aei.index( cpEntity );
 
         // next, update entity in every collection and connection scope in which it is indexed 
         updateEntityIndexes( entity, cpEntity );
@@ -529,7 +535,7 @@ public class CpEntityManager implements EntityManager {
                 Set<String> collections = collectionsByUuid.get( uuid );
                 for ( String coll : collections ) {
 
-                    if ( coll.trim().isEmpty() ) {
+                    if ( coll == null || coll.trim().isEmpty() ) {
                         logger.warn( "Ignoring empty collection name for owner {}:{}", 
                                 uuid, ownerType );
                         break;
@@ -604,11 +610,16 @@ public class CpEntityManager implements EntityManager {
                     appScope.getApplication(),
                     getCollectionScopeNameFromEntityType( entityRef.getType() ) );
             EntityIndex entityIndex = managerCache.getEntityIndex( defaultIndexScope );
-
             entityIndex.deindex( entity );
 
-            decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
+            IndexScope allTypesIndexScope = new IndexScopeImpl( 
+                appScope.getApplication(), 
+                appScope.getApplication(), 
+                ALL_TYPES);
+            EntityIndex aei = managerCache.getEntityIndex( allTypesIndexScope );
+            aei.deindex( entity );
 
+            decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
 
             // and finally...
             return ecm.delete( entityId );
@@ -2452,11 +2463,11 @@ public class CpEntityManager implements EntityManager {
             }
         }
 
-        // Index CP entity into default scope
+        // Index CP entity into default collection scope
         IndexScope defaultIndexScope = new IndexScopeImpl( 
             appScope.getApplication(), 
             appScope.getApplication(), 
-            entity.getType() );
+            CpEntityManager.getCollectionScopeNameFromEntityType( entity.getType() ) );
         EntityIndex ei = managerCache.getEntityIndex( defaultIndexScope );
         ei.index( cpEntity );
 

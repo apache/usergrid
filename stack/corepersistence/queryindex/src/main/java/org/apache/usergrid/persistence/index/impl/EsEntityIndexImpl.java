@@ -270,13 +270,14 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void index( Entity entity ) {
 
         if ( log.isDebugEnabled() ) {
-            log.debug("Indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {}", 
+            log.debug("Indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {}\n   type {}", 
                 new Object[] { 
                     entity.getId().getType(), 
                     entity.getId().getUuid(), 
                     indexScope.getApplication(), 
                     indexScope.getOwner(), 
-                    indexScope.getName() 
+                    indexScope.getName(),
+                    indexType
             });
         }
 
