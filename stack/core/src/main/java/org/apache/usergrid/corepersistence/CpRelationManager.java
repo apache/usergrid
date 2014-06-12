@@ -155,7 +155,7 @@ public class CpRelationManager implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
 
-    private static final String ALL_TYPES = "zzzalltypesnzzz";
+    public static final String ALL_TYPES = "zzzalltypesnzzz";
 
     private static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
 
@@ -1429,6 +1429,8 @@ public class CpRelationManager implements RelationManager {
         Results results = null;
 
         if ( query.getLevel().equals( Level.IDS )) {
+
+            // TODO: add stale entity logic here
             
             // TODO: replace this with List<Id> someday
             List<UUID> ids = new ArrayList<UUID>();
@@ -1440,6 +1442,8 @@ public class CpRelationManager implements RelationManager {
 
         } else if ( query.getLevel().equals( Level.REFS )) {
 
+            // TODO: add stale entity logic here
+            
             if ( crs.size() == 1 ) {
                 CandidateResult cr = crs.iterator().next();
                 results = Results.fromRef( 
@@ -1486,7 +1490,7 @@ public class CpRelationManager implements RelationManager {
                 org.apache.usergrid.persistence.model.entity.Entity e =
                     ecm.load( cr.getId() ).toBlockingObservable().last();
 
-                if ( cr.getVersion().compareTo( e.getVersion()) > 0 )  {
+                if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
                     logger.debug("Stale version uuid:{} type:{} version:{}", 
                         new Object[] {cr.getId().getUuid(), cr.getId().getType(), cr.getVersion()});
                     continue;
