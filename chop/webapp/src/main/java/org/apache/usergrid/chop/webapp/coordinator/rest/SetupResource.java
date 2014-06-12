@@ -120,24 +120,31 @@ public class SetupResource extends TestableResource implements RestParams {
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-        if( status.equals( SetupStackState.Destroying ) ) {
+
+        if( ! status.equals( SetupStackState.NotSetUp ) ) {
             return Response.status( Response.Status.OK )
-                           .entity( SetupStackState.Destroying.getMessage() )
+                           .entity( status.getMessage() )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-        if( status.equals( SetupStackState.SettingUp ) ) {
-            return Response.status( Response.Status.OK )
-                           .entity( SetupStackState.SettingUp.getMessage() )
-                           .type( MediaType.APPLICATION_JSON )
-                           .build();
-        }
-        if( status.equals( SetupStackState.SetUp ) ) {
-            return Response.status( Response.Status.OK )
-                           .entity( SetupStackState.SetUp.getMessage() )
-                           .type( MediaType.APPLICATION_JSON )
-                           .build();
-        }
+//        if( status.equals( SetupStackState.Destroying ) ) {
+//            return Response.status( Response.Status.OK )
+//                           .entity( SetupStackState.Destroying.getMessage() )
+//                           .type( MediaType.APPLICATION_JSON )
+//                           .build();
+//        }
+//        if( status.equals( SetupStackState.SettingUp ) ) {
+//            return Response.status( Response.Status.OK )
+//                           .entity( SetupStackState.SettingUp.getMessage() )
+//                           .type( MediaType.APPLICATION_JSON )
+//                           .build();
+//        }
+//        if( status.equals( SetupStackState.SetUp ) ) {
+//            return Response.status( Response.Status.OK )
+//                           .entity( SetupStackState.SetUp.getMessage() )
+//                           .type( MediaType.APPLICATION_JSON )
+//                           .build();
+//        }
 
         /** SetupStackState.NotSetUp */
         stackCoordinator.setupStack( commitId, artifactId, groupId, version, user, runnerCount );
@@ -160,7 +167,7 @@ public class SetupResource extends TestableResource implements RestParams {
             @QueryParam( RestParams.MODULE_VERSION ) String version,
             @QueryParam( RestParams.USERNAME ) String user,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
-                         ) {
+                          ) {
 
         if( inTestMode( testMode ) ) {
             LOG.info( "Calling /setup/status in test mode ..." );

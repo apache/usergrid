@@ -41,22 +41,25 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 @Mojo( name = "reset" )
 public class ResetMojo extends MainMojo {
 
+
     public ResetMojo() {
 
     }
+
+
     protected ResetMojo( MainMojo mojo ) {
-            this.username = mojo.username;
-            this.password = mojo.password;
-            this.endpoint = mojo.endpoint;
-            this.testPackageBase = mojo.testPackageBase;
-            this.certStorePassphrase = mojo.certStorePassphrase;
-            this.failIfCommitNecessary = mojo.failIfCommitNecessary;
-            this.localRepository = mojo.localRepository;
-            this.plugin = mojo.plugin;
-            this.project = mojo.project;
-            this.runnerCount = mojo.runnerCount;
-            this.finalName = mojo.finalName;
-        }
+        this.username = mojo.username;
+        this.password = mojo.password;
+        this.endpoint = mojo.endpoint;
+        this.testPackageBase = mojo.testPackageBase;
+        this.certStorePassphrase = mojo.certStorePassphrase;
+        this.failIfCommitNecessary = mojo.failIfCommitNecessary;
+        this.localRepository = mojo.localRepository;
+        this.plugin = mojo.plugin;
+        this.project = mojo.project;
+        this.runnerCount = mojo.runnerCount;
+        this.finalName = mojo.finalName;
+    }
 
 
     @Override
