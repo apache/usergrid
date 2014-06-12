@@ -329,10 +329,22 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.refreshIndex();
 
-        assertEquals( 1, 
-            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).connections.size() );
+//        // search for "likes" edges from fred
+//        assertEquals( 1, 
+//            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size());
+//
+//        // search for any type of edges from fred
+//        assertEquals( 1, 
+//            em.getConnectedEntities( fredEntity, null, null, Level.IDS ).size());
 
-        assertEquals( 1, 
-            em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES ).size() );
+        // search for "likes" edges to wilman from any type of object
+        Results res = em.getConnectingEntities( wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
+        assertEquals( 1, res.size() ); 
+        assertEquals( "user", res.getEntity().getType() ); // fred is a user
+
+        // search for "likes" edges to wilman from user type object 
+        res = em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
+        assertEquals( 1, res.size() );
+        assertEquals( "user", res.getEntity().getType() );
     }
 }
