@@ -24,6 +24,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.smile.SmileFactory;
+
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.ReversedType;
 import org.apache.cassandra.db.marshal.UUIDType;
@@ -44,8 +47,7 @@ import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -374,16 +376,15 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             }
 
             Entity storedEntity = null;
+            Object obj = null;
 
             ByteBuffer jsonBytes = parser.read(  BUFFER_SERIALIZER );
+            byte[] array = jsonBytes.array();
+            int start = jsonBytes.arrayOffset();
+            int length = jsonBytes.remaining();
 
             try {
-
-                byte[] array = jsonBytes.array();
-                int start = jsonBytes.arrayOffset();
-                int length = jsonBytes.remaining();
-
-                storedEntity = mapper.readValue( array,start,length,Entity.class);
+                obj = mapper.readValue( array,start,length,Entity.class);
             }
             catch ( Exception e ) {
                 throw new RuntimeException(e.getMessage());
