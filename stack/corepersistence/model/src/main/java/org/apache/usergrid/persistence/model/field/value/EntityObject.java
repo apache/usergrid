@@ -79,13 +79,14 @@ public class EntityObject implements Serializable {
         }
     }
 
-    @JsonAnyGetter
+
     public void getFields( String name) {
         fields.get( name );
     }
     /**
      * Get all fields in the entity
      */
+    @JsonAnyGetter
     public Collection<Field> getFields() {
         return fields.values();
     }
