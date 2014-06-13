@@ -1487,12 +1487,18 @@ public class CpEntityManager implements EntityManager {
         try {
             createRole( "admin", "Administrator", 0 );
         }
+        catch ( DuplicateUniquePropertyExistsException dupe ) {
+            logger.warn("Role admin already exists ");
+        }
         catch ( Exception e ) {
             logger.error( "Could not create admin role, may already exist", e );
         }
 
         try {
             createRole( "default", "Default", 0 );
+        }
+        catch ( DuplicateUniquePropertyExistsException dupe ) {
+            logger.warn("Role default already exists ");
         }
         catch ( Exception e ) {
             logger.error( "Could not create default role, may already exist", e );
@@ -1501,12 +1507,18 @@ public class CpEntityManager implements EntityManager {
         try {
             createRole( "guest", "Guest", 0 );
         }
+        catch ( DuplicateUniquePropertyExistsException dupe ) {
+            logger.warn("Role guest already exists ");
+        }
         catch ( Exception e ) {
             logger.error( "Could not create guest role, may already exist", e );
         }
 
         try {
             grantRolePermissions( "default", Arrays.asList( "get,put,post,delete:/**" ) );
+        }
+        catch ( DuplicateUniquePropertyExistsException dupe ) {
+            logger.warn("Role default already has permission");
         }
         catch ( Exception e ) {
             logger.error( "Could not populate default role", e );
@@ -1515,6 +1527,9 @@ public class CpEntityManager implements EntityManager {
         try {
             grantRolePermissions( "guest", 
                     Arrays.asList( "post:/users", "post:/devices", "put:/devices/*" ) );
+        }
+        catch ( DuplicateUniquePropertyExistsException dupe ) {
+            logger.warn("Role guest already has permission");
         }
         catch ( Exception e ) {
             logger.error( "Could not populate guest role", e );
