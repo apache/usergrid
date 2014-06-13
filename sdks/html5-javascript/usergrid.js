@@ -1823,6 +1823,44 @@ Usergrid.Entity.prototype.getRoles = function(callback) {
     });
 };
 
+Usergrid.Client.prototype.assignRole = function(roleName, entityID, entityType, callback) {
+    
+    if (entityType.substr(entityType.length - 1) != 's'){
+        entityType += 's';
+    }
+
+    var endpoint = 'roles/' + roleName + '/' + entityType + '/' + entityID;
+    var options = {
+        method: 'POST',
+        endpoint: endpoint        
+    };
+
+    this.request(options, function(err, response) {
+        if (err) {
+            console.log('Could not assign role.');
+        }        
+        doCallback(callback, [ err, response, self ]);
+    });
+
+};
+
+Usergrid.Client.prototype.removeRole = function(roleName, entityID, entityType, callback) {
+    
+    var endpoint = 'roles/' + roleName + '/' + entityType + '/' + entityID;
+    var options = {
+        method: 'DELETE',
+        endpoint: endpoint        
+    };
+
+    this.request(options, function(err, response) {
+        if (err) {
+            console.log('Could not assign role.');
+        }        
+        doCallback(callback, [ err, response, self ]);
+    });
+
+};
+
 Usergrid.Entity.prototype.assignPermissions = function(permissions, callback) {
     var self = this;
     var entityID;
