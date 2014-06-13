@@ -19,8 +19,6 @@
 
 package org.apache.usergrid.persistence.index.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -31,8 +29,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.ANALYZED_SUFFIX;
-import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.GEO_SUFFIX;
+
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.ObjectMapper;
+
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.BooleanField;
@@ -50,6 +50,9 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.persistence.model.field.value.Location;
+
+import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.ANALYZED_SUFFIX;
+import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.GEO_SUFFIX;
 
 
 class EntityIndexMapUtils {
@@ -136,6 +139,9 @@ class EntityIndexMapUtils {
                     valueSerialized = objectMapper.writeValueAsBytes( value );
                 }
                 catch ( JsonProcessingException e ) {
+                    throw new RuntimeException( "Can't serialize object ",e );
+                }
+                catch ( IOException e ) {
                     throw new RuntimeException( "Can't serialize object ",e );
                 }
                 ByteBuffer byteBuffer = ByteBuffer.wrap( valueSerialized );

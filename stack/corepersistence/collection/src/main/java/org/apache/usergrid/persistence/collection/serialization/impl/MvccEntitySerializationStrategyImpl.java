@@ -376,7 +376,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             }
 
             Entity storedEntity = null;
-            Object obj = null;
 
             ByteBuffer jsonBytes = parser.read(  BUFFER_SERIALIZER );
             byte[] array = jsonBytes.array();
@@ -384,7 +383,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             int length = jsonBytes.remaining();
 
             try {
-                obj = mapper.readValue( array,start,length,Entity.class);
+                storedEntity = mapper.readValue( array,start,length,Entity.class);
             }
             catch ( Exception e ) {
                 throw new RuntimeException(e.getMessage());

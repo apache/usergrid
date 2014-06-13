@@ -3,9 +3,7 @@ package org.apache.usergrid.persistence.core.consistency;
 
 import java.io.Serializable;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.codehaus.jackson.annotate.*;
 
 
 /**
