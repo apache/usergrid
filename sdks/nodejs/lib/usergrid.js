@@ -1363,6 +1363,74 @@ var AUTH_NONE = 'NONE';
 
   }
 
+  Usergrid.Entity.prototype.assignRole = function(roleName, callback) {
+      
+      var self = this;
+      var type = self.get('type');
+      var collection = type + 's';
+      var entityID;
+
+      if (type == 'user' && this.get('username') != null) {
+          entityID = self.get('username');
+      } else if (type == 'group' && this.get('name') != null) {
+          entityID = self.get('name');
+      } else if (this.get('uuid') != null) {
+          entityID = self.get('uuid');
+      }
+
+      if (type != 'users' && type != 'groups') {
+          doCallback(callback, [ new UsergridError('entity must be a group or user', 'invalid_entity_type'), null, this ], this);
+      }
+
+      var endpoint = 'roles/' + roleName + '/' + collection + '/' + entityID;
+      var options = {
+          method: 'POST',
+          endpoint: endpoint        
+      };
+
+      this._client.request(options, function(err, response) {
+          if (err) {
+              console.log('Could not assign role.');
+          }        
+          doCallback(callback, [ err, response, self ]);
+      });
+
+  };
+
+  Usergrid.Entity.prototype.removeRole = function(roleName, callback) {
+      
+      var self = this;
+      var type = self.get('type');
+      var collection = type + 's';
+      var entityID;
+
+      if (type == 'user' && this.get('username') != null) {
+          entityID = this.get('username');
+      } else if (type == 'group' && this.get('name') != null) {
+          entityID = this.get('name');
+      } else if (this.get('uuid') != null) {
+          entityID = this.get('uuid');
+      }
+
+      if (type != 'users' && type != 'groups') {
+          doCallback(callback, [ new UsergridError('entity must be a group or user', 'invalid_entity_type'), null, this ], this);
+      }
+
+      var endpoint = 'roles/' + roleName + '/' + collection + '/' + entityID;
+      var options = {
+          method: 'DELETE',
+          endpoint: endpoint        
+      };
+
+      this._client.request(options, function(err, response) {
+          if (err) {
+              console.log('Could not assign role.');
+          }        
+          doCallback(callback, [ err, response, self ]);
+      });
+
+  };
+
   Usergrid.Entity.prototype.assignPermissions = function(permissions, callback) {
       var self = this;
       var entityID;
