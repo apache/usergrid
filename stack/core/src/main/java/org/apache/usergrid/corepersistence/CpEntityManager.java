@@ -52,6 +52,7 @@ import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.corepersistence.CpRelationManager.ALL_TYPES;
 import org.apache.usergrid.persistence.AggregateCounter;
 import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.CollectionRef;
@@ -135,7 +136,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.ClassUtils;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import org.apache.usergrid.utils.CompositeUtils;
@@ -224,7 +224,7 @@ public class CpEntityManager implements EntityManager {
 
 
     static String getConnectionScopeName( String entityType, String connectionType ) {
-        String csn = entityType + connectionType + CONN_SUFFIX;
+        String csn = connectionType + entityType + CONN_SUFFIX;
         return csn;
     }
 
@@ -324,28 +324,37 @@ public class CpEntityManager implements EntityManager {
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
-                new Object[] {
-                    id.getType(), id.getUuid(), 
-                    collectionScope.getApplication(), 
-                    collectionScope.getOwner(),
-                    collectionScope.getName()
-            } );
-        }
-
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
                 ecm.load( id ).toBlockingObservable().last();
 
         if ( cpEntity == null ) {
-            logger.debug( "   Entity NOT found" );
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                    new Object[] {
+                        id.getType(), id.getUuid(), 
+                        collectionScope.getApplication(), 
+                        collectionScope.getOwner(),
+                        collectionScope.getName()
+                } );
+            }
             return null;
         }
+
+//        if ( entityRef.getType().equals("group") ) {
+//            logger.debug("Reading Group");
+//            for ( Field field : cpEntity.getFields() ) {
+//                logger.debug("   Reading prop name={} value={}", field.getName(), field.getValue() );
+//            }
+//        }
 
         Class clazz = Schema.getDefaultSchema().getEntityClass( entityRef.getType() );
 
         Entity entity = EntityFactory.newEntity( entityRef.getUuid(), entityRef.getType(), clazz );
         entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
+
+        if ( entityRef.getType().equals("group") ) {
+            logger.debug("Reading Group " + entity.getProperties());
+        }
 
         return entity;
     }
@@ -387,24 +396,22 @@ public class CpEntityManager implements EntityManager {
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
-                new Object[] {
-                    id.getType(), id.getUuid(), 
-                    collectionScope.getApplication(), 
-                    collectionScope.getOwner(),
-                    collectionScope.getName()
-            } );
-        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
                 ecm.load( id ).toBlockingObservable().last();
 
         if ( cpEntity == null ) {
-            logger.debug( "   entity null" );
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Failed entity load {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                    new Object[] {
+                        id.getType(), id.getUuid(), 
+                        collectionScope.getApplication(), 
+                        collectionScope.getOwner(),
+                        collectionScope.getName()
+                } );
+            }
             return null;
         }
-        logger.debug( "   entity found" );
 
         A entity = EntityFactory.newEntity( entityId, type, entityClass );
         entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
@@ -450,14 +457,7 @@ public class CpEntityManager implements EntityManager {
             appScope.getApplication(), 
             appScope.getApplication(),
             getCollectionScopeNameFromEntityType( entity.getType() ) );
-
-        IndexScope indexScope = new IndexScopeImpl( 
-            appScope.getApplication(), 
-            appScope.getApplication(), 
-            entity.getType() );
-
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-        EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
@@ -490,8 +490,20 @@ public class CpEntityManager implements EntityManager {
                 handleWriteUniqueVerifyException( entity, wuve );
             }
         }
-
+        
+        IndexScope indexScope = new IndexScopeImpl( 
+            appScope.getApplication(), 
+            appScope.getApplication(), 
+            entity.getType() );
+        EntityIndex ei = managerCache.getEntityIndex( indexScope );
         ei.index( cpEntity );
+
+        IndexScope allTypesIndexScope = new IndexScopeImpl( 
+            appScope.getApplication(), 
+            appScope.getApplication(), 
+            ALL_TYPES);
+        EntityIndex aei = managerCache.getEntityIndex( allTypesIndexScope );
+        aei.index( cpEntity );
 
         // next, update entity in every collection and connection scope in which it is indexed 
         updateEntityIndexes( entity, cpEntity );
@@ -515,7 +527,7 @@ public class CpEntityManager implements EntityManager {
                 Set<String> collections = collectionsByUuid.get( uuid );
                 for ( String coll : collections ) {
 
-                    if ( coll.trim().isEmpty() ) {
+                    if ( coll == null || coll.trim().isEmpty() ) {
                         logger.warn( "Ignoring empty collection name for owner {}:{}", 
                                 uuid, ownerType );
                         break;
@@ -590,11 +602,16 @@ public class CpEntityManager implements EntityManager {
                     appScope.getApplication(),
                     getCollectionScopeNameFromEntityType( entityRef.getType() ) );
             EntityIndex entityIndex = managerCache.getEntityIndex( defaultIndexScope );
-
             entityIndex.deindex( entity );
 
-            decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
+            IndexScope allTypesIndexScope = new IndexScopeImpl( 
+                appScope.getApplication(), 
+                appScope.getApplication(), 
+                ALL_TYPES);
+            EntityIndex aei = managerCache.getEntityIndex( allTypesIndexScope );
+            aei.deindex( entity );
 
+            decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
 
             // and finally...
             return ecm.delete( entityId );
@@ -1470,12 +1487,18 @@ public class CpEntityManager implements EntityManager {
         try {
             createRole( "admin", "Administrator", 0 );
         }
+        catch ( DuplicateUniquePropertyExistsException dupe ) {
+            logger.warn("Role admin already exists ");
+        }
         catch ( Exception e ) {
             logger.error( "Could not create admin role, may already exist", e );
         }
 
         try {
             createRole( "default", "Default", 0 );
+        }
+        catch ( DuplicateUniquePropertyExistsException dupe ) {
+            logger.warn("Role default already exists ");
         }
         catch ( Exception e ) {
             logger.error( "Could not create default role, may already exist", e );
@@ -1484,12 +1507,18 @@ public class CpEntityManager implements EntityManager {
         try {
             createRole( "guest", "Guest", 0 );
         }
+        catch ( DuplicateUniquePropertyExistsException dupe ) {
+            logger.warn("Role guest already exists ");
+        }
         catch ( Exception e ) {
             logger.error( "Could not create guest role, may already exist", e );
         }
 
         try {
             grantRolePermissions( "default", Arrays.asList( "get,put,post,delete:/**" ) );
+        }
+        catch ( DuplicateUniquePropertyExistsException dupe ) {
+            logger.warn("Role default already has permission");
         }
         catch ( Exception e ) {
             logger.error( "Could not populate default role", e );
@@ -1498,6 +1527,9 @@ public class CpEntityManager implements EntityManager {
         try {
             grantRolePermissions( "guest", 
                     Arrays.asList( "post:/users", "post:/devices", "put:/devices/*" ) );
+        }
+        catch ( DuplicateUniquePropertyExistsException dupe ) {
+            logger.warn("Role guest already has permission");
         }
         catch ( Exception e ) {
             logger.error( "Could not populate guest role", e );
@@ -2387,6 +2419,13 @@ public class CpEntityManager implements EntityManager {
                     collectionScope.getOwner(),
                     collectionScope.getName()
             } );
+//
+//            if ( entity.getType().equals("group")) {
+//                logger.debug("Writing Group");
+//                for ( Field field : cpEntity.getFields() ) {
+//                    logger.debug("   Writing Group name={} value={}", field.getName(), field.getValue() );
+//                }
+//            }
         }
 
         try {
@@ -2403,11 +2442,11 @@ public class CpEntityManager implements EntityManager {
             }
         }
 
-        // Index CP entity into default scope
+        // Index CP entity into default collection scope
         IndexScope defaultIndexScope = new IndexScopeImpl( 
             appScope.getApplication(), 
             appScope.getApplication(), 
-            entity.getType() );
+            CpEntityManager.getCollectionScopeNameFromEntityType( entity.getType() ) );
         EntityIndex ei = managerCache.getEntityIndex( defaultIndexScope );
         ei.index( cpEntity );
 

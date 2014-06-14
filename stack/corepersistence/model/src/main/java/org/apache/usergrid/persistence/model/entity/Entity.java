@@ -21,9 +21,11 @@ package org.apache.usergrid.persistence.model.entity;
 
 import java.util.UUID;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 
 
@@ -32,6 +34,7 @@ import com.google.common.base.Preconditions;
  * Simple entity that is used for persistence.  It has 1 required property, the Id.
  * Equality is based both on id an on version.
  */
+@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
 public class Entity extends EntityObject {
 
     /**

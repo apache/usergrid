@@ -32,6 +32,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 
 import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.RestParams;
+import org.apache.usergrid.chop.api.State;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -100,8 +101,19 @@ public class StartMojo extends MainMojo {
         }
 
         String result = resp.getEntity( String.class );
-        LOG.info( "====== Response from the coordinator ======" );
-        LOG.info( "Coordinator message: {}", result );
-        LOG.info( "===========================================" );
+
+        // In case tests are stopped by the user, reset them automatically
+        if ( result.contains( "is in " + State.STOPPED + " state" ) ) {
+            LOG.info( "Resetting the runners before starting..." );
+            ResetMojo resetMojo = new ResetMojo( this );
+            resetMojo.execute();
+            this.execute();
+        }
+        else {
+            LOG.info( "====== Response from the coordinator ======" );
+            LOG.info( "Coordinator message: {}", result );
+            LOG.info( "===========================================" );
+        }
+
     }
 }
