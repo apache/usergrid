@@ -47,12 +47,20 @@ public abstract class ValueResource extends NamedResource {
     }
 
 
+    public String getName() {
+        return name;
+    }
+
+
+
+
+
     /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.apache.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuilder)
-     */
+         * (non-Javadoc)
+         *
+         * @see
+         * org.apache.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuilder)
+         */
     @Override
     public void addToUrl( StringBuilder buffer ) {
         parent.addToUrl( buffer );
