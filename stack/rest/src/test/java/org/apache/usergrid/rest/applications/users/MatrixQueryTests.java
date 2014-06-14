@@ -44,7 +44,7 @@ public class MatrixQueryTests extends AbstractRestIT {
 
 
     @Test
-    public void orderByShouldNotAffectResults() {
+    public void simpleMatrix() {
 
         /**
          * Create 3 users which we will use for sub searching
@@ -69,7 +69,7 @@ public class MatrixQueryTests extends AbstractRestIT {
         users.create( user3 );
 
 
-        //now create 3 restaurants
+        //now create 4 restaurants
 
         CustomCollection restaurants = context.collection( "restaurants" );
 
@@ -113,13 +113,88 @@ public class MatrixQueryTests extends AbstractRestIT {
         //now query with matrix params
 
 
-
         JsonNode testGetUsers = context.collection( "users" ).get().get( "entities" );
 
         JsonNode likesNode =
                 context.collection( "users" ).entity( "user1" ).connection( "likes" ).get().get( "entities" );
 
 
+        JsonNode queryResponse = context.collection( "users" ).withMatrix(
+                hashMap( "ql", "where fullname contains 'Smith'" ).map( "limit", "1000" ) ).connection( "likes" ).get();
+
+        assertEquals( "Old Major", getEntityName( queryResponse, 0 ) );
+
+        assertEquals( "tag", getEntityName( queryResponse, 1 ) );
+
+        assertEquals( "Squeaky Bean", getEntityName( queryResponse, 2 ) );
+
+        /**
+         * No additional elements in the response
+         */
+        assertNull( getEntity( queryResponse, 3 ) );
+    }
+
+
+    @Test
+    public void largeRootElements() {
+
+
+        // create 4 restaurants
+
+        CustomCollection restaurants = context.collection( "restaurants" );
+
+
+        Map restaurant1 = hashMap( "name", "Old Major" );
+
+        UUID restaurant1Id = getEntityId( restaurants.create( restaurant1 ), 0 );
+
+        Map restaurant2 = hashMap( "name", "tag" );
+
+        UUID restaurant2Id = getEntityId( restaurants.create( restaurant2 ), 0 );
+
+        Map restaurant3 = hashMap( "name", "Squeaky Bean" );
+
+        UUID restaurant3Id = getEntityId( restaurants.create( restaurant3 ), 0 );
+
+
+        /**
+         * Create 3 users which we will use for sub searching
+         */
+        UsersCollection users = context.users();
+
+
+        int max = 1000;
+        int count = ( int ) (max * 1.1);
+
+        for ( int i = 0; i < count; i++ ) {
+
+            String username = "user" + i;
+            String email = username + "@usergrid.com";
+
+            Map user1 = hashMap( "username", username ).map( "email", email ).map( "fullname", i + " Smith" );
+
+            users.create( user1 );
+
+            /**
+             * Change our links every other time.  This way we should get all 3
+             */
+
+            if ( i % 2 == 0 ) {
+                users.user( username ).connection( "likes" ).entity( restaurant1Id ).post();
+
+                users.user( username ).connection( "likes" ).entity( restaurant2Id ).post();
+            }
+            else {
+
+                users.user( username ).connection( "likes" ).entity( restaurant2Id ).post();
+
+                users.user( username ).connection( "likes" ).entity( restaurant3Id ).post();
+            }
+        }
+
+
+
+        //set our limit to 1k.  We should get only 3 results, but this should run
         JsonNode queryResponse = context.collection( "users" ).withMatrix(
                 hashMap( "ql", "where fullname contains 'Smith'" ).map( "limit", "1000" ) ).connection( "likes" ).get();
 
