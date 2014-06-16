@@ -20,23 +20,30 @@ package org.apache.usergrid.persistence.model.field;
 
 import java.io.Serializable;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+
+
 /**
  * Interface for fields.  All fields must implement this method The T is the type of field 
  * (in the java runtime) The V is the value of the field
  * @param <T>
  */
+@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
 public interface Field<T> extends Serializable {
 
     /**
      * Get the name of the field
      * @return
      */
+    @JsonProperty
     public String getName();
 
     /**
      * Get the value of the field
      * @return
      */
+    @JsonProperty
     public T getValue();
 
     /** 
