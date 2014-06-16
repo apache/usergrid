@@ -430,7 +430,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        Thread.sleep( 1000 );
+       em.refreshIndex();
 
         exportService.doExport( jobExecution );
 
@@ -492,7 +492,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        Thread.sleep( 1000 );
+        em.refreshIndex();
 
         exportService.doExport( jobExecution );
 
@@ -551,7 +551,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        Thread.sleep( 1000 );
+        em.refreshIndex();
 
         exportService.doExport( jobExecution );
 
@@ -630,7 +630,7 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        Thread.sleep( 1000 );
+        Thread.sleep(1000);
 
         exportService.doExport( jobExecution );
 
