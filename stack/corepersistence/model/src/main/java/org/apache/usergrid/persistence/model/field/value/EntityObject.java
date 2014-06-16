@@ -64,7 +64,7 @@ public class EntityObject implements Serializable {
         fields.remove( name );
     }
 
-    @JsonAnySetter
+    //@JsonAnySetter
     public void setFields(ArrayList al) {
         if(al.size() == 0)
             return;
@@ -86,8 +86,19 @@ public class EntityObject implements Serializable {
     /**
      * Get all fields in the entity
      */
-    @JsonAnyGetter
+    //@JsonAnyGetter
     public Collection<Field> getFields() {
         return fields.values();
+    }
+
+    @JsonAnyGetter
+    public Map<String, Field> getFieldMap() {
+        return fields;
+    }
+
+    @JsonAnySetter
+    public void setFieldMap( Map<String, Field> fieldMap ) {
+        fields.clear();
+        fields.putAll( fieldMap );
     }
 }

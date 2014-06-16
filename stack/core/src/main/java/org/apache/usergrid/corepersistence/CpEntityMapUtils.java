@@ -37,7 +37,7 @@ import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.BooleanField;
-import org.apache.usergrid.persistence.model.field.ByteBufferField;
+import org.apache.usergrid.persistence.model.field.ByteArrayField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -115,12 +115,8 @@ class CpEntityMapUtils {
                     throw new RuntimeException( "Can't serialize object ",e );
                 }
                 ByteBuffer byteBuffer = ByteBuffer.wrap( valueSerialized );
-                ByteBufferField byteBufferField = new ByteBufferField( fieldName, byteBuffer, value.getClass() );
-                entity.setField( byteBufferField );
-                // TODO: do we really want to serialized Java objects to maps here?
-//                ObjectMapper m = new ObjectMapper();
-//                Map<String, Object> mapValue = m.convertValue( value, Map.class);
-//                processMapValue( mapValue, fieldName, entity, entityType);
+                ByteArrayField bf = new ByteArrayField( fieldName, byteBuffer.array(), value.getClass() );
+                entity.setField( bf );
             }
         }
 
@@ -259,19 +255,18 @@ class CpEntityMapUtils {
                 locMap.put("lon", locField.getValue().getLongtitude());
                  entityMap.put( field.getName(), field.getValue());
 
-            } else if (f instanceof ByteBufferField) {
-                    ByteBufferField byteBufferField = ( ByteBufferField ) f;
-                    ByteBuffer byteBuffer = byteBufferField.getValue();
+            } else if (f instanceof ByteArrayField) {
+                    ByteArrayField bf = ( ByteArrayField ) f;
 
-                    byte[] serilizedObj =  byteBuffer.array();
+                    byte[] serilizedObj =  bf.getValue();
                     Object o;
                     try {
-                        o = objectMapper.readValue(serilizedObj,byteBufferField.getClassinfo() );
+                        o = objectMapper.readValue( serilizedObj, bf.getClassinfo() );
                     }
                     catch ( IOException e ) {
                         throw new RuntimeException( "Can't deserialize object ",e );
                     }
-                    entityMap.put(byteBufferField.getName(),o);
+                    entityMap.put( bf.getName(), o );
             }
             else {
                 entityMap.put( field.getName(), field.getValue());
