@@ -39,27 +39,27 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 
-@Title( "Judo Chop" )
-public class MainView extends UI implements ModuleSelectListener {
+public class MainView extends AbsoluteLayout implements ModuleSelectListener {
 
     private TabSheetManager tabSheetManager;
 
-    @Override
-    protected void init( VaadinRequest request ) {
+    MainView( ) {
+        // mainLayout = addMainLayout();
+        addButtons( this );
+        addTabSheet( this );
 
-        AbsoluteLayout mainLayout = addMainLayout();
-        addButtons( mainLayout );
-        addTabSheet( mainLayout );
-
-        loadScripts();
     }
-
-
-    private void loadScripts() {
-        JavaScriptUtil.loadFile( "js/jquery.min.js" );
-        JavaScriptUtil.loadFile( "js/jquery.flot.min.js" );
-    }
-
+//
+//
+//    @Override
+//    protected void init( VaadinRequest request ) {
+//
+//        AbsoluteLayout mainLayout = addMainLayout();
+//        addButtons( mainLayout );
+//        addTabSheet( mainLayout );
+//
+//        loadScripts();
+//    }
 
     private AbsoluteLayout addMainLayout() {
 
@@ -71,8 +71,8 @@ public class MainView extends UI implements ModuleSelectListener {
         verticalLayout.setSizeFull();
         verticalLayout.addComponent( absoluteLayout );
         verticalLayout.setComponentAlignment( absoluteLayout, Alignment.MIDDLE_CENTER );
-
-        setContent( verticalLayout );
+        this.addComponent( verticalLayout);
+        //setContent( verticalLayout );
 
         return absoluteLayout;
     }
