@@ -22,16 +22,13 @@ package org.apache.usergrid.chop.webapp.view.main;
 import com.vaadin.server.VaadinService;
 import org.apache.usergrid.chop.webapp.service.chart.Params;
 import org.apache.usergrid.chop.webapp.service.shiro.ShiroRealm;
-import org.apache.usergrid.chop.webapp.view.chart.layout.*;
+
+import org.apache.usergrid.chop.webapp.view.chart.layout.OverviewChartLayout;
 import org.apache.usergrid.chop.webapp.view.log.LogLayout;
 import org.apache.usergrid.chop.webapp.view.module.ModuleListWindow;
 import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
 import org.apache.usergrid.chop.webapp.view.runner.RunnersLayout;
 import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
-import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
-
-import com.vaadin.annotations.Title;
-import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
