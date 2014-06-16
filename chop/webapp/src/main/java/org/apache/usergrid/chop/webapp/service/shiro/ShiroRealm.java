@@ -50,28 +50,55 @@ public class ShiroRealm extends AuthorizingRealm {
         super(new MemoryConstrainedCacheManager(), new SimpleCredentialsMatcher());
     }
 
+//    public static boolean authenticateUser(String username, String password) {
+//        try {
+//            if (!SecurityUtils.getSubject().isAuthenticated()) {
+//                if (username == null) {
+//                    throw new AuthenticationException("Username is null");
+//                }
+//                if (password == null) {
+//                    throw new AuthenticationException("Password is null");
+//                }
+//
+//                LOG.info(String.format("Authenticating  user %s", username));
+//
+//                if (username.equalsIgnoreCase("user") && password.equals("pass")) {
+//                    initUserData();
+//                } else {
+//                    User user = InjectorFactory.getInstance(UserDao.class).get(username.toLowerCase());
+//                    if (user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase(password)) {
+//                        throw new AuthenticationException("Authentication failed");
+//                    }
+//                }
+//                SecurityUtils.getSubject().login(new UsernamePasswordToken(username, password));
+//            }
+//            return true;
+//        } catch (Exception e) {
+//            LOG.error("Error in findUser", e);
+//        }
+//        return false;
+//    }
+
     public static boolean authenticateUser(String username, String password) {
         try {
-            if (!SecurityUtils.getSubject().isAuthenticated()) {
-                if (username == null) {
-                    throw new AuthenticationException("Username is null");
-                }
-                if (password == null) {
-                    throw new AuthenticationException("Password is null");
-                }
-
-                LOG.info(String.format("Authenticating  user %s", username));
-
-                if (username.equalsIgnoreCase("user") && password.equals("pass")) {
-                    initUserData();
-                } else {
-                    User user = InjectorFactory.getInstance(UserDao.class).get(username.toLowerCase());
-                    if (user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase(password)) {
-                        throw new AuthenticationException("Authentication failed");
-                    }
-                }
-                SecurityUtils.getSubject().login(new UsernamePasswordToken(username, password));
+            if (username == null) {
+                throw new AuthenticationException("Username is null");
             }
+            if (password == null) {
+                throw new AuthenticationException("Password is null");
+            }
+
+            LOG.info(String.format("Authenticating  user %s", username));
+
+            if (username.equalsIgnoreCase("user") && password.equals("pass")) {
+                initUserData();
+            } else {
+                User user = InjectorFactory.getInstance(UserDao.class).get(username.toLowerCase());
+                if (user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase(password)) {
+                    throw new AuthenticationException("Authentication failed");
+                }
+            }
+            SecurityUtils.getSubject().login(new UsernamePasswordToken(username, password));
             return true;
         } catch (Exception e) {
             LOG.error("Error in findUser", e);
