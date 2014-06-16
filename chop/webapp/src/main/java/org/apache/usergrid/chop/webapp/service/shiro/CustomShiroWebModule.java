@@ -27,17 +27,17 @@ import javax.servlet.ServletContext;
 @SuppressWarnings("unchecked")
 public class CustomShiroWebModule extends ShiroWebModule {
 
-    public CustomShiroWebModule(ServletContext servletContext) {
-        super(servletContext);
+    public CustomShiroWebModule( ServletContext servletContext ) {
+        super( servletContext );
     }
 
     @Override
     protected void configureShiroWeb() {
 
-        addFilterChain("/logout", LOGOUT);
-        addFilterChain("/VAADIN/*", AUTHC_BASIC);
-        addFilterChain("/auth/**", Key.get(RestFilter.class));
-        bindRealm().to(ShiroRealm.class).in(Singleton.class);
+        addFilterChain( "/logout", LOGOUT );
+        addFilterChain( "/VAADIN/*" );
+        addFilterChain( "/auth/**", Key.get(RestFilter.class ) );
+        bindRealm().to( ShiroRealm.class ).in( Singleton.class );
 
 //        bindConstant().annotatedWith(Names.named("shiro.loginUrl")).to("/login.jsp");
 //        bindConstant().annotatedWith(Names.named("shiro.globalSessionTimeout")).to(3600000L);//1 hour

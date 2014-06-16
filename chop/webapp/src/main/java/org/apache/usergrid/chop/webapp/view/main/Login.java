@@ -9,7 +9,7 @@ import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
 
 public class Login extends UI {
 
-    private final Label title = new Label ("<h3>Login</h3>", ContentMode.HTML);
+    private final Label title = new Label ( "<h3>Login</h3>", ContentMode.HTML );
     private final TextField usernameField = new TextField( "Username:" );
     private final PasswordField passwordField = new PasswordField( "Password:" );
     private final Button loginButton = new Button( "Login" );
@@ -19,11 +19,8 @@ public class Login extends UI {
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
-
         mainLayout  = addMainLayout();
-
         addItems();
-        //addButtons(mainLayout);
         loadScripts();
     }
 
@@ -47,23 +44,6 @@ public class Login extends UI {
         setContent( verticalLayout );
 
         return absoluteLayout;
-    }
-
-    private void addButtons( AbsoluteLayout mainLayout ) {
-
-        TextField username = new TextField();
-        PasswordField pass = new PasswordField();
-        mainLayout.addComponent( username, String.format( "left: %spx; top: %spx;", 200, 300 ) );
-        mainLayout.addComponent( pass, String.format( "left: %spx; top: %spx;", 200, 400 ) );
-    }
-
-    private static void addButton( AbsoluteLayout mainLayout, int left, String caption, Button.ClickListener listener ) {
-
-        Button button = new Button( caption );
-        button.setWidth( "100px" );
-        button.addClickListener( listener );
-
-        mainLayout.addComponent( button, String.format( "left: %spx; top: 0px;", left ) );
     }
 
     private void addItems() {
@@ -113,28 +93,23 @@ public class Login extends UI {
             Notification.show( "Error", "Please enter username and password", Notification.Type.ERROR_MESSAGE );
             return;
         }
-
         try {
             if ( authUser(username, password) ){
-                Notification.show( "Yep", "You successfully logged in", Notification.Type.HUMANIZED_MESSAGE );
-                goToMainView();
+                redirectToMainView();
             }
             else{
                 Notification.show( "Error", "Check your password and username", Notification.Type.HUMANIZED_MESSAGE );
             }
-
-
         } catch ( Exception e ) {
             Notification.show( "Error", "Check your password and username: " + e.getMessage(), Notification.Type.ERROR_MESSAGE );
         }
     }
 
     private boolean authUser( String username, String password ){
-        return ShiroRealm.authenticateUser(username, password);
+        return ShiroRealm.authenticateUser( username, password );
     }
 
-
-    private void goToMainView(){
+    public void redirectToMainView(){
         setContent( mainView );
     }
 }

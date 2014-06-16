@@ -21,6 +21,7 @@ package org.apache.usergrid.chop.webapp.view.main;
 
 import com.vaadin.server.VaadinService;
 import org.apache.usergrid.chop.webapp.service.chart.Params;
+import org.apache.usergrid.chop.webapp.service.shiro.ShiroRealm;
 import org.apache.usergrid.chop.webapp.view.chart.layout.*;
 import org.apache.usergrid.chop.webapp.view.log.LogLayout;
 import org.apache.usergrid.chop.webapp.view.module.ModuleListWindow;
@@ -44,22 +45,9 @@ public class MainView extends AbsoluteLayout implements ModuleSelectListener {
     private TabSheetManager tabSheetManager;
 
     MainView( ) {
-        // mainLayout = addMainLayout();
         addButtons( this );
         addTabSheet( this );
-
     }
-//
-//
-//    @Override
-//    protected void init( VaadinRequest request ) {
-//
-//        AbsoluteLayout mainLayout = addMainLayout();
-//        addButtons( mainLayout );
-//        addTabSheet( mainLayout );
-//
-//        loadScripts();
-//    }
 
     private AbsoluteLayout addMainLayout() {
 
@@ -71,8 +59,7 @@ public class MainView extends AbsoluteLayout implements ModuleSelectListener {
         verticalLayout.setSizeFull();
         verticalLayout.addComponent( absoluteLayout );
         verticalLayout.setComponentAlignment( absoluteLayout, Alignment.MIDDLE_CENTER );
-        this.addComponent( verticalLayout);
-        //setContent( verticalLayout );
+        this.addComponent(verticalLayout);
 
         return absoluteLayout;
     }
@@ -106,7 +93,8 @@ public class MainView extends AbsoluteLayout implements ModuleSelectListener {
 
         addButton( mainLayout, 790, "Logout", new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
-                logout();
+                ShiroRealm.logout();
+                redirectToMainView();
             }
         });
     }
@@ -137,14 +125,12 @@ public class MainView extends AbsoluteLayout implements ModuleSelectListener {
         tabSheetManager.addTab( layout, "Overview Chart" );
     }
 
-    private void logout() {
+    private void redirectToMainView() {
         // Close the VaadinServiceSession
         getUI().getSession().close();
 
         // Invalidate underlying session instead if login info is stored there
         VaadinService.getCurrentRequest().getWrappedSession().invalidate();
-
-        // Redirect to avoid keeping the removed UI open in the browser
-        getUI().getPage().setLocation( "/logout" );
+        getUI().getPage().setLocation( "/VAADIN" );
     }
 }
