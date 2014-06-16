@@ -20,6 +20,9 @@ package org.apache.usergrid.persistence.model.field;
 
 import java.nio.ByteBuffer;
 
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+
+
 /**
  * A field for storing byte buffers
  */

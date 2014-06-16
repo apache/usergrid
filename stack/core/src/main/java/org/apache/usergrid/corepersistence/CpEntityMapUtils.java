@@ -27,7 +27,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;import java.util.UUID;
+import java.util.TreeMap;
+import java.util.UUID;
+
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -48,16 +52,14 @@ import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.persistence.model.field.value.Location;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 
 /**
  * Utilities for converting entities to/from maps suitable for Core Persistence.
  * Aware of unique properties via Schema.
  */
 class CpEntityMapUtils {
-    public static com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind
-            .ObjectMapper(  );
+
+    public static ObjectMapper objectMapper = new ObjectMapper(  );
 
     public static Entity fromMap( Map<String, Object> map, String entityType, boolean topLevel ) {
         return fromMap( null, map, entityType, topLevel );
@@ -107,6 +109,9 @@ class CpEntityMapUtils {
                     valueSerialized = objectMapper.writeValueAsBytes( value );
                 }
                 catch ( JsonProcessingException e ) {
+                    throw new RuntimeException( "Can't serialize object ",e );
+                }
+                catch ( IOException e ) {
                     throw new RuntimeException( "Can't serialize object ",e );
                 }
                 ByteBuffer byteBuffer = ByteBuffer.wrap( valueSerialized );
