@@ -88,7 +88,7 @@ public class SubtractionIterator extends MergeIterator {
             Set<ScanColumn> keepPage = keepIterator.next();
 
             while ( subtractIterator.hasNext() && keepPage.size() > 0 ) {
-                keepPage = Sets.difference( keepPage, subtractIterator.next() );
+                keepPage.removeAll( subtractIterator.next() );
             }
 
             subtractIterator.reset();
