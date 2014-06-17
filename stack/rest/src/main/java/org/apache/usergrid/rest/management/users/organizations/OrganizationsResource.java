@@ -35,7 +35,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.usergrid.rest.RootResource;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.apache.usergrid.management.OrganizationInfo;
@@ -153,7 +152,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @PUT
-    @Path(RootResource.ORGANIZATION_ID_PATH)
+    @Path( "{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
     public JSONWithPadding addUserToOrganizationByOrganizationId( @Context UriInfo ui, @PathParam( "organizationId" )
     String organizationIdStr, @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback ) throws Exception {
 
@@ -169,7 +168,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @DELETE
-    @Path( RootResource.ORGANIZATION_ID_PATH )
+    @Path( "{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
     public JSONWithPadding removeUserFromOrganizationByOrganizationId( @Context UriInfo ui,
                                                                        @PathParam( "organizationId" )
                                                                        String organizationIdStr,

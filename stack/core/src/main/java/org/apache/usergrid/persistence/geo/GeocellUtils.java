@@ -447,7 +447,7 @@ public final class GeocellUtils {
         // NOTE: This only works for grid size 4.
         int charI = GEOCELL_ALPHABET.indexOf( char_ );
         return new int[] {
-                ( charI & 4 ) >> 1 | (charI & 1), ( charI & 8 ) >> 2 | ( charI & 2 ) >> 1
+                ( charI & 4 ) >> 1 | ( charI & 1 ) >> 0, ( charI & 8 ) >> 2 | ( charI & 2 ) >> 1
         };
     }
 
@@ -462,7 +462,7 @@ public final class GeocellUtils {
         return GEOCELL_ALPHABET.charAt( ( pos[1] & 2 ) << 2 |
                 ( pos[0] & 2 ) << 1 |
                 ( pos[1] & 1 ) << 1 |
-                (pos[0] & 1));
+                ( pos[0] & 1 ) << 0 );
     }
 
 

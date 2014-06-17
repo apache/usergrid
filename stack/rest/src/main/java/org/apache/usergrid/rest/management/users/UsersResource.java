@@ -35,8 +35,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.usergrid.management.exceptions.ManagementException;
-import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -75,7 +75,7 @@ public class UsersResource extends AbstractContextResource {
     }
 
 
-    @Path(RootResource.USER_ID_PATH)
+    @Path( "{userId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
     public UserResource getUserById( @Context UriInfo ui, @PathParam( "userId" ) String userIdStr ) throws Exception {
 
         return getUserResource(management.getAdminUserByUuid(UUID.fromString(userIdStr)), "user id", userIdStr);
@@ -105,7 +105,7 @@ public class UsersResource extends AbstractContextResource {
     }
 
 
-    @Path(RootResource.EMAIL_PATH)
+    @Path( "{email: [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}}" )
     public UserResource getUserByEmail( @Context UriInfo ui, @PathParam( "email" ) String email ) throws Exception {
 
         return getUserResource(management.getAdminUserByEmail(email), "email", email);

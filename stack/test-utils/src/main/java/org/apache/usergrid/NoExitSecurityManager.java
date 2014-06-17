@@ -47,7 +47,7 @@ public class NoExitSecurityManager extends java.rmi.RMISecurityManager {
         Thread thread = Thread.currentThread();
 
         try {
-            Thread.sleep(100L);
+            thread.sleep( 100L );
         }
         catch ( InterruptedException e ) {
             LOG.error( "failed to sleep", e );

@@ -95,7 +95,7 @@ public class OrganizationsResourceIT extends AbstractRestIT {
             EntityManager em = setup.getEmf().getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
             User user = em.get( ui.getUuid(), User.class );
             assertEquals( "Test User", user.getName() );
-            assertEquals( "Apigee", user.getProperty( "company" ));
+            assertEquals( "Apigee", ( String ) user.getProperty( "company" ) );
 
             OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName( "test-org-1" );
             assertEquals( 5L, orgInfo.getProperties().get( "securityLevel" ) );

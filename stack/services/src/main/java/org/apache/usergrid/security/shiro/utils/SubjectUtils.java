@@ -55,7 +55,10 @@ public class SubjectUtils {
         if ( currentUser == null ) {
             return true;
         }
-        return !currentUser.isAuthenticated() && !currentUser.isRemembered();
+        if ( !currentUser.isAuthenticated() && !currentUser.isRemembered() ) {
+            return true;
+        }
+        return false;
     }
 
 
