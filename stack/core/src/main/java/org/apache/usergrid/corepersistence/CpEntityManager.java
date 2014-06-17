@@ -16,13 +16,9 @@
 package org.apache.usergrid.corepersistence;
 
 
-import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.yammer.metrics.annotation.Metered;
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import static java.util.Arrays.asList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,23 +32,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.beans.CounterRow;
-import me.prettyprint.hector.api.beans.CounterRows;
-import me.prettyprint.hector.api.beans.CounterSlice;
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.HCounterColumn;
-import me.prettyprint.hector.api.factory.HFactory;
-import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import me.prettyprint.hector.api.mutation.Mutator;
-import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
-import me.prettyprint.hector.api.query.QueryResult;
-import me.prettyprint.hector.api.query.SliceCounterQuery;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.usergrid.corepersistence.CpRelationManager.ALL_TYPES;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
+
 import org.apache.usergrid.persistence.AggregateCounter;
 import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.CollectionRef;
@@ -67,48 +51,14 @@ import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
-import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
-import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_ROLENAMES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_ROLETIMES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_SETS;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
-import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
-import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
-import static org.apache.usergrid.persistence.SimpleRoleRef.getIdForGroupIdAndRoleName;
-import static org.apache.usergrid.persistence.SimpleRoleRef.getIdForRoleName;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
 import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
-import static org.apache.usergrid.persistence.cassandra.Serializers.be;
-import static org.apache.usergrid.persistence.cassandra.Serializers.le;
-import static org.apache.usergrid.persistence.cassandra.Serializers.se;
-import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
@@ -131,28 +81,86 @@ import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
-import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.ClassUtils;
-import static org.apache.usergrid.utils.ClassUtils.cast;
 import org.apache.usergrid.utils.CompositeUtils;
+import org.apache.usergrid.utils.StringUtils;
+import org.apache.usergrid.utils.UUIDUtils;
+
+import com.netflix.hystrix.exception.HystrixRuntimeException;
+import com.yammer.metrics.annotation.Metered;
+
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.ColumnSlice;
+import me.prettyprint.hector.api.beans.CounterRow;
+import me.prettyprint.hector.api.beans.CounterRows;
+import me.prettyprint.hector.api.beans.CounterSlice;
+import me.prettyprint.hector.api.beans.DynamicComposite;
+import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.beans.HCounterColumn;
+import me.prettyprint.hector.api.factory.HFactory;
+import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
+import me.prettyprint.hector.api.query.QueryResult;
+import me.prettyprint.hector.api.query.SliceCounterQuery;
+import rx.Observable;
+
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static java.util.Arrays.asList;
+
+import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.commons.lang.StringUtils.capitalize;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.corepersistence.CpRelationManager.ALL_TYPES;
+import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
+import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_ROLENAMES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_ROLETIMES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_SETS;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
+import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
+import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
+import static org.apache.usergrid.persistence.SimpleRoleRef.getIdForGroupIdAndRoleName;
+import static org.apache.usergrid.persistence.SimpleRoleRef.getIdForRoleName;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
+import static org.apache.usergrid.persistence.cassandra.Serializers.le;
+import static org.apache.usergrid.persistence.cassandra.Serializers.se;
+import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
+import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
+import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import static org.apache.usergrid.utils.ConversionUtils.object;
 import static org.apache.usergrid.utils.ConversionUtils.string;
-import org.apache.usergrid.utils.StringUtils;
-import org.apache.usergrid.utils.UUIDUtils;
+import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
-import rx.Observable;
 
 
 /**
@@ -332,7 +340,7 @@ public class CpEntityManager implements EntityManager {
                 logger.debug( "Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
                     new Object[] {
                         id.getType(), id.getUuid(), 
-                        collectionScope.getApplication(), 
+                        collectionScope.getApplication(),
                         collectionScope.getOwner(),
                         collectionScope.getName()
                 } );
@@ -714,12 +722,39 @@ public class CpEntityManager implements EntityManager {
     public Set<String> getApplicationCollections() throws Exception {
 
         return getRelationManager( getApplication() ).getCollections();
+
     }
 
 
     @Override
     public Map<String, Object> getApplicationCollectionMetadata() throws Exception {
-        throw new UnsupportedOperationException( "Not supported yet." );
+        Set<String> collections = getApplicationCollections();
+        Map<String, Long> counts = getApplicationCounters();
+        Map<String, Object> metadata = new HashMap<String, Object>();
+        if ( collections != null ) {
+            for ( String collectionName : collections ) {
+                if ( !Schema.isAssociatedEntityType( collectionName ) ) {
+                    Long count = counts.get( APPLICATION_COLLECTION + collectionName );
+                    /*
+                     * int count = emf .countColumns(
+					 * getApplicationKeyspace(applicationId),
+					 * ApplicationCF.ENTITY_ID_SETS, key(applicationId,
+					 * DICTIONARY_COLLECTIONS, collectionName));
+					 */
+                    Map<String, Object> entry = new HashMap<String, Object>();
+                    entry.put( "count", count != null ? count : 0 );
+                    entry.put( "type", singularize( collectionName ) );
+                    entry.put( "name", collectionName );
+                    entry.put( "title", capitalize( collectionName ) );
+                    metadata.put( collectionName, entry );
+                }
+            }
+        }
+		/*
+		 * if ((counts != null) && !counts.isEmpty()) { metadata.put("counters",
+		 * counts); }
+		 */
+        return metadata;
     }
 
 
@@ -731,6 +766,7 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void createApplicationCollection( String entityType ) throws Exception {
+        create(entityType,null);
     }
 
 

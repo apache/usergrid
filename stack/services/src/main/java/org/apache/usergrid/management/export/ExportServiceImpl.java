@@ -91,6 +91,7 @@ public class ExportServiceImpl implements ExportService {
         try {
             em = emf.getEntityManager( emf.getManagementAppId() );
             Set<String> collections = em.getApplicationCollections();
+            //Set<String> collections = em.getE
             if ( !collections.contains( "exports" ) ) {
                 em.createApplicationCollection( "exports" );
             }
@@ -576,13 +577,13 @@ public class ExportServiceImpl implements ExportService {
         jg.writeStartArray();
 
         for ( String collectionName : metadata.keySet() ) {
+            collectionName = collectionName.substring( 0, collectionName.indexOf( "|" ) );
+
             if ( collectionName.equals( "exports" ) ) {
                 continue;
             }
             //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
-
-            if ( ( config.get( "collectionName" ) == null ) || collectionName
-                    .equals( config.get( "collectionName" ) ) ) {
+            if ( ( config.get( "collectionName" ) == null ) || collectionName.equalsIgnoreCase((String)config.get( "collectionName" ) ) ) {
                 //Query entity manager for the entities in a collection
                 Query query = null;
                 if ( config.get( "query" ) == null ) {
