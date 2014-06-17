@@ -27,6 +27,7 @@ import org.apache.usergrid.chop.webapp.elasticsearch.Util;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.search.SearchHit;
 
 import java.io.IOException;
@@ -81,6 +82,27 @@ public class UserDao extends Dao {
                 .actionGet();
 
         return response.isCreated();
+    }
+
+    public boolean update( User user ) throws  IOException{
+        StringBuilder sb = new StringBuilder();
+        sb.append("ctx._source._id=\"=")
+                .append(user.getUsername())
+                .append(";")
+                .append("ctx._source.password=\"=")
+                .append(user.getPassword());
+        try{
+            UpdateResponse response = elasticSearchClient.getClient()
+                    .prepareUpdate( DAO_INDEX_KEY, DAO_TYPE_KEY, user.getUsername() )
+                    .setScript(sb.toString())
+                    .execute()
+                    .actionGet();
+            boolean res = response.isCreated();
+            return res;
+        }catch ( Exception e ){
+            LOG.error( "Could not update user information {}", e );
+            return false;
+        }
     }
 
 

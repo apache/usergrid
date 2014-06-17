@@ -166,7 +166,30 @@ public class UserLayout extends AbsoluteLayout {
         }
 
         try {
-            doSaveUser( username, password );
+            if ( UserListWindow.createClicked ){
+                userDao.update( new User( username, password ) );
+
+                BasicProviderParams newProviderParams = new BasicProviderParams(
+                        username,
+                        instanceTypeField.getValue(),
+                        accessKeyField.getValue(),
+                        secretKeyField.getValue(),
+                        imageField.getValue(),
+                        keyPairNameField.getValue()
+                );
+
+                ProviderParams oldProviderParams = providerParamsDao.getByUser( username );
+
+                Map<String, String> keys = oldProviderParams != null ? oldProviderParams.getKeys() : new HashMap<String, String>();
+                newProviderParams.setKeys( keys );
+
+                providerParamsDao.update( newProviderParams );
+                close();
+                Notification.show( "Success", "User updated successfully", Notification.Type.HUMANIZED_MESSAGE );
+                UserListWindow.createClicked = false;
+            } else{
+                doSaveUser( username, password );
+            }
         } catch ( Exception e ) {
             Notification.show( "Error", "Error to save user: " + e.getMessage(), Notification.Type.ERROR_MESSAGE );
         }

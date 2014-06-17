@@ -37,6 +37,8 @@ public class UserListWindow extends PopupWindow {
 
     private final TabSheetManager tabSheetManager;
 
+    public static boolean createClicked = false;
+
     public UserListWindow(TabSheetManager tabSheetManager) {
         super( "Users" );
         this.tabSheetManager = tabSheetManager;
@@ -75,6 +77,7 @@ public class UserListWindow extends PopupWindow {
 
     private void showUser( String username ) {
         tabSheetManager.addTab( new UserLayout( username, tabSheetManager ), "User" );
+        createClicked = true;
     }
 
     private void loadData( ListSelect list ) {
