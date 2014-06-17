@@ -306,30 +306,30 @@ public class Utils {
     }
 
 
-    public static String calculateMD5Sum(String filename) throws MojoExecutionException {
+    public static String calculateMD5Sum( String filename ) throws MojoExecutionException {
         InputStream fis = null;
         MessageDigest complete = null;
 
         try {
-            fis = new FileInputStream(filename);
+            fis = new FileInputStream( filename );
             complete = MessageDigest.getInstance( "MD5" );
             byte[] buffer = new byte[1024];
             int numRead;
 
             do {
-                numRead = fis.read(buffer);
-                if (numRead > 0) {
-                    complete.update(buffer, 0, numRead);
+                numRead = fis.read( buffer );
+                if ( numRead > 0 ) {
+                    complete.update( buffer, 0, numRead );
                 }
-            } while (numRead != -1);
+            } while ( numRead != -1 );
 
             fis.close();
 
             byte[] b = complete.digest();
             String result = "";
 
-            for (int i=0; i < b.length; i++) {
-                result += Integer.toString( ( b[i] & 0xff ) + 0x100, 16).substring( 1 );
+            for ( int i=0; i < b.length; i++ ) {
+                result += Integer.toString( ( b[i] & 0xff ) + 0x100, 16 ).substring( 1 );
             }
             return result;
 
