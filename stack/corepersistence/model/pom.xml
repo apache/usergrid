@@ -13,7 +13,7 @@
     <name>Usergrid Model</name>
 
   <properties>
-    <jackson-2-version>2.3.1</jackson-2-version>
+    <jackson-2-version>2.2.0</jackson-2-version>
   </properties>
 
     <!-- Runtime Dependencies -->

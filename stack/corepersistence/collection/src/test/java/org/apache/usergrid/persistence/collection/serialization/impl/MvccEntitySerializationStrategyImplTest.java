@@ -28,7 +28,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.safehaus.chop.api.IterationChop;
+//import org.safehaus.chop.api.IterationChop;
 import org.safehaus.guicyfig.Env;
 import org.safehaus.guicyfig.Option;
 import org.safehaus.guicyfig.Overrides;
@@ -71,7 +71,7 @@ import static org.mockito.Mockito.mock;
 
 
 /** @author tnine */
-@IterationChop( iterations = 1000, threads = 2 )
+//@IterationChop( iterations = 1000, threads = 2 )
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class MvccEntitySerializationStrategyImplTest {

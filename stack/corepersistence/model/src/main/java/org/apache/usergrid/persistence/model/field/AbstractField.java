@@ -18,11 +18,14 @@
  */
 package org.apache.usergrid.persistence.model.field;
 
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 /**
  * Base class for data information
  */
+@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
 public abstract class AbstractField<T> implements Field<T> {
 
     /**

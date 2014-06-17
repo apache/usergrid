@@ -8,20 +8,19 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import org.apache.usergrid.persistence.core.consistency.AmazonSimpleTimeoutQueue;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
 
 
 /**

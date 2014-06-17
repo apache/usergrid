@@ -99,12 +99,6 @@ public class SetupResource extends TestableResource implements RestParams {
                            .build();
         }
 
-        if( status.equals( SetupStackState.JarNotFound ) ) {
-            return Response.status( Response.Status.OK )
-                           .entity( SetupStackState.JarNotFound.getMessage() )
-                           .type( MediaType.APPLICATION_JSON )
-                           .build();
-        }
         if( status.equals( SetupStackState.SetupFailed ) ) {
             String message = "";
             CoordinatedStack stack = stackCoordinator.findCoordinatedStack( commitId, artifactId, groupId, version,
@@ -127,24 +121,6 @@ public class SetupResource extends TestableResource implements RestParams {
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-//        if( status.equals( SetupStackState.Destroying ) ) {
-//            return Response.status( Response.Status.OK )
-//                           .entity( SetupStackState.Destroying.getMessage() )
-//                           .type( MediaType.APPLICATION_JSON )
-//                           .build();
-//        }
-//        if( status.equals( SetupStackState.SettingUp ) ) {
-//            return Response.status( Response.Status.OK )
-//                           .entity( SetupStackState.SettingUp.getMessage() )
-//                           .type( MediaType.APPLICATION_JSON )
-//                           .build();
-//        }
-//        if( status.equals( SetupStackState.SetUp ) ) {
-//            return Response.status( Response.Status.OK )
-//                           .entity( SetupStackState.SetUp.getMessage() )
-//                           .type( MediaType.APPLICATION_JSON )
-//                           .build();
-//        }
 
         /** SetupStackState.NotSetUp */
         stackCoordinator.setupStack( commitId, artifactId, groupId, version, user, runnerCount );

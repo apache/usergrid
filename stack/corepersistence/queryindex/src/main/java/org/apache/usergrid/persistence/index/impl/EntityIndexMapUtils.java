@@ -19,8 +19,6 @@
 
 package org.apache.usergrid.persistence.index.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -31,12 +29,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.ANALYZED_SUFFIX;
-import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.GEO_SUFFIX;
+
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.ObjectMapper;
+
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.ArrayField;
 import org.apache.usergrid.persistence.model.field.BooleanField;
-import org.apache.usergrid.persistence.model.field.ByteBufferField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -50,6 +49,10 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.persistence.model.field.value.Location;
+
+import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.ANALYZED_SUFFIX;
+import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.GEO_SUFFIX;
+import org.apache.usergrid.persistence.model.field.ByteArrayField;
 
 
 class EntityIndexMapUtils {
@@ -138,9 +141,12 @@ class EntityIndexMapUtils {
                 catch ( JsonProcessingException e ) {
                     throw new RuntimeException( "Can't serialize object ",e );
                 }
+                catch ( IOException e ) {
+                    throw new RuntimeException( "Can't serialize object ",e );
+                }
                 ByteBuffer byteBuffer = ByteBuffer.wrap( valueSerialized );
-                ByteBufferField byteBufferField = new ByteBufferField( fieldName, byteBuffer, value.getClass() );
-                entity.setField( byteBufferField );
+                ByteArrayField ba = new ByteArrayField( fieldName, byteBuffer.array(), value.getClass() );
+                entity.setField( ba );
             }
             else {
                 throw new RuntimeException("Unknown type " + value.getClass().getName());
@@ -247,19 +253,19 @@ class EntityIndexMapUtils {
                 locMap.put("lon", locField.getValue().getLongtitude());
                 entityMap.put(field.getName() + GEO_SUFFIX, locMap);
 
-            } else if (f instanceof ByteBufferField) {
-                ByteBufferField byteBufferField = ( ByteBufferField ) f;
-                ByteBuffer byteBuffer = byteBufferField.getValue();
+            } else if (f instanceof ByteArrayField) {
+                ByteArrayField ba = ( ByteArrayField ) f;
+                ByteBuffer byteBuffer = ByteBuffer.wrap( ba.getValue() );
 
                 byte[] serilizedObj =  byteBuffer.array();
                 Object o;
                 try {
-                    o = objectMapper.readValue(serilizedObj,byteBufferField.getClassinfo() );
+                    o = objectMapper.readValue( serilizedObj, ba.getClassinfo() );
                 }
                 catch ( IOException e ) {
                     throw new RuntimeException( "Can't deserialize object ",e );
                 }
-                entityMap.put(byteBufferField.getName(),o);
+                entityMap.put( ba.getName(), o );
             }
             else {
                 entityMap.put(field.getName(), field.getValue());
