@@ -6,16 +6,16 @@
  *  to you under the Apache License, Version 2.0 (the
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
- *  
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing,
  *  software distributed under the License is distributed on an
  *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  *  KIND, either express or implied.  See the License for the
  *  specific language governing permissions and limitations
- *  under the License. 
- *  
+ *  under the License.
+ *
  */
 package org.apache.usergrid.chop.webapp.coordinator.rest;
 
@@ -35,6 +35,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.usergrid.chop.stack.SetupStackState;
 import org.apache.usergrid.chop.webapp.ChopUiFig;
 import org.apache.usergrid.chop.webapp.coordinator.CoordinatorUtils;
 import org.apache.usergrid.chop.webapp.dao.model.BasicCommit;
@@ -45,6 +46,8 @@ import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.webapp.dao.CommitDao;
 import org.apache.usergrid.chop.webapp.dao.ModuleDao;
 import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
+import org.apache.usergrid.chop.webapp.service.util.FileUtil;
+
 import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +125,7 @@ public class UploadResource extends TestableResource implements RestParams {
             @FormDataParam( VCS_REPO_URL ) String vcsRepoUrl,
             @FormDataParam( TEST_PACKAGE ) String testPackage,
             @FormDataParam( MD5 ) String md5,
+            @FormDataParam( MD5SUM ) String md5Sum,
             @FormDataParam( CONTENT ) InputStream runnerJarStream,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
 
@@ -142,6 +146,7 @@ public class UploadResource extends TestableResource implements RestParams {
         LOG.debug( "extracted {} = {}", RestParams.VCS_REPO_URL, vcsRepoUrl );
         LOG.debug( "extracted {} = {}", RestParams.TEST_PACKAGE, testPackage );
         LOG.debug( "extracted {} = {}", RestParams.MD5, md5 );
+        LOG.debug( "extracted {} = {}", RestParams.MD5SUM, md5Sum );
 
         if( inTestMode( testMode ) ) {
             return Response.status( Response.Status.CREATED )
@@ -165,11 +170,17 @@ public class UploadResource extends TestableResource implements RestParams {
             }
         }
         if( runnerJar.exists() ) {
-            if( runnerJar.delete() ) {
-                LOG.info( "Deleted old runner.jar" );
+            if ( isMD5SumsEqual( runnerJar, md5Sum ) ) {
+                return Response.status( Response.Status.OK )
+                               .entity( SetupStackState.JarAlreadyDeployed.getMessage() ).build();
             }
             else {
-                LOG.info( "Could not delete old runner.jar" );
+                if( runnerJar.delete() ) {
+                    LOG.info( "Deleted old runner.jar" );
+                }
+                else {
+                    LOG.info( "Could not delete old runner.jar" );
+                }
             }
         }
 
@@ -187,8 +198,8 @@ public class UploadResource extends TestableResource implements RestParams {
         for ( Commit returnedCommit : commits ) {
             Module commitModule = moduleDao.get( returnedCommit.getModuleId() );
             if ( commitModule.getArtifactId().equals( artifactId ) &&
-                 commitModule.getGroupId().equals( groupId ) &&
-                 commitModule.getVersion().equals( version ) )
+                    commitModule.getGroupId().equals( groupId ) &&
+                    commitModule.getVersion().equals( version ) )
             {
                 commit = returnedCommit;
                 module = commitModule;
@@ -206,5 +217,12 @@ public class UploadResource extends TestableResource implements RestParams {
         }
 
         return Response.status( Response.Status.CREATED ).entity( runnerJar.getAbsolutePath() ).build();
+    }
+
+
+    private boolean isMD5SumsEqual( final File coordinatorRunnerJar, final String md5Sum ) {
+        String coordinatorRunnerJarMd5Sum = FileUtil.calculateMD5Sum( coordinatorRunnerJar.getAbsolutePath() );
+
+        return coordinatorRunnerJarMd5Sum.equals( md5Sum );
     }
 }

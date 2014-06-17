@@ -20,7 +20,10 @@ package org.apache.usergrid.chop.plugin;
 
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -299,6 +302,46 @@ public class Utils {
         }
         catch ( UnsupportedEncodingException e ) {
             throw new MojoExecutionException( "UTF-8 encoding is not supported", e );
+        }
+    }
+
+
+    public static String calculateMD5Sum(String filename) throws MojoExecutionException {
+        InputStream fis = null;
+        MessageDigest complete = null;
+
+        try {
+            fis = new FileInputStream(filename);
+            complete = MessageDigest.getInstance( "MD5" );
+            byte[] buffer = new byte[1024];
+            int numRead;
+
+            do {
+                numRead = fis.read(buffer);
+                if (numRead > 0) {
+                    complete.update(buffer, 0, numRead);
+                }
+            } while (numRead != -1);
+
+            fis.close();
+
+            byte[] b = complete.digest();
+            String result = "";
+
+            for (int i=0; i < b.length; i++) {
+                result += Integer.toString( ( b[i] & 0xff ) + 0x100, 16).substring( 1 );
+            }
+            return result;
+
+        }
+        catch ( FileNotFoundException e ) {
+            throw new MojoExecutionException( "File not found", e );
+        }
+        catch ( NoSuchAlgorithmException e ) {
+            throw new MojoExecutionException( "MD5 algorithm could not be found", e );
+        }
+        catch ( IOException e ) {
+            throw new MojoExecutionException( "Error while reading the file", e );
         }
     }
 

@@ -29,6 +29,7 @@ public enum SetupStackState {
     NotSetUp ( "Not set up" ),
     Destroying ( "Currently being destroyed. Wait until it is finished to set up again..." ),
     JarNotFound( "No runner jars found with given parameters, deploy first" ),
+    JarAlreadyDeployed( "Current runner jar already deployed.." ),
     StackNotFound(  "No stack found with given parameters, setup first" );
     private final String message;
 

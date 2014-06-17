@@ -18,16 +18,21 @@
  */
 package org.apache.usergrid.chop.webapp.service.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.Scanner;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FileUtil {
 
@@ -85,5 +90,44 @@ public class FileUtil {
     private static String streamToString(InputStream is) {
         Scanner scanner = new Scanner(is).useDelimiter("\\A");
         return scanner.hasNext() ? scanner.next() : "";
+    }
+
+    public static String calculateMD5Sum(String filename) {
+        InputStream fis = null;
+        MessageDigest complete = null;
+        String result = "";
+
+        try {
+            fis = new FileInputStream(filename);
+            complete = MessageDigest.getInstance( "MD5" );
+            byte[] buffer = new byte[1024];
+            int numRead;
+
+            do {
+                numRead = fis.read(buffer);
+                if (numRead > 0) {
+                    complete.update(buffer, 0, numRead);
+                }
+            } while (numRead != -1);
+
+            fis.close();
+
+            byte[] b = complete.digest();
+
+            for (int i=0; i < b.length; i++) {
+                result += Integer.toString( ( b[i] & 0xff ) + 0x100, 16).substring( 1 );
+            }
+        }
+        catch ( FileNotFoundException e ) {
+            LOG.error( "File not found: " + e );
+        }
+        catch ( NoSuchAlgorithmException e ) {
+            LOG.error( "No such algorithm: " + e );
+        }
+        catch ( IOException e ) {
+            LOG.error( "Error while reading file: " + e );
+        }
+
+        return result;
     }
 }

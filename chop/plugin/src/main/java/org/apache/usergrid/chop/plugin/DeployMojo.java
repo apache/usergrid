@@ -26,12 +26,13 @@ import java.util.Properties;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.usergrid.chop.api.Project;
-import org.apache.usergrid.chop.api.RestParams;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+
+import org.apache.usergrid.chop.api.Project;
+import org.apache.usergrid.chop.api.RestParams;
+import org.apache.usergrid.chop.stack.SetupStackState;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -56,6 +57,7 @@ public class DeployMojo extends MainMojo {
         this.username = mojo.username;
         this.password = mojo.password;
         this.endpoint = mojo.endpoint;
+        this.testPackageBase = mojo.testPackageBase;
         this.certStorePassphrase = mojo.certStorePassphrase;
         this.failIfCommitNecessary = mojo.failIfCommitNecessary;
         this.localRepository = mojo.localRepository;
@@ -102,6 +104,7 @@ public class DeployMojo extends MainMojo {
         }
 
         FormDataMultiPart multipart = new FormDataMultiPart();
+        String md5Sum = Utils.calculateMD5Sum( source.getAbsolutePath() );
 
         try {
             multipart.field( RestParams.COMMIT_ID, props.getProperty( Project.GIT_UUID_KEY ) );
@@ -112,6 +115,7 @@ public class DeployMojo extends MainMojo {
             multipart.field( RestParams.VCS_REPO_URL, props.getProperty( Project.GIT_URL_KEY ) );
             multipart.field( RestParams.TEST_PACKAGE, props.getProperty( Project.TEST_PACKAGE_BASE ) );
             multipart.field( RestParams.MD5, props.getProperty( Project.MD5_KEY ) );
+            multipart.field( RestParams.MD5SUM, md5Sum );
 
             FileInputStream in = new FileInputStream( source );
             FormDataBodyPart body = new FormDataBodyPart( RestParams.CONTENT, in,
@@ -133,14 +137,20 @@ public class DeployMojo extends MainMojo {
                                       .accept( MediaType.TEXT_PLAIN )
                                       .post( ClientResponse.class, multipart );
 
+        String responseMessage = resp.getEntity( String.class );
+
         if( resp.getStatus() == Response.Status.CREATED.getStatusCode() ) {
-            LOG.info( "Runner Jar uploaded to coordinator successfully on path: {}", resp.getEntity( String.class ) );
+            LOG.info( "Runner Jar uploaded to coordinator successfully on path: {}", responseMessage );
+        }
+        else if ( responseMessage.equals( SetupStackState.JarAlreadyDeployed.getMessage() )  ) {
+            LOG.info( responseMessage );
         }
         else {
             LOG.error( "Could not upload successfully, HTTP status: ", resp.getStatus() );
-            LOG.error( "Error Message: {}", resp.getEntity( String.class ) );
+            LOG.error( "Error Message: {}", responseMessage );
 
             throw new MojoExecutionException( "Upload failed" );
         }
     }
+
 }
