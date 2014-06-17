@@ -1784,6 +1784,29 @@ Usergrid.Entity.prototype.getFollowers = function(callback) {
     });
 };
 
+Usergrid.Client.prototype.createRole = function(roleName, permissions, callback) {
+    
+    var options = {
+        type: 'role',
+        name: roleName        
+    };
+
+    this.createEntity(options, function(err, response, entity) {
+        if (err) {
+            doCallback(callback, [ err, response, self ]);    
+        } else {
+            entity.assignPermissions(permissions, function (err, data) {
+                if (err) {
+                    doCallback(callback, [ err, response, self ]);    
+                } else {
+                    doCallback(callback, [ err, data, data.data ], self);
+                }
+            })
+        }        
+    });
+
+};
+
 Usergrid.Entity.prototype.getRoles = function(callback) {
     var self = this;
     var endpoint = this.get("type") + "/" + this.get("uuid") + "/roles";
@@ -1797,6 +1820,140 @@ Usergrid.Entity.prototype.getRoles = function(callback) {
         }
         self.roles = data.entities;
         doCallback(callback, [ err, data, data.entities ], self);
+    });
+};
+
+Usergrid.Entity.prototype.assignRole = function(roleName, callback) {
+    
+    var self = this;
+    var type = self.get('type');
+    var collection = type + 's';
+    var entityID;
+
+    if (type == 'user' && this.get('username') != null) {
+        entityID = self.get('username');
+    } else if (type == 'group' && this.get('name') != null) {
+        entityID = self.get('name');
+    } else if (this.get('uuid') != null) {
+        entityID = self.get('uuid');
+    }
+
+    if (type != 'users' && type != 'groups') {
+        doCallback(callback, [ new UsergridError('entity must be a group or user', 'invalid_entity_type'), null, this ], this);
+    }
+
+    var endpoint = 'roles/' + roleName + '/' + collection + '/' + entityID;
+    var options = {
+        method: 'POST',
+        endpoint: endpoint        
+    };
+
+    this._client.request(options, function(err, response) {
+        if (err) {
+            console.log('Could not assign role.');
+        }        
+        doCallback(callback, [ err, response, self ]);
+    });
+
+};
+
+Usergrid.Entity.prototype.removeRole = function(roleName, callback) {
+    
+    var self = this;
+    var type = self.get('type');
+    var collection = type + 's';
+    var entityID;
+
+    if (type == 'user' && this.get('username') != null) {
+        entityID = this.get('username');
+    } else if (type == 'group' && this.get('name') != null) {
+        entityID = this.get('name');
+    } else if (this.get('uuid') != null) {
+        entityID = this.get('uuid');
+    }
+
+    if (type != 'users' && type != 'groups') {
+        doCallback(callback, [ new UsergridError('entity must be a group or user', 'invalid_entity_type'), null, this ], this);
+    }
+
+    var endpoint = 'roles/' + roleName + '/' + collection + '/' + entityID;
+    var options = {
+        method: 'DELETE',
+        endpoint: endpoint        
+    };
+
+    this._client.request(options, function(err, response) {
+        if (err) {
+            console.log('Could not assign role.');
+        }        
+        doCallback(callback, [ err, response, self ]);
+    });
+
+};
+
+Usergrid.Entity.prototype.assignPermissions = function(permissions, callback) {
+    var self = this;
+    var entityID;
+    var type = this.get('type');
+
+    if (type != 'user' && type != 'users' && type != 'group' && type != 'groups' && type != 'role' && type != 'roles') {
+        doCallback(callback, [ new UsergridError('entity must be a group, user, or role', 'invalid_entity_type'), null, this ], this);
+    }
+
+    if (type == 'user' && this.get('username') != null) {
+        entityID = this.get('username');
+    } else if (type == 'group' && this.get('name') != null) {
+        entityID = this.get('name');
+    } else if (this.get('uuid') != null) {
+        entityID = this.get('uuid');
+    }
+
+    var endpoint = type + '/' + entityID + '/permissions';
+    var options = {
+        method: 'POST',
+        endpoint: endpoint,
+        body: {
+            'permission': permissions
+        }
+    };
+    this._client.request(options, function(err, data) {
+        if (err && self._client.logging) {
+            console.log('could not assign permissions');
+        }
+        doCallback(callback, [ err, data, data.data ], self);
+    });
+};
+
+Usergrid.Entity.prototype.removePermissions = function(permissions, callback) {
+    var self = this;
+    var entityID;
+    var type = this.get('type');
+
+    if (type != 'user' && type != 'users' && type != 'group' && type != 'groups' && type != 'role' && type != 'roles') {
+        doCallback(callback, [ new UsergridError('entity must be a group, user, or role', 'invalid_entity_type'), null, this ], this);
+    }
+
+    if (type == 'user' && this.get('username') != null) {
+        entityID = this.get('username');
+    } else if (type == 'group' && this.get('name') != null) {
+        entityID = this.get('name');
+    } else if (this.get('uuid') != null) {
+        entityID = this.get('uuid');
+    }
+
+    var endpoint = type + '/' + entityID + '/permissions';
+    var options = {
+        method: 'DELETE',
+        endpoint: endpoint,
+        qs: {
+            'permission': permissions
+        }
+    };
+    this._client.request(options, function(err, data) {
+        if (err && self._client.logging) {
+            console.log('could not remove permissions');
+        }
+        doCallback(callback, [ err, data, data.params.permission ], self);
     });
 };
 
