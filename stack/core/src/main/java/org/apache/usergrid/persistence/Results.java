@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.index.query.Query;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -32,19 +31,20 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import org.apache.usergrid.persistence.cassandra.QueryProcessor;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 import org.apache.usergrid.utils.MapUtils;
 import org.apache.usergrid.utils.StringUtils;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
+
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
-import org.apache.usergrid.persistence.cassandra.QueryProcessor;
-import org.apache.usergrid.persistence.index.query.Query.Level;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ConversionUtils.bytes;
-import org.elasticsearch.common.collect.Lists;
 
 
 @XmlRootElement
@@ -270,7 +270,7 @@ public class Results implements Iterable<Entity> {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Query getQuery() {
         return query;
     }

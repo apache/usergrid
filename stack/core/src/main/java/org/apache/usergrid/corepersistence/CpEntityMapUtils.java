@@ -30,9 +30,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.map.ObjectMapper;
-
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.ArrayField;
@@ -52,6 +49,8 @@ import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.persistence.model.field.value.Location;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Utilities for converting entities to/from maps suitable for Core Persistence.

@@ -21,13 +21,10 @@ package org.apache.usergrid.persistence.model.entity;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.annotate.JsonTypeInfo;
 
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
+import com.fasterxml.jackson.annotation.*;
 import com.google.common.base.Preconditions;
 
 
