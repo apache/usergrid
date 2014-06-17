@@ -5,7 +5,7 @@
         "DnsSubDomain": {
             "Description": "DNS name for stack, must not already exist in Route53.",
             "Type": "String",
-            "Default": "ugtest"
+            "Default": "sfeldmanpush"
         },
         "DnsDomain": {
             "Description": "DNS domain for stack, must already exist in Route53",
@@ -20,26 +20,26 @@
         "RestMinServers": {
             "Description": "Minimum number of REST servers.",
             "Type": "Number",
-            "Default": "1",
-            "MinValue": "1"
+            "Default": "3",
+            "MinValue": "3"
         },
         "RestMaxServers": {
             "Description": "Maximum number REST servers.",
             "Type": "Number",
-            "Default": "1",
-            "MinValue": "1"
+            "Default": "3",
+            "MinValue": "3"
         },
         "RestInstanceType": {
             "Description": "Instance type for REST servers",
             "Type": "String",
-            "Default": "m1.small",
+            "Default": "m1.large",
             "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge"],
             "ConstraintDescription": "must be valid instance type."
         },
         "KeyPair": {
             "Description": "EC2 key pair to be use for SSH access",
             "Type": "String",
-            "Default": "ug-cloudformation"
+            "Default": "sfeldmanpush"
         },
         "CassClusterName": {
             "Description": "Name to be used for Cassandra cluster.",
@@ -62,23 +62,23 @@
         "CassReplicationFactor": {
             "Description": "Cassandra replication factor",
             "Type": "Number",
-            "Default": "2",
-            "MinValue": "1"
+            "Default": "3",
+            "MinValue": "3"
         },
         "SuperUserEmail": {
             "Description": "Email for superuser user",
             "Type": "String",
-            "Default": "dmjohnson+super@apigee.com"
+            "Default": "sfeldman+super@apigee.com"
         },
         "TestAdminUserEmail": {
             "Description": "Email for test admin user",
             "Type": "String",
-            "Default": "dmjohnson+admin@apigee.com"
+            "Default": "sfeldman+admin@apigee.com"
         },
         "NotificationEmail": {
             "Description": "Email for notifications",
             "Type": "String",
-            "Default": "dmjohnson+super@apigee.com"
+            "Default": "sfeldman+super@apigee.com"
         }
     },
     "Mappings": {
@@ -89,9 +89,9 @@
             "m1.xlarge": {"Arch": "64"}
         },
         "AWSRegionArch2AMI": {
-            "ap-southeast-2": {"64": "ami-db8611e1"},
-            "us-east-1": {"64": "ami-e864da81"},
-            "us-west-2": {"64": "ami-50f97060"}
+            "ap-southeast-2": {"64": "ami-5993f663"},
+            "us-east-1": {"64": "ami-7cbd4f14"},
+            "us-west-2": {"64": "ami-2598ea15"}
         },
         "TwoAZs": {
             "ap-southeast-2": {"AZ1": "ap-southeast-2a", "AZ2": "ap-southeast-2b"},
@@ -208,6 +208,8 @@
                                 "\n",
 
                                 "# download usergrid and init script bundle from S3\n",
+                                "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                                "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
                                 "apt-get update\n",
                                 "apt-get -y install s3cmd\n",
                                 "cd /usr/share/usergrid\n",
@@ -338,6 +340,8 @@
                                 "\n",
 
                                 "# download usergrid and init script bundle from S3\n",
+                                "wget -O- -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add -\n",
+                                "wget -O/etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list\n",
                                 "apt-get update\n",
                                 "apt-get -y install s3cmd\n",
                                 "cd /usr/share/usergrid\n",
