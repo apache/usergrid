@@ -38,7 +38,7 @@
         <archaius.version>0.5.12</archaius.version>
         <astyanax.version>1.56.49-SNAPSHOT-UG-1</astyanax.version>
         <cassandra.version>1.2.15</cassandra.version>
-        <chop.version>1.0</chop.version>
+<!--        <chop.version>1.0</chop.version>-->
         <commons.codec.version>1.6</commons.codec.version>
         <commons.collections.version>3.2.1</commons.collections.version>
         <commons.io.version>2.4</commons.io.version>

@@ -114,11 +114,11 @@
             <classifier>tests</classifier>
         </dependency>
 
-        <dependency>
+<!--        <dependency>
             <groupId>org.safehaus.chop</groupId>
             <artifactId>chop-api</artifactId>
             <version>${chop.version}</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>org.jukito</groupId>
