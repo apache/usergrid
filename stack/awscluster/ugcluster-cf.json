@@ -5,7 +5,7 @@
         "DnsSubDomain": {
             "Description": "DNS name for stack, must not already exist in Route53.",
             "Type": "String",
-            "Default": "sfeldmanpush"
+            "Default": "ugtest"
         },
         "DnsDomain": {
             "Description": "DNS domain for stack, must already exist in Route53",
@@ -39,7 +39,7 @@
         "KeyPair": {
             "Description": "EC2 key pair to be use for SSH access",
             "Type": "String",
-            "Default": "sfeldmanpush"
+            "Default": "ug-cloudformation"
         },
         "CassClusterName": {
             "Description": "Name to be used for Cassandra cluster.",
@@ -68,17 +68,17 @@
         "SuperUserEmail": {
             "Description": "Email for superuser user",
             "Type": "String",
-            "Default": "sfeldman+super@apigee.com"
+            "Default": "dmjohnson+super@apigee.com"
         },
         "TestAdminUserEmail": {
             "Description": "Email for test admin user",
             "Type": "String",
-            "Default": "sfeldman+admin@apigee.com"
+            "Default": "dmjohnson+admin@apigee.com"
         },
         "NotificationEmail": {
             "Description": "Email for notifications",
             "Type": "String",
-            "Default": "sfeldman+super@apigee.com"
+            "Default": "dmjohnson+super@apigee.com"
         }
     },
     "Mappings": {
