@@ -19,17 +19,16 @@
 package org.apache.usergrid.chop.webapp.view.main;
 
 
+import com.vaadin.server.VaadinService;
 import org.apache.usergrid.chop.webapp.service.chart.Params;
-import org.apache.usergrid.chop.webapp.view.chart.layout.*;
+import org.apache.usergrid.chop.webapp.service.shiro.ShiroRealm;
+
+import org.apache.usergrid.chop.webapp.view.chart.layout.OverviewChartLayout;
 import org.apache.usergrid.chop.webapp.view.log.LogLayout;
 import org.apache.usergrid.chop.webapp.view.module.ModuleListWindow;
 import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
 import org.apache.usergrid.chop.webapp.view.runner.RunnersLayout;
 import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
-import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
-
-import com.vaadin.annotations.Title;
-import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -38,27 +37,14 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 
-@Title( "Judo Chop" )
-public class MainView extends UI implements ModuleSelectListener {
+public class MainView extends AbsoluteLayout implements ModuleSelectListener {
 
     private TabSheetManager tabSheetManager;
 
-    @Override
-    protected void init( VaadinRequest request ) {
-
-        AbsoluteLayout mainLayout = addMainLayout();
-        addButtons( mainLayout );
-        addTabSheet( mainLayout );
-
-        loadScripts();
+    MainView( ) {
+        addButtons( this );
+        addTabSheet( this );
     }
-
-
-    private void loadScripts() {
-        JavaScriptUtil.loadFile( "js/jquery.min.js" );
-        JavaScriptUtil.loadFile( "js/jquery.flot.min.js" );
-    }
-
 
     private AbsoluteLayout addMainLayout() {
 
@@ -70,8 +56,7 @@ public class MainView extends UI implements ModuleSelectListener {
         verticalLayout.setSizeFull();
         verticalLayout.addComponent( absoluteLayout );
         verticalLayout.setComponentAlignment( absoluteLayout, Alignment.MIDDLE_CENTER );
-
-        setContent( verticalLayout );
+        this.addComponent(verticalLayout);
 
         return absoluteLayout;
     }
@@ -79,27 +64,34 @@ public class MainView extends UI implements ModuleSelectListener {
 
     private void addButtons( AbsoluteLayout mainLayout ) {
 
-        addButton( mainLayout, 450, "Modules", new Button.ClickListener() {
+        addButton( mainLayout, 350, "Modules", new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
                 UI.getCurrent().addWindow( new ModuleListWindow( MainView.this ) );
             }
         });
 
-        addButton( mainLayout, 560, "Runners", new Button.ClickListener() {
+        addButton( mainLayout, 460, "Runners", new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
-                tabSheetManager.addTab( new RunnersLayout(), "Runners" );
+                tabSheetManager.addTab(new RunnersLayout(), "Runners");
             }
         });
 
-        addButton( mainLayout, 670, "Users", new Button.ClickListener() {
+        addButton( mainLayout, 570, "Users", new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
-                UI.getCurrent().addWindow( new UserListWindow( tabSheetManager ) );
+                UI.getCurrent().addWindow(new UserListWindow(tabSheetManager));
             }
         });
 
-        addButton( mainLayout, 780, "Logs", new Button.ClickListener() {
+        addButton( mainLayout, 680, "Logs", new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
-                tabSheetManager.addTab( new LogLayout(), "Logs" );
+                tabSheetManager.addTab(new LogLayout(), "Logs");
+            }
+        });
+
+        addButton( mainLayout, 790, "Logout", new Button.ClickListener() {
+            public void buttonClick( Button.ClickEvent event ) {
+                ShiroRealm.logout();
+                redirectToMainView();
             }
         });
     }
@@ -127,6 +119,15 @@ public class MainView extends UI implements ModuleSelectListener {
     @Override
     public void onModuleSelect( String moduleId ) {
         AbsoluteLayout layout = new OverviewChartLayout( new Params(moduleId), tabSheetManager );
-        tabSheetManager.addTab( layout, "Overview Chart"  );
+        tabSheetManager.addTab( layout, "Overview Chart" );
+    }
+
+    private void redirectToMainView() {
+        // Close the VaadinServiceSession
+        getUI().getSession().close();
+
+        // Invalidate underlying session instead if login info is stored there
+        VaadinService.getCurrentRequest().getWrappedSession().invalidate();
+        getUI().getPage().setLocation( "/VAADIN" );
     }
 }
