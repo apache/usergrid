@@ -18,18 +18,17 @@ package org.apache.usergrid.rest.test;
 
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.usergrid.persistence.EntityManager;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -38,53 +37,41 @@ import org.apache.usergrid.rest.AbstractContextResource;
 
 
 /** 
- * Set properties at runtime, for testing purposes only and only works with usergrid.test=true.
+ * Reindex one application, for testing purposes only and only works with usergrid.test=true .
  */
 @Component
 @Scope("prototype")
-@Path("/testproperties")
+@Path("/testreindex")
 @Produces({ MediaType.APPLICATION_JSON })
-public class PropertiesResource extends AbstractContextResource {
-    static final Logger logger = LoggerFactory.getLogger( PropertiesResource.class );
+public class ReindexResource extends AbstractContextResource {
+    static final Logger logger = LoggerFactory.getLogger( ReindexResource.class );
 
-
-    public PropertiesResource() {}
+    public ReindexResource() {}
 
 
     @POST
-    public Response setProperties( String body ) throws IOException {
-
-        Properties props = management.getProperties();
+    public Response setProperties( 
+            @QueryParam("org_name") String orgName, 
+            @QueryParam("app_name") String appName, 
+            @QueryParam("app_id") String appIdString ) throws IOException, Exception {
 
         // only works in test mode
+        Properties props = management.getProperties();
         String testProp = ( String ) props.get( "usergrid.test" );
         if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
             throw new UnsupportedOperationException();
         }
 
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String, String> map = mapper.readValue( body, new TypeReference<Map<String, String>>() {} );
-        for ( String key : map.keySet() ) {
-            management.getProperties().setProperty( key, map.get( key ) );
+        UUID appId;
+        if ( orgName != null && appName != null ) {
+            appId = emf.lookupApplication( orgName + "/" + appName );
+        } else {
+            appId = UUID.fromString(appIdString);
         }
+         
+        EntityManager em = emf.getEntityManager( appId );
+        em.refreshIndex();
 
         return Response.created( null ).build();
-    }
-
-
-    @GET
-    public Response getProperties() throws Exception {
-
-        Properties props = management.getProperties();
-
-        // only works in test mode
-        String testProp = ( String ) props.get( "usergrid.test" );
-        if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
-            throw new UnsupportedOperationException();
-        }
-
-        ObjectMapper mapper = new ObjectMapper();
-        String json = mapper.writeValueAsString( props );
-        return Response.ok( json ).build();
     }
 }

@@ -80,8 +80,8 @@ public class EsProvider {
                 Settings settings = ImmutableSettings.settingsBuilder()
                     .put("node.http.enabled", true)
                     .put("transport.tcp.port", port)
-                    .put("path.logs", "target/elasticsearch/logs_" + tempDir.toString())
-                    .put("path.data", "target/elasticsearch/data_" + tempDir.toString())
+                    .put("path.logs", tempDir.toString())
+                    .put("path.data", tempDir.toString())
                     .put("gateway.type", "none").put("index.store.type", "memory")
                     .put("index.number_of_shards", 1)
                     .put("index.number_of_replicas", 1).build();
