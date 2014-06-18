@@ -19,8 +19,6 @@
 package org.apache.usergrid.chop.webapp.view.user;
 
 
-import java.util.List;
-
 import org.apache.usergrid.chop.stack.User;
 import org.apache.usergrid.chop.webapp.dao.UserDao;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
@@ -37,7 +35,8 @@ public class UserListWindow extends PopupWindow {
 
     private final TabSheetManager tabSheetManager;
 
-    public static boolean createClicked = false;
+    private static boolean createButtonClicked = false;
+    private static String currentUser = "user";
 
     public UserListWindow(TabSheetManager tabSheetManager) {
         super( "Users" );
@@ -65,6 +64,7 @@ public class UserListWindow extends PopupWindow {
                 Object value = event.getProperty().getValue();
                 if (value != null) {
                     close();
+                    currentUser = (String) value;
                     showUser( (String) value );
                 }
             }
@@ -77,7 +77,6 @@ public class UserListWindow extends PopupWindow {
 
     private void showUser( String username ) {
         tabSheetManager.addTab( new UserLayout( username, tabSheetManager ), "User" );
-        createClicked = true;
     }
 
     private void loadData( ListSelect list ) {
@@ -97,6 +96,7 @@ public class UserListWindow extends PopupWindow {
         createButton.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
                 close();
+                setCreateButtonClicked( true );
                 showUser( null );
             }
         } );
@@ -104,5 +104,19 @@ public class UserListWindow extends PopupWindow {
         mainLayout.addComponent( createButton, "left: 10px; top: 425px;" );
     }
 
+    public static String getCurrentUser() {
+        return currentUser;
+    }
 
+    public static void setCurrentUser(String currentUser) {
+        UserListWindow.currentUser = currentUser;
+    }
+
+    public static boolean isCreateButtonClicked() {
+        return createButtonClicked;
+    }
+
+    public static void setCreateButtonClicked(boolean createButtonClicked) {
+        UserListWindow.createButtonClicked = createButtonClicked;
+    }
 }

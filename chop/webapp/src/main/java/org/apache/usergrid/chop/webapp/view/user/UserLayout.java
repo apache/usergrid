@@ -31,6 +31,7 @@ import org.apache.usergrid.chop.webapp.dao.ProviderParamsDao;
 import org.apache.usergrid.chop.webapp.dao.UserDao;
 import org.apache.usergrid.chop.webapp.dao.model.BasicProviderParams;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
+import org.apache.usergrid.chop.webapp.view.main.MainView;
 import org.apache.usergrid.chop.webapp.view.main.TabSheetManager;
 
 import com.vaadin.ui.AbsoluteLayout;
@@ -166,8 +167,9 @@ public class UserLayout extends AbsoluteLayout {
         }
 
         try {
-            if ( UserListWindow.createClicked ){
-                userDao.update( new User( username, password ) );
+            if ( ! UserListWindow.isCreateButtonClicked() ){  // update current user information
+                userDao.delete( UserListWindow.getCurrentUser() );
+                userDao.save( new User( username, password ) );
 
                 BasicProviderParams newProviderParams = new BasicProviderParams(
                         username,
@@ -178,17 +180,21 @@ public class UserLayout extends AbsoluteLayout {
                         keyPairNameField.getValue()
                 );
 
-                ProviderParams oldProviderParams = providerParamsDao.getByUser( username );
+                ProviderParams oldProviderParams = providerParamsDao.getByUser( UserListWindow.getCurrentUser() );
 
                 Map<String, String> keys = oldProviderParams != null ? oldProviderParams.getKeys() : new HashMap<String, String>();
                 newProviderParams.setKeys( keys );
 
-                providerParamsDao.update( newProviderParams );
+                providerParamsDao.delete( UserListWindow.getCurrentUser() );
+                providerParamsDao.save( newProviderParams );
+
                 close();
-                Notification.show( "Success", "User updated successfully", Notification.Type.HUMANIZED_MESSAGE );
-                UserListWindow.createClicked = false;
-            } else{
+                Notification.show( "Success", "User information updated successfully", Notification.Type.HUMANIZED_MESSAGE );
+
+                UserListWindow.setCurrentUser( username );
+            } else{  // save new user
                 doSaveUser( username, password );
+                UserListWindow.setCreateButtonClicked( false );
             }
         } catch ( Exception e ) {
             Notification.show( "Error", "Error to save user: " + e.getMessage(), Notification.Type.ERROR_MESSAGE );

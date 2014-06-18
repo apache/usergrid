@@ -25,6 +25,7 @@ import org.apache.usergrid.chop.api.ProviderParams;
 import org.apache.usergrid.chop.webapp.dao.model.BasicProviderParams;
 import org.apache.usergrid.chop.webapp.elasticsearch.IElasticSearchClient;
 import org.apache.usergrid.chop.webapp.elasticsearch.Util;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -82,40 +83,6 @@ public class ProviderParamsDao extends Dao {
                                 .field( "keyName", pp.getKeyName() )
                                 .field( "keys", pp.getKeys().toString() )
                 )
-                .execute()
-                .actionGet();
-
-        return response.isCreated();
-    }
-
-
-    public boolean update( final ProviderParams pp ) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        sb.append("ctx._source.username=\"=")
-                .append(pp.getUsername())
-                .append(";")
-                .append("ctx._source.instanceType=\"=")
-                .append(pp.getAccessKey())
-                .append(";")
-                .append("ctx._source.accessKey=\"=")
-                .append(pp.getAccessKey())
-                .append(";")
-                .append("ctx._source.secretKey=\"=")
-                .append(pp.getSecretKey())
-                .append(";")
-                .append("ctx._source.imageId=\"=")
-                .append(pp.getImageId())
-                .append(";")
-                .append("ctx._source.keyName=\"=")
-                .append(pp.getImageId())
-                .append(";")
-                .append("ctx._source.keys=\"=")
-                .append(pp.getKeys().toString());
-
-        UpdateResponse response = elasticSearchClient.getClient()
-                .prepareUpdate( DAO_INDEX_KEY, DAO_TYPE_KEY, pp.getUsername() )
-                .setRefresh( true )
-                .setScript(sb.toString())
                 .execute()
                 .actionGet();
 
@@ -190,7 +157,12 @@ public class ProviderParamsDao extends Dao {
      * @return          whether or not provider params existed for given username
      */
     public boolean delete( String username ) {
-        // TODO to be implemented
-        throw new NotImplementedException( "ProviderParamsDao.delete has not yet been implemented" );
+        DeleteResponse response = elasticSearchClient.getClient()
+                .prepareDelete( DAO_INDEX_KEY, DAO_TYPE_KEY, username )
+                .setRefresh( true )
+                .execute()
+                .actionGet();
+
+        return response.isFound();
     }
 }
