@@ -19,8 +19,6 @@
 package org.apache.usergrid.chop.webapp.view.user;
 
 
-import java.util.List;
-
 import org.apache.usergrid.chop.stack.User;
 import org.apache.usergrid.chop.webapp.dao.UserDao;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
@@ -36,6 +34,9 @@ import com.vaadin.ui.ListSelect;
 public class UserListWindow extends PopupWindow {
 
     private final TabSheetManager tabSheetManager;
+
+    private static boolean createButtonClicked = false;
+    private static String currentUser = "user";
 
     public UserListWindow(TabSheetManager tabSheetManager) {
         super( "Users" );
@@ -57,13 +58,14 @@ public class UserListWindow extends PopupWindow {
         list.setNullSelectionAllowed( false );
         list.setImmediate( true );
 
-        list.addValueChangeListener(new Property.ValueChangeListener() {
+        list.addValueChangeListener( new Property.ValueChangeListener() {
             @Override
-            public void valueChange(Property.ValueChangeEvent event) {
+            public void valueChange( Property.ValueChangeEvent event ) {
                 Object value = event.getProperty().getValue();
-                if (value != null) {
+                if ( value != null ) {
                     close();
-                    showUser( (String) value );
+                    currentUser = ( String ) value;
+                    showUser( ( String ) value );
                 }
             }
         });
@@ -94,6 +96,7 @@ public class UserListWindow extends PopupWindow {
         createButton.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
                 close();
+                setCreateButtonClicked( true );
                 showUser( null );
             }
         } );
@@ -101,5 +104,19 @@ public class UserListWindow extends PopupWindow {
         mainLayout.addComponent( createButton, "left: 10px; top: 425px;" );
     }
 
+    public static String getCurrentUser() {
+        return currentUser;
+    }
 
+    public static void setCurrentUser( String currentUser ) {
+        UserListWindow.currentUser = currentUser;
+    }
+
+    public static boolean isCreateButtonClicked() {
+        return createButtonClicked;
+    }
+
+    public static void setCreateButtonClicked( boolean createButtonClicked ) {
+        UserListWindow.createButtonClicked = createButtonClicked;
+    }
 }
