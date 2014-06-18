@@ -310,6 +310,7 @@
                                     "\n",
                                     "export CASSANDRA_CLUSTER_NAME=", {"Ref": "CassClusterName"}, "\n",
                                     "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
+                                    "export CASSANDRA_NUM_SERVERS=", {"Ref": "CassNumServers"}, "\n",
                                     "export CASSANDRA_REPLICATION_FACTOR=", {"Ref": "CassReplicationFactor"}, "\n",
                                     "\n",
                                     "export RELEASE_BUCKET=", {"Ref": "ReleaseBucket"}, "\n",

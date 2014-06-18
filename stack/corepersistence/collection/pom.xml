@@ -64,11 +64,11 @@
 
   <dependencies>
 
-    <dependency>
+<!--    <dependency>
       <groupId>org.safehaus.chop</groupId>
       <artifactId>chop-api</artifactId>
       <version>${chop.version}</version>
-    </dependency>
+    </dependency>-->
 
     <!-- Google Guice Integration Test Injectors -->
 
