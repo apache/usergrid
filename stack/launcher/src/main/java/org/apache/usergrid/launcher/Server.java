@@ -100,7 +100,6 @@ public class Server implements org.springframework.context.ApplicationContextAwa
     }
 
 
-    @SuppressWarnings("InfiniteLoopStatement")
     public synchronized void startServer() {
 
         if ( startDatabaseWithServer ) {

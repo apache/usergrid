@@ -130,11 +130,11 @@ public class PrincipalCredentialsToken implements org.apache.shiro.authc.Authent
 
 
     public boolean isDisabled() {
-        return (principal != null) && principal.isDisabled();
+        return ( principal != null ) ? principal.isDisabled() : false;
     }
 
 
     public boolean isActivated() {
-        return (principal == null) || principal.isActivated();
+        return ( principal != null ) ? principal.isActivated() : true;
     }
 }

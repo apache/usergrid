@@ -102,6 +102,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
         }
         catch ( UniformInterfaceException uie ) {
             assertEquals( 404, uie.getResponse().getClientResponseStatus().getStatusCode() );
+            return;
         }
     }
 

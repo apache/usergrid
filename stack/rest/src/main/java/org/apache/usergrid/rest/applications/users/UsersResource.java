@@ -36,7 +36,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.usergrid.rest.RootResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -79,7 +78,7 @@ public class UsersResource extends ServiceResource {
 
 
     @Override
-    @Path(RootResource.ENTITY_ID_PATH)
+    @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
             throws Exception {
 

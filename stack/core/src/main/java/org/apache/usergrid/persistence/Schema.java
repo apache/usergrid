@@ -161,8 +161,8 @@ public class Schema {
     public static final String DICTIONARY_COUNTERS = "counters";
     public static final String DICTIONARY_GEOCELL = "geocell";
 
-    private static final List<String> entitiesPackage = new ArrayList<String>();
-    private static final List<String> entitiesScanPath = new ArrayList<String>();
+    private static List<String> entitiesPackage = new ArrayList<String>();
+    private static List<String> entitiesScanPath = new ArrayList<String>();
 
     @SuppressWarnings("rawtypes")
     public static Map<String, Class> DEFAULT_DICTIONARIES =
@@ -217,6 +217,7 @@ public class Schema {
             new ConcurrentHashMap<Class<? extends Entity>, EntityInfo>();
 
     Map<String, EntityInfo> entityMap = new TreeMap<String, EntityInfo>( String.CASE_INSENSITIVE_ORDER );
+    ;
 
     Map<String, Map<String, Set<CollectionInfo>>> entityContainerCollections =
             new TreeMap<String, Map<String, Set<CollectionInfo>>>( String.CASE_INSENSITIVE_ORDER );
@@ -500,8 +501,7 @@ public class Schema {
 
     public String[] getAllPropertyNamesAsArray() {
 
-        Set<String> strings = allProperties.keySet();
-        return strings.toArray(new String[strings.size()]);
+        return allProperties.keySet().toArray( new String[0] );
     }
 
 
@@ -640,8 +640,11 @@ public class Schema {
     public boolean hasProperties( String entityType ) {
 
         EntityInfo entity = getEntityInfo( entityType );
-        return entity != null && entity.hasProperties();
+        if ( entity == null ) {
+            return false;
+        }
 
+        return entity.hasProperties();
     }
 
 
@@ -665,8 +668,7 @@ public class Schema {
             return new String[0];
         }
 
-        Set<String> strings = entity.getProperties().keySet();
-        return strings.toArray(new String[strings.size()]);
+        return entity.getProperties().keySet().toArray( new String[0] );
     }
 
 
@@ -678,8 +680,11 @@ public class Schema {
         }
 
         EntityInfo entity = getEntityInfo( entityType );
-        return entity != null && entity.hasProperty(propertyName);
+        if ( entity == null ) {
+            return false;
+        }
 
+        return entity.hasProperty( propertyName );
     }
 
 
@@ -698,40 +703,63 @@ public class Schema {
     public boolean isPropertyMutable( String entityType, String propertyName ) {
 
         EntityInfo entity = getEntityInfo( entityType );
-        return entity != null && entity.isPropertyMutable(propertyName);
+        if ( entity == null ) {
+            return false;
+        }
 
+        return entity.isPropertyMutable( propertyName );
     }
 
 
     public boolean isPropertyUnique( String entityType, String propertyName ) {
 
         EntityInfo entity = getEntityInfo( entityType );
-        return entity != null && entity.isPropertyUnique(propertyName);
+        if ( entity == null ) {
+            return false;
+        }
 
+        return entity.isPropertyUnique( propertyName );
     }
 
 
     public boolean isPropertyIndexed( String entityType, String propertyName ) {
 
         EntityInfo entity = getEntityInfo( entityType );
-        return entity == null || !entity.hasProperty(propertyName) || entity.isPropertyIndexed(propertyName);
+        if ( entity == null ) {
+            return true;
+        }
 
+        if ( entity.hasProperty( propertyName ) ) {
+            return entity.isPropertyIndexed( propertyName );
+        }
+
+        return true;
     }
 
 
     public boolean isPropertyFulltextIndexed( String entityType, String propertyName ) {
 
         EntityInfo entity = getEntityInfo( entityType );
-        return entity == null || !entity.hasProperty(propertyName) || entity.isPropertyFulltextIndexed(propertyName);
+        if ( entity == null ) {
+            return true;
+        }
 
+        if ( entity.hasProperty( propertyName ) ) {
+            return entity.isPropertyFulltextIndexed( propertyName );
+        }
+
+        return true;
     }
 
 
     public boolean isPropertyTimestamp( String entityType, String propertyName ) {
 
         EntityInfo entity = getEntityInfo( entityType );
-        return entity != null && entity.isPropertyTimestamp(propertyName);
+        if ( entity == null ) {
+            return false;
+        }
 
+        return entity.isPropertyTimestamp( propertyName );
     }
 
 
@@ -755,8 +783,11 @@ public class Schema {
         }
 
         EntityInfo entity = getEntityInfo( entityType );
-        return entity != null && entity.isPropertyRequired(propertyName);
+        if ( entity == null ) {
+            return false;
+        }
 
+        return entity.isPropertyRequired( propertyName );
     }
 
 
@@ -781,8 +812,11 @@ public class Schema {
     public boolean isPropertyIndexedInCollection( String containerType, String collectionName, String propertyName ) {
 
         CollectionInfo collection = getCollection( containerType, collectionName );
-        return collection != null && collection.isPropertyIndexed(propertyName);
+        if ( collection == null ) {
+            return false;
+        }
 
+        return collection.isPropertyIndexed( propertyName );
     }
 
 
@@ -790,8 +824,11 @@ public class Schema {
     public boolean hasDictionaries( String entityType ) {
 
         EntityInfo entity = getEntityInfo( entityType );
-        return entity != null && entity.hasDictionaries();
+        if ( entity == null ) {
+            return false;
+        }
 
+        return entity.hasDictionaries();
     }
 
 
@@ -811,8 +848,11 @@ public class Schema {
     public boolean hasDictionary( String entityType, String dictionaryName ) {
 
         EntityInfo entity = getEntityInfo( entityType );
-        return entity != null && entity.hasDictionary(dictionaryName);
+        if ( entity == null ) {
+            return false;
+        }
 
+        return entity.hasDictionary( dictionaryName );
     }
 
 
@@ -858,8 +898,11 @@ public class Schema {
         }
 
         DictionaryInfo dictionary = entity.getDictionary( dictionaryName );
-        return dictionary != null && dictionary.isKeysIndexedInConnections();
+        if ( dictionary == null ) {
+            return false;
+        }
 
+        return dictionary.isKeysIndexedInConnections();
     }
 
 
@@ -868,8 +911,11 @@ public class Schema {
                                                     String dictionaryName ) {
 
         CollectionInfo collection = getCollection( containerType, collectionName );
-        return collection != null && collection.isDictionaryIndexed(dictionaryName);
+        if ( collection == null ) {
+            return false;
+        }
 
+        return collection.isDictionaryIndexed( dictionaryName );
     }
 
 
@@ -893,16 +939,22 @@ public class Schema {
         }
 
         PropertyInfo property = item.getAliasPropertyObject();
-        return property != null && property.isPathBasedName();
+        if ( property == null ) {
+            return false;
+        }
 
+        return property.isPathBasedName();
     }
 
 
     public boolean isCollectionReversed( String containerType, String collectionName ) {
 
         CollectionInfo collection = getCollection( containerType, collectionName );
-        return collection != null && collection.isReversed();
+        if ( collection == null ) {
+            return false;
+        }
 
+        return collection.isReversed();
     }
 
 
@@ -1209,7 +1261,10 @@ public class Schema {
 
 
     public static boolean isAssociatedEntityType( String entityType ) {
-        return entityType != null && entityType.contains(":");
+        if ( entityType == null ) {
+            return false;
+        }
+        return entityType.indexOf( ':' ) != -1;
     }
 
 
@@ -1335,7 +1390,7 @@ public class Schema {
                     continue;
                 }
                 Object propertyValue = entry.getValue();
-                if ( ( propertyValue instanceof String ) && (propertyValue.equals("")) ) {
+                if ( ( propertyValue instanceof String ) && ( ( ( String ) propertyValue ) == "" ) ) {
                     propertyValue = null;
                 }
                 if ( ( propertyValue == null ) && isRequiredProperty( entityType, entry.getKey() ) ) {
@@ -1352,7 +1407,7 @@ public class Schema {
 
         entityType = normalizeEntityType( entityType );
 
-        if ( ( propertyValue instanceof String ) && propertyValue.equals("") ) {
+        if ( ( propertyValue instanceof String ) && ( ( String ) propertyValue ).equals( "" ) ) {
             propertyValue = null;
         }
 
@@ -1385,7 +1440,7 @@ public class Schema {
 
         entityType = normalizeEntityType( entityType );
 
-        if ( ( elementValue instanceof String ) && elementValue.equals("") ) {
+        if ( ( elementValue instanceof String ) && ( ( String ) elementValue ).equals( "" ) ) {
             elementValue = null;
         }
 
@@ -1412,7 +1467,8 @@ public class Schema {
         if ( entityClass == null ) {
             entityClass = DynamicEntity.class;
         }
-        return mapper.convertValue( map, entityClass );
+        Entity entity = mapper.convertValue( map, entityClass );
+        return entity;
     }
 
     /*
@@ -1428,7 +1484,8 @@ public class Schema {
 
 
     public Map<String, Object> toMap( Entity entity ) {
-        return mapper.convertValue( entity, new TypeReference<Map<String, Object>>() {} );
+        Map<String, Object> map = mapper.convertValue( entity, new TypeReference<Map<String, Object>>() {} );
+        return map;
     }
 
 
@@ -1668,8 +1725,11 @@ public class Schema {
         }
 
         PropertyInfo property = entity.getProperty( propertyName );
-        return property != null && property.isEncrypted();
+        if ( property == null ) {
+            return false;
+        }
 
+        return property.isEncrypted();
     }
 
 

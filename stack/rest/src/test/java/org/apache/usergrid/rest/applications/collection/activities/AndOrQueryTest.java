@@ -125,12 +125,13 @@ public class AndOrQueryTest extends AbstractRestIT {
 
         int numValuesTested = 20;
 
+        JsonNode[] correctValues = new JsonNode[numValuesTested];
 
         props.put( "actor", actor );
         props.put( "verb", "go" );
         props.put( "content", "bragh" );
 
-        JsonNode[] correctValues = activities.createEntitiesWithOrdinal( props, numValuesTested );
+        correctValues = activities.createEntitiesWithOrdinal( props, numValuesTested );
 
         String inCorrectQuery = "select * where verb = 'go' and ordinal >= 10 ";
 
@@ -144,7 +145,9 @@ public class AndOrQueryTest extends AbstractRestIT {
         CustomCollection madeupStuff = context.collection( "imagination" );
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 
-        JsonNode[] correctValues;
+        JsonNode[] correctValues = new JsonNode[1000];
+
+
         correctValues = madeupStuff.createEntitiesWithOrdinal( character, 1000 );
 
         String inquisitiveQuery =

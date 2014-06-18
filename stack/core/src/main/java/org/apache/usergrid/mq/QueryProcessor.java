@@ -410,6 +410,7 @@ public class QueryProcessor {
             }
             if ( searchFinishValue == null ) {
                 searchFinishValue = searchStartValue;
+                ;
             }
             if ( ( searchStartValue != null ) && searchStartValue.toString().endsWith( "*" ) ) {
                 searchStartValue = removeEnd( searchStartValue.toString(), "*" );

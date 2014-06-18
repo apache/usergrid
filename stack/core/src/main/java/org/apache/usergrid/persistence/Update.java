@@ -56,7 +56,7 @@ public class Update {
 
 
     public static enum UpdateOperator {
-        UPDATE, DELETE, ADD_TO_LIST, REMOVE_FROM_LIST
+        UPDATE, DELETE, ADD_TO_LIST, REMOVE_FROM_LIST;
     }
 
 

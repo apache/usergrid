@@ -34,7 +34,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.usergrid.rest.RootResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -129,7 +128,7 @@ public class ApplicationsResource extends AbstractContextResource {
 
 
     @RequireOrganizationAccess
-    @Path(RootResource.APPLICATION_ID_PATH)
+    @Path( "{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}" )
     public ApplicationResource applicationFromOrganizationByApplicationId( @Context UriInfo ui,
                                                                            @PathParam( "applicationId" )
                                                                            String applicationIdStr ) throws Exception {

@@ -156,8 +156,8 @@ public class MongoQueryParser {
 
                     Stack<Operand> expressions = new Stack<Operand>();
 
-                    for (Object value : values) {
-                        expressions.push(eval((BSONObject) value));
+                    for ( int i = 0; i < size; i++ ) {
+                        expressions.push( eval( ( BSONObject ) values.get( i ) ) );
                     }
 
                     // we need to build a tree of expressions
@@ -179,8 +179,8 @@ public class MongoQueryParser {
 
                     Stack<Operand> expressions = new Stack<Operand>();
 
-                    for (Object value : values) {
-                        expressions.push(eval((BSONObject) value));
+                    for ( int i = 0; i < size; i++ ) {
+                        expressions.push( eval( ( BSONObject ) values.get( i ) ) );
                     }
 
                     while ( expressions.size() > 1 ) {
@@ -266,12 +266,12 @@ public class MongoQueryParser {
 
                     Stack<Operand> expressions = new Stack<Operand>();
 
-                    for (Object value1 : values) {
+                    for ( int i = 0; i < size; i++ ) {
                         Equal equal = new Equal();
-                        equal.setProperty(sourceField);
-                        equal.setLiteral(value1);
+                        equal.setProperty( sourceField );
+                        equal.setLiteral( values.get( i ) );
 
-                        expressions.push(equal);
+                        expressions.push( equal );
                     }
 
                     // we need to build a tree of expressions

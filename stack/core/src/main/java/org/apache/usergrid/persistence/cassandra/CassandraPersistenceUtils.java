@@ -436,7 +436,7 @@ public class CassandraPersistenceUtils {
 
         CFEnum[] values = null;
         try {
-            values = ( CFEnum[] ) invokeStaticMethod( cfEnum, "values", null);
+            values = ( CFEnum[] ) invokeStaticMethod( cfEnum, "values", ( Object[] ) null );
         }
         catch ( Exception e ) {
             logger.error( "Couldn't get CFEnum values", e );

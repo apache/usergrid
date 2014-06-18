@@ -1,4 +1,4 @@
-    /*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -24,10 +24,22 @@ import org.apache.usergrid.persistence.exceptions.PersistenceException;
 /** @author tnine */
 public class ContainsOperand extends EqualityOperand {
 
+    /**
+     * @param property
+     * @param literal
+     */
     public ContainsOperand( Token t ) {
         super( t );
     }
 
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence
+     * .query.tree.QueryVisitor)
+     */
     @Override
     public void visit( QueryVisitor visitor ) throws PersistenceException {
         visitor.visit( this );
@@ -38,6 +50,10 @@ public class ContainsOperand extends EqualityOperand {
         return ( StringLiteral ) getLiteral();
     }
 
+
+    /* (non-Javadoc)
+     * @see org.apache.usergrid.persistence.query.tree.EqualityOperand#newProperty(java.lang.String)
+     */
     @Override
     protected Property newProperty( String name ) {
         return new ContainsProperty( name );

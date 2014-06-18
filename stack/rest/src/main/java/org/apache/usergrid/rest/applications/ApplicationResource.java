@@ -598,7 +598,7 @@ public class ApplicationResource extends ServiceResource {
     public JSONWithPadding getAPMConfig( @Context UriInfo ui,
                                          @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
-        EntityManager em = emf.getEntityManager( applicationId );
+        EntityManager em = ( EntityManager ) emf.getEntityManager( applicationId );
         Object value = em.getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                 APIGEE_MOBILE_APM_CONFIG_JSON_KEY );
         //If there is no apm configuration then try to create apm config on the fly

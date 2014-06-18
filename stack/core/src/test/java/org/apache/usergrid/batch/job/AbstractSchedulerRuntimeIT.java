@@ -45,7 +45,7 @@ public class AbstractSchedulerRuntimeIT {
     private int count = DEFAULT_COUNT;
     protected SchedulerService scheduler;
     protected Properties props;
-    protected long waitTime = TestJobListener.WAIT_MAX_MILLIS;
+    protected long waitTime = listener.WAIT_MAX_MILLIS;
 
 
     @Before
