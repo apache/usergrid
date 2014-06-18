@@ -58,14 +58,14 @@ public class UserListWindow extends PopupWindow {
         list.setNullSelectionAllowed( false );
         list.setImmediate( true );
 
-        list.addValueChangeListener(new Property.ValueChangeListener() {
+        list.addValueChangeListener( new Property.ValueChangeListener() {
             @Override
-            public void valueChange(Property.ValueChangeEvent event) {
+            public void valueChange( Property.ValueChangeEvent event ) {
                 Object value = event.getProperty().getValue();
-                if (value != null) {
+                if ( value != null ) {
                     close();
-                    currentUser = (String) value;
-                    showUser( (String) value );
+                    currentUser = ( String ) value;
+                    showUser( ( String ) value );
                 }
             }
         });
@@ -108,7 +108,7 @@ public class UserListWindow extends PopupWindow {
         return currentUser;
     }
 
-    public static void setCurrentUser(String currentUser) {
+    public static void setCurrentUser( String currentUser ) {
         UserListWindow.currentUser = currentUser;
     }
 
@@ -116,7 +116,7 @@ public class UserListWindow extends PopupWindow {
         return createButtonClicked;
     }
 
-    public static void setCreateButtonClicked(boolean createButtonClicked) {
+    public static void setCreateButtonClicked( boolean createButtonClicked ) {
         UserListWindow.createButtonClicked = createButtonClicked;
     }
 }
