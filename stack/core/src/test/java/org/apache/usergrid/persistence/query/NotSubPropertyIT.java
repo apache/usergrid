@@ -91,21 +91,21 @@ public class NotSubPropertyIT extends AbstractIteratingQueryIT {
 
 
 
-            List<UUID> expected = new ArrayList<>(size);
+            List<UUID> expected = new ArrayList<UUID>(size);
 
             for ( int i = 0; i < size; i++ ) {
-                Map<String, Object> entity = new HashMap<>();
+                Map<String, Object> entity = new HashMap<String, Object>();
 
 
                 final boolean usageTypeBool = i%2 == 0;
                 final String usageType =  String.valueOf( usageTypeBool );
 
 
-                List<Map<String, Object>> subArray = new ArrayList<>();
+                List<Map<String, Object>> subArray = new ArrayList<Map<String, Object>>();
 
                 for(int j = 0; j < 2; j ++){
 
-                    Map<String, Object> subFields = new HashMap<>();
+                    Map<String, Object> subFields = new HashMap<String, Object>();
                     subFields.put( "startDate", 10000 );
                     subFields.put( "endDate", 20000);
                     subFields.put( "usageType", usageType+j  );
