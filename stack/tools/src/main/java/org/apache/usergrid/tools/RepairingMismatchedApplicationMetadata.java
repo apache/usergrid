@@ -59,7 +59,7 @@ public class RepairingMismatchedApplicationMetadata extends ToolBase {
                     Keyspace ko = cass.getSystemKeyspace();
                     Mutator<ByteBuffer> m = createMutator(ko, be);
                     long timestamp = cass.createTimestamp();
-                    addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_UUID, (UUID)app.getKey(), timestamp);
+                    addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_UUID, app.getKey(), timestamp);
                     addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_NAME, appName, timestamp);
                     batchExecute(m, RETRY_COUNT);
                     logger.info("UUID {}, NAME {}", app.getKey(), app.getValue());
