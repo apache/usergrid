@@ -27,6 +27,7 @@ import org.apache.usergrid.chop.webapp.elasticsearch.Util;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.search.SearchHit;
 
 import java.io.IOException;
@@ -82,7 +83,6 @@ public class UserDao extends Dao {
 
         return response.isCreated();
     }
-
 
     /**
      * Gets a User object containing the information for given username
