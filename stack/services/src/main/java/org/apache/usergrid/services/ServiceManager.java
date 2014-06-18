@@ -99,7 +99,7 @@ public class ServiceManager {
         if ( em != null ) {
             try {
                 application = em.getApplication();
-                applicationId = em.getApplicationRef().getUuid();
+                applicationId = em.getApplication().getUuid();
             }
             catch ( Exception e ) {
                 logger.error( "This should never happen", e );

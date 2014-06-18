@@ -18,7 +18,6 @@ package org.apache.usergrid.rest;
 
 
 import java.util.Map;
-import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -33,9 +32,11 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.assertNotNull;
 
 
 public class BasicIT extends AbstractRestIT {
@@ -281,13 +282,16 @@ public class BasicIT extends AbstractRestIT {
 
         logNode( node );
 
+        assertNotNull( node.get( "entities" ) );
+        assertNotNull( node.get( "entities" ).get( 0 ) );
+        assertNotNull( node.get( "entities" ).get( 0 ).get( "username" ) );
         assertEquals( "ed.anuff", node.get( "entities" ).get( 0 ).get( "username" ).getTextValue() );
 
         // test create device with guest permissions (no token)
 
         payload = hashMap( "foo", "bar" );
 
-        node = resource().path( "/test-organization/test-app/devices/" + UUID.randomUUID() )
+        node = resource().path( "/test-organization/test-app/devices/" + UUIDGenerator.newTimeUUID() )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                 .put( JsonNode.class, payload );
 

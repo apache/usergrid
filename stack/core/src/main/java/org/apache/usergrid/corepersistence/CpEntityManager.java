@@ -337,7 +337,7 @@ public class CpEntityManager implements EntityManager {
 
         if ( cpEntity == null ) {
             if ( logger.isDebugEnabled() ) {
-                logger.debug( "Loading entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                logger.debug( "FAILED to load entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
                     new Object[] {
                         id.getType(), id.getUuid(), 
                         collectionScope.getApplication(),
@@ -346,7 +346,7 @@ public class CpEntityManager implements EntityManager {
                 } );
             }
             return null;
-        }
+        } 
 
 //        if ( entityRef.getType().equals("group") ) {
 //            logger.debug("Reading Group");
@@ -360,9 +360,19 @@ public class CpEntityManager implements EntityManager {
         Entity entity = EntityFactory.newEntity( entityRef.getUuid(), entityRef.getType(), clazz );
         entity.setProperties( CpEntityMapUtils.toMap( cpEntity ) );
 
-        if ( entityRef.getType().equals("group") ) {
-            logger.debug("Reading Group " + entity.getProperties());
-        }
+//        if ( entityRef.getType().equals("group") ) {
+//            logger.debug("Reading Group " + entity.getProperties());
+//        }
+
+//        if ( logger.isDebugEnabled() ) {
+//            logger.debug( "Loaded entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+//                new Object[] {
+//                    id.getType(), id.getUuid(), 
+//                    collectionScope.getApplication(), 
+//                    collectionScope.getOwner(),
+//                    collectionScope.getName()
+//            } );
+//        }
 
         return entity;
     }
@@ -410,7 +420,7 @@ public class CpEntityManager implements EntityManager {
 
         if ( cpEntity == null ) {
             if ( logger.isDebugEnabled() ) {
-                logger.debug( "Failed entity load {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                logger.debug( "FAILED to load entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
                     new Object[] {
                         id.getType(), id.getUuid(), 
                         collectionScope.getApplication(), 
@@ -2146,8 +2156,9 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Entity get( UUID id ) throws Exception {
 
-        Results r = getRelationManager( getApplication() ).searchConnectedEntities(
-            Query.fromQL("select * where " + PROPERTY_UUID + " = '" + id.toString() + "'"));
+        Query q = Query.fromQL("select * where " + PROPERTY_UUID + " = '" + id.toString() + "'");
+        q.setResultsLevel( Level.ALL_PROPERTIES );
+        Results r = getRelationManager( getApplication() ).searchConnectedEntities( q );
 
         return r.getEntity();
     } 
