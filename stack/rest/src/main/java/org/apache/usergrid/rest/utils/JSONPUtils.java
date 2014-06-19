@@ -54,11 +54,8 @@ public class JSONPUtils {
         }
 
         Set<String> subtypes = javascriptTypes.get( m.getType() );
-        if ( subtypes == null ) {
-            return false;
-        }
+        return subtypes != null && subtypes.contains(m.getSubtype());
 
-        return subtypes.contains( m.getSubtype() );
     }
 
 
@@ -84,8 +81,7 @@ public class JSONPUtils {
 
     public static String wrapJSONPResponse( MediaType m, String callback, String jsonResponse ) {
         if ( isJavascript( m ) && isNotBlank( callback ) ) {
-            String jsResponse = callback + "(" + jsonResponse + ")";
-            return jsResponse;
+            return callback + "(" + jsonResponse + ")";
         }
         else {
             return jsonResponse;

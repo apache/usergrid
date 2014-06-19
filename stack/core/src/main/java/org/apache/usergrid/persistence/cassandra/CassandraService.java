@@ -874,7 +874,7 @@ public class CassandraService {
      * @return a timestamp
      */
     public long createTimestamp() {
-        return chc.getClockResolution().createClock();
+        return CassandraHostConfigurator.getClockResolution().createClock();
     }
 
 

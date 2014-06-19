@@ -98,7 +98,7 @@ public class FoursquareProvider extends AbstractProvider {
         String fq_user_username = ( String ) fq_user.get( "id" );
         String fq_user_email = ( String ) ( ( Map<?, ?> ) fq_user.get( "contact" ) ).get( "email" );
         String fq_user_picture = ( String ) ( ( Map<?, ?> ) fq_user.get( "photo" ) ).get( "suffix" );
-        String fq_user_name = new String( "" );
+        String fq_user_name = "";
 
         // Grab the last check-in so we can store that as the user location
         Map<String, Object> fq_location =

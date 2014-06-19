@@ -37,6 +37,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.RootResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -179,7 +180,7 @@ public class UsersResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @PUT
-    @Path("{userId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    @Path(RootResource.USER_ID_PATH)
     public JSONWithPadding addUserToOrganization( @Context UriInfo ui, @PathParam("userId") String userIdStr,
                                                   @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
@@ -204,7 +205,7 @@ public class UsersResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @PUT
-    @Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
+    @Path(RootResource.EMAIL_PATH)
     public JSONWithPadding addUserToOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
                                                          @QueryParam("callback") @DefaultValue("callback")
                                                          String callback ) throws Exception {
@@ -262,7 +263,7 @@ public class UsersResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @DELETE
-    @Path("{userId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    @Path(RootResource.USER_ID_PATH)
     public JSONWithPadding removeUserFromOrganizationByUserId( @Context UriInfo ui,
                                                                @PathParam("userId") String userIdStr,
                                                                @QueryParam("callback") @DefaultValue("callback")
@@ -322,7 +323,7 @@ public class UsersResource extends AbstractContextResource {
 
     @RequireOrganizationAccess
     @DELETE
-    @Path("{email: [A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}}")
+    @Path(RootResource.EMAIL_PATH)
     public JSONWithPadding removeUserFromOrganizationByEmail( @Context UriInfo ui, @PathParam("email") String email,
                                                               @QueryParam("callback") @DefaultValue("callback")
                                                               String callback ) throws Exception {

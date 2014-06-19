@@ -81,7 +81,7 @@ public class BatchCountParallelismTest {
                     }
                     LOG.info( "Task iteration # {} : ", c );
                     cdl.countDown();
-                    return new Boolean( true );
+                    return true;
                 }
             } ) );
         }
