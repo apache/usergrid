@@ -1,5 +1,6 @@
 package org.apache.usergrid.chop.webapp.view.main;
 
+import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Notification;
@@ -16,6 +17,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.chop.webapp.service.shiro.ShiroRealm;
 import org.apache.usergrid.chop.webapp.view.util.JavaScriptUtil;
 
+
+@PreserveOnRefresh
 public class Login extends UI {
 
     private final Label title = new Label ( "<h3>Login</h3>", ContentMode.HTML );
@@ -23,12 +26,15 @@ public class Login extends UI {
     private final PasswordField passwordField = new PasswordField( "Password:" );
     private final Button loginButton = new Button( "Login" );
 
-    AbsoluteLayout mainLayout;
+    VerticalLayout mainLayout;
     MainView mainView = new MainView();
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
-        mainLayout  = addMainLayout();
+        mainLayout  = new VerticalLayout();
+        mainLayout.setSizeFull();
+        setContent( mainLayout );
+
         addItems();
         loadScripts();
     }
@@ -39,23 +45,10 @@ public class Login extends UI {
         JavaScriptUtil.loadFile( "js/jquery.flot.min.js" );
     }
 
-    private AbsoluteLayout addMainLayout() {
-
-        AbsoluteLayout absoluteLayout = new AbsoluteLayout();
-        absoluteLayout.setWidth( "1300px" );
-        absoluteLayout.setHeight( "700px" );
-
-        VerticalLayout verticalLayout = new VerticalLayout();
-        verticalLayout.setSizeFull();
-        verticalLayout.addComponent( absoluteLayout );
-        verticalLayout.setComponentAlignment( absoluteLayout, Alignment.MIDDLE_CENTER );
-
-        setContent( verticalLayout );
-
-        return absoluteLayout;
-    }
-
     private void addItems() {
+        // Set default values
+        usernameField.setValue( "user" );
+        passwordField.setValue( "pass" );
 
         FormLayout formLayout = addFormLayout();
         formLayout.addComponent( title );
@@ -72,8 +65,8 @@ public class Login extends UI {
         formLayout.setHeight( "200px" );
         formLayout.addStyleName( "outlined" );
         formLayout.setSpacing( true );
-        mainLayout.addComponent(formLayout, "left: 350px; top: 50px;");
-
+        mainLayout.addComponent( formLayout );
+        mainLayout.setComponentAlignment( formLayout, Alignment.MIDDLE_CENTER );
         return formLayout;
     }
 
