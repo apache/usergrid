@@ -1589,7 +1589,7 @@ public class CpEntityManager implements EntityManager {
         if ( roleName == null || roleName.isEmpty() ) {
             throw new RequiredPropertyNotFoundException( "role",roleTitle );
         }
-        
+
         String propertyName = roleName;
         UUID ownerId = applicationId;
         String batchRoleName = StringUtils.stringOrSubstringAfterLast( roleName.toLowerCase(), ':');
