@@ -193,7 +193,7 @@
     <module>rest</module>
     <module>launcher</module>
     <module>test-utils</module>
-    <module>query-validator</module>
+    <!--<module>query-validator</module>-->
     <module>build-tools</module>
   </modules>
 
