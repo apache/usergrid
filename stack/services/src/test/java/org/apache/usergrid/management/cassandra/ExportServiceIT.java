@@ -68,6 +68,7 @@ import com.google.inject.Module;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -223,6 +224,7 @@ public class ExportServiceIT {
 
             entity[i] = em.create( "users", userProperties );
         }
+        em.refreshIndex();
         //creates connections
         em.createConnection( 
                 em.get( new SimpleEntityRef( "user", entity[0].getUuid())), "Vibrations", 
@@ -254,10 +256,9 @@ public class ExportServiceIT {
                 break;
             }
         }
-        if ( indexApp >= a.size() ) {
-            //what? How does this condition even get reached due to the above forloop
-            assert ( false );
-        }
+
+       assertTrue( "Uuid was not found in exported files. ", indexApp < a.size() );
+
 
         org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( indexApp );
         org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );

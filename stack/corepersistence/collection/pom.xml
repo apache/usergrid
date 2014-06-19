@@ -91,11 +91,11 @@
 
     <!-- Serialization libraries -->
 
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-smile</artifactId>
-      <version>${jackson-smile.verson}</version>
-    </dependency>
+    <!--<dependency>-->
+      <!--<groupId>org.codehaus.jackson</groupId>-->
+      <!--<artifactId>jackson-smile</artifactId>-->
+      <!--<version>${jackson-smile.verson}</version>-->
+    <!--</dependency>-->
 
     <!-- Re-add once this is done
     https://github.com/Netflix/Hystrix/pull/209-->

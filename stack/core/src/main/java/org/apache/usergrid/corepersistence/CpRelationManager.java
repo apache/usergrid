@@ -798,7 +798,35 @@ public class CpRelationManager implements RelationManager {
     public void copyRelationships(String srcRelationName, EntityRef dstEntityRef, 
             String dstRelationName) throws Exception {
 
-        throw new UnsupportedOperationException("Not supported yet."); 
+        headEntity = em.validate( headEntity );
+        dstEntityRef = em.validate( dstEntityRef );
+
+        CollectionInfo srcCollection = getDefaultSchema().getCollection( headEntity.getType(), srcRelationName );
+
+        CollectionInfo dstCollection = getDefaultSchema().getCollection( dstEntityRef.getType(), dstRelationName );
+
+        Results results = null;
+        do {
+            if ( srcCollection != null ) {
+                results = em.getCollection( headEntity, srcRelationName, null, 5000, Level.REFS, false );
+            }
+            else {
+                results = em.getConnectedEntities( headEntity, srcRelationName, null, Level.REFS );
+            }
+
+            if ( ( results != null ) && ( results.size() > 0 ) ) {
+                List<EntityRef> refs = results.getRefs();
+                for ( EntityRef ref : refs ) {
+                    if ( dstCollection != null ) {
+                        em.addToCollection( dstEntityRef, dstRelationName, ref );
+                    }
+                    else {
+                        em.createConnection( dstEntityRef, dstRelationName, ref );
+                    }
+                }
+            }
+        }
+        while ( ( results != null ) && ( results.hasMoreResults() ) );
     }
 
     @Override

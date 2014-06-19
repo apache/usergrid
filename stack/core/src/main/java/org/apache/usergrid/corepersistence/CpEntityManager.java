@@ -1587,7 +1587,7 @@ public class CpEntityManager implements EntityManager {
     public Entity createRole( String roleName, String roleTitle, long inactivity) throws Exception {
 
         if ( roleName == null || roleName.isEmpty() ) {
-            throw new IllegalArgumentException( "Role name must be specified");
+            throw new RequiredPropertyNotFoundException("role",roleTitle);
         }
 
         String propertyName = roleName;
@@ -1698,6 +1698,12 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void deleteRole( String roleName ) throws Exception {
         roleName = roleName.toLowerCase();
+        Set<String> permissions = getRolePermissions( roleName );
+        Iterator<String> itrPermissions = permissions.iterator();
+
+        while ( itrPermissions.hasNext())
+            revokeRolePermission( roleName, itrPermissions.next() );
+
         removeFromDictionary( getApplicationRef(), DICTIONARY_ROLENAMES, roleName );
         removeFromDictionary( getApplicationRef(), DICTIONARY_ROLETIMES, roleName );
         EntityRef entity = getRoleRef( roleName );

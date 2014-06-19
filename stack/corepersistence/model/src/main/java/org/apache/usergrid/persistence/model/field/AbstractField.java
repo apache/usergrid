@@ -18,9 +18,9 @@
  */
 package org.apache.usergrid.persistence.model.field;
 
-import org.codehaus.jackson.annotate.JsonTypeInfo;
-
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * Base class for data information
