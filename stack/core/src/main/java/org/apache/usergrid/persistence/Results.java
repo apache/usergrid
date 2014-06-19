@@ -211,7 +211,6 @@ public class Results implements Iterable<Entity> {
     public static Results fromEntity( Entity e ) {
         Results r = new Results();
         r.setEntity( e );
-        r.setEntities( Collections.singletonList(e) );
         return r;
     }
 
