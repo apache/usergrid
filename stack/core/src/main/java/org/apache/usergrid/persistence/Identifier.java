@@ -30,6 +30,9 @@ import org.apache.usergrid.utils.UUIDUtils;
 
 public class Identifier implements Serializable {
 
+    public static final String UUID_REX = "[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}";
+    public static final String EMAIL_REX =  "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}";
+
     public enum Type {
         UUID, NAME, EMAIL
     }
@@ -38,14 +41,9 @@ public class Identifier implements Serializable {
     Type type;
     Object value;
 
-//<<<<<<< HEAD
-//    static Pattern emailRegEx = Pattern.compile( EMAIL_REX );
-//    //"Pattern nameRegEx" below used to be [a-zA-Z0-9_\\-./], changed it to contain a 'space' to address https://issues.apache.org/jira/browse/USERGRID-94
-//    static Pattern nameRegEx = Pattern.compile( "[a-zA-Z0-9_\\-./ ]*" );
-//=======
-    static Pattern emailRegEx = Pattern.compile( "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}" );
-    static Pattern nameRegEx = Pattern.compile( "[a-zA-Z0-9_\\-./]*" );
-//>>>>>>> parent of d4f4f84... Merge pull request #30 from stliu/Miscellaneous
+    static Pattern emailRegEx = Pattern.compile( EMAIL_REX );
+    //"Pattern nameRegEx" below used to be [a-zA-Z0-9_\\-./], changed it to contain a 'space' to address https://issues.apache.org/jira/browse/USERGRID-94
+    static Pattern nameRegEx = Pattern.compile( "[a-zA-Z0-9_\\-./ ]*" );
 
 
     private Identifier( Type type, Object value ) {

@@ -707,7 +707,6 @@ public class Results implements Iterable<Entity> {
             idSet.addAll( results.idSet );
             ids = new ArrayList<UUID>( idSet );
 
-            return;
         }
     }
 
@@ -757,7 +756,6 @@ public class Results implements Iterable<Entity> {
             idSet = newSet;
             ids = new ArrayList<UUID>( idSet );
             level = Level.IDS;
-            return;
         }
     }
 

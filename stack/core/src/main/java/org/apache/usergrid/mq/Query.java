@@ -500,12 +500,7 @@ public class Query {
             return this;
         }
 
-        if ( StringUtils.isNotEmpty( output ) ) {
-            mergeSelectResults = true;
-        }
-        else {
-            mergeSelectResults = false;
-        }
+        mergeSelectResults = StringUtils.isNotEmpty(output);
 
         if ( output == null ) {
             output = "";

@@ -36,6 +36,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.persistence.Identifier;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
@@ -238,24 +239,28 @@ public class RootResource extends AbstractContextResource implements MetricProce
     }
 
 
-    @Path("applications/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    @Path("applications/"+APPLICATION_ID_PATH)
     public ApplicationResource getApplicationById2( @PathParam("applicationId") String applicationId )
             throws Exception {
         return getApplicationById( applicationId );
     }
 
 
-    @Path("apps/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    @Path("apps/"+APPLICATION_ID_PATH)
     public ApplicationResource getApplicationById3( @PathParam("applicationId") String applicationId )
             throws Exception {
         return getApplicationById( applicationId );
     }
 
+    public static final String APPLICATION_ID_PATH = "{applicationId: " + Identifier.UUID_REX + "}";
+    public static final String ORGANIZATION_ID_PATH = "{organizationId: " + Identifier.UUID_REX + "}";
+    public static final String USER_ID_PATH = "{userId: " + Identifier.UUID_REX + "}";
+    public static final String ENTITY_ID_PATH = "{entityId: " + Identifier.UUID_REX + "}";
+    public static final String EMAIL_PATH = "{email: " + Identifier.EMAIL_REX + "}";
 
     @Timed(name = "getApplicationByUuids_timer", group = "rest_timers")
     @ExceptionMetered(group = "rest_exceptions", name = "getApplicationByUuids_exceptions")
-    @Path("{organizationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12"
-            + "}}/{applicationId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+    @Path(ORGANIZATION_ID_PATH+"/"+APPLICATION_ID_PATH)
     public ApplicationResource getApplicationByUuids( @PathParam("organizationId") String organizationIdStr,
                                                       @PathParam("applicationId") String applicationIdStr )
 
