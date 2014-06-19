@@ -100,6 +100,7 @@ public abstract class AbstractRestIT extends JerseyTest {
     public void acquireToken() throws Exception {
 
         setupUsers();
+
         reindex("test-organization", "test-app");
 
         LOG.info( "acquiring token" );
@@ -107,6 +108,8 @@ public abstract class AbstractRestIT extends JerseyTest {
         LOG.info( "with token: {}", access_token );
 
         loginClient();
+
+        reindex("test-organization", "test-app");
     }
 
 
