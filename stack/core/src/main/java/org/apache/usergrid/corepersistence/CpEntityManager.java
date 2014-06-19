@@ -1587,7 +1587,7 @@ public class CpEntityManager implements EntityManager {
     public Entity createRole( String roleName, String roleTitle, long inactivity) throws Exception {
 
         if ( roleName == null || roleName.isEmpty() ) {
-            throw new IllegalArgumentException( "Role name must be specified");
+            throw new RequiredPropertyNotFoundException("role",roleTitle);
         }
 
         String propertyName = roleName;
