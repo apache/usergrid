@@ -332,7 +332,12 @@ public class CpEntityManager implements EntityManager {
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
-        org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
+        if ( !UUIDUtils.isTimeBased( id.getUuid() ) ) {
+            throw new IllegalArgumentException(
+                "Entity Id " + id.getType() + ":"+ id.getUuid() +" uuid not time based");
+        }
+
+       org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
                 ecm.load( id ).toBlockingObservable().last();
 
         if ( cpEntity == null ) {
@@ -414,6 +419,10 @@ public class CpEntityManager implements EntityManager {
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
+        if ( !UUIDUtils.isTimeBased( id.getUuid() ) ) {
+            throw new IllegalArgumentException(
+                "Entity Id " + id.getType() + ":"+ id.getUuid() +" uuid not time based");
+        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
                 ecm.load( id ).toBlockingObservable().last();
@@ -487,6 +496,11 @@ public class CpEntityManager implements EntityManager {
                     collectionScope.getOwner(),
                     collectionScope.getName()
             } );
+        }
+
+        if ( !UUIDUtils.isTimeBased( entityId.getUuid() ) ) {
+            throw new IllegalArgumentException(
+                "Entity Id " + entityId.getType() + ":"+ entityId.getUuid() +" uuid not time based");
         }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
@@ -581,6 +595,11 @@ public class CpEntityManager implements EntityManager {
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
+
+        if ( !UUIDUtils.isTimeBased( entityId.getUuid() ) ) {
+            throw new IllegalArgumentException(
+                "Entity Id " + entityId.getType() + ":"+ entityId.getUuid() +" uuid not time based");
+        }
 
         org.apache.usergrid.persistence.model.entity.Entity entity = 
                 ecm.load( entityId ).toBlockingObservable().last();
@@ -1020,6 +1039,11 @@ public class CpEntityManager implements EntityManager {
         EntityIndex ei = managerCache.getEntityIndex( defaultIndexScope );
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
+
+        if ( !UUIDUtils.isTimeBased( entityId.getUuid() ) ) {
+            throw new IllegalArgumentException(
+                "Entity Id " + entityId.getType() + ":"+entityId.getUuid() +" uuid not time based");
+        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
                 ecm.load( entityId ).toBlockingObservable().last();
