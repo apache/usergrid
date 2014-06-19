@@ -59,11 +59,11 @@ import org.apache.usergrid.management.export.S3Export;
 import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.JobData;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
-import org.apache.usergrid.persistence.SimpleEntityRef;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -430,12 +430,13 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+       em.refreshIndex();
+
         exportService.doExport( jobExecution );
 
         JSONParser parser = new JSONParser();
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-
         assertEquals( 1, a.size() );
         for ( int i = 0; i < a.size(); i++ ) {
             org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
@@ -463,7 +464,7 @@ public class ExportServiceIT {
         f.deleteOnExit();
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        em.createApplicationCollection( "qt" );
+       // em.createApplicationCollection( "qtsMagics" );
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
@@ -473,7 +474,7 @@ public class ExportServiceIT {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
             userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
-            entity[i] = em.create( "qts", userProperties );
+            entity[i] = em.create( "qtsMagics", userProperties );
         }
 
         S3Export s3Export = new MockS3ExportImpl("exportOneCollection.json" );
@@ -482,7 +483,7 @@ public class ExportServiceIT {
 
         payload.put( "organizationId", organization.getUuid() );
         payload.put( "applicationId", applicationId );
-        payload.put( "collectionName", "qts" );
+        payload.put( "collectionName", "qtsMagics" );
 
         UUID exportUUID = exportService.schedule( payload );
 
@@ -490,6 +491,8 @@ public class ExportServiceIT {
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        em.refreshIndex();
 
         exportService.doExport( jobExecution );
 
@@ -547,6 +550,8 @@ public class ExportServiceIT {
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        em.refreshIndex();
 
         exportService.doExport( jobExecution );
 
@@ -624,6 +629,8 @@ public class ExportServiceIT {
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        Thread.sleep(1000);
 
         exportService.doExport( jobExecution );
 
