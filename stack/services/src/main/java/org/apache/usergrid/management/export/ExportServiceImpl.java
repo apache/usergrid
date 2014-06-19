@@ -24,11 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +43,11 @@ import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.BiMap;
 
 
@@ -530,7 +530,7 @@ public class ExportServiceImpl implements ExportService {
         //TODO:shouldn't the below be UTF-16?
 
         JsonGenerator jg = jsonFactory.createJsonGenerator( ephermal, JsonEncoding.UTF8 );
-        jg.setPrettyPrinter( new DefaultPrettyPrinter() );
+        jg.setPrettyPrinter( new DefaultPrettyPrinter(  ) );
         jg.setCodec( new ObjectMapper() );
         return jg;
     }

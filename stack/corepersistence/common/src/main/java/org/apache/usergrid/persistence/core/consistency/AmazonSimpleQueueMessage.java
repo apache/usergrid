@@ -3,7 +3,7 @@ package org.apache.usergrid.persistence.core.consistency;
 
 import java.io.Serializable;
 
-import org.codehaus.jackson.annotate.*;
+import com.fasterxml.jackson.annotation.*;
 
 
 /**
