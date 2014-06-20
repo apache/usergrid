@@ -57,6 +57,7 @@ public class SetupMojo extends MainMojo {
         this.username = mojo.username;
         this.password = mojo.password;
         this.endpoint = mojo.endpoint;
+        this.testPackageBase = mojo.testPackageBase;
         this.certStorePassphrase = mojo.certStorePassphrase;
         this.failIfCommitNecessary = mojo.failIfCommitNecessary;
         this.localRepository = mojo.localRepository;
@@ -71,15 +72,9 @@ public class SetupMojo extends MainMojo {
     public void execute() throws MojoExecutionException {
         initCertStore();
 
-        /** First check that the runner.jar is ready and up-to-date */
-        if ( ! isReadyToDeploy() ) {
-            LOG.info( "{} is NOT present, calling chop:runner goal now...", RUNNER_JAR );
-            RunnerMojo runnerMojo = new RunnerMojo( this );
-            runnerMojo.execute();
-        }
-        if ( ! isReadyToDeploy() ) {
-            throw new MojoExecutionException( "Runner file was not ready and chop:runner failed" );
-        }
+        // Deploy if the local jar file is not uploaded or different from the one on the coordinator
+        DeployMojo deployMojo = new DeployMojo( this );
+        deployMojo.execute();
 
         Properties props = new Properties();
         try {
@@ -128,17 +123,9 @@ public class SetupMojo extends MainMojo {
 
         String responseMessage = resp.getEntity( String.class );
 
-        if ( responseMessage.equals( SetupStackState.JarNotFound.getMessage() ) ) {
-            LOG.info( "No runner jar found, deploying now..." );
-            DeployMojo deployMojo = new DeployMojo( this );
-            deployMojo.execute();
-            this.execute();
-        }
-        else {
-            LOG.info( "====== Response from the coordinator ======" );
-            LOG.info( responseMessage );
-            LOG.info( "===========================================" );
-        }
+        LOG.info( "====== Response from the coordinator ======" );
+        LOG.info( responseMessage );
+        LOG.info( "===========================================" );
 
 
 
