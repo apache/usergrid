@@ -188,7 +188,7 @@ public class Utils {
             }
             catch ( IllegalStateException e ) {
                 String path = resource.getDirectory();
-                path = path.substring( 0, path.lastIndexOf("/"));
+                path = path.substring( 0, path.lastIndexOf( "/" ) );
                 LOG.info( "There is no resource folder under {} folder.", path );
             }
         }
