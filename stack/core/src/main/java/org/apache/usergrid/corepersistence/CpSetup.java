@@ -96,6 +96,7 @@ public class CpSetup implements Setup {
                 put("cassandra.port", System.getProperty("cassandra.rpc_port"));
             }};
             ConfigurationManager.loadProperties( testProps );
+            logger.debug("Set properties: " + testProps.toString() );
         }
         catch ( IOException e ) {
             throw new RuntimeException( "Fatal error loading configuration.", e );

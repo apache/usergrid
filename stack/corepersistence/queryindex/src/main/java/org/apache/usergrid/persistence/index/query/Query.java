@@ -34,14 +34,21 @@ import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.Token;
 import org.antlr.runtime.TokenRewriteStream;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
+import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
+import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
 import org.apache.usergrid.persistence.index.query.tree.Equal;
 import org.apache.usergrid.persistence.index.query.tree.EqualityOperand;
 import org.apache.usergrid.persistence.index.query.tree.GreaterThan;
@@ -49,19 +56,16 @@ import org.apache.usergrid.persistence.index.query.tree.GreaterThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.LessThan;
 import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.Operand;
+import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
+import org.apache.usergrid.persistence.index.utils.JsonUtils;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.split;
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
-import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
-import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
-import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterLexer;
-import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
-import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import static org.apache.usergrid.persistence.index.utils.ClassUtils.cast;
 import static org.apache.usergrid.persistence.index.utils.ConversionUtils.uuid;
-import org.apache.usergrid.persistence.index.utils.JsonUtils;
 import static org.apache.usergrid.persistence.index.utils.ListUtils.first;
 import static org.apache.usergrid.persistence.index.utils.ListUtils.firstBoolean;
 import static org.apache.usergrid.persistence.index.utils.ListUtils.firstInteger;
@@ -69,9 +73,6 @@ import static org.apache.usergrid.persistence.index.utils.ListUtils.firstLong;
 import static org.apache.usergrid.persistence.index.utils.ListUtils.firstUuid;
 import static org.apache.usergrid.persistence.index.utils.ListUtils.isEmpty;
 import static org.apache.usergrid.persistence.index.utils.MapUtils.toMapList;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 
 
 

@@ -196,8 +196,9 @@ public class OrganizationIT {
 
         // test history size w/ user belonging to 2 orgs
         OrganizationInfo organization2 = setup.getMgmtSvc().createOrganization( "OrganizationTest3", user, false );
-        assertNotNull( organization );
+        assertNotNull( organization2 );
 
+        setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
         Map<UUID, String> userOrganizations = setup.getMgmtSvc().getOrganizationsForAdminUser( user.getUuid() );
         assertEquals( "wrong number of organizations", 2, userOrganizations.size() );
 

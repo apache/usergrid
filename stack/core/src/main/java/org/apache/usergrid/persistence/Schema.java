@@ -41,17 +41,15 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.smile.SmileFactory;
-import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AssignableTypeFilter;
+
+import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.reflect.FieldUtils;
+
 import org.apache.usergrid.persistence.annotations.EntityCollection;
 import org.apache.usergrid.persistence.annotations.EntityDictionary;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
@@ -66,9 +64,12 @@ import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.MapUtils;
 
-import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.lang.reflect.FieldUtils;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -247,7 +248,7 @@ public class Schema {
     public Schema() {
         setDefaultSchema( this );
 
-        mapper.configure( SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false );
+        mapper.configure( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,false );
     }
 
 
@@ -538,7 +539,7 @@ public class Schema {
                 JsonNode properties = schemaNode.get( "properties" );
                 if ( properties instanceof ObjectNode ) {
                     Set<String> fieldsToRemove = new LinkedHashSet<String>();
-                    Iterator<String> i = properties.getFieldNames();
+                    Iterator<String> i = properties.fieldNames();
                     while ( i.hasNext() ) {
                         String propertyName = i.next();
                         if ( !hasProperty( entityType, propertyName ) ) {

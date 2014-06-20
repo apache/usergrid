@@ -98,11 +98,35 @@ public abstract class AbstractRestIT extends JerseyTest {
     /** Hook to get the token for our base user */
     @Before
     public void acquireToken() throws Exception {
+
         setupUsers();
+
+        reindex("test-organization", "test-app");
+
         LOG.info( "acquiring token" );
         access_token = userToken( "ed@anuff.com", "sesame" );
         LOG.info( "with token: {}", access_token );
+
         loginClient();
+
+        reindex("test-organization", "test-app");
+    }
+
+
+    public void reindex( UUID appId ) {
+        resource().path( "/testreindex" )
+            .queryParam( "app_id", appId.toString() )
+            .accept( MediaType.APPLICATION_JSON )
+            .post();
+    }
+
+
+    public void reindex( String orgName, String appName ) {
+        resource().path( "/testreindex" )
+            .queryParam( "org_name", orgName )
+            .queryParam( "app_name", appName )
+            .accept( MediaType.APPLICATION_JSON )
+            .post();
     }
 
 
@@ -178,7 +202,7 @@ public abstract class AbstractRestIT extends JerseyTest {
     public static void logNode( JsonNode node ) {
         if ( LOG.isInfoEnabled() ) // - protect against unnecessary call to formatter
         {
-            LOG.info( mapToFormattedJsonString( node ) );
+            LOG.info("Node: " + mapToFormattedJsonString( node ) );
         }
     }
 
