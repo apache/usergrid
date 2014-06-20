@@ -25,6 +25,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.vaadin.ui.Accordion;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Table;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.chop.api.Module;
@@ -37,15 +42,9 @@ import org.apache.usergrid.chop.webapp.dao.model.RunnerGroup;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
 import org.apache.usergrid.chop.webapp.service.runner.RunnerService;
 import org.apache.usergrid.chop.webapp.service.runner.RunnerServiceImpl;
-import org.apache.usergrid.chop.webapp.service.runner.RunnerServiceMock;
-
-import com.vaadin.ui.AbsoluteLayout;
-import com.vaadin.ui.Accordion;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Table;
 
 
-public class RunnersLayout extends AbsoluteLayout {
+public class RunnersLayout extends VerticalLayout {
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss");
 
@@ -80,14 +79,16 @@ public class RunnersLayout extends AbsoluteLayout {
             }
         });
 
-        addComponent( button, "left: 585px; top: 570px;" );
+        addComponent( button );
+        this.setComponentAlignment( button, Alignment.BOTTOM_CENTER );
     }
 
 
     private void addAccordion() {
         accordion.setWidth( "800px" );
         accordion.setHeight( "530px" );
-        addComponent( accordion, "left: 250px; top: 20px;" );
+        addComponent( accordion );
+        this.setComponentAlignment( accordion, Alignment.MIDDLE_CENTER );
     }
 
 
