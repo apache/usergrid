@@ -158,7 +158,7 @@ public class Utils {
      * @param project       project whose resource files to be copied
      * @param targetFolder  matching resource files are stored in this directory
      */
-    public static void copyResourcesTo( MavenProject project, String targetFolder ) {
+    public static void copyResourcesTo( MavenProject project, String targetFolder ){
         File targetFolderFile = new File( targetFolder );
         String includes;
         String excludes;
@@ -170,11 +170,12 @@ public class Utils {
             if( ! ( res instanceof Resource ) ) {
                 continue;
             }
+            Resource resource = ( Resource ) res;
             try {
-                Resource resource = ( Resource ) res;
                 File baseDir = new File( resource.getDirectory() );
                 includes = resource.getIncludes().toString().replace( "[", "" ).replace( "]", "" ).replace( " ", "" );
                 excludes = resource.getExcludes().toString().replace( "[", "" ).replace( "]", "" ).replace( " ", "" );
+
                 List<String> resFiles = FileUtils.getFileNames( baseDir, includes, excludes, true, true );
                 for( String resFile: resFiles ) {
                     File resourceFile = new File( resFile );
@@ -182,11 +183,14 @@ public class Utils {
                     FileUtils.copyFileToDirectory( resourceFile, targetFolderFile );
                 }
             }
-            catch ( IOException e ) {
-                LOG.warn( "Error while trying to copy resource files", e );
+            catch ( Exception e) {
+                String path = resource.getDirectory();
+                path = path.substring( 0, path.lastIndexOf("/"));
+                LOG.info("Error while trying to copy resource files. There is no resource folder under {} folder.", path );
             }
         }
     }
+
 
 
     /**
