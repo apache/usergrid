@@ -157,43 +157,67 @@ public class Utils {
      *
      * @param project       project whose resource files to be copied
      * @param targetFolder  matching resource files are stored in this directory
+     * @return
      */
-    public static void copyResourcesTo( MavenProject project, String targetFolder ) {
+    public static boolean copyResourcesTo( MavenProject project, String targetFolder )  {
         File targetFolderFile = new File( targetFolder );
         String includes;
         String excludes;
         List allResources = project.getResources();
         allResources.addAll( project.getTestResources() );
-        LOG.info( "Copying resource files to runner.jar" );
 
-        for( Object res: allResources ) {
-            if( ! ( res instanceof Resource ) ) {
-                continue;
-            }
-            Resource resource = ( Resource ) res;
-            try {
-                File baseDir = new File( resource.getDirectory() );
-                includes = resource.getIncludes().toString().replace( "[", "" ).replace( "]", "" ).replace( " ", "" );
-                excludes = resource.getExcludes().toString().replace( "[", "" ).replace( "]", "" ).replace( " ", "" );
+        // If there is no resource folder under project, mvn chop:runner goal should fail
+        if ( ! hasResourceFolders( project ) ){
+            return false;
+        }
+        else{
+            LOG.info( "Copying resource files to runner.jar" );
 
-                List<String> resFiles = FileUtils.getFileNames( baseDir, includes, excludes, true, true );
-                for( String resFile: resFiles ) {
-                    File resourceFile = new File( resFile );
-                    LOG.info( "Copying {} to {}", resourceFile.getName(), targetFolder );
-                    FileUtils.copyFileToDirectory( resourceFile, targetFolderFile );
+            for( Object res: allResources ) {
+                if( ! ( res instanceof Resource ) ) {
+                    continue;
+                }
+                Resource resource = ( Resource ) res;
+                try {
+                    File baseDir = new File( resource.getDirectory() );
+                    includes = resource.getIncludes().toString().replace( "[", "" ).replace( "]", "" ).replace( " ", "" );
+                    excludes = resource.getExcludes().toString().replace( "[", "" ).replace( "]", "" ).replace( " ", "" );
+
+                    List<String> resFiles = FileUtils.getFileNames( baseDir, includes, excludes, true, true );
+                    for( String resFile: resFiles ) {
+                        File resourceFile = new File( resFile );
+                        LOG.info( "Copying {} to {}", resourceFile.getName(), targetFolder );
+                        FileUtils.copyFileToDirectory( resourceFile, targetFolderFile );
+                    }
+                }
+                catch ( IOException e ){
+                    LOG.info( "Error while trying to copy resource files.", e );
+                }
+                catch ( IllegalStateException e ) {
+                    String path = resource.getDirectory();
+                    path = path.substring( 0, path.lastIndexOf( "/" ) );
+                    LOG.info( "There is no resource folder under {} folder.", path );
                 }
             }
-            catch ( IOException e ){
-                LOG.info( "Error while trying to copy resource files.", e );
-            }
-            catch ( IllegalStateException e ) {
-                String path = resource.getDirectory();
-                path = path.substring( 0, path.lastIndexOf( "/" ) );
-                LOG.info( "There is no resource folder under {} folder.", path );
-            }
+            return true;
         }
     }
 
+    /**
+     * Returns true if there is at least one resource folder inside the project.
+     *
+     * @param project
+     * @return
+     */
+    public static boolean hasResourceFolders( MavenProject project ){
+        List<Resource> resources = project.getResources();
+        for ( Resource res : resources ){
+            if ( FileUtils.fileExists( res.getDirectory() ) ){
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     /**
