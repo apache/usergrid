@@ -158,7 +158,7 @@ public class Utils {
      * @param project       project whose resource files to be copied
      * @param targetFolder  matching resource files are stored in this directory
      */
-    public static void copyResourcesTo( MavenProject project, String targetFolder ){
+    public static void copyResourcesTo( MavenProject project, String targetFolder ) {
         File targetFolderFile = new File( targetFolder );
         String includes;
         String excludes;
@@ -183,10 +183,13 @@ public class Utils {
                     FileUtils.copyFileToDirectory( resourceFile, targetFolderFile );
                 }
             }
-            catch ( Exception e ) {
+            catch ( IOException e ){
+                LOG.info( "Error while trying to copy resource files.", e );
+            }
+            catch ( IllegalStateException e ) {
                 String path = resource.getDirectory();
-                path = path.substring( 0, path.lastIndexOf( "/" ) );
-                LOG.info( "Error while trying to copy resource files. There is no resource folder under {} folder.", path );
+                path = path.substring( 0, path.lastIndexOf("/"));
+                LOG.info( "There is no resource folder under {} folder.", path );
             }
         }
     }
