@@ -18,7 +18,6 @@
  */
 package org.apache.usergrid.chop.webapp.view.main;
 
-
 import com.vaadin.server.VaadinService;
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.Alignment;
@@ -40,26 +39,27 @@ import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
 public class MainView extends VerticalLayout implements ModuleSelectListener {
 
     private TabSheetManager tabSheetManager;
-    AbsoluteLayout tabSheet;
+    VerticalLayout tabSheet;
     HorizontalLayout buttons;
 
 
     MainView( ) {
         this.setHeight( "100%" );
-//        this.setSizeUndefined();
+
+        VerticalLayout verticalLayoutForButtons = new VerticalLayout();
+        verticalLayoutForButtons.setSizeFull();
 
         buttons = addButtons();
         this.addComponent( buttons );
         setComponentAlignment( buttons , Alignment.TOP_CENTER );
 
         tabSheet = addTabSheet();
+        tabSheet.setSizeFull();
         this.addComponent( tabSheet );
         this.setComponentAlignment( tabSheet, Alignment.TOP_CENTER );
 
         this.setExpandRatio( buttons, 0.04f );
         this.setExpandRatio( tabSheet, 0.96f );
-
-        tabSheet.setSizeFull();
     }
 
     private HorizontalLayout addButtons() {
@@ -78,54 +78,57 @@ public class MainView extends VerticalLayout implements ModuleSelectListener {
 
         /**      Runners Button    */
         Button runners = new Button( "Runners" );
-        horizontalLayout.addComponent(runners);
+        horizontalLayout.addComponent( runners );
         runners.addClickListener( new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent clickEvent) {
-                tabSheetManager.addTab(new RunnersLayout(), "Runners");
+                tabSheetManager.addTabWithVerticalLayout( new RunnersLayout(), "Runners" );
             }
         });
 
         /**      Users Button    */
-        Button users = new Button("Users");
+        Button users = new Button( "Users" );
         horizontalLayout.addComponent( users );
         users.addClickListener( new Button.ClickListener() {
             @Override
-            public void buttonClick(Button.ClickEvent clickEvent) {
-                UI.getCurrent().addWindow(new UserListWindow(tabSheetManager));
+            public void buttonClick( Button.ClickEvent clickEvent ) {
+                UI.getCurrent().addWindow( new UserListWindow( tabSheetManager ) );
             }
         });
 
         /**      Logs Button    */
-        Button logs = new Button("Logs");
+        Button logs = new Button( "Logs" );
         horizontalLayout.addComponent( logs );
-        logs.addClickListener( new Button.ClickListener() {
+        logs.addClickListener(new Button.ClickListener() {
             @Override
-            public void buttonClick(Button.ClickEvent clickEvent) {
-                tabSheetManager.addTab(new LogLayout(), "Logs");
+            public void buttonClick( Button.ClickEvent clickEvent ) {
+                tabSheetManager.addTabWithVerticalLayout( new LogLayout(), "Logs");
             }
         });
 
         /**      Logout Button    */
-        Button logout = new Button("Logout");
+        Button logout = new Button( "Logout" );
         horizontalLayout.addComponent( logout );
-        logout.addClickListener(new Button.ClickListener() {
+        logout.addClickListener( new Button.ClickListener() {
             @Override
-            public void buttonClick(Button.ClickEvent clickEvent) {
+            public void buttonClick( Button.ClickEvent clickEvent ) {
                 ShiroRealm.logout();
                 redirectToMainView();
             }
         });
+        float weight = logout.getHeight();
+        horizontalLayout.setHeight( String.valueOf( weight ) );
         return horizontalLayout;
     }
 
-    private AbsoluteLayout addTabSheet(  ) {
-        AbsoluteLayout tabLayout = new AbsoluteLayout();
+    private VerticalLayout addTabSheet() {
+        VerticalLayout tabLayout = new VerticalLayout();
         TabSheet tabSheet = new TabSheet();
-        tabSheet.setHeight( "650px" );
+        tabSheet.setHeight( "100%" );
 
-        tabSheetManager = new TabSheetManager(tabSheet );
-        tabLayout.addComponent(tabSheet, "left: 0px; top: 7px;");
+        tabSheetManager = new TabSheetManager( tabSheet );
+        tabLayout.addComponent( tabSheet );
+
         return tabLayout;
     }
 

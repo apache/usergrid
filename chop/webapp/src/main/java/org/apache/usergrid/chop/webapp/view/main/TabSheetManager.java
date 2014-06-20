@@ -21,6 +21,7 @@ package org.apache.usergrid.chop.webapp.view.main;
 
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.VerticalLayout;
 
 
 public class TabSheetManager {
@@ -33,6 +34,12 @@ public class TabSheetManager {
 
     public void addTab( AbsoluteLayout layout, String caption ) {
         removeAll();
+        tabSheet.addTab( layout, caption );
+    }
+
+    public void addTabWithVerticalLayout(VerticalLayout layout, String caption) {
+        removeAll();
+        tabSheet.setSizeFull();
         tabSheet.addTab( layout, caption );
     }
 

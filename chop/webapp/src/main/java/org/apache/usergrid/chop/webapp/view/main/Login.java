@@ -47,9 +47,6 @@ public class Login extends UI {
 
     private void addItems() {
         // Set default values
-        usernameField.setValue( "user" );
-        passwordField.setValue( "pass" );
-
         FormLayout formLayout = addFormLayout();
         formLayout.addComponent( title );
         formLayout.addComponent( usernameField );
