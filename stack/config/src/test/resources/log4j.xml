@@ -24,7 +24,7 @@
     </appender>
     <logger name="org.apache">
         <level value="error"/>
-        <appender-ref ref="stdout"/>
+        <!--<appender-ref ref="stdout"/>-->
     </logger>
     <logger name="org.apache.usergrid.persistence.cassandra.CounterUtils">
         <level value="warn"/>
@@ -35,6 +35,6 @@
     </logger>
     <root>
         <level value="info"/>
-        <appender-ref ref="stdout"/>
+        <!--<appender-ref ref="stdout"/>-->
     </root>
 </log4j:configuration>
