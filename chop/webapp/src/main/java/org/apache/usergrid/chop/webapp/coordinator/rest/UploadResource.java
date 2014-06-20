@@ -41,6 +41,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.usergrid.chop.stack.SetupStackState;
+import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
 import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +52,6 @@ import org.apache.usergrid.chop.api.Constants;
 import org.apache.usergrid.chop.api.Module;
 import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.RestParams;
-import org.apache.usergrid.chop.stack.SetupStackState;
 import org.apache.usergrid.chop.webapp.ChopUiFig;
 import org.apache.usergrid.chop.webapp.coordinator.CoordinatorUtils;
 import org.apache.usergrid.chop.webapp.dao.CommitDao;
@@ -82,6 +83,9 @@ public class UploadResource extends TestableResource implements RestParams, Cons
 
     @Inject
     private CommitDao commitDao;
+
+    @Inject
+    private StackCoordinator stackCoordinator;
 
 
     public UploadResource() {
@@ -126,7 +130,7 @@ public class UploadResource extends TestableResource implements RestParams, Cons
             @QueryParam( TEST_PACKAGE ) String testPackage,
             @QueryParam( MD5 ) String md5,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
-                                ) {
+    ) {
 
         if( inTestMode( testMode ) ) {
             LOG.info( "Calling /upload/status in test mode ..." );
@@ -136,18 +140,20 @@ public class UploadResource extends TestableResource implements RestParams, Cons
         }
         File runnerJar = CoordinatorUtils.getRunnerJar( chopUiFig.getContextPath(), username, groupId, artifactId,
                 version, commitId );
+        SetupStackState status = stackCoordinator.stackStatus( commitId, artifactId, groupId, version, username );
+
 
         if( runnerJar.exists() ) {
             String coordinatorRunnerJarMd5 = getCoordinatorJarMd5( runnerJar.getAbsolutePath() );
             if ( isMD5SumsEqual( coordinatorRunnerJarMd5, md5 ) ) {
                 return Response.status( Response.Status.OK )
-                               .entity( SetupStackState.JarAlreadyDeployed.getMessage() ).build();
+                        .entity( status.getMessage() ).build();
             }
         }
 
         return Response.status( Response.Status.OK )
-                       .entity( SetupStackState.JarNotFound.getMessage() )
-                       .build();
+                .entity( SetupStackState.JarNotFound.getMessage() )
+                .build();
     }
 
 
@@ -171,7 +177,7 @@ public class UploadResource extends TestableResource implements RestParams, Cons
             @FormDataParam( CONTENT ) InputStream runnerJarStream,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
 
-                                ) throws Exception {
+    ) throws Exception {
 
         if( inTestMode( testMode ) ) {
             LOG.info( "Calling /upload/runner in test mode ..." );
@@ -191,9 +197,9 @@ public class UploadResource extends TestableResource implements RestParams, Cons
 
         if( inTestMode( testMode ) ) {
             return Response.status( Response.Status.CREATED )
-                           .entity( SUCCESSFUL_TEST_MESSAGE )
-                           .type( MediaType.TEXT_PLAIN )
-                           .build();
+                    .entity( SUCCESSFUL_TEST_MESSAGE )
+                    .type( MediaType.TEXT_PLAIN )
+                    .build();
         }
 
         File runnerJar = CoordinatorUtils.getRunnerJar( chopUiFig.getContextPath(), username, groupId, artifactId,
@@ -260,7 +266,7 @@ public class UploadResource extends TestableResource implements RestParams, Cons
     }
 
 
-    public String getCoordinatorJarMd5( String coordinatorRunnerJarPath) {
+    public String getCoordinatorJarMd5( String coordinatorRunnerJarPath ) {
         InputStream stream;
         URL inputURL;
         Properties props = new Properties();
