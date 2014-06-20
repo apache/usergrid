@@ -16,21 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.consistency;
+package org.apache.usergrid.persistence.graph.impl.stage;
 
 
-import java.io.Serializable;
-import java.util.Collection;
+import java.util.UUID;
+
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
+
+import rx.Observable;
 
 
 /**
- * Interface for implementations of a timeout queue.
+ * The listener for node delete events.  Performs post proessing
  */
-public interface TimeoutQueueFactory {
+public interface NodeDeleteListener {
 
     /**
-     * Return a timeout queue that can handle the class type provided.
-     */
-    public <T extends Serializable> TimeoutQueue<T> getQueue(Class<T> eventType);
-
+       * Removes this node from the graph.
+       *
+       * @param scope The scope of the application
+       * @param node The node that was deleted
+       * @param timestamp The timestamp of the event
+       *
+       * @return An observable that emits the total number of edges that have been removed with this node both as the
+       *         target and source
+       */
+      public Observable<Integer> receive( final ApplicationScope scope, final Id node, final UUID timestamp );
 }

@@ -162,7 +162,7 @@ public class EntityCollectionManagerSyncIT {
 
         Observable<Entity> observable = manager.write( newEntity );
 
-        Entity createReturned = observable.toBlockingObservable().lastOrDefault( null );
+        Entity createReturned = observable.toBlocking().lastOrDefault( null );
 
 
         assertNotNull( "Id was assigned", createReturned.getId() );
@@ -171,7 +171,7 @@ public class EntityCollectionManagerSyncIT {
 
         Observable<Entity> loadObservable = manager.load( createReturned.getId() );
 
-        Entity loadReturned = loadObservable.toBlockingObservable().lastOrDefault( null );
+        Entity loadReturned = loadObservable.toBlocking().lastOrDefault( null );
 
         assertEquals( "Same value", createReturned, loadReturned );
 
@@ -181,7 +181,7 @@ public class EntityCollectionManagerSyncIT {
 
         EntityCollectionManager manager2 = factory.createCollectionManager( collectionScope2 );
 
-        Entity loaded = manager2.load( createReturned.getId() ).toBlockingObservable().lastOrDefault( null );
+        Entity loaded = manager2.load( createReturned.getId() ).toBlocking().lastOrDefault( null );
 
         assertNull("CollectionScope works correctly", loaded);
 

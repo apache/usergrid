@@ -99,21 +99,21 @@ public class ChangeLogGeneratorImplTest {
         e1.setField( new StringField( "name", "name1" ) );
         e1.setField( new IntegerField( "count", 1 ) );
         Observable<Entity> o1 = manager.write( e1 );
-        e1 = o1.toBlockingObservable().lastOrDefault( null );
+        e1 = o1.toBlocking().lastOrDefault( null );
 
-        Entity e2 = manager.load( e1.getId() ).toBlockingObservable().lastOrDefault( null );
+        Entity e2 = manager.load( e1.getId() ).toBlocking().lastOrDefault( null );
         e2.setField( new StringField( "name", "name2" ) );
         e2.setField( new IntegerField( "count", 2 ) );
         e2.setField( new StringField( "nickname", "buddy" ) );
         Observable<Entity> o2 = manager.write( e2 );
-        e2 = o2.toBlockingObservable().lastOrDefault( null );
+        e2 = o2.toBlocking().lastOrDefault( null );
 
-        Entity e3 = manager.load( e1.getId() ).toBlockingObservable().lastOrDefault( null );
+        Entity e3 = manager.load( e1.getId() ).toBlocking().lastOrDefault( null );
         e3.setField( new StringField( "name", "name3" ) );
         e3.setField( new IntegerField( "count", 2 ) );
         e3.getFields().remove(new StringField( "nickname", "buddy"));
         Observable<Entity> o3 = manager.write( e3 );
-        e3 = o3.toBlockingObservable().lastOrDefault( null );
+        e3 = o3.toBlocking().lastOrDefault( null );
 
         {
             // test minVersion of e3

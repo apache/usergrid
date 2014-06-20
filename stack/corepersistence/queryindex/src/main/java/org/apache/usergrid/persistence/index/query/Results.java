@@ -106,7 +106,7 @@ public class Results implements Iterable<Entity> {
 
             for ( CandidateResult candidate : candidates ) {
 
-                Entity entity = ecm.load( candidate.getId() ).toBlockingObservable().last();
+                Entity entity = ecm.load( candidate.getId() ).toBlocking().last();
                 if ( !takeAllVersions && candidate.getVersion().compareTo(entity.getVersion()) == -1) {
                     log.debug("   Stale hit {} version {}", entity.getId(), entity.getVersion() );
                     continue;

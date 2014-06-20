@@ -54,18 +54,18 @@ public class EntityCollectionManagerSyncImpl implements EntityCollectionManagerS
 
     @Override
     public Entity write( final Entity entity ) {
-        return em.write( entity ).toBlockingObservable().single();
+        return em.write( entity ).toBlocking().single();
     }
 
 
     @Override
     public void delete( final Id entityId ) {
-        em.delete( entityId ).toBlockingObservable().last();
+        em.delete( entityId ).toBlocking().last();
     }
 
 
     @Override
     public Entity load( final Id entityId ) {
-        return em.load( entityId ).toBlockingObservable().lastOrDefault( null );
+        return em.load( entityId ).toBlocking().lastOrDefault( null );
     }
 }

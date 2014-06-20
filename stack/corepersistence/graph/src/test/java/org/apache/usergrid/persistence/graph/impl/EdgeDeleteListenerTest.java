@@ -35,8 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -45,6 +43,7 @@ import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteListener;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompact;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompactImpl;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
@@ -155,12 +154,8 @@ public class EdgeDeleteListenerTest {
 
 
 
-        EdgeDeleteEvent edgeDeleteEvent = new EdgeDeleteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
-
         //now perform the listener execution
-        EdgeDeleteEvent returned = edgeDeleteListener.receive( edgeDeleteEvent ).toBlockingObservable().single();
-
-        assertEquals( edgeV3, returned.getData() );
+        edgeDeleteListener.receive(scope,  edgeV3, UUIDGenerator.newTimeUUID() ).toBlocking().single();
 
         //now validate there's nothing in the commit log.
         long now = System.currentTimeMillis();
@@ -301,21 +296,16 @@ public class EdgeDeleteListenerTest {
 
 
         //now perform the listener execution, should only clean up to edge v2
-        EdgeDeleteEvent returned =
-                edgeDeleteListener.receive( new EdgeDeleteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV2 ) )
-                                  .toBlockingObservable().single();
 
-        assertEquals( edgeV2, returned.getData() );
+                edgeDeleteListener.receive( scope,  edgeV2, UUIDGenerator.newTimeUUID() )
+                                  .toBlocking().single();
 
-        returned = edgeDeleteListener.receive( new EdgeDeleteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV1 ) )
-                                     .toBlockingObservable().single();
+       edgeDeleteListener.receive(  scope,edgeV1,  UUIDGenerator.newTimeUUID() )
+                                     .toBlocking().single();
 
-        assertEquals( edgeV1, returned.getData() );
+        edgeDeleteListener.receive( scope, edgeV3, UUIDGenerator.newTimeUUID() )
+                                     .toBlocking().single();
 
-        returned = edgeDeleteListener.receive( new EdgeDeleteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV3 ) )
-                                     .toBlockingObservable().single();
-
-        assertEquals( edgeV3, returned.getData() );
 
 
         //now validate there's nothing in the commit log.
@@ -467,23 +457,14 @@ public class EdgeDeleteListenerTest {
         EdgeSerialization commitLog = mock( EdgeSerialization.class );
         EdgeSerialization storage = mock( EdgeSerialization.class );
 
-        AsyncProcessorFactory edgeProcessor = mock( AsyncProcessorFactory.class );
-
-        AsyncProcessor<EdgeWriteEvent> processor = mock(AsyncProcessor.class);
-
-        when(edgeProcessor.getProcessor( EdgeWriteEvent.class )).thenReturn( processor );
 
 
-        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope,  UUIDGenerator.newTimeUUID(), edgeV1 );
-
-        Keyspace keyspace = mock( Keyspace.class );
+          Keyspace keyspace = mock( Keyspace.class );
 
 
         EdgeWriteCompact compact = new EdgeWriteCompactImpl( commitLog, storage, keyspace, graphFig );
 
 
-        //now perform the listener execution, should only clean up to edge v2
-        EdgeWriteListener listener = new EdgeWriteListener( compact, edgeProcessor );
 
 
         /**
@@ -512,7 +493,7 @@ public class EdgeDeleteListenerTest {
 
 
         try {
-            listener.receive( edgeWriteEvent ).toBlockingObservable().single();
+            compact.compact( scope,  edgeV1, UUIDGenerator.newTimeUUID()).toBlocking().last();
             fail( "I should have thrown an exception" );
         }
         catch ( RuntimeException re ) {

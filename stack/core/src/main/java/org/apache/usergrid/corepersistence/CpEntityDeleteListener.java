@@ -17,34 +17,36 @@
  */
 package org.apache.usergrid.corepersistence;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
-import org.apache.usergrid.persistence.core.consistency.MessageListener;
-import org.apache.usergrid.persistence.core.entity.EntityVersion;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import rx.Observable;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.entity.EntityVersion;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+
+import rx.Observable;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
+
 /**
  * Listener for cleans up old entities and deletes from data store
  */
 @Singleton
-public class CpEntityDeleteListener implements MessageListener<MvccEntityDeleteEvent, EntityVersion> {
+public class CpEntityDeleteListener {
     private static final Logger LOG = LoggerFactory.getLogger(CpEntityDeleteListener.class);
 
     private final MvccEntitySerializationStrategy entityMetadataSerialization;
@@ -53,16 +55,14 @@ public class CpEntityDeleteListener implements MessageListener<MvccEntityDeleteE
 
     @Inject
     public CpEntityDeleteListener(final MvccEntitySerializationStrategy entityMetadataSerialization,
-                                    final AsyncProcessorFactory asyncProcessorFactory,
                                     final Keyspace keyspace,
                                     final SerializationFig serializationFig){
         this.entityMetadataSerialization = entityMetadataSerialization;
         this.keyspace = keyspace;
         this.serializationFig = serializationFig;
-        asyncProcessorFactory.getProcessor( MvccEntityDeleteEvent.class ).addListener( this );
     }
 
-    @Override
+
     public Observable<EntityVersion> receive(final MvccEntityDeleteEvent entityEvent) {
         final MvccEntity entity = entityEvent.getEntity();
         return Observable.create( new ObservableIterator<MvccEntity>( "deleteEntities" ) {

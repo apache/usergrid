@@ -16,25 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl;
+package org.apache.usergrid.persistence.graph.impl.stage;
 
 
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
+
+import rx.Observable;
 
 
 /**
- * Event for when a node is deleted
+ * Listener to execute after an edge delete
  */
-public class NodeDeleteEvent extends EdgeEvent<Id> {
+public interface EdgeDeleteListener {
 
-    private final long timestamp;
+    /**
+     * Perform all cleanup.  Returns the number of edge types and subtypes returned.
+     *
+     * @param scope
+     * @param edge
+     * @param eventTimestamp
+     * @return
+     */
+    public Observable<Integer> receive( final ApplicationScope scope, final MarkedEdge edge, final UUID eventTimestamp );
 
-    public NodeDeleteEvent( final ApplicationScope applicationScope, final UUID eventTime, final long timestamp, final Id id ) {
-        super( applicationScope, eventTime, id );
-        this.timestamp = timestamp;
-    }
+
 }

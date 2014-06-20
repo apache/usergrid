@@ -76,7 +76,7 @@ public class WriteUniqueVerifyTest {
 
         CollectionIoEvent<MvccEntity> result = newStage.call( 
             new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) )
-                .toBlockingObservable().last();
+                .toBlocking().last();
 
         assertSame( "Context was correct", collectionScope, result.getEntityCollection() );
 
@@ -106,7 +106,7 @@ public class WriteUniqueVerifyTest {
 
         CollectionIoEvent<MvccEntity> result = newStage.call( 
             new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) )
-                .toBlockingObservable().last();
+                .toBlocking().last();
 
         assertSame( "Context was correct", collectionScope, result.getEntityCollection() );
     }
