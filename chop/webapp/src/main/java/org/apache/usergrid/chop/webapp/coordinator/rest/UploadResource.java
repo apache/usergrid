@@ -141,12 +141,13 @@ public class UploadResource extends TestableResource implements RestParams, Cons
             String coordinatorRunnerJarMd5 = getCoordinatorJarMd5( runnerJar.getAbsolutePath() );
             if ( isMD5SumsEqual( coordinatorRunnerJarMd5, md5 ) ) {
                 return Response.status( Response.Status.OK )
-                               .entity( SetupStackState.JarAlreadyDeployed.getMessage() ).build();
+                               .entity( SetupStackState.NotSetUp.getStackStateMessage() )
+                               .build();
             }
         }
 
         return Response.status( Response.Status.OK )
-                       .entity( SetupStackState.JarNotFound.getMessage() )
+                       .entity( SetupStackState.JarNotFound.getStackStateMessage() )
                        .build();
     }
 

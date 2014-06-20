@@ -127,7 +127,9 @@ public class DeployMojo extends MainMojo {
 
         String uploadResponseMessage = uploadResponse.getEntity( String.class );
 
-        if ( uploadResponseMessage.equals( SetupStackState.JarAlreadyDeployed.getMessage() )  ) {
+        // Check if latest jar exists on coordinator
+        if ( uploadResponseMessage.equals( SetupStackState.NotSetUp.getStackStateMessage() )
+                || uploadResponseMessage.equals( SetupStackState.SetUp.getStackStateMessage() ) ) {
             LOG.info( uploadResponseMessage );
             return;
         }
