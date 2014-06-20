@@ -183,10 +183,10 @@ public class Utils {
                     FileUtils.copyFileToDirectory( resourceFile, targetFolderFile );
                 }
             }
-            catch ( Exception e) {
+            catch ( Exception e ) {
                 String path = resource.getDirectory();
-                path = path.substring( 0, path.lastIndexOf("/"));
-                LOG.info("Error while trying to copy resource files. There is no resource folder under {} folder.", path );
+                path = path.substring( 0, path.lastIndexOf( "/" ) );
+                LOG.info( "Error while trying to copy resource files. There is no resource folder under {} folder.", path );
             }
         }
     }
