@@ -66,23 +66,24 @@ public class StringLiteralTest {
         assertNull( literal.getEndValue() );
     }
 
-
-    @Test
-    public void wildcardEndToken() {
-
-        StringLiteral literal = new StringLiteral( new CommonToken( 0, "'value*'" ) );
-
-        assertEquals( "value", literal.getValue() );
-        assertEquals( "value\uffff", literal.getEndValue() );
-    }
-
-
-    @Test
-    public void wildcardEndString() {
-
-        StringLiteral literal = new StringLiteral( "value*" );
-
-        assertEquals( "value", literal.getValue() );
-        assertEquals( "value\uffff", literal.getEndValue() );
-    }
+//      removing this because it breaks queries like "select * where name = "fred*"
+//
+//    @Test
+//    public void wildcardEndToken() {
+//
+//        StringLiteral literal = new StringLiteral( new CommonToken( 0, "'value*'" ) );
+//
+//        assertEquals( "value", literal.getValue() );
+//        assertEquals( "value\uffff", literal.getEndValue() );
+//    }
+//
+//
+//    @Test
+//    public void wildcardEndString() {
+//
+//        StringLiteral literal = new StringLiteral( "value*" );
+//
+//        assertEquals( "value", literal.getValue() );
+//        assertEquals( "value\uffff", literal.getEndValue() );
+//    }
 }

@@ -23,10 +23,20 @@ package org.apache.usergrid.chop.stack;
  * Represents the setup state of a stack
  */
 public enum SetupStackState {
-    SetUp,
-    SettingUp,
-    SetupFailed,
-    NotSetUp,
-    Destroying,
-    NotFound
+    SetUp ( "Already set up" ),
+    SettingUp ( "Already being set up" ),
+    SetupFailed ( "Stack was registered, however its setup failed. Call setup again to restart." ),
+    NotSetUp ( "Jar is deployed already but no stack set up with it" ),
+    Destroying ( "Currently being destroyed. Wait until it is finished to set up again..." ),
+    JarNotFound( "No runner jars found with given parameters, deploy first" );
+    private final String message;
+
+
+    SetupStackState (String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
+    }
 }

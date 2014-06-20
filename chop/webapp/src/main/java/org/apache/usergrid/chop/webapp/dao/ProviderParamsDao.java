@@ -25,8 +25,10 @@ import org.apache.usergrid.chop.api.ProviderParams;
 import org.apache.usergrid.chop.webapp.dao.model.BasicProviderParams;
 import org.apache.usergrid.chop.webapp.elasticsearch.IElasticSearchClient;
 import org.apache.usergrid.chop.webapp.elasticsearch.Util;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.search.SearchHit;
 
 import java.io.IOException;
@@ -86,7 +88,6 @@ public class ProviderParamsDao extends Dao {
 
         return response.isCreated();
     }
-
 
     /**
      * Gets the ProviderParams that belongs to the given username.
@@ -156,7 +157,12 @@ public class ProviderParamsDao extends Dao {
      * @return          whether or not provider params existed for given username
      */
     public boolean delete( String username ) {
-        // TODO to be implemented
-        throw new NotImplementedException( "ProviderParamsDao.delete has not yet been implemented" );
+        DeleteResponse response = elasticSearchClient.getClient()
+                .prepareDelete( DAO_INDEX_KEY, DAO_TYPE_KEY, username )
+                .setRefresh( true )
+                .execute()
+                .actionGet();
+
+        return response.isFound();
     }
 }

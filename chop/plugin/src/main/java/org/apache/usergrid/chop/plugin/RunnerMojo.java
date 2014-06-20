@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.Properties;
 
+import org.apache.maven.project.DefaultMavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
 
 import org.apache.usergrid.chop.api.CoordinatorFig;
@@ -61,6 +62,7 @@ public class RunnerMojo extends MainMojo {
         this.plugin = mojo.plugin;
         this.project = mojo.project;
         this.runnerCount = mojo.runnerCount;
+        this.finalName = mojo.finalName;
     }
 
 
@@ -161,7 +163,11 @@ public class RunnerMojo extends MainMojo {
             Utils.archiveWar( finalFile, extractedRunnerPath );
 
             // Attempt to attach the runner file with the chop classifier
+            if ( projectHelper == null ) {
+                projectHelper = new DefaultMavenProjectHelper();
+            }
             projectHelper.attachArtifact( project, finalFile, "chop" );
+
         }
         catch ( MojoExecutionException e ) {
             throw e;

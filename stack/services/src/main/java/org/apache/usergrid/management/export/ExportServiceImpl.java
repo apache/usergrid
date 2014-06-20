@@ -24,11 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,14 +36,19 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.PagingResultsIterator;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.JobData;
-
-import com.google.common.collect.BiMap;
-import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
+
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.BiMap;
 
 
 /**
@@ -81,7 +81,6 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     public UUID schedule( final Map<String, Object> config ) throws Exception {
-        ApplicationInfo defaultExportApp = null;
 
         if ( config == null ) {
             logger.error( "export information cannot be null" );
@@ -92,6 +91,7 @@ public class ExportServiceImpl implements ExportService {
         try {
             em = emf.getEntityManager( emf.getManagementAppId() );
             Set<String> collections = em.getApplicationCollections();
+            //Set<String> collections = em.getE
             if ( !collections.contains( "exports" ) ) {
                 em.createApplicationCollection( "exports" );
             }
@@ -530,7 +530,7 @@ public class ExportServiceImpl implements ExportService {
         //TODO:shouldn't the below be UTF-16?
 
         JsonGenerator jg = jsonFactory.createJsonGenerator( ephermal, JsonEncoding.UTF8 );
-        jg.setPrettyPrinter( new DefaultPrettyPrinter() );
+        jg.setPrettyPrinter( new DefaultPrettyPrinter(  ) );
         jg.setCodec( new ObjectMapper() );
         return jg;
     }
@@ -577,13 +577,13 @@ public class ExportServiceImpl implements ExportService {
         jg.writeStartArray();
 
         for ( String collectionName : metadata.keySet() ) {
+            collectionName = collectionName.substring( 0, collectionName.indexOf( "|" ) );
+
             if ( collectionName.equals( "exports" ) ) {
                 continue;
             }
             //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
-
-            if ( ( config.get( "collectionName" ) == null ) || collectionName
-                    .equals( config.get( "collectionName" ) ) ) {
+            if ( ( config.get( "collectionName" ) == null ) || collectionName.equalsIgnoreCase((String)config.get( "collectionName" ) ) ) {
                 //Query entity manager for the entities in a collection
                 Query query = null;
                 if ( config.get( "query" ) == null ) {

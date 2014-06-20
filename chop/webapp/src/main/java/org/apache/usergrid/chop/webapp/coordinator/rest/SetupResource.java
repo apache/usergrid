@@ -99,12 +99,6 @@ public class SetupResource extends TestableResource implements RestParams {
                            .build();
         }
 
-        if( status.equals( SetupStackState.NotFound ) ) {
-            return Response.status( Response.Status.OK )
-                           .entity( "No runner jars found with given parameters, deploy first" )
-                           .type( MediaType.APPLICATION_JSON )
-                           .build();
-        }
         if( status.equals( SetupStackState.SetupFailed ) ) {
             String message = "";
             CoordinatedStack stack = stackCoordinator.findCoordinatedStack( commitId, artifactId, groupId, version,
@@ -113,29 +107,17 @@ public class SetupResource extends TestableResource implements RestParams {
             if( setupStackThread != null ) {
                 message = setupStackThread.getErrorMessage();
             }
-            message = "Stack was registered, however its setup failed. Call setup again to restart. Error message: " +
-                    message;
+            message = SetupStackState.SetupFailed.getMessage() + " Error message: " + message;
             stackCoordinator.removeFailedStack( stack );
             return Response.status( Response.Status.OK )
                            .entity( message )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-        if( status.equals( SetupStackState.Destroying ) ) {
+
+        if( ! status.equals( SetupStackState.NotSetUp ) ) {
             return Response.status( Response.Status.OK )
-                           .entity( "Currently being destroyed. Wait until it is finished to set up again..." )
-                           .type( MediaType.APPLICATION_JSON )
-                           .build();
-        }
-        if( status.equals( SetupStackState.SettingUp ) ) {
-            return Response.status( Response.Status.OK )
-                           .entity( "Already being set up" )
-                           .type( MediaType.APPLICATION_JSON )
-                           .build();
-        }
-        if( status.equals( SetupStackState.SetUp ) ) {
-            return Response.status( Response.Status.OK )
-                           .entity( "Already set up" )
+                           .entity( status.getMessage() )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
@@ -161,7 +143,7 @@ public class SetupResource extends TestableResource implements RestParams {
             @QueryParam( RestParams.MODULE_VERSION ) String version,
             @QueryParam( RestParams.USERNAME ) String user,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
-                         ) {
+                          ) {
 
         if( inTestMode( testMode ) ) {
             LOG.info( "Calling /setup/status in test mode ..." );

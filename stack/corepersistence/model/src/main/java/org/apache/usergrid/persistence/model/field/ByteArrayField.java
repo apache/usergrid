@@ -18,31 +18,26 @@
  */
 package org.apache.usergrid.persistence.model.field;
 
-import java.nio.ByteBuffer;
 
 /**
- * A field for storing byte buffers
+ * A field for storing and array of bytes.
  */
-public class ByteBufferField extends AbstractField<ByteBuffer> {
+public class ByteArrayField extends AbstractField<byte[]> {
 
     Class classinfo;
-    /**
-     * Creates an immutable copy of the byte buffer
-     */
-    public ByteBufferField( String name, ByteBuffer value,Class classinfo ) {
-        //always return a duplicate so we don't mess with the markers
-        super( name, value.duplicate() );
+
+    public ByteArrayField( String name, byte[] value,Class classinfo ) {
+        super( name, value );
         this.classinfo = classinfo;
     }
 
-    public ByteBufferField() {
+    public ByteArrayField() {
 
     }
 
     @Override
-    public ByteBuffer getValue() {
-        //always return a duplicate so we don't mess with the markers
-        return value.duplicate();
+    public byte[] getValue() {
+        return value;
     }
 
     public Class getClassinfo() {

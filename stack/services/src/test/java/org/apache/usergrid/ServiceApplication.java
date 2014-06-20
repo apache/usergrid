@@ -72,7 +72,7 @@ public class ServiceApplication extends CoreApplication {
     public ServiceResults testRequest( ServiceAction action, int expectedCount, Object... params ) throws Exception {
         ServiceResults testRequest = testRequest( action, expectedCount, true, params );
 
-        if ( !action.name().equals( ServiceAction.GET )) {
+        if ( !action.equals( ServiceAction.GET )) {
             getEm().refreshIndex();
         }
 

@@ -26,12 +26,13 @@ import java.util.Properties;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.usergrid.chop.api.Project;
-import org.apache.usergrid.chop.api.RestParams;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+
+import org.apache.usergrid.chop.api.Project;
+import org.apache.usergrid.chop.api.RestParams;
+import org.apache.usergrid.chop.stack.SetupStackState;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -56,12 +57,14 @@ public class DeployMojo extends MainMojo {
         this.username = mojo.username;
         this.password = mojo.password;
         this.endpoint = mojo.endpoint;
+        this.testPackageBase = mojo.testPackageBase;
         this.certStorePassphrase = mojo.certStorePassphrase;
         this.failIfCommitNecessary = mojo.failIfCommitNecessary;
         this.localRepository = mojo.localRepository;
         this.plugin = mojo.plugin;
         this.project = mojo.project;
         this.runnerCount = mojo.runnerCount;
+        this.finalName = mojo.finalName;
     }
 
 
@@ -100,6 +103,35 @@ public class DeployMojo extends MainMojo {
             throw new MojoExecutionException( e.getMessage() );
         }
 
+
+        DefaultClientConfig clientConfig = new DefaultClientConfig();
+        Client client = Client.create( clientConfig );
+        WebResource resource = client.resource( endpoint ).path( "/upload" );
+
+        ClientResponse uploadResponse = resource.path( "/status" )
+                .queryParam( RestParams.COMMIT_ID,
+                        props.getProperty( Project.GIT_UUID_KEY ) )
+                .queryParam( RestParams.MODULE_ARTIFACTID,
+                        props.getProperty( Project.ARTIFACT_ID_KEY ) )
+                .queryParam( RestParams.MODULE_GROUPID,
+                        props.getProperty( Project.GROUP_ID_KEY ) )
+                .queryParam( RestParams.MODULE_VERSION,
+                        props.getProperty( Project.PROJECT_VERSION_KEY ) )
+                .queryParam( RestParams.USERNAME, username )
+                .queryParam( RestParams.TEST_PACKAGE,
+                        props.getProperty( Project.TEST_PACKAGE_BASE ) )
+                .queryParam( RestParams.MD5, props.getProperty( Project.MD5_KEY ) )
+                .type( MediaType.APPLICATION_JSON )
+                .accept( MediaType.APPLICATION_JSON )
+                .post( ClientResponse.class );
+
+        String uploadResponseMessage = uploadResponse.getEntity( String.class );
+
+        if ( ! uploadResponseMessage.equals( SetupStackState.JarNotFound.getMessage() ) ) {
+            LOG.info( uploadResponseMessage );
+            return;
+        }
+
         FormDataMultiPart multipart = new FormDataMultiPart();
 
         try {
@@ -123,23 +155,26 @@ public class DeployMojo extends MainMojo {
         }
 
         /** Upload TODO use chop-client module to talk to the coordinator */
-        DefaultClientConfig clientConfig = new DefaultClientConfig();
-        Client client = Client.create( clientConfig );
-        WebResource resource = client.resource( endpoint ).path( "/upload" );
+        clientConfig = new DefaultClientConfig();
+        client = Client.create( clientConfig );
+        resource = client.resource( endpoint ).path( "/upload" );
 
         ClientResponse resp = resource.path( "/runner" )
-                                      .type( MediaType.MULTIPART_FORM_DATA )
-                                      .accept( MediaType.TEXT_PLAIN )
-                                      .post( ClientResponse.class, multipart );
+                .type( MediaType.MULTIPART_FORM_DATA )
+                .accept( MediaType.TEXT_PLAIN )
+                .post( ClientResponse.class, multipart );
+
+        String responseMessage = resp.getEntity( String.class );
 
         if( resp.getStatus() == Response.Status.CREATED.getStatusCode() ) {
-            LOG.info( "Runner Jar uploaded to coordinator successfully on path: {}", resp.getEntity( String.class ) );
+            LOG.info( "Runner Jar uploaded to coordinator successfully on path: {}", responseMessage );
         }
         else {
             LOG.error( "Could not upload successfully, HTTP status: ", resp.getStatus() );
-            LOG.error( "Error Message: {}", resp.getEntity( String.class ) );
+            LOG.error( "Error Message: {}", responseMessage );
 
             throw new MojoExecutionException( "Upload failed" );
         }
     }
+
 }

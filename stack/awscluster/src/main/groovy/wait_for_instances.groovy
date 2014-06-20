@@ -18,7 +18,7 @@
 
 
 // 
-// wait_for_cassandra.groovy 
+// wait_for_instances.groovy 
 // 
 // Wait for enough Cassandra servers are up before proceding,
 // Enough means count greater than or equal to replication factor. 

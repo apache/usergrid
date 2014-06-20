@@ -113,4 +113,6 @@ public interface EntityManagerFactory {
     public UUID getManagementAppId();
 
     public UUID getDefaultAppId();
+
+    public void refreshIndex();
 }

@@ -301,4 +301,50 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         assertTrue( em.isConnectionMember( secondUserEntity, "likes", arrogantbutcher ) );
         assertFalse( em.isConnectionMember( secondUserEntity, "likes", fourpeaks ) );
     }
+
+    
+    @Test
+    public void testGetConnectingEntities() throws Exception {
+
+        UUID applicationId = setup.createApplication( 
+            "EntityConnectionsIT", "testGetConnectingEntities" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+        User fred = new User();
+        fred.setUsername( "fred" );
+        fred.setEmail( "fred@flintstones.com" );
+        Entity fredEntity = em.create( fred );
+        assertNotNull( fredEntity );
+
+        User wilma = new User();
+        wilma.setUsername( "wilma" );
+        wilma.setEmail( "wilma@flintstones.com" );
+        Entity wilmaEntity = em.create( wilma );
+        assertNotNull( wilmaEntity );
+
+        em.createConnection( fredEntity, "likes", wilmaEntity );
+
+        em.refreshIndex();
+
+//        // search for "likes" edges from fred
+//        assertEquals( 1, 
+//            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size());
+//
+//        // search for any type of edges from fred
+//        assertEquals( 1, 
+//            em.getConnectedEntities( fredEntity, null, null, Level.IDS ).size());
+
+        // search for "likes" edges to wilman from any type of object
+        Results res = em.getConnectingEntities( wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
+        assertEquals( 1, res.size() ); 
+        assertEquals( "user", res.getEntity().getType() ); // fred is a user
+
+        // search for "likes" edges to wilman from user type object 
+        res = em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
+        assertEquals( 1, res.size() );
+        assertEquals( "user", res.getEntity().getType() );
+    }
 }
