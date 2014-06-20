@@ -65,11 +65,11 @@ public class LogLayout extends VerticalLayout {
         catch ( FileNotFoundException e ) {
             LOG.error( "Error while accessing file {}: {}", file, e );
         }
-        logArea.setHeight( "100%");
-        logArea.setWidth( "100%");
+        logArea.setHeight( "100%" );
+        logArea.setWidth( "100%" );
         getApplicationLog();
         addComponent( logArea );
-        this.setComponentAlignment(logArea, Alignment.TOP_CENTER);
+        this.setComponentAlignment( logArea, Alignment.TOP_CENTER );
         this.setExpandRatio( logArea, 0.95f );
     }
 
@@ -100,8 +100,8 @@ public class LogLayout extends VerticalLayout {
     private void addRefreshButton()  {
         Button button = new Button( "Refresh" );
         button.setWidth("100px");
-        button.addClickListener(new Button.ClickListener() {
-            public void buttonClick(Button.ClickEvent event) {
+        button.addClickListener( new Button.ClickListener() {
+            public void buttonClick( Button.ClickEvent event ) {
                 loadData();
             }
         });

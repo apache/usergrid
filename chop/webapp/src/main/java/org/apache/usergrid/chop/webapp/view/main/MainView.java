@@ -102,7 +102,7 @@ public class MainView extends VerticalLayout implements ModuleSelectListener {
         logs.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick( Button.ClickEvent clickEvent ) {
-                tabSheetManager.addTabWithVerticalLayout( new LogLayout(), "Logs");
+                tabSheetManager.addTabWithVerticalLayout( new LogLayout(), "Logs" );
             }
         });
 

@@ -37,7 +37,7 @@ public class TabSheetManager {
         tabSheet.addTab( layout, caption );
     }
 
-    public void addTabWithVerticalLayout(VerticalLayout layout, String caption) {
+    public void addTabWithVerticalLayout( VerticalLayout layout, String caption ) {
         removeAll();
         tabSheet.setSizeFull();
         tabSheet.addTab( layout, caption );
@@ -47,5 +47,4 @@ public class TabSheetManager {
         // BUG: Showing two charts doesn't work, thus we have to close others to display a new one.
         tabSheet.removeAllComponents();
     }
-
 }
