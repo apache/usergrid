@@ -18,8 +18,6 @@
  */
 package org.apache.usergrid.chop.webapp.service.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +26,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Properties;
 import java.util.Scanner;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FileUtil {
 
