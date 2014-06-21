@@ -24,19 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import com.google.common.base.Optional;
-import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValue;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
-import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
-import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,10 +34,18 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValue;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.field.Field;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -72,8 +67,6 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
     private final MvccLogEntrySerializationStrategy logStrat;
     private final MvccEntitySerializationStrategy entityStrat;
-    private final AsyncProcessor<MvccEntityDeleteEvent> entityEventAsyncProcessor;
-    private final ConsistencyFig consistencyFig;
     private final SerializationFig serializationFig;
     private final UniqueValueSerializationStrategy uniqueValueStrat;
 
@@ -81,8 +74,6 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
     public MarkCommit( final MvccLogEntrySerializationStrategy logStrat,
                        final MvccEntitySerializationStrategy entityStrat,
                        final UniqueValueSerializationStrategy uniqueValueStrat,
-                       final AsyncProcessorFactory asyncProcessorFactory,
-                       final ConsistencyFig consistencyFig,
                        final SerializationFig serializationFig) {
 
         Preconditions.checkNotNull( 
@@ -92,15 +83,11 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
 
         this.logStrat = logStrat;
         this.entityStrat = entityStrat;
-        this.entityEventAsyncProcessor = asyncProcessorFactory.getProcessor( MvccEntityDeleteEvent.class );
-        this.consistencyFig = consistencyFig;
         this.serializationFig = serializationFig;
         this.uniqueValueStrat = uniqueValueStrat;
     }
 
-    private long getTimeout() {
-        return consistencyFig.getRepairTimeout() * 2;
-    }
+
 
     @Override
     public Void call( final CollectionIoEvent<MvccEntity> idIoEvent ) {
@@ -128,9 +115,6 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
         logMutation.mergeShallow( entityMutation );
 
         //set up the post processing queue
-        final AsynchronousMessage<MvccEntityDeleteEvent> event = entityEventAsyncProcessor.setVerification(
-                new MvccEntityDeleteEvent( collectionScope, version, entity ), getTimeout() );
-
         //delete unique fields
         Observable<List<Field>> deleteFieldsObservable = Observable.create(new ObservableIterator<Field>("deleteColumns") {
             @Override
@@ -162,7 +146,7 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
                         return fields;
                     }
                 });
-        deleteFieldsObservable.toBlockingObservable().firstOrDefault(null);
+        deleteFieldsObservable.toBlocking().firstOrDefault(null);
 
         try {
             logMutation.execute();
@@ -172,9 +156,6 @@ public class MarkCommit implements Func1<CollectionIoEvent<MvccEntity>, Void> {
             throw new CollectionRuntimeException( entity, collectionScope,
                     "Failed to execute write asynchronously ", e );
         }
-
-        //fork post processing
-        entityEventAsyncProcessor.start( event );
 
         /**
          * We're done executing.

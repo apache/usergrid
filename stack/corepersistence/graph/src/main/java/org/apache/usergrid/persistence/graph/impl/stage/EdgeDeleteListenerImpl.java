@@ -16,13 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.impl;
+package org.apache.usergrid.persistence.graph.impl.stage;
 
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
-import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
@@ -40,7 +38,7 @@ import rx.functions.Func2;
  * Construct the asynchronous delete operation from the listener
  */
 @Singleton
-public class EdgeDeleteListener implements MessageListener<EdgeDeleteEvent, EdgeDeleteEvent> {
+public class EdgeDeleteListenerImpl implements EdgeDeleteListener {
 
 
     private final EdgeDeleteRepair edgeDeleteRepair;
@@ -48,25 +46,24 @@ public class EdgeDeleteListener implements MessageListener<EdgeDeleteEvent, Edge
 
 
     @Inject
-    public EdgeDeleteListener( final AsyncProcessorFactory asyncProcessorFactory,
+    public EdgeDeleteListenerImpl(
                                final EdgeDeleteRepair edgeDeleteRepair, final EdgeMetaRepair edgeMetaRepair ) {
 
         this.edgeDeleteRepair = edgeDeleteRepair;
         this.edgeMetaRepair = edgeMetaRepair;
 
-        asyncProcessorFactory.getProcessor( EdgeDeleteEvent.class ).addListener( this );
     }
 
 
-    @Override
-    public Observable<EdgeDeleteEvent> receive( final EdgeDeleteEvent delete ) {
+    public Observable<Integer> receive( final ApplicationScope scope, final MarkedEdge edge,
+                                        final UUID eventTimestamp ) {
 
-        final MarkedEdge edge = delete.getData();
-        final ApplicationScope scope = delete.getApplicationScope();
         final long maxTimestamp = edge.getTimestamp();
 
 
-        return edgeDeleteRepair.repair( scope, edge, delete.getTimestamp() )
+
+
+        return edgeDeleteRepair.repair( scope, edge, eventTimestamp )
                                .flatMap( new Func1<MarkedEdge, Observable<Integer>>() {
                                    @Override
                                    public Observable<Integer> call( final MarkedEdge markedEdge ) {
@@ -88,11 +85,6 @@ public class EdgeDeleteListener implements MessageListener<EdgeDeleteEvent, Edge
                                                    }
                                                } );
                                    }
-                               } ).map( new Func1<Integer, EdgeDeleteEvent>() {
-                    @Override
-                    public EdgeDeleteEvent call( final Integer integer ) {
-                        return delete;
-                    }
-                } );
+                               } );
     }
 }

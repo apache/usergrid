@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.graph.impl;
 
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.UUID;
 
 import org.jukito.UseModules;
 import org.junit.Before;
@@ -33,8 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -65,10 +62,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -85,7 +80,7 @@ public class EdgeWriteListenerTest {
 
 
     @Inject
-    protected EdgeWriteListener edgeWriteListener;
+    protected EdgeWriteCompact edgeWriteCompact;
 
     @Inject
     @CommitLogEdgeSerialization
@@ -142,12 +137,11 @@ public class EdgeWriteListenerTest {
         commitLogEdgeSerialization.writeEdge( scope, edgeV2,  UUIDGenerator.newTimeUUID()).execute();
         commitLogEdgeSerialization.writeEdge( scope, edgeV3,  UUIDGenerator.newTimeUUID() ).execute();
 
-        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV3 );
+         //now perform the listener execution
 
-        //now perform the listener execution
-        Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
+        int returned =  edgeWriteCompact.compact( scope, edgeV3, UUIDGenerator.newTimeUUID() ).toBlocking().single();
 
-        assertEquals( 3, returned.intValue() );
+        assertEquals( 3, returned );
 
         //now validate there's nothing in the commit log.
         long now = System.currentTimeMillis();
@@ -273,12 +267,10 @@ public class EdgeWriteListenerTest {
         commitLogEdgeSerialization.writeEdge( scope, edgeV2,  UUIDGenerator.newTimeUUID() ).execute();
         commitLogEdgeSerialization.writeEdge( scope, edgeV3,  UUIDGenerator.newTimeUUID() ).execute();
 
-        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV2 );
 
-        //now perform the listener execution, should only clean up to edge v2
-        Integer returned = edgeWriteListener.receive( edgeWriteEvent ).toBlockingObservable().single();
+        int returned =  edgeWriteCompact.compact( scope, edgeV2, UUIDGenerator.newTimeUUID() ).toBlocking().single();
 
-        assertEquals( 2, returned.intValue() );
+        assertEquals( 2, returned );
 
         //now validate there's nothing in the commit log.
         long now = System.currentTimeMillis();
@@ -407,24 +399,12 @@ public class EdgeWriteListenerTest {
         EdgeSerialization commitLog = mock( EdgeSerialization.class );
         EdgeSerialization storage = mock( EdgeSerialization.class );
 
-        AsyncProcessorFactory edgeProcessor = mock( AsyncProcessorFactory.class );
-
-        AsyncProcessor<EdgeWriteEvent> processor = mock(AsyncProcessor.class);
-
-        when(edgeProcessor.getProcessor( EdgeWriteEvent.class )).thenReturn( processor );
-
-
-        EdgeWriteEvent edgeWriteEvent = new EdgeWriteEvent( scope, UUIDGenerator.newTimeUUID(), edgeV1 );
 
         Keyspace keyspace = mock( Keyspace.class );
 
 
         EdgeWriteCompact compact = new EdgeWriteCompactImpl( commitLog, storage, keyspace, graphFig );
 
-
-
-        //now perform the listener execution, should only clean up to edge v2
-        EdgeWriteListener listener = new EdgeWriteListener( compact, edgeProcessor );
 
 
         /**
@@ -454,7 +434,8 @@ public class EdgeWriteListenerTest {
 
 
         try {
-           listener.receive( edgeWriteEvent ).toBlockingObservable().single();
+
+            compact.compact( scope, edgeV1, UUIDGenerator.newTimeUUID() ).toBlocking().single();
             fail( "I should have thrown an exception" );
         }
         catch ( RuntimeException re ) {
