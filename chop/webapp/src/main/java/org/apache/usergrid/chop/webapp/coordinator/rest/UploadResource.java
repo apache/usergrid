@@ -6,24 +6,30 @@
  *  to you under the Apache License, Version 2.0 (the
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
- *  
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing,
  *  software distributed under the License is distributed on an
  *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  *  KIND, either express or implied.  See the License for the
  *  specific language governing permissions and limitations
- *  under the License. 
- *  
+ *  under the License.
+ *
  */
 package org.apache.usergrid.chop.webapp.coordinator.rest;
 
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.JarURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 import javax.annotation.Nullable;
 import javax.mail.internet.MimeMultipart;
@@ -35,19 +41,23 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.usergrid.chop.webapp.ChopUiFig;
-import org.apache.usergrid.chop.webapp.coordinator.CoordinatorUtils;
-import org.apache.usergrid.chop.webapp.dao.model.BasicCommit;
-
-import org.apache.usergrid.chop.api.Commit;
-import org.apache.usergrid.chop.api.Module;
-import org.apache.usergrid.chop.api.RestParams;
-import org.apache.usergrid.chop.webapp.dao.CommitDao;
-import org.apache.usergrid.chop.webapp.dao.ModuleDao;
-import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
+import org.apache.usergrid.chop.stack.SetupStackState;
+import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
 import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.chop.api.Commit;
+import org.apache.usergrid.chop.api.Constants;
+import org.apache.usergrid.chop.api.Module;
+import org.apache.usergrid.chop.api.Project;
+import org.apache.usergrid.chop.api.RestParams;
+import org.apache.usergrid.chop.webapp.ChopUiFig;
+import org.apache.usergrid.chop.webapp.coordinator.CoordinatorUtils;
+import org.apache.usergrid.chop.webapp.dao.CommitDao;
+import org.apache.usergrid.chop.webapp.dao.ModuleDao;
+import org.apache.usergrid.chop.webapp.dao.model.BasicCommit;
+import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -60,7 +70,7 @@ import com.sun.jersey.multipart.FormDataParam;
 @Singleton
 @Produces( MediaType.TEXT_PLAIN )
 @Path( UploadResource.ENDPOINT )
-public class UploadResource extends TestableResource implements RestParams {
+public class UploadResource extends TestableResource implements RestParams, Constants {
     public final static String ENDPOINT = "/upload";
     private final static Logger LOG = LoggerFactory.getLogger( UploadResource.class );
 
@@ -73,6 +83,9 @@ public class UploadResource extends TestableResource implements RestParams {
 
     @Inject
     private CommitDao commitDao;
+
+    @Inject
+    private StackCoordinator stackCoordinator;
 
 
     public UploadResource() {
@@ -104,6 +117,45 @@ public class UploadResource extends TestableResource implements RestParams {
         return Response.status( Response.Status.CREATED ).entity( "ok" ).build();
     }
 
+    @POST
+    @Consumes( MediaType.APPLICATION_JSON )
+    @Produces( MediaType.APPLICATION_JSON )
+    @Path( "/status" )
+    public Response runnerStatus(
+            @QueryParam( RestParams.COMMIT_ID ) String commitId,
+            @QueryParam( RestParams.MODULE_ARTIFACTID ) String artifactId,
+            @QueryParam( RestParams.MODULE_GROUPID ) String groupId,
+            @QueryParam( RestParams.MODULE_VERSION ) String version,
+            @QueryParam( RestParams.USERNAME ) String username,
+            @QueryParam( TEST_PACKAGE ) String testPackage,
+            @QueryParam( MD5 ) String md5,
+            @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
+    ) {
+
+        if( inTestMode( testMode ) ) {
+            LOG.info( "Calling /upload/status in test mode ..." );
+        }
+        else {
+            LOG.info( "Calling /upload/status" );
+        }
+        File runnerJar = CoordinatorUtils.getRunnerJar( chopUiFig.getContextPath(), username, groupId, artifactId,
+                version, commitId );
+        SetupStackState status = stackCoordinator.stackStatus( commitId, artifactId, groupId, version, username );
+
+
+        if( runnerJar.exists() ) {
+            String coordinatorRunnerJarMd5 = getCoordinatorJarMd5( runnerJar.getAbsolutePath() );
+            if ( isMD5SumsEqual( coordinatorRunnerJarMd5, md5 ) ) {
+                return Response.status( Response.Status.OK )
+                        .entity( status.getMessage() ).build();
+            }
+        }
+
+        return Response.status( Response.Status.OK )
+                .entity( SetupStackState.JarNotFound.getMessage() )
+                .build();
+    }
+
 
     /**
      * Uploads an executable runner jar into a special path in the temp directory for the application.
@@ -125,7 +177,7 @@ public class UploadResource extends TestableResource implements RestParams {
             @FormDataParam( CONTENT ) InputStream runnerJarStream,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
 
-                                ) throws Exception {
+    ) throws Exception {
 
         if( inTestMode( testMode ) ) {
             LOG.info( "Calling /upload/runner in test mode ..." );
@@ -145,9 +197,9 @@ public class UploadResource extends TestableResource implements RestParams {
 
         if( inTestMode( testMode ) ) {
             return Response.status( Response.Status.CREATED )
-                           .entity( SUCCESSFUL_TEST_MESSAGE )
-                           .type( MediaType.TEXT_PLAIN )
-                           .build();
+                    .entity( SUCCESSFUL_TEST_MESSAGE )
+                    .type( MediaType.TEXT_PLAIN )
+                    .build();
         }
 
         File runnerJar = CoordinatorUtils.getRunnerJar( chopUiFig.getContextPath(), username, groupId, artifactId,
@@ -187,8 +239,8 @@ public class UploadResource extends TestableResource implements RestParams {
         for ( Commit returnedCommit : commits ) {
             Module commitModule = moduleDao.get( returnedCommit.getModuleId() );
             if ( commitModule.getArtifactId().equals( artifactId ) &&
-                 commitModule.getGroupId().equals( groupId ) &&
-                 commitModule.getVersion().equals( version ) )
+                    commitModule.getGroupId().equals( groupId ) &&
+                    commitModule.getVersion().equals( version ) )
             {
                 commit = returnedCommit;
                 module = commitModule;
@@ -206,5 +258,37 @@ public class UploadResource extends TestableResource implements RestParams {
         }
 
         return Response.status( Response.Status.CREATED ).entity( runnerJar.getAbsolutePath() ).build();
+    }
+
+
+    private boolean isMD5SumsEqual( final String coordinatorRunnerJarMd5Sum, final String localRunnerJarMd5Sum ) {
+        return coordinatorRunnerJarMd5Sum.equals( localRunnerJarMd5Sum );
+    }
+
+
+    public String getCoordinatorJarMd5( String coordinatorRunnerJarPath ) {
+        InputStream stream;
+        URL inputURL;
+        Properties props = new Properties();
+        String runnerJarProjectPropertiesFile = "jar:file:" + coordinatorRunnerJarPath + "!/" + PROJECT_FILE;
+
+        if ( runnerJarProjectPropertiesFile.startsWith( "jar:" ) ) {
+            try {
+                inputURL = new URL( runnerJarProjectPropertiesFile );
+                JarURLConnection conn = ( JarURLConnection ) inputURL.openConnection();
+                stream = conn.getInputStream();
+                InputStreamReader reader = new InputStreamReader( stream );
+                props.load( reader );
+                stream.close();
+            } catch ( MalformedURLException e ) {
+                LOG.error( "Malformed URL provided:", e );
+            } catch ( IOException e ) {
+                LOG.error( "Error while reading the file:", e );
+            }
+        }
+
+        String coordinatorJarMd5 = props.getProperty( Project.MD5_KEY );
+
+        return coordinatorJarMd5;
     }
 }

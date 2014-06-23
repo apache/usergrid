@@ -19,15 +19,15 @@
 package org.apache.usergrid.persistence.core.consistency;
 
 
-/**
- * Internal listener for errors, really only used for testing.  Can be used to hook into error state
- */
-public interface ErrorListener <T> {
+import rx.Subscriber;
 
-    /**
-     * Invoked when an error occurs during asynchronous processing
-     * @param event
-     * @param t
-     */
-    void onError( AsynchronousMessage<T> event, Throwable t );
+
+/**
+ * Interface to create subscriptions.  Useful for creating custom listeners or composite functionality
+ * @param <T>
+ */
+public interface SubscriberFactory<T> {
+
+
+    public Subscriber<T> getSubcriber();
 }

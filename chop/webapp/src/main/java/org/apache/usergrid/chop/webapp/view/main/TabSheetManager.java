@@ -21,6 +21,7 @@ package org.apache.usergrid.chop.webapp.view.main;
 
 import com.vaadin.ui.AbsoluteLayout;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.VerticalLayout;
 
 
 public class TabSheetManager {
@@ -36,9 +37,14 @@ public class TabSheetManager {
         tabSheet.addTab( layout, caption );
     }
 
+    public void addTabWithVerticalLayout( VerticalLayout layout, String caption ) {
+        removeAll();
+        tabSheet.setSizeFull();
+        tabSheet.addTab( layout, caption );
+    }
+
     public void removeAll() {
         // BUG: Showing two charts doesn't work, thus we have to close others to display a new one.
         tabSheet.removeAllComponents();
     }
-
 }

@@ -31,7 +31,6 @@ import org.apache.usergrid.chop.webapp.dao.ProviderParamsDao;
 import org.apache.usergrid.chop.webapp.dao.UserDao;
 import org.apache.usergrid.chop.webapp.dao.model.BasicProviderParams;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
-import org.apache.usergrid.chop.webapp.view.main.MainView;
 import org.apache.usergrid.chop.webapp.view.main.TabSheetManager;
 
 import com.vaadin.ui.AbsoluteLayout;
