@@ -90,7 +90,8 @@ public class CpSetup implements Setup {
             
         try {
             logger.info("Loading Core Persistence properties");
-            ConfigurationManager.loadCascadedPropertiesFromResources( "corepersistence-DEPLOY" );
+
+            ConfigurationManager.loadCascadedPropertiesFromResources( "corepersistence" );
 
             String hostsString = "";
             CassandraHost[] hosts = cass.getCassandraHostConfigurator().buildCassandraHosts();
