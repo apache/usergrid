@@ -45,10 +45,13 @@ public class ShiroRealm extends AuthorizingRealm {
 
     private static final String DEFAULT_USER = "user";
     private static final String DEFAULT_PASSWORD = "pass";
+    private static String AUTHENTICATED_USER = "user";
+
 
     public ShiroRealm() {
         super( new MemoryConstrainedCacheManager(), new SimpleCredentialsMatcher() );
     }
+
 
     public static boolean authenticateUser( String username, String password ) {
         try {
@@ -71,6 +74,7 @@ public class ShiroRealm extends AuthorizingRealm {
                     }
                 }
                 SecurityUtils.getSubject().login(new UsernamePasswordToken(username, password));
+                AUTHENTICATED_USER = username;
             }
             return true;
 
@@ -79,6 +83,7 @@ public class ShiroRealm extends AuthorizingRealm {
         }
         return false;
     }
+
 
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo( AuthenticationToken authenticationToken ) throws AuthenticationException {
@@ -114,6 +119,7 @@ public class ShiroRealm extends AuthorizingRealm {
 
     }
 
+
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo( PrincipalCollection principals ) {
         try {
@@ -142,6 +148,7 @@ public class ShiroRealm extends AuthorizingRealm {
         }
     }
 
+
     private static void initUserData() throws Exception {
 
         UserDao userDao = InjectorFactory.getInstance( UserDao.class );
@@ -155,7 +162,22 @@ public class ShiroRealm extends AuthorizingRealm {
         InjectorFactory.getInstance( ProviderParamsDao.class ).save( new BasicProviderParams( DEFAULT_USER ) );
     }
 
+
     public static void logout(){
         SecurityUtils.getSubject().logout();
+    }
+
+
+    public static String getDefaultUser() {
+        return DEFAULT_USER;
+    }
+
+
+    public static String getAuthenticatedUser() {
+        return AUTHENTICATED_USER;
+    }
+
+    public static boolean isAuthenticatedUserAdmin() {
+        return ShiroRealm.getAuthenticatedUser().equals( getDefaultUser() );
     }
 }

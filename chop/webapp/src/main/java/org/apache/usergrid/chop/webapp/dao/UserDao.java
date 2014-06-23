@@ -24,6 +24,8 @@ import com.google.inject.Singleton;
 import org.apache.usergrid.chop.stack.User;
 import org.apache.usergrid.chop.webapp.elasticsearch.IElasticSearchClient;
 import org.apache.usergrid.chop.webapp.elasticsearch.Util;
+import org.apache.usergrid.chop.webapp.service.shiro.ShiroRealm;
+
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -119,7 +121,13 @@ public class UserDao extends Dao {
         ArrayList<User> users = new ArrayList<User>();
 
         for ( SearchHit hit : response.getHits().hits() ) {
-            users.add( toUser( hit ) );
+            // Show all users to only admin user
+            if ( ShiroRealm.isAuthenticatedUserAdmin() ) {
+                users.add( toUser( hit ) );
+            }
+            else {
+                users.add( get( ShiroRealm.getAuthenticatedUser() ) );
+            }
         }
 
         return users;
