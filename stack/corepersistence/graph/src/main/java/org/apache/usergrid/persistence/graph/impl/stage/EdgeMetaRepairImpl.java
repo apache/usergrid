@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
@@ -190,7 +191,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                                          batch.execute();
                                                      }
                                                      catch ( ConnectionException e ) {
-                                                         throw new RuntimeException( "Unable to execute mutation", e );
+                                                         throw new GraphRuntimeException( "Unable to execute mutation", e );
                                                      }
                                                  }
                                              } );
@@ -223,7 +224,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                     serialization.removeEdgeType( scope, node, edgeType, maxTimestamp ).execute();
                 }
                 catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to execute mutation" );
+                    throw new GraphRuntimeException( "Unable to execute mutation" );
                 }
             }
         } );

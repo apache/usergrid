@@ -29,6 +29,7 @@ import org.apache.commons.collections4.iterators.PushbackIterator;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
@@ -115,7 +116,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             cleanup.execute();
         }
         catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to remove future shards, mutation error", e );
+            throw new GraphRuntimeException( "Unable to remove future shards, mutation error", e );
         }
 
 
@@ -140,8 +141,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     @Override
     public boolean auditMaxShard( final ApplicationScope scope, final Id nodeId, final String... edgeType ) {
 
-        final long now =  timeService.getCurrentTime() ;
-
         final Iterator<Long> maxShards = getShards( scope, nodeId, Optional.<Long>absent(), edgeType );
 
 
@@ -153,14 +152,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         }
 
         final long maxShard = maxShards.next();
-
-        /**
-         * Nothing to do, it's already in the future
-         */
-        if ( maxShard > now ) {
-            return false;
-        }
-
 
         /**
          * Check out if we have a count for our shard allocation
@@ -180,7 +171,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             this.edgeShardSerialization.writeEdgeMeta( scope, nodeId, newShardTime, edgeType ).execute();
         }
         catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to write the new edge metadata" );
+            throw new GraphRuntimeException( "Unable to write the new edge metadata" );
         }
 
 

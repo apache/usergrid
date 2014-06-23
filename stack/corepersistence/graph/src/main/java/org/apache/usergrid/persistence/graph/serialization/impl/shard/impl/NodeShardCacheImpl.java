@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
 import org.apache.usergrid.persistence.graph.serialization.util.IterableUtil;
@@ -106,7 +107,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
             entry = this.graphs.get( key );
         }
         catch ( ExecutionException e ) {
-            throw new RuntimeException( "Unable to load shard key for graph", e );
+            throw new GraphRuntimeException( "Unable to load shard key for graph", e );
         }
 
         final Long shardId = entry.getShardId( timestamp );
@@ -116,7 +117,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
         }
 
         //if we get here, something went wrong, our shard should always have a time UUID to return to us
-        throw new RuntimeException( "No time UUID shard was found and could not allocate one" );
+        throw new GraphRuntimeException( "No time UUID shard was found and could not allocate one" );
     }
 
 
@@ -130,7 +131,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
                   entry = this.graphs.get( key );
               }
               catch ( ExecutionException e ) {
-                  throw new RuntimeException( "Unable to load shard key for graph", e );
+                  throw new GraphRuntimeException( "Unable to load shard key for graph", e );
               }
 
         Iterator<Long> iterator = entry.getShards( maxTimestamp );

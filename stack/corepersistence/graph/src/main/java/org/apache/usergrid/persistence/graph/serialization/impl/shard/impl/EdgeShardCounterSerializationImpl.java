@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -123,7 +124,7 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
             return 0;
         }
         catch ( ConnectionException e ) {
-            throw new RuntimeException( "An error occurred connecting to cassandra", e );
+            throw new GraphRuntimeException( "An error occurred connecting to cassandra", e );
         }
 
     }

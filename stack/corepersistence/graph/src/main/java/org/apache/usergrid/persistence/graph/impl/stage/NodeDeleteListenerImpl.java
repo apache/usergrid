@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
@@ -132,7 +133,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                                             nodeSerialization.delete( scope, node, maxVersion.get() ).execute();
                                         }
                                         catch ( ConnectionException e ) {
-                                            throw new RuntimeException( "Unable to delete marked graph node " + node,
+                                            throw new GraphRuntimeException( "Unable to delete marked graph node " + node,
                                                     e );
                                         }
                                     }
@@ -219,7 +220,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                             batch.execute();
                         }
                         catch ( ConnectionException e ) {
-                            throw new RuntimeException( "Unable to delete edges", e );
+                            throw new GraphRuntimeException( "Unable to delete edges", e );
                         }
 
                         //now  delete meta data

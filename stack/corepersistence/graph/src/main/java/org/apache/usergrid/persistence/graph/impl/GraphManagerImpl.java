@@ -41,6 +41,7 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteListener;
 import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListener;
@@ -147,7 +148,7 @@ public class GraphManagerImpl implements GraphManager {
                             mutation.execute();
                         }
                         catch ( ConnectionException e ) {
-                            throw new RuntimeException( "Unable to connect to cassandra", e );
+                            throw new GraphRuntimeException( "Unable to connect to cassandra", e );
                         }
 
 
@@ -180,7 +181,7 @@ public class GraphManagerImpl implements GraphManager {
                             edgeMutation.execute();
                         }
                         catch ( ConnectionException e ) {
-                            throw new RuntimeException( "Unable to connect to cassandra", e );
+                            throw new GraphRuntimeException( "Unable to connect to cassandra", e );
                         }
 
 
@@ -213,7 +214,7 @@ public class GraphManagerImpl implements GraphManager {
                     nodeMutation.execute();
                 }
                 catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to connect to cassandra", e );
+                    throw new GraphRuntimeException( "Unable to connect to cassandra", e );
                 }
 
                 HystrixObservable.async( nodeDeleteListener.receive( scope, id, eventTimestamp ) )

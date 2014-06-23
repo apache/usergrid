@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -98,7 +99,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
                                         storageSerialization.deleteEdge( scope, edge, timestamp ).execute();
                                     }
                                     catch ( ConnectionException e ) {
-                                        throw new RuntimeException( "Unable to remove edge from storage", e );
+                                        throw new GraphRuntimeException( "Unable to remove edge from storage", e );
                                     }
                                 }
                             }

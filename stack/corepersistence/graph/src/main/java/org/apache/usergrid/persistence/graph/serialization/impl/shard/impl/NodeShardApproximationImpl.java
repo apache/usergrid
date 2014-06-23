@@ -28,6 +28,7 @@ import javax.inject.Inject;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -74,7 +75,7 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
             graphLogs.get( key).addAndGet(count);
         }
         catch ( ExecutionException e ) {
-            throw new RuntimeException( "Unable to get hyperloglog from cache", e );
+            throw new GraphRuntimeException( "Unable to get hyperloglog from cache", e );
         }
 
 
@@ -92,7 +93,7 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
             return graphLogs.get( key ).get();
         }
         catch ( ExecutionException e ) {
-            throw new RuntimeException("Unable to execute cache get", e);
+            throw new GraphRuntimeException("Unable to execute cache get", e);
         }
     }
 
