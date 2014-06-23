@@ -67,12 +67,12 @@ public class ShiroRealm extends AuthorizingRealm {
 
                 if (username.equalsIgnoreCase("user") && password.equals("pass")) {
                     initUserData();
-                } else {
-                    User user = InjectorFactory.getInstance(UserDao.class).get(username.toLowerCase());
-                    if (user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase(password)) {
-                        throw new AuthenticationException("Authentication failed");
-                    }
                 }
+                User user = InjectorFactory.getInstance(UserDao.class).get(username.toLowerCase());
+                if (user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase(password)) {
+                    throw new AuthenticationException("Authentication failed");
+                }
+
                 SecurityUtils.getSubject().login(new UsernamePasswordToken(username, password));
                 AUTHENTICATED_USER = username;
             }
@@ -104,11 +104,10 @@ public class ShiroRealm extends AuthorizingRealm {
             if ( username.equals( username ) && password.equals( "pass" ) ) {
                 initUserData();
 
-            } else {
-                User user = InjectorFactory.getInstance( UserDao.class ).get( username.toLowerCase() );
-                if ( user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase( password ) ) {
-                    throw new AuthenticationException( "Authentication failed" );
-                }
+            }
+            User user = InjectorFactory.getInstance( UserDao.class ).get( username.toLowerCase() );
+            if ( user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase( password ) ) {
+                throw new AuthenticationException( "Authentication failed" );
             }
 
             return new SimpleAuthenticationInfo( username, password, this.getName() );

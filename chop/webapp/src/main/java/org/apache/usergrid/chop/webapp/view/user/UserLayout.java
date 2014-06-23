@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Assert;
+
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.chop.api.ProviderParams;
@@ -191,7 +193,8 @@ public class UserLayout extends AbsoluteLayout {
         }
 
         try {
-            if ( ! UserListWindow.isCreateButtonClicked() ){  // update current user information
+            // Update the information of an existing user
+            if ( UserListWindow.getSelectedUser() != null ){
                 userDao.delete( UserListWindow.getSelectedUser() );
                 userDao.save( new User( username, password ) );
 
@@ -215,9 +218,15 @@ public class UserLayout extends AbsoluteLayout {
                 close();
                 Notification.show( "Success", "User information updated successfully", Notification.Type.HUMANIZED_MESSAGE );
 
-            } else{  // save new user
+            }
+            // Create a new user
+            else{
+                // Check if the new user exists in the system
+                if ( userDao.get( username ) != null ) {
+                    Notification.show( "Error", "The username " + username +" already exists!", Notification.Type.ERROR_MESSAGE );
+                    return;
+                }
                 doSaveUser( username, password );
-                UserListWindow.setCreateButtonClicked( false );
             }
         } catch ( Exception e ) {
             Notification.show( "Error", "Error to save user: " + e.getMessage(), Notification.Type.ERROR_MESSAGE );
@@ -234,6 +243,8 @@ public class UserLayout extends AbsoluteLayout {
 
 
     private void doSaveUser( String username, String password ) throws IOException {
+
+        Assert.assertTrue(  userDao.get( username ) == null  );
 
         userDao.save( new User( username, password ) );
 
