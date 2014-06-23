@@ -12,10 +12,6 @@
     <artifactId>model</artifactId>
     <name>Usergrid Model</name>
 
-  <properties>
-    <jackson-2-version>2.2.0</jackson-2-version>
-  </properties>
-
     <!-- Runtime Dependencies -->
     <dependencies>
 
@@ -46,7 +42,7 @@
             <scope>test</scope>
         </dependency>
 
-      <!--&lt;!&ndash; the core, which includes Streaming API, shared low-level abstractions (but NOT data-binding) &ndash;&gt;-->
+      <!-- the core, which includes Streaming API, shared low-level abstractions (but NOT data-binding) -->
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
