@@ -33,14 +33,12 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
-import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -58,15 +56,13 @@ import rx.schedulers.Schedulers;
 /**
  * Construct the asynchronous node delete from the q
  */
-public class NodeDeleteListenerImpl implements NodeDeleteListener  {
+public class NodeDeleteListenerImpl implements NodeDeleteListener {
 
 
     private static final Logger LOG = LoggerFactory.getLogger( NodeDeleteListenerImpl.class );
 
     private final NodeSerialization nodeSerialization;
-    private final EdgeSerialization commitLogSerialization;
     private final EdgeSerialization storageSerialization;
-    private final MergedEdgeReader mergedEdgeReader;
     private final EdgeMetadataSerialization edgeMetadataSerialization;
     private final EdgeMetaRepair edgeMetaRepair;
     private final GraphFig graphFig;
@@ -78,16 +74,13 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener  {
      */
     @Inject
     public NodeDeleteListenerImpl( final NodeSerialization nodeSerialization,
-                               final EdgeMetadataSerialization edgeMetadataSerialization,
-                               final EdgeMetaRepair edgeMetaRepair, final GraphFig graphFig,
-                               @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
-                               @StorageEdgeSerialization final EdgeSerialization storageSerialization,
-                               final MergedEdgeReader mergedEdgeReader, final Keyspace keyspace ) {
+                                   final EdgeMetadataSerialization edgeMetadataSerialization,
+                                   final EdgeMetaRepair edgeMetaRepair, final GraphFig graphFig,
+                                   @StorageEdgeSerialization final EdgeSerialization storageSerialization,
+                                   final Keyspace keyspace ) {
 
 
         this.nodeSerialization = nodeSerialization;
-        this.commitLogSerialization = commitLogSerialization;
-        this.mergedEdgeReader = mergedEdgeReader;
         this.storageSerialization = storageSerialization;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.edgeMetaRepair = edgeMetaRepair;
@@ -126,25 +119,24 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener  {
                         }
 
 
-
                         //do all the delete, then when done, delete the node
                         return doDeletes( node, scope, maxVersion.get(), timestamp ).count()
                                 //if nothing is ever emitted, emit 0 so that we know no operations took place.
                                 // Finally remove
                                 // the
                                 // target node in the mark
-                               .doOnCompleted( new Action0() {
-                                   @Override
-                                   public void call() {
-                                       try {
-                                           nodeSerialization.delete( scope, node, maxVersion.get() ).execute();
-                                       }
-                                       catch ( ConnectionException e ) {
-                                           throw new RuntimeException( "Unable to delete marked graph node " + node,
-                                                   e );
-                                       }
-                                   }
-                               } );
+                                .doOnCompleted( new Action0() {
+                                    @Override
+                                    public void call() {
+                                        try {
+                                            nodeSerialization.delete( scope, node, maxVersion.get() ).execute();
+                                        }
+                                        catch ( ConnectionException e ) {
+                                            throw new RuntimeException( "Unable to delete marked graph node " + node,
+                                                    e );
+                                        }
+                                    }
+                                } );
                     }
                 } ).defaultIfEmpty( 0 );
     }
@@ -153,7 +145,8 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener  {
     /**
      * Do the deletes
      */
-    private Observable<MarkedEdge> doDeletes( final Id node, final ApplicationScope scope, final long maxVersion, final UUID eventTimestamp ) {
+    private Observable<MarkedEdge> doDeletes( final Id node, final ApplicationScope scope, final long maxVersion,
+                                              final UUID eventTimestamp ) {
         /**
          * Note that while we're processing, returned edges could be moved from the commit log to storage.  As a result,
          * we need to issue a delete with the same version as the node delete on both commit log and storage for
@@ -164,26 +157,36 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener  {
 
         //get all edges pointing to the target node and buffer then into groups for deletion
         Observable<MarkedEdge> targetEdges =
-                getEdgesTypesToTarget( scope, new SimpleSearchEdgeType( node, null, null ) ).subscribeOn( Schedulers.io() )
-                        .flatMap( new Func1<String, Observable<MarkedEdge>>() {
+                getEdgesTypesToTarget( scope, new SimpleSearchEdgeType( node, null, null ) )
+                        .subscribeOn( Schedulers.io() ).flatMap( new Func1<String, Observable<MarkedEdge>>() {
+                    @Override
+                    public Observable<MarkedEdge> call( final String edgeType ) {
+                        return Observable.create( new ObservableIterator<MarkedEdge>( "getTargetEdges" ) {
                             @Override
-                            public Observable<MarkedEdge> call( final String edgeType ) {
-                                return mergedEdgeReader.getEdgesToTarget( scope,
+                            protected Iterator<MarkedEdge> getIterator() {
+                                return storageSerialization.getEdgesToTarget( scope,
                                         new SimpleSearchByEdgeType( node, edgeType, maxVersion, null ) );
                             }
                         } );
+                    }
+                } );
 
 
         //get all edges pointing to the source node and buffer them into groups for deletion
         Observable<MarkedEdge> sourceEdges =
-                getEdgesTypesFromSource( scope, new SimpleSearchEdgeType( node, null, null ) ).subscribeOn( Schedulers.io() )
-                        .flatMap( new Func1<String, Observable<MarkedEdge>>() {
+                getEdgesTypesFromSource( scope, new SimpleSearchEdgeType( node, null, null ) )
+                        .subscribeOn( Schedulers.io() ).flatMap( new Func1<String, Observable<MarkedEdge>>() {
+                    @Override
+                    public Observable<MarkedEdge> call( final String edgeType ) {
+                        return Observable.create( new ObservableIterator<MarkedEdge>( "getSourceEdges" ) {
                             @Override
-                            public Observable<MarkedEdge> call( final String edgeType ) {
-                                return mergedEdgeReader.getEdgesFromSource( scope,
+                            protected Iterator<MarkedEdge> getIterator() {
+                                return storageSerialization.getEdgesFromSource( scope,
                                         new SimpleSearchByEdgeType( node, edgeType, maxVersion, null ) );
                             }
                         } );
+                    }
+                } );
 
         //merge both source and target into 1 observable.  We'll need to check them all regardless of order
         return Observable.merge( targetEdges, sourceEdges )
@@ -206,7 +209,6 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener  {
 
                             //we use the version specified on the delete purposefully.  If these edges are re-written
                             //at a greater time we want them to exit
-                            batch.mergeShallow( commitLogSerialization.deleteEdge( scope, edge, eventTimestamp ) );
                             batch.mergeShallow( storageSerialization.deleteEdge( scope, edge, eventTimestamp ) );
 
                             sourceNodes.add( new TargetPair( edge.getSourceNode(), edge.getType() ) );
@@ -284,7 +286,6 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener  {
      * Get all existing edge types to the target node
      */
     private Observable<String> getEdgesTypesFromSource( final ApplicationScope scope, final SearchEdgeType search ) {
-
         return Observable.create( new ObservableIterator<String>( "getEdgeTypesFromSource" ) {
             @Override
             protected Iterator<String> getIterator() {

@@ -32,8 +32,8 @@ import rx.Subscriber;
 
 /**
  * Converts an iterator to an observable.  Subclasses need to only implement getting the iterator from the data source.
- * This is used in favor of "Observable.just" when the initial fetch of the iterator will require I/O.  This allows
- * us to wrap the iterator in a deferred invocation to avoid the blocking on construction.
+ * This is used in favor of "Observable.just" when the initial fetch of the iterator will require I/O.  This allows us
+ * to wrap the iterator in a deferred invocation to avoid the blocking on construction.
  */
 public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T> {
 
@@ -43,7 +43,7 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T>
 
 
     /**
-     * @param name  The simple name of the iterator, used for debugging
+     * @param name The simple name of the iterator, used for debugging
      */
     protected ObservableIterator( final String name ) {this.name = name;}
 
@@ -56,18 +56,18 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T>
             //get our iterator and push data to the observer
             final Iterator<T> itr = getIterator();
 
-            Preconditions.checkNotNull( itr, "The observable must return an iterator.  Null was returned for iterator " + name );
+            Preconditions.checkNotNull( itr,
+                    "The observable must return an iterator.  Null was returned for iterator " + name );
 
 
             //while we have items to emit and our subscriber is subscribed, we want to keep emitting items
-            while ( itr.hasNext() && !subscriber.isUnsubscribed()) {
+            while ( itr.hasNext() && !subscriber.isUnsubscribed() ) {
                 final T next = itr.next();
 
-                log.trace( "Iterator '{}' emitting item '{}'",  name, next );
+                log.trace( "Iterator '{}' emitting item '{}'", name, next );
 
                 subscriber.onNext( next );
             }
-
 
 
             subscriber.onCompleted();
@@ -77,7 +77,6 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T>
         catch ( Throwable t ) {
             subscriber.onError( t );
         }
-
     }
 
 

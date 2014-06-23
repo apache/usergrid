@@ -31,11 +31,9 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -56,29 +54,21 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
     private static final Logger LOG = LoggerFactory.getLogger( EdgeDeleteRepairImpl.class );
 
-    protected final EdgeSerialization commitLogSerialization;
     protected final EdgeSerialization storageSerialization;
-    protected final MergedEdgeReader mergedEdgeReader;
     protected final GraphFig graphFig;
     protected final Keyspace keyspace;
 
 
     @Inject
-    public EdgeDeleteRepairImpl( @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
-                                 @StorageEdgeSerialization final EdgeSerialization storageSerialization,
-                                 final MergedEdgeReader mergedEdgeReader, final GraphFig graphFig,
-                                 final Keyspace keyspace ) {
+    public EdgeDeleteRepairImpl( @StorageEdgeSerialization final EdgeSerialization storageSerialization,
+                                 final GraphFig graphFig, final Keyspace keyspace ) {
 
-        Preconditions.checkNotNull( "commitLogSerialization is required", commitLogSerialization );
         Preconditions.checkNotNull( "storageSerialization is required", storageSerialization );
-        Preconditions.checkNotNull( "mergedEdgeReader is required", mergedEdgeReader );
         Preconditions.checkNotNull( "consistencyFig is required", graphFig );
         Preconditions.checkNotNull( "keyspace is required", keyspace );
 
 
-        this.commitLogSerialization = commitLogSerialization;
         this.storageSerialization = storageSerialization;
-        this.mergedEdgeReader = mergedEdgeReader;
         this.graphFig = graphFig;
         this.keyspace = keyspace;
     }
@@ -92,7 +82,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
             @Override
             public Observable<? extends MarkedEdge> call( final MarkedEdge edge ) {
 
-                return getEdgeVersions( scope, edge, commitLogSerialization ).take( 1 )
+                return getEdgeVersions( scope, edge, storageSerialization ).take( 1 )
                         .doOnNext( new Action1<MarkedEdge>() {
                             @Override
                             public void call( final MarkedEdge markedEdge ) {
@@ -108,17 +98,9 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
                                         storageSerialization.deleteEdge( scope, edge, timestamp ).execute();
                                     }
                                     catch ( ConnectionException e ) {
-                                        throw new RuntimeException("Unable to remove edge from storage", e );
-                                    }
-
-                                    try {
-                                        commitLogSerialization.deleteEdge( scope, edge, timestamp ).execute();
-                                    }
-                                    catch ( ConnectionException e ) {
-                                        throw new RuntimeException("Unable to remove edge from commitlog", e );
+                                        throw new RuntimeException( "Unable to remove edge from storage", e );
                                     }
                                 }
-
                             }
                         } );
             }

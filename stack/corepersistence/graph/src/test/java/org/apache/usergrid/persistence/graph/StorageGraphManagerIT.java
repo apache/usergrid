@@ -36,7 +36,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
 import rx.Observer;
-import rx.Subscriber;
 
 
 /**
@@ -61,7 +60,7 @@ public class StorageGraphManagerIT extends GraphManagerIT {
     protected GraphManager getHelper( final GraphManager gm ) {
 
 
-        final ComittedGraphTestHelper helper = new ComittedGraphTestHelper( gm );
+        final StorageGraphTestHelper helper = new StorageGraphTestHelper( gm );
 
         GraphManagerImpl gmi = ( GraphManagerImpl ) gm;
 
@@ -97,7 +96,7 @@ public class StorageGraphManagerIT extends GraphManagerIT {
     /**
      * Doesn't wait for the async process to happen before returning.  Simply executes and immediately returns.
      */
-    public static class ComittedGraphTestHelper implements GraphManager {
+    public static class StorageGraphTestHelper implements GraphManager {
 
         private final GraphManager graphManager;
         private final AtomicInteger completeInvocations = new AtomicInteger( 0 );
@@ -105,14 +104,13 @@ public class StorageGraphManagerIT extends GraphManagerIT {
         private final Object mutex = new Object();
 
 
-        public ComittedGraphTestHelper( final GraphManager graphManager ) {
+        public StorageGraphTestHelper( final GraphManager graphManager ) {
             this.graphManager = graphManager;
         }
 
 
         @Override
         public Observable<Edge> writeEdge( final Edge edge ) {
-            waitForComplete();
             return graphManager.writeEdge( edge );
         }
 
