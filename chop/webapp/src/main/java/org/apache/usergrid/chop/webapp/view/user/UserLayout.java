@@ -31,6 +31,7 @@ import org.apache.usergrid.chop.webapp.dao.ProviderParamsDao;
 import org.apache.usergrid.chop.webapp.dao.UserDao;
 import org.apache.usergrid.chop.webapp.dao.model.BasicProviderParams;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
+import org.apache.usergrid.chop.webapp.service.shiro.ShiroRealm;
 import org.apache.usergrid.chop.webapp.view.main.TabSheetManager;
 
 import com.vaadin.ui.AbsoluteLayout;
@@ -149,6 +150,15 @@ public class UserLayout extends AbsoluteLayout {
 
 
     private void deleteButtonClicked() {
+        // Check if the selected user is the default user and it is tried to be deleted
+        if ( UserListWindow.getSelectedUser().equals( ShiroRealm.getDefaultUser() ) ) {
+            Notification.show( "Error", "Default admin user cannot be deleted", Notification.Type.ERROR_MESSAGE );
+            return;
+        }
+        if ( ! ShiroRealm.isAuthenticatedUserAdmin() ) {
+            Notification.show( "Error", "Only an admin can delete a user", Notification.Type.ERROR_MESSAGE );
+            return;
+        }
         userDao.delete( username );
         close();
         Notification.show( "Success", "User deleted successfully", Notification.Type.HUMANIZED_MESSAGE );
@@ -160,6 +170,21 @@ public class UserLayout extends AbsoluteLayout {
         String username = usernameField.getValue();
         String password = passwordField.getValue();
 
+        // Check if the selected user is the default user and it's username is tried to be changed
+        if ( UserListWindow.getSelectedUser() != null &&
+                UserListWindow.getSelectedUser().equals( ShiroRealm.getDefaultUser() ) &&
+                isUserNameChanged( username ) ) {
+            Notification.show( "Error", "Username of the default user cannot be changed", Notification.Type.ERROR_MESSAGE );
+            return;
+        }
+
+        // Check if the user has the right permission to change a username
+        if ( ! ShiroRealm.isAuthenticatedUserAdmin() &&
+                isUserNameChanged( username ) ) {
+            Notification.show( "Error", "Only an admin can change the username", Notification.Type.ERROR_MESSAGE );
+            return;
+        }
+
         if ( StringUtils.isEmpty( username ) || StringUtils.isEmpty( password ) ) {
             Notification.show( "Error", "Please enter username and password", Notification.Type.ERROR_MESSAGE );
             return;
@@ -167,7 +192,7 @@ public class UserLayout extends AbsoluteLayout {
 
         try {
             if ( ! UserListWindow.isCreateButtonClicked() ){  // update current user information
-                userDao.delete( UserListWindow.getCurrentUser() );
+                userDao.delete( UserListWindow.getSelectedUser() );
                 userDao.save( new User( username, password ) );
 
                 BasicProviderParams newProviderParams = new BasicProviderParams(
@@ -179,18 +204,17 @@ public class UserLayout extends AbsoluteLayout {
                         keyPairNameField.getValue()
                 );
 
-                ProviderParams oldProviderParams = providerParamsDao.getByUser( UserListWindow.getCurrentUser() );
+                ProviderParams oldProviderParams = providerParamsDao.getByUser( UserListWindow.getSelectedUser() );
 
                 Map<String, String> keys = oldProviderParams != null ? oldProviderParams.getKeys() : new HashMap<String, String>();
                 newProviderParams.setKeys( keys );
 
-                providerParamsDao.delete( UserListWindow.getCurrentUser() );
+                providerParamsDao.delete( UserListWindow.getSelectedUser() );
                 providerParamsDao.save( newProviderParams );
 
                 close();
                 Notification.show( "Success", "User information updated successfully", Notification.Type.HUMANIZED_MESSAGE );
 
-                UserListWindow.setCurrentUser( username );
             } else{  // save new user
                 doSaveUser( username, password );
                 UserListWindow.setCreateButtonClicked( false );
@@ -199,6 +223,15 @@ public class UserLayout extends AbsoluteLayout {
             Notification.show( "Error", "Error to save user: " + e.getMessage(), Notification.Type.ERROR_MESSAGE );
         }
     }
+
+
+    private boolean isUserNameChanged( final String username ) {
+        if ( UserListWindow.getSelectedUser() == null ) {
+            return false;
+        }
+        return ! username.equals( UserListWindow.getSelectedUser() );
+    }
+
 
     private void doSaveUser( String username, String password ) throws IOException {
 
