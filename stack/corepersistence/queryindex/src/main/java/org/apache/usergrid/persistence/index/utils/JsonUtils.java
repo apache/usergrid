@@ -23,16 +23,24 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.usergrid.persistence.index.exceptions.JsonReadException;
-import org.apache.usergrid.persistence.index.exceptions.JsonWriteException;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.io.JsonStringEncoder;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig.Feature;
-import org.codehaus.jackson.smile.SmileFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.index.exceptions.JsonReadException;
+import org.apache.usergrid.persistence.index.exceptions.JsonWriteException;
+
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+
+//import org.codehaus.jackson.JsonNode;
+//import org.codehaus.jackson.io.JsonStringEncoder;
+//import org.codehaus.jackson.map.ObjectMapper;
+//import org.codehaus.jackson.map.SerializationConfig.Feature;
+//import org.codehaus.jackson.smile.SmileFactory;
 
 
 public class JsonUtils {
@@ -49,7 +57,7 @@ public class JsonUtils {
 
 
     static {
-        indentObjectMapper.getSerializationConfig().set( Feature.INDENT_OUTPUT, true );
+        indentObjectMapper.getSerializationConfig().with( SerializationFeature.INDENT_OUTPUT);
     }
 
 

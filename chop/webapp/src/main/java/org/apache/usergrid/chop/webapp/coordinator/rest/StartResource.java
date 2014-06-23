@@ -29,6 +29,7 @@ import com.google.inject.Singleton;
 import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.api.State;
+import org.apache.usergrid.chop.stack.CoordinatedStack;
 import org.apache.usergrid.chop.stack.SetupStackState;
 import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
 import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
@@ -119,9 +120,23 @@ public class StartResource extends TestableResource implements RestParams {
         Collection<Runner> runners = runnerCoordinator.getRunners( user, commitId, moduleId );
         Map<Runner, State> states = runnerCoordinator.getStates( runners );
 
+        CoordinatedStack stack = stackCoordinator.findCoordinatedStack( commitId, artifactId, groupId, version, user );
+
         int notReady = 0;
         StringBuilder sb = new StringBuilder();
         sb.append( "Cannot start tests.\n" );
+
+        // Check also if all runners are registered to coordinator
+        if( stack.getRunnerCount() != runners.size() ) {
+            sb.append( "Not all runners are registered !!!\n" )
+                .append( "Number of registered runners : " )
+                .append( runners.size() );
+            return Response.status( Response.Status.OK )
+                    .entity( sb.toString() )
+                    .type( MediaType.APPLICATION_JSON )
+                    .build();
+        }
+
         for ( Runner runner: runners ) {
             State state = states.get( runner );
             if( state != State.READY ) {
@@ -133,6 +148,7 @@ public class StartResource extends TestableResource implements RestParams {
                   .append( " state.\n" );
             }
         }
+
         // Not all runners are ready to start
         if( notReady > 0 ) {
             sb.append( notReady )

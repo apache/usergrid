@@ -25,15 +25,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.TextArea;
+import com.vaadin.ui.VerticalLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.ui.AbsoluteLayout;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.TextArea;
 
-
-public class LogLayout extends AbsoluteLayout {
+public class LogLayout extends VerticalLayout {
 
     private final static Logger LOG = LoggerFactory.getLogger( LogLayout.class );
 
@@ -44,6 +44,7 @@ public class LogLayout extends AbsoluteLayout {
 
     public LogLayout() {
         initializeUIComponents();
+        this.setSizeFull();
     }
 
 
@@ -64,10 +65,12 @@ public class LogLayout extends AbsoluteLayout {
         catch ( FileNotFoundException e ) {
             LOG.error( "Error while accessing file {}: {}", file, e );
         }
-        logArea.setWidth( "800px" );
-        logArea.setHeight( "530px" );
+        logArea.setHeight( "100%" );
+        logArea.setWidth( "100%" );
         getApplicationLog();
-        addComponent( logArea, "left: 250px; top: 20px;" );
+        addComponent( logArea );
+        this.setComponentAlignment( logArea, Alignment.TOP_CENTER );
+        this.setExpandRatio( logArea, 0.95f );
     }
 
 
@@ -96,13 +99,16 @@ public class LogLayout extends AbsoluteLayout {
 
     private void addRefreshButton()  {
         Button button = new Button( "Refresh" );
-        button.setWidth( "100px" );
+        button.setWidth("100px");
         button.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
                 loadData();
             }
-        } );
-        addComponent( button, "left: 585px; top: 570px;" );
+        });
+        addComponent( button );
+        setComponentAlignment( button, Alignment.BOTTOM_CENTER );
+        this.setExpandRatio( button, 0.05f );
+
     }
 
 

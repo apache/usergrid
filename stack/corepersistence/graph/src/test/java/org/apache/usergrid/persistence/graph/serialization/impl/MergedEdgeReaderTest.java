@@ -115,7 +115,7 @@ public class MergedEdgeReaderTest {
         MergedEdgeReader read = new MergedEdgeReaderImpl( commitLog, storage, config );
 
         Iterator<MarkedEdge> marked =
-                read.getEdgesFromSource( scope, searchByEdgeType ).toBlockingObservable().getIterator();
+                read.getEdgesFromSource( scope, searchByEdgeType ).toBlocking().getIterator();
 
 
         assertEquals( storageEdge2, marked.next() );
@@ -170,7 +170,7 @@ public class MergedEdgeReaderTest {
         MergedEdgeReader read = new MergedEdgeReaderImpl( commitLog, storage, config );
 
         Iterator<MarkedEdge> marked =
-                read.getEdgesFromSource( scope, searchByEdgeType ).toBlockingObservable().getIterator();
+                read.getEdgesFromSource( scope, searchByEdgeType ).toBlocking().getIterator();
 
         assertEquals( commitLogEdge2, marked.next() );
         assertEquals( commitLogEdge1, marked.next() );
@@ -223,7 +223,7 @@ public class MergedEdgeReaderTest {
         MergedEdgeReader read = new MergedEdgeReaderImpl( commitLog, storage, config );
 
         Iterator<MarkedEdge> marked =
-                read.getEdgesFromSourceByTargetType( scope, searchByEdgeType ).toBlockingObservable().getIterator();
+                read.getEdgesFromSourceByTargetType( scope, searchByEdgeType ).toBlocking().getIterator();
 
 
         assertEquals( storageEdge2, marked.next() );
@@ -277,7 +277,7 @@ public class MergedEdgeReaderTest {
         MergedEdgeReader read = new MergedEdgeReaderImpl( commitLog, storage, config );
 
         Iterator<MarkedEdge> marked =
-                read.getEdgesFromSourceByTargetType( scope, searchByEdgeType ).toBlockingObservable().getIterator();
+                read.getEdgesFromSourceByTargetType( scope, searchByEdgeType ).toBlocking().getIterator();
 
         assertEquals( commitLogEdge2, marked.next() );
         assertEquals( commitLogEdge1, marked.next() );
@@ -328,7 +328,7 @@ public class MergedEdgeReaderTest {
         MergedEdgeReader read = new MergedEdgeReaderImpl( commitLog, storage, config );
 
         Iterator<MarkedEdge> marked =
-                read.getEdgesToTarget( scope, searchByEdgeType ).toBlockingObservable().getIterator();
+                read.getEdgesToTarget( scope, searchByEdgeType ).toBlocking().getIterator();
 
 
         assertEquals( storageEdge2, marked.next() );
@@ -386,7 +386,7 @@ public class MergedEdgeReaderTest {
         MergedEdgeReader read = new MergedEdgeReaderImpl( commitLog, storage, config );
 
         Iterator<MarkedEdge> marked =
-                read.getEdgesToTarget( scope, searchByEdgeType ).toBlockingObservable().getIterator();
+                read.getEdgesToTarget( scope, searchByEdgeType ).toBlocking().getIterator();
 
         assertEquals( commitLogEdge2, marked.next() );
         assertEquals( commitLogEdge1, marked.next() );
@@ -441,7 +441,7 @@ public class MergedEdgeReaderTest {
         MergedEdgeReader read = new MergedEdgeReaderImpl( commitLog, storage, config );
 
         Iterator<MarkedEdge> marked =
-                read.getEdgesToTargetBySourceType( scope, searchByEdgeType ).toBlockingObservable().getIterator();
+                read.getEdgesToTargetBySourceType( scope, searchByEdgeType ).toBlocking().getIterator();
 
 
         assertEquals( storageEdge2, marked.next() );
@@ -497,7 +497,7 @@ public class MergedEdgeReaderTest {
         MergedEdgeReader read = new MergedEdgeReaderImpl( commitLog, storage, config );
 
         Iterator<MarkedEdge> marked =
-                read.getEdgesToTargetBySourceType( scope, searchByEdgeType ).toBlockingObservable().getIterator();
+                read.getEdgesToTargetBySourceType( scope, searchByEdgeType ).toBlocking().getIterator();
 
         assertEquals( commitLogEdge2, marked.next() );
         assertEquals( commitLogEdge1, marked.next() );

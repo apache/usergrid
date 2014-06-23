@@ -17,6 +17,7 @@
  */
 package org.apache.usergrid.corepersistence;
 
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -24,8 +25,6 @@ import java.util.List;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
-import org.apache.usergrid.persistence.core.consistency.MessageListener;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -34,6 +33,7 @@ import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -45,21 +45,19 @@ import rx.schedulers.Schedulers;
  * Listener for cleans up old indexes and deletes from indexer
  */
 @Singleton
-public class CpEntityIndexDeleteListener implements MessageListener<MvccEntityDeleteEvent, EntityVersion> {
+public class CpEntityIndexDeleteListener {
 
     private final SerializationFig serializationFig;
     private final EntityIndexFactory entityIndexFactory;
 
     @Inject
     public CpEntityIndexDeleteListener(final EntityIndexFactory entityIndexFactory,
-                                       final AsyncProcessorFactory asyncProcessorFactory,
                                        SerializationFig serializationFig) {
         this.entityIndexFactory = entityIndexFactory;
         this.serializationFig = serializationFig;
-        asyncProcessorFactory.getProcessor(MvccEntityDeleteEvent.class).addListener(this);
     }
 
-    @Override
+
     public Observable<EntityVersion> receive(final MvccEntityDeleteEvent event) {
         CollectionScope collectionScope = event.getCollectionScope();
         IndexScope indexScope = new IndexScopeImpl(collectionScope.getApplication(), collectionScope.getOwner(), collectionScope.getName());

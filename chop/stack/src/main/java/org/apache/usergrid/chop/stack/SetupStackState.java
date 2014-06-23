@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +72,7 @@ public enum SetupStackState {
 
     // SetupFailed ==> (setup deploy) ==> NotSetUp
     // SetupFailed ==> (setup signal) ==> SettingUp
-    SetupFailed( 2, new SetupStackSignal[] { SetupStackSignal.SETUP, SetupStackSignal.DEPLOY }, new Integer[] { 1 },
+    SetupFailed( 2, new SetupStackSignal[] { SetupStackSignal.SETUP, SetupStackSignal.DEPLOY }, new Integer[] { 1, 3 },
             "Stack was registered, however its setup failed. Call setup again to restart.",
             "%s signal rejected. When SetupFailed only a SETUP and DEPLOY signal(s) which cause to transition into " +
                     "SettingUp and NotSetUp state(s) respectively" ),
@@ -99,14 +100,13 @@ public enum SetupStackState {
     private final String rejectedMessage;
 
 
-
     private SetupStackState( int stateID, SetupStackSignal[] signals, Integer[] states, String stackStateMessage, String rejectedMessage ) {
+        Assert.assertTrue( states.length == signals.length );
         this.stackStateMessage = stackStateMessage;
         this.stateID = stateID;
         this.rejectedMessage = rejectedMessage;
         correspondingStateIDs = getCorrespondingStateIDs( signals, states );
-        acceptedStates = new HashSet<SetupStackSignal>( signals.length );
-        Collections.addAll( acceptedStates, signals );
+        acceptedStates = getAcceptedStates( signals );
     }
 
 
@@ -124,7 +124,6 @@ public enum SetupStackState {
         return formatter.format( rejectedMessage, signal ).toString();
     }
 
-
     public int getStateID() {
         return stateID;
     }
@@ -138,7 +137,8 @@ public enum SetupStackState {
      * @return true if the signal will be accepted, false otherwise
      */
     public boolean accepts( SetupStackSignal signal ) {
-        Preconditions.checkNotNull( signal, "Signal parameter cannot be null: state = {}", toString() );
+        if ( signal == null || acceptedStates == null)
+            return false;
         return acceptedStates.contains( signal );
     }
 
@@ -157,7 +157,9 @@ public enum SetupStackState {
         if ( signal == null || next == null ) {
             return false;
         }
-
+        if ( acceptedStates == null ) {
+            return false;
+        }
         if ( ! acceptedStates.contains( signal ) ) {
             return false;
         }
@@ -204,8 +206,15 @@ public enum SetupStackState {
 
 
     public SetupStackState next( SetupStackSignal signal ) {
-        Preconditions.checkNotNull( signal, "The signal cannot be null: state = {}", toString() );
+        if ( signal == null ) {
+            return null;
+        }
+
         Integer stateID = correspondingStateIDs.get( signal );
+
+        if ( stateID == null ) {
+            return null;
+        }
 
         LOG.info( "Got signal {} in {} state: stateID = " + stateID, signal, toString() );
 
@@ -215,6 +224,10 @@ public enum SetupStackState {
 
     private static Map<SetupStackSignal, Integer> getCorrespondingStateIDs( SetupStackSignal[] signals,
                                                                             Integer[] states ) {
+        Assert.assertTrue( signals.length == states.length );
+        if ( signals.length == 0 ) {
+            return null;
+        }
         Map<SetupStackSignal, Integer> correspondingStateIDs = new HashMap<SetupStackSignal, Integer>( signals.length );
 
         for ( int ii = 0; ii < signals.length; ii++ ) {
@@ -222,5 +235,15 @@ public enum SetupStackState {
         }
 
         return Collections.unmodifiableMap( correspondingStateIDs );
+    }
+
+
+    public Set<SetupStackSignal> getAcceptedStates( SetupStackSignal[] signals ) {
+        if ( signals.length == 0 ) {
+            return null;
+        }
+        Set<SetupStackSignal> acceptedStates = new HashSet<SetupStackSignal>( signals.length );
+        Collections.addAll( acceptedStates, signals );
+        return acceptedStates;
     }
 }

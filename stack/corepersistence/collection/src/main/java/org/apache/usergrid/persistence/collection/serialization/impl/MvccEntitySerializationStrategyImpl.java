@@ -376,20 +376,18 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             Entity storedEntity = null;
 
             ByteBuffer jsonBytes = parser.read(  BUFFER_SERIALIZER );
+            byte[] array = jsonBytes.array();
+            int start = jsonBytes.arrayOffset();
+            int length = jsonBytes.remaining();
 
             try {
-
-                byte[] array = jsonBytes.array();
-                int start = jsonBytes.arrayOffset();
-                int length = jsonBytes.remaining();
-
                 storedEntity = mapper.readValue( array,start,length,Entity.class);
             }
             catch ( Exception e ) {
                 throw new RuntimeException(e.getMessage());
             }
 
-            final Optional<Entity> entity = Optional.of( storedEntity );
+            final Optional<Entity> entity = Optional.of( storedEntity);
 
             if ( Arrays.equals( STATE_COMPLETE, state ) ) {
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );

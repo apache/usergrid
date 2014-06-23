@@ -29,14 +29,16 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.utils.JsonUtils;
 
 import org.apache.cassandra.thrift.ColumnDef;
 import org.apache.cassandra.thrift.IndexType;
 import org.apache.commons.lang.StringUtils;
+
+import org.apache.usergrid.utils.JsonUtils;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import me.prettyprint.cassandra.service.ThriftColumnDef;
 import me.prettyprint.hector.api.ClockResolution;
@@ -62,13 +64,12 @@ import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.serializeEntityProperty;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.utils.ClassUtils.isBasicType;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.JsonUtils.toJsonNode;
 import static org.apache.usergrid.utils.StringUtils.replaceAll;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
-
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /** @author edanuff */
 public class CassandraPersistenceUtils {
@@ -298,7 +299,7 @@ public class CassandraPersistenceUtils {
         if ( keyStr.length() == 0 ) {
             return NULL_ID;
         }
-        UUID uuid = UUID.nameUUIDFromBytes( keyStr.getBytes() );
+        UUID uuid = UUID.nameUUIDFromBytes( keyStr.getBytes() ); //UUIDUtils.newTimeUUID(); //UUID.nameUUIDFromBytes( keyStr.getBytes() );
         logger.debug( "Key {} equals UUID {}", keyStr, uuid );
         return uuid;
     }
@@ -356,17 +357,17 @@ public class CassandraPersistenceUtils {
         JsonNode json = toJsonNode( obj );
         if ( ( json != null ) && json.isValueNode() ) {
             if ( json.isBigInteger() ) {
-                return json.getBigIntegerValue();
+                return json.asInt();
             }
             else if ( json.isNumber() || json.isBoolean() ) {
-                return BigInteger.valueOf( json.getValueAsLong() );
+                return BigInteger.valueOf( json.asLong() );
             }
             else if ( json.isTextual() ) {
-                return json.getTextValue();
+                return json.asText();
             }
             else if ( json.isBinary() ) {
                 try {
-                    return wrap( json.getBinaryValue() );
+                    return wrap( json.binaryValue() );
                 }
                 catch ( IOException e ) {
                 }

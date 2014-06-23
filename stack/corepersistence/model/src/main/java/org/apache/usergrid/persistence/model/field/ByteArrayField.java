@@ -16,27 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.consistency;
+package org.apache.usergrid.persistence.model.field;
 
 
-import java.io.Serializable;
+/**
+ * A field for storing and array of bytes.
+ */
+public class ByteArrayField extends AbstractField<byte[]> {
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+    Class classinfo;
 
+    public ByteArrayField( String name, byte[] value,Class classinfo ) {
+        super( name, value );
+        this.classinfo = classinfo;
+    }
 
-@Singleton
-public class LocalTimeoutQueueFactory implements TimeoutQueueFactory {
+    public ByteArrayField() {
 
-    private final TimeService timeService;
-
-
-    @Inject
-    public LocalTimeoutQueueFactory( final TimeService timeService ) {this.timeService = timeService;}
-
+    }
 
     @Override
-    public <T extends Serializable> TimeoutQueue<T> getQueue( final Class<T> eventType ) {
-        return new LocalTimeoutQueue(timeService);
+    public byte[] getValue() {
+        return value;
+    }
+
+    public Class getClassinfo() {
+        return classinfo;
     }
 }

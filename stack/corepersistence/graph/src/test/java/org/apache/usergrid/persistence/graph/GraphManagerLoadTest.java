@@ -198,7 +198,7 @@ public class GraphManagerLoadTest {
 
                 Edge edge = generator.newEdge();
 
-                Edge returned = manager.writeEdge( edge ).toBlockingObservable().last();
+                Edge returned = manager.writeEdge( edge ).toBlocking().last();
 
 
                 assertNotNull( "Returned has a version", returned.getTimestamp() );

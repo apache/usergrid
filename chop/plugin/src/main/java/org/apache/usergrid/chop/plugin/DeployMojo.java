@@ -109,21 +109,21 @@ public class DeployMojo extends MainMojo {
         WebResource resource = client.resource( endpoint ).path( "/upload" );
 
         ClientResponse uploadResponse = resource.path( "/status" )
-                                                .queryParam( RestParams.COMMIT_ID,
-                                                        props.getProperty( Project.GIT_UUID_KEY ) )
-                                                .queryParam( RestParams.MODULE_ARTIFACTID,
-                                                        props.getProperty( Project.ARTIFACT_ID_KEY ) )
-                                                .queryParam( RestParams.MODULE_GROUPID,
-                                                        props.getProperty( Project.GROUP_ID_KEY ) )
-                                                .queryParam( RestParams.MODULE_VERSION,
-                                                        props.getProperty( Project.PROJECT_VERSION_KEY ) )
-                                                .queryParam( RestParams.USERNAME, username )
-                                                .queryParam( RestParams.TEST_PACKAGE,
-                                                        props.getProperty( Project.TEST_PACKAGE_BASE ) )
-                                                .queryParam( RestParams.MD5, props.getProperty( Project.MD5_KEY ) )
-                                                .type( MediaType.APPLICATION_JSON )
-                                                .accept( MediaType.APPLICATION_JSON )
-                                                .post( ClientResponse.class );
+                .queryParam( RestParams.COMMIT_ID,
+                        props.getProperty( Project.GIT_UUID_KEY ) )
+                .queryParam( RestParams.MODULE_ARTIFACTID,
+                        props.getProperty( Project.ARTIFACT_ID_KEY ) )
+                .queryParam( RestParams.MODULE_GROUPID,
+                        props.getProperty( Project.GROUP_ID_KEY ) )
+                .queryParam( RestParams.MODULE_VERSION,
+                        props.getProperty( Project.PROJECT_VERSION_KEY ) )
+                .queryParam( RestParams.USERNAME, username )
+                .queryParam( RestParams.TEST_PACKAGE,
+                        props.getProperty( Project.TEST_PACKAGE_BASE ) )
+                .queryParam( RestParams.MD5, props.getProperty( Project.MD5_KEY ) )
+                .type( MediaType.APPLICATION_JSON )
+                .accept( MediaType.APPLICATION_JSON )
+                .post( ClientResponse.class );
 
         String uploadResponseMessage = uploadResponse.getEntity( String.class );
 
@@ -162,9 +162,9 @@ public class DeployMojo extends MainMojo {
         resource = client.resource( endpoint ).path( "/upload" );
 
         ClientResponse resp = resource.path( "/runner" )
-                                      .type( MediaType.MULTIPART_FORM_DATA )
-                                      .accept( MediaType.TEXT_PLAIN )
-                                      .post( ClientResponse.class, multipart );
+                .type( MediaType.MULTIPART_FORM_DATA )
+                .accept( MediaType.TEXT_PLAIN )
+                .post( ClientResponse.class, multipart );
 
         String responseMessage = resp.getEntity( String.class );
 

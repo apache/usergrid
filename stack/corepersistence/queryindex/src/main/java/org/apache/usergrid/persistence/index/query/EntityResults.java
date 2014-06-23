@@ -79,7 +79,7 @@ public class EntityResults implements Iterable<Entity>, Iterator<Entity> {
             }
 
             //our candidate was too new, ignore it
-            next = ecm.load( candidate.getId() ).toBlockingObservable().single();
+            next = ecm.load( candidate.getId() ).toBlocking().single();
         }
     }
 

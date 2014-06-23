@@ -46,7 +46,7 @@ public interface ManagementService {
     public void addAdminUserToOrganization( UserInfo user, OrganizationInfo organization, boolean email )
             throws Exception;
 
-    public UUID addApplicationToOrganization( UUID organizationId, UUID applicationId ) throws Exception;
+    public UUID addApplicationToOrganization( UUID organizationId, UUID applicationId, Entity appInfo ) throws Exception;
 
     public AccessInfo authorizeClient( String clientId, String clientSecret, long ttl ) throws Exception;
 

@@ -236,6 +236,7 @@ public class QueryProcessorTest {
 
     @Test 
     public void containsRange() throws Exception, PersistenceException {
+
         String queryString = "select * where a contains 'foo*'";
 
         ANTLRStringStream in = new ANTLRStringStream( queryString );
@@ -246,6 +247,10 @@ public class QueryProcessorTest {
         Query query = parser.ql().query;
 
         QueryProcessor processor = new QueryProcessorImpl( query, null, null, null );
+
+        if ( !(processor.getEntityManager() instanceof EntityManagerImpl) ) {
+            return; // only relevant for old entity manager
+        }
 
         SliceNode node = ( SliceNode ) processor.getFirstNode();
 

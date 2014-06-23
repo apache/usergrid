@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -79,7 +80,7 @@ public class CounterIT extends AbstractCoreIT {
         Map<String, Long> counters = em.getEntityCounters( applicationId );
         assertEquals( null, counters.get( "application.collection.users" ) );
 
-        UUID uuid = UUID.randomUUID();
+        UUID uuid = UUIDUtils.newTimeUUID(); // UUID.();
         Map<String, Object> userProperties = new HashMap<String, Object>();
         userProperties.put( "name", "test-name" );
         userProperties.put( "username", "test-username" );

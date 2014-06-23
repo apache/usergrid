@@ -576,4 +576,27 @@ public class EntityManagerIT extends AbstractCoreIT {
         //Not an owner
         assertFalse( em.isCollectionMember( createdUser2, "devices", createdDevice ) );
     }
+
+
+    @Test
+    public void testDeprecatedGet() throws Exception {
+        LOG.info( "EntityManagerIT.testDeprecatedGet" );
+
+        UUID applicationId = setup.createApplication( "testOrganization", "testDeprecatedGet" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "name", "XR-51B" );
+        properties.put( "fuel", "Nutrinox" );
+
+        Entity user = em.create( "robot", properties );
+        assertNotNull( user );
+
+        em.refreshIndex();
+
+        assertNotNull( em.get( user.getUuid() ));
+    }
 }

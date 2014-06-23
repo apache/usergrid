@@ -61,11 +61,11 @@ public class CollectionIndexObserver{
 //
 //        //entity exists, write the edge
 //        if(entity.getEntity().isPresent()){
-//            em.writeEdge( edge ).toBlockingObservable().last();
+//            em.writeEdge( edge ).toBlocking().last();
 //        }
 //        //entity does not exist, it's been removed, mark the edge
 //        else{
-//            em.deleteEdge( edge ).toBlockingObservable().last();
+//            em.deleteEdge( edge ).toBlocking().last();
 //        }
 //    }
 }

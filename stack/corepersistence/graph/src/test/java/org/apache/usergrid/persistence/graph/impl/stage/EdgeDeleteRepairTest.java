@@ -106,7 +106,7 @@ public class EdgeDeleteRepairTest {
     public void noEdges() {
         MarkedEdge edge = createEdge( "source", "test", "target" );
 
-        Iterator<MarkedEdge> edges = edgeDeleteRepair.repair( scope, edge, UUIDGenerator.newTimeUUID() ).toBlockingObservable().getIterator();
+        Iterator<MarkedEdge> edges = edgeDeleteRepair.repair( scope, edge, UUIDGenerator.newTimeUUID() ).toBlocking().getIterator();
 
         assertFalse( "No edges cleaned", edges.hasNext() );
     }
@@ -154,7 +154,7 @@ public class EdgeDeleteRepairTest {
         assertEquals( edge1NotDeleted, itr.next() );
         assertFalse( itr.hasNext() );
 
-        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1, UUIDGenerator.newTimeUUID() ).toBlockingObservable().single();
+        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1, UUIDGenerator.newTimeUUID() ).toBlocking().single();
 
         assertEquals( edge1, deleted );
 

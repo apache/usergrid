@@ -229,7 +229,7 @@ public class CorePerformanceIT extends BaseIT {
                         if ( s.trim().equals("")) { // then we are at end of a record
                             
                             // write and index current entity
-                            ecm.write( current ).toBlockingObservable().last();
+                            ecm.write( current ).toBlocking().last();
                             eci.index( current );
                             
                             if ( maxEntities < 20 ) {

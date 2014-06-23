@@ -16,36 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.model.field;
+package org.apache.usergrid.persistence.core.consistency;
 
-import java.nio.ByteBuffer;
+
+import rx.Subscriber;
+
 
 /**
- * A field for storing byte buffers
+ * Interface to create subscriptions.  Useful for creating custom listeners or composite functionality
+ * @param <T>
  */
-public class ByteBufferField extends AbstractField<ByteBuffer> {
+public interface SubscriberFactory<T> {
 
-    Class classinfo;
-    /**
-     * Creates an immutable copy of the byte buffer
-     */
-    public ByteBufferField( String name, ByteBuffer value,Class classinfo ) {
-        //always return a duplicate so we don't mess with the markers
-        super( name, value.duplicate() );
-        this.classinfo = classinfo;
-    }
 
-    public ByteBufferField() {
-
-    }
-
-    @Override
-    public ByteBuffer getValue() {
-        //always return a duplicate so we don't mess with the markers
-        return value.duplicate();
-    }
-
-    public Class getClassinfo() {
-        return classinfo;
-    }
+    public Subscriber<T> getSubcriber();
 }
