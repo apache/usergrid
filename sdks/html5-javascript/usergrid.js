@@ -3189,7 +3189,7 @@ Usergrid.Asset.prototype.download = function(callback) {
         if(!err){
             doCallback(callback, [ null, response, self ], self);
         } else {
-            doCallback(callback, [ new UsergridError(err), xhr, self ], self);
+            doCallback(callback, [ new UsergridError(err), response, self ], self);
         }
     });
 };
