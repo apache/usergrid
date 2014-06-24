@@ -38,6 +38,12 @@ public class NameIdentifierNode extends QueryNode {
     }
 
 
+    @Override
+    public int getCount() {
+        return 1;
+    }
+
+
     public String getName() {
         return name;
     }
