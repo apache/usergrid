@@ -35,7 +35,6 @@ public class UserListWindow extends PopupWindow {
 
     private final TabSheetManager tabSheetManager;
 
-    private static boolean createButtonClicked = false;
     private static String selectedUser = "user";
 
     public UserListWindow(TabSheetManager tabSheetManager) {
@@ -96,7 +95,6 @@ public class UserListWindow extends PopupWindow {
         createButton.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
                 close();
-                setCreateButtonClicked( true );
                 setSelectedUser( null );
                 showUser( null );
             }
@@ -113,11 +111,4 @@ public class UserListWindow extends PopupWindow {
         UserListWindow.selectedUser = selectedUser;
     }
 
-    public static boolean isCreateButtonClicked() {
-        return createButtonClicked;
-    }
-
-    public static void setCreateButtonClicked( boolean createButtonClicked ) {
-        UserListWindow.createButtonClicked = createButtonClicked;
-    }
 }
