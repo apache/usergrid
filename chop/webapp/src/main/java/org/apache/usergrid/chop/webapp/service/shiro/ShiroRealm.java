@@ -45,7 +45,7 @@ public class ShiroRealm extends AuthorizingRealm {
 
     private static final String DEFAULT_USER = "user";
     private static final String DEFAULT_PASSWORD = "pass";
-    private static String AUTHENTICATED_USER = "user";
+    private static String authenticatedUser = "user";
 
 
     public ShiroRealm() {
@@ -74,7 +74,7 @@ public class ShiroRealm extends AuthorizingRealm {
                 }
 
                 SecurityUtils.getSubject().login(new UsernamePasswordToken(username, password));
-                AUTHENTICATED_USER = username;
+                authenticatedUser = username;
             }
             return true;
 
@@ -173,7 +173,7 @@ public class ShiroRealm extends AuthorizingRealm {
 
 
     public static String getAuthenticatedUser() {
-        return AUTHENTICATED_USER;
+        return authenticatedUser;
     }
 
     public static boolean isAuthenticatedUserAdmin() {
