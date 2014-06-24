@@ -856,6 +856,9 @@ Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Ja
 4. Push your changes to the upstream branch (`git push origin my-new-feature`).
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed).
 
+###Contributing to usergrid.js
+usergrid.js and usergrid.min.js are built from modular components using Grunt. If you want to contribute updates to these files, please commit your changes to the modules in /lib/modules. Do not contribute directly to usergrid.js or your changes could get overwritten in a future build.
+
 ##More information
 For more information on Usergrid, visit <http://usergrid.incubator.apache.org/>.
 For more information on Apigee App Services, visit <http://developers.apigee.com>.
