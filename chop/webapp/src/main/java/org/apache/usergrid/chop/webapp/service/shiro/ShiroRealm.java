@@ -45,7 +45,7 @@ public class ShiroRealm extends AuthorizingRealm {
 
     private static final String DEFAULT_USER = "user";
     private static final String DEFAULT_PASSWORD = "pass";
-    private static String AUTHENTICATED_USER = "user";
+    private static String authenticatedUser = "user";
 
 
     public ShiroRealm() {
@@ -55,26 +55,26 @@ public class ShiroRealm extends AuthorizingRealm {
 
     public static boolean authenticateUser( String username, String password ) {
         try {
-            if (!SecurityUtils.getSubject().isAuthenticated()) {
-                if (username == null) {
-                    throw new AuthenticationException("Username is null");
+            if ( !SecurityUtils.getSubject().isAuthenticated() ) {
+                if ( username == null ) {
+                    throw new AuthenticationException( "Username is null" );
                 }
-                if (password == null) {
-                    throw new AuthenticationException("Password is null");
+                if ( password == null ) {
+                    throw new AuthenticationException( "Password is null" );
                 }
 
-                LOG.info(String.format("Authenticating  user %s", username));
+                LOG.info( String.format( "Authenticating  user %s", username) );
 
-                if (username.equalsIgnoreCase("user") && password.equals("pass")) {
+                if ( username.equalsIgnoreCase( "user" ) && password.equals( "pass" ) ) {
                     initUserData();
-                } else {
-                    User user = InjectorFactory.getInstance(UserDao.class).get(username.toLowerCase());
-                    if (user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase(password)) {
-                        throw new AuthenticationException("Authentication failed");
-                    }
                 }
-                SecurityUtils.getSubject().login(new UsernamePasswordToken(username, password));
-                AUTHENTICATED_USER = username;
+                User user = InjectorFactory.getInstance( UserDao.class ).get( username.toLowerCase() );
+                if ( user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase( password ) ) {
+                    throw new AuthenticationException( "Authentication failed" );
+                }
+
+                SecurityUtils.getSubject().login( new UsernamePasswordToken( username, password ) );
+                authenticatedUser = username;
             }
             return true;
 
@@ -104,11 +104,10 @@ public class ShiroRealm extends AuthorizingRealm {
             if ( username.equals( username ) && password.equals( "pass" ) ) {
                 initUserData();
 
-            } else {
-                User user = InjectorFactory.getInstance( UserDao.class ).get( username.toLowerCase() );
-                if ( user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase( password ) ) {
-                    throw new AuthenticationException( "Authentication failed" );
-                }
+            }
+            User user = InjectorFactory.getInstance( UserDao.class ).get( username.toLowerCase() );
+            if ( user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase( password ) ) {
+                throw new AuthenticationException( "Authentication failed" );
             }
 
             return new SimpleAuthenticationInfo( username, password, this.getName() );
@@ -123,7 +122,7 @@ public class ShiroRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo( PrincipalCollection principals ) {
         try {
-            if (principals == null) {
+            if ( principals == null ) {
                 throw new AuthorizationException( "PrincipalCollection method argument cannot be null." );
             }
 
@@ -174,7 +173,7 @@ public class ShiroRealm extends AuthorizingRealm {
 
 
     public static String getAuthenticatedUser() {
-        return AUTHENTICATED_USER;
+        return authenticatedUser;
     }
 
     public static boolean isAuthenticatedUserAdmin() {
