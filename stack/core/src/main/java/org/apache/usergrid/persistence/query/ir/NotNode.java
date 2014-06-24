@@ -57,6 +57,12 @@ public class NotNode extends QueryNode {
 
 
     @Override
+    public int getCount() {
+        return subtractNode.getCount() + keepNode.getCount();
+    }
+
+
+    @Override
     public String toString() {
         return "NotNode [child=" + subtractNode + "]";
     }

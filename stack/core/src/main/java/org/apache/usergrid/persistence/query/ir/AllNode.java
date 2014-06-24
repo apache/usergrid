@@ -52,6 +52,12 @@ public class AllNode extends QueryNode {
 
 
     @Override
+    public int getCount() {
+        return 1;
+    }
+
+
+    @Override
     public String toString() {
         return "AllNode";
     }
