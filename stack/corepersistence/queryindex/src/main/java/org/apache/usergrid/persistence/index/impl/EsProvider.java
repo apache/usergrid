@@ -87,7 +87,9 @@ public class EsProvider {
                     .put("index.number_of_shards", 1)
                     .put("index.number_of_replicas", 1).build();
 
+                log.info("-----------------------------------------------------------------------");
                 log.info("Starting ElasticSearch embedded with settings: " + settings.getAsMap());
+                log.info("-----------------------------------------------------------------------");
 
                 Node node = NodeBuilder.nodeBuilder().local(true).settings(settings).node();
                 newClient = node.client();

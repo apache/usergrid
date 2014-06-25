@@ -17,10 +17,8 @@
 package org.apache.usergrid.rest;
 
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -301,7 +299,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         } catch (IOException ex) {
             throw new RuntimeException("Unable to parse response", ex);
-        }
+        } 
 
         String mgmToken = node.get( "access_token" ).textValue();
         LOG.info( "got mgmt token: {}", mgmToken );

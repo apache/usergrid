@@ -26,10 +26,14 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.lang.math.RandomUtils;
 
 import com.google.common.io.Files;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /** @author tnine */
 public class TomcatResource extends ExternalResource {
+
+    private static final Logger log = LoggerFactory.getLogger( TomcatResource.class );
 
     public static final TomcatResource instance = new TomcatResource();
     private static Object mutex = new Object();
@@ -62,6 +66,10 @@ public class TomcatResource extends ExternalResource {
             tomcat.setBaseDir( dataDir.getAbsolutePath() );
             tomcat.setPort( port );
             tomcat.addWebapp( CONTEXT, new File( getWebAppsPath() ).getAbsolutePath() );
+
+            log.info("-----------------------------------------------------------------");
+            log.info("Starting Tomcat port {} dir {}", port, dataDir.getAbsolutePath());
+            log.info("-----------------------------------------------------------------");
             tomcat.start();
         }
     }
