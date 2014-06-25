@@ -17,7 +17,8 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
@@ -69,7 +70,7 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
     }
 
 
-    private void doTest( String symbol, String org, String app ) {
+    private void doTest( String symbol, String org, String app ) throws IOException {
 
         org = org.toLowerCase();
         app = app.toLowerCase();

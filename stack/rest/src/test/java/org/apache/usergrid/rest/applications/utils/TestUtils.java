@@ -19,7 +19,7 @@ package org.apache.usergrid.rest.applications.utils;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.apache.usergrid.utils.UUIDUtils;
 

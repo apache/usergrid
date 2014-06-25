@@ -25,7 +25,7 @@ import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.app.queue.Queue;
 
@@ -167,7 +167,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT {
          *
          * @see
          * org.apache.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
-         * #response(org.codehaus.jackson.JsonNode)
+         * #response(com.fasterxml.jackson.databind.JsonNode)
          */
         @Override
         public void response( JsonNode node ) {
@@ -211,7 +211,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT {
          *
          * @see
          * org.apache.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
-         * #response(org.codehaus.jackson.JsonNode)
+         * #response(com.fasterxml.jackson.databind.JsonNode)
          */
         @Override
         public void response( JsonNode node ) {
@@ -257,7 +257,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT {
          *
          * @see
          * org.apache.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
-         * #response(org.codehaus.jackson.JsonNode)
+         * #response(com.fasterxml.jackson.databind.JsonNode)
          */
         @Override
         public void response( JsonNode node ) {
@@ -299,7 +299,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT {
          *
          * @see
          * org.apache.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
-         * #response(org.codehaus.jackson.JsonNode)
+         * #response(com.fasterxml.jackson.databind.JsonNode)
          */
         @Override
         public void response( JsonNode node ) {
@@ -338,7 +338,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT {
          *
          * @see
          * org.apache.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
-         * #response(org.codehaus.jackson.JsonNode)
+         * #response(com.fasterxml.jackson.databind.JsonNode)
          */
         @Override
         public void response( JsonNode node ) {
@@ -399,7 +399,7 @@ public class AbstractQueueResourceIT extends AbstractRestIT {
          *
          * @see
          * org.apache.usergrid.rest.applications.queues.QueueResourceIT.ResponseHandler
-         * #response(org.codehaus.jackson.JsonNode)
+         * #response(com.fasterxml.jackson.databind.JsonNode)
          */
         @Override
         public void response( JsonNode node ) {

@@ -157,13 +157,6 @@
             <type>jar</type>
         </dependency>
 
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-smile</artifactId>
-            <version>${jackson-smile.verson}</version>
-            <type>jar</type>
-        </dependency>
-
       <dependency>
           <groupId>org.apache.usergrid</groupId>
           <artifactId>common</artifactId>

@@ -17,25 +17,10 @@
 package org.apache.usergrid.rest;
 
 
-import java.net.URI;
-import java.net.URLClassLoader;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-
-import org.codehaus.jackson.JsonNode;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.usergrid.java.client.Client;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -45,11 +30,26 @@ import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerException;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
-
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URLClassLoader;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.java.client.Client;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import org.junit.AfterClass;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -78,6 +78,8 @@ public abstract class AbstractRestIT extends JerseyTest {
     public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
     private static final URI baseURI = setup.getBaseURI();
+
+    protected ObjectMapper mapper = new ObjectMapper();
 
 
     static {
@@ -165,7 +167,7 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    public void loginClient() throws InterruptedException {
+    public void loginClient() throws Exception {
         // now create a client that logs in ed
 
         // TODO T.N. This is a filthy hack and I should be ashamed of it (which
@@ -179,7 +181,7 @@ public abstract class AbstractRestIT extends JerseyTest {
         client = new Client( "test-organization", "test-app" ).withApiUrl(
                 UriBuilder.fromUri( "http://localhost/" ).port( setup.getTomcatPort() ).build().toString() );
 
-        org.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser( "ed@anuff.com", "sesame" );
+        org.apache.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser( "ed@anuff.com", "sesame" );
 
         assertTrue( response != null && response.getError() == null );
     }
@@ -211,22 +213,25 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         setUserPassword( "ed@anuff.com", "sesame" );
 
-        JsonNode node = resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
                 .queryParam( "username", name ).queryParam( "password", password ).accept( MediaType.APPLICATION_JSON )
-                .get( JsonNode.class );
+                .get( String.class ));
 
-        String userToken = node.get( "access_token" ).getTextValue();
+        String userToken = node.get( "access_token" ).textValue();
         LOG.info( "returning user token: {}", userToken );
         return userToken;
     }
 
 
     public void createUser( String username, String email, String password, String name ) {
+
         try {
-            JsonNode node =
-                    resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
-                            .queryParam( "username", username ).queryParam( "password", password )
-                            .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+            JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+                .queryParam( "grant_type", "password" )
+                .queryParam( "username", username )
+                .queryParam( "password", password )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( String.class ));
             if ( getError( node ) == null ) {
                 return;
             }
@@ -237,29 +242,31 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         adminToken();
 
+        Map<String, Object> payload = (Map<String, Object>)
+            hashMap( "email", (Object)email )
+            .map( "username", username )
+            .map( "name", name )
+            .map( "password", password )
+            .map( "pin", "1234" );
 
-        Map<String, String> payload =
-                hashMap( "email", email ).map( "username", username ).map( "name", name ).map( "password", password )
-                        .map( "pin", "1234" );
-
-        resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", adminAccessToken )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+        resource().path( "/test-organization/test-app/users" )
+            .queryParam( "access_token", adminAccessToken )
+            .accept( MediaType.APPLICATION_JSON )
+            .type( MediaType.APPLICATION_JSON )
+            .post( payload );
     }
 
 
-    public void setUserPassword( String username, String password ) {
+    public void setUserPassword( String username, String password ) throws IOException {
         Map<String, String> data = new HashMap<String, String>();
         data.put( "newpassword", password );
 
-
         adminToken();
 
-
         // change the password as admin. The old password isn't required
-        JsonNode node = resource().path( String.format( "/test-organization/test-app/users/%s/password", username ) )
+        JsonNode node = mapper.readTree( resource().path( String.format( "/test-organization/test-app/users/%s/password", username ) )
                 .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
 
         assertNull( getError( node ) );
     }
@@ -280,11 +287,23 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     /** Acquire the management token for the test@usergrid.com user with the given password */
     protected String mgmtToken( String user, String password ) {
-        JsonNode node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", user ).queryParam( "password", password ).accept( MediaType.APPLICATION_JSON )
-                .get( JsonNode.class );
 
-        String mgmToken = node.get( "access_token" ).getTextValue();
+        ObjectMapper mapper = new ObjectMapper();
+
+        JsonNode node;
+        try {
+            node = mapper.readTree( resource().path( "/management/token" )
+                .queryParam( "grant_type", "password" )
+                .queryParam( "username", user )
+                .queryParam( "password", password )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( String.class ));
+
+        } catch (IOException ex) {
+            throw new RuntimeException("Unable to parse response", ex);
+        }
+
+        String mgmToken = node.get( "access_token" ).textValue();
         LOG.info( "got mgmt token: {}", mgmToken );
         return mgmToken;
     }
@@ -332,14 +351,18 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     /** convenience to return a ready WebResource.Builder in a single call */
     protected WebResource.Builder appPath( String path ) {
-        return resource().path( "/test-organization/test-app/" + path ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE );
+        return resource().path( "/test-organization/test-app/" + path )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE );
     }
 
 
     /** convenience to return a ready WebResource.Builder in a single call */
     protected WebResource.Builder path( String path ) {
-        return resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+        return resource().path( path )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE );
     }
 
@@ -354,7 +377,8 @@ public abstract class AbstractRestIT extends JerseyTest {
         Map<String, String> props = new HashMap<String, String>();
         props.put( key, value );
         resource().path( "/testproperties" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).post( props );
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( props );
     }
 
 
@@ -368,13 +392,15 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         // set the values remotely (in the Usergrid instance running in Jetty classloader)
         resource().path( "/testproperties" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).post( props );
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( props );
     }
 
 
     /** Get all management service properties from th Jetty instance of the service. */
     public Map<String, String> getRemoteTestProperties() {
         return resource().path( "/testproperties" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( Map.class );
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( Map.class );
     }
 }

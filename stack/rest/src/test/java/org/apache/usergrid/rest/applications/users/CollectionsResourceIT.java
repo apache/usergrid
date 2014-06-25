@@ -23,7 +23,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -33,6 +33,7 @@ import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -51,13 +52,13 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void postToBadPath() {
+    public void postToBadPath() throws IOException {
         Map<String, String> payload = hashMap( "name", "Austin" ).map( "state", "TX" );
         JsonNode node = null;
         try {
-            node = resource().path( "/test-organization/test-organization/test-app/cities" )
+            node = mapper.readTree( resource().path( "/test-organization/test-organization/test-app/cities" )
                     .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 400 Not Found", 400, e.getResponse().getStatus() );
@@ -66,13 +67,12 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void postToEmptyCollection() {
+    public void postToEmptyCollection() throws IOException {
         Map<String, String> payload = new HashMap<String, String>();
 
-        JsonNode node =
-                resource().path( "/test-organization/test-app/cities" ).queryParam( "access_token", access_token )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/cities" ).queryParam( "access_token", access_token )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( JsonNode.class, payload );
+                        .post( String.class, payload ));
         assertNull( getEntity( node, 0 ) );
         assertNull( node.get( "count" ) );
     }
@@ -98,9 +98,8 @@ public class CollectionsResourceIT extends AbstractRestIT {
         data.put( "permission", "get,post,put,delete:/users/sumeet.agarwal@usergrid.com/**" );
 
         String path = "/test-organization/test-app/users/sumeet.agarwal@usergrid.com/permissions";
-        JsonNode posted =
-                resource().path( path ).queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
+        JsonNode posted = mapper.readTree( resource().path( path ).queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
+                        .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
 
 
         //now post data
@@ -112,14 +111,13 @@ public class CollectionsResourceIT extends AbstractRestIT {
         data.put( "mobile", "122" );
 
 
-        posted = resource().path( "/test-organization/test-app/nestprofiles" ).queryParam( "access_token", token )
+        posted = mapper.readTree( resource().path( "/test-organization/test-app/nestprofiles" ).queryParam( "access_token", token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, data );
+                .post( String.class, data ));
 
-        JsonNode response =
-                resource().path( "/test-organization/test-app/nestprofiles" ).queryParam( "access_token", token )
+        JsonNode response = mapper.readTree( resource().path( "/test-organization/test-app/nestprofiles" ).queryParam( "access_token", token )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( JsonNode.class );
+                        .get( String.class ));
 
         assertNotNull( getEntity( response, 0 ) );
         assertNotNull( response.get( "count" ) );
@@ -127,12 +125,12 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void stringWithSpaces() {
+    public void stringWithSpaces() throws IOException {
         Map<String, String> payload = hashMap( "summaryOverview", "My Summary" ).map( "caltype", "personal" );
 
-        JsonNode node = resource().path( "/test-organization/test-app/calendarlists" )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/calendarlists" )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
 
         UUID id = getEntityId( node, 0 );
@@ -142,9 +140,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         payload = hashMap( "summaryOverview", "Your Summary" ).map( "caltype", "personal" );
 
-        node = resource().path( "/test-organization/test-app/calendarlists" ).queryParam( "access_token", access_token )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/calendarlists" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+                .post( String.class, payload ));
 
 
         //query for the first entity
@@ -152,9 +150,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
         String query = "summaryOverview = 'My Summary'";
 
 
-        JsonNode queryResponse = resource().path( "/test-organization/test-app/calendarlists" )
+        JsonNode queryResponse = mapper.readTree( resource().path( "/test-organization/test-app/calendarlists" )
                 .queryParam( "access_token", access_token ).queryParam( "ql", query )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
 
         UUID returnedId = getEntityId( queryResponse, 0 );
@@ -177,9 +175,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
             // create an "app_user" object with name fred
             Map<String, String> payload = hashMap( "type", "app_user" ).map( "name", "fred" );
 
-            JsonNode node = resource().path( "/test-organization/test-app/app_users" )
+            JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/app_users" )
                     .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
             String uuidString = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
             entityId = UUIDUtils.tryGetUUID( uuidString );

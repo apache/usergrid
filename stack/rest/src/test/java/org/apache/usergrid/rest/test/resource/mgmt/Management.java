@@ -21,7 +21,9 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import org.apache.usergrid.rest.test.resource.Me;
 import org.apache.usergrid.rest.test.resource.NamedResource;
 import org.apache.usergrid.rest.test.resource.RootResource;
@@ -31,6 +33,8 @@ import org.apache.usergrid.utils.MapUtils;
 
 /** @author tnine */
 public class Management extends NamedResource {
+
+    protected ObjectMapper mapper = new ObjectMapper();
 
     /**
      * @param parent
@@ -65,24 +69,24 @@ public class Management extends NamedResource {
 
 
     /** Get the token from management for this username and password */
-    public String tokenGet( String username, String password ) {
+    public String tokenGet( String username, String password ) throws IOException {
 
-        JsonNode node = resource().path( String.format( "%s/token", url() ) ).queryParam( "grant_type", "password" )
+        JsonNode node = mapper.readTree( resource().path( String.format( "%s/token", url() ) ).queryParam( "grant_type", "password" )
                 .queryParam( "username", username ).queryParam( "password", password )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         return node.get( "access_token" ).asText();
     }
 
 
     /** Get the token from management for this username and password */
-    public String tokenPost( String username, String password ) {
+    public String tokenPost( String username, String password ) throws IOException {
 
         Map<String, String> payload =
                 MapUtils.hashMap( "grant_type", "password" ).map( "username", username ).map( "password", password );
 
-        JsonNode node = resource().path( String.format( "%s/token", url() ) ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        JsonNode node = mapper.readTree( resource().path( String.format( "%s/token", url() ) ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
         return node.get( "access_token" ).asText();
     }

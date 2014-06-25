@@ -28,7 +28,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.hystrix.HystrixObservable;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -53,7 +52,6 @@ import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -137,8 +135,7 @@ public class GraphManagerImpl implements GraphManager {
 
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
 
-        return HystrixObservable
-                .user( Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
+        return Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
                     @Override
                     public Edge call( final MarkedEdge edge ) {
 
@@ -162,11 +159,12 @@ public class GraphManagerImpl implements GraphManager {
 
 
                         //subscribe and execute the action
-                        HystrixObservable.async( edgeWriteCompact.compact( scope, edge, timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeWriteSubcriber );
+                        //HystrixObservable.async( edgeWriteCompact.compact( scope, edge, timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeWriteSubcriber );
+                        edgeWriteCompact.compact( scope, edge, timestamp ).subscribeOn( Schedulers.io() ).subscribe( edgeWriteSubcriber );
 
                         return edge;
                     }
-                } ) );
+                } );
     }
 
 
@@ -177,9 +175,7 @@ public class GraphManagerImpl implements GraphManager {
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
 
 
-        return
-                HystrixObservable
-                .user( Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
+        return Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
                     @Override
                     public Edge call( final MarkedEdge edge ) {
 
@@ -198,19 +194,19 @@ public class GraphManagerImpl implements GraphManager {
                         }
 
 
-                        HystrixObservable.async( edgeDeleteListener.receive( scope, markedEdge, timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
+                        //HystrixObservable.async( edgeDeleteListener.receive( scope, markedEdge, timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
+                        edgeDeleteListener.receive( scope, markedEdge, timestamp ).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
 
 
                         return edge;
                     }
-                } ) );
+                } );
     }
 
 
     @Override
     public Observable<Id> deleteNode( final Id node, final long timestamp ) {
-        return HystrixObservable
-                .user( Observable.from( node ).subscribeOn( Schedulers.io() ).map( new Func1<Id, Id>() {
+        return Observable.from( node ).subscribeOn( Schedulers.io() ).map( new Func1<Id, Id>() {
                     @Override
                     public Id call( final Id id ) {
 
@@ -231,104 +227,99 @@ public class GraphManagerImpl implements GraphManager {
                             throw new RuntimeException( "Unable to connect to cassandra", e );
                         }
 
-                        HystrixObservable.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn( Schedulers.io() ).subscribe( nodeDelete );
+                        //HystrixObservable.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn( Schedulers.io() ).subscribe( nodeDelete );
+                        nodeDeleteListener.receive(scope, id, eventTimestamp  ).subscribeOn( Schedulers.io() ).subscribe( nodeDelete );
 
                         return id;
                     }
-                } ) );
+                } );
     }
 
 
     @Override
     public Observable<Edge> loadEdgeVersions( final SearchByEdge searchByEdge ) {
-        return HystrixObservable
-                .user( mergedEdgeReader.getEdgeVersions( scope, searchByEdge ).buffer( graphFig.getScanPageSize() )
+        return mergedEdgeReader.getEdgeVersions( scope, searchByEdge ).buffer( graphFig.getScanPageSize() )
                                        .flatMap( new EdgeBufferFilter( searchByEdge.getMaxTimestamp() ) )
-                                       .cast( Edge.class ) );
+                                       .cast( Edge.class ) ;
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
-        return HystrixObservable
-                .user( mergedEdgeReader.getEdgesFromSource( scope, search ).buffer( graphFig.getScanPageSize() )
-                                       .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) ).cast( Edge.class ) );
+        return  mergedEdgeReader.getEdgesFromSource( scope, search ).buffer( graphFig.getScanPageSize() )
+                                       .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) ).cast( Edge.class );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
-        return HystrixObservable
-                .user( mergedEdgeReader.getEdgesToTarget( scope, search ).buffer( graphFig.getScanPageSize() )
-                                       .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) ).cast( Edge.class ) );
+        return mergedEdgeReader.getEdgesToTarget( scope, search ).buffer( graphFig.getScanPageSize() )
+                                       .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) ).cast( Edge.class ) ;
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
-        return HystrixObservable.user( mergedEdgeReader.getEdgesFromSourceByTargetType( scope, search )
+        return mergedEdgeReader.getEdgesFromSourceByTargetType( scope, search )
                                                        .buffer( graphFig.getScanPageSize() )
                                                        .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) )
 
-                                                       .cast( Edge.class ) );
+                                                       .cast( Edge.class );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
-        return HystrixObservable.user( mergedEdgeReader.getEdgesToTargetBySourceType( scope, search )
+        return mergedEdgeReader.getEdgesToTargetBySourceType( scope, search )
                                                        .buffer( graphFig.getScanPageSize() )
                                                        .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) )
-                                                       .cast( Edge.class ) );
+                                                       .cast( Edge.class ) ;
     }
 
 
     @Override
     public Observable<String> getEdgeTypesFromSource( final SearchEdgeType search ) {
 
-        return HystrixObservable
-                .user( Observable.create( new ObservableIterator<String>( "getEdgeTypesFromSource" ) {
+        return Observable.create( new ObservableIterator<String>( "getEdgeTypesFromSource" ) {
                     @Override
                     protected Iterator<String> getIterator() {
                         return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
                     }
-                } ) );
+                } );
     }
 
 
     @Override
     public Observable<String> getIdTypesFromSource( final SearchIdType search ) {
-        return HystrixObservable
-                .user( Observable.create( new ObservableIterator<String>( "getIdTypesFromSource" ) {
+        return Observable.create( new ObservableIterator<String>( "getIdTypesFromSource" ) {
                     @Override
                     protected Iterator<String> getIterator() {
                         return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
                     }
-                } ) );
+                } );
     }
 
 
     @Override
     public Observable<String> getEdgeTypesToTarget( final SearchEdgeType search ) {
 
-        return HystrixObservable
-                .user( Observable.create( new ObservableIterator<String>( "getEdgeTypesToTarget" ) {
+        return Observable.create( new ObservableIterator<String>( "getEdgeTypesToTarget" ) {
                     @Override
                     protected Iterator<String> getIterator() {
                         return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
                     }
-                } ) );
+                } );
     }
 
 
     @Override
     public Observable<String> getIdTypesToTarget( final SearchIdType search ) {
-        return HystrixObservable.user( Observable.create( new ObservableIterator<String>( "getIdTypesToTarget" ) {
+        return Observable.create( new ObservableIterator<String>( "getIdTypesToTarget" ) {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
             }
-        } ) );
+        } ) ;
     }
 
 

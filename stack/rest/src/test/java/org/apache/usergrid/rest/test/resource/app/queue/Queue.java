@@ -20,11 +20,12 @@ package org.apache.usergrid.rest.test.resource.app.queue;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource.NamedResource;
 
 import com.sun.jersey.api.client.WebResource;
+import java.io.IOException;
 
 
 /**
@@ -104,7 +105,7 @@ public class Queue extends CollectionResource {
     }
 
 
-    public JsonNode post( Map<String, ?> payload ) {
+    public JsonNode post( Map<String, ?> payload ) throws IOException {
         JsonNode node = super.postInternal( payload );
         return node;
     }
@@ -115,7 +116,7 @@ public class Queue extends CollectionResource {
      * @param payload
      * @return
      */
-    public JsonNode post( Map<String, ?>[] payload ) {
+    public JsonNode post( Map<String, ?>[] payload ) throws IOException {
         JsonNode node = super.postInternal( payload );
         return node;
     }
@@ -123,13 +124,21 @@ public class Queue extends CollectionResource {
 
     /** Get entities in this collection. Cursor is optional */
     public JsonNode get() {
-        return jsonMedia( withQueueParams( withToken( resource() ) ) ).get( JsonNode.class );
+        try {
+            return mapper.readTree( jsonMedia( withQueueParams( withToken( resource() ) ) ).get( String.class ));
+        } catch (IOException ex) {
+            throw new RuntimeException("Cannot parse JSON data", ex);
+        }
     }
 
 
     /** post to the entity set */
     public JsonNode delete() {
-        return jsonMedia( withToken( resource() ) ).delete( JsonNode.class );
+        try {
+            return mapper.readTree( jsonMedia( withToken( resource() ) ).delete( String.class ));
+        } catch (IOException ex) {
+            throw new RuntimeException("Cannot parse JSON data", ex);
+        }
     }
 
 
