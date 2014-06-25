@@ -35,6 +35,7 @@ import org.apache.usergrid.mq.QueueResults;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.exceptions.QueueException;
 import org.apache.usergrid.persistence.exceptions.TransactionNotFoundException;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import me.prettyprint.hector.api.Keyspace;
@@ -43,7 +44,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.SliceQuery;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+
 import static me.prettyprint.hector.api.factory.HFactory.createSliceQuery;
 import static org.apache.usergrid.mq.cassandra.CassandraMQUtils.getConsumerId;
 import static org.apache.usergrid.mq.cassandra.CassandraMQUtils.getQueueClientTransactionKey;
@@ -128,7 +129,8 @@ public class ConsumerTransaction extends NoTransactionSearch
 
         logger.debug( "Writing new timeout at '{}' for message '{}'", expirationId, messageId );
 
-        Mutator<ByteBuffer> mutator = createMutator( ko, be );
+
+        Mutator<ByteBuffer> mutator = CountingMutator.createFlushingMutator( ko, be );
 
         mutator.addInsertion( key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(),
                 createColumn( expirationId, messageId, cass.createTimestamp(), ue, ue ) );
@@ -162,7 +164,7 @@ public class ConsumerTransaction extends NoTransactionSearch
     private void deleteTransaction( UUID queueId, UUID consumerId, UUID transactionId )
     {
 
-        Mutator<ByteBuffer> mutator = createMutator( ko, be );
+        Mutator<ByteBuffer> mutator = CountingMutator.createFlushingMutator( ko, be );
         ByteBuffer key = getQueueClientTransactionKey( queueId, consumerId );
 
         mutator.addDeletion( key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), transactionId, ue,
@@ -374,7 +376,7 @@ public class ConsumerTransaction extends NoTransactionSearch
             return;
         }
 
-        Mutator<ByteBuffer> mutator = createMutator( ko, be );
+        Mutator<ByteBuffer> mutator = CountingMutator.createFlushingMutator( ko, be );
         ByteBuffer key = getQueueClientTransactionKey( queueId, consumerId );
 
         for ( int i = 0; i < maxIndex && i < pointers.size(); i++ )
@@ -406,7 +408,7 @@ public class ConsumerTransaction extends NoTransactionSearch
     protected void writeTransactions( List<Message> messages, final long futureTimeout, UUID queueId, UUID consumerId )
     {
 
-        Mutator<ByteBuffer> mutator = createMutator( ko, be );
+        Mutator<ByteBuffer> mutator = CountingMutator.createFlushingMutator( ko, be );
 
         ByteBuffer key = getQueueClientTransactionKey( queueId, consumerId );
 

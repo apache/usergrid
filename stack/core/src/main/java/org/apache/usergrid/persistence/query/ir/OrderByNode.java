@@ -83,9 +83,15 @@ public class OrderByNode extends QueryNode {
     }
 
 
+    @Override
+    public int getCount() {
+        return firstPredicate.getCount() + secondarySorts.size();
+    }
+
+
     /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
+         * @see java.lang.Object#toString()
+         */
     @Override
     public String toString() {
         return "OrderByNode [sorts=" + secondarySorts + "]";

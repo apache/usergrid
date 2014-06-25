@@ -43,6 +43,12 @@ public abstract class BooleanNode extends QueryNode {
 
 
     @Override
+    public int getCount() {
+       return left.getCount()+ right.getCount();
+    }
+
+
+    @Override
     public String toString() {
         return "BooleanNode [left=" + left + ", right=" + right + "]";
     }

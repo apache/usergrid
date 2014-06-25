@@ -59,6 +59,12 @@ public class SliceNode extends QueryNode {
     }
 
 
+    @Override
+    public int getCount() {
+        return pairs.size();
+    }
+
+
     /**
      * Set the start value. If the range pair doesn't exist, it's created
      *
