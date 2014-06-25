@@ -76,12 +76,12 @@ public class UserListWindow extends PopupWindow {
     }
 
     private void showUser( String username ) {
-        if ( ShiroRealm.getAuthenticatedUser().equals( ShiroRealm.getDefaultUser() )
-                && ! username.equals( ShiroRealm.getDefaultUser() ) ){
-            tabSheetManager.addTab( new UserLayout( username, tabSheetManager, false ), "User" );
-        }
-        else{
+        if ( username == null || ! ( ShiroRealm.getAuthenticatedUser().equals( ShiroRealm.getDefaultUser() )
+                && ! username.equals( ShiroRealm.getDefaultUser() ) ) ){
             tabSheetManager.addTab( new UserLayout( username, tabSheetManager ), "User" );
+        }
+        else {
+            tabSheetManager.addTab( new UserLayout( username, tabSheetManager, false ), "User" );
         }
     }
 

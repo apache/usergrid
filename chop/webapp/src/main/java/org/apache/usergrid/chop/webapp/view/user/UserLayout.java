@@ -23,7 +23,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
+import org.apache.usergrid.chop.webapp.view.util.UIUtil;
 import org.junit.Assert;
 
 import org.apache.commons.lang.StringUtils;
@@ -58,6 +61,7 @@ public class UserLayout extends AbsoluteLayout {
     private final TextField secretKeyField = new TextField( "Secret Key:" );
     private final TextField keyPairNameField = new TextField( "Key Pair Name:" );
 
+    private final Label formTitle = new Label( "<b>User Information</b>", ContentMode.HTML );
     private final Button saveButton = new Button( "Save" );
     private final Button deleteButton = new Button( "Delete" );
     private final KeyListLayout keyListLayout = new KeyListLayout();
@@ -69,7 +73,7 @@ public class UserLayout extends AbsoluteLayout {
         this.username = username;
         this.tabSheetManager = tabSheetManager;
 
-        addItems();
+        addItems( );
         loadData( username );
     }
 
@@ -114,16 +118,16 @@ public class UserLayout extends AbsoluteLayout {
         User user = userDao.get( username );
         ProviderParams providerParams = providerParamsDao.getByUser( username );
 
-        usernameField.setValue( user.getUsername() );
-        passwordField.setValue( user.getPassword() );
+        usernameField.setValue( user.getUsername( ) );
+        passwordField.setValue( user.getPassword( ) );
 
         // if user does not have authority, do not allow credential information to be viewed.
         if ( ! hasAuthority ){
-            disableCredentialInformationView();
+            disableCredentialInformationView( );
         }
         else {
             keyListLayout.loadKeys( username );
-            accessKeyField.setValue( providerParams.getAccessKey() );
+            accessKeyField.setValue( providerParams.getAccessKey( ) );
             imageField.setValue( providerParams.getImageId() );
             instanceTypeField.setValue( providerParams.getInstanceType() );
             secretKeyField.setValue( providerParams.getSecretKey() );
@@ -134,7 +138,8 @@ public class UserLayout extends AbsoluteLayout {
 
     private void addItems() {
 
-        FormLayout formLayout = addFormLayout( 300, 300);
+        FormLayout formLayout = addFormLayout( 300, 350);
+        formLayout.addComponent( formTitle );
         formLayout.addComponent( usernameField );
         formLayout.addComponent( passwordField );
         formLayout.addComponent( accessKeyField );
@@ -150,12 +155,14 @@ public class UserLayout extends AbsoluteLayout {
     private void addItems( boolean hasAuthority ) {
         if ( ! hasAuthority ){
             FormLayout formLayout = addFormLayout( 300, 150 );
+            formLayout.addComponent( formTitle );
             formLayout.addComponent( usernameField );
             formLayout.addComponent( passwordField );
             formLayout.addComponent( addButtonLayout() );
         }
         else {
-            FormLayout formLayout = addFormLayout( 300, 300 );
+            FormLayout formLayout = addFormLayout( 300, 350 );
+            formLayout.addComponent( formTitle );
             formLayout.addComponent( usernameField );
             formLayout.addComponent( passwordField );
             formLayout.addComponent( accessKeyField );
@@ -336,4 +343,7 @@ public class UserLayout extends AbsoluteLayout {
         tabSheetManager.removeAll();
     }
 
+    public void addTitleLabel() {
+        UIUtil.addLabel( this, "<b>User Information</b>", "left: 0px; top: 10px;", "120px" );
+    }
 }
