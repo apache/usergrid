@@ -22,6 +22,7 @@ package org.apache.usergrid.chop.webapp.view.user;
 import org.apache.usergrid.chop.stack.User;
 import org.apache.usergrid.chop.webapp.dao.UserDao;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
+import org.apache.usergrid.chop.webapp.service.shiro.ShiroRealm;
 import org.apache.usergrid.chop.webapp.view.main.TabSheetManager;
 import org.apache.usergrid.chop.webapp.view.util.PopupWindow;
 
@@ -75,7 +76,13 @@ public class UserListWindow extends PopupWindow {
     }
 
     private void showUser( String username ) {
-        tabSheetManager.addTab( new UserLayout( username, tabSheetManager ), "User" );
+        if ( ShiroRealm.getAuthenticatedUser().equals( ShiroRealm.getDefaultUser() )
+                && ! username.equals( ShiroRealm.getDefaultUser() ) ){
+            tabSheetManager.addTab( new UserLayout( username, tabSheetManager, false ), "User" );
+        }
+        else{
+            tabSheetManager.addTab( new UserLayout( username, tabSheetManager ), "User" );
+        }
     }
 
     private void loadData( ListSelect list ) {

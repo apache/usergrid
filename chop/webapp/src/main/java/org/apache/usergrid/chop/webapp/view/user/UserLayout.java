@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.vaadin.ui.TabSheet;
 import org.junit.Assert;
 
 import org.apache.commons.lang.StringUtils;
@@ -72,6 +73,12 @@ public class UserLayout extends AbsoluteLayout {
         loadData( username );
     }
 
+    UserLayout( String username, TabSheetManager tabSheetManager, boolean hasAuthority ){
+        this.username = username;
+        this.tabSheetManager = tabSheetManager;
+        addItems( hasAuthority );
+        loadData( username, hasAuthority );
+    }
 
     private void loadData( String username ) {
 
@@ -95,10 +102,39 @@ public class UserLayout extends AbsoluteLayout {
         keyPairNameField.setValue( providerParams.getKeyName() );
     }
 
+    private void loadData( String username, boolean hasAuthority ) {
+
+        if ( StringUtils.isEmpty( username ) ) {
+            deleteButton.setVisible( false );
+            keyListLayout.setVisible( false );
+            return;
+        }
+
+
+        User user = userDao.get( username );
+        ProviderParams providerParams = providerParamsDao.getByUser( username );
+
+        usernameField.setValue( user.getUsername() );
+        passwordField.setValue( user.getPassword() );
+
+        // if user does not have authority, do not allow credential information to be viewed.
+        if ( ! hasAuthority ){
+            disableCredentialInformationView();
+        }
+        else {
+            keyListLayout.loadKeys( username );
+            accessKeyField.setValue( providerParams.getAccessKey() );
+            imageField.setValue( providerParams.getImageId() );
+            instanceTypeField.setValue( providerParams.getInstanceType() );
+            secretKeyField.setValue( providerParams.getSecretKey() );
+            keyPairNameField.setValue( providerParams.getKeyName() );
+        }
+    }
+
 
     private void addItems() {
 
-        FormLayout formLayout = addFormLayout();
+        FormLayout formLayout = addFormLayout( 300, 300);
         formLayout.addComponent( usernameField );
         formLayout.addComponent( passwordField );
         formLayout.addComponent( accessKeyField );
@@ -111,12 +147,32 @@ public class UserLayout extends AbsoluteLayout {
         addComponent( keyListLayout, "left: 650px; top: 50px;" );
     }
 
+    private void addItems( boolean hasAuthority ) {
+        if ( ! hasAuthority ){
+            FormLayout formLayout = addFormLayout( 300, 150 );
+            formLayout.addComponent( usernameField );
+            formLayout.addComponent( passwordField );
+            formLayout.addComponent( addButtonLayout() );
+        }
+        else {
+            FormLayout formLayout = addFormLayout( 300, 300 );
+            formLayout.addComponent( usernameField );
+            formLayout.addComponent( passwordField );
+            formLayout.addComponent( accessKeyField );
+            formLayout.addComponent( imageField );
+            formLayout.addComponent( instanceTypeField );
+            formLayout.addComponent( secretKeyField );
+            formLayout.addComponent( keyPairNameField );
+            formLayout.addComponent( addButtonLayout() );
+        }
+        addComponent( keyListLayout, "left: 650px; top: 50px;" );
+    }
 
-    private FormLayout addFormLayout() {
+    private FormLayout addFormLayout(int x, int y) {
 
         FormLayout formLayout = new FormLayout();
-        formLayout.setWidth( "300px" );
-        formLayout.setHeight( "300px" );
+        formLayout.setWidth( String.format( "%spx", x ) );
+        formLayout.setHeight( String.format( "%spx", y ) );
         formLayout.addStyleName( "outlined" );
         formLayout.setSpacing( true );
 
@@ -233,6 +289,14 @@ public class UserLayout extends AbsoluteLayout {
         }
     }
 
+    public void disableCredentialInformationView(){
+        passwordField.setEnabled( false );
+        keyPairNameField.setVisible( false );
+        accessKeyField.setVisible( false );
+        imageField.setVisible( false );
+        instanceTypeField.setVisible( false );
+        secretKeyField.setVisible( false );
+    }
 
     private boolean isUserNameChanged( final String username ) {
         if ( UserListWindow.getSelectedUser() == null ) {
