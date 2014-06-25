@@ -95,7 +95,7 @@ public enum SetupStackState {
 
     private final String stackStateMessage;
     private final int stateID;
-    private final Map<SetupStackSignal, Integer> correspondingStateIDs;
+    private final Map<SetupStackSignal, Integer> signalsCorrespondingStateIDs;
     private final Set<SetupStackSignal> acceptedStates;
     private final String rejectedMessage;
 
@@ -105,7 +105,7 @@ public enum SetupStackState {
         this.stackStateMessage = stackStateMessage;
         this.stateID = stateID;
         this.rejectedMessage = rejectedMessage;
-        correspondingStateIDs = getCorrespondingStateIDs( signals, states );
+        signalsCorrespondingStateIDs = getCorrespondingStateIDs( signals, states );
         acceptedStates = getAcceptedStates( signals );
     }
 
@@ -164,7 +164,7 @@ public enum SetupStackState {
             return false;
         }
 
-        Integer stateID = correspondingStateIDs.get( signal );
+        Integer stateID = signalsCorrespondingStateIDs.get( signal );
         if ( stateID == null ) {
             return false;
         }
@@ -210,7 +210,7 @@ public enum SetupStackState {
             return null;
         }
 
-        Integer stateID = correspondingStateIDs.get( signal );
+        Integer stateID = signalsCorrespondingStateIDs.get( signal );
 
         if ( stateID == null ) {
             return null;
@@ -228,13 +228,13 @@ public enum SetupStackState {
         if ( signals.length == 0 ) {
             return null;
         }
-        Map<SetupStackSignal, Integer> correspondingStateIDs = new HashMap<SetupStackSignal, Integer>( signals.length );
+        Map<SetupStackSignal, Integer> signalsCorrespondingStateIDs = new HashMap<SetupStackSignal, Integer>( signals.length );
 
         for ( int ii = 0; ii < signals.length; ii++ ) {
-            correspondingStateIDs.put( signals[ii], states[ii] );
+            signalsCorrespondingStateIDs.put( signals[ii], states[ii] );
         }
 
-        return Collections.unmodifiableMap( correspondingStateIDs );
+        return Collections.unmodifiableMap( signalsCorrespondingStateIDs );
     }
 
 
