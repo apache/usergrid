@@ -72,10 +72,10 @@ import org.apache.usergrid.persistence.query.tree.StringLiteral;
 import org.apache.usergrid.persistence.query.tree.WithinOperand;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 public class QueryProcessor {
 
@@ -96,7 +96,7 @@ public class QueryProcessor {
 
     private int size;
     private Query query;
-    private int pageSizeHint;
+    private int sliceCount;
 
 
     public QueryProcessor( Query query, CollectionInfo collectionInfo, EntityManager em,
@@ -131,7 +131,8 @@ public class QueryProcessor {
 
     private void process() throws PersistenceException {
 
-        int opCount = 0;
+
+        sliceCount = 0;
 
         // no operand. Check for sorts
         if ( rootOperand != null ) {
@@ -143,16 +144,16 @@ public class QueryProcessor {
 
             rootNode = visitor.getRootNode();
 
-            opCount = visitor.getSliceCount();
+            sliceCount = rootNode.getCount();
         }
 
         // see if we have sorts, if so, we can add them all as a single node at
         // the root
         if ( sorts.size() > 0 ) {
 
-            OrderByNode order = generateSorts( opCount );
+            OrderByNode order = generateSorts( sliceCount );
 
-            opCount += order.getFirstPredicate().getAllSlices().size();
+            sliceCount += order.getCount();
 
             rootNode = order;
         }
@@ -198,18 +199,11 @@ public class QueryProcessor {
 
                 if ( startResultSet ) {
                     cursorCache.setNextCursor( allNode.getSlice().hashCode(),
-                            ue.toByteBuffer( startResult ) );
+                            UUIDSerializer.get().toByteBuffer( startResult ) );
                 }
 
                 rootNode = allNode;
             }
-        }
-
-        if ( opCount > 1 ) {
-            pageSizeHint = PAGE_SIZE;
-        }
-        else {
-            pageSizeHint = Math.min( size, PAGE_SIZE );
         }
     }
 
@@ -320,7 +314,7 @@ public class QueryProcessor {
 
         // stack for nodes that will be used to construct the tree and create
         // objects
-        private CountingStack<QueryNode> nodes = new CountingStack<QueryNode>();
+        private Stack<QueryNode> nodes = new Stack<QueryNode>();
 
 
         private int contextCount = -1;
@@ -622,39 +616,9 @@ public class QueryProcessor {
             }
         }
 
-
-        public int getSliceCount() {
-            return nodes.getSliceCount();
-        }
     }
 
 
-    private static class CountingStack<T> extends Stack<T> {
-
-        private int count = 0;
-        private static final long serialVersionUID = 1L;
-
-
-        @Override
-        public T push( final T entry ) {
-            if ( entry instanceof SliceNode ) {
-                //by definition a slicenode has a size.  Some have nothing to indicate full range scans, but they still count
-                //as an operand
-                count += Math.max(( ( SliceNode ) entry ).getAllSlices().size(), 1);
-            }
-            //not node creates a subraction, this needs to increase the count
-            else if ( entry instanceof NotNode ) {
-                count ++;
-            }
-
-            return super.push( entry );    //To change body of overridden methods use File | Settings | File Templates.
-        }
-
-
-        public int getSliceCount() {
-            return count;
-        }
-    }
 
 
     /**
@@ -666,11 +630,14 @@ public class QueryProcessor {
          * It is crucial that the root iterator only needs the result set size per page
          * otherwise our cursor logic will fail when passing cursor data to the leaf nodes
          *******/
-        if ( node == rootNode ) {
+
+        //if it's a root node, and there's only 1 slice to check in the entire tree, then just select what we need
+        //so we short circuit on range scans faster.  otherwise it's more efficient to make less trips with candidates we discard from cassandra
+        if ( node == rootNode && sliceCount == 1 ) {
             return size;
         }
 
-        return pageSizeHint;
+        return PAGE_SIZE;
     }
 
 

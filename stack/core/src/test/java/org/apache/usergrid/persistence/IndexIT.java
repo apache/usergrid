@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.apache.usergrid.persistence.cassandra.RelationManagerImpl;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -39,7 +40,6 @@ import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.mutation.Mutator;
 
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -432,7 +432,7 @@ public class IndexIT extends AbstractCoreIT {
         ByteBufferSerializer buf = ByteBufferSerializer.get();
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
-        Mutator<ByteBuffer> m = createMutator( ko, buf );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, buf );
 
 
         IndexUpdate update =

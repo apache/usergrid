@@ -33,6 +33,7 @@ import org.apache.usergrid.mq.Message;
 import org.apache.usergrid.mq.QueueResults;
 import org.apache.usergrid.mq.cassandra.io.NoTransactionSearch.SearchParam;
 import org.apache.usergrid.persistence.exceptions.QueueException;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import me.prettyprint.hector.api.Keyspace;
@@ -46,7 +47,7 @@ import me.prettyprint.hector.api.query.SliceQuery;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createMultigetSliceQuery;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+
 import static me.prettyprint.hector.api.factory.HFactory.createSliceQuery;
 import static org.apache.usergrid.mq.Queue.QUEUE_NEWEST;
 import static org.apache.usergrid.mq.Queue.QUEUE_OLDEST;
@@ -300,7 +301,7 @@ public abstract class AbstractSearch implements QueueSearch
         // conditions with clock drift.
         long colTimestamp = UUIDUtils.getTimestampInMicros( lastReturnedId );
 
-        Mutator<UUID> mutator = createMutator( ko, ue );
+        Mutator<UUID> mutator = CountingMutator.createFlushingMutator( ko, ue );
 
         if ( logger.isDebugEnabled() )
         {
