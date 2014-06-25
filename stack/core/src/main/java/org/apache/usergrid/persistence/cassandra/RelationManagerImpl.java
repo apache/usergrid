@@ -152,10 +152,6 @@ public class RelationManagerImpl implements RelationManager {
     private EntityRef headEntity;
     private IndexBucketLocator indexBucketLocator;
 
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-
 
     public RelationManagerImpl() {
     }
@@ -302,7 +298,7 @@ public class RelationManagerImpl implements RelationManager {
         // TODO TN, read all buckets here
         List<HColumn<String, String>> results =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
-                        key( headEntity.getUuid(), collectionName, Schema.DICTIONARY_INDEXES ), se, se );
+                        key( headEntity.getUuid(), collectionName, Schema.DICTIONARY_INDEXES ), Serializers.se, Serializers.se );
         Set<String> indexes = new TreeSet<String>();
         if ( results != null ) {
             for ( HColumn<String, String> column : results ) {
@@ -324,7 +320,7 @@ public class RelationManagerImpl implements RelationManager {
         // TODO TN get all buckets here
 
         List<HColumn<DynamicComposite, ByteBuffer>> containers = cass.getAllColumns( ko, ENTITY_COMPOSITE_DICTIONARIES,
-                key( headEntity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES ), EntityManagerFactoryImpl.dce, be );
+                key( headEntity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES ), Serializers.dce, Serializers.be );
         if ( containers != null ) {
             for ( HColumn<DynamicComposite, ByteBuffer> container : containers ) {
                 DynamicComposite composite = container.getName();
@@ -754,7 +750,7 @@ public class RelationManagerImpl implements RelationManager {
     public Set<String> getConnectionIndexes( ConnectionRefImpl connection ) throws Exception {
         List<HColumn<String, String>> results =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_DICTIONARIES,
-                        key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ), se, se );
+                        key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ), Serializers.se, Serializers.se );
         Set<String> indexes = new TreeSet<String>();
         if ( results != null ) {
             for ( HColumn<String, String> column : results ) {
@@ -1063,7 +1059,7 @@ public class RelationManagerImpl implements RelationManager {
     public void updateEntityConnection( boolean disconnect, ConnectionRefImpl connection ) throws Exception {
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), be );
+        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
 
         // Make or break the connection
 
@@ -1426,7 +1422,7 @@ public class RelationManagerImpl implements RelationManager {
                 .toByteBuffer( asList( this.headEntity.getType(), collectionName, headEntity.getUuid() ) );
 
         HColumn<ByteBuffer, ByteBuffer> result = cass.getColumn( ko, ENTITY_COMPOSITE_DICTIONARIES,
-                key( entity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES ), col, be, be );
+                key( entity.getUuid(), Schema.DICTIONARY_CONTAINER_ENTITIES ), col, Serializers.be, Serializers.be );
 
         return result != null;
     }
@@ -1551,7 +1547,7 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator(cass.getApplicationKeyspace( applicationId ), be );
+        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator(cass.getApplicationKeyspace( applicationId ), Serializers.be );
 
         batchAddToCollection( batch, collectionName, itemEntity, timestampUuid );
 
@@ -1578,7 +1574,7 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), be );
+        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
 
         Schema schema = getDefaultSchema();
         for ( Entry<String, List<UUID>> entry : collectionsByType.entrySet() ) {
@@ -1636,7 +1632,7 @@ public class RelationManagerImpl implements RelationManager {
 
         if ( itemEntity != null ) {
             UUID timestampUuid = newTimeUUID();
-            Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), be );
+            Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
 
             batchAddToCollection( batch, collectionName, itemEntity, timestampUuid );
 
@@ -1679,7 +1675,7 @@ public class RelationManagerImpl implements RelationManager {
         }
 
         UUID timestampUuid = newTimeUUID();
-        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), be );
+        Mutator<ByteBuffer> batch = CountingMutator.createFlushingMutator( cass.getApplicationKeyspace( applicationId ), Serializers.be );
 
         batchRemoveFromCollection( batch, collectionName, itemEntity, timestampUuid );
 

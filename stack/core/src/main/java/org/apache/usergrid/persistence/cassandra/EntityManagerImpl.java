@@ -1745,6 +1745,9 @@ public class EntityManagerImpl implements EntityManager {
 
     public EntityRef validate( EntityRef entityRef, boolean verify ) throws Exception {
         if ( ( entityRef == null ) || ( entityRef.getUuid() == null ) ) {
+            if(verify){
+                throw new EntityNotFoundException( "An unknown entity cannot be verified" );
+            }
             return null;
         }
         if ( ( entityRef.getType() == null ) || verify ) {
