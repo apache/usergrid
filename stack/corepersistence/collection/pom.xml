@@ -89,24 +89,6 @@
       <version>${commons.lang.version}</version>
     </dependency>
 
-    <!-- Serialization libraries -->
-
-    <!--<dependency>-->
-      <!--<groupId>org.codehaus.jackson</groupId>-->
-      <!--<artifactId>jackson-smile</artifactId>-->
-      <!--<version>${jackson-smile.verson}</version>-->
-    <!--</dependency>-->
-
-    <!-- Re-add once this is done
-    https://github.com/Netflix/Hystrix/pull/209-->
-
-    <!--<dependency>-->
-    <!--<groupId>com.netflix.hystrix</groupId>-->
-    <!--<artifactId>hystrix-core</artifactId>-->
-    <!--<version>${hystrix.version}</version>-->
-    <!--</dependency>-->
-
-
     <!-- tests -->
 
     <dependency>

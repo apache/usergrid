@@ -21,7 +21,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -43,8 +43,8 @@ public class UsersOrganizationsResourceIT extends AbstractRestIT {
         Map<String, String> payload = hashMap( "email", "orgfromuserconn@apigee.com" ).map( "password", "password" )
                 .map( "organization", "orgfromuserconn" );
 
-        JsonNode node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
         String userId = node.get( "data" ).get( "owner" ).get( "uuid" ).asText();
 
@@ -52,8 +52,8 @@ public class UsersOrganizationsResourceIT extends AbstractRestIT {
 
         String token = mgmtToken( "orgfromuserconn@apigee.com", "password" );
 
-        node = resource().path( String.format( "/management/users/%s/", userId ) ).queryParam( "access_token", token )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+        node = mapper.readTree( resource().path( String.format( "/management/users/%s/", userId ) ).queryParam( "access_token", token )
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         logNode( node );
 
@@ -61,9 +61,9 @@ public class UsersOrganizationsResourceIT extends AbstractRestIT {
 
         // try to create the same org again off the connection
         try {
-            node = resource().path( String.format( "/management/users/%s/organizations", userId ) )
+            node = mapper.readTree( resource().path( String.format( "/management/users/%s/organizations", userId ) )
                     .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
             fail( "Should have thrown unique exception on org name" );
         }
         catch ( Exception ex ) {

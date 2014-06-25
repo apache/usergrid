@@ -20,7 +20,8 @@ package org.apache.usergrid.rest.management.organizations.applications;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -41,7 +42,7 @@ public class ApplicationsIT extends AbstractRestIT {
 
 
     @Test
-    public void test10AppLimit() {
+    public void test10AppLimit() throws IOException {
 
         int size = 11;
 

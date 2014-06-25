@@ -28,6 +28,7 @@ import org.apache.usergrid.rest.test.resource.app.queue.Transaction;
 import org.apache.usergrid.utils.MapUtils;
 
 import com.google.common.collect.BiMap;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -42,7 +43,7 @@ public class QueueResourceLong1IT extends AbstractQueueResourceIT {
 
 
     @Test
-    public void transactionTimeout() throws InterruptedException {
+    public void transactionTimeout() throws InterruptedException, IOException {
 
         Queue queue = context.application().queues().queue( "test" );
 

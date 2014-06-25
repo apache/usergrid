@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,6 +37,7 @@ import org.apache.usergrid.rest.test.resource.app.queue.Queue;
 import org.apache.usergrid.utils.MapUtils;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -51,7 +52,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT {
 
 
     @Test
-    public void inOrder() {
+    public void inOrder() throws IOException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -72,7 +73,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT {
 
 
     @Test
-    public void inOrderPaging() {
+    public void inOrderPaging() throws IOException {
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 30;
@@ -97,7 +98,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT {
     /** Read all messages with the client, then re-issue the reads from the start position to test we do this
      * properly */
     @Test
-    public void startPaging() {
+    public void startPaging() throws IOException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -127,7 +128,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT {
 
 
     @Test
-    public void reverseOrderPaging() {
+    public void reverseOrderPaging() throws IOException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -174,7 +175,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT {
     /** Read messages ad-hoc with filtering */
     @Test
     @Ignore("Currently unsupported.  Needs fixed with iterators")
-    public void filterForward() {
+    public void filterForward() throws IOException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -207,7 +208,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT {
     /** Read messages ad-hoc with filtering */
     @Test
     @Ignore("Currently unsupported.  Needs fixed with iterators")
-    public void filterReverse() {
+    public void filterReverse() throws IOException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -233,7 +234,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT {
 
 
     @Test
-    public void topic() {
+    public void topic() throws IOException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -268,7 +269,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT {
 
 
     @Test
-    public void subscribe() {
+    public void subscribe() throws IOException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -308,7 +309,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT {
 
     /** Tests that after unsubscribing, we don't continue to deliver messages to other queues */
     @Test
-    public void unsubscribe() {
+    public void unsubscribe() throws IOException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -378,7 +379,7 @@ public class QueueResourceShortIT extends AbstractQueueResourceIT {
     @Test
     @Ignore("This is caused by timeuuids getting generated out of order within a millisecond.  Disabling until the "
             + "timeuuid issue is resolved next sprint.  For job scheduling, this is not an issue")
-    public void concurrentConsumers() throws InterruptedException, ExecutionException {
+    public void concurrentConsumers() throws InterruptedException, ExecutionException, IOException {
 
         int consumerSize = 8;
         int count = 10000;

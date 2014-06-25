@@ -27,7 +27,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -97,10 +97,9 @@ public class MUUserResourceIT extends AbstractRestIT {
         String tokenStr = mgmtToken( "akarasulu@apache.org", "test" );
 
         // Should succeed even when we use all lowercase
-        JsonNode node =
-                resource().path( "/management/users/akarasulu@apache.org" ).queryParam( "access_token", tokenStr )
+        JsonNode node = mapper.readTree( resource().path( "/management/users/akarasulu@apache.org" ).queryParam( "access_token", tokenStr )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( JsonNode.class );
+                        .get( String.class ));
         logNode( node );
     }
 
@@ -146,17 +145,17 @@ public class MUUserResourceIT extends AbstractRestIT {
             // -------------------------------------------
             JsonNode node;
             try {
-                node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+                node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", userName ).queryParam( "password", passwd )
-                        .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                        .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
                 fail( "Unconfirmed users should not be authorized to authenticate." );
             }
             catch ( UniformInterfaceException e ) {
-                node = e.getResponse().getEntity( JsonNode.class );
-                assertEquals( "invalid_grant", node.get( "error" ).getTextValue() );
+                node = mapper.readTree( e.getResponse().getEntity( String.class ));
+                assertEquals( "invalid_grant", node.get( "error" ).textValue() );
                 assertEquals( "User must be confirmed to authenticate",
-                        node.get( "error_description" ).getTextValue() );
+                        node.get( "error_description" ).textValue() );
                 LOG.info( "Unconfirmed user was not authorized to authenticate!" );
             }
 
@@ -189,9 +188,9 @@ public class MUUserResourceIT extends AbstractRestIT {
             // Attempt to authenticate again but this time should pass
             // -------------------------------------------
 
-            node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+            node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                     .queryParam( "username", userName ).queryParam( "password", passwd )
-                    .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                    .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
             assertNotNull( node );
             LOG.info( "Authentication succeeded after confirmation: {}.", node.toString() );
@@ -225,9 +224,9 @@ public class MUUserResourceIT extends AbstractRestIT {
             // sysadmin login should suceed despite confirmation setting
             JsonNode node;
             try {
-                node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+                node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", sysadminUsername ).queryParam( "password", sysadminPassword )
-                        .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                        .accept( MediaType.APPLICATION_JSON ).get( String.class ));
             }
             catch ( UniformInterfaceException e ) {
                 fail( "Sysadmin should need no confirmation" );
@@ -264,9 +263,9 @@ public class MUUserResourceIT extends AbstractRestIT {
             // test user login should suceed despite confirmation setting
             JsonNode node;
             try {
-                node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+                node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", testUserUsername ).queryParam( "password", testUserPassword )
-                        .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                        .accept( MediaType.APPLICATION_JSON ).get( String.class ));
             }
             catch ( UniformInterfaceException e ) {
                 fail( "Test User should need no confirmation" );
@@ -290,8 +289,8 @@ public class MUUserResourceIT extends AbstractRestIT {
                 hashMap( "email", "uort-user-1@apigee.com" ).map( "username", "uort-user-1" ).map( "name", "Test User" )
                         .map( "password", "password" ).map( "organization", "uort-org" ).map( "company", "Apigee" );
 
-        JsonNode node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         logNode( node );
         String userId = node.get( "data" ).get( "owner" ).get( "uuid" ).asText();
 
@@ -299,18 +298,18 @@ public class MUUserResourceIT extends AbstractRestIT {
 
         String token = mgmtToken( "uort-user-1@apigee.com", "password" );
 
-        node = resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+        node = mapper.readTree( resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         logNode( node );
 
         payload = hashMap( "company", "Usergrid" );
         LOG.info( "sending PUT for company update" );
-        node = resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
-                .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
+        node = mapper.readTree( resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
+                .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, payload ));
         assertNotNull( node );
-        node = resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+        node = mapper.readTree( resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         assertEquals( "Usergrid", node.get( "data" ).get( "properties" ).get( "company" ).asText() );
 
 
@@ -405,8 +404,8 @@ public class MUUserResourceIT extends AbstractRestIT {
     @Test
     public void reactivateMultipleSend() throws Exception {
 
-        JsonNode node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, buildOrgUserPayload( "reactivate" ) );
+        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, buildOrgUserPayload( "reactivate" ) ));
 
         logNode( node );
         String email = node.get( "data" ).get( "owner" ).get( "email" ).asText();
@@ -416,9 +415,9 @@ public class MUUserResourceIT extends AbstractRestIT {
 
         // reactivate should send activation email
 
-        node = resource().path( String.format( "/management/users/%s/reactivate", uuid ) )
+        node = mapper.readTree( resource().path( String.format( "/management/users/%s/reactivate", uuid ) )
                 .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get( email );
 
@@ -519,8 +518,8 @@ public class MUUserResourceIT extends AbstractRestIT {
         Map<String, String> payload = hashMap( "oldpassword", passwords[0] ).map( "newpassword", passwords[0] ); // fail
 
         try {
-            JsonNode node = resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            JsonNode node = mapper.readTree( resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
             fail( "should fail with conflict" );
         }
         catch ( UniformInterfaceException e ) {
@@ -528,14 +527,14 @@ public class MUUserResourceIT extends AbstractRestIT {
         }
 
         payload.put( "newpassword", passwords[1] ); // ok
-        JsonNode node = resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        JsonNode node = mapper.readTree( resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         payload.put( "oldpassword", passwords[1] );
 
         payload.put( "newpassword", passwords[0] ); // fail
         try {
-            node = resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            node = mapper.readTree( resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
             fail( "should fail with conflict" );
         }
         catch ( UniformInterfaceException e ) {
@@ -562,31 +561,31 @@ public class MUUserResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
         assertTrue( html.contains( "password set" ) );
 
-        JsonNode node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+        JsonNode node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                 .queryParam( "username", email ).queryParam( "password", "sesame" ).accept( MediaType.APPLICATION_JSON )
-                .get( JsonNode.class );
+                .get( String.class ));
 
-        Long changeTime = node.get( "passwordChanged" ).getLongValue();
+        Long changeTime = node.get( "passwordChanged" ).longValue();
         assertTrue( System.currentTimeMillis() - changeTime < 2000 );
 
         Map<String, String> payload = hashMap( "oldpassword", "sesame" ).map( "newpassword", "test" );
-        node = resource().path( "/management/users/" + userInfo.getUsername() + "/password" )
+        node = mapper.readTree( resource().path( "/management/users/" + userInfo.getUsername() + "/password" )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+                .post( String.class, payload ));
 
-        node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+        node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                 .queryParam( "username", email ).queryParam( "password", "test" ).accept( MediaType.APPLICATION_JSON )
-                .get( JsonNode.class );
+                .get( String.class ));
 
-        Long changeTime2 = node.get( "passwordChanged" ).getLongValue();
+        Long changeTime2 = node.get( "passwordChanged" ).longValue();
         assertTrue( changeTime < changeTime2 );
         assertTrue( System.currentTimeMillis() - changeTime2 < 2000 );
 
-        node = resource().path( "/management/me" ).queryParam( "grant_type", "password" )
+        node = mapper.readTree( resource().path( "/management/me" ).queryParam( "grant_type", "password" )
                 .queryParam( "username", email ).queryParam( "password", "test" ).accept( MediaType.APPLICATION_JSON )
-                .get( JsonNode.class );
+                .get( String.class ));
 
-        Long changeTime3 = node.get( "passwordChanged" ).getLongValue();
+        Long changeTime3 = node.get( "passwordChanged" ).longValue();
         assertEquals( changeTime2, changeTime3 );
     }
 

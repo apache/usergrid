@@ -49,7 +49,7 @@
         <guice.version>3.0</guice.version>
         <guicyfig.version>3.2</guicyfig.version>
         <hystrix.version>1.4.0-RC4</hystrix.version>
-        <jackson-2-version>2.2.0</jackson-2-version>
+        <jackson-2-version>2.3.1</jackson-2-version>
         <jackson-smile.verson>1.9.9</jackson-smile.verson>
         <jukito.version>1.4-UG</jukito.version>
         <junit.version>4.11</junit.version>

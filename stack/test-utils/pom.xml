@@ -67,17 +67,12 @@
   </build>
 
   <dependencies>
+
     <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>usergrid-config</artifactId>
       <version>${project.version}</version>
     </dependency>
-
-    <!--<dependency>-->
-    <!--<groupId>org.apache.usergrid</groupId>-->
-    <!--<artifactId>usergrid-services</artifactId>-->
-    <!--<version>${project.version}</version>-->
-    <!--</dependency>-->
 
     <!-- Apache Dependencies -->
 
@@ -204,16 +199,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
@@ -248,22 +233,11 @@
       <scope>test</scope>
     </dependency>
 
-    <!--<dependency>-->
-    <!--<groupId>org.slf4j</groupId>-->
-    <!--<artifactId>slf4j-log4j12</artifactId>-->
-    <!--<scope>test</scope>-->
-    <!--</dependency>-->
-
-    <!--<dependency>-->
-    <!--<groupId>log4j</groupId>-->
-    <!--<artifactId>log4j</artifactId>-->
-    <!--<scope>test</scope>-->
-    <!--</dependency>-->
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
+
 </project>
