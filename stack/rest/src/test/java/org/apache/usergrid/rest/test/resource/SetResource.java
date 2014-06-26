@@ -20,7 +20,8 @@ package org.apache.usergrid.rest.test.resource;
 import java.util.Map;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 
 
 /** @author tnine */
@@ -69,7 +70,7 @@ public abstract class SetResource extends ValueResource {
   then just have it automatically add in the variable. */
 
 
-    public JsonNode[] createEntitiesWithOrdinal( Map valueHolder, int numOfValues ) {
+    public JsonNode[] createEntitiesWithOrdinal( Map valueHolder, int numOfValues ) throws IOException {
 
         JsonNode[] node = new JsonNode[numOfValues];
 

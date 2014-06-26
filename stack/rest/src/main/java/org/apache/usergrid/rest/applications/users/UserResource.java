@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.applications.users;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,7 +37,6 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -276,7 +276,7 @@ public class UserResource extends ServiceResource {
         response.setAction( "set user pin" );
 
         if ( getUser() != null ) {
-            String pin = json.path( "pin" ).getTextValue();
+            String pin = json.path( "pin" ).textValue();
             management.setAppUserPin( getApplicationId(), getUserUuid(), pin );
         }
         else {

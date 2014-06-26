@@ -28,7 +28,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.hystrix.HystrixObservable;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -44,14 +43,17 @@ import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteListener;
+import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompact;
 import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListener;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -128,8 +130,7 @@ public class GraphManagerImpl implements GraphManager {
 
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
 
-        return HystrixObservable
-                .user( Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
+        return Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
                     @Override
                     public Edge call( final MarkedEdge edge ) {
 
@@ -138,7 +139,7 @@ public class GraphManagerImpl implements GraphManager {
 
                         final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
 
-                        final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge( scope, edge, timestamp );
+                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge, timestamp );
 
                         mutation.mergeShallow( edgeMutation );
 
@@ -148,13 +149,12 @@ public class GraphManagerImpl implements GraphManager {
                             mutation.execute();
                         }
                         catch ( ConnectionException e ) {
-                            throw new GraphRuntimeException( "Unable to connect to cassandra", e );
+                            throw new RuntimeException( "Unable to connect to cassandra", e );
                         }
-
 
                         return edge;
                     }
-                } ) );
+                } );
     }
 
 
@@ -165,15 +165,14 @@ public class GraphManagerImpl implements GraphManager {
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
 
 
-        return HystrixObservable
-                .user( Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
+        return Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
                     @Override
                     public Edge call( final MarkedEdge edge ) {
 
                         final UUID timestamp = UUIDGenerator.newTimeUUID();
 
 
-                        final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge( scope, edge, timestamp );
+                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge, timestamp );
 
 
                         try {
@@ -181,12 +180,12 @@ public class GraphManagerImpl implements GraphManager {
                             edgeMutation.execute();
                         }
                         catch ( ConnectionException e ) {
-                            throw new GraphRuntimeException( "Unable to connect to cassandra", e );
+                            throw new RuntimeException( "Unable to connect to cassandra", e );
                         }
 
 
-                        HystrixObservable.async( edgeDeleteListener.receive( scope, markedEdge, timestamp ) )
-                                         .subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
+                        //HystrixObservable.async( edgeDeleteListener.receive( scope, markedEdge, timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
+                        edgeDeleteListener.receive( scope, markedEdge, timestamp ).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
 
 
                         return edge;
@@ -197,37 +196,41 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<Id> deleteNode( final Id node, final long timestamp ) {
-        return HystrixObservable.user( Observable.from( node ).subscribeOn( Schedulers.io() ).map( new Func1<Id, Id>() {
-            @Override
-            public Id call( final Id id ) {
+        return Observable.from( node ).subscribeOn( Schedulers.io() ).map( new Func1<Id, Id>() {
+                    @Override
+                    public Id call( final Id id ) {
 
-                //mark the node as deleted
-
-
-                final UUID eventTimestamp = UUIDGenerator.newTimeUUID();
-
-                final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
+                        //mark the node as deleted
 
 
-                try {
-                    LOG.debug( "Marking node {} as deleted to node mark", node );
-                    nodeMutation.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new GraphRuntimeException( "Unable to connect to cassandra", e );
-                }
+                        final UUID eventTimestamp = UUIDGenerator.newTimeUUID();
 
-                HystrixObservable.async( nodeDeleteListener.receive( scope, id, eventTimestamp ) )
-                                 .subscribeOn( Schedulers.io() ).subscribe( nodeDelete );
+                        final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
 
-                return id;
-            }
-        } ) );
+
+
+                        try {
+                            LOG.debug( "Marking node {} as deleted to node mark", node );
+                            nodeMutation.execute();
+                        }
+                        catch ( ConnectionException e ) {
+                            throw new RuntimeException( "Unable to connect to cassandra", e );
+                        }
+
+                        //HystrixObservable.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn( Schedulers.io() ).subscribe( nodeDelete );
+                        nodeDeleteListener.receive(scope, id, eventTimestamp  ).subscribeOn( Schedulers.io() ).subscribe( nodeDelete );
+
+                        return id;
+                    }
+                } );
     }
 
 
     @Override
     public Observable<Edge> loadEdgeVersions( final SearchByEdge searchByEdge ) {
+        return mergedEdgeReader.getEdgeVersions( scope, searchByEdge ).buffer( graphFig.getScanPageSize() )
+                                       .flatMap( new EdgeBufferFilter( searchByEdge.getMaxTimestamp() ) )
+                                       .cast( Edge.class ) ;
         return HystrixObservable
                 .user( Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
                     @Override
@@ -242,6 +245,8 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
+        return  mergedEdgeReader.getEdgesFromSource( scope, search ).buffer( graphFig.getScanPageSize() )
+                                       .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) ).cast( Edge.class );
         return HystrixObservable
                 .user( Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
                     @Override
@@ -255,6 +260,8 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
+        return mergedEdgeReader.getEdgesToTarget( scope, search ).buffer( graphFig.getScanPageSize() )
+                                       .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) ).cast( Edge.class ) ;
         return HystrixObservable
                 .user( Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
                     @Override
@@ -330,12 +337,12 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<String> getIdTypesToTarget( final SearchIdType search ) {
-        return HystrixObservable.user( Observable.create( new ObservableIterator<String>( "getIdTypesToTarget" ) {
+        return Observable.create( new ObservableIterator<String>( "getIdTypesToTarget" ) {
             @Override
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
             }
-        } ) );
+        } ) ;
     }
 
 
@@ -391,7 +398,7 @@ public class GraphManagerImpl implements GraphManager {
             final long edgeTimestamp = edge.getTimestamp();
 
             //our edge needs to not be deleted and have a version that's > max Version
-            if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxTimestamp ) > 0 ) {
+            if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxTimestamp )> 0 ) {
                 return false;
             }
 
@@ -408,7 +415,7 @@ public class GraphManagerImpl implements GraphManager {
 
             //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
             // so we need to discard it
-            if ( targetTimestamp != null && Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
+            if ( targetTimestamp != null &&  Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
                 return false;
             }
 
@@ -423,6 +430,7 @@ public class GraphManagerImpl implements GraphManager {
 
     /**
      * Set the subcription for the edge write
+     * @param edgeWriteSubcriber
      */
     public void setEdgeWriteSubcriber( final Observer<Integer> edgeWriteSubcriber ) {
         Preconditions.checkNotNull( edgeWriteSubcriber, "Subscriber cannot be null" );
@@ -432,6 +440,7 @@ public class GraphManagerImpl implements GraphManager {
 
     /**
      * Set the subscription for the edge delete
+     * @param edgeDeleteSubcriber
      */
     public void setEdgeDeleteSubcriber( final Observer<Integer> edgeDeleteSubcriber ) {
         Preconditions.checkNotNull( edgeDeleteSubcriber, "Subscriber cannot be null" );
@@ -441,6 +450,7 @@ public class GraphManagerImpl implements GraphManager {
 
     /**
      * Set the subscription for the node delete
+     * @param nodeDelete
      */
     public void setNodeDelete( final Observer<Integer> nodeDelete ) {
         Preconditions.checkNotNull( nodeDelete, "Subscriber cannot be null" );
@@ -458,10 +468,9 @@ public class GraphManagerImpl implements GraphManager {
 
         private final Logger logger = LoggerFactory.getLogger( MetricSubscriber.class );
 
-
         @Override
         public void onCompleted() {
-            logger.debug( "Event completed" );
+             logger.debug( "Event completed" );
         }
 
 

@@ -23,7 +23,8 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResource.Builder;
@@ -33,6 +34,9 @@ import com.sun.jersey.api.client.WebResource.Builder;
  * @author tnine
  */
 public abstract class NamedResource {
+    
+    protected ObjectMapper mapper = new ObjectMapper();
+
 
     protected static final String SLASH = "/";
 

@@ -21,10 +21,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /** @author tnine */
@@ -72,24 +75,26 @@ public class EntityResource extends ValueResource {
             if ( uie.getResponse().getClientResponseStatus() == Status.NOT_FOUND ) {
                 return null;
             }
-
             throw uie;
+        }
+        catch ( Exception ex ) {
+            throw new RuntimeException("Error parsing JSON", ex);
         }
     }
 
 
-    public JsonNode delete() {
+    public JsonNode delete() throws IOException {
         return deleteInternal();
     }
 
 
-    public JsonNode post( Map<String, ?> data ) {
+    public JsonNode post( Map<String, ?> data ) throws IOException {
         return postInternal( data );
     }
 
 
     @SuppressWarnings("unchecked")
-    public JsonNode post() {
+    public JsonNode post() throws IOException {
         return postInternal( Collections.EMPTY_MAP );
     }
 

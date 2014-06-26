@@ -17,11 +17,14 @@
 package org.apache.usergrid.rest.test.resource.app.queue;
 
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource.NamedResource;
 
 import com.sun.jersey.api.client.WebResource;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -52,12 +55,16 @@ public class Transaction extends CollectionResource {
 
     /** post to the entity set */
     public JsonNode delete() {
-        return jsonMedia( withParams( withToken( resource() ) ) ).delete( JsonNode.class );
+        try {
+            return mapper.readTree( jsonMedia( withParams( withToken( resource() ) ) ).delete( String.class ));
+        } catch (IOException ex) {
+            throw new RuntimeException("Cannot parse JSON data", ex);
+        }
     }
 
 
     /** Renew this transaction to the set timeout */
-    public JsonNode renew( long timeout ) {
+    public JsonNode renew( long timeout ) throws IOException {
         this.timeout = timeout;
         return super.putInternal( null );
     }

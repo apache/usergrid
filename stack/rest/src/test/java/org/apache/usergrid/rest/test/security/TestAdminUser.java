@@ -17,7 +17,10 @@
 package org.apache.usergrid.rest.test.security;
 
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.usergrid.rest.test.resource.TestContext;
 
 
@@ -40,7 +43,11 @@ public class TestAdminUser extends TestUser {
      */
     @Override
     protected String getToken( TestContext context ) {
-        return context.management().tokenGet( user, password );
+        try {
+            return context.management().tokenGet( user, password );
+        } catch (IOException ex) {
+            throw new RuntimeException("Cannot parse JSON data", ex);
+        }
     }
 
 
@@ -49,6 +56,10 @@ public class TestAdminUser extends TestUser {
      */
     @Override
     protected JsonNode createInternal( TestContext context ) {
-        return context.application().users().create( user, email, password );
+        try {
+            return context.application().users().create( user, email, password );
+        } catch (IOException ex) {
+            throw new RuntimeException("Error reading JSON data", ex);
+        }
     }
 }

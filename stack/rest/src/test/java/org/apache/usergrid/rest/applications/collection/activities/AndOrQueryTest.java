@@ -20,7 +20,8 @@ package org.apache.usergrid.rest.applications.collection.activities;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class AndOrQueryTest extends AbstractRestIT {
 
 
     @Test //USERGRID-900
-    public void queriesWithAndPastLimit() {
+    public void queriesWithAndPastLimit() throws IOException {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -69,7 +70,7 @@ public class AndOrQueryTest extends AbstractRestIT {
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
             if ( i == 0 ) {
-                created = activity.findValue( "created" ).getLongValue();
+                created = activity.findValue( "created" ).longValue();
             }
         }
 
@@ -81,7 +82,7 @@ public class AndOrQueryTest extends AbstractRestIT {
 
 
     @Test //USERGRID-1475
-    public void displayFullQueriesInLimit() {
+    public void displayFullQueriesInLimit() throws IOException {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -109,8 +110,8 @@ public class AndOrQueryTest extends AbstractRestIT {
         assertEquals( 10, incorrectNode.get( "entities" ).size() );
 
         for ( int i = 0; i < 10; i++ ) {
-            assertEquals( 19 - i, incorrectNode.get( "entities" ).get( i ).get( "ordinal" ).getIntValue() );
-            assertEquals( "stop", incorrectNode.get( "entities" ).get( i ).get( "verb" ).getTextValue() );
+            assertEquals( 19 - i, incorrectNode.get( "entities" ).get( i ).get( "ordinal" ).intValue() );
+            assertEquals( "stop", incorrectNode.get( "entities" ).get( i ).get( "verb" ).textValue() );
         }
     }
 
@@ -174,7 +175,7 @@ public class AndOrQueryTest extends AbstractRestIT {
 
 
     @Ignore
-    public void queryReturnCheckWithShortHand() {
+    public void queryReturnCheckWithShortHand() throws IOException {
         CustomCollection madeupStuff = context.collection( "imagination" );
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 

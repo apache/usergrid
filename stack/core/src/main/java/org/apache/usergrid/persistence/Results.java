@@ -569,9 +569,9 @@ public class Results implements Iterable<Entity> {
         if ( entitiesMap != null ) {
             return entitiesMap;
         }
-        if ( entities != null ) {
+        if ( getEntities() != null ) {
             entitiesMap = new LinkedHashMap<UUID, Entity>();
-            for ( Entity entity : entities ) {
+            for ( Entity entity : getEntities() ) {
                 entitiesMap.put( entity.getUuid(), entity );
             }
         }
