@@ -243,13 +243,6 @@ public class UserLayout extends AbsoluteLayout {
             return;
         }
 
-        // Check if the user has the right permission to change a username
-        if ( ! ShiroRealm.isAuthenticatedUserAdmin() &&
-                isUserNameChanged( username ) ) {
-            Notification.show( "Error", "Only an admin can change the username", Notification.Type.ERROR_MESSAGE );
-            return;
-        }
-
         if ( StringUtils.isEmpty( username ) || StringUtils.isEmpty( password ) ) {
             Notification.show( "Error", "Please enter username and password", Notification.Type.ERROR_MESSAGE );
             return;
@@ -260,6 +253,9 @@ public class UserLayout extends AbsoluteLayout {
             if ( UserListWindow.getSelectedUser() != null ){
                 userDao.delete( UserListWindow.getSelectedUser() );
                 userDao.save( new User( username, password ) );
+
+                UserListWindow.setSelectedUser( username );
+                ShiroRealm.setAuthenticatedUser( username );
 
                 BasicProviderParams newProviderParams = new BasicProviderParams(
                         username,
@@ -297,7 +293,12 @@ public class UserLayout extends AbsoluteLayout {
     }
 
     public void disableCredentialInformationView(){
+        usernameField.setEnabled( false );
         passwordField.setEnabled( false );
+        saveButton.setEnabled( false );
+        keyListLayout.setEnabled( false );
+        keyListLayout.disableKeyLabels();
+
         keyPairNameField.setVisible( false );
         accessKeyField.setVisible( false );
         imageField.setVisible( false );
@@ -341,9 +342,5 @@ public class UserLayout extends AbsoluteLayout {
 
     private void close() {
         tabSheetManager.removeAll();
-    }
-
-    public void addTitleLabel() {
-        UIUtil.addLabel( this, "<b>User Information</b>", "left: 0px; top: 10px;", "120px" );
     }
 }
