@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.serialization.impl.shard;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
 import java.util.ArrayList;
@@ -31,14 +31,19 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardApproximationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.netflix.astyanax.MutationBatch;
+
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -48,6 +53,9 @@ public class NodeShardApproximationTest {
 
     private GraphFig graphFig;
 
+    private EdgeShardCounterSerialization ser;
+    private NodeShardCounterSerialization nodeShardCounterSerialization;
+    private TimeService timeService;
 
     protected ApplicationScope scope;
 
@@ -66,16 +74,26 @@ public class NodeShardApproximationTest {
         graphFig = mock( GraphFig.class );
 
         when( graphFig.getShardCacheSize() ).thenReturn( 10000l );
-        when(graphFig.getShardSize()).thenReturn( 250000l );
+        when( graphFig.getShardSize() ).thenReturn( 250000l );
+
+        ser = mock( EdgeShardCounterSerialization.class );
+        nodeShardCounterSerialization = mock( NodeShardCounterSerialization.class );
+
+        when(nodeShardCounterSerialization.flush( any(Counter.class) )).thenReturn( mock( MutationBatch.class) );
+
+
+        timeService = mock( TimeService.class );
     }
 
 
     @Test
     public void testSingleShard() {
 
-        EdgeShardCounterSerialization ser = mock( EdgeShardCounterSerialization.class );
 
-        NodeShardApproximation approximation = new NodeShardApproximationImpl( graphFig );
+        when(graphFig.getCounterFlushCount()).thenReturn( 100000l );
+
+        NodeShardApproximation approximation =
+                new NodeShardApproximationImpl( graphFig, nodeShardCounterSerialization, timeService );
 
 
         final Id id = createId( "test" );
@@ -93,16 +111,23 @@ public class NodeShardApproximationTest {
     public void testMultipleShard() throws ExecutionException, InterruptedException {
 
 
-        final NodeShardApproximation approximation = new NodeShardApproximationImpl( graphFig );
+        when(graphFig.getCounterFlushCount()).thenReturn( 10000l );
+        //2 minutes
+        when(graphFig.getCounterFlushInterval()).thenReturn( 30000l );
+
+        final NodeShardApproximation approximation =
+                new NodeShardApproximationImpl( graphFig, nodeShardCounterSerialization, timeService );
 
 
         final int increments = 1000000;
-        final int workers = Runtime.getRuntime().availableProcessors()*2;
+//        final int workers = Runtime.getRuntime().availableProcessors() * 2;
+        final int workers =  2;
 
         final Id id = createId( "test" );
         final String type = "type";
         final String type2 = "subType";
-        final AtomicLong shardIdGenerator = new AtomicLong( );
+        final long shardId = 10000;
+
 
         ExecutorService executor = Executors.newFixedThreadPool( workers );
 
@@ -114,18 +139,11 @@ public class NodeShardApproximationTest {
                 @Override
                 public Long call() throws Exception {
 
-                    final long shardId = shardIdGenerator.incrementAndGet();
-
-
-                    long count = approximation.getCount( scope, id, shardId, type, type2 );
-
-                    assertEquals( 0, count );
-
                     for ( int i = 0; i < increments; i++ ) {
                         approximation.increment( scope, id, shardId, 1, type, type2 );
                     }
 
-                    return approximation.getCount( scope, id, shardId, type, type2 );
+                    return 0l;
                 }
             } );
 
@@ -133,10 +151,25 @@ public class NodeShardApproximationTest {
         }
 
 
-        for ( Future<Long> future : futures ) {
-            final long value = future.get().longValue();
 
-            assertEquals( increments, value );
+        for ( Future<Long> future : futures ) {
+           future.get();
         }
+
+
+        //get our count.  It should be accurate b/c we only have 1 instance
+
+        final long returnedCount = approximation.getCount( scope, id, shardId, type, type2);
+        final long expected = workers * increments;
+
+
+        assertEquals(expected, returnedCount);
+
+
+
+
+
     }
+
+
 }
