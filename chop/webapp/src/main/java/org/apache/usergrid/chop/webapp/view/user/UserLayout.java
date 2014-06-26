@@ -73,7 +73,7 @@ public class UserLayout extends AbsoluteLayout {
         this.username = username;
         this.tabSheetManager = tabSheetManager;
 
-        addItems( );
+        addItems();
         loadData( username );
     }
 
@@ -175,7 +175,7 @@ public class UserLayout extends AbsoluteLayout {
         addComponent( keyListLayout, "left: 650px; top: 50px;" );
     }
 
-    private FormLayout addFormLayout(int x, int y) {
+    private FormLayout addFormLayout( int x, int y ) {
 
         FormLayout formLayout = new FormLayout();
         formLayout.setWidth( String.format( "%spx", x ) );
