@@ -204,7 +204,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                //we an update, signal the fix
 
-                //HystrixObservable.async( Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ) ).subscribe();
+                //HystrixCassandra.async( Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ) ).subscribe();
                 Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
 
 

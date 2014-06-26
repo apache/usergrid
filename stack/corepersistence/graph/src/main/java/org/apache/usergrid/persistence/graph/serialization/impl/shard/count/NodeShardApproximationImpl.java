@@ -24,6 +24,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.inject.Inject;
 
+import org.apache.cassandra.thrift.Mutation;
+
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -32,6 +34,10 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardA
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.MutationBatch;
+import com.netflix.hystrix.HystrixCommand;
+
+import rx.functions.Action0;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -128,14 +134,33 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
         }
 
 
+        //copy to the batch outside of the command for performance
+        final MutationBatch batch =  nodeShardCounterSerialization.flush( toFlush );
+
         /**
-         * Execute the batch asynchronously
+         * Execute the command in hystrix to avoid slamming cassandra
          */
-        MutationBatch batch = nodeShardCounterSerialization.flush( toFlush );
+        new HystrixCommand( HystrixCassandra.ASYNC_GROUP ) {
 
-        HystrixCassandra.asyncMutation( batch );
+            @Override
+            protected Void run() throws Exception {
+                /**
+                 * Execute the batch asynchronously
+                 */
+                batch.execute();
+
+                return null;
+            }
 
 
+            @Override
+            protected Object getFallback() {
+                //we've failed to mutate.  Merge this count back into the current one
+                currentCounter.merge( toFlush );
+
+                return null;
+            }
+        }.execute();
     }
 
 
@@ -147,12 +172,19 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
         //we shouldn't flush we've not pass our timeout
         if ( currentCounter.getCreateTimestamp() + graphFig.getCounterFlushInterval() > timeService.getCurrentTime()
                 //or we're not past the invocation count
-               &&  currentCounter.getInvokeCount() < graphFig.getCounterFlushCount() ) {
+                && currentCounter.getInvokeCount() < graphFig.getCounterFlushCount() ) {
             return;
         }
 
-        flush();
 
-
+        /**
+         * Fire the flush action asynchronously
+         */
+        Schedulers.immediate().createWorker().schedule( new Action0() {
+            @Override
+            public void call() {
+                flush();
+            }
+        } );
     }
 }

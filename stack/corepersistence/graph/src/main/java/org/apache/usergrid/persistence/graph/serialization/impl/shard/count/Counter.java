@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -56,7 +57,7 @@ public class Counter {
     /**
      * Add the count to the key.
      */
-    public void add( ShardKey key, long count ) {
+    public void add( final ShardKey key, final long count ) {
         AtomicLong counter = counts.get( key );
 
         if ( counter == null ) {
@@ -76,7 +77,7 @@ public class Counter {
     /**
      * Get the current valye from the cache
      */
-    public long get( ShardKey key ) {
+    public long get( final ShardKey key ) {
         AtomicLong counter = counts.get( key );
 
         if ( counter == null ) {
@@ -84,6 +85,17 @@ public class Counter {
         }
 
         return counter.get();
+    }
+
+
+    /**
+     * Deep copy the counts from other into this counter
+     * @param other
+     */
+    public void merge(final Counter other){
+        for(Map.Entry<ShardKey, AtomicLong> entry: other.counts.entrySet()){
+            add(entry.getKey(), entry.getValue().get());
+        }
     }
 
 
