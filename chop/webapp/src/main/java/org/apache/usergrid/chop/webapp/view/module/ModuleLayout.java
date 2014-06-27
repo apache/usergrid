@@ -25,7 +25,7 @@ public class ModuleLayout extends VerticalLayout{
 
 
     public Table addTable( ){
-        Table table = new Table(" \n ");
+        Table table = new Table( " \n " );
         table.setHeight( "500px" );
         table.setWidth( "700px" );
 
