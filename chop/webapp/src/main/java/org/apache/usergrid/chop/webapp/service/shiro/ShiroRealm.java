@@ -176,6 +176,10 @@ public class ShiroRealm extends AuthorizingRealm {
         return authenticatedUser;
     }
 
+    public static void setAuthenticatedUser( String authenticatedUser ) {
+        ShiroRealm.authenticatedUser = authenticatedUser;
+    }
+
     public static boolean isAuthenticatedUserAdmin() {
         return ShiroRealm.getAuthenticatedUser().equals( getDefaultUser() );
     }
