@@ -61,7 +61,6 @@ public class TomcatResource extends ExternalResource {
 
     @Override
     protected void after() {    
-        // TODO: need something better than this, see also TomcatMain.
         process.destroy();
     }
         

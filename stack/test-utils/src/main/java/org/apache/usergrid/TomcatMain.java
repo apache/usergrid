@@ -47,7 +47,6 @@ public class TomcatMain {
         log.info("-----------------------------------------------------------------");
         tomcat.start();
 
-        // TODO: figure out how to stop of this process at end of testing.
         while ( true ) {
             Thread.sleep(1000);
         }

@@ -49,6 +49,10 @@ public class ITSetup extends ExternalResource {
     private SignInProviderFactory providerFactory;
     private Properties properties;
 
+    private boolean setupCalled = false;
+    private boolean ready = false;
+    private URI uri;
+
 
     public ITSetup( CassandraResource cassandraResource) {
         this.cassandraResource = cassandraResource;
@@ -61,10 +65,6 @@ public class ITSetup extends ExternalResource {
         tomcatResource = TomcatResource.instance;
         tomcatResource.setWebAppsPath(webAppsPath);
     }
-
-    private boolean setupCalled = false;
-    private boolean ready = false;
-    private URI uri;
 
 
     @Override
@@ -100,7 +100,10 @@ public class ITSetup extends ExternalResource {
     }
 
 
-
+    @Override
+    protected void after() {
+        tomcatResource.after();
+    }
 
 
     public void protect() {
