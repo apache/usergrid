@@ -108,14 +108,14 @@ public class ResetResource extends TestableResource implements RestParams {
                            .build();
         }
 
-        if( ! status.equals( SetupStackState.SetUp ) ) {
+        if( ! status.equals( SetupStackState.Stopped ) ) {
             return Response.status( Response.Status.OK )
                            .entity( "Stack is " + status.toString() + ", cannot reset tests." )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-        /** SetupStackState.SetUp */
-        LOG.info( "Stack is set up, checking runner states..." );
+        /** SetupStackState.Stopped */
+        LOG.info( "Stack is stopped, checking runner states..." );
 
         /** Check state of all runners */
         String moduleId = BasicModule.createId( groupId, artifactId, version );

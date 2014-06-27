@@ -108,13 +108,13 @@ public class StopResource extends TestableResource implements RestParams {
                            .build();
         }
 
-        if( ! status.equals( SetupStackState.SetUp ) ) {
+        if( ! status.equals( SetupStackState.Running ) ) {
             return Response.status( Response.Status.OK )
                            .entity( "Stack is " + status.toString() + ", cannot stop tests." )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-        /** SetupStackState.SetUp */
+        /** SetupStackState.Running */
         LOG.info( "Stack is set up, checking runner states..." );
 
         /** Check state of all runners */

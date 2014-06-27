@@ -24,7 +24,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -34,6 +36,11 @@ import com.sun.jersey.multipart.FormDataParam;
 import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.api.Run;
 import org.apache.usergrid.chop.api.Runner;
+import org.apache.usergrid.chop.api.State;
+import org.apache.usergrid.chop.stack.CoordinatedStack;
+import org.apache.usergrid.chop.stack.SetupStackSignal;
+import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
+import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
 import org.apache.usergrid.chop.webapp.dao.RunDao;
 import org.apache.usergrid.chop.webapp.dao.RunResultDao;
 import org.apache.usergrid.chop.webapp.dao.RunnerDao;
@@ -73,6 +80,12 @@ public class RunManagerResource extends TestableResource implements RestParams {
 
     @Inject
     private RunnerDao runnerDao;
+
+    @Inject
+    private RunnerCoordinator runnerCoordinator;
+
+    @Inject
+    private StackCoordinator stackCoordinator;
 
 
     protected RunManagerResource() {
@@ -158,6 +171,22 @@ public class RunManagerResource extends TestableResource implements RestParams {
         Collection<Run> runs = runDao.getMap( commitId, runNumber, testClass, runners ).values() ;
 
         Boolean allFinished = runs.size() == runners.size();
+        CoordinatedStack stack = stackCoordinator.findCoordinatedStack( commitId, artifactId, groupId, version, username );
+
+        Map<Runner, State> states = runnerCoordinator.getStates( runners );
+
+        Collection<Runner> readyRunners = new LinkedList<Runner>();
+        for ( Runner runner: runners ) {
+            State state = states.get( runner );
+            if( state == State.READY ) {
+                readyRunners.add( runner );
+            }
+        }
+
+        if( readyRunners.size() == runners.size() ) {
+            LOG.info( "All runners are ready, sending " + SetupStackSignal.COMPLETE + " signal.." );
+            stack.setSetupState( SetupStackSignal.COMPLETE );
+        }
 
         return Response.status( Response.Status.CREATED ).entity( allFinished ).build();
     }
