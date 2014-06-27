@@ -8,7 +8,6 @@ import com.vaadin.ui.VerticalLayout;
 import org.apache.usergrid.chop.api.Module;
 import org.apache.usergrid.chop.webapp.dao.ModuleDao;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
-import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
 
 import java.util.List;
 
@@ -51,15 +50,7 @@ public class ModuleLayout extends VerticalLayout{
             Label artifactLabel = new Label( module.getArtifactId( ) );
             Label versionLabel = new Label( module.getVersion( ) );
 
-            // The Table item identifier for the row.
-            String itemId = new String( module.getId( ) );
-
-            // Create a button and handle its click. A Button does not
-            // know the item it is contained in, so we have to store the
-            // item ID as user-defined data.
             Button detailsField = new Button( "show details" );
-            detailsField.setId( itemId );
-            detailsField.setData( itemId );
             detailsField.addStyleName( "link" );
             detailsField.addClickListener( new Button.ClickListener( ) {
                 @Override

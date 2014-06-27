@@ -31,7 +31,6 @@ import org.apache.usergrid.chop.webapp.service.shiro.ShiroRealm;
 import org.apache.usergrid.chop.webapp.view.module.ModuleLayout;
 import org.apache.usergrid.chop.webapp.view.chart.layout.OverviewChartLayout;
 import org.apache.usergrid.chop.webapp.view.log.LogLayout;
-import org.apache.usergrid.chop.webapp.view.module.ModuleListWindow;
 import org.apache.usergrid.chop.webapp.view.module.ModuleSelectListener;
 import org.apache.usergrid.chop.webapp.view.runner.RunnersLayout;
 import org.apache.usergrid.chop.webapp.view.user.UserListWindow;
@@ -72,7 +71,6 @@ public class MainView extends VerticalLayout implements ModuleSelectListener {
         modules.addClickListener( new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent clickEvent) {
-//                UI.getCurrent().addWindow( new ModuleListWindow( MainView.this ) );
                 tabSheetManager.addTabWithVerticalLayout( new ModuleLayout( MainView.this ), "Modules" );
             }
         });
