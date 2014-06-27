@@ -37,8 +37,6 @@ import org.apache.usergrid.services.ServiceManagerFactory;
 /** A {@link org.junit.rules.TestRule} that sets up services. */
 public class ITSetup extends ExternalResource {
 
-
-
     private static final Logger LOG = LoggerFactory.getLogger( ITSetup.class );
     private final CassandraResource cassandraResource;
     private final TomcatResource tomcatResource;
@@ -81,12 +79,15 @@ public class ITSetup extends ExternalResource {
                 setupCalled = true;
             }
 
+            emf =                cassandraResource.getBean( EntityManagerFactory.class );
+            smf =                cassandraResource.getBean( ServiceManagerFactory.class );
+            properties =         cassandraResource.getBean( "properties", Properties.class );
+            tokenService =       cassandraResource.getBean( TokenService.class );
+            providerFactory =    cassandraResource.getBean( SignInProviderFactory.class );
             applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
-            emf = cassandraResource.getBean( EntityManagerFactory.class );
-            tokenService = cassandraResource.getBean( TokenService.class );
-            providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
-            properties = cassandraResource.getBean( "properties", Properties.class );
-            smf = cassandraResource.getBean( ServiceManagerFactory.class );
+
+            tomcatResource.setCassandraPort( cassandraResource.getRpcPort() );
+            tomcatResource.setElasticSearchPort( Integer.parseInt( System.getProperty("EMBEDDED_ES_PORT")) );
 
             tomcatResource.before();
 

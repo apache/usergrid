@@ -17,10 +17,8 @@
 package org.apache.usergrid.rest;
 
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -39,7 +37,6 @@ import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.java.client.Client;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
@@ -58,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * method(s) should following the following naming convention: test_[HTTP verb]_[action mapping]_[ok|fail][_[specific
  * failure condition if multiple]
  */
-@Concurrent()
+//@Concurrent()
 public abstract class AbstractRestIT extends JerseyTest {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractRestIT.class );
     private static boolean usersSetup = false;
@@ -301,7 +298,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         } catch (IOException ex) {
             throw new RuntimeException("Unable to parse response", ex);
-        }
+        } 
 
         String mgmToken = node.get( "access_token" ).textValue();
         LOG.info( "got mgmt token: {}", mgmToken );

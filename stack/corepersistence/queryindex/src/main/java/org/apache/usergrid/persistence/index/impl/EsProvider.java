@@ -18,6 +18,15 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.io.File;
+import java.io.IOException;
+import java.util.Properties;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
+import org.apache.usergrid.persistence.index.IndexFig;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -26,19 +35,8 @@ import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
-import org.apache.usergrid.persistence.index.IndexFig;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import java.io.File;
-import java.io.IOException;
-import java.util.Properties;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.RandomStringUtils;
-
 /**
- * Provides access to ElasticSearch client.
+ * Provides access to ElasticSearch client and, optionally, embedded ElasticSearch for testing.
  */
 @Singleton
 public class EsProvider {
@@ -70,6 +68,8 @@ public class EsProvider {
 
                 int port = AvailablePortFinder.getNextAvailable(2000);
 
+                System.setProperty("EMBEDDED_ES_PORT", port+"");
+
                 File tempDir;
                 try {
                     tempDir = getTempDirectory();
@@ -83,26 +83,44 @@ public class EsProvider {
                     .put("transport.tcp.port", port)
                     .put("path.logs", tempDir.toString())
                     .put("path.data", tempDir.toString())
-                    .put("gateway.type", "none").put("index.store.type", "memory")
+                    .put("gateway.type", "none")
+                    .put("index.store.type", "memory")
                     .put("index.number_of_shards", 1)
-                    .put("index.number_of_replicas", 1).build();
+                    .put("index.number_of_replicas", 1)
+                    .build();
 
-                log.info("Starting ElasticSearch embedded with settings: " + settings.getAsMap());
+                log.info("-----------------------------------------------------------------------");
+                log.info("Starting ElasticSearch embedded with settings: \n" + settings.getAsMap() );
+                log.info("-----------------------------------------------------------------------");
 
-                Node node = NodeBuilder.nodeBuilder().local(true).settings(settings).node();
+                Node node = NodeBuilder.nodeBuilder().settings(settings)
+                    .clusterName( fig.getClusterName() ).node();
+
                 newClient = node.client();
 
-            } else { // build client that connects to all hosts
+
+            } else { // build client that connects to all configured hosts
 
                 final String hosts = fig.getHosts();
 
+                String allHosts = "";
+                String SEP = "";
+                for (String host : fig.getHosts().split(",")) {
+                    allHosts = SEP + host + ":" + fig.getPort();
+                    SEP = ",";
+                }
+
                 Settings settings = ImmutableSettings.settingsBuilder()
                     .put("client.transport.ping_timeout", 2000) // milliseconds
-                    .put("client.transport.nodes_sampler_interval", 100).put("http.enabled", false)
+                    .put("client.transport.nodes_sampler_interval", 100)
+                    .put("http.enabled", false)
 
                     // this assumes that we're using zen for host discovery.  Putting an 
                     // explicit set of bootstrap hosts ensures we connect to a valid cluster.
-                    .put("discovery.zen.ping.unicast.hosts", hosts).build();
+                    .put("discovery.zen.ping.unicast.hosts", allHosts)
+                    .build();
+
+                log.info("Creating ElasticSearch client with settings: " +  settings.getAsMap());
 
                 Node node = NodeBuilder.nodeBuilder().settings(settings)
                     .clusterName(fig.getClusterName())
