@@ -43,16 +43,16 @@ import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeShardCounterSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardApproximationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeShardSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardApproximationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeShardStrategy;
 
@@ -92,13 +92,14 @@ public class GraphModule extends AbstractModule {
         bind( NodeShardAllocation.class ).to( NodeShardAllocationImpl.class );
         bind( NodeShardApproximation.class ).to( NodeShardApproximationImpl.class );
         bind( NodeShardCache.class ).to( NodeShardCacheImpl.class );
+        bind( NodeShardCounterSerialization.class ).to( NodeShardCounterSerializationImpl.class );
 
         /**
          * Bind our strategies based on their internal annotations.
          */
 
         bind( EdgeShardSerialization.class ).to( EdgeShardSerializationImpl.class );
-        bind( EdgeShardCounterSerialization.class ).to( EdgeShardCounterSerializationImpl.class );
+
 
 
         //Repair/cleanup classes.
@@ -113,6 +114,9 @@ public class GraphModule extends AbstractModule {
         bind( EdgeDeleteListener.class).to( EdgeDeleteListenerImpl.class );
 
 
+        /**
+         * Bind our implementation
+         */
 
         /********
          * Migration bindings
@@ -128,7 +132,7 @@ public class GraphModule extends AbstractModule {
         migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, StorageEdgeSerialization.class ) );
 
         migrationBinding.addBinding().to( Key.get( EdgeShardSerialization.class ) );
-        migrationBinding.addBinding().to( Key.get( EdgeShardCounterSerialization.class ) );
+        migrationBinding.addBinding().to( Key.get( NodeShardCounterSerialization.class ) );
     }
 
 

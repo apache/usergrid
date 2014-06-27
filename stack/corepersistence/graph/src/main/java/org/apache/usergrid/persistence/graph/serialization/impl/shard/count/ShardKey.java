@@ -35,9 +35,7 @@ public class ShardKey {
     private final String[] edgeTypes;
 
 
-    public ShardKey( final ApplicationScope scope, final Id nodeId, final long shardId, final String[] edgeTypes ) {
-
-
+    public ShardKey( final ApplicationScope scope, final Id nodeId, final long shardId, final String... edgeTypes ) {
         this.scope = scope;
         this.nodeId = nodeId;
         this.shardId = shardId;
@@ -70,6 +68,26 @@ public class ShardKey {
         }
 
         return true;
+    }
+
+
+    public ApplicationScope getScope() {
+        return scope;
+    }
+
+
+    public Id getNodeId() {
+        return nodeId;
+    }
+
+
+    public long getShardId() {
+        return shardId;
+    }
+
+
+    public String[] getEdgeTypes() {
+        return edgeTypes;
     }
 
 

@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 import java.beans.PropertyChangeListener;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -39,10 +40,10 @@ import org.safehaus.guicyfig.Bypass;
 import org.safehaus.guicyfig.OptionState;
 import org.safehaus.guicyfig.Overrides;
 
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -70,7 +71,7 @@ public class NodeShardApproximationTest {
 
     private GraphFig graphFig;
 
-    private EdgeShardCounterSerialization ser;
+    private NodeShardCounterSerialization ser;
     private NodeShardCounterSerialization nodeShardCounterSerialization;
     private TimeService timeService;
 
@@ -93,7 +94,7 @@ public class NodeShardApproximationTest {
         when( graphFig.getShardCacheSize() ).thenReturn( 10000l );
         when( graphFig.getShardSize() ).thenReturn( 250000l );
 
-        ser = mock( EdgeShardCounterSerialization.class );
+        ser = mock( NodeShardCounterSerialization.class );
         nodeShardCounterSerialization = mock( NodeShardCounterSerialization.class );
 
         when(nodeShardCounterSerialization.flush( any(Counter.class) )).thenReturn( mock( MutationBatch.class) );
@@ -272,6 +273,12 @@ public class NodeShardApproximationTest {
         @Override
         public long getCount( final ShardKey key ) {
             return copy.get( key );
+        }
+
+
+        @Override
+        public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
 

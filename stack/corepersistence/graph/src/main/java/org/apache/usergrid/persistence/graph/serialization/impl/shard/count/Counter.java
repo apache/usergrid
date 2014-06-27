@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -96,6 +97,15 @@ public class Counter {
         for(Map.Entry<ShardKey, AtomicLong> entry: other.counts.entrySet()){
             add(entry.getKey(), entry.getValue().get());
         }
+    }
+
+
+    /**
+     * Get all entries
+     * @return
+     */
+    public Set<Map.Entry<ShardKey, AtomicLong>> getEntries(){
+        return counts.entrySet();
     }
 
 

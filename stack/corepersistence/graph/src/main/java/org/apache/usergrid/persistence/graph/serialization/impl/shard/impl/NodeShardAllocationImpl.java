@@ -30,9 +30,10 @@ import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.ShardKey;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -49,7 +50,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
     private final EdgeShardSerialization edgeShardSerialization;
-    private final EdgeShardCounterSerialization edgeShardCounterSerialization;
+    private final NodeShardCounterSerialization edgeShardCounterSerialization;
     private final TimeService timeService;
     private final GraphFig graphFig;
     private final Keyspace keyspace;
@@ -57,7 +58,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
     @Inject
     public NodeShardAllocationImpl( final EdgeShardSerialization edgeShardSerialization,
-                                    final EdgeShardCounterSerialization edgeShardCounterSerialization,
+                                    final NodeShardCounterSerialization edgeShardCounterSerialization,
                                     final TimeService timeService, final GraphFig graphFig, final Keyspace keyspace ) {
         this.edgeShardSerialization = edgeShardSerialization;
         this.edgeShardCounterSerialization = edgeShardCounterSerialization;
@@ -156,7 +157,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         /**
          * Check out if we have a count for our shard allocation
          */
-        final long count = edgeShardCounterSerialization.getCount( scope, nodeId, maxShard, edgeType );
+        final long count = edgeShardCounterSerialization.getCount( new ShardKey( scope, nodeId, maxShard, edgeType ));
 
         if ( count < graphFig.getShardSize() ) {
             return false;
