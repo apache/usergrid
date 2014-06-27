@@ -20,7 +20,7 @@ package org.apache.usergrid.rest.applications.collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -29,6 +29,7 @@ import org.apache.usergrid.rest.test.resource.CustomCollection;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -45,7 +46,7 @@ public class BadGrammarQueryTest extends AbstractRestIT {
 
 
     @Test
-    public void catchBadQueryGrammar() {
+    public void catchBadQueryGrammar() throws IOException {
 
         CustomCollection things = context.collection( "things" );
 

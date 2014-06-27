@@ -101,7 +101,7 @@
     <hector-version>1.1-4</hector-version>
     <hector-test-version>1.1-4</hector-test-version>
     <jackson-version>1.9.9</jackson-version>
-    <jackson-2-version>2.2.0</jackson-2-version>
+    <jackson-2-version>2.3.1</jackson-2-version>
     <jclouds.version>1.6.2-incubating</jclouds.version>
     <jersey-version>1.18</jersey-version>
     <junit-version>4.11</junit-version>
@@ -114,7 +114,6 @@
     <tomcat-version>7.0.42</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
-
 
   </properties>
 
@@ -1316,9 +1315,9 @@
       </dependency>
 
       <dependency>
-        <groupId>org.usergrid</groupId>
+        <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid-java-client</artifactId>
-        <version>0.0.3</version>
+        <version>0.0.10-SNAPSHOT</version>
       </dependency>
 
       <dependency>

@@ -17,19 +17,20 @@
 package org.apache.usergrid.rest.applications.collection;
 
 
+import com.fasterxml.jackson.core.JsonParser;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.usergrid.java.client.entities.Entity;
-import org.usergrid.java.client.response.ApiResponse;
+import org.apache.usergrid.java.client.entities.Entity;
+import org.apache.usergrid.java.client.response.ApiResponse;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
@@ -40,6 +41,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import org.codehaus.jackson.JsonFactory;
 
 
 /** Simple tests to test querying at the REST tier */
@@ -214,6 +216,7 @@ public class PagingResourceIT extends AbstractRestIT {
 
 
     private static final ApiResponse parse( JsonNode response ) throws Exception {
-        return mapper.readValue( response, ApiResponse.class );
+        String jsonResponseString = mapper.writeValueAsString( response );
+        return mapper.readValue( jsonResponseString, ApiResponse.class );
     }
 }

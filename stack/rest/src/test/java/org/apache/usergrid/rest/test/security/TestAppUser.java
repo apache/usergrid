@@ -17,7 +17,8 @@
 package org.apache.usergrid.rest.test.security;
 
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.apache.usergrid.rest.test.resource.TestContext;
 
 
@@ -40,7 +41,11 @@ public class TestAppUser extends TestUser {
      */
     @Override
     protected String getToken( TestContext context ) {
-        return context.application().token( user, password );
+        try {
+            return context.application().token( user, password );
+        } catch (IOException ex) {
+            throw new RuntimeException("Error parsing JSON", ex);
+        }
     }
 
 
@@ -49,6 +54,10 @@ public class TestAppUser extends TestUser {
      */
     @Override
     protected JsonNode createInternal( TestContext context ) {
-        return context.application().users().create( user, email, password );
+        try {
+            return context.application().users().create( user, email, password );
+        } catch (IOException ex) {
+            throw new RuntimeException("Error parsing JSON", ex);
+        }
     }
 }

@@ -22,7 +22,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import java.io.IOException;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -69,7 +70,7 @@ public class BasicIT extends AbstractRestIT {
         String token = userToken( "ed@anuff.com", "sesame" );
         WebResource resource =
                 resource().path( "/test-organization/test-app/suspects" ).queryParam( "access_token", token );
-        node = resource.accept( MediaType.APPLICATION_JSON ).post( JsonNode.class );
+        node = mapper.readTree( resource.accept( MediaType.APPLICATION_JSON ).post( String.class ));
 
 
         String uuid = "4dadf156-c82f-4eb7-a437-3e574441c4db";
@@ -79,8 +80,8 @@ public class BasicIT extends AbstractRestIT {
         Map<String, String> payload = hashMap( "hair", "brown" ).map( "sex", "male" ).map( "eyes", "green" )
                 .map( "name", uuid.replace( '-', '0' ) ).map( "build", "thin" ).map( "height", "6 4" );
 
-        node = resource.queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-                       .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        node = mapper.readTree( resource.queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
+                       .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
         logNode( node );
 
@@ -89,22 +90,22 @@ public class BasicIT extends AbstractRestIT {
         payload = hashMap( "hair", "red" ).map( "sex", "female" ).map( "eyes", "blue" ).map( "name", uuid )
                 .map( "build", "heavy" ).map( "height", "5 9" );
 
-        node = resource.accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                       .post( JsonNode.class, payload );
+        node = mapper.readTree( resource.accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                       .post( String.class, payload ));
 
         logNode( node );
     }
 
 
     @Test
-    public void testNonexistentUserAccessViaGuest() {
+    public void testNonexistentUserAccessViaGuest() throws IOException {
         JsonNode node = null;
 
         try {
             WebResource resource = resource();
             resource.path( "/test-organization/test-app/users/foobarNonexistent" );
             resource.accept( MediaType.APPLICATION_JSON );
-            node = resource.get( JsonNode.class );
+            node = mapper.readTree( resource.get( String.class ));
         }
         catch ( UniformInterfaceException e ) {
             logNode( node );
@@ -114,16 +115,16 @@ public class BasicIT extends AbstractRestIT {
 
 
     @Test
-    public void testToken() {
+    public void testToken() throws IOException {
         JsonNode node = null;
 
         // test get token for admin user with bad password
 
         boolean err_thrown = false;
         try {
-            node = resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+            node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                     .queryParam( "username", "test@usergrid.com" ).queryParam( "password", "blahblah" )
-                    .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                    .accept( MediaType.APPLICATION_JSON ).get( String.class ));
         }
         catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 400 Bad Request", 400, e.getResponse().getStatus() );
@@ -136,23 +137,23 @@ public class BasicIT extends AbstractRestIT {
         String mgmtToken = adminToken();
         // test get admin user with token
 
-        node = resource().path( "/management/users/test@usergrid.com" ).queryParam( "access_token", mgmtToken )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+        node = mapper.readTree( resource().path( "/management/users/test@usergrid.com" ).queryParam( "access_token", mgmtToken )
+                .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
         logNode( node );
 
         assertEquals( "Test User",
                 node.get( "data" ).get( "organizations" ).get( "test-organization" ).get( "users" ).get( "test" )
-                    .get( "name" ).getTextValue() );
+                    .get( "name" ).textValue() );
 
 
         // test login user with incorrect password
 
         err_thrown = false;
         try {
-            node = resource().path( "/test-app/token" ).queryParam( "grant_type", "password" )
+            node = mapper.readTree( resource().path( "/test-app/token" ).queryParam( "grant_type", "password" )
                     .queryParam( "username", "ed@anuff.com" ).queryParam( "password", "blahblah" )
-                    .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                    .accept( MediaType.APPLICATION_JSON ).get( String.class ));
         }
         catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 400 Bad Request", 400, e.getResponse().getStatus() );
@@ -164,9 +165,9 @@ public class BasicIT extends AbstractRestIT {
 
         err_thrown = false;
         try {
-            node = resource().path( "/test-app/token" ).queryParam( "grant_type", "pin" )
+            node = mapper.readTree( resource().path( "/test-app/token" ).queryParam( "grant_type", "pin" )
                     .queryParam( "username", "ed@anuff.com" ).queryParam( "pin", "4321" )
-                    .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                    .accept( MediaType.APPLICATION_JSON ).get( String.class ));
         }
         catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 400 Bad Request", 400, e.getResponse().getStatus() );
@@ -176,22 +177,22 @@ public class BasicIT extends AbstractRestIT {
 
         // test login user with correct password
 
-        node = resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
                 .queryParam( "username", "ed@anuff.com" ).queryParam( "password", "sesame" )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
         logNode( node );
 
-        String user_access_token = node.get( "access_token" ).getTextValue();
+        String user_access_token = node.get( "access_token" ).textValue();
         assertTrue( isNotBlank( user_access_token ) );
 
         // test get app user collection with insufficient permissions
 
         err_thrown = false;
         try {
-            node = resource().path( "/test-organization/test-app/users" )
+            node = mapper.readTree( resource().path( "/test-organization/test-app/users" )
                     .queryParam( "access_token", user_access_token ).accept( MediaType.APPLICATION_JSON )
-                    .get( JsonNode.class );
+                    .get( String.class ));
         }
         catch ( UniformInterfaceException e ) {
             if ( e.getResponse().getStatus() != 401 ) {
@@ -203,9 +204,9 @@ public class BasicIT extends AbstractRestIT {
 
         // test get app user with sufficient permissions
 
-        node = resource().path( "/test-organization/test-app/users/edanuff" )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/users/edanuff" )
                 .queryParam( "access_token", user_access_token ).accept( MediaType.APPLICATION_JSON )
-                .get( JsonNode.class );
+                .get( String.class ));
         logNode( node );
 
         assertEquals( 1, node.get( "entities" ).size() );
@@ -214,8 +215,8 @@ public class BasicIT extends AbstractRestIT {
 
         err_thrown = false;
         try {
-            node = resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", "blahblahblah" )
-                    .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+            node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", "blahblahblah" )
+                    .accept( MediaType.APPLICATION_JSON ).get( String.class ));
         }
         catch ( UniformInterfaceException e ) {
             if ( e.getResponse().getStatus() != 401 ) {
@@ -229,8 +230,8 @@ public class BasicIT extends AbstractRestIT {
 
         err_thrown = false;
         try {
-            node = resource().path( "/test-organization/test-app/users" ).accept( MediaType.APPLICATION_JSON )
-                    .get( JsonNode.class );
+            node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).accept( MediaType.APPLICATION_JSON )
+                    .get( String.class ));
         }
         catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 401 Unauthorized", 401, e.getResponse().getStatus() );
@@ -240,35 +241,35 @@ public class BasicIT extends AbstractRestIT {
 
         // test login app user with pin
 
-        node = resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "pin" )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "pin" )
                 .queryParam( "username", "ed@anuff.com" ).queryParam( "pin", "1234" )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
         logNode( node );
 
-        user_access_token = node.get( "access_token" ).getTextValue();
+        user_access_token = node.get( "access_token" ).textValue();
         assertTrue( isNotBlank( user_access_token ) );
 
         // test set app user pin
 
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
         formData.add( "pin", "5678" );
-        node = resource().path( "/test-organization/test-app/users/ed@anuff.com/setpin" )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/users/ed@anuff.com/setpin" )
                 .queryParam( "access_token", user_access_token ).type( "application/x-www-form-urlencoded" )
-                .post( JsonNode.class, formData );
+                .post( String.class, formData ));
 
-        node = resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "pin" )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "pin" )
                 .queryParam( "username", "ed@anuff.com" ).queryParam( "pin", "5678" )
-                .accept( MediaType.APPLICATION_JSON ).get( JsonNode.class );
+                .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
         logNode( node );
 
-        user_access_token = node.get( "access_token" ).getTextValue();
+        user_access_token = node.get( "access_token" ).textValue();
         assertTrue( isNotBlank( user_access_token ) );
 
         // test user test extension resource
 
-        node = resource().path( "/test-organization/test-app/users/ed@anuff.com/test" ).get( JsonNode.class );
+        node = mapper.readTree( resource().path( "/test-organization/test-app/users/ed@anuff.com/test" ).get( String.class ));
         logNode( node );
 
         // test create user with guest permissions (no token)
@@ -277,23 +278,23 @@ public class BasicIT extends AbstractRestIT {
                 hashMap( "email", "ed.anuff@gmail.com" ).map( "username", "ed.anuff" ).map( "name", "Ed Anuff" )
                         .map( "password", "sesame" ).map( "pin", "1234" );
 
-        node = resource().path( "/test-organization/test-app/users" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
         logNode( node );
 
         assertNotNull( node.get( "entities" ) );
         assertNotNull( node.get( "entities" ).get( 0 ) );
         assertNotNull( node.get( "entities" ).get( 0 ).get( "username" ) );
-        assertEquals( "ed.anuff", node.get( "entities" ).get( 0 ).get( "username" ).getTextValue() );
+        assertEquals( "ed.anuff", node.get( "entities" ).get( 0 ).get( "username" ).textValue() );
 
         // test create device with guest permissions (no token)
 
         payload = hashMap( "foo", "bar" );
 
-        node = resource().path( "/test-organization/test-app/devices/" + UUIDGenerator.newTimeUUID() )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/devices/" + UUIDGenerator.newTimeUUID() )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .put( JsonNode.class, payload );
+                .put( String.class, payload ));
 
         logNode( node );
 
@@ -303,8 +304,8 @@ public class BasicIT extends AbstractRestIT {
 
         err_thrown = false;
         try {
-            node = resource().path( "/test-organization/test-app/items" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            node = mapper.readTree( resource().path( "/test-organization/test-app/items" ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException e ) {
             assertEquals( "Should receive a 401 Unauthorized", 401, e.getResponse().getStatus() );

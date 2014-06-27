@@ -20,7 +20,8 @@ package org.apache.usergrid.rest.applications.collection.activities;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -44,7 +45,7 @@ public class PutTest extends AbstractRestIT {
 
 
     @Test //USERGRID-545
-    public void putMassUpdateTest() {
+    public void putMassUpdateTest() throws IOException {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -66,7 +67,7 @@ public class PutTest extends AbstractRestIT {
         String query = "select * ";
 
         JsonNode node = activities.withQuery( query ).get();
-        String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).getTextValue();
+        String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
         StringBuilder buf = new StringBuilder( uuid );
 
 
