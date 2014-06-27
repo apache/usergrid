@@ -21,6 +21,7 @@ package org.apache.usergrid.chop.webapp.view.chart.layout;
 
 import java.util.Set;
 
+import com.vaadin.ui.Notification;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -131,11 +132,14 @@ public class ChartLayout extends AbsoluteLayout implements JavaScriptFunction {
         testNameCombo.setWidth( "155px" );
 
         metricCombo = UIUtil.createCombo( "Metric:", Metric.values() );
+        metricCombo.setWidth( "155px" );
 
         percentileCombo = UIUtil.createCombo( "Percentile:",
                 new String[] { "100", "90", "80", "70", "60", "50", "40", "30", "20", "10" } );
+        percentileCombo.setWidth( "155px" );
 
         failureCombo = UIUtil.createCombo( "Points to Plot:", FailureType.values() );
+        failureCombo.setWidth( "155px" );
 
         Button submitButton = new Button("Submit");
         submitButton.addClickListener(new Button.ClickListener() {
@@ -180,6 +184,12 @@ public class ChartLayout extends AbsoluteLayout implements JavaScriptFunction {
 
 
     public void loadChart() {
+
+        Params params = getParams();
+        if ( params.getTestName() == null ){
+            Notification.show( "Warning", "You don't have run results yet !!!", Notification.Type.WARNING_MESSAGE );
+            return;
+        }
 
         // BUG: If common.js is loaded separately its content is not visible later
         String chartContent = FileUtil.getContent( "js/common.js" ) + FileUtil.getContent( chartFile );
