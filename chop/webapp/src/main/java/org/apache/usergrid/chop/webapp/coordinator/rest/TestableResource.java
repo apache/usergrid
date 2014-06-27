@@ -19,7 +19,25 @@
 package org.apache.usergrid.chop.webapp.coordinator.rest;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+
 import org.safehaus.jettyjam.utils.TestMode;
+
+import org.apache.usergrid.chop.api.Commit;
+import org.apache.usergrid.chop.api.Module;
+import org.apache.usergrid.chop.stack.CoordinatedStack;
+import org.apache.usergrid.chop.stack.Stack;
+import org.apache.usergrid.chop.stack.User;
+import org.apache.usergrid.chop.webapp.coordinator.CoordinatorUtils;
+import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
+import org.apache.usergrid.chop.webapp.dao.CommitDao;
+import org.apache.usergrid.chop.webapp.dao.ModuleDao;
+import org.apache.usergrid.chop.webapp.dao.UserDao;
+import org.apache.usergrid.chop.webapp.dao.model.BasicCommit;
+import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
 
 
 /**
@@ -46,5 +64,43 @@ public abstract class TestableResource {
     public boolean inTestMode(String testMode) {
         return testMode != null &&
                 (testMode.equals(TestMode.INTEG.toString()) || testMode.equals(TestMode.UNIT.toString()));
+    }
+
+    public CoordinatedStack getCoordinatedStack( CommitDao commitDao, ModuleDao moduleDao, UserDao userDao,
+                                                  StackCoordinator stackCoordinator, String artifactId,
+                                                  String commitId, String md5, String username,
+                                                  String groupId, String version, String vcsRepoUrl,
+                                                  String testPackage, File runnerJar )
+            throws IOException {
+        Commit commit = null;
+        Module module = null;
+
+        List<Commit> commits = commitDao.getByModule( artifactId );
+        for ( Commit returnedCommit : commits ) {
+            Module commitModule = moduleDao.get( returnedCommit.getModuleId() );
+            if ( commitModule.getArtifactId().equals( artifactId ) &&
+                    commitModule.getGroupId().equals( groupId ) &&
+                    commitModule.getVersion().equals( version ) )
+            {
+                commit = returnedCommit;
+                module = commitModule;
+            }
+        }
+
+        if ( module == null ) {
+            module = new BasicModule( groupId, artifactId, version, vcsRepoUrl, testPackage );
+            moduleDao.save( module );
+        }
+
+        if ( commit == null ) {
+            commit = new BasicCommit( commitId, module.getId(), md5, new Date(), runnerJar.getAbsolutePath() );
+            commitDao.save( commit );
+        }
+
+        // Send DEPLOY signal to coordinatedStack
+        Stack stack = CoordinatorUtils.getStackFromRunnerJar( runnerJar );
+        User chopUser = userDao.get( username );
+        CoordinatedStack coordinatedStack =  stackCoordinator.getCoordinatedStack( stack, chopUser, commit, module );
+        return coordinatedStack;
     }
 }

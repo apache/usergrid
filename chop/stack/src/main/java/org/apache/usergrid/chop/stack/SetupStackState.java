@@ -37,13 +37,13 @@ import com.google.common.base.Preconditions;
  * Represents the setup state of a stack
  */
 public enum SetupStackState {
-    // After tests finishes, it will automatically switch to SetUp state
+    // Running ==> (Complete signal) ==> SetUp
+    // Running ==> (Destroy signal) ==> NotSetUp
     // Running ==> (Stop signal) ==> Stopped
-    Running( 7, new SetupStackSignal[] { SetupStackSignal.STOP }, new Integer[] { 6 },
+    Running( 7, new SetupStackSignal[] { SetupStackSignal.STOP, SetupStackSignal.DESTROY, SetupStackSignal.COMPLETE }, new Integer[] { 6, 3, 0 },
             "Running tests on stack.",
-            "%s signal rejected. When Running only a STOP signal(s) which cause to transition into " +
-                    "Stopped state(s) respectively" +
-                    " or it will automatically transition into SetUp state when tests are finished" ),
+            "%s signal rejected. When Running only a STOP, DESTROY and COMPLETE signal(s) which cause to transition into " +
+                    "Stopped, NotSetUp and SetUp state(s) respectively" ),
 
     // Stopped ==> (reset signal) ==> SetUp
     Stopped( 6, new SetupStackSignal[] { SetupStackSignal.RESET }, new Integer[] { 0 },
@@ -51,17 +51,17 @@ public enum SetupStackState {
             "%s signal rejected. When Stopped only a RESET signal(s) which cause to transition into " +
                     "SetUp state(s) respectively" ),
 
-    // JarNotFound ==> (deploy signal) ==> JarAlreadyDeployed
-    JarNotFound( 5, new SetupStackSignal[] { SetupStackSignal.DEPLOY }, new Integer[] { 3 },
+    // JarNotFound ==> (deploy signal) ==> NotSetUp
+    JarNotFound( 5, new SetupStackSignal[] { SetupStackSignal.DEPLOY, SetupStackSignal.SETUP }, new Integer[] { 3, 1 },
             "No runner jars found with given parameters, deploy first.",
-            "%s signal rejected. When JarNotFound only a DEPLOY signal(s) which cause to transition into " +
-                    "JarAlreadyDeployed state(s) respectively" ),
+            "%s signal rejected. When JarNotFound only a DEPLOY and SETUP signal(s) which cause to transition into " +
+                    "NotSetUp and SettingUp state(s) respectively" ),
 
-    // After destroy finishes, it will automatically switch to NotSetUp state
-    Destroying( 4, new SetupStackSignal[] { }, new Integer[] { },
+    // Destroying ==> (Complete signal) ==> NotSetUp
+    Destroying( 4, new SetupStackSignal[] { SetupStackSignal.COMPLETE }, new Integer[] { 3 },
             "Currently being destroyed. Wait until it is finished to set up again.",
-            "%s signal rejected. When Destroying no Signal can be sent. It transitions into " +
-                    "NotSetUp state automatically when it finishes." ),
+            "%s signal rejected. When Destroying only a COMPLETE signal(s) can be sent which cause to " +
+                    "transition into NotSetUp state(s) respectively" ),
 
     // NotSetUp ==> (setup signal) ==> NotSetUp
     // NotSetUp ==> (setup signal) ==> SettingUp
@@ -77,11 +77,11 @@ public enum SetupStackState {
             "%s signal rejected. When SetupFailed only a SETUP and DEPLOY signal(s) which cause to transition into " +
                     "SettingUp and NotSetUp state(s) respectively" ),
 
-    // After setting up the stack finishes, it will automatically switch to SetUp state
-    SettingUp( 1, new SetupStackSignal[] { }, new Integer[] { },
+    // SettingUp ==> (Complete signal) ==> SetUp
+    SettingUp( 1, new SetupStackSignal[] { SetupStackSignal.COMPLETE, SetupStackSignal.FAIL }, new Integer[] { 0, 2 },
             "Setting up the stack right now.",
-            "%s signal rejected. When SettingUp no Signal can be sent. It transitions into " +
-                    "SetUp state automatically when it finishes." ),
+            "%s signal rejected. When SettingUp only a COMPLETE signal(s) can be sent which cause to " +
+                    "transition into SetUp state(s) respectively" ),
 
     // SetUp ==> (start signal) ==> Running
     // SetUp ==> (destroy signal) ==> NotSetUp

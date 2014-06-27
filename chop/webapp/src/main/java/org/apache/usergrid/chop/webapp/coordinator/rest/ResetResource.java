@@ -29,6 +29,8 @@ import com.google.inject.Singleton;
 import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.api.State;
+import org.apache.usergrid.chop.stack.CoordinatedStack;
+import org.apache.usergrid.chop.stack.SetupStackSignal;
 import org.apache.usergrid.chop.stack.SetupStackState;
 import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
 import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
@@ -194,6 +196,9 @@ public class ResetResource extends TestableResource implements RestParams {
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
+
+        CoordinatedStack stack = stackCoordinator.findCoordinatedStack( commitId, artifactId, groupId, version, user );
+        stack.setSetupState( SetupStackSignal.RESET );
 
         return Response.status( Response.Status.CREATED )
                        .entity( "All stopped runners have been reset." )

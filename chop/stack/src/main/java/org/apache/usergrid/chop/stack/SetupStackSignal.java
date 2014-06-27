@@ -22,7 +22,7 @@ package org.apache.usergrid.chop.stack;
 
 public enum SetupStackSignal {
 
-    START( 0 ), STOP( 1 ), RESET( 2 ), DESTROY( 3 ), DEPLOY( 4 ), SETUP( 5 );
+    START( 0 ), STOP( 1 ), RESET( 2 ), DESTROY( 3 ), DEPLOY( 4 ), SETUP( 5 ), FAIL ( 6 ), COMPLETE ( 7 );
 
     private final int signalID;
 
@@ -51,6 +51,10 @@ public enum SetupStackSignal {
                 return DEPLOY;
             case 5:
                 return SETUP;
+            case 6:
+                return FAIL;
+            case 7:
+                return COMPLETE;
         }
 
         throw new RuntimeException( "Should never get here!" );

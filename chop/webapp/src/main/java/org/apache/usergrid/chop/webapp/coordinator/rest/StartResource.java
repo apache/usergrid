@@ -30,6 +30,7 @@ import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.api.State;
 import org.apache.usergrid.chop.stack.CoordinatedStack;
+import org.apache.usergrid.chop.stack.SetupStackSignal;
 import org.apache.usergrid.chop.stack.SetupStackState;
 import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
 import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
@@ -108,7 +109,7 @@ public class StartResource extends TestableResource implements RestParams {
 
         if( ! status.equals( SetupStackState.SetUp ) ) {
             return Response.status( Response.Status.OK )
-                           .entity( SetupStackState.NotSetUp.getStackStateMessage() )
+                           .entity( status.getStackStateMessage() )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
@@ -192,6 +193,8 @@ public class StartResource extends TestableResource implements RestParams {
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
+
+        stack.setSetupState( SetupStackSignal.START );
 
         return Response.status( Response.Status.CREATED )
                        .entity( "Started chop tests" )
