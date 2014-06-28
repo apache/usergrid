@@ -40,53 +40,62 @@ public enum SetupStackState {
     // Running ==> (Complete signal) ==> SetUp
     // Running ==> (Destroy signal) ==> Destroying
     // Running ==> (Stop signal) ==> Stopped
-    Running( 7, new SetupStackSignal[] { SetupStackSignal.STOP, SetupStackSignal.DESTROY, SetupStackSignal.COMPLETE }, new Integer[] { 6, 4, 0 },
+    Running( 7, new SetupStackSignal[] { SetupStackSignal.STOP, SetupStackSignal.DESTROY, SetupStackSignal.COMPLETE },
+            new Integer[] { 6, 4, 0 },
             "Running tests on stack.",
             "%s signal rejected. When Running only STOP, DESTROY and COMPLETE signal(s) which cause to transition into " +
                     "Stopped, Destroying and SetUp state(s) respectively" ),
 
     // Stopped ==> (reset signal) ==> SetUp
-    Stopped( 6, new SetupStackSignal[] { SetupStackSignal.RESET, SetupStackSignal.DESTROY }, new Integer[] { 0, 4 },
+    Stopped( 6, new SetupStackSignal[] { SetupStackSignal.RESET, SetupStackSignal.DESTROY },
+            new Integer[] { 0, 4 },
             "Tests are stopped while running, please reset first.",
             "%s signal rejected. When Stopped only RESET and DESTROY signal(s) which cause to transition into " +
                     "SetUp, Destroying state(s) respectively" ),
 
+    // JarNotFound ==> (setup signal) ==> SettingUp
     // JarNotFound ==> (deploy signal) ==> NotSetUp
-    JarNotFound( 5, new SetupStackSignal[] { SetupStackSignal.DEPLOY, SetupStackSignal.SETUP }, new Integer[] { 3, 1 },
+    JarNotFound( 5, new SetupStackSignal[] { SetupStackSignal.DEPLOY, SetupStackSignal.SETUP },
+            new Integer[] { 3, 1 },
             "No runner jars found with given parameters, deploy first.",
             "%s signal rejected. When JarNotFound only DEPLOY and SETUP signal(s) which cause to transition into " +
                     "NotSetUp and SettingUp state(s) respectively" ),
 
     // Destroying ==> (Complete signal) ==> NotSetUp
-    Destroying( 4, new SetupStackSignal[] { SetupStackSignal.COMPLETE }, new Integer[] { 3 },
+    Destroying( 4, new SetupStackSignal[] { SetupStackSignal.COMPLETE },
+            new Integer[] { 3 },
             "Currently being destroyed. Wait until it is finished to set up again.",
             "%s signal rejected. When Destroying only COMPLETE signal(s) can be sent which cause to " +
                     "transition into NotSetUp state(s) respectively" ),
 
-    // NotSetUp ==> (setup signal) ==> NotSetUp
+    // NotSetUp ==> (deploy signal) ==> NotSetUp
     // NotSetUp ==> (setup signal) ==> SettingUp
-    NotSetUp( 3, new SetupStackSignal[] { SetupStackSignal.SETUP, SetupStackSignal.DEPLOY }, new Integer[] { 1, 3 },
+    NotSetUp( 3, new SetupStackSignal[] { SetupStackSignal.SETUP, SetupStackSignal.DEPLOY },
+            new Integer[] { 1, 3 },
             "Jar is deployed but no stack set up with it.",
             "%s signal rejected. When NotSetUp only SETUP and DEPLOY signal(s) which cause to transition into " +
                     "SettingUp and NotSetUp state(s) respectively" ),
 
     // SetupFailed ==> (setup deploy) ==> NotSetUp
     // SetupFailed ==> (setup signal) ==> SettingUp
-    SetupFailed( 2, new SetupStackSignal[] { SetupStackSignal.SETUP, SetupStackSignal.DEPLOY }, new Integer[] { 1, 3 },
+    SetupFailed( 2, new SetupStackSignal[] { SetupStackSignal.SETUP, SetupStackSignal.DEPLOY },
+            new Integer[] { 1, 3 },
             "Stack was registered, however its setup failed. Call setup again to restart.",
             "%s signal rejected. When SetupFailed only SETUP and DEPLOY signal(s) which cause to transition into " +
                     "SettingUp and NotSetUp state(s) respectively" ),
 
+    // SettingUp ==> (Fail signal) ==> SetupFailed
     // SettingUp ==> (Complete signal) ==> SetUp
-    SettingUp( 1, new SetupStackSignal[] { SetupStackSignal.COMPLETE, SetupStackSignal.FAIL
-            , SetupStackSignal.DESTROY}, new Integer[] { 0, 2, 4 },
+    SettingUp( 1, new SetupStackSignal[] { SetupStackSignal.COMPLETE, SetupStackSignal.FAIL},
+            new Integer[] { 0, 2 },
             "Setting up the stack right now.",
-            "%s signal rejected. When SettingUp only COMPLETE, FAIL and DESTROY signal(s) can be sent which " +
-                    "cause to transition into SetUp, SetupFailed and Destroying state(s) respectively" ),
+            "%s signal rejected. When SettingUp only COMPLETE and FAIL signal(s) can be sent which " +
+                    "cause to transition into SetUp and SetupFailed state(s) respectively" ),
 
     // SetUp ==> (start signal) ==> Running
     // SetUp ==> (destroy signal) ==> NotSetUp
-    SetUp( 0, new SetupStackSignal[] { SetupStackSignal.DESTROY, SetupStackSignal.START }, new Integer[] { 4, 7 },
+    SetUp( 0, new SetupStackSignal[] { SetupStackSignal.DESTROY, SetupStackSignal.START },
+            new Integer[] { 4, 7 },
             "Stack is set up and ready to start the tests.",
             "%s signal rejected. When SetUp only DESTROY and SetUp signal(s) which cause to transition into " +
                     "NotSetUp and SetUp state(s) respectively" );

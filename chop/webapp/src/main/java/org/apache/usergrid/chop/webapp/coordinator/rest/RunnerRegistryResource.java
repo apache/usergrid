@@ -210,12 +210,11 @@ public class RunnerRegistryResource extends TestableResource implements RestPara
             @QueryParam( MODULE_VERSION ) String version,
             @QueryParam( COMMIT_ID ) String commitId
     ) {
-
-        LOG.info( "USERNAME: {}", username );
-        LOG.info( "MODULE_GROUPID: {}", groupId );
-        LOG.info( "MODULE_ARTIFACTID: {}", artifactId );
-        LOG.info( "MODULE_VERSION: {}", version );
-        LOG.info( "COMMIT_ID: {}", commitId );
+        LOG.debug( "USERNAME: {}", username );
+        LOG.debug( "MODULE_GROUPID: {}", groupId );
+        LOG.debug( "MODULE_ARTIFACTID: {}", artifactId );
+        LOG.debug( "MODULE_VERSION: {}", version );
+        LOG.debug( "COMMIT_ID: {}", commitId );
 
         CoordinatedStack stack = stackCoordinator.findCoordinatedStack( commitId, artifactId, groupId, version, username );
         if ( stack.getSetupState().accepts( SetupStackSignal.COMPLETE ) ) {

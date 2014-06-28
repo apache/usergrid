@@ -173,7 +173,7 @@ public class StackCoordinator {
         }
 
         synchronized ( coordinatedStack ) {
-            if ( coordinatedStack.getSetupState().accepts( SetupStackSignal.DESTROY ) ) {
+            if ( ! coordinatedStack.getSetupState().accepts( SetupStackSignal.DESTROY ) ) {
                 LOG.info( "Stack is in {} state, will not destroy.", coordinatedStack.getSetupState().toString() );
                 return;
             }

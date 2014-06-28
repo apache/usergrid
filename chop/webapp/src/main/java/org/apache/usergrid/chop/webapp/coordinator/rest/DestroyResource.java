@@ -111,9 +111,7 @@ public class DestroyResource extends TestableResource implements RestParams {
                            .build();
         }
 
-        /** SetupStackState.SetUp or SetupStackState.SettingUp
-         * or SetupStackState.Running or SetupStackState.Stopped */
-
+        LOG.debug( "Stack is {}, destroying... ", status.toString() );
         // Unregister runners first
         String moduleId = BasicModule.createId( groupId, artifactId, version );
         Collection<Runner> runners = runnerCoordinator.getRunners( user, commitId, moduleId );
