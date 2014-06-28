@@ -19,25 +19,7 @@
 package org.apache.usergrid.chop.webapp.coordinator.rest;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-
 import org.safehaus.jettyjam.utils.TestMode;
-
-import org.apache.usergrid.chop.api.Commit;
-import org.apache.usergrid.chop.api.Module;
-import org.apache.usergrid.chop.stack.CoordinatedStack;
-import org.apache.usergrid.chop.stack.Stack;
-import org.apache.usergrid.chop.stack.User;
-import org.apache.usergrid.chop.webapp.coordinator.CoordinatorUtils;
-import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
-import org.apache.usergrid.chop.webapp.dao.CommitDao;
-import org.apache.usergrid.chop.webapp.dao.ModuleDao;
-import org.apache.usergrid.chop.webapp.dao.UserDao;
-import org.apache.usergrid.chop.webapp.dao.model.BasicCommit;
-import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
 
 
 /**
