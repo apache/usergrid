@@ -26,7 +26,10 @@ import com.google.inject.Singleton;
 import org.apache.usergrid.chop.api.Module;
 import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.api.Runner;
+import org.apache.usergrid.chop.stack.CoordinatedStack;
+import org.apache.usergrid.chop.stack.SetupStackSignal;
 import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
+import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
 import org.apache.usergrid.chop.webapp.dao.ModuleDao;
 import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
 import org.safehaus.jettyjam.utils.TestMode;
@@ -54,7 +57,7 @@ import java.util.Collections;
 @Produces( MediaType.APPLICATION_JSON )
 @Consumes( MediaType.APPLICATION_JSON )
 @Path( RunnerRegistryResource.ENDPOINT )
-public class RunnerRegistryResource extends TestableResource {
+public class RunnerRegistryResource extends TestableResource implements RestParams {
     public final static String ENDPOINT = "/runners";
 
     private static final Logger LOG = LoggerFactory.getLogger( RunnerRegistryResource.class );
@@ -64,6 +67,9 @@ public class RunnerRegistryResource extends TestableResource {
 
     @Inject
     private RunnerCoordinator runnerCoordinator;
+
+    @Inject
+    private StackCoordinator stackCoordinator;
 
 
     public RunnerRegistryResource() {
@@ -189,5 +195,33 @@ public class RunnerRegistryResource extends TestableResource {
         }
 
         return Response.ok( result ).build();
+    }
+
+
+    @SuppressWarnings( "unchecked" )
+    @GET
+    @Path( "/completed" )
+    @Consumes( MediaType.APPLICATION_JSON )
+    @Produces( MediaType.APPLICATION_JSON )
+    public Response runnersCompleted(
+            @QueryParam( USERNAME ) String username,
+            @QueryParam( MODULE_GROUPID ) String groupId,
+            @QueryParam( MODULE_ARTIFACTID ) String artifactId,
+            @QueryParam( MODULE_VERSION ) String version,
+            @QueryParam( COMMIT_ID ) String commitId
+    ) {
+
+        LOG.info( "USERNAME: {}", username );
+        LOG.info( "MODULE_GROUPID: {}", groupId );
+        LOG.info( "MODULE_ARTIFACTID: {}", artifactId );
+        LOG.info( "MODULE_VERSION: {}", version );
+        LOG.info( "COMMIT_ID: {}", commitId );
+
+        CoordinatedStack stack = stackCoordinator.findCoordinatedStack( commitId, artifactId, groupId, version, username );
+        if ( stack.getSetupState().accepts( SetupStackSignal.COMPLETE ) ) {
+            stack.setSetupState( SetupStackSignal.COMPLETE );
+        }
+
+        return Response.status( Response.Status.OK ).entity( stack.getSetupState() ).build();
     }
 }

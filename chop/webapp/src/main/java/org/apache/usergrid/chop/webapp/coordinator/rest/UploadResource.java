@@ -27,6 +27,8 @@ import java.io.InputStreamReader;
 import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import javax.annotation.Nullable;
@@ -39,20 +41,23 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.usergrid.chop.stack.SetupStackState;
+import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
 import org.safehaus.jettyjam.utils.TestMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.chop.api.Commit;
 import org.apache.usergrid.chop.api.Constants;
+import org.apache.usergrid.chop.api.Module;
 import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.RestParams;
-import org.apache.usergrid.chop.stack.SetupStackState;
 import org.apache.usergrid.chop.webapp.ChopUiFig;
 import org.apache.usergrid.chop.webapp.coordinator.CoordinatorUtils;
-import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
 import org.apache.usergrid.chop.webapp.dao.CommitDao;
 import org.apache.usergrid.chop.webapp.dao.ModuleDao;
-import org.apache.usergrid.chop.webapp.dao.UserDao;
+import org.apache.usergrid.chop.webapp.dao.model.BasicCommit;
+import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -230,6 +235,32 @@ public class UploadResource extends TestableResource implements RestParams, Cons
         // - this is bad news because we will get commits of other users :(
         // - we also need to qualify the commit with username, groupId,
         //   and the version of module as well
+
+        Commit commit = null;
+        Module module = null;
+
+        List<Commit> commits = commitDao.getByModule( artifactId );
+        for ( Commit returnedCommit : commits ) {
+            Module commitModule = moduleDao.get( returnedCommit.getModuleId() );
+            if ( commitModule.getArtifactId().equals( artifactId ) &&
+                    commitModule.getGroupId().equals( groupId ) &&
+                    commitModule.getVersion().equals( version ) )
+            {
+                commit = returnedCommit;
+                module = commitModule;
+            }
+        }
+
+        if ( module == null ) {
+            module = new BasicModule( groupId, artifactId, version, vcsRepoUrl, testPackage );
+            moduleDao.save( module );
+        }
+
+        if ( commit == null ) {
+            commit = new BasicCommit( commitId, module.getId(), md5, new Date(), runnerJar.getAbsolutePath() );
+            commitDao.save( commit );
+        }
+
         stackCoordinator.registerStack( commitId, artifactId, groupId, version, username, runnerCount );
 
         return Response.status( Response.Status.CREATED ).entity( runnerJar.getAbsolutePath() ).build();

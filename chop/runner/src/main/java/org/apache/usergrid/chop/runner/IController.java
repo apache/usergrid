@@ -23,6 +23,7 @@ import org.apache.usergrid.chop.api.Signal;
 import org.apache.usergrid.chop.api.StatsSnapshot;
 import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.State;
+import org.apache.usergrid.chop.stack.SetupStackState;
 
 
 /**
@@ -86,4 +87,10 @@ public interface IController {
      * @return the project being chopped up
      */
     Project getProject();
+
+    /**
+     * sends signal to coordinator to inform that all runners are finished
+     * @return Setup stack state of coordinator after signal sent
+     */
+    SetupStackState sendCompleteSignalToSetupStack();
 }

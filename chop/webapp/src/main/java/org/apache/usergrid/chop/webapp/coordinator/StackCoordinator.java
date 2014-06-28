@@ -173,7 +173,7 @@ public class StackCoordinator {
         }
 
         synchronized ( coordinatedStack ) {
-            if ( coordinatedStack.getSetupState() != SetupStackState.SetUp ) {
+            if ( coordinatedStack.getSetupState().accepts( SetupStackSignal.DESTROY ) ) {
                 LOG.info( "Stack is in {} state, will not destroy.", coordinatedStack.getSetupState().toString() );
                 return;
             }
@@ -362,9 +362,7 @@ public class StackCoordinator {
         CoordinatedStack coordinatedStack = getCoordinatedStack( stack, user, commit, module );
         if ( coordinatedStack != null ) {
             LOG.info( "Stack {} is already registered", stack.getName() );
-            if ( coordinatedStack.getSetupState() == SetupStackState.SetUp ) {
-                return coordinatedStack;
-            }
+            return coordinatedStack;
         }
         else {
             coordinatedStack = new CoordinatedStack( stack, user, commit, module, runnerCount );

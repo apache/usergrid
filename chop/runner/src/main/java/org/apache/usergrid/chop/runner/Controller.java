@@ -21,6 +21,8 @@ package org.apache.usergrid.chop.runner;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,8 +31,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import org.apache.usergrid.chop.api.CoordinatorFig;
+import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.runner.drivers.Driver;
 import org.apache.usergrid.chop.runner.drivers.TimeDriver;
+import org.apache.usergrid.chop.stack.CoordinatedStack;
+import org.apache.usergrid.chop.stack.SetupStackSignal;
+import org.apache.usergrid.chop.stack.SetupStackState;
 import org.reflections.Reflections;
 import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.Runner;
@@ -46,6 +55,7 @@ import org.apache.usergrid.chop.stack.ChopCluster;
 import org.apache.usergrid.chop.stack.ICoordinatedCluster;
 import org.apache.usergrid.chop.stack.Instance;
 
+import org.safehaus.jettyjam.utils.CertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,13 +63,19 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import javax.ws.rs.core.MediaType;
+
 
 /**
  * The Controller controls the process of executing chops on test classes.
  */
 @Singleton
-public class Controller implements IController, Runnable {
+public class Controller implements IController, Runnable, RestParams {
     private static final Logger LOG = LoggerFactory.getLogger( Controller.class );
+
+    private CoordinatorFig coordinatorFig;
+    private URL endpoint;
+
 
     // @todo make this configurable and also put this into the project or runner fig
     private static final long DEFAULT_LAGER_WAIT_TIMEOUT_MILLIS = 120000;
@@ -102,6 +118,25 @@ public class Controller implements IController, Runnable {
                 injectClusters();
             }
         }
+    }
+
+
+    @Inject
+    private void setCoordinatorConfig( CoordinatorFig coordinatorFig ) {
+        this.coordinatorFig = coordinatorFig;
+
+        try {
+            endpoint = new URL( coordinatorFig.getEndpoint() );
+        }
+        catch ( MalformedURLException e ) {
+            LOG.error( "Failed to parse URL for coordinator", e );
+        }
+
+        // Need to get the configuration information for the coordinator
+        if ( ! CertUtils.isTrusted( endpoint.getHost() ) ) {
+            CertUtils.preparations( endpoint.getHost(), endpoint.getPort() );
+        }
+        Preconditions.checkState( CertUtils.isTrusted( endpoint.getHost() ), "coordinator must be trusted" );
     }
 
 
@@ -444,5 +479,32 @@ public class Controller implements IController, Runnable {
         LOG.info( "The controller has completed." );
         currentDriver = null;
         state = state.next( Signal.COMPLETED );
+        SetupStackState setupStackState = sendCompleteSignalToSetupStack();
+        LOG.info( "Coordinator stack state: {}", setupStackState );
     }
+
+    public SetupStackState sendCompleteSignalToSetupStack() {
+        LOG.info( "Sending complete signal to Coordinator" );
+        WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
+
+        LOG.info( "USERNAME: {}", coordinatorFig.getUsername() );
+        LOG.info( "MODULE_GROUPID: {}", project.getGroupId() );
+        LOG.info( "MODULE_ARTIFACTID: {}", project.getArtifactId() );
+        LOG.info( "MODULE_VERSION: {}", project.getVersion() );
+        LOG.info( "COMMIT_ID: {}", project.getVcsVersion() );
+
+        SetupStackState result = resource.path( coordinatorFig.getRunnersCompletedPath() )
+                .queryParam( USERNAME, coordinatorFig.getUsername() )
+                .queryParam( MODULE_GROUPID, project.getGroupId() )
+                .queryParam( MODULE_ARTIFACTID, project.getArtifactId() )
+                .queryParam( MODULE_VERSION, project.getVersion() )
+                .queryParam( COMMIT_ID, project.getVcsVersion() )
+                .type( MediaType.APPLICATION_JSON )
+                .get( SetupStackState.class );
+
+
+        return result;
+    }
+
+
 }
