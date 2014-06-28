@@ -65,42 +65,4 @@ public abstract class TestableResource {
         return testMode != null &&
                 (testMode.equals(TestMode.INTEG.toString()) || testMode.equals(TestMode.UNIT.toString()));
     }
-
-    public CoordinatedStack getCoordinatedStack( CommitDao commitDao, ModuleDao moduleDao, UserDao userDao,
-                                                  StackCoordinator stackCoordinator, String artifactId,
-                                                  String commitId, String md5, String username,
-                                                  String groupId, String version, String vcsRepoUrl,
-                                                  String testPackage, File runnerJar )
-            throws IOException {
-        Commit commit = null;
-        Module module = null;
-
-        List<Commit> commits = commitDao.getByModule( artifactId );
-        for ( Commit returnedCommit : commits ) {
-            Module commitModule = moduleDao.get( returnedCommit.getModuleId() );
-            if ( commitModule.getArtifactId().equals( artifactId ) &&
-                    commitModule.getGroupId().equals( groupId ) &&
-                    commitModule.getVersion().equals( version ) )
-            {
-                commit = returnedCommit;
-                module = commitModule;
-            }
-        }
-
-        if ( module == null ) {
-            module = new BasicModule( groupId, artifactId, version, vcsRepoUrl, testPackage );
-            moduleDao.save( module );
-        }
-
-        if ( commit == null ) {
-            commit = new BasicCommit( commitId, module.getId(), md5, new Date(), runnerJar.getAbsolutePath() );
-            commitDao.save( commit );
-        }
-
-        // Send DEPLOY signal to coordinatedStack
-        Stack stack = CoordinatorUtils.getStackFromRunnerJar( runnerJar );
-        User chopUser = userDao.get( username );
-        CoordinatedStack coordinatedStack =  stackCoordinator.getCoordinatedStack( stack, chopUser, commit, module );
-        return coordinatedStack;
-    }
 }
