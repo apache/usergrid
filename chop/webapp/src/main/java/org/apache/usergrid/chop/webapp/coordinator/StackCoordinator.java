@@ -122,15 +122,19 @@ public class StackCoordinator {
     public CoordinatedStack setupStack( Stack stack, User user, Commit commit, Module module, int runnerCount ) {
 
         CoordinatedStack coordinatedStack = getCoordinatedStack( stack, user, commit, module );
-        if ( coordinatedStack != null ) {
+        if ( coordinatedStack != null && coordinatedStack.getRunnerCount() == runnerCount ) {
             LOG.info( "Stack {} is already registered", stack.getName() );
             if( coordinatedStack.getSetupState() == SetupStackState.SetUp ) {
                 return coordinatedStack;
             }
         }
-        else {
-            coordinatedStack = new CoordinatedStack( stack, user, commit, module, runnerCount );
+        else if ( coordinatedStack != null && coordinatedStack.getRunnerCount() != runnerCount  ) {
+            LOG.info( "Stack {} is registered with different runner count, first removing the old stack", stack.getName() );
+            registeredStacks.remove( coordinatedStack.hashCode() );
         }
+
+        LOG.info( "Registering new stack {}...", stack.getName() );
+        coordinatedStack = new CoordinatedStack( stack, user, commit, module, runnerCount );
 
         LOG.info( "Starting setup stack thread of {}...", stack.getName() );
         synchronized ( coordinatedStack ) {
