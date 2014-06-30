@@ -53,8 +53,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import javax.ws.rs.core.MediaType;
-
 
 /**
  * The Controller controls the process of executing chops on test classes.
@@ -62,7 +60,6 @@ import javax.ws.rs.core.MediaType;
 @Singleton
 public class Controller implements IController, Runnable {
     private static final Logger LOG = LoggerFactory.getLogger( Controller.class );
-
 
     // @todo make this configurable and also put this into the project or runner fig
     private static final long DEFAULT_LAGER_WAIT_TIMEOUT_MILLIS = 120000;
@@ -448,5 +445,4 @@ public class Controller implements IController, Runnable {
         currentDriver = null;
         state = state.next( Signal.COMPLETED );
     }
-
 }
