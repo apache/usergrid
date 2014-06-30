@@ -88,8 +88,8 @@ public class StackCoordinator {
      * @param runnerCount
      * @return
      */
-    public CoordinatedStack setupStack( String commitId, String artifactId, String groupId, String version, String user,
-                                        int runnerCount ) {
+    public CoordinatedStack setupStack( String commitId, String artifactId, String groupId, String version,
+                                        String user, int runnerCount ) {
 
         User chopUser = userDao.get( user );
         File runnerJar = CoordinatorUtils.getRunnerJar( chopUiFig.getContextPath(), user, groupId, artifactId, version,

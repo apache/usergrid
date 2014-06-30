@@ -113,7 +113,7 @@ public class ResetResource extends TestableResource implements RestParams {
                            .build();
         }
         /** SetupStackState.SetUp */
-        LOG.info( "Stack is stopped, checking runner states..." );
+        LOG.info( "Stack is set up, checking runner states..." );
 
         /** Check state of all runners */
         String moduleId = BasicModule.createId( groupId, artifactId, version );

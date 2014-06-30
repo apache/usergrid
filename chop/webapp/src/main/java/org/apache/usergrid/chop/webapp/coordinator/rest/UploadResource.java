@@ -298,5 +298,4 @@ public class UploadResource extends TestableResource implements RestParams, Cons
 
         return coordinatorJarMd5;
     }
-
 }

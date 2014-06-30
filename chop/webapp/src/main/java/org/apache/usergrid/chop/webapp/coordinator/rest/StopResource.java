@@ -112,7 +112,7 @@ public class StopResource extends TestableResource implements RestParams {
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-        /** SetupStackState.Setup */
+        /** SetupStackState.SetUp */
         LOG.info( "Stack is set up, checking runner states..." );
 
         /** Check state of all runners */
