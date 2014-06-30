@@ -29,8 +29,6 @@ import com.google.inject.Singleton;
 import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.api.Runner;
 import org.apache.usergrid.chop.api.State;
-import org.apache.usergrid.chop.stack.CoordinatedStack;
-import org.apache.usergrid.chop.stack.SetupStackSignal;
 import org.apache.usergrid.chop.stack.SetupStackState;
 import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
 import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
@@ -108,13 +106,13 @@ public class StopResource extends TestableResource implements RestParams {
                            .build();
         }
 
-        if( ! status.equals( SetupStackState.Running ) ) {
+        if( ! status.equals( SetupStackState.SetUp ) ) {
             return Response.status( Response.Status.OK )
                            .entity( "Stack is " + status.toString() + ", cannot stop tests." )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-        /** SetupStackState.Running */
+        /** SetupStackState.Setup */
         LOG.info( "Stack is set up, checking runner states..." );
 
         /** Check state of all runners */
@@ -183,9 +181,6 @@ public class StopResource extends TestableResource implements RestParams {
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-
-        CoordinatedStack stack = stackCoordinator.findCoordinatedStack( commitId, artifactId, groupId, version, user );
-        stack.setSetupState( SetupStackSignal.STOP );
 
         return Response.status( Response.Status.CREATED )
                        .entity( "All running runners have been stopped." )

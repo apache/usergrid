@@ -70,11 +70,8 @@ import javax.ws.rs.core.MediaType;
  * The Controller controls the process of executing chops on test classes.
  */
 @Singleton
-public class Controller implements IController, Runnable, RestParams {
+public class Controller implements IController, Runnable {
     private static final Logger LOG = LoggerFactory.getLogger( Controller.class );
-
-    private CoordinatorFig coordinatorFig;
-    private URL endpoint;
 
 
     // @todo make this configurable and also put this into the project or runner fig
@@ -118,25 +115,6 @@ public class Controller implements IController, Runnable, RestParams {
                 injectClusters();
             }
         }
-    }
-
-
-    @Inject
-    private void setCoordinatorConfig( CoordinatorFig coordinatorFig ) {
-        this.coordinatorFig = coordinatorFig;
-
-        try {
-            endpoint = new URL( coordinatorFig.getEndpoint() );
-        }
-        catch ( MalformedURLException e ) {
-            LOG.error( "Failed to parse URL for coordinator", e );
-        }
-
-        // Need to get the configuration information for the coordinator
-        if ( ! CertUtils.isTrusted( endpoint.getHost() ) ) {
-            CertUtils.preparations( endpoint.getHost(), endpoint.getPort() );
-        }
-        Preconditions.checkState( CertUtils.isTrusted( endpoint.getHost() ), "coordinator must be trusted" );
     }
 
 
@@ -479,32 +457,6 @@ public class Controller implements IController, Runnable, RestParams {
         LOG.info( "The controller has completed." );
         currentDriver = null;
         state = state.next( Signal.COMPLETED );
-        SetupStackState setupStackState = sendCompleteSignalToSetupStack();
-        LOG.info( "Coordinator stack state: {}", setupStackState );
     }
-
-    public SetupStackState sendCompleteSignalToSetupStack() {
-        LOG.info( "Sending complete signal to Coordinator" );
-        WebResource resource = Client.create().resource( coordinatorFig.getEndpoint() );
-
-        LOG.info( "USERNAME: {}", coordinatorFig.getUsername() );
-        LOG.info( "MODULE_GROUPID: {}", project.getGroupId() );
-        LOG.info( "MODULE_ARTIFACTID: {}", project.getArtifactId() );
-        LOG.info( "MODULE_VERSION: {}", project.getVersion() );
-        LOG.info( "COMMIT_ID: {}", project.getVcsVersion() );
-
-        SetupStackState result = resource.path( coordinatorFig.getRunnersCompletedPath() )
-                .queryParam( USERNAME, coordinatorFig.getUsername() )
-                .queryParam( MODULE_GROUPID, project.getGroupId() )
-                .queryParam( MODULE_ARTIFACTID, project.getArtifactId() )
-                .queryParam( MODULE_VERSION, project.getVersion() )
-                .queryParam( COMMIT_ID, project.getVcsVersion() )
-                .type( MediaType.APPLICATION_JSON )
-                .get( SetupStackState.class );
-
-
-        return result;
-    }
-
 
 }

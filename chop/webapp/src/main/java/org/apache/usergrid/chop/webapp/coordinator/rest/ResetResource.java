@@ -108,13 +108,13 @@ public class ResetResource extends TestableResource implements RestParams {
                            .build();
         }
 
-        if( ! status.equals( SetupStackState.Stopped ) ) {
+        if( ! status.equals( SetupStackState.SetUp ) ) {
             return Response.status( Response.Status.OK )
                            .entity( "Stack is " + status.toString() + ", cannot reset tests." )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-        /** SetupStackState.Stopped */
+        /** SetupStackState.SetUp */
         LOG.info( "Stack is stopped, checking runner states..." );
 
         /** Check state of all runners */
@@ -196,9 +196,6 @@ public class ResetResource extends TestableResource implements RestParams {
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
-
-        CoordinatedStack stack = stackCoordinator.findCoordinatedStack( commitId, artifactId, groupId, version, user );
-        stack.setSetupState( SetupStackSignal.RESET );
 
         return Response.status( Response.Status.CREATED )
                        .entity( "All stopped runners have been reset." )

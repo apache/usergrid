@@ -92,13 +92,6 @@ public interface CoordinatorFig extends GuicyFig {
     String getRunnersUnregisterPath();
 
 
-    String RUNNERS_COMPLETED_PATH = "coordinator.endpoint.runners.completed";
-    String RUNNERS_COMPLETED_PATH_DEFAULT = "/runners/completed";
-    @Key( RUNNERS_COMPLETED_PATH )
-    @Default( RUNNERS_COMPLETED_PATH_DEFAULT )
-    String getRunnersCompletedPath();
-
-
     String ENDPOINT = "coordinator.endpoint";
     String ENDPOINT_DEFAULT = "https://localhost:8443";
     @Key( ENDPOINT )

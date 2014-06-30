@@ -37,22 +37,6 @@ import com.google.common.base.Preconditions;
  * Represents the setup state of a stack
  */
 public enum SetupStackState {
-    // Running ==> (Complete signal) ==> SetUp
-    // Running ==> (Destroy signal) ==> Destroying
-    // Running ==> (Stop signal) ==> Stopped
-    Running( 7, new SetupStackSignal[] { SetupStackSignal.STOP, SetupStackSignal.DESTROY, SetupStackSignal.COMPLETE },
-            new Integer[] { 6, 4, 0 },
-            "Running tests on stack.",
-            "%s signal rejected. When Running only STOP, DESTROY and COMPLETE signal(s) which cause to transition into " +
-                    "Stopped, Destroying and SetUp state(s) respectively" ),
-
-    // Stopped ==> (reset signal) ==> SetUp
-    Stopped( 6, new SetupStackSignal[] { SetupStackSignal.RESET, SetupStackSignal.DESTROY },
-            new Integer[] { 0, 4 },
-            "Tests are stopped while running, please reset first.",
-            "%s signal rejected. When Stopped only RESET and DESTROY signal(s) which cause to transition into " +
-                    "SetUp, Destroying state(s) respectively" ),
-
     // JarNotFound ==> (setup signal) ==> SettingUp
     // JarNotFound ==> (deploy signal) ==> NotSetUp
     JarNotFound( 5, new SetupStackSignal[] { SetupStackSignal.DEPLOY, SetupStackSignal.SETUP },
@@ -92,13 +76,12 @@ public enum SetupStackState {
             "%s signal rejected. When SettingUp only COMPLETE and FAIL signal(s) can be sent which " +
                     "cause to transition into SetUp and SetupFailed state(s) respectively" ),
 
-    // SetUp ==> (start signal) ==> Running
     // SetUp ==> (destroy signal) ==> NotSetUp
-    SetUp( 0, new SetupStackSignal[] { SetupStackSignal.DESTROY, SetupStackSignal.START },
-            new Integer[] { 4, 7 },
+    SetUp( 0, new SetupStackSignal[] { SetupStackSignal.DESTROY },
+            new Integer[] { 4 },
             "Stack is set up and ready to start the tests.",
-            "%s signal rejected. When SetUp only DESTROY and SetUp signal(s) which cause to transition into " +
-                    "NotSetUp and SetUp state(s) respectively" );
+            "%s signal rejected. When SetUp only DESTROY signal(s) which cause to transition into " +
+                    "NotSetUp state(s) respectively" );
 
     private static final Logger LOG = LoggerFactory.getLogger( SetupStackState.class );
     private static final String SUCCESS_MSG = "%s signal accepted, transitioning from %s state to %s";
@@ -206,10 +189,6 @@ public enum SetupStackState {
                 return Destroying;
             case 5:
                 return JarNotFound;
-            case 6:
-                return Stopped;
-            case 7:
-                return Running;
         }
 
         throw new RuntimeException( "Should never get here!" );

@@ -88,9 +88,4 @@ public interface IController {
      */
     Project getProject();
 
-    /**
-     * sends signal to coordinator to inform that all runners are finished
-     * @return Setup stack state of coordinator after signal sent
-     */
-    SetupStackState sendCompleteSignalToSetupStack();
 }

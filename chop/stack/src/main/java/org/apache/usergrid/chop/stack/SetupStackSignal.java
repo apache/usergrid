@@ -22,7 +22,7 @@ package org.apache.usergrid.chop.stack;
 
 public enum SetupStackSignal {
 
-    START( 0 ), STOP( 1 ), RESET( 2 ), DESTROY( 3 ), DEPLOY( 4 ), SETUP( 5 ), FAIL ( 6 ), COMPLETE ( 7 );
+    DESTROY( 0 ), DEPLOY( 1 ), SETUP( 2 ), FAIL ( 3 ), COMPLETE ( 4 );
 
     private final int signalID;
 
@@ -40,20 +40,15 @@ public enum SetupStackSignal {
     public SetupStackSignal get( int id ) {
         switch ( id ) {
             case 0:
-                return START;
-            case 1:
-                return STOP;
-            case 2:
-                return RESET;
-            case 3:
                 return DESTROY;
-            case 4:
+
+            case 1:
                 return DEPLOY;
-            case 5:
+            case 2:
                 return SETUP;
-            case 6:
+            case 3:
                 return FAIL;
-            case 7:
+            case 4:
                 return COMPLETE;
         }
 

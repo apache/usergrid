@@ -195,8 +195,8 @@ public class UploadResource extends TestableResource implements RestParams, Cons
         LOG.debug( "extracted {} = {}", RestParams.MODULE_VERSION, version );
         LOG.debug( "extracted {} = {}", RestParams.USERNAME, username );
         LOG.debug( "extracted {} = {}", RestParams.VCS_REPO_URL, vcsRepoUrl );
-        LOG.debug( "extracted {} = {}", RestParams.TEST_PACKAGE, runnerCount );
-        LOG.debug( "extracted {} = {}", RestParams.RUNNER_COUNT, testPackage );
+        LOG.debug( "extracted {} = {}", RestParams.TEST_PACKAGE, testPackage );
+        LOG.debug( "extracted {} = {}", RestParams.RUNNER_COUNT, runnerCount );
         LOG.debug( "extracted {} = {}", RestParams.MD5, md5 );
 
         if( inTestMode( testMode ) ) {
@@ -261,7 +261,7 @@ public class UploadResource extends TestableResource implements RestParams, Cons
             commitDao.save( commit );
         }
 
-        stackCoordinator.registerStack( commitId, artifactId, groupId, version, username, runnerCount );
+//        stackCoordinator.registerStack( commitId, artifactId, groupId, version, username, runnerCount );
 
         return Response.status( Response.Status.CREATED ).entity( runnerJar.getAbsolutePath() ).build();
     }
