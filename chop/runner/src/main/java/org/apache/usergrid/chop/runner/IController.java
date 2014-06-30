@@ -86,5 +86,4 @@ public interface IController {
      * @return the project being chopped up
      */
     Project getProject();
-
 }

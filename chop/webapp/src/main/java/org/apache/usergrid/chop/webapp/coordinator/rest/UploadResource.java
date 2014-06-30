@@ -261,7 +261,7 @@ public class UploadResource extends TestableResource implements RestParams, Cons
             commitDao.save( commit );
         }
 
-//        stackCoordinator.registerStack( commitId, artifactId, groupId, version, username, runnerCount );
+        stackCoordinator.registerStack( commitId, artifactId, groupId, version, username, runnerCount );
 
         return Response.status( Response.Status.CREATED ).entity( runnerJar.getAbsolutePath() ).build();
     }
