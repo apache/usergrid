@@ -71,7 +71,6 @@ public class NodeShardApproximationTest {
 
     private GraphFig graphFig;
 
-    private NodeShardCounterSerialization ser;
     private NodeShardCounterSerialization nodeShardCounterSerialization;
     private TimeService timeService;
 
@@ -94,7 +93,6 @@ public class NodeShardApproximationTest {
         when( graphFig.getShardCacheSize() ).thenReturn( 10000l );
         when( graphFig.getShardSize() ).thenReturn( 250000l );
 
-        ser = mock( NodeShardCounterSerialization.class );
         nodeShardCounterSerialization = mock( NodeShardCounterSerialization.class );
 
         when(nodeShardCounterSerialization.flush( any(Counter.class) )).thenReturn( mock( MutationBatch.class) );
