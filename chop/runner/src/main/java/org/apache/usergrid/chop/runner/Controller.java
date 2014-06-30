@@ -21,8 +21,6 @@ package org.apache.usergrid.chop.runner;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,15 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import org.apache.usergrid.chop.api.CoordinatorFig;
-import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.runner.drivers.Driver;
 import org.apache.usergrid.chop.runner.drivers.TimeDriver;
-import org.apache.usergrid.chop.stack.CoordinatedStack;
-import org.apache.usergrid.chop.stack.SetupStackSignal;
-import org.apache.usergrid.chop.stack.SetupStackState;
 import org.reflections.Reflections;
 import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.Runner;
@@ -55,7 +46,6 @@ import org.apache.usergrid.chop.stack.ChopCluster;
 import org.apache.usergrid.chop.stack.ICoordinatedCluster;
 import org.apache.usergrid.chop.stack.Instance;
 
-import org.safehaus.jettyjam.utils.CertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

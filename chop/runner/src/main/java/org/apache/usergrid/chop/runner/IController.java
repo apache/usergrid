@@ -23,7 +23,6 @@ import org.apache.usergrid.chop.api.Signal;
 import org.apache.usergrid.chop.api.StatsSnapshot;
 import org.apache.usergrid.chop.api.Project;
 import org.apache.usergrid.chop.api.State;
-import org.apache.usergrid.chop.stack.SetupStackState;
 
 
 /**
