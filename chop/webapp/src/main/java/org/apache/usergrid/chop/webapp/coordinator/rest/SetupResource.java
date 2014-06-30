@@ -107,7 +107,7 @@ public class SetupResource extends TestableResource implements RestParams {
             if( setupStackThread != null ) {
                 message = setupStackThread.getErrorMessage();
             }
-            message = SetupStackState.SetupFailed.getMessage() + " Error message: " + message;
+            message = SetupStackState.SetupFailed.getStackStateMessage() + " Error message: " + message;
             stackCoordinator.removeFailedStack( stack );
             return Response.status( Response.Status.OK )
                            .entity( message )
@@ -117,7 +117,7 @@ public class SetupResource extends TestableResource implements RestParams {
 
         if( ! status.equals( SetupStackState.NotSetUp ) ) {
             return Response.status( Response.Status.OK )
-                           .entity( status.getMessage() )
+                           .entity( status.getStackStateMessage() )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }

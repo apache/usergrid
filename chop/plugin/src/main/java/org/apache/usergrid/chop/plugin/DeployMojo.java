@@ -118,16 +118,20 @@ public class DeployMojo extends MainMojo {
                 .queryParam( RestParams.MODULE_VERSION,
                         props.getProperty( Project.PROJECT_VERSION_KEY ) )
                 .queryParam( RestParams.USERNAME, username )
+                .queryParam( RestParams.VCS_REPO_URL, props.getProperty( Project.GIT_URL_KEY ) )
                 .queryParam( RestParams.TEST_PACKAGE,
                         props.getProperty( Project.TEST_PACKAGE_BASE ) )
                 .queryParam( RestParams.MD5, props.getProperty( Project.MD5_KEY ) )
+                .queryParam( RestParams.RUNNER_COUNT, runnerCount.toString() )
                 .type( MediaType.APPLICATION_JSON )
                 .accept( MediaType.APPLICATION_JSON )
                 .post( ClientResponse.class );
 
         String uploadResponseMessage = uploadResponse.getEntity( String.class );
 
-        if ( ! uploadResponseMessage.equals( SetupStackState.JarNotFound.getMessage() ) ) {
+        // Check if latest jar exists on coordinator
+        if ( uploadResponseMessage.equals( SetupStackState.NotSetUp.getStackStateMessage() )
+                || uploadResponseMessage.equals( SetupStackState.SetUp.getStackStateMessage() ) ) {
             LOG.info( uploadResponseMessage );
             return;
         }
@@ -142,6 +146,7 @@ public class DeployMojo extends MainMojo {
             multipart.field( RestParams.USERNAME, username );
             multipart.field( RestParams.VCS_REPO_URL, props.getProperty( Project.GIT_URL_KEY ) );
             multipart.field( RestParams.TEST_PACKAGE, props.getProperty( Project.TEST_PACKAGE_BASE ) );
+            multipart.field( RestParams.RUNNER_COUNT, runnerCount.toString() );
             multipart.field( RestParams.MD5, props.getProperty( Project.MD5_KEY ) );
 
             FileInputStream in = new FileInputStream( source );

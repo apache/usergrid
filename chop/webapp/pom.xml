@@ -19,6 +19,7 @@
     <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <wagon.version>2.6</wagon.version>
+      <shade.plugin.version>2.2</shade.plugin.version>
       <wagon.plugin.version>1.0-beta-5</wagon.plugin.version>
       <webapp-shaded-jar>${project.artifactId}-${project.version}-shaded.${project.packaging}</webapp-shaded-jar>
       <wagon.webapp.copy.file>${project.build.directory}/${webapp-shaded-jar}</wagon.webapp.copy.file>
@@ -170,6 +171,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
+        <version>${shade.plugin.version}</version>
         <executions>
           <execution>
             <phase>package</phase>

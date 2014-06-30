@@ -108,7 +108,7 @@ public class StartResource extends TestableResource implements RestParams {
 
         if( ! status.equals( SetupStackState.SetUp ) ) {
             return Response.status( Response.Status.OK )
-                           .entity( SetupStackState.NotSetUp.getMessage() )
+                           .entity( status.getStackStateMessage() )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }

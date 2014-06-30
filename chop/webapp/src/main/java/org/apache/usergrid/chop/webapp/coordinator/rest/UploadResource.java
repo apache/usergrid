@@ -127,10 +127,12 @@ public class UploadResource extends TestableResource implements RestParams, Cons
             @QueryParam( RestParams.MODULE_GROUPID ) String groupId,
             @QueryParam( RestParams.MODULE_VERSION ) String version,
             @QueryParam( RestParams.USERNAME ) String username,
+            @QueryParam( VCS_REPO_URL ) String vcsRepoUrl,
             @QueryParam( TEST_PACKAGE ) String testPackage,
             @QueryParam( MD5 ) String md5,
+            @QueryParam( RestParams.RUNNER_COUNT ) int runnerCount,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
-    ) {
+                                ) throws IOException {
 
         if( inTestMode( testMode ) ) {
             LOG.info( "Calling /upload/status in test mode ..." );
@@ -147,13 +149,14 @@ public class UploadResource extends TestableResource implements RestParams, Cons
             String coordinatorRunnerJarMd5 = getCoordinatorJarMd5( runnerJar.getAbsolutePath() );
             if ( isMD5SumsEqual( coordinatorRunnerJarMd5, md5 ) ) {
                 return Response.status( Response.Status.OK )
-                        .entity( status.getMessage() ).build();
+                               .entity( SetupStackState.NotSetUp.getStackStateMessage() )
+                               .build();
             }
         }
 
         return Response.status( Response.Status.OK )
-                .entity( SetupStackState.JarNotFound.getMessage() )
-                .build();
+                       .entity( SetupStackState.JarNotFound.getStackStateMessage() )
+                       .build();
     }
 
 
@@ -174,10 +177,11 @@ public class UploadResource extends TestableResource implements RestParams, Cons
             @FormDataParam( VCS_REPO_URL ) String vcsRepoUrl,
             @FormDataParam( TEST_PACKAGE ) String testPackage,
             @FormDataParam( MD5 ) String md5,
+            @FormDataParam( RestParams.RUNNER_COUNT ) int runnerCount,
             @FormDataParam( CONTENT ) InputStream runnerJarStream,
             @Nullable @QueryParam( TestMode.TEST_MODE_PROPERTY ) String testMode
 
-    ) throws Exception {
+                                ) throws Exception {
 
         if( inTestMode( testMode ) ) {
             LOG.info( "Calling /upload/runner in test mode ..." );
@@ -193,13 +197,14 @@ public class UploadResource extends TestableResource implements RestParams, Cons
         LOG.debug( "extracted {} = {}", RestParams.USERNAME, username );
         LOG.debug( "extracted {} = {}", RestParams.VCS_REPO_URL, vcsRepoUrl );
         LOG.debug( "extracted {} = {}", RestParams.TEST_PACKAGE, testPackage );
+        LOG.debug( "extracted {} = {}", RestParams.RUNNER_COUNT, runnerCount );
         LOG.debug( "extracted {} = {}", RestParams.MD5, md5 );
 
         if( inTestMode( testMode ) ) {
             return Response.status( Response.Status.CREATED )
-                    .entity( SUCCESSFUL_TEST_MESSAGE )
-                    .type( MediaType.TEXT_PLAIN )
-                    .build();
+                           .entity( SUCCESSFUL_TEST_MESSAGE )
+                           .type( MediaType.TEXT_PLAIN )
+                           .build();
         }
 
         File runnerJar = CoordinatorUtils.getRunnerJar( chopUiFig.getContextPath(), username, groupId, artifactId,
@@ -256,6 +261,8 @@ public class UploadResource extends TestableResource implements RestParams, Cons
             commit = new BasicCommit( commitId, module.getId(), md5, new Date(), runnerJar.getAbsolutePath() );
             commitDao.save( commit );
         }
+
+        stackCoordinator.registerStack( commitId, artifactId, groupId, version, username, runnerCount );
 
         return Response.status( Response.Status.CREATED ).entity( runnerJar.getAbsolutePath() ).build();
     }
