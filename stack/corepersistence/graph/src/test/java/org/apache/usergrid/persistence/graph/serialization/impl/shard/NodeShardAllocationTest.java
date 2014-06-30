@@ -84,8 +84,8 @@ public class NodeShardAllocationTest {
     public void noShards() {
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final NodeShardCounterSerialization nodeShardCounterSerialization =
-                mock( NodeShardCounterSerialization.class );
+        final NodeShardApproximation nodeShardCounterSerialization =
+                mock( NodeShardApproximation.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -121,8 +121,8 @@ public class NodeShardAllocationTest {
     public void existingFutureShard() {
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final NodeShardCounterSerialization nodeShardCounterSerialization =
-                mock( NodeShardCounterSerialization.class );
+        final NodeShardApproximation nodeShardCounterSerialization =
+                mock( NodeShardApproximation.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -167,8 +167,8 @@ public class NodeShardAllocationTest {
     public void lowCountFutureShard() {
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final NodeShardCounterSerialization NodeShardCounterSerialization =
-                mock( NodeShardCounterSerialization.class );
+        final NodeShardApproximation nodeShardApproximation =
+                mock( NodeShardApproximation.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -181,7 +181,7 @@ public class NodeShardAllocationTest {
 
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, NodeShardCounterSerialization, timeService,
+                new NodeShardAllocationImpl( edgeShardSerialization, nodeShardApproximation, timeService,
                         graphFig, keyspace );
 
         final Id nodeId = createId( "test" );
@@ -206,7 +206,7 @@ public class NodeShardAllocationTest {
 
         final long count = graphFig.getShardSize() - 1;
 
-        when( NodeShardCounterSerialization.getCount( eq( new ShardKey( scope, nodeId, 0l, type, subType ) ) ))
+        when( nodeShardApproximation.getCount(scope, nodeId, 0l, type, subType ))
                                            .thenReturn( count );
 
         final boolean result = approximation.auditMaxShard( scope, nodeId, type, subType );
@@ -219,8 +219,8 @@ public class NodeShardAllocationTest {
     public void equalCountFutureShard() {
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final NodeShardCounterSerialization NodeShardCounterSerialization =
-                mock( NodeShardCounterSerialization.class );
+        final NodeShardApproximation nodeShardApproximation =
+                mock( NodeShardApproximation.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -233,7 +233,7 @@ public class NodeShardAllocationTest {
 
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, NodeShardCounterSerialization, timeService,
+                new NodeShardAllocationImpl( edgeShardSerialization, nodeShardApproximation, timeService,
                         graphFig, keyspace );
 
         final Id nodeId = createId( "test" );
@@ -257,8 +257,8 @@ public class NodeShardAllocationTest {
         final long shardCount = graphFig.getShardSize();
 
         //return a shard size equal to our max
-        when( NodeShardCounterSerialization
-                .getCount(  eq(new ShardKey(  scope , nodeId, 0l,type , subType ) ) ))
+        when( nodeShardApproximation
+                .getCount(   scope , nodeId, 0l,type , subType  ))
                 .thenReturn( shardCount );
 
         ArgumentCaptor<Long> newUUIDValue = ArgumentCaptor.forClass( Long.class );
@@ -292,8 +292,8 @@ public class NodeShardAllocationTest {
     public void futureCountShardCleanup() {
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final NodeShardCounterSerialization NodeShardCounterSerialization =
-                mock( NodeShardCounterSerialization.class );
+        final NodeShardApproximation nodeShardApproximation =
+                mock( NodeShardApproximation.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -306,7 +306,7 @@ public class NodeShardAllocationTest {
 
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, NodeShardCounterSerialization, timeService,
+                new NodeShardAllocationImpl( edgeShardSerialization, nodeShardApproximation, timeService,
                         graphFig, keyspace );
 
         final Id nodeId = createId( "test" );
@@ -397,8 +397,8 @@ public class NodeShardAllocationTest {
     public void noShardsReturns() {
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
-        final NodeShardCounterSerialization NodeShardCounterSerialization =
-                mock( NodeShardCounterSerialization.class );
+        final NodeShardApproximation nodeShardApproximation =
+                mock( NodeShardApproximation.class );
 
 
         final TimeService timeService = mock( TimeService.class );
@@ -410,7 +410,7 @@ public class NodeShardAllocationTest {
         when( keyspace.prepareMutationBatch() ).thenReturn( batch );
 
         NodeShardAllocation approximation =
-                new NodeShardAllocationImpl( edgeShardSerialization, NodeShardCounterSerialization, timeService,
+                new NodeShardAllocationImpl( edgeShardSerialization, nodeShardApproximation, timeService,
                         graphFig, keyspace );
 
         final Id nodeId = createId( "test" );

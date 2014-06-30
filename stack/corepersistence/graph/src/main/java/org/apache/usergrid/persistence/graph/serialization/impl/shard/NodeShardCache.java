@@ -61,5 +61,5 @@ public interface NodeShardCache {
      * @param count
      * @return The new local cached count
      */
-    public long increment(final ApplicationScope scope, final Id nodeId, final long shard, final long count, final String... edgeTypes);
+    public void increment(final ApplicationScope scope, final Id nodeId, final long shard, final long count, final String... edgeTypes);
 }

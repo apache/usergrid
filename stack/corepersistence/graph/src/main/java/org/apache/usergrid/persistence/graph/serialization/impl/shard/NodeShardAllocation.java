@@ -38,7 +38,7 @@ public interface NodeShardAllocation {
     /**
      * Get all shards for the given info.  If none exist, a default shard should be allocated
      *
-     * @param scope
+     * @param scope The application scope
      * @param nodeId
      * @param maxShardId The max value to start seeking from.  Values <= this will be returned if specified
      * @param edgeTypes
@@ -51,12 +51,23 @@ public interface NodeShardAllocation {
     /**
      * Audit our highest shard for it's maximum capacity.  If it has reached the max capacity <=, it will allocate a new shard
      *
-     * @param scope The organization scope
+     * @param scope The app scope
      * @param nodeId The node id
      * @param edgeType The edge types
      * @return True if a new shard was allocated
      */
     public boolean auditMaxShard(final ApplicationScope scope, final Id nodeId, final String... edgeType);
+
+
+    /**
+     * Increment the underlying counts on the shards
+     * @param scope The app scope
+     * @param nodeId The id of the node
+     * @param shardId The id of the shard
+     * @param amount The amount to increment
+     * @param edgeTypes The edge types to include in the count operation
+     */
+    public void increment(final ApplicationScope scope, final Id nodeId, final long shardId, final long amount, final String... edgeTypes);
 
 
 }
