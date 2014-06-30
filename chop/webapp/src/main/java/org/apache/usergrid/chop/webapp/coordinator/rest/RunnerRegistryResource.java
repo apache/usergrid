@@ -54,7 +54,7 @@ import java.util.Collections;
 @Produces( MediaType.APPLICATION_JSON )
 @Consumes( MediaType.APPLICATION_JSON )
 @Path( RunnerRegistryResource.ENDPOINT )
-public class RunnerRegistryResource extends TestableResource implements RestParams {
+public class RunnerRegistryResource extends TestableResource {
     public final static String ENDPOINT = "/runners";
 
     private static final Logger LOG = LoggerFactory.getLogger( RunnerRegistryResource.class );
@@ -64,6 +64,7 @@ public class RunnerRegistryResource extends TestableResource implements RestPara
 
     @Inject
     private RunnerCoordinator runnerCoordinator;
+
 
     public RunnerRegistryResource() {
         super( ENDPOINT );
@@ -189,5 +190,4 @@ public class RunnerRegistryResource extends TestableResource implements RestPara
 
         return Response.ok( result ).build();
     }
-
 }

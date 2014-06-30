@@ -41,7 +41,6 @@ public enum SetupStackSignal {
         switch ( id ) {
             case 0:
                 return DESTROY;
-
             case 1:
                 return DEPLOY;
             case 2:

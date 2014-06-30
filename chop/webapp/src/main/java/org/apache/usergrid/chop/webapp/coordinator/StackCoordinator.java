@@ -293,8 +293,8 @@ public class StackCoordinator {
      * @param user
      * @return Setup state of given parameters' stack
      */
-    public SetupStackState stackStatus( String commitId, String artifactId, String groupId, String version,
-                                        String user ) {
+    public SetupStackState stackStatus( String commitId, String artifactId, String groupId,
+                                        String version, String user ) {
 
         CoordinatedStack stack = findCoordinatedStack( commitId, artifactId, groupId, version, user );
 
@@ -340,8 +340,8 @@ public class StackCoordinator {
                                            final String version, final String user, final int runnerCount ) {
 
         User chopUser = userDao.get( user );
-        File runnerJar = CoordinatorUtils.getRunnerJar( chopUiFig.getContextPath(), user, groupId, artifactId, version,
-                commitId );
+        File runnerJar = CoordinatorUtils.getRunnerJar( chopUiFig.getContextPath(), user, groupId, artifactId,
+                version, commitId );
 
         Stack stack = CoordinatorUtils.getStackFromRunnerJar( runnerJar );
         Module module = moduleDao.get( BasicModule.createId( groupId, artifactId, version ) );

@@ -87,6 +87,7 @@ public class UploadResource extends TestableResource implements RestParams, Cons
     @Inject
     private StackCoordinator stackCoordinator;
 
+
     public UploadResource() {
         super( ENDPOINT );
     }
