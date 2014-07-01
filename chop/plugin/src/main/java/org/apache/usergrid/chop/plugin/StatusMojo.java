@@ -45,11 +45,6 @@ public class StatusMojo extends MainMojo {
     public void execute() throws MojoExecutionException {
         initCertStore();
 
-        /** First check that the runner.jar is ready and up-to-date */
-        if ( ! isReadyToDeploy() ) {
-            throw new MojoExecutionException( "Runner file was not ready, quitting." );
-        }
-
         Properties props = new Properties();
         try {
             File extractedConfigPropFile = new File( getExtractedRunnerPath(), PROJECT_FILE );
