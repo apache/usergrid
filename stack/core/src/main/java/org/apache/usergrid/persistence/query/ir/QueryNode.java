@@ -32,4 +32,10 @@ public abstract class QueryNode {
      * Get the count of the total number of slices in our tree from this node and it's children
      */
     public abstract int getCount();
+
+    /**
+     * True if this node should not be used in it's context in the AST, and should ignore it's hint size and always select the max
+     * @return
+     */
+    public abstract boolean ignoreHintSize();
 }

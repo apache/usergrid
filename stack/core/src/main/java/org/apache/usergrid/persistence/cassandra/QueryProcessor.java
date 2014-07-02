@@ -633,7 +633,7 @@ public class QueryProcessor {
 
         //if it's a root node, and there's only 1 slice to check in the entire tree, then just select what we need
         //so we short circuit on range scans faster.  otherwise it's more efficient to make less trips with candidates we discard from cassandra
-        if ( node == rootNode && sliceCount == 1 ) {
+        if ( node == rootNode && !node.ignoreHintSize()) {
             return size;
         }
 
