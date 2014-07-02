@@ -1,10 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.symbolicName>org.apache.usergrid</bundle.symbolicName>
         <bundle.namespace>org.apache.usergrid</bundle.namespace>
         <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
-        <jackson-version>2.2.0</jackson-version>
+        <jackson-version>2.3.1</jackson-version>
     </properties>
 	
     <parent>
@@ -12,12 +13,13 @@
         <artifactId>oss-parent</artifactId>
         <version>7</version>
     </parent>
-	
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid-java-client</artifactId>
-    <version>0.0.9-SNAPSHOT</version>
+    <version>0.0.10-SNAPSHOT</version>
     <packaging>jar</packaging>
+
     <description>A simple java client for usergrid</description>
     <url>https://github.com/apigee/usergrid-stack-internal</url>
 	

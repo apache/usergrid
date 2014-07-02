@@ -213,7 +213,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
 
         applicationId = UUIDGenerator.newTimeUUID();
-        logger.debug( "New application id " + applicationId.toString() );
+
+        logger.debug( "New application orgName {} name {} id {} ", 
+                new Object[] { orgName, name, applicationId.toString() } );
 
         initializeApplication( orgName, applicationId, appName, properties );
         return applicationId;
@@ -266,12 +268,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         properties.put( PROPERTY_NAME, appName );
 
-        Entity appInfoEntity = new Entity(generateApplicationId( UUIDGenerator.newTimeUUID() ));
+        Entity appInfoEntity = new Entity( generateApplicationId( applicationId ));
 
         long timestamp = System.currentTimeMillis();
         appInfoEntity.setField( new LongField( PROPERTY_CREATED, (long)(timestamp / 1000)));
         appInfoEntity.setField( new StringField( PROPERTY_NAME, name ));
-        appInfoEntity.setField( new UUIDField( PROPERTY_UUID, applicationId ));
+        appInfoEntity.setField( new UUIDField( "applicationUuid", applicationId ));
         appInfoEntity.setField( new UUIDField( "organizationUuid", orgUuid ));
 
         // create app in system app scope
@@ -288,8 +290,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // create app in its own scope
         EntityManager em = getEntityManager( applicationId );
-        em.create( TYPE_APPLICATION, APPLICATION_ENTITY_CLASS, properties );
+        em.create( applicationId, TYPE_APPLICATION, properties );
         em.resetRoles();
+        em.refreshIndex();
 
         return applicationId;
     }
@@ -518,7 +521,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private Id generateApplicationId(UUID id){
         return new SimpleId( id, Application.ENTITY_TYPE );
     }
-   
 
     /**
      * Gets the setup.

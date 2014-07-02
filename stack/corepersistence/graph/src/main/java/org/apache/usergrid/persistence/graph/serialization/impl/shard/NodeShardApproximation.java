@@ -48,4 +48,10 @@ public interface NodeShardApproximation {
      */
     public long getCount( final ApplicationScope scope, final Id nodeId, final long shardId,
                           final String... edgeType );
+
+
+    /**
+     * Flush the current counters in the Approximation
+     */
+    public void flush();
 }

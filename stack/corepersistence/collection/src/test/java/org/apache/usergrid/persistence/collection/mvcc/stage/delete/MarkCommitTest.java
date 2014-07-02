@@ -1,15 +1,6 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
-import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityEvent;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValue;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
-import org.apache.usergrid.persistence.core.consistency.AsynchronousMessage;
-import org.apache.usergrid.persistence.core.consistency.ConsistencyFig;
-import org.apache.usergrid.persistence.core.consistency.SimpleAsynchronousMessage;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -24,11 +15,10 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.netflix.astyanax.MutationBatch;
-
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -117,12 +107,6 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
          */
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
         final MutationBatch logMutation = mock( MutationBatch.class );
-        final ConsistencyFig consistencyFig = mock(ConsistencyFig.class);
-        final AsyncProcessorFactory factory = mock(AsyncProcessorFactory.class);
-
-        final AsyncProcessor<MvccEntityDeleteEvent> processor = mock(AsyncProcessor.class);
-
-        final SimpleAsynchronousMessage<MvccEntityDeleteEvent> message = mock(SimpleAsynchronousMessage.class);
         final MvccEntitySerializationStrategy mvccEntityStrategy = mock( MvccEntitySerializationStrategy.class );
         final MutationBatch entityMutation = mock( MutationBatch.class );
         final SerializationFig serializationFig = mock(SerializationFig.class);
@@ -132,10 +116,10 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
         when( mvccEntityStrategy.write( any( CollectionScope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
 
-        when (factory.getProcessor( MvccEntityDeleteEvent.class )).thenReturn( processor );
 
-        when(processor.setVerification(any(MvccEntityDeleteEvent.class),any(long.class))).thenReturn(message);
-        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, factory, consistencyFig, serializationFig ).call( event );
+        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, serializationFig ).call( event );
+
+        //TODO: This doesn't assert anything, this needs fixed (should be a fail technically)
     }
 
 }

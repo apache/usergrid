@@ -80,7 +80,7 @@ public class EntityCollectionManagerStressTest {
             newEntity.setField(new StringField("name", String.valueOf(i)));
             newEntity.setField(new LocationField("location", new Location(120,40)));
 
-            Entity returned = manager.write(newEntity).toBlockingObservable().last();
+            Entity returned = manager.write(newEntity).toBlocking().last();
 
             assertNotNull("Returned has a id", returned.getId());
             assertNotNull("Returned has a version", returned.getVersion());
@@ -97,7 +97,7 @@ public class EntityCollectionManagerStressTest {
 
         timer.start();
         for ( Id id : ids ) {
-            Entity entity = manager.load( id ).toBlockingObservable().last();
+            Entity entity = manager.load( id ).toBlocking().last();
             assertNotNull("Returned has a id", entity.getId());
             assertNotNull("Returned has a version", entity.getVersion());
         }

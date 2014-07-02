@@ -24,13 +24,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.annotate.JsonAnyGetter;
-import org.codehaus.jackson.annotate.JsonAnySetter;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonTypeInfo;
-
 import org.apache.usergrid.persistence.model.field.Field;
+
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * Simple wrapper for holding nested objects
@@ -64,7 +64,7 @@ public class EntityObject implements Serializable {
         fields.remove( name );
     }
 
-    @JsonAnySetter
+    //@JsonAnySetter
     public void setFields(ArrayList al) {
         if(al.size() == 0)
             return;
@@ -79,14 +79,26 @@ public class EntityObject implements Serializable {
         }
     }
 
-    @JsonAnyGetter
+
     public void getFields( String name) {
         fields.get( name );
     }
     /**
      * Get all fields in the entity
      */
+    //@JsonAnyGetter
     public Collection<Field> getFields() {
         return fields.values();
+    }
+
+    @JsonAnyGetter
+    public Map<String, Field> getFieldMap() {
+        return fields;
+    }
+
+    @JsonAnySetter
+    public void setFieldMap( Map<String, Field> fieldMap ) {
+        fields.clear();
+        fields.putAll( fieldMap );
     }
 }

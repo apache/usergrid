@@ -17,27 +17,27 @@
 package org.apache.usergrid.rest.applications.utils;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.WebResource;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.ws.rs.core.MediaType;
-
-import org.codehaus.jackson.JsonNode;
-import org.apache.usergrid.utils.UUIDUtils;
-
-import com.sun.jersey.api.client.WebResource;
-
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import org.apache.usergrid.utils.UUIDUtils;
 
 
 public enum UserRepo {
+        
+
     INSTANCE;
 
     private final Map<String, UUID> loaded = new HashMap<String, UUID>();
 
 
-    public void load( WebResource resource, String accessToken ) {
+    public void load( WebResource resource, String accessToken ) throws IOException {
         if ( loaded.size() > 0 ) {
             return;
         }
@@ -49,7 +49,8 @@ public enum UserRepo {
 
 
     private void createUser( String username, String email, String password, String fullName, WebResource resource,
-                             String accessToken ) {
+                             String accessToken ) throws IOException {
+    
 
         Map<String, String> payload = hashMap( "email", email ).map( "username", username ).map( "name", fullName )
                 .map( "password", password ).map( "pin", "1234" );
@@ -66,12 +67,12 @@ public enum UserRepo {
 
 
     /** Create a user via the REST API and post it. Return the response */
-    private UUID createUser( Map<String, String> payload, WebResource resource, String access_token ) {
+    private UUID createUser( Map<String, String> payload, WebResource resource, String access_token ) throws IOException {
 
-        JsonNode response =
-                resource.path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode response = mapper.readTree( resource.path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( JsonNode.class, payload );
+                        .post( String.class, payload ));
 
         String idString = response.get( "entities" ).get( 0 ).get( "uuid" ).asText();
 

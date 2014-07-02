@@ -29,9 +29,12 @@ import org.apache.commons.collections4.iterators.PushbackIterator;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.ShardKey;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -48,21 +51,20 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
     private final EdgeShardSerialization edgeShardSerialization;
-    private final EdgeShardCounterSerialization edgeShardCounterSerialization;
+//    private final NodeShardCounterSerialization edgeShardCounterSerialization;
+    private final NodeShardApproximation nodeShardApproximation;
     private final TimeService timeService;
     private final GraphFig graphFig;
-    private final Keyspace keyspace;
 
 
     @Inject
     public NodeShardAllocationImpl( final EdgeShardSerialization edgeShardSerialization,
-                                    final EdgeShardCounterSerialization edgeShardCounterSerialization,
-                                    final TimeService timeService, final GraphFig graphFig, final Keyspace keyspace ) {
+                                    final NodeShardApproximation nodeShardApproximation,
+                                    final TimeService timeService, final GraphFig graphFig ) {
         this.edgeShardSerialization = edgeShardSerialization;
-        this.edgeShardCounterSerialization = edgeShardCounterSerialization;
+        this.nodeShardApproximation = nodeShardApproximation;
         this.timeService = timeService;
         this.graphFig = graphFig;
-        this.keyspace = keyspace;
     }
 
 
@@ -73,59 +75,59 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
                 edgeShardSerialization.getEdgeMetaData( scope, nodeId, maxShardId, edgeTypes );
 
         final PushbackIterator<Long> pushbackIterator = new PushbackIterator( existingShards );
-
-
-        final long now = timeService.getCurrentTime();
-
-
-        final List<Long> futures = new ArrayList<Long>();
-
-
-        //loop through all shards, any shard > now+1 should be deleted
-        while ( pushbackIterator.hasNext() ) {
-
-            final Long value = pushbackIterator.next();
-
-            //we're done, our current time uuid is greater than the value stored
-            if ( now >= value ) {
-                //push it back into the iterator
-                pushbackIterator.pushback( value );
-                break;
-            }
-
-            futures.add( value );
-        }
-
-
-        //we have more than 1 future value, we need to remove it
-
-        MutationBatch cleanup = keyspace.prepareMutationBatch();
-
-        //remove all futures except the last one, it is the only value we shouldn't lazy remove
-        for ( int i = 0; i < futures.size() -1; i++ ) {
-            final long toRemove = futures.get( i );
-
-            final MutationBatch batch = edgeShardSerialization.removeEdgeMeta( scope, nodeId, toRemove, edgeTypes );
-
-            cleanup.mergeShallow( batch );
-        }
-
-
-        try {
-            cleanup.execute();
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to remove future shards, mutation error", e );
-        }
-
-
-        final int futuresSize =  futures.size();
-
-        if ( futuresSize > 0 ) {
-            pushbackIterator.pushback( futures.get( futuresSize - 1 ) );
-        }
-
-
+//
+//
+//        final long now = timeService.getCurrentTime();
+//
+//
+//        final List<Long> futures = new ArrayList<Long>();
+//
+//
+//        //loop through all shards, any shard > now+1 should be deleted
+//        while ( pushbackIterator.hasNext() ) {
+//
+//            final Long value = pushbackIterator.next();
+//
+//            //we're done, our current time uuid is greater than the value stored
+//            if ( now >= value ) {
+//                //push it back into the iterator
+//                pushbackIterator.pushback( value );
+//                break;
+//            }
+//
+//            futures.add( value );
+//        }
+//
+//
+//        //we have more than 1 future value, we need to remove it
+//
+//        MutationBatch cleanup = keyspace.prepareMutationBatch();
+//
+//        //remove all futures except the last one, it is the only value we shouldn't lazy remove
+//        for ( int i = 0; i < futures.size() -1; i++ ) {
+//            final long toRemove = futures.get( i );
+//
+//            final MutationBatch batch = edgeShardSerialization.removeEdgeMeta( scope, nodeId, toRemove, edgeTypes );
+//
+//            cleanup.mergeShallow( batch );
+//        }
+//
+//
+//        try {
+//            cleanup.execute();
+//        }
+//        catch ( ConnectionException e ) {
+//            throw new GraphRuntimeException( "Unable to remove future shards, mutation error", e );
+//        }
+//
+//
+//        final int futuresSize =  futures.size();
+//
+//        if ( futuresSize > 0 ) {
+//            pushbackIterator.pushback( futures.get( futuresSize - 1 ) );
+//        }
+//
+//
         /**
          * Nothing to iterate, return an iterator with 0.
          */
@@ -140,8 +142,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     @Override
     public boolean auditMaxShard( final ApplicationScope scope, final Id nodeId, final String... edgeType ) {
 
-        final long now =  timeService.getCurrentTime() ;
-
         final Iterator<Long> maxShards = getShards( scope, nodeId, Optional.<Long>absent(), edgeType );
 
 
@@ -155,17 +155,11 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         final long maxShard = maxShards.next();
 
         /**
-         * Nothing to do, it's already in the future
-         */
-        if ( maxShard > now ) {
-            return false;
-        }
-
-
-        /**
          * Check out if we have a count for our shard allocation
          */
-        final long count = edgeShardCounterSerialization.getCount( scope, nodeId, maxShard, edgeType );
+
+
+        final long count = nodeShardApproximation.getCount( scope, nodeId, maxShard, edgeType );
 
         if ( count < graphFig.getShardSize() ) {
             return false;
@@ -180,10 +174,11 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             this.edgeShardSerialization.writeEdgeMeta( scope, nodeId, newShardTime, edgeType ).execute();
         }
         catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to write the new edge metadata" );
+            throw new GraphRuntimeException( "Unable to write the new edge metadata" );
         }
 
 
         return true;
     }
+
 }

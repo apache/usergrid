@@ -19,18 +19,18 @@ package org.apache.usergrid.count.common;
 
 import java.nio.ByteBuffer;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import me.prettyprint.cassandra.serializers.SerializerTypeInferer;
 import me.prettyprint.hector.api.Serializer;
 
-import static org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
 
 /**

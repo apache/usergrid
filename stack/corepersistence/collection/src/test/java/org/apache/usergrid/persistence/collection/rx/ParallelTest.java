@@ -190,7 +190,7 @@ public class ParallelTest {
         } );
 
 
-        final Integer last = thing.toBlockingObservable().last();
+        final Integer last = thing.toBlocking().last();
 
 
         assertEquals( expected, last.intValue() );

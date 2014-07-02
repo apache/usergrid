@@ -22,10 +22,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.usergrid.java.client.Client.Query;
-import org.usergrid.java.client.entities.Entity;
-import org.usergrid.java.client.entities.User;
-import org.usergrid.java.client.response.ApiResponse;
+import org.apache.usergrid.java.client.Client.Query;
+import org.apache.usergrid.java.client.entities.Entity;
+import org.apache.usergrid.java.client.entities.User;
+import org.apache.usergrid.java.client.response.ApiResponse;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.utils.UUIDUtils;
 

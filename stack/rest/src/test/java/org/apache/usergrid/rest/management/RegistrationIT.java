@@ -32,13 +32,12 @@ import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.rest.AbstractRestIT;
 
 import org.apache.commons.lang.StringUtils;
@@ -82,7 +81,7 @@ public class RegistrationIT extends AbstractRestIT {
                             "testpassword" );
 
             UUID owner_uuid =
-                    UUID.fromString( node.findPath( "data" ).findPath( "owner" ).findPath( "uuid" ).getTextValue() );
+                    UUID.fromString( node.findPath( "data" ).findPath( "owner" ).findPath( "uuid" ).textValue() );
 
             List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get( "test-user-1@mockserver.com" );
 
@@ -100,13 +99,13 @@ public class RegistrationIT extends AbstractRestIT {
                 resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( JsonNode.class );
+                        .get( String.class );
                 fail( "request for disabled user should fail" );
             }
             catch ( UniformInterfaceException uie ) {
                 ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
-                JsonNode body = uie.getResponse().getEntity( JsonNode.class );
-                assertEquals( "user disabled", body.findPath( "error_description" ).getTextValue() );
+                JsonNode body = mapper.readTree( uie.getResponse().getEntity( String.class ));
+                assertEquals( "user disabled", body.findPath( "error_description" ).textValue() );
             }
 
             setup.getMgmtSvc().deactivateUser( setup.getEmf().getManagementAppId(), owner_uuid );
@@ -114,13 +113,13 @@ public class RegistrationIT extends AbstractRestIT {
                 resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( JsonNode.class );
+                        .get( String.class );
                 fail( "request for deactivated user should fail" );
             }
             catch ( UniformInterfaceException uie ) {
                 ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
-                JsonNode body = uie.getResponse().getEntity( JsonNode.class );
-                assertEquals( "user not activated", body.findPath( "error_description" ).getTextValue() );
+                JsonNode body = mapper.readTree( uie.getResponse().getEntity( String.class ));
+                assertEquals( "user not activated", body.findPath( "error_description" ).textValue() );
             }
 
             // assertEquals(ActivationState.ACTIVATED,
@@ -152,14 +151,14 @@ public class RegistrationIT extends AbstractRestIT {
 
 
     public JsonNode postCreateOrgAndAdmin( String organizationName, String username, String name, String email,
-                                           String password ) {
+                                           String password ) throws IOException {
         JsonNode node = null;
         Map<String, String> payload =
                 hashMap( "email", email ).map( "username", username ).map( "name", name ).map( "password", password )
                         .map( "organization", organizationName );
 
-        node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
         assertNotNull( node );
         logNode( node );
@@ -168,16 +167,16 @@ public class RegistrationIT extends AbstractRestIT {
 
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public JsonNode postAddAdminToOrg( String organizationName, String email, String password, String token ) {
+    public JsonNode postAddAdminToOrg( String organizationName, String email, String password, String token ) throws IOException {
         JsonNode node = null;
 
         MultivaluedMap formData = new MultivaluedMapImpl();
         formData.add( "email", email );
         formData.add( "password", password );
 
-        node = resource().path( "/management/organizations/" + organizationName + "/users" )
+        node = mapper.readTree( resource().path( "/management/organizations/" + organizationName + "/users" )
                 .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_FORM_URLENCODED ).post( JsonNode.class, formData );
+                .type( MediaType.APPLICATION_FORM_URLENCODED ).post( String.class, formData ));
 
         assertNotNull( node );
         logNode( node );
@@ -202,7 +201,7 @@ public class RegistrationIT extends AbstractRestIT {
             try {
                 resource().path( "/management/organizations/test-organization/users/test-admin-null@mockserver.com" )
                         .queryParam( "access_token", t ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_FORM_URLENCODED ).put( JsonNode.class, formData );
+                        .type( MediaType.APPLICATION_FORM_URLENCODED ).put( String.class, formData );
             }
             catch ( UniformInterfaceException e ) {
                 assertEquals( "Should receive a 400 Not Found", 400, e.getResponse().getStatus() );
@@ -250,7 +249,7 @@ public class RegistrationIT extends AbstractRestIT {
             ///in usergrid) and "User Invited To Organization" email
             String adminToken = adminToken();
             JsonNode node = postAddAdminToOrg( "test-organization", "test-admin-nopwd@mockserver.com", "", adminToken );
-            String uuid = node.get( "data" ).get( "user" ).get( "uuid" ).getTextValue();
+            String uuid = node.get( "data" ).get( "user" ).get( "uuid" ).textValue();
             UUID userId = UUID.fromString( uuid );
 
             String subject = "Password Reset";
@@ -309,7 +308,7 @@ public class RegistrationIT extends AbstractRestIT {
             String adminToken = adminToken();
             JsonNode node = postAddAdminToOrg( "test-organization", "AdminUserFromOtherOrg@otherorg.com", "password1",
                     adminToken );
-            String uuid = node.get( "data" ).get( "user" ).get( "uuid" ).getTextValue();
+            String uuid = node.get( "data" ).get( "user" ).get( "uuid" ).textValue();
             UUID userId = UUID.fromString( uuid );
 
             assertEquals( adminUser.getUuid(), userId );

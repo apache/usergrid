@@ -20,7 +20,8 @@ package org.apache.usergrid.rest.applications.collection.groups;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -44,7 +45,7 @@ public class GeoPagingTest extends AbstractRestIT {
 
 
     @Test //("Test uses up to many resources to run reliably") // USERGRID-1403
-    public void groupQueriesWithGeoPaging() {
+    public void groupQueriesWithGeoPaging() throws IOException {
 
         CustomCollection groups = context.application().collection( "groups" );
 
@@ -66,7 +67,7 @@ public class GeoPagingTest extends AbstractRestIT {
             props.put( "path", newPath );
             props.put( "ordinal", i );
             JsonNode activity = groups.create( props );
-            index[i] = activity.findValue( "created" ).getLongValue();
+            index[i] = activity.findValue( "created" ).longValue();
         }
 
         String query =
@@ -75,12 +76,12 @@ public class GeoPagingTest extends AbstractRestIT {
         JsonNode node = groups.withQuery( query ).get();
         assertEquals( 1, node.get( "entities" ).size() );
 
-        assertEquals( index[3], node.get( "entities" ).get( 0 ).get( "created" ).getLongValue() );
+        assertEquals( index[3], node.get( "entities" ).get( 0 ).get( "created" ).longValue() );
     }
 
 
     @Test // USERGRID-1401
-    public void groupQueriesWithConsistentResults() {
+    public void groupQueriesWithConsistentResults() throws IOException {
 
         CustomCollection groups = context.application().collection( "groups" );
 

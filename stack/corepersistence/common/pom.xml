@@ -134,7 +134,13 @@
          <groupId>com.amazonaws</groupId>
          <artifactId>aws-java-sdk</artifactId>
          <version>1.7.5</version>
-       </dependency>
+         <exclusions>
+            <exclusion>
+                <artifactId>jackson-databind</artifactId>
+                <groupId>com.fasterxml.jackson.core</groupId>
+            </exclusion>
+         </exclusions>
+    </dependency>
 
 
     <dependency>

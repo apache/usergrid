@@ -219,11 +219,20 @@ public class RunManagerResource extends TestableResource implements RestParams {
                     failureCount
             );
             if( failureCount != 0 ) {
-                runResult.setFailures( Util.getString( jsonResult, "failures" ) );
+                try {
+                    for( Object result : runResults ) {
+                        JSONObject failures = ( JSONObject ) result;
+                        JSONArray obj = ( JSONArray ) failures.get( "failures" );
+                        runResult.setFailures( obj.toJSONString() );
+                        LOG.info( "Saving run results into Elastic Search." );
+                    }
+                }catch ( Exception e ){
+                    LOG.warn( "Could not serialize runResults JSON object", e );
+                }
             }
 
             if ( runResultDao.save( runResult ) ) {
-                LOG.info( "Saved run result: {}", runResult );
+                LOG.info( "Saved run result.");
             }
         }
 

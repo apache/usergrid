@@ -22,11 +22,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
+
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.entities.Role;
+import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
+import org.apache.usergrid.persistence.index.query.Query;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -56,7 +57,7 @@ public class RolesServiceIT extends AbstractServiceIT {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected =  RequiredPropertyNotFoundException.class)
     public void noRoleName() throws Exception {
 
         app.put( "title", "Manager Title" );

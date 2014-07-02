@@ -20,7 +20,8 @@ package org.apache.usergrid.rest.applications.collection.activities;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -46,7 +47,7 @@ public class PagingEntitiesTest extends AbstractRestIT {
 
 
     @Test //USERGRID-266
-    public void pageThroughConnectedEntities() {
+    public void pageThroughConnectedEntities() throws IOException {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -64,9 +65,9 @@ public class PagingEntitiesTest extends AbstractRestIT {
 
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
-            verifyCreated[i] = activity.findValue( "created" ).getLongValue();
+            verifyCreated[i] = activity.findValue( "created" ).longValue();
             if ( i == 0 ) {
-                created = activity.findValue( "created" ).getLongValue();
+                created = activity.findValue( "created" ).longValue();
             }
         }
         ArrayUtils.reverse( verifyCreated );
@@ -113,9 +114,9 @@ public class PagingEntitiesTest extends AbstractRestIT {
             }
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
-            verifyCreated[i] = activity.findValue( "created" ).getLongValue();
+            verifyCreated[i] = activity.findValue( "created" ).longValue();
             if ( i == 18 ) {
-                created = activity.findValue( "created" ).getLongValue();
+                created = activity.findValue( "created" ).longValue();
             }
         }
 
@@ -125,7 +126,7 @@ public class PagingEntitiesTest extends AbstractRestIT {
 
         for ( int index = 0; index < 5; index++ ) {
             assertEquals( verifyCreated[maxSize - 1 - index],
-                    node.get( "entities" ).get( index ).get( "created" ).getLongValue() );
+                    node.get( "entities" ).get( index ).get( "created" ).longValue() );
         }
 
         int totalEntitiesContained = activities.countEntities( query );

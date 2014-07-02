@@ -22,7 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -47,7 +48,7 @@ public class OrderByTest extends AbstractRestIT {
 
     @Test
     // USERGRID-1400
-    public void orderByShouldNotAffectResults() {
+    public void orderByShouldNotAffectResults() throws IOException {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -61,7 +62,7 @@ public class OrderByTest extends AbstractRestIT {
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
             if ( i == 5 ) {
-                created = activity.findValue( "created" ).getLongValue();
+                created = activity.findValue( "created" ).longValue();
             }
         }
 
@@ -77,7 +78,7 @@ public class OrderByTest extends AbstractRestIT {
 
     @Test
     // USERGRID-1520
-    public void orderByComesBeforeLimitResult() {
+    public void orderByComesBeforeLimitResult() throws IOException {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -115,7 +116,7 @@ public class OrderByTest extends AbstractRestIT {
 
     @Test
     // USERGRID-1521
-    public void orderByReturnCorrectResults() {
+    public void orderByReturnCorrectResults() throws IOException {
 
         CustomCollection activities = context.collection( "activities" );
 

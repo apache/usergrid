@@ -39,13 +39,13 @@ import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
-
 import org.apache.usergrid.persistence.PagingResultsIterator;
-
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate;
@@ -58,6 +58,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.geo.ConnectionGeoSearch;
 import org.apache.usergrid.persistence.geo.EntityLocationRef;
@@ -78,7 +79,7 @@ import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.query.ir.AllNode;
 import org.apache.usergrid.persistence.query.ir.NameIdentifierNode;
 import org.apache.usergrid.persistence.query.ir.QueryNode;
@@ -92,23 +93,22 @@ import org.apache.usergrid.persistence.query.ir.result.EmptyIterator;
 import org.apache.usergrid.persistence.query.ir.result.GeoIterator;
 import org.apache.usergrid.persistence.query.ir.result.SliceIterator;
 import org.apache.usergrid.persistence.query.ir.result.StaticIdIterator;
-
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.IndexUtils;
 import org.apache.usergrid.utils.MapUtils;
 
 import com.yammer.metrics.annotation.Metered;
-import static java.util.Arrays.asList;
-import me.prettyprint.hector.api.Keyspace;
 
+import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import me.prettyprint.hector.api.mutation.Mutator;
-import org.apache.usergrid.persistence.RoleRef;
-import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import rx.Observable;
 
+import static java.util.Arrays.asList;
+
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_TYPES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_ENTITIES;
@@ -122,7 +122,6 @@ import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
 import static org.apache.usergrid.persistence.Schema.TYPE_ROLE;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
-import org.apache.usergrid.persistence.SimpleRoleRef;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
@@ -140,8 +139,7 @@ import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCo
 import static org.apache.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
 import static org.apache.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
-import org.apache.usergrid.persistence.entities.Group;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
@@ -510,13 +508,19 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Set<String> getCollections() throws Exception {
 
-        Map<String, CollectionInfo> collections = 
-                getDefaultSchema().getCollections( headEntity.getType() );
-        if ( collections == null ) {
-            return null;
+        final Set<String> indexes = new HashSet<String>();
+
+        GraphManager gm = managerCache.getGraphManager(applicationScope);
+
+        Observable<String> str = gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(),null , null ));
+
+        Iterator<String> iter = str.toBlockingObservable().getIterator();
+        while ( iter.hasNext() ) {
+            indexes.add( iter.next() );
         }
 
-        return collections.keySet();
+        return indexes;
+
     }
 
     @Override
@@ -794,7 +798,35 @@ public class CpRelationManager implements RelationManager {
     public void copyRelationships(String srcRelationName, EntityRef dstEntityRef, 
             String dstRelationName) throws Exception {
 
-        throw new UnsupportedOperationException("Not supported yet."); 
+        headEntity = em.validate( headEntity );
+        dstEntityRef = em.validate( dstEntityRef );
+
+        CollectionInfo srcCollection = getDefaultSchema().getCollection( headEntity.getType(), srcRelationName );
+
+        CollectionInfo dstCollection = getDefaultSchema().getCollection( dstEntityRef.getType(), dstRelationName );
+
+        Results results = null;
+        do {
+            if ( srcCollection != null ) {
+                results = em.getCollection( headEntity, srcRelationName, null, 5000, Level.REFS, false );
+            }
+            else {
+                results = em.getConnectedEntities( headEntity, srcRelationName, null, Level.REFS );
+            }
+
+            if ( ( results != null ) && ( results.size() > 0 ) ) {
+                List<EntityRef> refs = results.getRefs();
+                for ( EntityRef ref : refs ) {
+                    if ( dstCollection != null ) {
+                        em.addToCollection( dstEntityRef, dstRelationName, ref );
+                    }
+                    else {
+                        em.createConnection( dstEntityRef, dstRelationName, ref );
+                    }
+                }
+            }
+        }
+        while ( ( results != null ) && ( results.hasMoreResults() ) );
     }
 
     @Override
@@ -1144,12 +1176,19 @@ public class CpRelationManager implements RelationManager {
 
     @Override
     public Set<String> getConnectionTypes() throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        return getConnectionTypes( false );
     }
 
     @Override
     public Set<String> getConnectionTypes(boolean filterConnection) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        Set<String> connections = cast( em.getDictionaryAsSet( headEntity, Schema.DICTIONARY_CONNECTED_TYPES ) );
+        if ( connections == null ) {
+            return null;
+        }
+        if ( filterConnection && ( connections.size() > 0 ) ) {
+            connections.remove( "connection" );
+        }
+        return connections;
     }
 
 

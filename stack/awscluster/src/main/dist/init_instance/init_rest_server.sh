@@ -46,7 +46,7 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 
 # Wait for enough Cassandra nodes then deploy and restart Tomcat 
 cd /usr/share/usergrid/scripts
-groovy wait_for_cassandra.groovy
+groovy wait_for_instances.groovy
 
 mkdir -p /usr/share/tomcat7/lib 
 groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 

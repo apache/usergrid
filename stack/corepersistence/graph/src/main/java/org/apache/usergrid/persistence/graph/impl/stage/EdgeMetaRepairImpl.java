@@ -23,21 +23,21 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
+import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -65,19 +65,19 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
     private static final Log RX_LOG = new Log();
 
     private final EdgeMetadataSerialization edgeMetadataSerialization;
+    private final EdgeSerialization storageEdgeSerialization;
     private final Keyspace keyspace;
     private final GraphFig graphFig;
-    private final MergedEdgeReader mergedEdgeReader;
 
 
     @Inject
-    public EdgeMetaRepairImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
-                               final MergedEdgeReader mergedEdgeReader, final Keyspace keyspace,
-                               final GraphFig graphFig, final CassandraConfig cassandraConfig ) {
+    public EdgeMetaRepairImpl( final EdgeMetadataSerialization edgeMetadataSerialization, final Keyspace keyspace,
+                               final GraphFig graphFig,
+                               @StorageEdgeSerialization final EdgeSerialization storageEdgeSerialization ) {
 
 
         Preconditions.checkNotNull( "edgeMetadataSerialization is required", edgeMetadataSerialization );
-        Preconditions.checkNotNull( "mergedEdgeReader is required", mergedEdgeReader );
+        Preconditions.checkNotNull( "storageEdgeSerialization is required", storageEdgeSerialization );
         Preconditions.checkNotNull( "consistencyFig is required", graphFig );
         Preconditions.checkNotNull( "cassandraConfig is required", graphFig );
         Preconditions.checkNotNull( "keyspace is required", keyspace );
@@ -85,7 +85,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         this.edgeMetadataSerialization = edgeMetadataSerialization;
         this.keyspace = keyspace;
         this.graphFig = graphFig;
-        this.mergedEdgeReader = mergedEdgeReader;
+        this.storageEdgeSerialization = storageEdgeSerialization;
     }
 
 
@@ -100,7 +100,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
     @Override
     public Observable<Integer> repairTargets( final ApplicationScope scope, final Id targetId, final String edgeType,
-                                              final long maxTimestamp) {
+                                              final long maxTimestamp ) {
         return clearTypes( scope, targetId, edgeType, maxTimestamp, target );
     }
 
@@ -136,7 +136,8 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
                             Observable<Integer> search =
                                     //load each edge in it's own thread
-                                    serialization.loadEdges( scope, node, edgeType, subType, maxTimestamp ).doOnNext( RX_LOG ).take( 1 ).count()
+                                    serialization.loadEdges( scope, node, edgeType, subType, maxTimestamp )
+                                                 .doOnNext( RX_LOG ).take( 1 ).count()
                                                  .doOnNext( new Action1<Integer>() {
 
                                                      @Override
@@ -190,7 +191,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                                          batch.execute();
                                                      }
                                                      catch ( ConnectionException e ) {
-                                                         throw new RuntimeException( "Unable to execute mutation", e );
+                                                         throw new GraphRuntimeException( "Unable to execute mutation", e );
                                                      }
                                                  }
                                              } );
@@ -218,11 +219,12 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
                 try {
 
-                    LOG.debug( "Type {} has no subtypes in use as of maxTimestamp {}.  Deleting type.", edgeType, maxTimestamp );
+                    LOG.debug( "Type {} has no subtypes in use as of maxTimestamp {}.  Deleting type.", edgeType,
+                            maxTimestamp );
                     serialization.removeEdgeType( scope, node, edgeType, maxTimestamp ).execute();
                 }
                 catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to execute mutation" );
+                    throw new GraphRuntimeException( "Unable to execute mutation" );
                 }
             }
         } );
@@ -285,8 +287,14 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         @Override
         public Observable<MarkedEdge> loadEdges( final ApplicationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final long maxTimestamp ) {
-            return mergedEdgeReader.getEdgesToTargetBySourceType( scope,
-                    new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, subType, null ) );
+
+            return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+                @Override
+                protected Iterator<MarkedEdge> getIterator() {
+                    return storageEdgeSerialization.getEdgesToTargetBySourceType( scope,
+                            new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, subType, null ) );
+                }
+            } );
         }
 
 
@@ -316,7 +324,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                 @Override
                 protected Iterator<String> getIterator() {
                     return edgeMetadataSerialization
-                            .getIdTypesFromSource( scope, new SimpleSearchIdType( nodeId, edgeType, null,  null ) );
+                            .getIdTypesFromSource( scope, new SimpleSearchIdType( nodeId, edgeType, null, null ) );
                 }
             } );
         }
@@ -326,8 +334,13 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         public Observable<MarkedEdge> loadEdges( final ApplicationScope scope, final Id nodeId, final String edgeType,
                                                  final String subType, final long maxTimestamp ) {
 
-            return mergedEdgeReader.getEdgesFromSourceByTargetType( scope,
-                    new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, subType, null ) );
+            return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+                @Override
+                protected Iterator<MarkedEdge> getIterator() {
+                    return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope,
+                            new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, subType, null ) );
+                }
+            } );
         }
 
 
@@ -346,7 +359,6 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
     };
 
 
-
     private static class Log implements Action1<MarkedEdge> {
 
 
@@ -355,5 +367,4 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
             LOG.debug( "Emitting edge {}", markedEdge );
         }
     }
-
 }

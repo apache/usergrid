@@ -41,115 +41,142 @@ import java.util.Set;
 
 public class ShiroRealm extends AuthorizingRealm {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ShiroRealm.class);
+    private static final Logger LOG = LoggerFactory.getLogger( ShiroRealm.class );
 
     private static final String DEFAULT_USER = "user";
     private static final String DEFAULT_PASSWORD = "pass";
+    private static String authenticatedUser = "user";
+
 
     public ShiroRealm() {
-        super(new MemoryConstrainedCacheManager(), new SimpleCredentialsMatcher());
+        super( new MemoryConstrainedCacheManager(), new SimpleCredentialsMatcher() );
     }
 
-    public static boolean authenticateUser(String username, String password) {
+
+    public static boolean authenticateUser( String username, String password ) {
         try {
-            if (!SecurityUtils.getSubject().isAuthenticated()) {
-                if (username == null) {
-                    throw new AuthenticationException("Username is null");
+            if ( !SecurityUtils.getSubject().isAuthenticated() ) {
+                if ( username == null ) {
+                    throw new AuthenticationException( "Username is null" );
                 }
-                if (password == null) {
-                    throw new AuthenticationException("Password is null");
+                if ( password == null ) {
+                    throw new AuthenticationException( "Password is null" );
                 }
 
-                LOG.info(String.format("Authenticating  user %s", username));
+                LOG.info( String.format( "Authenticating  user %s", username) );
 
-                if (username.equalsIgnoreCase("user") && password.equals("pass")) {
+                if ( username.equalsIgnoreCase( "user" ) && password.equals( "pass" ) ) {
                     initUserData();
-                } else {
-                    User user = InjectorFactory.getInstance(UserDao.class).get(username.toLowerCase());
-                    if (user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase(password)) {
-                        throw new AuthenticationException("Authentication failed");
-                    }
                 }
-                SecurityUtils.getSubject().login(new UsernamePasswordToken(username, password));
+                User user = InjectorFactory.getInstance( UserDao.class ).get( username.toLowerCase() );
+                if ( user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase( password ) ) {
+                    throw new AuthenticationException( "Authentication failed" );
+                }
+
+                SecurityUtils.getSubject().login( new UsernamePasswordToken( username, password ) );
+                authenticatedUser = username;
             }
             return true;
-        } catch (Exception e) {
-            LOG.error("Error in findUser", e);
+
+        } catch ( Exception e ) {
+            LOG.error( "Error in findUser", e );
         }
         return false;
     }
 
+
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+    protected AuthenticationInfo doGetAuthenticationInfo( AuthenticationToken authenticationToken ) throws AuthenticationException {
 
         try {
-            UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
+            UsernamePasswordToken token = ( UsernamePasswordToken ) authenticationToken;
+            token.setRememberMe( true );
 
             String username = token.getUsername();
-            String password = String.valueOf(token.getPassword());
+            String password = String.valueOf( token.getPassword() );
 
-            if (username == null) {
-                throw new AuthenticationException("Authentication failed");
+            if ( username == null ) {
+                throw new AuthenticationException( "Authentication failed" );
             }
 
-            LOG.info(String.format("Authenticating user %s", username));
+            LOG.info( String.format( "Authenticating user %s", username ) );
 
-            if (username.equals(username) && password.equals("pass")) {
+            if ( username.equals( username ) && password.equals( "pass" ) ) {
                 initUserData();
 
-            } else {
-                User user = InjectorFactory.getInstance(UserDao.class).get(username.toLowerCase());
-                if (user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase(password)) {
-                    throw new AuthenticationException("Authentication failed");
-                }
+            }
+            User user = InjectorFactory.getInstance( UserDao.class ).get( username.toLowerCase() );
+            if ( user == null || user.getPassword() == null || !user.getPassword().equalsIgnoreCase( password ) ) {
+                throw new AuthenticationException( "Authentication failed" );
             }
 
-            return new SimpleAuthenticationInfo(username, password, this.getName());
-        } catch (Exception e) {
-            LOG.error("Error while authenticating", e);
-            throw new AuthenticationException("Authentication failed", e);
+            return new SimpleAuthenticationInfo( username, password, this.getName() );
+        } catch ( Exception e ) {
+            LOG.error( "Error while authenticating", e );
+            throw new AuthenticationException( "Authentication failed", e );
         }
 
     }
+
 
     @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
+    protected AuthorizationInfo doGetAuthorizationInfo( PrincipalCollection principals ) {
         try {
-            if (principals == null) {
-                throw new AuthorizationException("PrincipalCollection method argument cannot be null.");
+            if ( principals == null ) {
+                throw new AuthorizationException( "PrincipalCollection method argument cannot be null." );
             }
 
-            Collection<String> principalsList = principals.byType(String.class);
+            Collection<String> principalsList = principals.byType( String.class );
 
-            if (principalsList.isEmpty()) {
-                throw new AuthorizationException("Empty principals list!");
+            if ( principalsList.isEmpty() ) {
+                throw new AuthorizationException( "Empty principals list!" );
             }
 
-            String username = (String) principals.getPrimaryPrincipal();
+            String username = ( String ) principals.getPrimaryPrincipal();
 
             Set<String> roles = new HashSet<String>();
-            roles.add("role1");
+            roles.add( "role1" );
 
-            LOG.info(String.format("Authorizing user %s with roles %s", username, roles));
+            LOG.info( String.format( "Authorizing user %s with roles %s", username, roles ) );
 
-            return new SimpleAuthorizationInfo(roles);
+            return new SimpleAuthorizationInfo( roles );
 
-        } catch (Exception e) {
-            LOG.error("Error while authorizing", e);
-            throw new AuthorizationException("Authorization failed", e);
+        } catch ( Exception e ) {
+            LOG.error( "Error while authorizing", e );
+            throw new AuthorizationException( "Authorization failed", e );
         }
     }
+
 
     private static void initUserData() throws Exception {
 
-        UserDao userDao = InjectorFactory.getInstance(UserDao.class);
-        User user = userDao.get(DEFAULT_USER);
+        UserDao userDao = InjectorFactory.getInstance( UserDao.class );
+        User user = userDao.get( DEFAULT_USER );
 
-        if (user != null) {
+        if ( user != null ) {
             return;
         }
 
-        InjectorFactory.getInstance(UserDao.class).save(new User(DEFAULT_USER, DEFAULT_PASSWORD));
-        InjectorFactory.getInstance(ProviderParamsDao.class).save(new BasicProviderParams(DEFAULT_USER));
+        InjectorFactory.getInstance( UserDao.class ).save( new User( DEFAULT_USER, DEFAULT_PASSWORD ) );
+        InjectorFactory.getInstance( ProviderParamsDao.class ).save( new BasicProviderParams( DEFAULT_USER ) );
+    }
+
+
+    public static void logout(){
+        SecurityUtils.getSubject().logout();
+    }
+
+
+    public static String getDefaultUser() {
+        return DEFAULT_USER;
+    }
+
+
+    public static String getAuthenticatedUser() {
+        return authenticatedUser;
+    }
+
+    public static boolean isAuthenticatedUserAdmin() {
+        return ShiroRealm.getAuthenticatedUser().equals( getDefaultUser() );
     }
 }

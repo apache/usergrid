@@ -27,7 +27,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.safehaus.chop.api.IterationChop;
+//import org.safehaus.chop.api.IterationChop;
 
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -52,7 +52,7 @@ import static org.mockito.Mockito.when;
 /**
  * Test for use with Judo CHOP to stress test
  */
-@IterationChop(iterations = 10, threads = 2)
+//@IterationChop(iterations = 10, threads = 2)
 @RunWith(ITRunner.class)
 @UseModules({ TestGraphModule.class })
 public class EdgeSerializationChopTest {

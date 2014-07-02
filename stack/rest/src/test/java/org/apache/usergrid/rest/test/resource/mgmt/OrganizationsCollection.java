@@ -19,7 +19,8 @@ package org.apache.usergrid.rest.test.resource.mgmt;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource.NamedResource;
 import org.apache.usergrid.rest.test.security.TestUser;
@@ -44,7 +45,7 @@ public class OrganizationsCollection extends CollectionResource {
 
 
     /** Create the org and return it's UUID */
-    public UUID create( String name, TestUser owner ) {
+    public UUID create( String name, TestUser owner ) throws IOException {
 
         JsonNode node = postInternal( MapUtils.hashMap( "organization", name ).map( "username", owner.getUser() )
                                               .map( "email", owner.getEmail() ).map( "name", owner.getUser() )

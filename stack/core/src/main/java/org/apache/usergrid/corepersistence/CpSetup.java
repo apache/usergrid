@@ -23,6 +23,7 @@ import com.netflix.config.ConfigurationManager;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
+import me.prettyprint.cassandra.service.CassandraHost;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import org.apache.usergrid.mq.cassandra.QueuesCF;
@@ -86,16 +87,29 @@ public class CpSetup implements Setup {
     @Override
     public void init() throws Exception {
         cass.init();
-                
+            
         try {
             logger.info("Loading Core Persistence properties");
 
             ConfigurationManager.loadCascadedPropertiesFromResources( "corepersistence" );
-            Properties testProps = new Properties() {{
-                put("cassandra.hosts", "localhost");
-                put("cassandra.port", System.getProperty("cassandra.rpc_port"));
-            }};
-            ConfigurationManager.loadProperties( testProps );
+
+            String hostsString = "";
+            CassandraHost[] hosts = cass.getCassandraHostConfigurator().buildCassandraHosts();
+            if ( hosts.length == 0 ) {
+                throw new RuntimeException("Fatal error: no Cassandra hosts configured");
+            }
+            String sep = "";
+            for ( CassandraHost host : hosts ) {
+                hostsString = sep + host.getHost();
+                sep = ",";
+            }
+
+            Properties cpProps = new Properties();
+            cpProps.put("cassandra.hosts", hostsString);
+            cpProps.put("cassandra.port", hosts[0].getPort());
+            
+            ConfigurationManager.loadProperties( cpProps );
+            logger.debug("Set Cassandra properties for Core Persistence: " + cpProps.toString() );
         }
         catch ( IOException e ) {
             throw new RuntimeException( "Fatal error loading configuration.", e );
