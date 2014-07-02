@@ -145,9 +145,10 @@ public class GraphModule extends AbstractModule {
     @StorageEdgeSerialization
     public EdgeSerialization permanentStorageSerialization( final NodeShardCache cache, final Keyspace keyspace,
                                                             final CassandraConfig cassandraConfig,
-                                                            final GraphFig graphFig ) {
+                                                            final GraphFig graphFig,
+                                                            final NodeShardApproximation shardApproximation) {
 
-        final EdgeShardStrategy sizeBasedStrategy = new SizebasedEdgeShardStrategy( cache );
+        final EdgeShardStrategy sizeBasedStrategy = new SizebasedEdgeShardStrategy( cache, shardApproximation );
 
         final EdgeSerializationImpl edgeSerialization =
                 new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy );

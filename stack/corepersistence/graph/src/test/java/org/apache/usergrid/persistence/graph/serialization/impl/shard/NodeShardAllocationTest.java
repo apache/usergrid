@@ -98,7 +98,7 @@ public class NodeShardAllocationTest {
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, nodeShardCounterSerialization, timeService,
-                        graphFig, keyspace );
+                        graphFig );
 
         final Id nodeId = createId( "test" );
         final String type = "type";
@@ -137,7 +137,7 @@ public class NodeShardAllocationTest {
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, nodeShardCounterSerialization, timeService,
-                        graphFig, keyspace );
+                        graphFig );
 
         final Id nodeId = createId( "test" );
         final String type = "type";
@@ -182,7 +182,7 @@ public class NodeShardAllocationTest {
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, nodeShardApproximation, timeService,
-                        graphFig, keyspace );
+                        graphFig );
 
         final Id nodeId = createId( "test" );
         final String type = "type";
@@ -234,7 +234,7 @@ public class NodeShardAllocationTest {
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, nodeShardApproximation, timeService,
-                        graphFig, keyspace );
+                        graphFig );
 
         final Id nodeId = createId( "test" );
         final String type = "type";
@@ -307,7 +307,7 @@ public class NodeShardAllocationTest {
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, nodeShardApproximation, timeService,
-                        graphFig, keyspace );
+                        graphFig );
 
         final Id nodeId = createId( "test" );
         final String type = "type";
@@ -411,7 +411,7 @@ public class NodeShardAllocationTest {
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, nodeShardApproximation, timeService,
-                        graphFig, keyspace );
+                        graphFig );
 
         final Id nodeId = createId( "test" );
         final String type = "type";

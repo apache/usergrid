@@ -35,12 +35,6 @@ public interface GraphFig extends GuicyFig {
 
     public static final String REPAIR_CONCURRENT_SIZE = "usergrid.graph.repair.concurrent.size";
 
-
-
-    public static final String WRITE_TIMEOUT = "usergrid.graph.write.timeout";
-
-    public static final String READ_TIMEOUT = "usergrid.graph.read.timeout";
-
     public static final String SHARD_SIZE = "usergrid.graph.shard.size";
 
     public static final String SHARD_CACHE_SIZE = "usergrid.graph.shard.cache.size";
@@ -59,17 +53,6 @@ public interface GraphFig extends GuicyFig {
     int getScanPageSize();
 
 
-    @Default("10000")
-    @Key(WRITE_TIMEOUT)
-    int getWriteTimeout();
-
-    /**
-     * Get the read timeout (in milliseconds) that we should allow when reading from the data source
-     */
-    @Default("10000")
-    @Key(READ_TIMEOUT)
-    int getReadTimeout();
-
 
     @Default("5")
     @Key(REPAIR_CONCURRENT_SIZE)
@@ -77,11 +60,9 @@ public interface GraphFig extends GuicyFig {
 
 
 
-    @Default("10000")
+    @Default("500000")
     @Key(SHARD_SIZE)
     long getShardSize();
-
-
 
 
     @Default("30000")
@@ -93,7 +74,7 @@ public interface GraphFig extends GuicyFig {
     long getShardCacheSize();
 
 
-    @Default( "100000" )
+    @Default( "10000" )
     @Key( COUNTER_WRITE_FLUSH_COUNT )
     long getCounterFlushCount();
 

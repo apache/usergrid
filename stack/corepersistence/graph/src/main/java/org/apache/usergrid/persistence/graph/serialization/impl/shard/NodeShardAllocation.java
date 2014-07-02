@@ -59,15 +59,4 @@ public interface NodeShardAllocation {
     public boolean auditMaxShard(final ApplicationScope scope, final Id nodeId, final String... edgeType);
 
 
-    /**
-     * Increment the underlying counts on the shards
-     * @param scope The app scope
-     * @param nodeId The id of the node
-     * @param shardId The id of the shard
-     * @param amount The amount to increment
-     * @param edgeTypes The edge types to include in the count operation
-     */
-    public void increment(final ApplicationScope scope, final Id nodeId, final long shardId, final long amount, final String... edgeTypes);
-
-
 }

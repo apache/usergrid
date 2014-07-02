@@ -423,19 +423,6 @@ public class NodeShardApproximationTest {
             return 0;  //To change body of implemented methods use File | Settings | File Templates.
         }
 
-
-        @Override
-        public int getWriteTimeout() {
-            return 0;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-
-        @Override
-        public int getReadTimeout() {
-            return 0;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-
         @Override
         public int getRepairConcurrentSize() {
             return 0;  //To change body of implemented methods use File | Settings | File Templates.

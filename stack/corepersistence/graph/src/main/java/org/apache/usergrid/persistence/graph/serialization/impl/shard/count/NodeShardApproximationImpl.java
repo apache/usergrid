@@ -24,8 +24,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.inject.Inject;
 
-import org.apache.cassandra.thrift.Mutation;
-
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -57,7 +55,15 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
     private final NodeShardCounterSerialization nodeShardCounterSerialization;
     private final TimeService timeService;
 
+    /**
+     * Counter currently implemented
+     */
     private volatile Counter currentCounter;
+
+    /**
+     * The counter that is currently in process of flushing to Cassandra.  Can be null
+     */
+    private volatile Counter flushPending;
 
 
     /**
@@ -108,6 +114,10 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
         try {
             count = currentCounter.get( key );
+
+            if ( flushPending != null ) {
+                count += flushPending.get( key );
+            }
         }
         finally {
             readLock.unlock();
@@ -121,12 +131,11 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
     @Override
     public void flush() {
-        final Counter toFlush;
 
         writeLockLock.lock();
 
         try {
-            toFlush = currentCounter;
+            flushPending = currentCounter;
             currentCounter = new Counter();
         }
         finally {
@@ -135,7 +144,7 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
 
         //copy to the batch outside of the command for performance
-        final MutationBatch batch =  nodeShardCounterSerialization.flush( toFlush );
+        final MutationBatch batch = nodeShardCounterSerialization.flush( flushPending );
 
         /**
          * Execute the command in hystrix to avoid slamming cassandra
@@ -156,11 +165,20 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
             @Override
             protected Object getFallback() {
                 //we've failed to mutate.  Merge this count back into the current one
-                currentCounter.merge( toFlush );
+                currentCounter.merge( flushPending );
 
                 return null;
             }
         }.execute();
+
+        writeLockLock.lock();
+
+        try {
+            flushPending = null;
+        }
+        finally {
+            writeLockLock.unlock();
+        }
     }
 
 
@@ -169,22 +187,21 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
      */
     private void checkFlush() {
 
-        //we shouldn't flush we've not pass our timeout
-        if ( currentCounter.getCreateTimestamp() + graphFig.getCounterFlushInterval() > timeService.getCurrentTime()
-                //or we're not past the invocation count
-                && currentCounter.getInvokeCount() < graphFig.getCounterFlushCount() ) {
-            return;
+        //there's no flush pending and we're past the timeout or count
+        if ( flushPending == null && (
+                currentCounter.getCreateTimestamp() + graphFig.getCounterFlushInterval() > timeService.getCurrentTime()
+                        || currentCounter.getInvokeCount() >= graphFig.getCounterFlushCount() ) ) {
+
+
+            /**
+             * Fire the flush action asynchronously
+             */
+            Schedulers.immediate().createWorker().schedule( new Action0() {
+                @Override
+                public void call() {
+                    flush();
+                }
+            } );
         }
-
-
-        /**
-         * Fire the flush action asynchronously
-         */
-        Schedulers.immediate().createWorker().schedule( new Action0() {
-            @Override
-            public void call() {
-                flush();
-            }
-        } );
     }
 }

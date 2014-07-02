@@ -139,13 +139,6 @@ public class NodeShardCacheImpl implements NodeShardCache {
         return iterator;
     }
 
-
-    @Override
-    public void increment( final ApplicationScope scope, final Id nodeId, final long shard, final long count, final String... edgeTypes ) {
-        nodeShardAllocation.increment( scope, nodeId, shard, count, edgeTypes );
-    }
-
-
     /**
      * This is a race condition.  We could re-init the shard while another thread is reading it.  This is fine, the read
      * doesn't have to be precise.  The algorithm accounts for stale data.
@@ -160,12 +153,12 @@ public class NodeShardCacheImpl implements NodeShardCache {
                       @Override
                       public CacheEntry load( final CacheKey key ) throws Exception {
 
-
-                          /**
-                           * Perform an audit in case we need to allocate a new shard
-                           */
-                          nodeShardAllocation.auditMaxShard( key.scope, key.id, key.types );
-                          //TODO, we need to put some sort of upper bounds on this, it could possibly get too large
+//
+//                          /**
+//                           * Perform an audit in case we need to allocate a new shard
+//                           */
+//                          nodeShardAllocation.auditMaxShard( key.scope, key.id, key.types );
+//                          //TODO, we need to put some sort of upper bounds on this, it could possibly get too large
 
 
                           final Iterator<Long> edges = nodeShardAllocation
