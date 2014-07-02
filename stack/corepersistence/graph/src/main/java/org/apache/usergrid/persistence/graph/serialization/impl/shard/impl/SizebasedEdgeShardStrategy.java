@@ -21,10 +21,10 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
 import java.util.Iterator;
-import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -40,11 +40,15 @@ public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     private final NodeShardCache shardCache;
+    private final NodeShardApproximation shardApproximation;
 
 
     @Inject
-    public SizebasedEdgeShardStrategy( final NodeShardCache shardCache ) {this.shardCache = shardCache;}
-
+    public SizebasedEdgeShardStrategy( final NodeShardCache shardCache,
+                                       final NodeShardApproximation shardApproximation ) {
+        this.shardCache = shardCache;
+        this.shardApproximation = shardApproximation;
+    }
 
 
     @Override
@@ -62,9 +66,9 @@ public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     @Override
-    public void increment( final ApplicationScope scope, final Id rowKeyId,
-                           final long shardId, final long count, final String... types ) {
-        shardCache.increment(  scope, rowKeyId, shardId, count, types );
+    public void increment( final ApplicationScope scope, final Id rowKeyId, final long shardId, final long count,
+                           final String... types ) {
+        shardApproximation.increment( scope, rowKeyId, shardId, count, types );
     }
 
 

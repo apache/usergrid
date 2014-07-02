@@ -40,14 +40,12 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
-import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
+import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteListener;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeWriteCompact;
 import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListener;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.MergedEdgeReader;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -77,14 +75,10 @@ public class GraphManagerImpl implements GraphManager {
     private final EdgeMetadataSerialization edgeMetadataSerialization;
 
 
-    private final MergedEdgeReader mergedEdgeReader;
-    private final EdgeSerialization commitLogSerialization;
+    private final EdgeSerialization storageEdgeSerialization;
 
     private final NodeSerialization nodeSerialization;
 
-    private final EdgeWriteCompact edgeWriteCompact;
-
-    //TODO TN fix this
     private final EdgeDeleteListener edgeDeleteListener;
     private final NodeDeleteListener nodeDeleteListener;
 
@@ -93,39 +87,35 @@ public class GraphManagerImpl implements GraphManager {
     private Observer<Integer> nodeDelete;
 
 
-
     private final GraphFig graphFig;
+
 
     @Inject
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
-                             @CommitLogEdgeSerialization final EdgeSerialization commitLogSerialization,
-                             final NodeSerialization nodeSerialization, final GraphFig graphFig, final MergedEdgeReader mergedEdgeReader,
-                             @Assisted final ApplicationScope scope, final EdgeWriteCompact edgeWriteCompact,
-                             final EdgeDeleteListener edgeDeleteListener, final NodeDeleteListener nodeDeleteListener ) {
+                             @StorageEdgeSerialization final EdgeSerialization storageEdgeSerialization,
+                             final NodeSerialization nodeSerialization, final GraphFig graphFig,
+                             @Assisted final ApplicationScope scope, final EdgeDeleteListener edgeDeleteListener,
+                             final NodeDeleteListener nodeDeleteListener ) {
 
 
         ValidationUtils.validateApplicationScope( scope );
         Preconditions.checkNotNull( edgeMetadataSerialization, "edgeMetadataSerialization must not be null" );
-        Preconditions.checkNotNull( mergedEdgeReader, "mergedEdgeReader must not be null" );
-        Preconditions.checkNotNull( commitLogSerialization, "commitLogSerialization must not be null" );
+        Preconditions.checkNotNull( storageEdgeSerialization, "storageEdgeSerialization must not be null" );
         Preconditions.checkNotNull( nodeSerialization, "nodeSerialization must not be null" );
         Preconditions.checkNotNull( graphFig, "consistencyFig must not be null" );
         Preconditions.checkNotNull( scope, "scope must not be null" );
 
         this.scope = scope;
         this.edgeMetadataSerialization = edgeMetadataSerialization;
-        this.mergedEdgeReader = mergedEdgeReader;
-        this.commitLogSerialization = commitLogSerialization;
+        this.storageEdgeSerialization = storageEdgeSerialization;
         this.nodeSerialization = nodeSerialization;
         this.graphFig = graphFig;
-        this.edgeWriteCompact = edgeWriteCompact;
         this.edgeDeleteListener = edgeDeleteListener;
         this.nodeDeleteListener = nodeDeleteListener;
 
         this.edgeWriteSubcriber = MetricSubscriber.INSTANCE;
         this.edgeDeleteSubcriber = MetricSubscriber.INSTANCE;
         this.nodeDelete = MetricSubscriber.INSTANCE;
-
     }
 
 
@@ -136,35 +126,30 @@ public class GraphManagerImpl implements GraphManager {
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
 
         return Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
-                    @Override
-                    public Edge call( final MarkedEdge edge ) {
+            @Override
+            public Edge call( final MarkedEdge edge ) {
 
-                        final UUID timestamp = UUIDGenerator.newTimeUUID();
-
-
-                        final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
-
-                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge, timestamp );
-
-                        mutation.mergeShallow( edgeMutation );
+                final UUID timestamp = UUIDGenerator.newTimeUUID();
 
 
-                        try {
-                            LOG.debug( "Writing edge {} to metadata and commit log", edge );
-                            mutation.execute();
-                        }
-                        catch ( ConnectionException e ) {
-                            throw new RuntimeException( "Unable to connect to cassandra", e );
-                        }
+                final MutationBatch mutation = edgeMetadataSerialization.writeEdge( scope, edge );
+
+                final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge( scope, edge, timestamp );
+
+                mutation.mergeShallow( edgeMutation );
 
 
-                        //subscribe and execute the action
-                        //HystrixObservable.async( edgeWriteCompact.compact( scope, edge, timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeWriteSubcriber );
-                        edgeWriteCompact.compact( scope, edge, timestamp ).subscribeOn( Schedulers.io() ).subscribe( edgeWriteSubcriber );
+                try {
+                    LOG.debug( "Writing edge {} to metadata and commit log", edge );
+                    mutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to cassandra", e );
+                }
 
-                        return edge;
-                    }
-                } );
+                return edge;
+            }
+        } );
     }
 
 
@@ -176,104 +161,127 @@ public class GraphManagerImpl implements GraphManager {
 
 
         return Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
-                    @Override
-                    public Edge call( final MarkedEdge edge ) {
+            @Override
+            public Edge call( final MarkedEdge edge ) {
 
-                        final UUID timestamp = UUIDGenerator.newTimeUUID();
-
-
-                        final MutationBatch edgeMutation = commitLogSerialization.writeEdge( scope, edge, timestamp );
+                final UUID timestamp = UUIDGenerator.newTimeUUID();
 
 
-                        try {
-                            LOG.debug( "Marking edge {} as deleted to commit log", edge );
-                            edgeMutation.execute();
-                        }
-                        catch ( ConnectionException e ) {
-                            throw new RuntimeException( "Unable to connect to cassandra", e );
-                        }
+                final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge( scope, edge, timestamp );
 
 
-                        //HystrixObservable.async( edgeDeleteListener.receive( scope, markedEdge, timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
-                        edgeDeleteListener.receive( scope, markedEdge, timestamp ).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
+                try {
+                    LOG.debug( "Marking edge {} as deleted to commit log", edge );
+                    edgeMutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to cassandra", e );
+                }
 
 
-                        return edge;
-                    }
-                } );
+                //HystrixCassandra.async( edgeDeleteListener.receive( scope, markedEdge,
+                // timestamp )).subscribeOn( Schedulers.io() ).subscribe( edgeDeleteSubcriber );
+                edgeDeleteListener.receive( scope, markedEdge, timestamp ).subscribeOn( Schedulers.io() )
+                                  .subscribe( edgeDeleteSubcriber );
+
+
+                return edge;
+            }
+        } );
     }
 
 
     @Override
     public Observable<Id> deleteNode( final Id node, final long timestamp ) {
         return Observable.from( node ).subscribeOn( Schedulers.io() ).map( new Func1<Id, Id>() {
-                    @Override
-                    public Id call( final Id id ) {
+            @Override
+            public Id call( final Id id ) {
 
-                        //mark the node as deleted
-
-
-                        final UUID eventTimestamp = UUIDGenerator.newTimeUUID();
-
-                        final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
+                //mark the node as deleted
 
 
+                final UUID eventTimestamp = UUIDGenerator.newTimeUUID();
 
-                        try {
-                            LOG.debug( "Marking node {} as deleted to node mark", node );
-                            nodeMutation.execute();
-                        }
-                        catch ( ConnectionException e ) {
-                            throw new RuntimeException( "Unable to connect to cassandra", e );
-                        }
+                final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
 
-                        //HystrixObservable.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn( Schedulers.io() ).subscribe( nodeDelete );
-                        nodeDeleteListener.receive(scope, id, eventTimestamp  ).subscribeOn( Schedulers.io() ).subscribe( nodeDelete );
 
-                        return id;
-                    }
-                } );
+                try {
+                    LOG.debug( "Marking node {} as deleted to node mark", node );
+                    nodeMutation.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to cassandra", e );
+                }
+
+                //HystrixCassandra.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn(
+                // Schedulers.io() ).subscribe( nodeDelete );
+                nodeDeleteListener.receive( scope, id, eventTimestamp ).subscribeOn( Schedulers.io() )
+                                  .subscribe( nodeDelete );
+
+                return id;
+            }
+        } );
     }
 
 
     @Override
     public Observable<Edge> loadEdgeVersions( final SearchByEdge searchByEdge ) {
-        return mergedEdgeReader.getEdgeVersions( scope, searchByEdge ).buffer( graphFig.getScanPageSize() )
-                                       .flatMap( new EdgeBufferFilter( searchByEdge.getMaxTimestamp() ) )
-                                       .cast( Edge.class ) ;
+        return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return storageEdgeSerialization.getEdgeVersions( scope, searchByEdge );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( searchByEdge.getMaxTimestamp() ) )
+                         .cast( Edge.class );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSource( final SearchByEdgeType search ) {
-        return  mergedEdgeReader.getEdgesFromSource( scope, search ).buffer( graphFig.getScanPageSize() )
-                                       .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) ).cast( Edge.class );
+        return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return storageEdgeSerialization.getEdgesFromSource( scope, search );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) )
+                         .cast( Edge.class );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTarget( final SearchByEdgeType search ) {
-        return mergedEdgeReader.getEdgesToTarget( scope, search ).buffer( graphFig.getScanPageSize() )
-                                       .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) ).cast( Edge.class ) ;
+        return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return storageEdgeSerialization.getEdgesToTarget( scope, search );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) )
+                         .cast( Edge.class );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesFromSourceByType( final SearchByIdType search ) {
-        return mergedEdgeReader.getEdgesFromSourceByTargetType( scope, search )
-                                                       .buffer( graphFig.getScanPageSize() )
-                                                       .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) )
+        return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope, search );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) )
 
-                                                       .cast( Edge.class );
+                         .cast( Edge.class );
     }
 
 
     @Override
     public Observable<Edge> loadEdgesToTargetByType( final SearchByIdType search ) {
-        return mergedEdgeReader.getEdgesToTargetBySourceType( scope, search )
-                                                       .buffer( graphFig.getScanPageSize() )
-                                                       .flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) )
-                                                       .cast( Edge.class ) ;
+        return Observable.create( new ObservableIterator<MarkedEdge>( "getEdgeTypesFromSource" ) {
+            @Override
+            protected Iterator<MarkedEdge> getIterator() {
+                return storageEdgeSerialization.getEdgesToTargetBySourceType( scope, search );
+            }
+        } ).buffer( graphFig.getScanPageSize() ).flatMap( new EdgeBufferFilter( search.getMaxTimestamp() ) )
+                         .cast( Edge.class );
     }
 
 
@@ -281,22 +289,22 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<String> getEdgeTypesFromSource( final SearchEdgeType search ) {
 
         return Observable.create( new ObservableIterator<String>( "getEdgeTypesFromSource" ) {
-                    @Override
-                    protected Iterator<String> getIterator() {
-                        return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
-                    }
-                } );
+            @Override
+            protected Iterator<String> getIterator() {
+                return edgeMetadataSerialization.getEdgeTypesFromSource( scope, search );
+            }
+        } );
     }
 
 
     @Override
     public Observable<String> getIdTypesFromSource( final SearchIdType search ) {
         return Observable.create( new ObservableIterator<String>( "getIdTypesFromSource" ) {
-                    @Override
-                    protected Iterator<String> getIterator() {
-                        return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
-                    }
-                } );
+            @Override
+            protected Iterator<String> getIterator() {
+                return edgeMetadataSerialization.getIdTypesFromSource( scope, search );
+            }
+        } );
     }
 
 
@@ -304,11 +312,11 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<String> getEdgeTypesToTarget( final SearchEdgeType search ) {
 
         return Observable.create( new ObservableIterator<String>( "getEdgeTypesToTarget" ) {
-                    @Override
-                    protected Iterator<String> getIterator() {
-                        return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
-                    }
-                } );
+            @Override
+            protected Iterator<String> getIterator() {
+                return edgeMetadataSerialization.getEdgeTypesToTarget( scope, search );
+            }
+        } );
     }
 
 
@@ -319,10 +327,8 @@ public class GraphManagerImpl implements GraphManager {
             protected Iterator<String> getIterator() {
                 return edgeMetadataSerialization.getIdTypesToTarget( scope, search );
             }
-        } ) ;
+        } );
     }
-
-
 
 
     /**
@@ -377,7 +383,7 @@ public class GraphManagerImpl implements GraphManager {
             final long edgeTimestamp = edge.getTimestamp();
 
             //our edge needs to not be deleted and have a version that's > max Version
-            if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxTimestamp )> 0 ) {
+            if ( edge.isDeleted() || Long.compare( edgeTimestamp, maxTimestamp ) > 0 ) {
                 return false;
             }
 
@@ -394,7 +400,7 @@ public class GraphManagerImpl implements GraphManager {
 
             //the target Id has been marked for deletion.  It's version is <= to the marked version for deletion,
             // so we need to discard it
-            if ( targetTimestamp != null &&  Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
+            if ( targetTimestamp != null && Long.compare( edgeTimestamp, targetTimestamp ) < 1 ) {
                 return false;
             }
 
@@ -409,7 +415,6 @@ public class GraphManagerImpl implements GraphManager {
 
     /**
      * Set the subcription for the edge write
-     * @param edgeWriteSubcriber
      */
     public void setEdgeWriteSubcriber( final Observer<Integer> edgeWriteSubcriber ) {
         Preconditions.checkNotNull( edgeWriteSubcriber, "Subscriber cannot be null" );
@@ -419,7 +424,6 @@ public class GraphManagerImpl implements GraphManager {
 
     /**
      * Set the subscription for the edge delete
-     * @param edgeDeleteSubcriber
      */
     public void setEdgeDeleteSubcriber( final Observer<Integer> edgeDeleteSubcriber ) {
         Preconditions.checkNotNull( edgeDeleteSubcriber, "Subscriber cannot be null" );
@@ -429,7 +433,6 @@ public class GraphManagerImpl implements GraphManager {
 
     /**
      * Set the subscription for the node delete
-     * @param nodeDelete
      */
     public void setNodeDelete( final Observer<Integer> nodeDelete ) {
         Preconditions.checkNotNull( nodeDelete, "Subscriber cannot be null" );
@@ -447,9 +450,10 @@ public class GraphManagerImpl implements GraphManager {
 
         private final Logger logger = LoggerFactory.getLogger( MetricSubscriber.class );
 
+
         @Override
         public void onCompleted() {
-             logger.debug( "Event completed" );
+            logger.debug( "Event completed" );
         }
 
 

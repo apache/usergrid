@@ -16,19 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.usergrid.persistence.graph.guice;
-
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import com.google.inject.BindingAnnotation;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD })
-@BindingAnnotation
-public @interface CommitLogEdgeSerialization {}
+import org.apache.usergrid.persistence.core.migration.Migration;
+
+import com.netflix.astyanax.MutationBatch;
+
+
+/**
+ * Serialization for flushing and reading counters
+ */
+public interface NodeShardCounterSerialization  extends Migration {
+
+
+    /**
+     * Flush the counter to the mutation batch
+     * @param counter
+     * @return
+     */
+    public MutationBatch flush(Counter counter);
+
+
+    /**
+     * Get the count of this shard, if it exists.
+     * @param key The shard key to get
+     * @return
+     */
+    public long getCount(ShardKey key);
+
+}

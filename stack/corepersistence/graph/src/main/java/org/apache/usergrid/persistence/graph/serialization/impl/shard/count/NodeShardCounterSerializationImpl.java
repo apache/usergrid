@@ -16,27 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.CounterColumnType;
 
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
-import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardCounterSerialization;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeRowKey;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeRowKeySerializer;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -50,8 +51,9 @@ import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.serializers.LongSerializer;
 
 
+
 @Singleton
-public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerialization {
+public class NodeShardCounterSerializationImpl implements NodeShardCounterSerialization {
 
 
     /**
@@ -68,8 +70,8 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
 
 
     @Inject
-    public EdgeShardCounterSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
-                                              final GraphFig graphFig ) {
+    public NodeShardCounterSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
+                                            final GraphFig graphFig ) {
         this.keyspace = keyspace;
         this.cassandraConfig = cassandraConfig;
         this.graphFig = graphFig;
@@ -77,44 +79,43 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
 
 
     @Override
-    public MutationBatch writeMetaDataLog( final ApplicationScope scope, final Id nodeId, final long shardId,
-                                           final long count, final String... types ) {
+    public MutationBatch flush( final Counter counter ) {
 
-        ValidationUtils.validateApplicationScope( scope );
-        ValidationUtils.verifyIdentity(nodeId);
-        Preconditions.checkArgument( shardId > -1, "shardId must be greater than -1" );
-        Preconditions.checkNotNull( types );
 
-        final EdgeRowKey key = new EdgeRowKey( nodeId, types );
+        Preconditions.checkNotNull( counter, "counter must be specified" );
 
-        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, key );
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        batch.withRow( EDGE_SHARD_COUNTS, rowKey ).incrementCounterColumn( shardId, count );
+        for ( Map.Entry<ShardKey, AtomicLong> entry : counter.getEntries() ) {
+
+            final ShardKey key = entry.getKey();
+            final long value = entry.getValue().get();
+
+            final EdgeRowKey edgeRowKey = new EdgeRowKey( key.getNodeId(), key.getEdgeTypes() );
+
+            final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.getScope(), edgeRowKey );
+
+
+            batch.withRow( EDGE_SHARD_COUNTS, rowKey ).incrementCounterColumn( key.getShardId(), value );
+        }
+
 
         return batch;
     }
 
 
     @Override
-    public long getCount( final ApplicationScope scope, final Id nodeId, final long shardId, final String... types ) {
+    public long getCount( final ShardKey key ) {
 
+        final EdgeRowKey edgeRowKey = new EdgeRowKey( key.getNodeId(), key.getEdgeTypes() );
 
-        ValidationUtils.validateApplicationScope( scope );
-        ValidationUtils.verifyIdentity(nodeId);
-        Preconditions.checkArgument( shardId > -1, "shardId must be greater than -1" );
-        Preconditions.checkNotNull( types );
-
-
-        final EdgeRowKey key = new EdgeRowKey( nodeId, types );
-
-        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, key );
+        final ScopedRowKey rowKey = ScopedRowKey.fromKey( key.getScope(), edgeRowKey );
 
 
         try {
             OperationResult<Column<Long>> column =
-                    keyspace.prepareQuery( EDGE_SHARD_COUNTS ).getKey( rowKey ).getColumn( shardId ).execute();
+                    keyspace.prepareQuery( EDGE_SHARD_COUNTS ).getKey( rowKey ).getColumn( key.getShardId() ).execute();
 
             return column.getResult().getLongValue();
         }
@@ -123,9 +124,8 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
             return 0;
         }
         catch ( ConnectionException e ) {
-            throw new RuntimeException( "An error occurred connecting to cassandra", e );
+            throw new GraphRuntimeException( "An error occurred connecting to cassandra", e );
         }
-
     }
 
 
@@ -133,9 +133,7 @@ public class EdgeShardCounterSerializationImpl implements EdgeShardCounterSerial
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
         return Collections.singleton(
                 new MultiTennantColumnFamilyDefinition( EDGE_SHARD_COUNTS, BytesType.class.getSimpleName(),
-                        ColumnTypes.LONG_TYPE_REVERSED,  CounterColumnType.class.getSimpleName(),
+                        ColumnTypes.LONG_TYPE_REVERSED, CounterColumnType.class.getSimpleName(),
                         MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
     }
-
-
 }

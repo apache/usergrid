@@ -23,7 +23,6 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.UUID;
 
 import org.jukito.UseModules;
 import org.junit.Before;
@@ -31,12 +30,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
@@ -73,10 +71,6 @@ public class EdgeMetaRepairTest {
 
     @Inject
     protected EdgeMetaRepair edgeMetaRepair;
-
-    @Inject
-    @CommitLogEdgeSerialization
-    protected EdgeSerialization commitLogEdgeSerialization;
 
     @Inject
     @StorageEdgeSerialization

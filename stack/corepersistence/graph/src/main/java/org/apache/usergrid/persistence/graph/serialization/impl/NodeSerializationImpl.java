@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -161,7 +162,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
             return Optional.absent();
         }
         catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to casandra", e );
+            throw new GraphRuntimeException( "Unable to connect to casandra", e );
         }
     }
 
@@ -200,7 +201,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
             }
         }
         catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to execute multiget for all max versions", e );
+            throw new GraphRuntimeException( "Unable to execute multiget for all max versions", e );
         }
 
         return versions;

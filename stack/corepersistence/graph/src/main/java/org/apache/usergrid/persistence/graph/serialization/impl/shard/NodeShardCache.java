@@ -52,14 +52,4 @@ public interface NodeShardCache {
      */
     public Iterator<Long> getVersions(final ApplicationScope scope, final Id nodeId, final long  maxTimestamp, final String... edgeType);
 
-
-    /**
-     * Increment the cached counter amount for this shard
-     * @param scope
-     * @param nodeId
-     * @param shard
-     * @param count
-     * @return The new local cached count
-     */
-    public long increment(final ApplicationScope scope, final Id nodeId, final long shard, final long count, final String... edgeTypes);
 }

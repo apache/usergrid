@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -76,14 +77,7 @@ public abstract class GraphManagerIT {
 
     @Before
     public void mockApp() {
-        this.scope = mock( ApplicationScope.class );
-
-        Id orgId = mock( Id.class );
-
-        when( orgId.getType() ).thenReturn( "organization" );
-        when( orgId.getUuid() ).thenReturn( UUIDGenerator.newTimeUUID() );
-
-        when( this.scope.getApplication() ).thenReturn( orgId );
+        this.scope = new ApplicationScopeImpl(createId("application")  );
     }
 
 
