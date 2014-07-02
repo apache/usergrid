@@ -20,12 +20,10 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
+import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -53,7 +51,7 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
     public SimpleSearchByEdgeType( final Id node, final String type, final long maxTimestamp, final Edge last ) {
         ValidationUtils.verifyIdentity(node);
         ValidationUtils.verifyString( type, "type" );
-        EdgeUtils.validateTimestamp(maxTimestamp, "maxTimestamp");
+        GraphValidation.validateTimestamp( maxTimestamp, "maxTimestamp" );
 
 
         this.node = node;

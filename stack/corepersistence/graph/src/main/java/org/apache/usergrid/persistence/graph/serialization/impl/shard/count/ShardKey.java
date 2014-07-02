@@ -19,27 +19,24 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
-import java.util.Arrays;
-
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 
 
 /**
  * Key for shards and counts
  */
 public class ShardKey {
-    private final ApplicationScope scope;
-    private final Id nodeId;
-    private final long shardId;
-    private final String[] edgeTypes;
+    public final ApplicationScope scope;
+    public final Shard shard;
+    public final DirectedEdgeMeta directedEdgeMeta;
 
 
-    public ShardKey( final ApplicationScope scope, final Id nodeId, final long shardId, final String... edgeTypes ) {
+    public ShardKey( final ApplicationScope scope, final Shard shard, final DirectedEdgeMeta directedEdgeMeta ) {
         this.scope = scope;
-        this.nodeId = nodeId;
-        this.shardId = shardId;
-        this.edgeTypes = edgeTypes;
+        this.shard = shard;
+        this.directedEdgeMeta = directedEdgeMeta;
     }
 
 
@@ -54,16 +51,13 @@ public class ShardKey {
 
         final ShardKey shardKey = ( ShardKey ) o;
 
-        if ( shardId != shardKey.shardId ) {
-            return false;
-        }
-        if ( !Arrays.equals( edgeTypes, shardKey.edgeTypes ) ) {
-            return false;
-        }
-        if ( !nodeId.equals( shardKey.nodeId ) ) {
+        if ( !directedEdgeMeta.equals( shardKey.directedEdgeMeta ) ) {
             return false;
         }
         if ( !scope.equals( shardKey.scope ) ) {
+            return false;
+        }
+        if ( !shard.equals( shardKey.shard ) ) {
             return false;
         }
 
@@ -71,32 +65,11 @@ public class ShardKey {
     }
 
 
-    public ApplicationScope getScope() {
-        return scope;
-    }
-
-
-    public Id getNodeId() {
-        return nodeId;
-    }
-
-
-    public long getShardId() {
-        return shardId;
-    }
-
-
-    public String[] getEdgeTypes() {
-        return edgeTypes;
-    }
-
-
     @Override
     public int hashCode() {
         int result = scope.hashCode();
-        result = 31 * result + nodeId.hashCode();
-        result = 31 * result + ( int ) ( shardId ^ ( shardId >>> 32 ) );
-        result = 31 * result + Arrays.hashCode( edgeTypes );
+        result = 31 * result + shard.hashCode();
+        result = 31 * result + directedEdgeMeta.hashCode();
         return result;
     }
 }

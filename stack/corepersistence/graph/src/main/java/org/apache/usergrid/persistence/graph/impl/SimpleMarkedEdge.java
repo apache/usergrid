@@ -20,8 +20,6 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.model.entity.Id;

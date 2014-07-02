@@ -39,12 +39,16 @@ import org.junit.Test;
 import org.safehaus.guicyfig.Bypass;
 import org.safehaus.guicyfig.OptionState;
 import org.safehaus.guicyfig.Overrides;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -68,6 +72,7 @@ import static org.mockito.Mockito.when;
 
 public class NodeShardApproximationTest {
 
+    private static final Logger LOG = LoggerFactory.getLogger( NodeShardApproximation.class );
 
     private GraphFig graphFig;
 
@@ -92,35 +97,38 @@ public class NodeShardApproximationTest {
 
         when( graphFig.getShardCacheSize() ).thenReturn( 10000l );
         when( graphFig.getShardSize() ).thenReturn( 250000l );
+        when( graphFig.getCounterFlushQueueSize() ).thenReturn( 10000 );
 
         nodeShardCounterSerialization = mock( NodeShardCounterSerialization.class );
 
-        when(nodeShardCounterSerialization.flush( any(Counter.class) )).thenReturn( mock( MutationBatch.class) );
-
+        when( nodeShardCounterSerialization.flush( any( Counter.class ) ) ).thenReturn( mock( MutationBatch.class ) );
 
 
         timeService = mock( TimeService.class );
 
-        when(timeService.getCurrentTime()).thenReturn( System.currentTimeMillis() );
+        when( timeService.getCurrentTime() ).thenReturn( System.currentTimeMillis() );
     }
 
 
     @Test
-    public void testSingleShard() {
+    public void testSingleShard() throws InterruptedException {
 
 
-        when(graphFig.getCounterFlushCount()).thenReturn( 100000l );
-
+        when( graphFig.getCounterFlushCount() ).thenReturn( 100000l );
         NodeShardApproximation approximation =
                 new NodeShardApproximationImpl( graphFig, nodeShardCounterSerialization, timeService );
 
 
         final Id id = createId( "test" );
-        final long shardId = 0l;
+        final Shard shard = new Shard(0, 0, true);
         final String type = "type";
         final String type2 = "subType";
 
-        long count = approximation.getCount( scope, id, shardId, type, type2 );
+        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( id, type, type2 );
+
+        long count = approximation.getCount( scope, shard, directedEdgeMeta);
+
+        waitForFlush( approximation );
 
         assertEquals( 0, count );
     }
@@ -128,8 +136,6 @@ public class NodeShardApproximationTest {
 
     @Test
     public void testSingleShardMultipleThreads() throws ExecutionException, InterruptedException {
-
-
 
 
         NodeShardCounterSerialization serialization = new TestNodeShardCounterSerialization();
@@ -144,8 +150,10 @@ public class NodeShardApproximationTest {
         final Id id = createId( "test" );
         final String type = "type";
         final String type2 = "subType";
-        final long shardId = 10000;
 
+        final Shard shard = new Shard(10000, 0, true);
+
+        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( id, type, type2 );
 
         ExecutorService executor = Executors.newFixedThreadPool( workers );
 
@@ -158,7 +166,7 @@ public class NodeShardApproximationTest {
                 public Long call() throws Exception {
 
                     for ( int i = 0; i < increments; i++ ) {
-                        approximation.increment( scope, id, shardId, 1, type, type2 );
+                        approximation.increment( scope, shard, 1, directedEdgeMeta );
                     }
 
                     return 0l;
@@ -169,32 +177,31 @@ public class NodeShardApproximationTest {
         }
 
 
-
         for ( Future<Long> future : futures ) {
-           future.get();
+            future.get();
         }
 
-
+        waitForFlush( approximation );
         //get our count.  It should be accurate b/c we only have 1 instance
 
-        final long returnedCount = approximation.getCount( scope, id, shardId, type, type2);
+        final long returnedCount = approximation.getCount( scope, shard, directedEdgeMeta );
         final long expected = workers * increments;
 
 
-        assertEquals(expected, returnedCount);
+        assertEquals( expected, returnedCount );
+
+        //test we get nothing with the other type
+
+        final long emptyCount = approximation.getCount( scope, shard,  DirectedEdgeMeta.fromSourceNodeTargetType( id, type, type2 ));
 
 
-
-
-
+        assertEquals( 0, emptyCount );
     }
 
 
 
     @Test
     public void testMultipleShardMultipleThreads() throws ExecutionException, InterruptedException {
-
-
 
 
         NodeShardCounterSerialization serialization = new TestNodeShardCounterSerialization();
@@ -210,27 +217,32 @@ public class NodeShardApproximationTest {
         final String type = "type";
         final String type2 = "subType";
 
-        final AtomicLong shardIdCounter = new AtomicLong(  );
+        final AtomicLong shardIdCounter = new AtomicLong();
+
+
+        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( id, type, type2 );
 
 
 
         ExecutorService executor = Executors.newFixedThreadPool( workers );
 
-        List<Future<Long>> futures = new ArrayList<>( workers );
+        List<Future<Shard>> futures = new ArrayList<>( workers );
 
         for ( int i = 0; i < workers; i++ ) {
 
-            final Future<Long> future = executor.submit( new Callable<Long>() {
+            final Future<Shard> future = executor.submit( new Callable<Shard>() {
                 @Override
-                public Long call() throws Exception {
+                public Shard call() throws Exception {
 
                     final long threadShardId = shardIdCounter.incrementAndGet();
 
+                    final Shard shard = new Shard( threadShardId, 0, true );
+
                     for ( int i = 0; i < increments; i++ ) {
-                        approximation.increment( scope, id, threadShardId, 1, type, type2 );
+                        approximation.increment( scope, shard, 1, directedEdgeMeta );
                     }
 
-                    return threadShardId;
+                    return shard;
                 }
             } );
 
@@ -238,28 +250,40 @@ public class NodeShardApproximationTest {
         }
 
 
+        for ( Future<Shard> future : futures ) {
+            final Shard shardId = future.get();
 
-        for ( Future<Long> future : futures ) {
-           final long shardId = future.get();
+            waitForFlush( approximation );
 
-            final long returnedCount = approximation.getCount( scope, id, shardId, type, type2);
+            final long returnedCount = approximation.getCount( scope, shardId, directedEdgeMeta);
 
-            assertEquals(increments, returnedCount);
+            assertEquals( increments, returnedCount );
         }
-
-
-
-
     }
+
+
+    private void waitForFlush( NodeShardApproximation approximation ) throws InterruptedException {
+
+        approximation.beginFlush();
+
+        while ( approximation.flushPending() ) {
+
+            LOG.info("Waiting on beginFlush to complete");
+
+            Thread.sleep( 100 );
+        }
+    }
+
 
 
     /**
      * These are created b/c we can't use Mockito.  It OOM's with keeping track of all the mock invocations
      */
 
-    private static class TestNodeShardCounterSerialization implements NodeShardCounterSerialization{
+    private static class TestNodeShardCounterSerialization implements NodeShardCounterSerialization {
 
         private Counter copy = new Counter();
+
 
         @Override
         public MutationBatch flush( final Counter counter ) {
@@ -279,7 +303,6 @@ public class NodeShardApproximationTest {
             return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
-
 
 
     /**
@@ -415,13 +438,13 @@ public class NodeShardApproximationTest {
     }
 
 
-
-    private static class TestGraphFig implements GraphFig{
+    private static class TestGraphFig implements GraphFig {
 
         @Override
         public int getScanPageSize() {
             return 0;  //To change body of implemented methods use File | Settings | File Templates.
         }
+
 
         @Override
         public int getRepairConcurrentSize() {
@@ -442,6 +465,12 @@ public class NodeShardApproximationTest {
 
 
         @Override
+        public long getShardMinDelta() {
+            return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+
+        @Override
         public long getShardCacheSize() {
             return 0;  //To change body of implemented methods use File | Settings | File Templates.
         }
@@ -456,6 +485,12 @@ public class NodeShardApproximationTest {
         @Override
         public long getCounterFlushInterval() {
             return 30000l;
+        }
+
+
+        @Override
+        public int getCounterFlushQueueSize() {
+            return 10000;
         }
 
 
@@ -555,7 +590,8 @@ public class NodeShardApproximationTest {
         }
     }
 
-    private static class TestTimeService implements TimeService{
+
+    private static class TestTimeService implements TimeService {
 
         @Override
         public long getCurrentTime() {

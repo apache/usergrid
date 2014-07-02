@@ -43,17 +43,21 @@ import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardApproximationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeShardSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardedEdgeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeShardStrategy;
 
 import com.google.inject.AbstractModule;
@@ -101,7 +105,6 @@ public class GraphModule extends AbstractModule {
         bind( EdgeShardSerialization.class ).to( EdgeShardSerializationImpl.class );
 
 
-
         //Repair/cleanup classes.
         bind( EdgeMetaRepair.class ).to( EdgeMetaRepairImpl.class );
         bind( EdgeDeleteRepair.class ).to( EdgeDeleteRepairImpl.class );
@@ -111,7 +114,9 @@ public class GraphModule extends AbstractModule {
          * Add our listeners
          */
         bind( NodeDeleteListener.class ).to( NodeDeleteListenerImpl.class );
-        bind( EdgeDeleteListener.class).to( EdgeDeleteListenerImpl.class );
+        bind( EdgeDeleteListener.class ).to( EdgeDeleteListenerImpl.class );
+
+
 
 
         /**
@@ -129,7 +134,7 @@ public class GraphModule extends AbstractModule {
         migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class ) );
 
         //bind each singleton to the multi set.  Otherwise we won't migrate properly
-        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, StorageEdgeSerialization.class ) );
+        migrationBinding.addBinding().to( Key.get( EdgeColumnFamilies.class, StorageEdgeSerialization.class ) );
 
         migrationBinding.addBinding().to( Key.get( EdgeShardSerialization.class ) );
         migrationBinding.addBinding().to( Key.get( NodeShardCounterSerialization.class ) );
@@ -143,22 +148,36 @@ public class GraphModule extends AbstractModule {
     @Singleton
     @Inject
     @StorageEdgeSerialization
-    public EdgeSerialization permanentStorageSerialization( final NodeShardCache cache, final Keyspace keyspace,
-                                                            final CassandraConfig cassandraConfig,
-                                                            final GraphFig graphFig,
-                                                            final NodeShardApproximation shardApproximation) {
+    public EdgeSerialization storageSerialization( final NodeShardCache cache, final Keyspace keyspace,
+                                                   final CassandraConfig cassandraConfig, final GraphFig graphFig,
+                                                   final NodeShardApproximation shardApproximation,
+                                                   final TimeService timeService,
+                                                   @StorageEdgeSerialization
+                                                   final EdgeColumnFamilies edgeColumnFamilies ) {
 
         final EdgeShardStrategy sizeBasedStrategy = new SizebasedEdgeShardStrategy( cache, shardApproximation );
 
+
+        final ShardedEdgeSerialization serialization = new ShardedEdgeSerializationImpl(keyspace, cassandraConfig, graphFig, sizeBasedStrategy,
+                timeService );
+
+
         final EdgeSerializationImpl edgeSerialization =
-                new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy );
+                new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy, edgeColumnFamilies,
+                        serialization );
 
 
         return edgeSerialization;
     }
 
 
-
+    @Provides
+    @Singleton
+    @Inject
+    @StorageEdgeSerialization
+    public EdgeColumnFamilies storageSerializationColumnFamilies() {
+        return new SizebasedEdgeColumnFamilies();
+    }
 }
 
 

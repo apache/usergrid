@@ -20,27 +20,31 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
-import org.apache.commons.collections4.iterators.PushbackIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.ShardKey;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
@@ -50,8 +54,13 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
+    private static final Logger LOG = LoggerFactory.getLogger( NodeShardAllocationImpl.class );
+
+    private static final Shard MIN_SHARD = new Shard(0, 0, true);
+
     private final EdgeShardSerialization edgeShardSerialization;
-//    private final NodeShardCounterSerialization edgeShardCounterSerialization;
+    private final EdgeColumnFamilies edgeColumnFamilies;
+    private final ShardedEdgeSerialization shardedEdgeSerialization;
     private final NodeShardApproximation nodeShardApproximation;
     private final TimeService timeService;
     private final GraphFig graphFig;
@@ -59,9 +68,13 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
     @Inject
     public NodeShardAllocationImpl( final EdgeShardSerialization edgeShardSerialization,
-                                    final NodeShardApproximation nodeShardApproximation,
-                                    final TimeService timeService, final GraphFig graphFig ) {
+                                    final EdgeColumnFamilies edgeColumnFamilies,
+                                    final ShardedEdgeSerialization shardedEdgeSerialization,
+                                    final NodeShardApproximation nodeShardApproximation, final TimeService timeService,
+                                    final GraphFig graphFig ) {
         this.edgeShardSerialization = edgeShardSerialization;
+        this.edgeColumnFamilies = edgeColumnFamilies;
+        this.shardedEdgeSerialization = shardedEdgeSerialization;
         this.nodeShardApproximation = nodeShardApproximation;
         this.timeService = timeService;
         this.graphFig = graphFig;
@@ -69,109 +82,115 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
     @Override
-    public Iterator<Long> getShards( final ApplicationScope scope, final Id nodeId, Optional<Long> maxShardId, final String... edgeTypes ) {
+    public Iterator<ShardEntryGroup> getShards( final ApplicationScope scope,
+                                                final Optional<Shard> maxShardId, final DirectedEdgeMeta directedEdgeMeta ) {
 
-        final Iterator<Long> existingShards =
-                edgeShardSerialization.getEdgeMetaData( scope, nodeId, maxShardId, edgeTypes );
+        ValidationUtils.validateApplicationScope(scope);
+        Preconditions.checkNotNull( maxShardId, "maxShardId cannot be null" );
+        GraphValidation.validateDirectedEdgeMeta( directedEdgeMeta );
 
-        final PushbackIterator<Long> pushbackIterator = new PushbackIterator( existingShards );
-//
-//
-//        final long now = timeService.getCurrentTime();
-//
-//
-//        final List<Long> futures = new ArrayList<Long>();
-//
-//
-//        //loop through all shards, any shard > now+1 should be deleted
-//        while ( pushbackIterator.hasNext() ) {
-//
-//            final Long value = pushbackIterator.next();
-//
-//            //we're done, our current time uuid is greater than the value stored
-//            if ( now >= value ) {
-//                //push it back into the iterator
-//                pushbackIterator.pushback( value );
-//                break;
-//            }
-//
-//            futures.add( value );
-//        }
-//
-//
-//        //we have more than 1 future value, we need to remove it
-//
-//        MutationBatch cleanup = keyspace.prepareMutationBatch();
-//
-//        //remove all futures except the last one, it is the only value we shouldn't lazy remove
-//        for ( int i = 0; i < futures.size() -1; i++ ) {
-//            final long toRemove = futures.get( i );
-//
-//            final MutationBatch batch = edgeShardSerialization.removeEdgeMeta( scope, nodeId, toRemove, edgeTypes );
-//
-//            cleanup.mergeShallow( batch );
-//        }
-//
-//
-//        try {
-//            cleanup.execute();
-//        }
-//        catch ( ConnectionException e ) {
-//            throw new GraphRuntimeException( "Unable to remove future shards, mutation error", e );
-//        }
-//
-//
-//        final int futuresSize =  futures.size();
-//
-//        if ( futuresSize > 0 ) {
-//            pushbackIterator.pushback( futures.get( futuresSize - 1 ) );
-//        }
-//
-//
-        /**
-         * Nothing to iterate, return an iterator with 0.
-         */
-        if(!pushbackIterator.hasNext()){
-            pushbackIterator.pushback( 0l );
+        Iterator<Shard> existingShards;
+
+        //its a new node, it doesn't need to check cassandra, it won't exist
+        if(isNewNode(directedEdgeMeta)){
+            existingShards = Collections.singleton( MIN_SHARD ).iterator();
         }
 
-        return pushbackIterator;
+        else{
+            existingShards = edgeShardSerialization.getShardMetaData( scope, maxShardId, directedEdgeMeta );
+        }
+
+        if(existingShards == null || !existingShards.hasNext()){
+
+            try {
+                edgeShardSerialization.writeShardMeta( scope, MIN_SHARD, directedEdgeMeta ).execute();
+            }
+            catch ( ConnectionException e ) {
+                throw new GraphRuntimeException( "Unable to allocate minimum shard" );
+            }
+
+            existingShards = Collections.singleton( MIN_SHARD ).iterator();
+        }
+
+        return new ShardEntryGroupIterator( existingShards, graphFig.getShardMinDelta() );
     }
 
 
     @Override
-    public boolean auditMaxShard( final ApplicationScope scope, final Id nodeId, final String... edgeType ) {
+    public boolean auditShard( final ApplicationScope scope, final ShardEntryGroup shardEntryGroup, final DirectedEdgeMeta directedEdgeMeta) {
 
-        final Iterator<Long> maxShards = getShards( scope, nodeId, Optional.<Long>absent(), edgeType );
+        ValidationUtils.validateApplicationScope(scope);
+        GraphValidation.validateShardEntryGroup( shardEntryGroup );
+        GraphValidation.validateDirectedEdgeMeta( directedEdgeMeta );
+
+        Preconditions.checkNotNull( shardEntryGroup, "shardEntryGroup cannot be null" );
 
 
-        //if the first shard has already been allocated, do nothing.
-
-        //now is already > than the max, don't do anything
-        if ( !maxShards.hasNext() ) {
+        /**
+         * Nothing to do, it's been created very recently, we don't create a new one
+         */
+        if (shardEntryGroup.isCompactionPending()) {
             return false;
         }
 
-        final long maxShard = maxShards.next();
+        //we can't allocate, we have more than 1 write shard currently.  We need to compact first
+        if(shardEntryGroup.entrySize() != 1){
+            return false;
+        }
+
+
+        /**
+         * Check the min shard in our system
+         */
+        final Shard shard = shardEntryGroup.getMinShard();
+
+
+        if (shard.getCreatedTime() >= getMinTime()){
+            return false;
+        }
+
 
         /**
          * Check out if we have a count for our shard allocation
          */
 
+        final long count =
+                nodeShardApproximation.getCount( scope, shard, directedEdgeMeta);
 
-        final long count = nodeShardApproximation.getCount( scope, nodeId, maxShard, edgeType );
 
         if ( count < graphFig.getShardSize() ) {
             return false;
         }
 
-        //try to get a lock here, and fail if one isn't present
 
-        final long newShardTime = timeService.getCurrentTime() + graphFig.getShardCacheTimeout() * 2;
+
+
+        /**
+         * Allocate the shard
+         */
+
+        final Iterator<MarkedEdge> edges  = directedEdgeMeta.loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup, Long.MAX_VALUE );
+
+
+        if ( !edges.hasNext() ) {
+            LOG.warn( "Tried to allocate a new shard for edge meta data {}, "
+                    + "but no max value could be found in that row", directedEdgeMeta );
+            return false;
+        }
+
+        //we have a next, allocate it based on the max
+
+        MarkedEdge marked = edges.next();
+
+        final long createTimestamp = timeService.getCurrentTime();
+
+        final Shard newShard = new Shard(marked.getTimestamp(), createTimestamp, false);
 
 
         try {
-            this.edgeShardSerialization.writeEdgeMeta( scope, nodeId, newShardTime, edgeType ).execute();
+            this.edgeShardSerialization
+                    .writeShardMeta( scope, newShard, directedEdgeMeta )
+                    .execute();
         }
         catch ( ConnectionException e ) {
             throw new GraphRuntimeException( "Unable to write the new edge metadata" );
@@ -180,5 +199,51 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         return true;
     }
+
+
+    @Override
+    public long getMinTime() {
+
+        final long minimumAllowed = 2 * graphFig.getShardCacheTimeout();
+
+        final long minDelta = graphFig.getShardMinDelta();
+
+
+        if ( minDelta < minimumAllowed ) {
+            throw new GraphRuntimeException( String.format(
+                    "You must configure the property %s to be >= 2 x %s.  Otherwise you risk losing data",
+                    GraphFig.SHARD_MIN_DELTA, GraphFig.SHARD_CACHE_TIMEOUT ) );
+        }
+
+        return timeService.getCurrentTime() - minDelta;
+    }
+
+
+    /**
+     * Return true if the node has been created within our timeout.  If this is the case, we dont' need to check
+     * cassandra, we know it won't exist
+     *
+     * @param directedEdgeMeta
+     * @return
+     */
+    private boolean isNewNode(DirectedEdgeMeta directedEdgeMeta){
+
+        /**
+         * the max time in microseconds we can allow
+         */
+        final long maxTime = (timeService.getCurrentTime() + graphFig.getShardCacheTimeout() )* 10000;
+
+        for(DirectedEdgeMeta.NodeMeta node: directedEdgeMeta.getNodes()){
+            final long uuidTime = node.getId().getUuid().timestamp();
+
+            if(uuidTime < maxTime){
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
 
 }

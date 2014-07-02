@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.runner.RunWith;
 

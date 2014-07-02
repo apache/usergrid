@@ -56,7 +56,7 @@ public class UniqueValueSerializationStrategyImpl
 
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 
-    private static final MultiTennantColumnFamily<CollectionScope, Field, EntityVersion> 
+    private static final MultiTennantColumnFamily<CollectionScope, Field, EntityVersion>
         CF_UNIQUE_VALUES =
             new MultiTennantColumnFamily<CollectionScope, Field, EntityVersion>( "Unique_Values",
                 ROW_KEY_SER,

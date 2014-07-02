@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.graph.serialization;
 
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.junit.Test;

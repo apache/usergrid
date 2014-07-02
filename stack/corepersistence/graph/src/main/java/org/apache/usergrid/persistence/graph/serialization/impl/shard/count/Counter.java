@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.common.base.Preconditions;
+
 
 /**
  * This class is synchronized for addition.  It is meant to be used across multiple threads
@@ -35,7 +37,7 @@ public class Counter {
     private final AtomicLong invokeCounter;
 
     /**
-     * Pointer to our "current" counter map.  We flush this when time expires or we hit our count
+     * Pointer to our "current" counter map.  We beginFlush this when time expires or we hit our count
      */
     private final ConcurrentHashMap<ShardKey, AtomicLong> counts;
 
@@ -94,6 +96,10 @@ public class Counter {
      * @param other
      */
     public void merge(final Counter other){
+
+        Preconditions.checkNotNull(other, "other cannot be null");
+        Preconditions.checkNotNull( other.counts, "other.counts cannot be null" );
+
         for(Map.Entry<ShardKey, AtomicLong> entry: other.counts.entrySet()){
             add(entry.getKey(), entry.getValue().get());
         }

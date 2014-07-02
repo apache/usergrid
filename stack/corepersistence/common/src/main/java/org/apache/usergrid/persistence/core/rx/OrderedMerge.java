@@ -181,6 +181,9 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
                     InnerObserver<T> maxObserver = null;
                     T max = null;
 
+                    /**
+                     * TODO T.N. change this to be an 0(1) for min and O(log n) to update after pop rather than O(n*inner)
+                     */
                     for ( InnerObserver<T> inner : innerSubscribers ) {
 
                         //nothing to do, this inner

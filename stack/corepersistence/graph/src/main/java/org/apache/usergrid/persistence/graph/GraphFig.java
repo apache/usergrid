@@ -39,11 +39,26 @@ public interface GraphFig extends GuicyFig {
 
     public static final String SHARD_CACHE_SIZE = "usergrid.graph.shard.cache.size";
 
+
+    /**
+     * Get the cache timeout.  The local cache will exist for this amount of time max (in millis).
+     */
     public static final String SHARD_CACHE_TIMEOUT = "usergrid.graph.shard.cache.timeout";
 
-    public static final String COUNTER_WRITE_FLUSH_COUNT = "usergrid.graph.shard.counter.flush.count";
+    /**
+     * The minimum amount of time than can occur (in millis) between shard allocation.  Must be at least 2x the cache timeout.
+     *
+     * Note that you should also pad this for node clock drift.  A good value for this would be 2x the shard cache timeout + 30 seconds,
+     * assuming you have NTP and allow a max drift of 30 seconds
+     */
+    public static final String SHARD_MIN_DELTA = "usergrid.graph.shard.min.delta";
 
-    public static final String COUNTER_WRITE_FLUSH_INTERVAL = "usergrid.graph.shard.counter.flush.interval";
+
+    public static final String COUNTER_WRITE_FLUSH_COUNT = "usergrid.graph.shard.counter.beginFlush.count";
+
+    public static final String COUNTER_WRITE_FLUSH_INTERVAL = "usergrid.graph.shard.counter.beginFlush.interval";
+
+    public static final String COUNTER_WRITE_FLUSH_QUEUE_SIZE = "usergrid.graph.shard.counter.queue.size";
 
 
 
@@ -69,9 +84,16 @@ public interface GraphFig extends GuicyFig {
     @Key(SHARD_CACHE_TIMEOUT)
     long getShardCacheTimeout();
 
+    @Default("60000")
+    @Key( SHARD_MIN_DELTA )
+    long getShardMinDelta();
+
+
     @Default( "250000" )
     @Key( SHARD_CACHE_SIZE )
     long getShardCacheSize();
+
+
 
 
     @Default( "10000" )
@@ -82,5 +104,9 @@ public interface GraphFig extends GuicyFig {
     @Default( "30000" )
     @Key( COUNTER_WRITE_FLUSH_INTERVAL )
     long getCounterFlushInterval();
+
+    @Default( "1000" )
+    @Key(COUNTER_WRITE_FLUSH_QUEUE_SIZE  )
+    int getCounterFlushQueueSize();
 }
 

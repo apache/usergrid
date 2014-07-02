@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.graph.test.util;
 
 
-import java.io.IOException;
 import java.util.Random;
 import java.util.UUID;
 
@@ -39,11 +38,6 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import com.fasterxml.uuid.EthernetAddress;
-import com.fasterxml.uuid.TimestampSynchronizer;
-import com.fasterxml.uuid.UUIDTimer;
-import com.fasterxml.uuid.impl.UUIDUtil;
 
 
 /**

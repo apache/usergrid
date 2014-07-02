@@ -23,10 +23,12 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 import java.util.Iterator;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -52,52 +54,21 @@ public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     @Override
-    public long getWriteShard( final ApplicationScope scope, final Id rowKeyId, final long timestamp,
-                               final String... types ) {
-        return shardCache.getSlice( scope, rowKeyId, timestamp, types );
+    public ShardEntryGroup getWriteShards( final ApplicationScope scope,
+                                        final long timestamp, final DirectedEdgeMeta directedEdgeMeta ) {
+        return shardCache.getWriteShardGroup( scope, timestamp, directedEdgeMeta);
     }
 
 
     @Override
-    public Iterator<Long> getReadShards( final ApplicationScope scope, final Id rowKeyId, final long maxTimestamp,
-                                         final String... types ) {
-        return shardCache.getVersions( scope, rowKeyId, maxTimestamp, types );
+    public Iterator<ShardEntryGroup> getReadShards( final ApplicationScope scope, final long maxTimestamp, final DirectedEdgeMeta directedEdgeMeta ) {
+        return shardCache.getReadShardGroup( scope, maxTimestamp, directedEdgeMeta );
     }
 
 
     @Override
-    public void increment( final ApplicationScope scope, final Id rowKeyId, final long shardId, final long count,
-                           final String... types ) {
-        shardApproximation.increment( scope, rowKeyId, shardId, count, types );
-    }
-
-
-    @Override
-    public String getSourceNodeCfName() {
-        return "Graph_Source_Node_Edges";
-    }
-
-
-    @Override
-    public String getTargetNodeCfName() {
-        return "Graph_Target_Node_Edges";
-    }
-
-
-    @Override
-    public String getSourceNodeTargetTypeCfName() {
-        return "Graph_Source_Node_Target_Type";
-    }
-
-
-    @Override
-    public String getTargetNodeSourceTypeCfName() {
-        return "Graph_Target_Node_Source_Type";
-    }
-
-
-    @Override
-    public String getGraphEdgeVersions() {
-        return "Graph_Edge_Versions";
+    public void increment( final ApplicationScope scope, final Shard shard,
+                           final long count, final DirectedEdgeMeta directedEdgeMeta) {
+        shardApproximation.increment( scope, shard,  count, directedEdgeMeta );
     }
 }

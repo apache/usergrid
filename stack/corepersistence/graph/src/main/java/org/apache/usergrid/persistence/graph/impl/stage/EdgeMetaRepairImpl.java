@@ -38,7 +38,7 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
+import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
@@ -111,7 +111,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
         Preconditions.checkNotNull( edgeType, "edge type is required" );
-        EdgeUtils.validateTimestamp( maxTimestamp, "maxTimestamp" );
+        GraphValidation.validateTimestamp( maxTimestamp, "maxTimestamp" );
         Preconditions.checkNotNull( serialization, "serialization is required" );
 
 

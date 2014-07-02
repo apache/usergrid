@@ -46,7 +46,7 @@ import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListener;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
+import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -121,7 +121,7 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<Edge> writeEdge( final Edge edge ) {
-        EdgeUtils.validateEdge( edge );
+        GraphValidation.validateEdge( edge );
 
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
 
@@ -155,7 +155,7 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<Edge> deleteEdge( final Edge edge ) {
-        EdgeUtils.validateEdge( edge );
+        GraphValidation.validateEdge( edge );
 
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
 

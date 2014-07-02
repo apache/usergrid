@@ -32,19 +32,19 @@ import javax.inject.Inject;
 import org.apache.cassandra.db.marshal.BooleanType;
 import org.apache.cassandra.db.marshal.BytesType;
 
-import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
+import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -116,7 +116,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
     public MutationBatch mark( final ApplicationScope scope, final Id node, final long timestamp ) {
         ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
-        EdgeUtils.validateTimestamp(timestamp, "timestamp");
+        GraphValidation.validateTimestamp( timestamp, "timestamp" );
 
         MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
@@ -131,7 +131,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
     public MutationBatch delete( final ApplicationScope scope, final Id node, final long timestamp ) {
         ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
-        EdgeUtils.validateTimestamp( timestamp, "timestamp" );
+        GraphValidation.validateTimestamp( timestamp, "timestamp" );
 
         MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
@@ -168,20 +168,20 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     @Override
-    public Map<Id, Long> getMaxVersions( final ApplicationScope scope, final Collection<? extends Edge> nodeIds ) {
+    public Map<Id, Long> getMaxVersions( final ApplicationScope scope, final Collection<? extends Edge> edges ) {
         ValidationUtils.validateApplicationScope( scope );
-        Preconditions.checkNotNull( nodeIds, "nodeIds cannot be null" );
+        Preconditions.checkNotNull( edges, "edges cannot be null" );
 
 
         final ColumnFamilyQuery<ScopedRowKey<ApplicationScope, Id>, Boolean> query = keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel( fig.getReadCL() );
 
 
-        final List<ScopedRowKey<ApplicationScope, Id>> keys = new ArrayList<ScopedRowKey<ApplicationScope, Id>>(nodeIds.size());
+        final List<ScopedRowKey<ApplicationScope, Id>> keys = new ArrayList<ScopedRowKey<ApplicationScope, Id>>(edges.size());
 
         //worst case all are marked
-        final Map<Id, Long> versions = new HashMap<>(nodeIds.size());
+        final Map<Id, Long> versions = new HashMap<>(edges.size());
 
-        for(final Edge edge: nodeIds){
+        for(final Edge edge: edges){
             keys.add( ScopedRowKey.fromKey( scope, edge.getSourceNode() ) );
             keys.add( ScopedRowKey.fromKey( scope, edge.getTargetNode() ) );
         }
