@@ -2027,7 +2027,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private String emailMsg( Map<String, String> values, String propertyName ) {
+    protected String emailMsg(Map<String, String> values, String propertyName) {
         return new StrSubstitutor( values ).replace( properties.getProperty( propertyName ) );
     }
 
