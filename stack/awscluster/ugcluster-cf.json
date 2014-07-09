@@ -33,7 +33,7 @@
             "Description": "Instance type for REST servers",
             "Type": "String",
             "Default": "m1.large",
-            "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge"],
+            "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.large"],
             "ConstraintDescription": "must be valid instance type."
         },
         "KeyPair": {
@@ -56,7 +56,7 @@
             "Description": "Instance type for Cass servers",
             "Type": "String",
             "Default": "m1.xlarge",
-            "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge"],
+            "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge","c3.4xlarge"],
             "ConstraintDescription": "must be valid instance type."
         },
         "CassReplicationFactor": {
@@ -86,7 +86,10 @@
             "m1.small": {"Arch": "64"},
             "m1.medium": {"Arch": "64"},
             "m1.large": {"Arch": "64"},
-            "m1.xlarge": {"Arch": "64"}
+            "m1.xlarge": {"Arch": "64"},
+            "m3.large":{"Arch": "64"},
+            "c3.4xlarge":{"Arch":"64"}
+
         },
         "AWSRegionArch2AMI": {
             "ap-southeast-2": {"64": "ami-5993f663"},
