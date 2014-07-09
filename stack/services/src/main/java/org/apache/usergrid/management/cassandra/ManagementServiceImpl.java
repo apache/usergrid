@@ -2535,7 +2535,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private String buildUserAppUrl( UUID applicationId, String url, User user, String token ) throws Exception {
+    protected String buildUserAppUrl(UUID applicationId, String url, User user, String token) throws Exception {
         ApplicationInfo ai = getApplicationInfo( applicationId );
         OrganizationInfo oi = getOrganizationForApplication( applicationId );
         return String.format( url, oi.getName(), StringUtils.stringOrSubstringAfterFirst( ai.getName(), '/' ),
