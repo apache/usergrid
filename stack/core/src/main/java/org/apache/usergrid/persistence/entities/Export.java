@@ -20,10 +20,10 @@ package org.apache.usergrid.persistence.entities;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 
 /**

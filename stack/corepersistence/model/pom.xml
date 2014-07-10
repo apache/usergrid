@@ -12,10 +12,6 @@
     <artifactId>model</artifactId>
     <name>Usergrid Model</name>
 
-  <properties>
-    <jackson-2-version>2.3.1</jackson-2-version>
-  </properties>
-
     <!-- Runtime Dependencies -->
     <dependencies>
 

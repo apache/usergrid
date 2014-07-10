@@ -17,7 +17,8 @@
 package org.apache.usergrid.rest.applications.users;
 
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
@@ -57,7 +58,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         String token = user1.getToken();
         JsonNode userNode = context.application().users().user( "me" ).get();
         assertNotNull( userNode );
-        String uuid = userNode.get( "entities" ).get( 0 ).get( "uuid" ).getTextValue();
+        String uuid = userNode.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
         assertNotNull( uuid );
         setup.getMgmtSvc().revokeAccessTokenForAppUser( token );
 
@@ -73,7 +74,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void contextualPathOwnership() {
+    public void contextualPathOwnership() throws IOException {
 
         // anonymous user
         context.clearUser();
@@ -163,7 +164,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void contextualConnectionOwnership() {
+    public void contextualConnectionOwnership() throws IOException {
 
         // anonymous user
         context.clearUser();
@@ -284,7 +285,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void contextualConnectionOwnershipGuestAccess() {
+    public void contextualConnectionOwnershipGuestAccess() throws IOException {
 
         //set up full GET,PUT,POST,DELETE access for guests
         context.application().collection( "roles" ).entity( "guest" ).collection( "permissions" )

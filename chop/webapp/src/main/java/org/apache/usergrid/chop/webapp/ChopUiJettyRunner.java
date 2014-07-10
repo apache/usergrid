@@ -103,6 +103,7 @@ public class ChopUiJettyRunner extends JettyRunner {
         options.addOption("j", "join", true, "Joins an existing ES cluster: cluster name argument.");
         options.addOption("c", "client-only", true, "Client to existing ES cluster: transport address argument " +
                 "(i.e. localhost:3456)");
+        options.addOption( "n", "name-of-cluster", true, "Sets the name of the ES instance/cluster." );
 
         return options;
     }

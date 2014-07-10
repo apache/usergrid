@@ -68,9 +68,9 @@ public class WriteUniqueVerifyIT {
         entity.setField(new StringField("name", "Aston Martin Vanquish", true));
         entity.setField(new StringField("identifier", "v12", true));
         entity.setField(new IntegerField("top_speed_mph", 200));
-        entityManager.write( entity ).toBlockingObservable().last();
+        entityManager.write( entity ).toBlocking().last();
 
-        Entity entityFetched = entityManager.load( entity.getId() ).toBlockingObservable().last();
+        Entity entityFetched = entityManager.load( entity.getId() ).toBlocking().last();
         entityFetched.setField( new StringField("foo", "bar"));
 
         // another enity that tries to use two unique values already taken by first
@@ -80,11 +80,11 @@ public class WriteUniqueVerifyIT {
         entity2.setField(new IntegerField("top_speed_mph", 120));
 
         try {
-            entityManager.write( entity2 ).toBlockingObservable().last();
+            entityManager.write( entity2 ).toBlocking().last();
             fail("Write should have thrown an exception");
 
         } catch ( Exception ex ) {
-            WriteUniqueVerifyException e = (WriteUniqueVerifyException)ex.getCause();
+            WriteUniqueVerifyException e = (WriteUniqueVerifyException)ex;
 
             // verify two unique value violations
             assertEquals( 2, e.getVioliations().size() );
@@ -108,11 +108,11 @@ public class WriteUniqueVerifyIT {
         entity.setField(new StringField("name", "Porsche 911 GT3", true));
         entity.setField(new StringField("identifier", "911gt3", true));
         entity.setField(new IntegerField("top_speed_mph", 194));
-        entityManager.write( entity ).toBlockingObservable().last();
+        entityManager.write( entity ).toBlocking().last();
 
-        Entity entityFetched = entityManager.load( entity.getId() ).toBlockingObservable().last();
+        Entity entityFetched = entityManager.load( entity.getId() ).toBlocking().last();
         entityFetched.setField( new StringField("foo", "baz"));
-        entityManager.write( entityFetched ).toBlockingObservable().last();
+        entityManager.write( entityFetched ).toBlocking().last();
     }
 
     @Test
@@ -128,9 +128,9 @@ public class WriteUniqueVerifyIT {
         entity.setField(new StringField("name", "Alfa Romeo 8C Competizione", true));
         entity.setField(new StringField("identifier", "ar8c", true));
         entity.setField(new IntegerField("top_speed_mph", 182));
-        entityManager.write( entity ).toBlockingObservable().last();
+        entityManager.write( entity ).toBlocking().last();
 
         entity.setField( new StringField("foo", "bar"));
-        entityManager.write( entity ).toBlockingObservable().last();
+        entityManager.write( entity ).toBlocking().last();
     }
 }

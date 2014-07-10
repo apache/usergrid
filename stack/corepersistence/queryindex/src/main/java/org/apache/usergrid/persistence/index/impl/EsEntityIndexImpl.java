@@ -130,18 +130,24 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         IndexValidationUtils.validateIndexScope( indexScope );
 
-        this.indexScope = indexScope;
+        try {
+            this.indexScope = indexScope;
 
-        this.client = provider.getClient();
-        this.ecmFactory = factory;
+            this.client = provider.getClient();
+            this.ecmFactory = factory;
 
-        this.indexName = createIndexName( config.getIndexPrefix(), indexScope);
-        this.indexType = createCollectionScopeTypeName( indexScope );
+            this.indexName = createIndexName( config.getIndexPrefix(), indexScope);
+            this.indexType = createCollectionScopeTypeName( indexScope );
 
-        this.serializationFig = serializationFig;
+            this.serializationFig = serializationFig;
 
-        this.refresh = config.isForcedRefresh();
-        this.cursorTimeout = config.getQueryCursorTimeout();
+            this.refresh = config.isForcedRefresh();
+            this.cursorTimeout = config.getQueryCursorTimeout();
+
+        } catch ( Exception e ) {
+            log.error("Error setting up index", e);
+            throw e;
+        }
 
         //log.debug("Creating new EsEntityIndexImpl for: " + indexName);
 
@@ -270,13 +276,14 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void index( Entity entity ) {
 
         if ( log.isDebugEnabled() ) {
-            log.debug("Indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {}", 
+            log.debug("Indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {}\n   type {}", 
                 new Object[] { 
                     entity.getId().getType(), 
                     entity.getId().getUuid(), 
                     indexScope.getApplication(), 
                     indexScope.getOwner(), 
-                    indexScope.getName() 
+                    indexScope.getName(),
+                    indexType
             });
         }
 

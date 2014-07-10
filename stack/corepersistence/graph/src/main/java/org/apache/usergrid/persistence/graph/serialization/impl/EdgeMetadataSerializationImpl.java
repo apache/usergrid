@@ -23,28 +23,27 @@ package org.apache.usergrid.persistence.graph.serialization.impl;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.UUID;
 
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
-import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.astyanax.StringColumnParser;
 import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
-import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
-import org.apache.usergrid.persistence.core.astyanax.StringColumnParser;
 import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -53,7 +52,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.model.ByteBufferRange;
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
 import com.netflix.astyanax.query.RowQuery;
@@ -136,14 +134,13 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         EdgeUtils.validateEdge( edge );
 
 
-
-
         final Id source = edge.getSourceNode();
         final Id target = edge.getTargetNode();
         final String edgeType = edge.getType();
         final long timestamp = edge.getTimestamp();
 
-        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() ).withTimestamp( timestamp );
+        final MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( cassandraConfig.getWriteCL() )
+                                            .withTimestamp( timestamp );
 
 
         //add source->target edge type to meta data
@@ -158,8 +155,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 new ScopedRowKey<ApplicationScope, EdgeIdTypeKey>( scope, tk );
 
 
-        batch.withRow( CF_SOURCE_EDGE_ID_TYPES, sourceTypeKey )
-             .putColumn( target.getType(), HOLDER );
+        batch.withRow( CF_SOURCE_EDGE_ID_TYPES, sourceTypeKey ).putColumn( target.getType(), HOLDER );
 
 
         //write target<--source edge type meta data
@@ -174,8 +170,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                 new ScopedRowKey<ApplicationScope, EdgeIdTypeKey>( scope, new EdgeIdTypeKey( target, edgeType ) );
 
 
-        batch.withRow( CF_TARGET_EDGE_ID_TYPES, targetTypeKey )
-             .putColumn( source.getType(), HOLDER );
+        batch.withRow( CF_TARGET_EDGE_ID_TYPES, targetTypeKey ).putColumn( source.getType(), HOLDER );
 
 
         return batch;
@@ -189,8 +184,8 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
     @Override
-    public MutationBatch removeEdgeTypeFromSource( final ApplicationScope scope, final Id sourceNode,
-                                                   final String type, final long version ) {
+    public MutationBatch removeEdgeTypeFromSource( final ApplicationScope scope, final Id sourceNode, final String type,
+                                                   final long version ) {
         return removeEdgeType( scope, sourceNode, type, version, CF_SOURCE_EDGE_TYPES );
     }
 
@@ -250,8 +245,6 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                                           final MultiTennantColumnFamily<ApplicationScope, Id, String> cf ) {
 
 
-
-
         //write target<--source edge type meta data
         final ScopedRowKey<ApplicationScope, Id> rowKey = new ScopedRowKey<ApplicationScope, Id>( scope, rowKeyId );
 
@@ -280,8 +273,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
                                         final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> cf ) {
 
 
-          final   MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( version );
-
+        final MutationBatch batch = keyspace.prepareMutationBatch().withTimestamp( version );
 
 
         //write target<--source edge type and id type to meta data
@@ -326,21 +318,19 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
         EdgeUtils.validateSearchEdgeType( search );
 
 
-        final ScopedRowKey<ApplicationScope, Id> sourceKey =
-                new ScopedRowKey<ApplicationScope, Id>( scope, search.getNode() );
+        final ScopedRowKey<ApplicationScope, Id> sourceKey = new ScopedRowKey<>( scope, search.getNode() );
 
 
         //resume from the last if specified.  Also set the range
 
 
-        final RangeBuilder rangeBuilder =
-                new RangeBuilder().setLimit( graphFig.getScanPageSize() ).setStart( search.getLast().or( "" ) );
+        final RangeBuilder rangeBuilder = createRange( search );
 
         RowQuery<ScopedRowKey<ApplicationScope, Id>, String> query =
                 keyspace.prepareQuery( cf ).getKey( sourceKey ).autoPaginate( true )
                         .withColumnRange( rangeBuilder.build() );
 
-        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent());
+        return new ColumnNameIterator<>( query, PARSER, search.getLast().isPresent() );
     }
 
 
@@ -364,20 +354,18 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
 
 
         final ScopedRowKey<ApplicationScope, EdgeIdTypeKey> sourceTypeKey =
-                new ScopedRowKey<ApplicationScope, EdgeIdTypeKey>( scope,
-                        new EdgeIdTypeKey( search.getNode(), search.getEdgeType() ) );
+                new ScopedRowKey<>( scope, new EdgeIdTypeKey( search.getNode(), search.getEdgeType() ) );
 
 
-        //resume from the last if specified.  Also set the range
-        final ByteBufferRange searchRange =
-                new RangeBuilder().setLimit( graphFig.getScanPageSize() ).setStart( search.getLast().or( "" ) )
-                                  .build();
+        final RangeBuilder rangeBuilder = createRange( search );
+
 
         RowQuery<ScopedRowKey<ApplicationScope, EdgeIdTypeKey>, String> query =
-                keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true ).withColumnRange( searchRange );
+                keyspace.prepareQuery( cf ).getKey( sourceTypeKey ).autoPaginate( true )
+                        .withColumnRange( rangeBuilder.build() );
 
 
-        return new ColumnNameIterator<String, String>( query, PARSER, search.getLast().isPresent());
+        return new ColumnNameIterator<>( query, PARSER, search.getLast().isPresent() );
     }
 
 
@@ -424,6 +412,52 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
             return new EdgeIdTypeKey( id, edgeType );
         }
     }
+
+
+    private RangeBuilder createRange( final SearchEdgeType search ) {
+        final RangeBuilder builder = new RangeBuilder().setLimit( graphFig.getScanPageSize() );
+
+
+        //we have a last, it's where we need to start seeking from
+        if ( search.getLast().isPresent() ) {
+            builder.setStart( search.getLast().get() );
+        }
+
+        //no last was set, but we have a prefix, set it
+        else if ( search.prefix().isPresent() ) {
+            builder.setStart( search.prefix().get() );
+        }
+
+
+        //we have a prefix, so make sure we only seek to prefix + max UTF value
+        if ( search.prefix().isPresent() ) {
+            builder.setEnd( search.prefix().get() + "\uffff" );
+        }
+
+
+        return builder;
+    }
+
+
+    //    private void setStart( final SearchEdgeType search, final RangeBuilder builder ) {
+    //        //prefix is set, set our end marker
+    //        if ( search.getLast().isPresent() ) {
+    //            builder.setEnd( search.getLast().get() );
+    //        }
+    //
+    //        else if ( search.prefix().isPresent() ) {
+    //            builder.setStart( search.prefix().get() );
+    //        }
+    //    }
+    //
+    //
+    //    private void setEnd( final SearchEdgeType search, final RangeBuilder builder ) {
+    //        //if our last is set, it takes precendence
+    //
+    //        if ( search.prefix().isPresent() ) {
+    //            builder.setEnd( search.prefix().get() + "\uffff" );
+    //        }
+    //    }
 
 
     /**

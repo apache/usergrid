@@ -170,6 +170,8 @@ public class ManagementServiceIT {
 
         setup.getMgmtSvc().activateAppUser( applicationId, user.getUuid() );
 
+        em.refreshIndex();
+
         user = em.get( entity.getUuid(), User.class );
 
         assertTrue( user.activated() );
@@ -463,6 +465,9 @@ public class ManagementServiceIT {
                                   .createAdminUser( username, "Todd Nine", UUID.randomUUID() + "@apigee.com", password,
                                           false, false );
 
+        EntityManager em = setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
+        em.refreshIndex();
+
         UserInfo authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( username, password );
 
         assertEquals( adminUser.getUuid(), authedUser.getUuid() );
@@ -512,6 +517,8 @@ public class ManagementServiceIT {
 
         em.addToDictionary( storedUser, DICTIONARY_CREDENTIALS, "password", info );
 
+        em.refreshIndex();
+
 
         //verify authorization works
         User authedUser =
@@ -548,6 +555,7 @@ public class ManagementServiceIT {
         EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         User storedUser = em.create( user );
+        em.refreshIndex();
 
 
         UUID userId = storedUser.getUuid();
@@ -614,6 +622,7 @@ public class ManagementServiceIT {
 
         User storedUser = em.create( user );
 
+        em.refreshIndex();
 
         UUID userId = storedUser.getUuid();
 
@@ -629,6 +638,8 @@ public class ManagementServiceIT {
         String newPassword = "test2";
 
         setup.getMgmtSvc().setAppUserPassword( appId, userId, password, newPassword );
+
+        em.refreshIndex();
 
         //verify authorization works
         authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials( appId, username, newPassword );
@@ -655,6 +666,7 @@ public class ManagementServiceIT {
 
         User storedUser = em.create( user );
 
+        em.refreshIndex();
 
         UUID userId = storedUser.getUuid();
 
@@ -684,6 +696,8 @@ public class ManagementServiceIT {
 
         setup.getMgmtSvc().setAppUserPassword( appId, userId, password, newPassword );
 
+        em.refreshIndex();
+
         //verify authorization works
         authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials( appId, username, newPassword );
 
@@ -711,6 +725,7 @@ public class ManagementServiceIT {
 
         User storedUser = em.create( user );
 
+        em.refreshIndex();
 
         UUID userId = storedUser.getUuid();
 
@@ -746,6 +761,8 @@ public class ManagementServiceIT {
         String newPassword = "test2";
 
         setup.getMgmtSvc().setAppUserPassword( appId, userId, password, newPassword );
+
+        em.refreshIndex();
 
         //verify authorization works
         authedUser = setup.getMgmtSvc().verifyAppUserPasswordCredentials( appId, username, newPassword );

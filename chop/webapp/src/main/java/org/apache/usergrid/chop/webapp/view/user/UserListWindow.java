@@ -19,11 +19,10 @@
 package org.apache.usergrid.chop.webapp.view.user;
 
 
-import java.util.List;
-
 import org.apache.usergrid.chop.stack.User;
 import org.apache.usergrid.chop.webapp.dao.UserDao;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
+import org.apache.usergrid.chop.webapp.service.shiro.ShiroRealm;
 import org.apache.usergrid.chop.webapp.view.main.TabSheetManager;
 import org.apache.usergrid.chop.webapp.view.util.PopupWindow;
 
@@ -36,6 +35,8 @@ import com.vaadin.ui.ListSelect;
 public class UserListWindow extends PopupWindow {
 
     private final TabSheetManager tabSheetManager;
+
+    private static String selectedUser = "user";
 
     public UserListWindow(TabSheetManager tabSheetManager) {
         super( "Users" );
@@ -57,13 +58,14 @@ public class UserListWindow extends PopupWindow {
         list.setNullSelectionAllowed( false );
         list.setImmediate( true );
 
-        list.addValueChangeListener(new Property.ValueChangeListener() {
+        list.addValueChangeListener( new Property.ValueChangeListener() {
             @Override
-            public void valueChange(Property.ValueChangeEvent event) {
+            public void valueChange( Property.ValueChangeEvent event ) {
                 Object value = event.getProperty().getValue();
-                if (value != null) {
+                if ( value != null ) {
                     close();
-                    showUser( (String) value );
+                    selectedUser = ( String ) value;
+                    showUser( ( String ) value );
                 }
             }
         });
@@ -74,7 +76,13 @@ public class UserListWindow extends PopupWindow {
     }
 
     private void showUser( String username ) {
-        tabSheetManager.addTab( new UserLayout( username, tabSheetManager ), "User" );
+        if ( username == null || ! ( ShiroRealm.getAuthenticatedUser().equals( ShiroRealm.getDefaultUser() )
+                && ! username.equals( ShiroRealm.getDefaultUser() ) ) ){
+            tabSheetManager.addTab( new UserLayout( username, tabSheetManager ), "User" );
+        }
+        else {
+            tabSheetManager.addTab( new UserLayout( username, tabSheetManager, false ), "User" );
+        }
     }
 
     private void loadData( ListSelect list ) {
@@ -94,6 +102,7 @@ public class UserListWindow extends PopupWindow {
         createButton.addClickListener( new Button.ClickListener() {
             public void buttonClick( Button.ClickEvent event ) {
                 close();
+                setSelectedUser( null );
                 showUser( null );
             }
         } );
@@ -101,5 +110,12 @@ public class UserListWindow extends PopupWindow {
         mainLayout.addComponent( createButton, "left: 10px; top: 425px;" );
     }
 
+    public static String getSelectedUser() {
+        return selectedUser;
+    }
+
+    public static void setSelectedUser( String selectedUser ) {
+        UserListWindow.selectedUser = selectedUser;
+    }
 
 }

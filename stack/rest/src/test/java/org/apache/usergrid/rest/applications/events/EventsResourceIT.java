@@ -22,7 +22,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class EventsResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void testEventPostandGet() {
+    public void testEventPostandGet() throws IOException {
 
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put( "timestamp", 0 );
@@ -51,10 +52,9 @@ public class EventsResourceIT extends AbstractRestIT {
             }
         } );
 
-        JsonNode node =
-                resource().path( "/test-organization/test-app/events" ).queryParam( "access_token", access_token )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/events" ).queryParam( "access_token", access_token )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( JsonNode.class, payload );
+                        .post( String.class, payload ));
 
         assertNotNull( node.get( "entities" ) );
         String advertising = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
@@ -68,9 +68,9 @@ public class EventsResourceIT extends AbstractRestIT {
             }
         } );
 
-        node = resource().path( "/test-organization/test-app/events" ).queryParam( "access_token", access_token )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/events" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+                .post( String.class, payload ));
 
         assertNotNull( node.get( "entities" ) );
         String sales = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
@@ -84,9 +84,9 @@ public class EventsResourceIT extends AbstractRestIT {
             }
         } );
 
-        node = resource().path( "/test-organization/test-app/events" ).queryParam( "access_token", access_token )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/events" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+                .post( String.class, payload ));
 
         assertNotNull( node.get( "entities" ) );
         String marketing = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
@@ -96,8 +96,8 @@ public class EventsResourceIT extends AbstractRestIT {
         // subsequent GETs advertising
         for ( int i = 0; i < 3; i++ ) {
 
-            node = resource().path( "/test-organization/test-app/events" ).queryParam( "access_token", access_token )
-                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+            node = mapper.readTree( resource().path( "/test-organization/test-app/events" ).queryParam( "access_token", access_token )
+                    .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
             logNode( node );
             assertEquals( "Expected Advertising", advertising, node.get( "messages" ).get( 0 ).get( "uuid" ).asText() );
@@ -105,9 +105,9 @@ public class EventsResourceIT extends AbstractRestIT {
         }
 
         // check sales event in queue
-        node = resource().path( "/test-organization/test-app/events" ).queryParam( "last", lastId )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/events" ).queryParam( "last", lastId )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         logNode( node );
         assertEquals( "Expected Sales", sales, node.get( "messages" ).get( 0 ).get( "uuid" ).asText() );
@@ -115,9 +115,9 @@ public class EventsResourceIT extends AbstractRestIT {
 
 
         // check marketing event in queue
-        node = resource().path( "/test-organization/test-app/events" ).queryParam( "last", lastId )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/events" ).queryParam( "last", lastId )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         logNode( node );
         assertEquals( "Expected Marketing", marketing, node.get( "messages" ).get( 0 ).get( "uuid" ).asText() );

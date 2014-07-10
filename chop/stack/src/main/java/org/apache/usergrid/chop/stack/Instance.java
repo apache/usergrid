@@ -19,22 +19,42 @@
 package org.apache.usergrid.chop.stack;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+
 /**
  * A virtual machine or lxc instance.
  */
+@JsonDeserialize( as = BasicInstance.class )
 public interface Instance {
 
+
+    @JsonProperty
     String getId();
 
+
+    @JsonIgnore
     InstanceSpec getSpec();
 
+
+    @JsonIgnore
     InstanceState getState();
 
+
+    @JsonProperty
     String getPrivateDnsName();
 
+
+    @JsonProperty
     String getPublicDnsName();
 
+
+    @JsonProperty
     String getPrivateIpAddress();
 
+
+    @JsonProperty
     String getPublicIpAddress();
 }

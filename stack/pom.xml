@@ -115,7 +115,6 @@
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
 
-
   </properties>
 
   <licenses>
@@ -1316,9 +1315,9 @@
       </dependency>
 
       <dependency>
-        <groupId>org.usergrid</groupId>
+        <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid-java-client</artifactId>
-        <version>0.0.3</version>
+        <version>0.0.10-SNAPSHOT</version>
       </dependency>
 
       <dependency>

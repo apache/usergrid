@@ -33,12 +33,20 @@ import com.google.common.base.Optional;
 public class SimpleSearchEdgeType implements SearchEdgeType {
 
     private final Id node;
+    private final Optional<String> prefix;
     private final Optional<String> last;
 
 
-    public SimpleSearchEdgeType( final Id node, final String last ) {
+    /**
+     * The node's id, the prefix of the string, the last value returned
+     * @param node The node to search from (required)
+     * @param prefix The optional prefix
+     * @param last The optional last
+     */
+    public SimpleSearchEdgeType( final Id node, final String prefix, final String last ) {
         ValidationUtils.verifyIdentity( node );
         this.node = node;
+        this.prefix =  Optional.fromNullable( prefix );
         this.last = Optional.fromNullable( last );
     }
 
@@ -46,6 +54,12 @@ public class SimpleSearchEdgeType implements SearchEdgeType {
     @Override
     public Id getNode() {
         return node;
+    }
+
+
+    @Override
+    public Optional<String> prefix() {
+        return prefix;
     }
 
 

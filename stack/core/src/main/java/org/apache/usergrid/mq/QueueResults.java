@@ -23,8 +23,7 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 
 @XmlRootElement
@@ -65,7 +64,7 @@ public class QueueResults {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getPath() {
         return path;
     }
@@ -76,7 +75,7 @@ public class QueueResults {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public UUID getQueue() {
         return queue;
     }
@@ -87,7 +86,7 @@ public class QueueResults {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public List<Message> getMessages() {
         return messages;
     }
@@ -101,7 +100,7 @@ public class QueueResults {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public UUID getLast() {
         return last;
     }
@@ -112,7 +111,7 @@ public class QueueResults {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public UUID getConsumer() {
         return consumer;
     }

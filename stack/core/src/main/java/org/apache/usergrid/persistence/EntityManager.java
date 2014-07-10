@@ -575,6 +575,9 @@ public interface EntityManager {
     public boolean isPropertyValueUniqueForEntity( 
             String entityType, String propertyName, Object propertyValue ) throws Exception;
 
+    @Deprecated
+    public Entity get( UUID id ) throws Exception;
+
     public <A extends Entity> A get( EntityRef entityRef, Class<A> entityClass ) throws Exception;
 
     public Map<String, Role> getRolesWithTitles( Set<String> roleNames ) throws Exception;

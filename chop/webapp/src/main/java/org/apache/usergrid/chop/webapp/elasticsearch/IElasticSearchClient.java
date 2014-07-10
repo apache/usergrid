@@ -18,11 +18,11 @@
  */
 package org.apache.usergrid.chop.webapp.elasticsearch;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsearch.client.Client;
 
+import java.util.List;
 
 public interface IElasticSearchClient {
 
@@ -33,10 +33,17 @@ public interface IElasticSearchClient {
     String getHost();
 
     @JsonProperty
-    int getPort();
+    int getTransportPort();
+
+    @JsonProperty
+    int getHttpPort();
 
     @JsonProperty
     String getClusterName();
+
+    List<ElasticSearchNode> getNodeList();
+
+    String getHTTPResult( String query );
 
     Client start();
 }

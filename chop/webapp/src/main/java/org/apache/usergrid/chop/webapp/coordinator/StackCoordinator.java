@@ -28,6 +28,7 @@ import java.util.concurrent.Executors;
 import org.apache.usergrid.chop.api.Commit;
 import org.apache.usergrid.chop.api.Module;
 import org.apache.usergrid.chop.stack.CoordinatedStack;
+import org.apache.usergrid.chop.stack.SetupStackSignal;
 import org.apache.usergrid.chop.stack.SetupStackState;
 import org.apache.usergrid.chop.stack.Stack;
 import org.apache.usergrid.chop.stack.User;
@@ -121,19 +122,23 @@ public class StackCoordinator {
     public CoordinatedStack setupStack( Stack stack, User user, Commit commit, Module module, int runnerCount ) {
 
         CoordinatedStack coordinatedStack = getCoordinatedStack( stack, user, commit, module );
-        if ( coordinatedStack != null ) {
+        if ( coordinatedStack != null && coordinatedStack.getRunnerCount() == runnerCount ) {
             LOG.info( "Stack {} is already registered", stack.getName() );
             if( coordinatedStack.getSetupState() == SetupStackState.SetUp ) {
                 return coordinatedStack;
             }
         }
-        else {
-            coordinatedStack = new CoordinatedStack( stack, user, commit, module, runnerCount );
+        else if ( coordinatedStack != null && coordinatedStack.getRunnerCount() != runnerCount  ) {
+            LOG.info( "Stack {} is registered with different runner count, first removing the old stack", stack.getName() );
+            registeredStacks.remove( coordinatedStack.hashCode() );
         }
+
+        LOG.info( "Registering new stack {}...", stack.getName() );
+        coordinatedStack = new CoordinatedStack( stack, user, commit, module, runnerCount );
 
         LOG.info( "Starting setup stack thread of {}...", stack.getName() );
         synchronized ( coordinatedStack ) {
-            coordinatedStack.setSetupState( SetupStackState.SettingUp );
+            coordinatedStack.setSetupState( SetupStackSignal.SETUP );
             registeredStacks.put( coordinatedStack.hashCode(), coordinatedStack );
 
             SetupStackThread setupThread = new SetupStackThread( coordinatedStack );
@@ -166,24 +171,25 @@ public class StackCoordinator {
 
     public void destroyStack( Stack stack, User user, Commit commit, Module module ) {
         CoordinatedStack coordinatedStack = getCoordinatedStack( stack, user, commit, module );
-        if ( coordinatedStack == null || coordinatedStack.getSetupState() == SetupStackState.NotFound ) {
+        if ( coordinatedStack == null || coordinatedStack.getSetupState() == SetupStackState.JarNotFound ) {
             LOG.info( "No such stack was found." );
             return;
         }
 
         synchronized ( coordinatedStack ) {
-            if ( coordinatedStack.getSetupState() != SetupStackState.SetUp ) {
+            if ( ! coordinatedStack.getSetupState().accepts( SetupStackSignal.DESTROY ) ) {
                 LOG.info( "Stack is in {} state, will not destroy.", coordinatedStack.getSetupState().toString() );
                 return;
             }
 
             // TODO should we also check run state of stack?
             LOG.info( "Starting to destroy stack instances of {}...", stack.getName() );
-            coordinatedStack.setSetupState( SetupStackState.Destroying );
+            coordinatedStack.setSetupState( SetupStackSignal.DESTROY );
             StackDestroyer destroyer = new StackDestroyer( coordinatedStack );
             destroyer.destroy();
             registeredStacks.remove( coordinatedStack.hashCode() );
             setupStackThreads.remove( coordinatedStack );
+            coordinatedStack.setSetupState( SetupStackSignal.COMPLETE );
             coordinatedStack.notifyAll();
         }
     }
@@ -239,7 +245,7 @@ public class StackCoordinator {
      * @return  matching coordinated stack, or null
      */
     public CoordinatedStack findCoordinatedStack( String commitId, String artifactId, String groupId, String version,
-                                                     String user ) {
+                                                  String user ) {
 
         User chopUser = userDao.get( user );
         if( chopUser == null ) {
@@ -291,8 +297,8 @@ public class StackCoordinator {
      * @param user
      * @return Setup state of given parameters' stack
      */
-    public SetupStackState stackStatus( String commitId, String artifactId, String groupId, String version,
-                                              String user ) {
+    public SetupStackState stackStatus( String commitId, String artifactId, String groupId,
+                                        String version, String user ) {
 
         CoordinatedStack stack = findCoordinatedStack( commitId, artifactId, groupId, version, user );
 
@@ -302,7 +308,7 @@ public class StackCoordinator {
                     version, commitId );
 
             if( ! runnerJar.exists() ) {
-                return SetupStackState.NotFound;
+                return SetupStackState.JarNotFound;
             }
 
             return SetupStackState.NotSetUp;
@@ -331,5 +337,47 @@ public class StackCoordinator {
             setupStackThreads.remove( stack );
             stack.notifyAll();
         }
+    }
+
+
+    public CoordinatedStack registerStack( final String commitId, final String artifactId, final String groupId,
+                                           final String version, final String user, final int runnerCount ) {
+
+        User chopUser = userDao.get( user );
+        File runnerJar = CoordinatorUtils.getRunnerJar( chopUiFig.getContextPath(), user, groupId, artifactId,
+                version, commitId );
+
+        Stack stack = CoordinatorUtils.getStackFromRunnerJar( runnerJar );
+        Module module = moduleDao.get( BasicModule.createId( groupId, artifactId, version ) );
+        Commit commit = null;
+        for( Commit c: commitDao.getByModule( module.getId() ) ) {
+            if( commitId.equals( c.getId() ) ) {
+                commit = c;
+                break;
+            }
+        }
+
+        return registerStack( stack, chopUser, commit, module, runnerCount );
+    }
+
+
+    public CoordinatedStack registerStack( final Stack stack, final User user, final Commit commit, final Module
+            module, final int runnerCount ) {
+        CoordinatedStack coordinatedStack = getCoordinatedStack( stack, user, commit, module );
+        if ( coordinatedStack != null ) {
+            LOG.info( "Stack {} is already registered", stack.getName() );
+            return coordinatedStack;
+        }
+        else {
+            coordinatedStack = new CoordinatedStack( stack, user, commit, module, runnerCount );
+        }
+
+        LOG.info( "Registering stack...", stack.getName() );
+        synchronized ( coordinatedStack ) {
+            coordinatedStack.setSetupState( SetupStackSignal.DEPLOY );
+            registeredStacks.put( coordinatedStack.hashCode(), coordinatedStack );
+        }
+
+        return coordinatedStack;
     }
 }

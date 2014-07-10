@@ -16,6 +16,8 @@
 
 package org.apache.usergrid.persistence.cassandra;
 
+import java.util.UUID;
+
 /**
  *
  * @author ApigeeCorporation
@@ -31,4 +33,6 @@ public interface Setup {
     public boolean keyspacesExist();
 
     public void createDefaultApplications() throws Exception;
+
+    public void setupApplicationKeyspace(UUID applicationId, String appName) throws Exception;
 }

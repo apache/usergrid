@@ -19,13 +19,13 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.guice.Write;
+import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
@@ -38,19 +38,17 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimist
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
-import org.apache.usergrid.persistence.collection.util.EntityUtils;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import org.apache.usergrid.persistence.core.hystrix.HystrixObservable;
 
 import rx.Observable;
+import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.functions.Func2;
-import rx.functions.FuncN;
 import rx.schedulers.Schedulers;
 
 
@@ -63,7 +61,7 @@ import rx.schedulers.Schedulers;
  */
 public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
-    private static final Logger log = LoggerFactory.getLogger(EntityCollectionManagerImpl.class);
+    private static final Logger log = LoggerFactory.getLogger( EntityCollectionManagerImpl.class );
 
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
@@ -71,6 +69,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     //start stages
     private final WriteStart writeStart;
+    private final WriteStart writeUpdate;
     private final WriteUniqueVerify writeVerifyUnique;
     private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
@@ -84,29 +83,26 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final MarkStart markStart;
     private final MarkCommit markCommit;
 
-
     @Inject
-    public EntityCollectionManagerImpl( 
-        final UUIDService uuidService, 
-        final WriteStart writeStart,
-        final WriteUniqueVerify writeVerifyUnique,
-        final WriteOptimisticVerify writeOptimisticVerify,
-        final WriteCommit writeCommit, 
-        final RollbackAction rollback,
-        final Load load, 
-        final MarkStart markStart,
-        final MarkCommit markCommit,
-        @Assisted final CollectionScope collectionScope ) {
+    public EntityCollectionManagerImpl( final UUIDService uuidService, @Write final WriteStart writeStart,
+                                        @WriteUpdate final WriteStart writeUpdate,
+                                        final WriteUniqueVerify writeVerifyUnique,
+                                        final WriteOptimisticVerify writeOptimisticVerify,
+                                        final WriteCommit writeCommit, final RollbackAction rollback, final Load load,
+                                        final MarkStart markStart, final MarkCommit markCommit,
+                                        @Assisted final CollectionScope collectionScope) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
 
         MvccValidationUtils.validateCollectionScope( collectionScope );
 
         this.writeStart = writeStart;
+        this.writeUpdate = writeUpdate;
         this.writeVerifyUnique = writeVerifyUnique;
         this.writeOptimisticVerify = writeOptimisticVerify;
         this.writeCommit = writeCommit;
         this.rollback = rollback;
+
         this.load = load;
         this.markStart = markStart;
         this.markCommit = markCommit;
@@ -125,81 +121,36 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         final Id entityId = entity.getId();
 
-        Preconditions.checkNotNull( entityId, 
-            "The entity id is required to be set for an update operation" );
+        ValidationUtils.verifyIdentity( entityId );
 
-        Preconditions.checkNotNull( entityId.getUuid(), 
-            "The entity id uuid is required to be set for an update operation" );
-
-        Preconditions.checkNotNull( entityId.getType(), 
-            "The entity id type required to be set for an update operation" );
-
-
-        final UUID version = uuidService.newTimeUUID();
-
-        EntityUtils.setVersion( entity, version );
-
-
-        // fire the stages
-        // TODO use our own Schedulers.io() to help with multitenancy here.
-        // TODO writeOptimisticVerify and writeVerifyUnique should be concurrent to reduce wait time
-        // these 3 lines could be done in a single line, but they are on multiple lines for clarity
 
         // create our observable and start the write
         CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
-        Observable<CollectionIoEvent<MvccEntity>> observable =
-            Observable.from( writeData ).subscribeOn( Schedulers.io() ).map( writeStart ).flatMap(
-                new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
-
-                    @Override
-                    public Observable<CollectionIoEvent<MvccEntity>> call(
-                            final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
-
-                        // do the unique and optimistic steps in parallel
-
-                        // unique function.  Since there can be more than 1 unique value in this 
-                        // entity the unique verify step itself is multiple parallel executions.
-                        // This is why we use "flatMap" instead of "map", which allows the
-                        // WriteVerifyUnique stage to execute multiple verification steps in 
-                        // parallel and zip the results
-
-                        Observable<CollectionIoEvent<MvccEntity>> unique =
-                            Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                .flatMap( writeVerifyUnique);
-
-
-                        // optimistic verification
-                        Observable<CollectionIoEvent<MvccEntity>> optimistic =
-                            Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                .map( writeOptimisticVerify );
-
-                        // zip the results
-                        // TODO: Should the zip only return errors here, and if errors are present, 
-                        // we throw during the zip phase?  I couldn't find "
-
-                        return Observable.zip( unique, optimistic, new Func2<CollectionIoEvent<MvccEntity>,
-                                CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>>() {
-
-                            @Override
-                            public CollectionIoEvent<MvccEntity> call(
-                                final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent,
-                                final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent2 ) {
-
-                            return mvccEntityCollectionIoEvent;
-                           }
-                        });
-                    }
-                });
+        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData,writeStart );
 
         // execute all validation stages concurrently.  Needs refactored when this is done.  
         // https://github.com/Netflix/RxJava/issues/627
         // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(), 
         //                  writeVerifyUnique, writeOptimisticVerify );
 
-        // return the commit result
-        return HystrixObservable.user( observable.map(writeCommit).doOnError(rollback) );
+        observable.doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
+            @Override
+            public void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+                //Queue future write here (verify)
+            }
+        } ).map( writeCommit ).doOnNext( new Action1<Entity>() {
+            @Override
+            public void call( final Entity entity ) {
+                //fork background processing here (start)
 
+                //post-processing to come later. leave it empty for now.
+            }
+        } ).doOnError( rollback );
+
+
+        // return the commit result.
+        return observable.map( writeCommit ).doOnError( rollback );
     }
 
 
@@ -210,9 +161,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
-        return HystrixObservable.user(
-                Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ) 
-                        .subscribeOn( Schedulers.io() ).map( markStart ).map( markCommit )) ;
+        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( Schedulers.io() )
+                         .map( markStart ).map( markCommit );
     }
 
 
@@ -220,30 +170,74 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<Entity> load( final Id entityId ) {
 
         Preconditions.checkNotNull( entityId, "Entity id required in the load stage" );
-        Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage");
-        Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage");
+        Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage" );
+        Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage" );
 
-        return HystrixObservable.user(
-                Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-                        .subscribeOn( Schedulers.io() ).map( load ) ) ;
+        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( Schedulers.io() )
+                         .map( load );
     }
 
+    @Override
+    public Observable<Entity> update( final Entity entity ) {
 
-    /**
-     * Class that validates all results are equal then proceeds
-     */
-    private static class WaitZip<R> implements FuncN<R> {
+        log.debug( "Starting update process" );
 
-        private WaitZip() {}
+        //do our input validation
+        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
 
-        @Override
-        public R call( final Object... args ) {
+        final Id entityId = entity.getId();
 
-            for ( int i = 0; i < args.length - 1; i++ ) {
-                assert args[i] == args[i + 1];
+
+        ValidationUtils.verifyIdentity( entityId );
+
+        // create our observable and start the write
+        CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
+
+
+        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData,writeUpdate );
+
+
+        return observable.map( writeCommit ).doOnNext( new Action1<Entity>() {
+            @Override
+            public void call( final Entity entity ) {
+                log.debug( "sending entity to the queue" );
+
+               //we an update, signal the fix
+
+                //HystrixCassandra.async( Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ) ).subscribe();
+                Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
+
+
             }
-
-            return ( R ) args[0];
-        }
+        } ).doOnError( rollback );
     }
+
+    // fire the stages
+    public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData,WriteStart writeState ) {
+
+        return Observable.from( writeData ).subscribeOn( Schedulers.io() ).map( writeState ).flatMap(
+                new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
+
+                    @Override
+                    public Observable<CollectionIoEvent<MvccEntity>> call(
+                            final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+
+                        Observable<CollectionIoEvent<MvccEntity>> unique =
+                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                          .flatMap( writeVerifyUnique );
+
+
+                        // optimistic verification
+                        Observable<CollectionIoEvent<MvccEntity>> optimistic =
+                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                          .map( writeOptimisticVerify );
+
+
+                        return Observable.merge( unique, optimistic).last();
+                    }
+                } );
+    }
+
+
+
 }

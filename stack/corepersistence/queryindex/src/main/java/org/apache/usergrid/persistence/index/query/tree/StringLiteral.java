@@ -61,15 +61,18 @@ public class StringLiteral extends Literal<String> {
             return;
         }
 
-        if ( value != null && value.endsWith( "*" ) ) {
-            this.value = removeEnd( value.toString(), "*" );
+//      removing this because it breaks queries like "select * where name = "fred*"
+//
+//        if ( value != null && value.endsWith( "*" ) ) {
+//            this.value = removeEnd( value.toString(), "*" );
+//            finishValue = this.value + "\uFFFF";
+//        }
+//        // set the end value to the same as the start value
+//        else {
+//            finishValue = value;
+//        }
 
-            finishValue = this.value + "\uFFFF";
-        }
-        // set the end value to the same as the start value
-        else {
-            finishValue = value;
-        }
+        finishValue = value;
     }
 
 

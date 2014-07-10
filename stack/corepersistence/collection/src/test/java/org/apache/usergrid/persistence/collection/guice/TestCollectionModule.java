@@ -20,8 +20,6 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
-import org.apache.usergrid.persistence.core.consistency.LocalTimeoutQueueFactory;
-import org.apache.usergrid.persistence.core.consistency.TimeoutQueueFactory;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 
 
@@ -29,12 +27,7 @@ public class TestCollectionModule extends TestModule {
 
     @Override
     protected void configure() {
-        install( new CommonModule() {
-            @Override
-            protected void bindTimeoutQueueFactory() {
-               bind(TimeoutQueueFactory.class).to(LocalTimeoutQueueFactory.class);
-            }
-        } );
+        install( new CommonModule() );
         install(new CollectionModule());
     }
 }

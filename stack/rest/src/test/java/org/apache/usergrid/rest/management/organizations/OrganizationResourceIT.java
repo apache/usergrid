@@ -17,13 +17,12 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
@@ -59,8 +58,8 @@ public class OrganizationResourceIT extends AbstractRestIT {
 
         payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
 
-        JsonNode node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         assertNotNull( node );
 
         OrganizationInfo orgInfo =
@@ -71,14 +70,14 @@ public class OrganizationResourceIT extends AbstractRestIT {
         properties.put( "securityLevel", 6 );
         payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, properties );
 
-        node = resource().path( "/management/organizations/organizationresourceit.testorganizationupdate.test-org-1" )
+        node = mapper.readTree( resource().path( "/management/organizations/organizationresourceit.testorganizationupdate.test-org-1" )
                 .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
+                .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, payload ));
         logNode( node );
 
-        node = resource().path( "/management/organizations/organizationresourceit.testorganizationupdate.test-org-1" )
+        node = mapper.readTree( resource().path( "/management/organizations/organizationresourceit.testorganizationupdate.test-org-1" )
                 .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         logNode( node );
         Assert.assertEquals( 6,
                 node.get( "organization" ).get( OrganizationsResource.ORGANIZATION_PROPERTIES ).get( "securityLevel" )

@@ -237,7 +237,7 @@ class ChopUiTestUtils {
 
         assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
 
-        assertEquals("\"NotFound\"", response.getEntity(String.class));
+        assertEquals("\"JarNotFound\"", response.getEntity(String.class));
     }
 
 
@@ -252,7 +252,7 @@ class ChopUiTestUtils {
 
         assertEquals( Response.Status.CREATED.getStatusCode(), response.getStatus() );
 
-        assertEquals( "\"NotFound\"", response.getEntity( String.class ) );
+        assertEquals( "\"JarNotFound\"", response.getEntity( String.class ) );
     }
 
 

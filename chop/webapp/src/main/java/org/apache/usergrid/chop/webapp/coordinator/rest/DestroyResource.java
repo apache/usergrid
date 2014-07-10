@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.chop.api.RestParams;
 import org.apache.usergrid.chop.api.Runner;
+import org.apache.usergrid.chop.stack.SetupStackSignal;
 import org.apache.usergrid.chop.stack.SetupStackState;
 import org.apache.usergrid.chop.webapp.coordinator.RunnerCoordinator;
 import org.apache.usergrid.chop.webapp.coordinator.StackCoordinator;
@@ -103,15 +104,14 @@ public class DestroyResource extends TestableResource implements RestParams {
                            .build();
         }
 
-        if( ! status.equals( SetupStackState.SetUp ) ) {
+        if( ! status.accepts( SetupStackSignal.DESTROY ) ) {
             return Response.status( Response.Status.OK )
                            .entity( "Stack is " + status.toString() + ", will not destroy." )
                            .type( MediaType.APPLICATION_JSON )
                            .build();
         }
 
-        /** SetupStackState.SetUp */
-
+        LOG.debug( "Stack is {}, destroying... ", status.toString() );
         // Unregister runners first
         String moduleId = BasicModule.createId( groupId, artifactId, version );
         Collection<Runner> runners = runnerCoordinator.getRunners( user, commitId, moduleId );

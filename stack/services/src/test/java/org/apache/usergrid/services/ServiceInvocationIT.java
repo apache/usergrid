@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -117,7 +118,7 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.GET, 1, null, "users", "edanuff", "likes", "restaurants" );
 
-        UUID uuid = UUID.randomUUID();
+        UUID uuid = UUIDGenerator.newTimeUUID();
         app.put( "visits", 5 );
         app.testRequest( ServiceAction.PUT, 1, "devices", uuid );
     }
@@ -186,9 +187,11 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.GET, 1, "projects" );
         
-        app.testRequest( ServiceAction.POST, 1, "projects", project.getName(), "contains", "contributors", contributor.getName());
+        app.testRequest( ServiceAction.POST, 1, 
+                "projects", project.getName(), "contains", "contributors", contributor.getName());
 
-        app.testRequest( ServiceAction.GET, 1, "projects", project.getName(), "contains", "contributors", contributor.getName());
+        app.testRequest( ServiceAction.GET, 1, 
+                "projects", project.getName(), "contains", "contributors", contributor.getName());
     }
     
     //Making sure that names without spaces are still intact (See above test case comments).
@@ -205,8 +208,10 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.GET, 1, "projects" );
         
-        app.testRequest( ServiceAction.POST, 1, "projects", project.getName(), "contains", "contributors", contributor.getName());
+        app.testRequest( ServiceAction.POST, 1, 
+                "projects", project.getName(), "contains", "contributors", contributor.getName());
 
-        app.testRequest( ServiceAction.GET, 1, "projects", project.getName(), "contains", "contributors", contributor.getName());
+        app.testRequest( ServiceAction.GET, 1, 
+                "projects", project.getName(), "contains", "contributors", contributor.getName());
     }
 }

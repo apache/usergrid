@@ -17,28 +17,28 @@
 */
 package org.apache.usergrid.corepersistence;
 
-import com.google.inject.Inject;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
+
+import java.util.ArrayList;
+import java.util.UUID;
+
+import org.jukito.JukitoRunner;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessor;
-import org.apache.usergrid.persistence.core.consistency.AsyncProcessorFactory;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.jukito.JukitoRunner;
-import org.jukito.UseModules;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import rx.Observable;
 
-import java.util.ArrayList;
-import java.util.UUID;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+
+import rx.Observable;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -50,8 +50,6 @@ public class CpEntityDeleteListenerTest {
 
     protected MvccEntitySerializationStrategy mvccEntitySerializationStrategy;
 
-    protected AsyncProcessor<MvccEntityDeleteEvent> processor;
-
     protected CpEntityDeleteListener listener;
 
     protected SerializationFig serializationFig;
@@ -60,16 +58,11 @@ public class CpEntityDeleteListenerTest {
 
     @Before
     public void setup() {
-        processor = mock(AsyncProcessor.class);
         serializationFig = mock(SerializationFig.class);
         keyspace = mock(Keyspace.class);
         mvccEntitySerializationStrategy = mock(MvccEntitySerializationStrategy.class);
 
-        AsyncProcessorFactory factory = mock(AsyncProcessorFactory.class);
-
-        when(factory.getProcessor(MvccEntityDeleteEvent.class)).thenReturn(processor);
-
-        listener = new CpEntityDeleteListener(mvccEntitySerializationStrategy, factory, keyspace, serializationFig);
+        listener = new CpEntityDeleteListener(mvccEntitySerializationStrategy, keyspace, serializationFig);
     }
 
     @Test
@@ -92,7 +85,7 @@ public class CpEntityDeleteListenerTest {
         when(mvccEntitySerializationStrategy.loadHistory(scope, entityId, id, serializationFig.getHistorySize())).thenReturn(entityList.iterator());
 
         Observable<EntityVersion> observable = listener.receive(entityEvent);
-        EntityVersion entityEventReturned = observable.toBlockingObservable().last();
+        EntityVersion entityEventReturned = observable.toBlocking().last();
         assertEquals(entity.getVersion(), entityEventReturned.getVersion());
     }
 

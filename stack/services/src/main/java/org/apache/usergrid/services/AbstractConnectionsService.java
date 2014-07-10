@@ -196,12 +196,12 @@ public class AbstractConnectionsService extends AbstractService {
         EntityRef entity = null;
 
         if ( !context.moreParameters() ) {
-            entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
+            entity = em.get( id );
 
             entity = importEntity( context, ( Entity ) entity );
         }
         else {
-            entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
+            entity = em.get( id );
         }
 
         if ( entity == null ) {
@@ -239,8 +239,8 @@ public class AbstractConnectionsService extends AbstractService {
             throw new ServiceResourceNotFoundException( context );
         }
 
-        if ( results.size() == 1 && !em
-                .isConnectionMember( context.getOwner(), context.getCollectionName(), results.getEntity() ) ) {
+        if ( results.size() == 1 && !em.isConnectionMember( 
+                context.getOwner(), context.getCollectionName(), results.getEntity() ) ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
@@ -337,7 +337,8 @@ public class AbstractConnectionsService extends AbstractService {
             return getItemById( context, id );
         }
 
-        Entity entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
+        Entity entity = em.get( id );
+
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -397,7 +398,7 @@ public class AbstractConnectionsService extends AbstractService {
 
         checkPermissionsForEntity( context, id );
 
-        Entity item = em.get( new SimpleEntityRef( this.getEntityType(), id) );
+        Entity item = em.get( id );
         if ( item != null ) {
             updateEntity( context, item, context.getPayload() );
             item = importEntity( context, item );
@@ -447,7 +448,7 @@ public class AbstractConnectionsService extends AbstractService {
             return getItemById( context, id );
         }
 
-        Entity entity = em.get( new SimpleEntityRef( this.getEntityType(), id) );
+        Entity entity = em.get( id );
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }

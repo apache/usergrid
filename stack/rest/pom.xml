@@ -17,580 +17,547 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.apache.usergrid</groupId>
-    <artifactId>usergrid</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
-  </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.usergrid</groupId>
+        <artifactId>usergrid</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
 
-  <artifactId>usergrid-rest</artifactId>
-  <packaging>war</packaging>
-  <name>Usergrid REST</name>
-  <description>REST web services for Usergrid system.</description>
+    <artifactId>usergrid-rest</artifactId>
+    <packaging>war</packaging>
+    <name>Usergrid REST</name>
+    <description>REST web services for Usergrid system.</description>
 
-  <!-- Override these properties in an active profile within your settings.xml -->
-  <properties>
-    <!-- If you got the resources, max parallelism = 6 forks -->
-    <rest.it.forkCount>3</rest.it.forkCount>
-  </properties>
+    <!-- Override these properties in an active profile within your settings.xml -->
+    <properties>
+        <!-- If you got the resources, max parallelism = 6 forks -->
+        <rest.it.forkCount>1</rest.it.forkCount>
+        <core.it.suite.concurrency>1</core.it.suite.concurrency>
+    </properties>
 
-  <profiles>
-    <profile>
-      <id>unit</id>
-      <activation>
-        <property>
-          <name>unit</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
+    <profiles>
+
+<!--        <profile>
+            <id>unit</id>
+            <activation>
+                <property>
+                    <name>unit</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <storage-config>${basedir}/src/test/conf</storage-config>
+                                <target.directory>${project.build.directory}</target.directory>
+                            </systemPropertyVariables>
+                            <forkMode>once</forkMode>
+                             TODO: make this into a small configuration but based on settings.xml 
+                            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+
+                            <includes>
+                                <include>**/RestTestSuite.java</include>
+                                <include>**/*Test.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/*IT.java</exclude>
+                                <exclude>**/*ITSuite.java</exclude>
+                                 TODO - add these suites too 
+                                 <exclude>**/*Test.java</exclude> 
+                                <exclude>**/ConcurrentRest*Suite.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>-->
+
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <storage-config>${basedir}/src/test/conf</storage-config>
+                                <target.directory>${project.build.directory}</target.directory>
+                            </systemPropertyVariables>
+
+<!--                            <parallel>classes</parallel>
+                            <forkCount>${rest.it.forkCount}</forkCount>
+                            <reuseForks>false</reuseForks>
+                            <perCoreThreadCount>false</perCoreThreadCount>
+                            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+                            </argLine>-->
+
+                            <includes>
+                                <include>**/RestTestSuite.java</include>
+                                <include>**/RestITSuite.java</include>
+                                <include>**/*IT.java</include>
+                                <include>**/*Test.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/*Concurrent*Suite.java</exclude>
+                                <exclude>**/ActivityResourceIT.java</exclude>
+                                <exclude>**/AdminEmailEncodingIT.java</exclude>
+                                <exclude>**/ApplicationRequestCounterIT.java</exclude>
+                                <exclude>**/AssetResourceIT.java</exclude>
+                                <exclude>**/BasicIT.java</exclude>
+                                <exclude>**/CollectionsResourceIT.java</exclude>
+                                <exclude>**/ContentTypeResourceIT.java</exclude>
+                                <exclude>**/DevicesResourceIT.java</exclude>
+                                <exclude>**/EventsResourceIT.java</exclude>
+                                <exclude>**/GroupResourceIT.java</exclude>
+                                <exclude>**/OrganizationResourceIT.java</exclude>
+                                <exclude>**/OrganizationsResourceIT.java</exclude>
+                                <exclude>**/OwnershipResourceIT.java</exclude>
+                                <exclude>**/PagingResourceIT.java</exclude>
+                                <exclude>**/PermissionsResourceIT.java</exclude>
+                                <exclude>**/UserResourceIT.java</exclude>
+                                <exclude>**/UsersOrganizationsResourceIT.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+<!--        <profile>
+            <id>unit-concurrent</id>
+            <activation>
+                <property>
+                    <name>unit-concurrent</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <storage-config>${basedir}/src/test/conf</storage-config>
+                                <target.directory>${project.build.directory}</target.directory>
+                            </systemPropertyVariables>
+                            <forkMode>once</forkMode>
+                            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+
+                            <includes>
+                                <include>**/ConcurrentRestTestSuite.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/*IT.java</exclude>
+                                <exclude>**/*Test.java</exclude>
+                                <exclude>**/RestITSuite.java</exclude>
+                                <exclude>**/RestTestSuite.java</exclude>
+                                <exclude>**/ConcurrentRestITSuite.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>-->
+
+<!--        <profile>
+            <id>integ-concurrent</id>
+            <activation>
+                <property>
+                    <name>integ-concurrent</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <storage-config>${basedir}/src/test/conf</storage-config>
+                                <target.directory>${project.build.directory}</target.directory>
+                            </systemPropertyVariables>
+                            <forkMode>once</forkMode>
+                            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+
+                            <includes>
+                                <include>**/ConcurrentRestITSuite.java</include>
+                                <include>**/LongRunningNotInSuiteIT.java</include>
+                                 an example 
+                            </includes>
+                            <excludes>
+                                <exclude>**/*IT.java</exclude>
+                                <exclude>**/*Test.java</exclude>
+                                <exclude>**/RestITSuite.java</exclude>
+                                <exclude>**/RestTestSuite.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>-->
+
+    </profiles>
+
+    <build>
+        <finalName>ROOT</finalName>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.json</include>
+                </includes>
+            </resource>
+        </resources>
+
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </testResource>
+        </testResources>
+
         <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-              <forkMode>once</forkMode>
-              <!-- TODO: make this into a small configuration but based on settings.xml -->
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+                </configuration>
+            </plugin>
 
-              <includes>
-                <include>**/RestTestSuite.java</include>
-                <include>**/*Test.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*ITSuite.java</exclude>
-                <!-- TODO - add these suites too -->
-                <!-- <exclude>**/*Test.java</exclude> -->
-                <exclude>**/ConcurrentRest*Suite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.3</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jasig.mojo.jspc</groupId>
+                <artifactId>jspc-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <configuration>
+                    <includeInProject>false</includeInProject>
+                    <webFragmentFile>${project.build.directory}/web-fragment.xml.txt</webFragmentFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jspc</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jasig.mojo.jspc</groupId>
+                        <artifactId>jspc-compiler-tomcat6</artifactId>
+                        <version>2.0.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <finalName>${project.artifactId}-${project.version}</finalName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-a-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>classes</classifier>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jsp-jar-execution</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>compiled-jsp</classifier>
+                            <classesDirectory>${project.build.directory}/jsp-source</classesDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.3.1</version>
+                <executions>
+                    <execution>
+                        <id>install jar</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <packaging>jar</packaging>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <groupId>${project.groupId}</groupId>
+                            <version>${project.version}</version>
+                            <file>
+                                ${project.build.directory}/${project.artifactId}-${project.version}.jar
+                            </file>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
-      </build>
-    </profile>
+    </build>
 
-    <profile>
-      <id>default</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
+    <dependencies>
 
-              <parallel>classes</parallel>
-              <forkCount>${rest.it.forkCount}</forkCount>
-              <reuseForks>false</reuseForks>
-              <perCoreThreadCount>false</perCoreThreadCount>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-              </argLine>
+        <!-- Usergrid Dependencies -->
 
-              <includes>
-                <include>**/RestTestSuite.java</include>
-                <include>**/RestITSuite.java</include>
-                <include>**/*IT.java</include>
-                <include>**/*Test.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*Concurrent*Suite.java</exclude>
-                <exclude>**/ActivityResourceIT.java</exclude>
-                <exclude>**/AdminEmailEncodingIT.java</exclude>
-                <exclude>**/ApplicationRequestCounterIT.java</exclude>
-                <exclude>**/AssetResourceIT.java</exclude>
-                <exclude>**/BasicIT.java</exclude>
-                <exclude>**/CollectionsResourceIT.java</exclude>
-                <exclude>**/ContentTypeResourceIT.java</exclude>
-                <exclude>**/DevicesResourceIT.java</exclude>
-                <exclude>**/EventsResourceIT.java</exclude>
-                <exclude>**/GroupResourceIT.java</exclude>
-                <exclude>**/OrganizationResourceIT.java</exclude>
-                <exclude>**/OrganizationsResourceIT.java</exclude>
-                <exclude>**/OwnershipResourceIT.java</exclude>
-                <exclude>**/PagingResourceIT.java</exclude>
-                <exclude>**/PermissionsResourceIT.java</exclude>
-                <exclude>**/UserResourceIT.java</exclude>
-                <exclude>**/UsersOrganizationsResourceIT.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-    <profile>
-      <id>scott</id>
-      <activation>
-        <property>
-          <name>unit-concurrent</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-core</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
-              <parallel>classes</parallel>
-              <forkCount>${rest.it.forkCount}</forkCount>
-              <reuseForks>false</reuseForks>
-              <perCoreThreadCount>false</perCoreThreadCount>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-              </argLine>
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-mongo-emulator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-              <includes>
-                <include>**/RestTestSuite.java</include>
-                <include>**/RestITSuite.java</include>
-                <include>**/ManagementResourceIT.java</include>
-                <include>**/ApplicationResourceIT.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*Test.java</exclude>
-                <exclude>**/*Concurrent*Suite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
+        <!-- Apache Dependencies -->
 
-    <profile>
-      <id>unit-concurrent</id>
-      <activation>
-        <property>
-          <name>unit-concurrent</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-              <forkMode>once</forkMode>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+        </dependency>
 
-              <includes>
-                <include>**/ConcurrentRestTestSuite.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*Test.java</exclude>
-                <exclude>**/RestITSuite.java</exclude>
-                <exclude>**/RestTestSuite.java</exclude>
-                <exclude>**/ConcurrentRestITSuite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>integ-concurrent</id>
-      <activation>
-        <property>
-          <name>integ-concurrent</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-              </systemPropertyVariables>
-              <forkMode>once</forkMode>
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
-
-              <includes>
-                <include>**/ConcurrentRestITSuite.java</include>
-                <include>**/LongRunningNotInSuiteIT.java</include>
-                <!-- an example -->
-              </includes>
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-                <exclude>**/*Test.java</exclude>
-                <exclude>**/RestITSuite.java</exclude>
-                <exclude>**/RestTestSuite.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-
-  <build>
-    <finalName>ROOT</finalName>
-
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*.xml</include>
-          <include>**/*.json</include>
-        </includes>
-      </resource>
-    </resources>
-
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*</include>
-        </includes>
-      </testResource>
-    </testResources>
-
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-war-plugin</artifactId>
-        <version>2.3</version>
-      </plugin>
-
-      <plugin>
-        <groupId>org.jasig.mojo.jspc</groupId>
-        <artifactId>jspc-maven-plugin</artifactId>
-        <version>2.0.0</version>
-        <configuration>
-          <includeInProject>false</includeInProject>
-          <webFragmentFile>${project.build.directory}/web-fragment.xml.txt</webFragmentFile>
-        </configuration>
-        <executions>
-          <execution>
-            <id>jspc</id>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-        </executions>
-        <dependencies>
-          <dependency>
-            <groupId>org.jasig.mojo.jspc</groupId>
-            <artifactId>jspc-compiler-tomcat6</artifactId>
-            <version>2.0.0</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.3.2</version>
-        <configuration>
-          <finalName>${project.artifactId}-${project.version}</finalName>
-        </configuration>
-        <executions>
-          <execution>
-            <id>make-a-jar</id>
-            <phase>package</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-            <configuration>
-              <classifier>classes</classifier>
-            </configuration>
-          </execution>
-          <execution>
-            <id>jsp-jar-execution</id>
-            <phase>package</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-            <configuration>
-              <classifier>compiled-jsp</classifier>
-              <classesDirectory>${project.build.directory}/jsp-source</classesDirectory>
-            </configuration>
-          </execution>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-install-plugin</artifactId>
-        <version>2.3.1</version>
-        <executions>
-          <execution>
-            <id>install jar</id>
-            <phase>install</phase>
-            <goals>
-              <goal>install-file</goal>
-            </goals>
-            <configuration>
-              <packaging>jar</packaging>
-              <artifactId>${project.artifactId}</artifactId>
-              <groupId>${project.groupId}</groupId>
-              <version>${project.version}</version>
-              <file>
-                ${project.build.directory}/${project.artifactId}-${project.version}.jar
-              </file>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
-  <dependencies>
-
-    <!-- Usergrid Dependencies -->
-
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-config</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-core</artifactId>
-      <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-mongo-emulator</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <!-- Apache Dependencies -->
-
-    <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
-    </dependency>
-
-    <!-- SUN, Javax Package, and Other Com Dependencies -->
+        <!-- SUN, Javax Package, and Other Com Dependencies -->
 
 
-    <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <scope>provided</scope>
-    </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>jstl</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>jstl</artifactId>
+        </dependency>
 
 
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-multipart</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-multipart</artifactId>
+        </dependency>
 
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-json</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+        </dependency>
 
-    <dependency>
-      <groupId>com.yammer.metrics</groupId>
-      <artifactId>metrics-spring</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+            <version>2.3.1</version>
+        </dependency>
 
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-client</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>com.yammer.metrics</groupId>
+            <artifactId>metrics-spring</artifactId>
+        </dependency>
 
-    <dependency>
-      <groupId>net.tanesha.recaptcha4j</groupId>
-      <artifactId>recaptcha4j</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+        </dependency>
 
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-server</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>net.tanesha.recaptcha4j</groupId>
+            <artifactId>recaptcha4j</artifactId>
+        </dependency>
 
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-spring</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+        </dependency>
 
-    <!-- Codehaus, Spring, and Other Org Dependencies -->
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-spring</artifactId>
+        </dependency>
 
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-webmvc</artifactId>
-    </dependency>
+        <!-- Codehaus, Spring, and Other Org Dependencies -->
 
-    <dependency>
-      <!-- TODO - should not scope be 'test' ? -->
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
 
-    <dependency>
-      <!-- TODO - should not scope be 'test' ? -->
-      <groupId>org.slf4j</groupId>
-      <artifactId>jul-to-slf4j</artifactId>
-    </dependency>
+        <dependency>
+            <!-- TODO - should not scope be 'test' ? -->
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
 
-    <!-- Testing and Logging Dependencies -->
+        <dependency>
+            <!-- TODO - should not scope be 'test' ? -->
+            <groupId>org.slf4j</groupId>
+            <artifactId>jul-to-slf4j</artifactId>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-config</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-      <classifier>tests</classifier>
-    </dependency>
+        <!-- Testing and Logging Dependencies -->
 
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-test-utils</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-config</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-core</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-      <classifier>tests</classifier>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-test-utils</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-test</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-core</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
 
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.jvnet.mock-javamail</groupId>
-      <artifactId>mock-javamail</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.hectorclient</groupId>
-      <artifactId>hector-test</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.jvnet.mock-javamail</groupId>
+            <artifactId>mock-javamail</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.tomcat.embed</groupId>
-      <artifactId>tomcat-embed-core</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.hectorclient</groupId>
+            <artifactId>hector-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.tomcat.embed</groupId>
-      <artifactId>tomcat-embed-logging-juli</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.tomcat.embed</groupId>
-      <artifactId>tomcat-embed-jasper</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-logging-juli</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-jasper-el</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-jsp-api</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-jasper-el</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>juli</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-jsp-api</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
-    <dependency>
-      <groupId>com.sun.jersey.jersey-test-framework</groupId>
-      <artifactId>jersey-test-framework-external</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>juli</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>com.sun.jersey.jersey-test-framework</groupId>
-      <artifactId>jersey-test-framework-core</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
+        <dependency>
+            <groupId>com.sun.jersey.jersey-test-framework</groupId>
+            <artifactId>jersey-test-framework-external</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.usergrid</groupId>
-      <artifactId>usergrid-java-client</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.jersey-test-framework</groupId>
+            <artifactId>jersey-test-framework-core</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-    <dependency>
-      <groupId>org.apache.usergrid</groupId>
-      <artifactId>usergrid-services</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
-      <scope>test</scope>
-      <classifier>tests</classifier>
-    </dependency>
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-java-client</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-  </dependencies>
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>usergrid-services</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
+
+    </dependencies>
 
 </project>

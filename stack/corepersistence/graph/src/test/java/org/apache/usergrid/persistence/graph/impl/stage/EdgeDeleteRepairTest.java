@@ -34,7 +34,6 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.guice.CommitLogEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
@@ -47,7 +46,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
-import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createMarkedEdge;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
@@ -70,9 +68,6 @@ public class EdgeDeleteRepairTest {
     public MigrationManagerRule migrationManagerRule;
 
 
-    @Inject
-    @CommitLogEdgeSerialization
-    protected EdgeSerialization commitLogEdgeSerialization;
 
 
     @Inject
@@ -106,7 +101,7 @@ public class EdgeDeleteRepairTest {
     public void noEdges() {
         MarkedEdge edge = createEdge( "source", "test", "target" );
 
-        Iterator<MarkedEdge> edges = edgeDeleteRepair.repair( scope, edge, UUIDGenerator.newTimeUUID() ).toBlockingObservable().getIterator();
+        Iterator<MarkedEdge> edges = edgeDeleteRepair.repair( scope, edge, UUIDGenerator.newTimeUUID() ).toBlocking().getIterator();
 
         assertFalse( "No edges cleaned", edges.hasNext() );
     }
@@ -124,45 +119,29 @@ public class EdgeDeleteRepairTest {
         final String edgeType = "edge";
 
 
-        final MarkedEdge edge1 = createMarkedEdge( sourceId, edgeType, targetId );
-        commitLogEdgeSerialization.writeEdge( scope, edge1,  UUIDGenerator.newTimeUUID() ).execute();
+        final MarkedEdge edge1 = createEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), true );
 
         //write it as non deleted to storage
-        final MarkedEdge edge1NotDeleted =
-                createEdge( edge1.getSourceNode(), edgeType, edge1.getTargetNode(), edge1.getTimestamp(), false );
 
-        storageEdgeSerialization.writeEdge( scope, edge1NotDeleted,  UUIDGenerator.newTimeUUID() ).execute();
+        storageEdgeSerialization.writeEdge( scope, edge1,  UUIDGenerator.newTimeUUID() ).execute();
 
 
         final MarkedEdge edge2 = createEdge( sourceId, edgeType, targetId );
-        commitLogEdgeSerialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
         storageEdgeSerialization.writeEdge( scope, edge2, UUIDGenerator.newTimeUUID() ).execute();
 
         //now repair delete the first edge
 
-        Iterator<MarkedEdge> itr = commitLogEdgeSerialization.getEdgeVersions( scope,
+
+        Iterator<MarkedEdge> itr = storageEdgeSerialization.getEdgeVersions( scope,
                 new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), null ) );
 
         assertEquals( edge2, itr.next() );
         assertEquals( edge1, itr.next() );
         assertFalse( itr.hasNext() );
 
-        itr =  storageEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), null ) );
-
-        assertEquals( edge2, itr.next() );
-        assertEquals( edge1NotDeleted, itr.next() );
-        assertFalse( itr.hasNext() );
-
-        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1, UUIDGenerator.newTimeUUID() ).toBlockingObservable().single();
+        MarkedEdge deleted = edgeDeleteRepair.repair( scope, edge1, UUIDGenerator.newTimeUUID() ).toBlocking().single();
 
         assertEquals( edge1, deleted );
-
-        itr = commitLogEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId,System.currentTimeMillis(), null ) );
-
-        assertEquals( edge2, itr.next() );
-        assertFalse( itr.hasNext() );
 
         itr = storageEdgeSerialization.getEdgeVersions( scope,
                 new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), null ) );

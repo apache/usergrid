@@ -40,6 +40,8 @@ import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -47,6 +49,8 @@ import org.elasticsearch.index.query.QueryBuilders;
  * ElasticSearch QueryBuilder that represents the query.
  */
 public class EsQueryVistor implements QueryVisitor {
+    private static final Logger logger = LoggerFactory.getLogger( EsQueryVistor.class );
+
     Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
     List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
 
@@ -123,9 +127,18 @@ public class EsQueryVistor implements QueryVisitor {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
+            String svalue = (String)value;
+
+            if ( svalue.indexOf("*") != -1 ) {
+                // for regex expression we need analuzed field, add suffix
+                name = addAnayzedSuffix( name );
+                stack.push( QueryBuilders.regexpQuery(name, svalue) );
+                return;
+            } 
+
             // for equal operation on string, need to use unanalyzed field, leave off the suffix
-            value = ((String)value).toLowerCase();
-        }
+            value = svalue.toLowerCase();
+        } 
         stack.push( QueryBuilders.termQuery( name, value ));
     }
 

@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import org.apache.usergrid.persistence.index.query.Query;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,16 +26,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.CoreITSuite;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.count.SimpleBatcher;
 import org.apache.usergrid.persistence.entities.Event;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.utils.JsonUtils;
-
-import org.apache.usergrid.count.SimpleBatcher;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -79,7 +80,7 @@ public class CounterIT extends AbstractCoreIT {
         Map<String, Long> counters = em.getEntityCounters( applicationId );
         assertEquals( null, counters.get( "application.collection.users" ) );
 
-        UUID uuid = UUID.randomUUID();
+        UUID uuid = UUIDUtils.newTimeUUID(); // UUID.();
         Map<String, Object> userProperties = new HashMap<String, Object>();
         userProperties.put( "name", "test-name" );
         userProperties.put( "username", "test-username" );
@@ -192,9 +193,11 @@ public class CounterIT extends AbstractCoreIT {
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
         properties.put( "name", "testCounter/testEntityCounters" );
         Entity applicationEntity = em.create( applicationId, "application_info", properties );
+//Creating connections like below doesn't work.
+//        em.createConnection( new SimpleEntityRef( "group", organizationEntity.getUuid() ), "owns",
+//                new SimpleEntityRef( "application_info", applicationId ) );
 
-        em.createConnection( new SimpleEntityRef( "group", organizationEntity.getUuid() ), "owns",
-                new SimpleEntityRef( "application_info", applicationId ) );
+        em.createConnection( organizationEntity.toTypedEntity(),"owns",applicationEntity );
 
 
         Event event = new Event();

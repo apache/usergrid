@@ -163,18 +163,14 @@
     
     <bean id="mailUtils" class="org.apache.usergrid.utils.MailUtils" />
 
-<!--    
-    <bean id="entityManager" 
-        class="org.apache.usergrid.corepersistence.CpEntityManager" 
-        scope="prototype"/>
--->
-
     <bean id="entityManager" 
         class="org.apache.usergrid.persistence.cassandra.EntityManagerImpl" 
         scope="prototype"/>
     <bean id="relationManager" 
         class="org.apache.usergrid.persistence.cassandra.RelationManagerImpl" 
         scope="prototype"/>
+
+<!--    <bean id="entityManager" class="org.apache.usergrid.corepersistence.CpEntityManager" scope="prototype"/>-->
 
     <bean id="traceTagAspect" class="org.apache.usergrid.persistence.cassandra.util.TraceTagAspect"/>
 

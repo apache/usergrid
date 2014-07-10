@@ -130,7 +130,7 @@ public class CassandraResource extends ExternalResource {
      * Creates a Cassandra starting ExternalResource for JUnit test cases which uses the specified SchemaManager for
      * Cassandra.
      */
-    CassandraResource( int rpcPort, int storagePort, int sslStoragePort, int nativeTransportPort ) throws IOException {
+    public CassandraResource( int rpcPort, int storagePort, int sslStoragePort, int nativeTransportPort ) throws IOException {
         this( null, rpcPort, storagePort, sslStoragePort, nativeTransportPort );
     }
 
@@ -263,7 +263,9 @@ public class CassandraResource extends ExternalResource {
                 return;
             }
 
-            LOG.info( "Initializing Cassandra at {} ...", tempDir.toString() );
+            LOG.info( "-------------------------------------------------------------------");
+            LOG.info( "Initializing Embedded Cassandra at {} ...", tempDir.toString() );
+            LOG.info( "-------------------------------------------------------------------");
 
             // Create temp directory, setup to create new File configuration there
             File newYamlFile = new File( tempDir, "cassandra.yaml" );
@@ -292,6 +294,7 @@ public class CassandraResource extends ExternalResource {
             System.setProperty( "log4j.configuration", "log4j.properties" );
             System.setProperty( "cassandra.ring_delay_ms", "100" );
             System.setProperty( "cassandra.config", newYamlUrl.toString() );
+            System.setProperty( "cassandra.tempName", tempDir.getName() );
 
             
             //while ( !AvailablePortFinder.available( rpcPort ) || rpcPort == 9042 ) {

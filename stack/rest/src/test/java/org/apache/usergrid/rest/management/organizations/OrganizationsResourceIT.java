@@ -17,26 +17,25 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.rest.AbstractRestIT;
 
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
+import java.io.IOException;
 
 import junit.framework.Assert;
 
@@ -76,8 +75,8 @@ public class OrganizationsResourceIT extends AbstractRestIT {
                     .map( "company", "Apigee" );
             payload.put( OrganizationsResource.ORGANIZATION_PROPERTIES, organizationProperties );
 
-            JsonNode node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
             assertNotNull( node );
 
@@ -100,16 +99,16 @@ public class OrganizationsResourceIT extends AbstractRestIT {
             OrganizationInfo orgInfo = setup.getMgmtSvc().getOrganizationByName( "test-org-1" );
             assertEquals( 5L, orgInfo.getProperties().get( "securityLevel" ) );
 
-            node = resource().path( "/management/organizations/test-org-1" )
+            node = mapper.readTree( resource().path( "/management/organizations/test-org-1" )
                     .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
             logNode( node );
             Assert.assertEquals( 5, node.get( "organization" ).get( OrganizationsResource.ORGANIZATION_PROPERTIES )
                                         .get( "securityLevel" ).asInt() );
 
-            node = resource().path( "/management/organizations/test-org-1" )
+            node = mapper.readTree( resource().path( "/management/organizations/test-org-1" )
                     .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
             Assert.assertEquals( 5, node.get( "organization" ).get( OrganizationsResource.ORGANIZATION_PROPERTIES )
                                         .get( "securityLevel" ).asInt() );
         }
@@ -125,8 +124,8 @@ public class OrganizationsResourceIT extends AbstractRestIT {
                 hashMap( "email", "create-duplicate-org@mockserver.com" ).map( "password", "password" )
                         .map( "organization", "create-duplicate-orgname-org" );
 
-        JsonNode node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
         logNode( node );
         assertNotNull( node );
@@ -135,16 +134,16 @@ public class OrganizationsResourceIT extends AbstractRestIT {
                 .map( "password", "password" ).map( "organization", "create-duplicate-orgname-org" );
 
         try {
-            node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( Exception ex ) {
         }
         payload = hashMap( "grant_type", "password" ).map( "username", "create-dupe-orgname2" )
                 .map( "password", "password" );
         try {
-            node = resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+            node = mapper.readTree( resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
             fail( "Should not have created user" );
         }
         catch ( Exception ex ) {
@@ -153,8 +152,8 @@ public class OrganizationsResourceIT extends AbstractRestIT {
 
         payload = hashMap( "username", "create-duplicate-org@mockserver.com" ).map( "grant_type", "password" )
                 .map( "password", "password" );
-        node = resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        node = mapper.readTree( resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         logNode( node );
     }
 
@@ -166,10 +165,10 @@ public class OrganizationsResourceIT extends AbstractRestIT {
                 .map( "password", "password" )
                 .map( "organization", "very-nice-org" );
 
-        JsonNode node = resource().path( "/management/organizations" )
+        JsonNode node = mapper.readTree( resource().path( "/management/organizations" )
             .accept( MediaType.APPLICATION_JSON )
             .type( MediaType.APPLICATION_JSON_TYPE )
-            .post( JsonNode.class, payload );
+            .post( String.class, payload ));
 
         logNode( node );
         assertNotNull( node );
@@ -181,10 +180,10 @@ public class OrganizationsResourceIT extends AbstractRestIT {
 
         boolean failed = false;
         try {
-            node = resource().path( "/management/organizations" )
+            node = mapper.readTree( resource().path( "/management/organizations" )
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+                .post( String.class, payload ));
         }
         catch ( UniformInterfaceException ex ) {
             Assert.assertEquals( 400, ex.getResponse().getStatus() );
@@ -198,10 +197,10 @@ public class OrganizationsResourceIT extends AbstractRestIT {
             .map( "username", "create-dupe-orgname2" )
             .map( "password", "password" );
         try {
-            node = resource().path( "/management/token" )
+            node = mapper.readTree( resource().path( "/management/token" )
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+                .post( String.class, payload ));
             fail( "Should not have created user" );
         }
         catch ( Exception ex ) {
@@ -212,29 +211,29 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         payload = hashMap( "username", "duplicate-email@mockserver.com" )
                 .map( "grant_type", "password" )
                 .map( "password", "password" );
-        node = resource().path( "/management/token" )
+        node = mapper.readTree( resource().path( "/management/token" )
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+                .post( String.class, payload ));
         logNode( node );
     }
 
     @Test
-    public void testOrgPOSTParams() {
-        JsonNode node = resource().path( "/management/organizations" ).queryParam( "organization", "testOrgPOSTParams" )
+    public void testOrgPOSTParams() throws IOException {
+        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).queryParam( "organization", "testOrgPOSTParams" )
                 .queryParam( "username", "testOrgPOSTParams" ).queryParam( "grant_type", "password" )
                 .queryParam( "email", "testOrgPOSTParams@apigee.com" ).queryParam( "name", "testOrgPOSTParams" )
                 .queryParam( "password", "password" )
 
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_FORM_URLENCODED )
-                .post( JsonNode.class );
+                .post( String.class ));
 
         assertEquals( "ok", node.get( "status" ).asText() );
     }
 
 
     @Test
-    public void testOrgPOSTForm() {
+    public void testOrgPOSTForm() throws IOException {
 
         Form form = new Form();
         form.add( "organization", "testOrgPOSTForm" );
@@ -244,14 +243,14 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         form.add( "name", "testOrgPOSTForm" );
         form.add( "password", "password" );
 
-        JsonNode node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_FORM_URLENCODED ).post( JsonNode.class, form );
+        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_FORM_URLENCODED ).post( String.class, form ));
 
         assertEquals( "ok", node.get( "status" ).asText() );
     }
 
     @Test
-    public void noOrgDelete() {
+    public void noOrgDelete() throws IOException {
 
 
         String mgmtToken = adminToken();
@@ -260,9 +259,9 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         JsonNode node = null;
 
         try {
-            node = resource().path( "/test-organization" ).queryParam( "access_token", mgmtToken )
+            node = mapper.readTree( resource().path( "/test-organization" ).queryParam( "access_token", mgmtToken )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                    .delete( JsonNode.class );
+                    .delete( String.class ));
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -281,11 +280,11 @@ public class OrganizationsResourceIT extends AbstractRestIT {
             .map("email", "test-user-2@mockserver.com")
             .map( "password", "password" );
 
-        JsonNode node = resource().path( "/management/organizations/test-organization/users" )
+        JsonNode node = mapper.readTree( resource().path( "/management/organizations/test-organization/users" )
             .queryParam( "access_token", mgmtToken )
             .accept( MediaType.APPLICATION_JSON )
             .type( MediaType.APPLICATION_JSON_TYPE )
-            .post( JsonNode.class, payload );
+            .post( String.class, payload ));
 
         logNode( node );
         assertNotNull( node );

@@ -23,12 +23,12 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.usergrid.java.client.entities.Group;
+import org.apache.usergrid.java.client.entities.Group;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -37,6 +37,7 @@ import org.apache.usergrid.utils.UUIDUtils;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -64,43 +65,42 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void deleteUserFromRole() {
+    public void deleteUserFromRole() throws IOException {
         Map<String, String> data = hashMap( "name", ROLE );
 
-        JsonNode node =
-                resource().path( "/test-organization/test-app/roles" ).queryParam( "access_token", access_token )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/roles" ).queryParam( "access_token", access_token )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( JsonNode.class, data );
+                        .post( String.class, data ));
 
         assertNull( node.get( "error" ) );
 
         assertEquals( ROLE, getEntity( node, 0 ).get( "name" ).asText() );
 
         // add the user to the role
-        node = resource().path( "/test-organization/test-app/roles/" + ROLE + "/users/" + USER )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/roles/" + ROLE + "/users/" + USER )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
         assertNull( node.get( "error" ) );
 
         // now check the user has the role
-        node = resource().path( "/test-organization/test-app/users/" + USER + "/roles" )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + USER + "/roles" )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         // check if the role was assigned
         assertEquals( ROLE, getEntity( node, 0 ).get( "name" ).asText() );
 
         // now delete the role
-        node = resource().path( "/test-organization/test-app/users/" + USER + "/roles/" + ROLE )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + USER + "/roles/" + ROLE )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
 
         // check if the role was deleted
 
-        node = resource().path( "/test-organization/test-app/users/" + USER + "/roles" )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + USER + "/roles" )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         // check if the role was assigned
         assertNull( getEntity( node, 0 ) );
@@ -108,7 +108,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void deleteUserGroup() {
+    public void deleteUserGroup() throws IOException {
 
         // don't populate the user, it will use the currently authenticated
         // user.
@@ -119,16 +119,15 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         Map<String, String> data = hashMap( "type", "group" ).map( "path", groupPath );
 
-        JsonNode node =
-                resource().path( "/test-organization/test-app/groups" ).queryParam( "access_token", access_token )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/groups" ).queryParam( "access_token", access_token )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( JsonNode.class, data );
+                        .post( String.class, data ));
 
         assertNull( node.get( "error" ) );
 
-        node = resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
         assertNull( node.get( "error" ) );
 
@@ -138,9 +137,9 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         // now delete the group
 
-        node = resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
 
         assertNull( node.get( "error" ) );
 
@@ -181,9 +180,9 @@ public class PermissionsResourceIT extends AbstractRestIT {
         Map<String, String> data = hashMap( "name", "usercreatedrole" );
 
         // create a role as the user
-        JsonNode node = resource().path( String.format( "/%s/%s/roles", orgname, applicationName ) )
+        JsonNode node = mapper.readTree( resource().path( String.format( "/%s/%s/roles", orgname, applicationName ) )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, data );
+                .post( String.class, data ));
 
         assertNull( getError( node ) );
 
@@ -232,16 +231,16 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser( orgs.getOwner().getUuid(), 0 );
 
-        JsonNode node = resource().path( String.format( "/%s/%s/roles", orgname, applicationName ) )
+        JsonNode node = mapper.readTree( resource().path( String.format( "/%s/%s/roles", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
 
         assertNull( getError( node ) );
 
         // delete the default role to test permissions later
-        node = resource().path( String.format( "/%s/%s/roles/default", orgname, applicationName ) )
+        node = mapper.readTree( resource().path( String.format( "/%s/%s/roles/default", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
 
         assertNull( getError( node ) );
 
@@ -255,9 +254,9 @@ public class PermissionsResourceIT extends AbstractRestIT {
                 "reviewer1@usergrid.com" );
 
         // grant this user the "reviewer" role
-        node = resource().path( String.format( "/%s/%s/users/reviewer1/roles/reviewer", orgname, applicationName ) )
+        node = mapper.readTree( resource().path( String.format( "/%s/%s/users/reviewer1/roles/reviewer", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
         assertNull( getError( node ) );
 
@@ -269,20 +268,20 @@ public class PermissionsResourceIT extends AbstractRestIT {
         // post a review as the reviewer1 user
         resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
                 .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, review );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, review );
 
         review = hashMap( "rating", "4" ).map( "name", "4peaks" ).map( "review", "Huge beer selection" );
 
         // put a review as the reviewer1 user
         resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
                 .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, review );
+                .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, review );
 
         // get the reviews
 
-        node = resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
+        node = mapper.readTree( resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
                 .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         assertEquals( "noca", getEntity( node, 0 ).get( "name" ).asText() );
         assertEquals( "4peaks", getEntity( node, 1 ).get( "name" ).asText() );
@@ -294,7 +293,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         try {
             resource().path( String.format( "/%s/%s/reviews/noca", orgname, applicationName ) )
                     .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -307,7 +306,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         try {
             resource().path( String.format( "/%s/%s/reviews/4peaks", orgname, applicationName ) )
                     .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -324,17 +323,17 @@ public class PermissionsResourceIT extends AbstractRestIT {
         // /now create the group
         resource().path( String.format( "/%s/%s/groups", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, group );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, group );
 
         // link the group to the role
         resource().path( String.format( "/%s/%s/groups/reviewergroup/roles/reviewer", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, group );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, group );
 
         // add the user to the group
         resource().path( String.format( "/%s/%s/users/reviewer2/groups/reviewergroup", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class );
 
         // post 2 reviews. Should get permissions from the group
 
@@ -345,19 +344,19 @@ public class PermissionsResourceIT extends AbstractRestIT {
         // post a review as the reviewer2 user
         resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
                 .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, review );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, review );
 
         review = hashMap( "rating", "4" ).map( "name", "currycorner" ).map( "review", "Authentic" );
 
         // post a review as the reviewer2 user
         resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
                 .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, review );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, review );
 
         // get all reviews as a user
-        node = resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
+        node = mapper.readTree( resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
                 .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         assertEquals( "noca", getEntity( node, 0 ).get( "name" ).asText() );
         assertEquals( "4peaks", getEntity( node, 1 ).get( "name" ).asText() );
@@ -371,7 +370,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         try {
             resource().path( String.format( "/%s/%s/reviews/cowboyciao", orgname, applicationName ) )
                     .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -384,7 +383,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         try {
             resource().path( String.format( "/%s/%s/reviews/currycorner", orgname, applicationName ) )
                     .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class );
         }
         catch ( UniformInterfaceException uie ) {
             status = uie.getResponse().getClientResponseStatus();
@@ -418,15 +417,15 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser( orgs.getOwner().getUuid(), 0 );
 
-        JsonNode node = resource()
+        JsonNode node = mapper.readTree( resource()
                 .path( String.format( "/%s/%s/roles/default", params.get( "orgName" ), params.get( "appName" ) ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
         Map<String, String> data = hashMap( "name", "reviewer" );
 
-        node = resource().path( String.format( "/%s/%s/roles", params.get( "orgName" ), params.get( "appName" ) ) )
+        node = mapper.readTree( resource().path( String.format( "/%s/%s/roles", params.get( "orgName" ), params.get( "appName" ) ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
         assertNull( getError( node ) );
 
         // allow access to reviews
@@ -454,55 +453,55 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
 
         // assign userOne the reviewer role
-        node = resource().path( String
+        node = mapper.readTree( resource().path( String
                 .format( "/%s/%s/users/%s/roles/reviewer", params.get( "orgName" ), params.get( "appName" ),
                         userOneId.toString() ) ).queryParam( "access_token", adminToken )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
         Map<String, String> book = hashMap( "title", "Ready Player One" ).map( "author", "Earnest Cline" );
 
         // create a book as admin
-        node = resource().path( String.format( "/%s/%s/books", params.get( "orgName" ), params.get( "appName" ) ) )
+        node = mapper.readTree( resource().path( String.format( "/%s/%s/books", params.get( "orgName" ), params.get( "appName" ) ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, book );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, book ));
 
         logNode( node );
-        assertEquals( "Ready Player One", getEntity( node, 0 ).get( "title" ).getTextValue() );
-        String bookId = getEntity( node, 0 ).get( "uuid" ).getTextValue();
+        assertEquals( "Ready Player One", getEntity( node, 0 ).get( "title" ).textValue() );
+        String bookId = getEntity( node, 0 ).get( "uuid" ).textValue();
 
         String userOneToken = setup.getMgmtSvc().getAccessTokenForAppUser( appInfo.getId(), userOneId, 0 );
         // post a review of the book as user1
         // POST https://api.usergrid.com/my-org/my-app/users/$user1/reviewed/books/$uuid
         Map<String, String> review =
                 hashMap( "heading", "Loved It" ).map( "body", "80s Awesomeness set in the future" );
-        node = resource().path( String.format( "/%s/%s/reviews", params.get( "orgName" ), params.get( "appName" ) ) )
+        node = mapper.readTree( resource().path( String.format( "/%s/%s/reviews", params.get( "orgName" ), params.get( "appName" ) ) )
                 .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, review );
-        String reviewId = getEntity( node, 0 ).get( "uuid" ).getTextValue();
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, review ));
+        String reviewId = getEntity( node, 0 ).get( "uuid" ).textValue();
 
         // POST https://api.usergrid.com/my-org/my-app/users/me/wrote/review/${reviewId}
-        node = resource().path( String
+        node = mapper.readTree( resource().path( String
                 .format( "/%s/%s/users/me/wrote/review/%s", params.get( "orgName" ), params.get( "appName" ),
                         reviewId ) ).queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
-        node = resource().path( String
+        node = mapper.readTree( resource().path( String
                 .format( "/%s/%s/users/me/reviewed/books/%s", params.get( "orgName" ), params.get( "appName" ),
                         bookId ) ).queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
         logNode( node );
         // POST https://api.usergrid.com/my-org/my-app/books/${bookId}/review/${reviewId}
-        node = resource().path( String
+        node = mapper.readTree( resource().path( String
                 .format( "/%s/%s/books/%s/review/%s", params.get( "orgName" ), params.get( "appName" ), bookId,
                         reviewId ) ).queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
         logNode( node );
         // now try to post the same thing to books to verify as userOne the failure
         Status status = null;
         try {
-            node = resource().path( String.format( "/%s/%s/books", params.get( "orgName" ), params.get( "appName" ) ) )
+            node = mapper.readTree( resource().path( String.format( "/%s/%s/books", params.get( "orgName" ), params.get( "appName" ) ) )
                     .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
             logNode( node );
         }
         catch ( UniformInterfaceException uie ) {
@@ -510,22 +509,22 @@ public class PermissionsResourceIT extends AbstractRestIT {
         }
         assertEquals( Status.UNAUTHORIZED, status );
 
-        node = resource().path( String
+        node = mapper.readTree( resource().path( String
                 .format( "/%s/%s/users/me/reviewed/books", params.get( "orgName" ), params.get( "appName" ) ) )
                 .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         logNode( node );
 
-        node = resource().path( String
+        node = mapper.readTree( resource().path( String
                 .format( "/%s/%s/reviews/%s", params.get( "orgName" ), params.get( "appName" ), reviewId ) )
                 .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         logNode( node );
 
-        node = resource()
+        node = mapper.readTree( resource()
                 .path( String.format( "/%s/%s/users/me/wrote", params.get( "orgName" ), params.get( "appName" ) ) )
                 .queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         logNode( node );
     }
 
@@ -562,14 +561,14 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         String adminToken = setup.getMgmtSvc().getAccessTokenForAdminUser( orgs.getOwner().getUuid(), 0 );
 
-        JsonNode node = resource().path( String.format( "/%s/%s/roles/default", orgname, applicationName ) )
+        JsonNode node = mapper.readTree( resource().path( String.format( "/%s/%s/roles/default", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
         Map<String, String> data = hashMap( "name", "patient" );
 
-        node = resource().path( String.format( "/%s/%s/roles", orgname, applicationName ) )
+        node = mapper.readTree( resource().path( String.format( "/%s/%s/roles", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, data );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
         assertNull( getError( node ) );
         //allow patients to add doctors as their followers
         addPermission( orgname, applicationName, adminToken, "patient",
@@ -589,17 +588,17 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
 
         // assign examplepatient the patient role
-        node = resource().path( String
+        node = mapper.readTree( resource().path( String
                 .format( "/%s/%s/users/%s/roles/patient", orgname, applicationName, patientId.toString() ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
         String patientToken = setup.getMgmtSvc().getAccessTokenForAppUser( appInfo.getId(), patientId, 0 );
 
-        node = resource().path( String
+        node = mapper.readTree( resource().path( String
                 .format( "/%s/%s/users/%s/following/users/%s", orgname, applicationName, "exampledoctor",
                         "examplepatient" ) ).queryParam( "access_token", patientToken )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class );
+                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
         logNode( node );
     }
 
@@ -626,9 +625,9 @@ public class PermissionsResourceIT extends AbstractRestIT {
         Map<String, String> props = hashMap( "email", email ).map( "username", username ).map( "name", username )
                 .map( "password", "password" );
 
-        JsonNode node = resource().path( String.format( "/%s/%s/users", orgId, appId ) )
+        JsonNode node = mapper.readTree( resource().path( String.format( "/%s/%s/users", orgId, appId ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, props );
+                .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, props ));
 
         assertNull( getError( node ) );
 
@@ -642,23 +641,23 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
 
     /** Test adding the permission to the role */
-    private void addPermission( String orgname, String appname, String adminToken, String rolename, String grant ) {
+    private void addPermission( String orgname, String appname, String adminToken, String rolename, String grant ) throws IOException {
         Map<String, String> props = hashMap( "permission", grant );
 
         String rolePath = String.format( "/%s/%s/roles/%s/permissions", orgname, appname, rolename );
 
-        JsonNode node = resource().path( rolePath ).queryParam( "access_token", adminToken )
+        JsonNode node = mapper.readTree( resource().path( rolePath ).queryParam( "access_token", adminToken )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .put( JsonNode.class, props );
+                .put( String.class, props ));
 
         assertNull( getError( node ) );
 
-        node = resource().path( rolePath ).queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+        node = mapper.readTree( resource().path( rolePath ).queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         ArrayNode data = ( ArrayNode ) node.get( "data" );
 
-        Iterator<JsonNode> iterator = data.getElements();
+        Iterator<JsonNode> iterator = data.elements();
 
         while ( iterator.hasNext() ) {
             if ( grant.equals( iterator.next().asText() ) ) {
@@ -671,23 +670,22 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
 
     /** Test adding the permission to the role */
-    private void addPermission( String orgname, String appname, String rolename, String grant ) {
+    private void addPermission( String orgname, String appname, String rolename, String grant ) throws IOException {
         Map<String, String> props = hashMap( "permission", grant );
 
         String rolePath = String.format( "/%s/%s/roles/%s/permissions", orgname, appname, rolename );
 
-        JsonNode node =
-                resource().path( rolePath ).accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .put( JsonNode.class, props );
+        JsonNode node = mapper.readTree( resource().path( rolePath ).accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                        .put( String.class, props ));
 
         assertNull( getError( node ) );
 
-        node = resource().path( rolePath ).accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .get( JsonNode.class );
+        node = mapper.readTree( resource().path( rolePath ).accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                .get( String.class ));
 
         ArrayNode data = ( ArrayNode ) node.get( "data" );
 
-        Iterator<JsonNode> iterator = data.getElements();
+        Iterator<JsonNode> iterator = data.elements();
 
         while ( iterator.hasNext() ) {
             if ( grant.equals( iterator.next().asText() ) ) {
