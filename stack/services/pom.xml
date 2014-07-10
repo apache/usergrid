@@ -156,9 +156,6 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
-              <accessKey>${aws.s3.key}</accessKey>
-              <secretKey>${aws.s3.secret}</secretKey>
-              <bucketName>${aws.s3.bucket}</bucketName>
               <systemPropertyVariables>
                 <storage-config>${basedir}/src/test/conf</storage-config>
                 <target.directory>${project.build.directory}</target.directory>

@@ -18,31 +18,8 @@
 package org.apache.usergrid.management.cassandra;
 
 
-import java.io.File;
-import java.io.FileReader;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
-
-import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.BlobStore;
-import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
-import org.jclouds.logging.log4j.config.Log4JLoggingModule;
-import org.jclouds.netty.config.NettyPayloadModule;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Module;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.ServiceITSuite;
@@ -60,13 +37,24 @@ import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.JobData;
+import org.jclouds.ContextBuilder;
+import org.jclouds.blobstore.BlobStore;
+import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
+import org.jclouds.logging.log4j.config.Log4JLoggingModule;
+import org.jclouds.netty.config.NettyPayloadModule;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
+import java.io.File;
+import java.io.FileReader;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -874,8 +862,8 @@ public class ExportServiceIT {
     }
 
 
-    @Ignore
-   // @Test
+  //  @Ignore
+    @Test
     public void testIntegration100EntitiesOnOneOrg() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -946,7 +934,6 @@ public class ExportServiceIT {
         Blob bo = null;
         BlobStore blobStore = null;
 
-        try {
             final Iterable<? extends Module> MODULES = ImmutableSet
                     .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(),
                             new NettyPayloadModule() );
@@ -965,10 +952,7 @@ public class ExportServiceIT {
             assertEquals( numOfFiles, numWeWant );
 
             bo = blobStore.getBlob( bucketName, s3Export.getFilename() );
-        }
-        catch ( Exception e ) {
-            assert ( false );
-        }
+
 
         assertNotNull( bo );
         blobStore.deleteContainer( bucketName );
