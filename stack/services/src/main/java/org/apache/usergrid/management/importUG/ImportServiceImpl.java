@@ -21,8 +21,6 @@ import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
-
-import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.entities.Import;
@@ -32,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -46,6 +45,7 @@ public class ImportServiceImpl implements ImportService {
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
     public static final String IMPORT_ID = "importId";
     public static final String IMPORT_JOB_NAME = "importJob";
+    private static ArrayList<File> files;
 
     //dependency injection
     private SchedulerService sch;
@@ -165,6 +165,8 @@ public class ImportServiceImpl implements ImportService {
         return importUG.getState().toString();
     }
 
+
+
     @Override
     public void doImport(JobExecution jobExecution) throws Exception {
 
@@ -222,8 +224,7 @@ public class ImportServiceImpl implements ImportService {
         else if ( config.get( "collectionName" ) == null ) {
             //imports an Application from a single organization
             try {
-                //importApplicationFromOrg((UUID) config.get("organizationId"),
-                       // (UUID) config.get("applicationId"), config, jobExecution, s3Import);
+                importApplicationFromOrg((UUID) config.get("organizationId"),(UUID) config.get("applicationId"), config, jobExecution, s3Import);
             }
             catch ( Exception e ) {
                 importUG.setErrorMessage( e.getMessage() );
@@ -267,29 +268,71 @@ public class ImportServiceImpl implements ImportService {
 
         //retrieves export entity
         Import importUG = getImportEntity(jobExecution);
-        ApplicationInfo application = managementService.getApplicationInfo( applicationUUID );
-        OrganizationInfo organization = managementService.getOrganizationForApplication(applicationUUID);
-        String appFileName = prepareInputFileName("application", application.getName(),organization.getName(),
-                (String) config.get("collectionName"));
+        ApplicationInfo application = managementService.getApplicationInfo(applicationUUID);
 
-        File ephemeral = fileTransfer( importUG, appFileName, config, s3Import );
+        String appFileName = prepareInputFileName("application", application.getName(),(String) config.get("collectionName"));
+
+        files = fileTransfer( importUG, appFileName, config, s3Import, 0 );
         //collectionExportAndQuery( applicationUUID, config, export, jobExecution );
 
 
     }
 
-    public File fileTransfer( Import importUG, String appFileName, Map<String, Object> config,
-                              S3Import s3Import ) {
-        File ephemeral;
+    /**
+     * Exports a specific applications from an organization
+     */
+    private void importApplicationFromOrg( UUID organizationUUID, UUID applicationId, final Map<String, Object> config,
+                                           final JobExecution jobExecution, S3Import s3Import ) throws Exception {
+
+        //retrieves import entity
+        Import importUG = getImportEntity(jobExecution);
+
+        ApplicationInfo application = managementService.getApplicationInfo( applicationId );
+        String appFileName = prepareInputFileName("application", application.getName(), null);
+
+        files = fileTransfer( importUG, appFileName, config, s3Import, 1 );
+        //collectionExportAndQuery( applicationId, config, export, jobExecution );
+    }
+
+//    /**
+//     * Exports All Applications from an Organization
+//     */
+//    private void importApplicationsFromOrg( UUID organizationUUID, final Map<String, Object> config,
+//                                            final JobExecution jobExecution, S3Import s3Import ) throws Exception {
+//
+//        //retrieves export entity
+//        Import importUG = getImportEntity(jobExecution);
+//        String appFileName = null;
+//
+//        BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
+//
+//        for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
+//
+//            if ( application.getValue().equals(
+//                    managementService.getOrganizationByUuid( organizationUUID ).getName() + "/exports" ) ) {
+//                continue;
+//            }
+//
+//            appFileName = prepareInputFileName( "application", application.getValue() , null );
+//            files = fileTransfer( importUG, appFileName, config, s3Import, 2 );
+//            //File ephemeral = collectionExportAndQuery( application.getKey(), config, export, jobExecution );
+//
+//            //fileTransfer( export, appFileName, ephemeral, config, s3Export );
+//        }
+//    }
+
+    public ArrayList<File> fileTransfer( Import importUG, String appFileName, Map<String, Object> config,
+                              S3Import s3Import , int type) {
+        ArrayList<File> files;
         try {
-          ephemeral   =  s3Import.copyFromS3(config, appFileName );
+              files  =  s3Import.copyFromS3(config, appFileName , type);
         }
         catch ( Exception e ) {
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FAILED);
             return null;
         }
-        return ephemeral;
+        return files;
     }
 
     public Import getImportEntity( final JobExecution jobExecution ) throws Exception {
@@ -305,24 +348,51 @@ public class ImportServiceImpl implements ImportService {
      *
      * @return the file name concatenated with the type and the name of the collection
      */
-    protected String prepareInputFileName( String type, String name, String organizationName, String CollectionName ) {
+    protected String prepareInputFileName( String type, String name, String CollectionName ) {
         StringBuilder str = new StringBuilder();
-        str.append(organizationName);
-        str.append("/");
         str.append( name );
         str.append( "." );
         if ( CollectionName != null ) {
             str.append( CollectionName );
             str.append( "." );
         }
-        //TODO: check how to give regex in filename
-        //TODO: confirm how to give the org folder in path
-        str.append("*");
-        str.append( ".json" );
-
         String inputFileName = str.toString();
 
         return inputFileName;
     }
 
+    @Override
+    public ArrayList<File> getEphemeralFile() {
+        return files;
+    }
+
+    public SchedulerService getSch() {
+        return sch;
+    }
+
+
+    public void setSch( final SchedulerService sch ) {
+        this.sch = sch;
+    }
+
+
+    public EntityManagerFactory getEmf() {
+        return emf;
+    }
+
+
+    public void setEmf( final EntityManagerFactory emf ) {
+        this.emf = emf;
+    }
+
+
+    public ManagementService getManagementService() {
+
+        return managementService;
+    }
+
+
+    public void setManagementService( final ManagementService managementService ) {
+        this.managementService = managementService;
+    }
 }

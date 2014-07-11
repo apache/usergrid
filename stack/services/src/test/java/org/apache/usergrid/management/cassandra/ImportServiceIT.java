@@ -17,42 +17,42 @@
 
 package org.apache.usergrid.management.cassandra;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.management.export.S3Export;
 import org.apache.usergrid.management.export.S3ExportImpl;
-import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.BlobStore;
-import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.ContainerNotFoundException;
-import org.jclouds.blobstore.domain.Blob;
-import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
-import org.jclouds.logging.log4j.config.Log4JLoggingModule;
-import org.jclouds.netty.config.NettyPayloadModule;
-import org.junit.BeforeClass;
+import org.apache.usergrid.management.importUG.ImportService;
+import org.apache.usergrid.management.importUG.S3Import;
+import org.apache.usergrid.management.importUG.S3ImportImpl;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.entities.JobData;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.UUID;
 
-import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by ApigeeCorporation on 7/8/14.
@@ -63,6 +63,7 @@ public class ImportServiceIT {
     private static final Logger LOG = LoggerFactory.getLogger(ExportServiceIT.class);
 
     private static CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
+    private static ManagementService managementService;
 
     // app-level data generated only once
     private static UserInfo adminUser;
@@ -79,60 +80,172 @@ public class ImportServiceIT {
     @BeforeClass
     public static void setup() throws Exception {
         LOG.info( "in setup" );
-        adminUser = setup.getMgmtSvc().createAdminUser( "pooja", "Pooja Jain", "pooja@jain.com", "test", false, false );
-        organization = setup.getMgmtSvc().createOrganization( "pooja-organization", adminUser, true );
-        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "pooja-application" ).getId();
+        adminUser = setup.getMgmtSvc().createAdminUser( "intern", "intern test", "intern@test.com", "test", false, false );
+        organization = setup.getMgmtSvc().createOrganization( "test-organization", adminUser, true );
+        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app" ).getId();
+
+        // add collection with 5 entities
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+        Entity[] entity;
+        entity = new Entity[5];
+        //creates entities
+        for ( int i = 0; i < 5; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "user" + i );
+            userProperties.put( "email", "user" + i + "@test.com" );
+            entity[i] = em.create( "users", userProperties );
+        }
     }
 
 
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     @Test
-    public void testIntegration100EntitiesOn() throws Exception {
+    public void testIntegrationImportCollection() throws Exception {
 
+
+
+        ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
         HashMap<String, Object> payload = payloadBuilder();
 
-        payload.put( "organizationId", organization.getUuid() );
+
+        payload.put( "organizationId",  organization.getUuid());
+        payload.put( "applicationId", applicationId );
+        payload.put("collectionName", "users");
+
+        // export the collection
+        UUID exportUUID = exportService.schedule( payload );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = jobExportDataCreator(payload, exportUUID, s3Export);
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( jobExecution );
+        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
+            ;
+        }
+        //TODo: can check if file got created
+
+        // import
+        S3Import s3Import = new S3ImportImpl();
+        ImportService importService = setup.getImportService();
+
+        UUID importUUID = importService.schedule( payload );
+
+        //create and initialize jobData returned in JobExecution.
+        jobData = jobImportDataCreator( payload,importUUID, s3Import );
+
+        jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        importService.doImport(jobExecution);
+        while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
+            ;
+        }
+
+        assertThat(importService.getEphemeralFile().size(), is(not(0)));
+    }
+
+    // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    @Test
+    public void testIntegrationImportApplication() throws Exception {
+
+
+
+        ExportService exportService = setup.getExportService();
+        S3Export s3Export = new S3ExportImpl();
+        HashMap<String, Object> payload = payloadBuilder();
+
+
+        payload.put( "organizationId",  organization.getUuid());
         payload.put( "applicationId", applicationId );
 
+        // export the collection
+        UUID exportUUID = exportService.schedule( payload );
 
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = jobExportDataCreator(payload, exportUUID, s3Export);
 
-        String bucketName = System.getProperty( "bucketName" );
-        String accessId = System.getProperty( "accessKey" );
-        String secretKey = System.getProperty( "secretKey" );
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        Properties overrides = new Properties();
-        overrides.setProperty( "s3" + ".identity", accessId );
-        overrides.setProperty( "s3" + ".credential", secretKey );
-
-
-        final Iterable<? extends Module> MODULES = ImmutableSet
-                .of(new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(),
-                        new NettyPayloadModule());
-
-        BlobStoreContext context =
-                ContextBuilder.newBuilder("s3").credentials( accessId, secretKey ).modules( MODULES )
-                        .overrides( overrides ).buildView( BlobStoreContext.class );
-
-
-        FileOutputStream fop = null;
-
-        File ephemeral = new File("temp_file");
-        ephemeral.deleteOnExit();
-        try{
-            BlobStore blobStore = context.getBlobStore();
-            Blob blob = blobStore.getBlob(bucketName, s3Export.getFilename());
-
-            fop = new FileOutputStream(ephemeral);
-            blob.getPayload().writeTo(fop);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ContainerNotFoundException m) {
-            m.printStackTrace();
+        exportService.doExport( jobExecution );
+        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
+            ;
         }
-        assertNotNull( ephemeral );
+        //TODo: can check if file got created
+
+        // import
+        S3Import s3Import = new S3ImportImpl();
+        ImportService importService = setup.getImportService();
+
+        UUID importUUID = importService.schedule( payload );
+
+        //create and initialize jobData returned in JobExecution.
+        jobData = jobImportDataCreator( payload,importUUID, s3Import );
+
+        jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        importService.doImport(jobExecution);
+        while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
+            ;
+        }
+        assertThat(importService.getEphemeralFile().size(), is(not(0)));
     }
+
+//    @Test
+//    public void testIntegrationImportOrganization() throws Exception {
+//
+//
+//
+//        ExportService exportService = setup.getExportService();
+//        S3Export s3Export = new S3ExportImpl();
+//        HashMap<String, Object> payload = payloadBuilder();
+//
+//
+//
+//        payload.put( "organizationId",  organization.getUuid());
+//
+//        // export the collection
+//        UUID exportUUID = exportService.schedule( payload );
+//
+//        //create and initialize jobData returned in JobExecution.
+//        JobData jobData = jobExportDataCreator(payload, exportUUID, s3Export);
+//
+//        JobExecution jobExecution = mock( JobExecution.class );
+//        when( jobExecution.getJobData() ).thenReturn( jobData );
+//
+//        exportService.doExport( jobExecution );
+//        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
+//            ;
+//        }
+//        //TODo: can check if file got created
+//
+//        // import
+//        S3Import s3Import = new S3ImportImpl();
+//        ImportService importService = setup.getImportService();
+//
+//        UUID importUUID = importService.schedule( payload );
+//
+//        //create and initialize jobData returned in JobExecution.
+//        jobData = jobImportDataCreator( payload,importUUID, s3Import );
+//
+//        jobExecution = mock( JobExecution.class );
+//        when( jobExecution.getJobData() ).thenReturn( jobData );
+//
+//        importService.doImport(jobExecution);
+//        while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
+//            ;
+//        }
+//        assertThat(importService.getEphemeralFile().size(), is(not(0)));
+//    }
 
     /*Creates fake payload for testing purposes.*/
     public HashMap<String, Object> payloadBuilder() {
@@ -146,9 +259,30 @@ public class ImportServiceIT {
         properties.put( "storage_provider", "s3" );
         properties.put( "storage_info", storage_info );
 
-        payload.put( "path", "test-organization/test-app" );
+        payload.put( "path","test-organization/test-app" );
         payload.put( "properties", properties );
         return payload;
     }
 
+    public JobData jobImportDataCreator(HashMap<String, Object> payload,UUID importUUID,S3Import s3Import) {
+        JobData jobData = new JobData();
+
+        jobData.setProperty( "jobName", "importJob" );
+        jobData.setProperty( "importInfo", payload );
+        jobData.setProperty( "importId", importUUID );
+        jobData.setProperty( "s3Import", s3Import );
+
+        return jobData;
+    }
+
+    public JobData jobExportDataCreator(HashMap<String, Object> payload,UUID exportUUID,S3Export s3Export) {
+        JobData jobData = new JobData();
+
+        jobData.setProperty( "jobName", "exportJob" );
+        jobData.setProperty( "exportInfo", payload );
+        jobData.setProperty( "exportId", exportUUID );
+        jobData.setProperty( "s3Export", s3Export);
+
+        return jobData;
+    }
 }

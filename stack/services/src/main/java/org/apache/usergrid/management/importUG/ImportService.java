@@ -19,6 +19,8 @@ package org.apache.usergrid.management.importUG;
 
 import org.apache.usergrid.batch.JobExecution;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -43,5 +45,7 @@ public interface ImportService {
     String getState(UUID state) throws Exception;
 
     String getErrorMessage(UUID appId, UUID state) throws Exception;
+
+    ArrayList<File> getEphemeralFile();
 
 }

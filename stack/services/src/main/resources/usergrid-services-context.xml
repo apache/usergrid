@@ -89,4 +89,12 @@
 
   <bean id="exportJob" class="org.apache.usergrid.management.export.ExportJob" />
 
+  <bean id="importService" class="org.apache.usergrid.management.importUG.ImportServiceImpl" >
+    <property name="managementService" ref="managementService"/>
+    <property name="emf" ref="entityManagerFactory"/>
+    <property name="sch" ref="schedulerService"/>
+  </bean>
+
+  <bean id="importJob" class="org.apache.usergrid.management.importUG.ImportJob" />
+
 </beans>
