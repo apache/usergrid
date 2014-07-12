@@ -38,15 +38,11 @@
 
     <import resource="classpath:/usergrid-services-context.xml" />
 
-    <bean id="setup" class="org.apache.usergrid.corepersistence.CpSetup">
+    <bean id="setup" class="org.apache.usergrid.corepersistence.HybridSetup">
+        <constructor-arg ref="properties"/>
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="cassandraService"/>
     </bean>
-
-    <!--  <bean id="setup" class="org.apache.usergrid.persistence.cassandra.Setup">
-      <constructor-arg ref="entityManagerFactory"/>
-      <constructor-arg ref="cassandraService"/>
-    </bean>-->
 
     <!-- The default schema manager -->
     <!-- refer to a named schemaManager from the DataControl annotation thusly -->

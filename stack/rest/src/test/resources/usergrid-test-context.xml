@@ -28,7 +28,6 @@
         <property name="traceEnabled" value="false"/>
     </bean>
 
-
     <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore"/>
 
     <!--<bean id="binaryStore" class="org.apache.usergrid.services.assets.data.S3BinaryStore">-->
@@ -37,24 +36,12 @@
     <!--<constructor-arg name="bucketName" value="xx" />-->
     <!--</bean>-->
 
-    <bean id="setup" class="org.apache.usergrid.corepersistence.CpSetup">
+    <bean id="setup" class="org.apache.usergrid.corepersistence.HybridSetup">
+        <constructor-arg ref="properties"/>
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="cassandraService"/>
     </bean>
 
-
-    <!--    <bean id="setup" class="org.apache.usergrid.persistence.cassandra.Setup">
-        <constructor-arg ref="entityManagerFactory"/>
-        <constructor-arg ref="cassandraService"/>
-    </bean>-->
-
-    <!-- The default schema manager -->
-    <!--
-    <bean class="org.apache.usergrid.persistence.CoreSchemaManager">
-        <constructor-arg ref="svcSetup"/>
-        <constructor-arg ref="cassandraCluster"/>
-    </bean>
-    -->
     <!-- refer to a named schemaManager from the DataControl annotation thusly -->
     <bean id="coreManager" class="org.apache.usergrid.persistence.CoreSchemaManager">
         <constructor-arg ref="setup"/>

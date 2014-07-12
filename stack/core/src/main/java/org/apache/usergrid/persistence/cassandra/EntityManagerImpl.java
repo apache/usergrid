@@ -41,6 +41,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
 
+import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
+
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.mq.Message;
 import org.apache.usergrid.mq.QueueManager;
@@ -519,7 +522,7 @@ public class EntityManagerImpl implements EntityManager {
          */
 
         Set<UUID> ownerEntityIds = getUUIDsForUniqueProperty( 
-            new SimpleEntityRef("applicaion", applicationId), entityType, propertyName, propertyValue );
+            new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), entityType, propertyName, propertyValue );
 
         //if there are no entities for this property, we know it's unique.  If there are,
         // we have to make sure the one we were passed is in the set.  otherwise it belongs
@@ -648,7 +651,7 @@ public class EntityManagerImpl implements EntityManager {
 
     @Override
     public Map<String, EntityRef> getAlias( String aliasType, List<String> aliases ) throws Exception {
-        return getAlias( new SimpleEntityRef("applicaion", applicationId), aliasType, aliases );
+        return getAlias( new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), aliasType, aliases );
     }
 
 
@@ -831,28 +834,28 @@ public class EntityManagerImpl implements EntityManager {
         // Create collection name based on entity: i.e. "users"
         String collection_name = Schema.defaultCollectionName( eType );
         // Create collection key based collection name
-//        String bucketId = indexBucketLocator.getBucket( applicationId, IndexType.COLLECTION, itemId, collection_name );
-//
-//        Object collection_key = key( applicationId, Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId );
+        String bucketId = indexBucketLocator.getBucket( applicationId, IndexType.COLLECTION, itemId, collection_name );
+
+        Object collection_key = key( applicationId, Schema.DICTIONARY_COLLECTIONS, collection_name, bucketId );
 
         CollectionInfo collection = null;
 
-//        if ( !is_application ) {
-//            // Add entity to collection
-//
-//
-//            if ( !emptyPropertyMap ) {
-//                addInsertToMutator( m, ENTITY_ID_SETS, collection_key, itemId, null, timestamp );
-//            }
-//
-//            // Add name of collection to dictionary property
-//            // Application.collections
-//            addInsertToMutator( m, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_COLLECTIONS ),
-//                    collection_name, null, timestamp );
-//
-//            addInsertToMutator( m, ENTITY_COMPOSITE_DICTIONARIES, key( itemId, Schema.DICTIONARY_CONTAINER_ENTITIES ),
-//                    asList( TYPE_APPLICATION, collection_name, applicationId ), null, timestamp );
-//        }
+        if ( !is_application ) {
+            // Add entity to collection
+
+
+            if ( !emptyPropertyMap ) {
+                addInsertToMutator( m, ENTITY_ID_SETS, collection_key, itemId, null, timestamp );
+            }
+
+            // Add name of collection to dictionary property
+            // Application.collections
+            addInsertToMutator( m, ENTITY_DICTIONARIES, key( applicationId, Schema.DICTIONARY_COLLECTIONS ),
+                    collection_name, null, timestamp );
+
+            addInsertToMutator( m, ENTITY_COMPOSITE_DICTIONARIES, key( itemId, Schema.DICTIONARY_CONTAINER_ENTITIES ),
+                    asList( TYPE_APPLICATION, collection_name, applicationId ), null, timestamp );
+        }
 
         if ( emptyPropertyMap ) {
             return null;
@@ -1549,7 +1552,7 @@ public class EntityManagerImpl implements EntityManager {
         }
         if ( identifier.isName() ) {
             return this.getAlias( 
-                    new SimpleEntityRef("applicaion", applicationId), 
+                    new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), 
                     "user", identifier.getName() );
         }
         if ( identifier.isEmail() ) {

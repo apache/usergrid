@@ -28,14 +28,8 @@
 
     <import resource="classpath:/usergrid-core-context.xml"/>
 
-<!--
-    <bean id="setup" class="org.apache.usergrid.corepersistence.CpSetup">
-        <constructor-arg ref="entityManagerFactory"/>
-        <constructor-arg ref="cassandraService"/>
-    </bean>
--->
-
-    <bean id="setup" class="org.apache.usergrid.persistence.cassandra.SetupImpl">
+    <bean id="setup" class="org.apache.usergrid.corepersistence.HybridSetup">
+        <constructor-arg ref="properties"/>
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="cassandraService"/>
     </bean>

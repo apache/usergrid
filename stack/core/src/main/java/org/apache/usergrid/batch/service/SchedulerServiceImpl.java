@@ -120,8 +120,8 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
         Message message = new Message();
         message.setTimestamp( fireTime );
         message.setStringProperty( JOB_NAME, jobName );
-        message.setProperty( JOB_ID, jobDataId );
-        message.setProperty( STATS_ID, jobStatId );
+        message.setProperty( JOB_ID, jobDataId.toString() );
+        message.setProperty( STATS_ID, jobStatId.toString() );
 
         getQm().postToQueue( jobQueueName, message );
     }
@@ -166,6 +166,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
         List<JobDescriptor> results = new ArrayList<JobDescriptor>( jobs.size() );
 
         for ( Message job : jobs.getMessages() ) {
+
+            Object jo = job.getStringProperty( JOB_ID );
+            LOG.info("jo type " + jo.getClass().getCanonicalName() );
 
             UUID jobUuid = UUID.fromString( job.getStringProperty( JOB_ID ) );
             UUID statsUuid = UUID.fromString( job.getStringProperty( STATS_ID ) );
