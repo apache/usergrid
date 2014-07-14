@@ -73,24 +73,16 @@ public class S3ImportImpl implements S3Import {
                 ContextBuilder.newBuilder("s3").credentials( accessId, secretKey ).modules( MODULES )
                         .overrides( overrides ).buildView( BlobStoreContext.class );
 
-
-
-
         try{
 
             blobStore = context.getBlobStore();
 
             PageSet<? extends StorageMetadata> pageSet = blobStore.list(bucketName, new ListContainerOptions().recursive());
 
-
-
             Iterator itr = pageSet.iterator();
-
-
 
             while(itr.hasNext())
             {
-
                 String fname = ((MutableBlobMetadata)itr.next()).getName();
                 switch(type) {
                     case 0:
@@ -101,32 +93,19 @@ public class S3ImportImpl implements S3Import {
                         }
                         break;
                     case 1:
-
-                        if(fname.matches(filename+"[0-9]+.json"))
+                        if(fname.matches(filename+"[0-9]+\\.json"))
                         {
                             copyFile(bucketName,fname,i);
                             i++;
                         }
                         break;
-//                    case 2:
-//                        filename = filename.split("/")[0];
-//                        if(fname.matches(filename+"/*.[0-9]+.json"))
-//                        {
-//                            Blob blob = blobStore.getBlob(bucketName,fname);
-//                            blobs.add(blob);
-//                            File ephemeral = new File("temp_file_o_"+i);
-//
-//                            fop = new FileOutputStream(ephemeral);
-//
-//                            blobs.get(i).getPayload().writeTo(fop);
-//                            i++;
-//
-//                            files.add(ephemeral);
-//
-//                            //ephemeral.deleteOnExit();
-//                            fop.close();
-//                        }
-//                        break;
+                    case 2:
+                        if(fname.matches(filename+"[-a-zA-Z0-9]+\\.[0-9]+\\.json"))
+                        {
+                            copyFile(bucketName,fname,i);
+                            i++;
+                        }
+                        break;
                 }
             }
         } catch (IOException e) {

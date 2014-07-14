@@ -21,6 +21,7 @@ import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.entities.Import;
@@ -212,7 +213,7 @@ public class ImportServiceImpl implements ImportService {
         else if ( config.get( "applicationId" ) == null ) {
             //import All the applications from an organization
             try {
-                //importApplicationsFromOrg((UUID) config.get("organizationId"), config, jobExecution, s3Import);
+                importApplicationsFromOrg((UUID) config.get("organizationId"), config, jobExecution, s3Import);
             }
             catch ( Exception e ) {
                 importUG.setErrorMessage(e.getMessage());
@@ -294,32 +295,48 @@ public class ImportServiceImpl implements ImportService {
         //collectionExportAndQuery( applicationId, config, export, jobExecution );
     }
 
-//    /**
-//     * Exports All Applications from an Organization
-//     */
-//    private void importApplicationsFromOrg( UUID organizationUUID, final Map<String, Object> config,
-//                                            final JobExecution jobExecution, S3Import s3Import ) throws Exception {
-//
-//        //retrieves export entity
-//        Import importUG = getImportEntity(jobExecution);
-//        String appFileName = null;
-//
-//        BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
-//
-//        for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
-//
-//            if ( application.getValue().equals(
-//                    managementService.getOrganizationByUuid( organizationUUID ).getName() + "/exports" ) ) {
-//                continue;
-//            }
-//
-//            appFileName = prepareInputFileName( "application", application.getValue() , null );
-//            files = fileTransfer( importUG, appFileName, config, s3Import, 2 );
-//            //File ephemeral = collectionExportAndQuery( application.getKey(), config, export, jobExecution );
-//
-//            //fileTransfer( export, appFileName, ephemeral, config, s3Export );
-//        }
-//    }
+    /**
+     * Exports All Applications from an Organization
+     */
+     private void importApplicationsFromOrg( UUID organizationUUID, final Map<String, Object> config,
+                                            final JobExecution jobExecution, S3Import s3Import ) throws Exception {
+
+        // retrieves import entity
+        Import importUG = getImportEntity(jobExecution);
+        String appFileName = null;
+
+        OrganizationInfo organizationInfo = managementService.getOrganizationByUuid(organizationUUID);
+
+        appFileName = prepareInputFileName( "organization", organizationInfo.getName() , null );
+        files = fileTransfer( importUG, appFileName, config, s3Import, 2 );
+        //collectionExportAndQuery( application.getKey(), config, export, jobExecution );
+
+    }
+
+    /**
+     * @param type just a label such us: organization, application.
+     *
+     * @return the file name concatenated with the type and the name of the collection
+     */
+    protected String prepareInputFileName( String type, String name, String CollectionName ) {
+        StringBuilder str = new StringBuilder();
+        if(type.equals("organization")) {
+            str.append(name);
+            str.append("/");
+        }
+        else if(type.equals("application")) {
+            str.append(name);
+            str.append(".");
+            if (CollectionName != null) {
+                str.append(CollectionName);
+                str.append(".");
+            }
+        }
+
+        String inputFileName = str.toString();
+
+        return inputFileName;
+    }
 
     public ArrayList<File> fileTransfer( Import importUG, String appFileName, Map<String, Object> config,
                               S3Import s3Import , int type) {
@@ -335,31 +352,16 @@ public class ImportServiceImpl implements ImportService {
         return files;
     }
 
+
     public Import getImportEntity( final JobExecution jobExecution ) throws Exception {
 
         UUID importId = ( UUID ) jobExecution.getJobData().getProperty( IMPORT_ID );
-        EntityManager importManager = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager importManager = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
         return importManager.get( importId, Import.class );
     }
 
-    /**
-     * @param type just a label such us: organization, application.
-     *
-     * @return the file name concatenated with the type and the name of the collection
-     */
-    protected String prepareInputFileName( String type, String name, String CollectionName ) {
-        StringBuilder str = new StringBuilder();
-        str.append( name );
-        str.append( "." );
-        if ( CollectionName != null ) {
-            str.append( CollectionName );
-            str.append( "." );
-        }
-        String inputFileName = str.toString();
 
-        return inputFileName;
-    }
 
     @Override
     public ArrayList<File> getEphemeralFile() {

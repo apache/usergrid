@@ -36,10 +36,10 @@ import org.apache.usergrid.management.importUG.S3ImportImpl;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.JobData;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,7 +152,6 @@ public class ImportServiceIT {
         assertThat(importService.getEphemeralFile().size(), is(not(0)));
     }
 
-    // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     @Test
     public void testIntegrationImportApplication() throws Exception {
 
@@ -200,52 +199,53 @@ public class ImportServiceIT {
         assertThat(importService.getEphemeralFile().size(), is(not(0)));
     }
 
-//    @Test
-//    public void testIntegrationImportOrganization() throws Exception {
-//
-//
-//
-//        ExportService exportService = setup.getExportService();
-//        S3Export s3Export = new S3ExportImpl();
-//        HashMap<String, Object> payload = payloadBuilder();
-//
-//
-//
-//        payload.put( "organizationId",  organization.getUuid());
-//
-//        // export the collection
-//        UUID exportUUID = exportService.schedule( payload );
-//
-//        //create and initialize jobData returned in JobExecution.
-//        JobData jobData = jobExportDataCreator(payload, exportUUID, s3Export);
-//
-//        JobExecution jobExecution = mock( JobExecution.class );
-//        when( jobExecution.getJobData() ).thenReturn( jobData );
-//
-//        exportService.doExport( jobExecution );
-//        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
-//            ;
-//        }
-//        //TODo: can check if file got created
-//
-//        // import
-//        S3Import s3Import = new S3ImportImpl();
-//        ImportService importService = setup.getImportService();
-//
-//        UUID importUUID = importService.schedule( payload );
-//
-//        //create and initialize jobData returned in JobExecution.
-//        jobData = jobImportDataCreator( payload,importUUID, s3Import );
-//
-//        jobExecution = mock( JobExecution.class );
-//        when( jobExecution.getJobData() ).thenReturn( jobData );
-//
-//        importService.doImport(jobExecution);
-//        while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
-//            ;
-//        }
-//        assertThat(importService.getEphemeralFile().size(), is(not(0)));
-//    }
+
+    @Test
+    public void testIntegrationImportOrganization() throws Exception {
+
+
+
+        ExportService exportService = setup.getExportService();
+        S3Export s3Export = new S3ExportImpl();
+        HashMap<String, Object> payload = payloadBuilder();
+
+
+
+        payload.put( "organizationId",  organization.getUuid());
+
+        // export the collection
+        UUID exportUUID = exportService.schedule( payload );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = jobExportDataCreator(payload, exportUUID, s3Export);
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        exportService.doExport( jobExecution );
+        while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
+            ;
+        }
+        //TODo: can check if file got created
+
+        // import
+        S3Import s3Import = new S3ImportImpl();
+        ImportService importService = setup.getImportService();
+
+        UUID importUUID = importService.schedule( payload );
+
+        //create and initialize jobData returned in JobExecution.
+        jobData = jobImportDataCreator( payload,importUUID, s3Import );
+
+        jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        importService.doImport(jobExecution);
+        while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
+            ;
+        }
+        assertThat(importService.getEphemeralFile().size(), is(not(0)));
+    }
 
     /*Creates fake payload for testing purposes.*/
     public HashMap<String, Object> payloadBuilder() {
