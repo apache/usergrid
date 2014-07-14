@@ -168,7 +168,6 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
         for ( Message job : jobs.getMessages() ) {
 
             Object jo = job.getStringProperty( JOB_ID );
-            LOG.info("jo type " + jo.getClass().getCanonicalName() );
 
             UUID jobUuid = UUID.fromString( job.getStringProperty( JOB_ID ) );
             UUID statsUuid = UUID.fromString( job.getStringProperty( STATS_ID ) );
