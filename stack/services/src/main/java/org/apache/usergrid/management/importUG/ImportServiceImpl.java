@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -262,9 +263,8 @@ public class ImportServiceImpl implements ImportService {
     }
 
     /**
-     * Exports a specific collection from an org-app combo.
+     * Imports a specific collection from an org-app combo.
      */
-    //might be confusing, but uses the /s/ inclusion or exclusion nomenclature.
     private void importCollectionFromOrgApp( UUID applicationUUID, final Map<String, Object> config,
                                              final JobExecution jobExecution, S3Import s3Import ) throws Exception {
 
@@ -277,8 +277,7 @@ public class ImportServiceImpl implements ImportService {
         files = fileTransfer( importUG, appFileName, config, s3Import, 0 );
         //method to read file by file, set up a json parser for each of them
 
-        jsonFilesParser(applicationUUID);
-
+        FileParser();
 
         //another method to receive the JP token and then checkout the parts of it and call update
         //collectionExportAndQuery( applicationUUID, config, export, jobExecution );
@@ -286,23 +285,24 @@ public class ImportServiceImpl implements ImportService {
 
     }
 
-    private void jsonFilesParser(UUID appId) throws Exception {
+    private void FileParser() throws Exception {
 
         for(File collectionFile : files) {
-            //String organizationName = collectionFile.getPath().split("\\/")[0];
             String applicationName = collectionFile.getPath().split("\\.")[0];
 
             ApplicationInfo application = managementService.getApplicationInfo(applicationName);
 
             JsonParser jp = getJsonParserForFile(collectionFile);
 
-            jp.nextToken();
+            while(jp.getCurrentToken() != JsonToken.START_OBJECT) {
+                jp.nextToken();
+            }
+
             EntityManager em = emf.getEntityManager(application.getId());
 
-            //reomve roles and take care of it later
+            //remove roles and take care of it later
             while (jp.nextToken() != JsonToken.END_OBJECT) {
                 importEntitysStuff(jp, em);
-                //System.out.println("i guess this works");
             }
             jp.close();
         }
@@ -321,12 +321,18 @@ public class ImportServiceImpl implements ImportService {
      * @param jp JsonPrser pointing to the beginning of the object.
      */
     private void importEntitysStuff( JsonParser jp, EntityManager em ) throws Exception {
-        // The entity that owns the collections
-        String entityOwnerId = jp.getCurrentName();
+
+        String jsonFieldName = jp.getCurrentName();
+        String entityOwnerId="";
+
+        if(jsonFieldName.equals("Metadata"))
+        {
+            JsonNode fieldValues = jp.readValueAsTree();
+            entityOwnerId = fieldValues.get("UUID").asText();
+        }
 
         EntityRef ownerEntityRef = em.getRef( UUID.fromString( entityOwnerId ) );
 
-        jp.nextToken(); // start object
 
         // Go inside the value after getting the owner entity id.
         while ( jp.nextToken() != JsonToken.END_OBJECT ) {
@@ -380,7 +386,7 @@ public class ImportServiceImpl implements ImportService {
 
 
     /**
-     * Exports a specific applications from an organization
+     * Imports a specific applications from an organization
      */
     private void importApplicationFromOrg( UUID organizationUUID, UUID applicationId, final Map<String, Object> config,
                                            final JobExecution jobExecution, S3Import s3Import ) throws Exception {
@@ -396,7 +402,7 @@ public class ImportServiceImpl implements ImportService {
     }
 
     /**
-     * Exports All Applications from an Organization
+     * Imports All Applications from an Organization
      */
      private void importApplicationsFromOrg( UUID organizationUUID, final Map<String, Object> config,
                                             final JobExecution jobExecution, S3Import s3Import ) throws Exception {
