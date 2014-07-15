@@ -28,7 +28,6 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -169,6 +168,48 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
+    public Import getImportEntity( final JobExecution jobExecution ) throws Exception {
+
+        UUID importId = ( UUID ) jobExecution.getJobData().getProperty( IMPORT_ID );
+        EntityManager importManager = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+
+        return importManager.get( importId, Import.class );
+    }
+
+    @Override
+    public ArrayList<File> getEphemeralFile() {
+        return files;
+    }
+
+    public SchedulerService getSch() {
+        return sch;
+    }
+
+
+    public void setSch( final SchedulerService sch ) {
+        this.sch = sch;
+    }
+
+
+    public EntityManagerFactory getEmf() {
+        return emf;
+    }
+
+
+    public void setEmf( final EntityManagerFactory emf ) {
+        this.emf = emf;
+    }
+
+
+    public ManagementService getManagementService() {
+
+        return managementService;
+    }
+
+
+    public void setManagementService( final ManagementService managementService ) {
+        this.managementService = managementService;
+    }
 
     @Override
     public void doImport(JobExecution jobExecution) throws Exception {
@@ -275,115 +316,9 @@ public class ImportServiceImpl implements ImportService {
         String appFileName = prepareInputFileName("application", application.getName(),(String) config.get("collectionName"));
 
         files = fileTransfer( importUG, appFileName, config, s3Import, 0 );
-        //method to read file by file, set up a json parser for each of them
 
         FileParser();
-
-        //another method to receive the JP token and then checkout the parts of it and call update
-        //collectionExportAndQuery( applicationUUID, config, export, jobExecution );
-
-
     }
-
-    private void FileParser() throws Exception {
-
-        for(File collectionFile : files) {
-            String applicationName = collectionFile.getPath().split("\\.")[0];
-
-            ApplicationInfo application = managementService.getApplicationInfo(applicationName);
-
-            JsonParser jp = getJsonParserForFile(collectionFile);
-
-            while(jp.getCurrentToken() != JsonToken.START_OBJECT) {
-                jp.nextToken();
-            }
-
-            EntityManager em = emf.getEntityManager(application.getId());
-
-            //remove roles and take care of it later
-            while (jp.nextToken() != JsonToken.END_OBJECT) {
-                importEntitysStuff(jp, em);
-            }
-            jp.close();
-        }
-    }
-
-
-    private JsonParser getJsonParserForFile( File collectionFile ) throws Exception {
-        JsonParser jp = jsonFactory.createJsonParser( collectionFile );
-        jp.setCodec( new ObjectMapper() );
-        return jp;
-    }
-
-    /**
-     * Imports the entity's connecting references (collections and connections)
-     *
-     * @param jp JsonPrser pointing to the beginning of the object.
-     */
-    private void importEntitysStuff( JsonParser jp, EntityManager em ) throws Exception {
-
-        String jsonFieldName = jp.getCurrentName();
-        String entityOwnerId="";
-
-        if(jsonFieldName.equals("Metadata"))
-        {
-            JsonNode fieldValues = jp.readValueAsTree();
-            entityOwnerId = fieldValues.get("UUID").asText();
-        }
-
-        EntityRef ownerEntityRef = em.getRef( UUID.fromString( entityOwnerId ) );
-
-
-        // Go inside the value after getting the owner entity id.
-        while ( jp.nextToken() != JsonToken.END_OBJECT ) {
-            String collectionName = jp.getCurrentName();
-
-            if ( collectionName.equals( "connections" ) ) {
-
-                jp.nextToken(); // START_OBJECT
-                while ( jp.nextToken() != JsonToken.END_OBJECT ) {
-                    String connectionType = jp.getCurrentName();
-
-                    jp.nextToken(); // START_ARRAY
-                    while ( jp.nextToken() != JsonToken.END_ARRAY ) {
-                        String entryId = jp.getText();
-                        EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
-                        // Store in DB
-                        em.createConnection( ownerEntityRef, connectionType, entryRef );
-                    }
-                }
-            }
-            else if ( collectionName.equals( "dictionaries" ) ) {
-
-                jp.nextToken(); // START_OBJECT
-                while ( jp.nextToken() != JsonToken.END_OBJECT ) {
-
-
-                    String dictionaryName = jp.getCurrentName();
-
-                    jp.nextToken();
-
-                    @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs( HashMap.class );
-
-                    em.addMapToDictionary( ownerEntityRef, dictionaryName, dictionary );
-                }
-            }
-
-            else {
-                // Regular collections
-
-                jp.nextToken(); // START_ARRAY
-                while ( jp.nextToken() != JsonToken.END_ARRAY ) {
-                    String entryId = jp.getText();
-                    EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
-
-                    // store it
-                    em.addToCollection( ownerEntityRef, collectionName, entryRef );
-                }
-            }
-        }
-    }
-
 
     /**
      * Imports a specific applications from an organization
@@ -398,13 +333,14 @@ public class ImportServiceImpl implements ImportService {
         String appFileName = prepareInputFileName("application", application.getName(), null);
 
         files = fileTransfer( importUG, appFileName, config, s3Import, 1 );
-        //collectionExportAndQuery( applicationId, config, export, jobExecution );
+
+        FileParser();
     }
 
     /**
      * Imports All Applications from an Organization
      */
-     private void importApplicationsFromOrg( UUID organizationUUID, final Map<String, Object> config,
+    private void importApplicationsFromOrg( UUID organizationUUID, final Map<String, Object> config,
                                             final JobExecution jobExecution, S3Import s3Import ) throws Exception {
 
         // retrieves import entity
@@ -415,8 +351,8 @@ public class ImportServiceImpl implements ImportService {
 
         appFileName = prepareInputFileName( "organization", organizationInfo.getName() , null );
         files = fileTransfer( importUG, appFileName, config, s3Import, 2 );
-        //collectionExportAndQuery( application.getKey(), config, export, jobExecution );
 
+        FileParser();
     }
 
     /**
@@ -445,10 +381,10 @@ public class ImportServiceImpl implements ImportService {
     }
 
     public ArrayList<File> fileTransfer( Import importUG, String appFileName, Map<String, Object> config,
-                              S3Import s3Import , int type) {
+                                         S3Import s3Import , int type) {
         ArrayList<File> files;
         try {
-              files  =  s3Import.copyFromS3(config, appFileName , type);
+            files  =  s3Import.copyFromS3(config, appFileName , type);
         }
         catch ( Exception e ) {
             importUG.setErrorMessage(e.getMessage());
@@ -458,49 +394,108 @@ public class ImportServiceImpl implements ImportService {
         return files;
     }
 
+    private void FileParser() throws Exception {
 
-    public Import getImportEntity( final JobExecution jobExecution ) throws Exception {
+        for(File collectionFile : files) {
+            String applicationName = collectionFile.getPath().split("\\.")[0];
 
-        UUID importId = ( UUID ) jobExecution.getJobData().getProperty( IMPORT_ID );
-        EntityManager importManager = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            ApplicationInfo application = managementService.getApplicationInfo(applicationName);
 
-        return importManager.get( importId, Import.class );
+            JsonParser jp = getJsonParserForFile(collectionFile);
+
+            while(jp.getCurrentToken() != JsonToken.START_OBJECT) {
+                jp.nextToken();
+            }
+
+            EntityManager em = emf.getEntityManager(application.getId());
+
+            //TODO: remove roles and take care of it later when importing applications
+            while (jp.nextToken() != JsonToken.END_ARRAY) {
+                importEntityStuff(jp, em);
+            }
+            jp.close();
+        }
     }
 
 
-
-    @Override
-    public ArrayList<File> getEphemeralFile() {
-        return files;
+    private JsonParser getJsonParserForFile( File collectionFile ) throws Exception {
+        JsonParser jp = jsonFactory.createJsonParser( collectionFile );
+        jp.setCodec( new ObjectMapper() );
+        return jp;
     }
 
-    public SchedulerService getSch() {
-        return sch;
+    /**
+     * Imports the entity's connecting references (collections and connections)
+     *
+     * @param jp JsonPrser pointing to the beginning of the object.
+     */
+    private void importEntityStuff( JsonParser jp, EntityManager em ) throws Exception {
+
+        EntityRef ownerEntryRef=null;
+        // Go inside the value after getting the owner entity id.
+        while ( jp.nextToken() != JsonToken.END_OBJECT ) {
+            String collectionName = jp.getCurrentName();
+
+            if ( collectionName.equals( "connections" ) ) {
+
+                jp.nextToken(); // START_OBJECT
+                while ( jp.nextToken() != JsonToken.END_OBJECT ) {
+                    String connectionType = jp.getCurrentName();
+
+                    jp.nextToken(); // START_ARRAY
+                    while ( jp.nextToken() != JsonToken.END_ARRAY ) {
+                        String entryId = jp.getText();
+                        EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
+                        // Store in DB
+                        //em.createConnection( ownerEntityRef, connectionType, entryRef );
+                    }
+                }
+            }
+            else if ( collectionName.equals( "dictionaries" ) ) {
+
+                jp.nextToken(); // START_OBJECT
+                while ( jp.nextToken() != JsonToken.END_OBJECT ) {
+
+
+                    String dictionaryName = jp.getCurrentName();
+
+                    jp.nextToken();
+
+                    @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs( HashMap.class );
+
+                    //em.addMapToDictionary( ownerEntityRef, dictionaryName, dictionary );
+                }
+            }
+            else {
+                // Regular collections
+                jp.nextToken(); // START_OBJECT
+
+                Map<String,Object> properties = new HashMap<String,Object>();
+                String type="";
+                UUID uuid=null;
+
+                JsonToken token = jp.nextToken();
+
+                while ( token != JsonToken.END_OBJECT ) {
+                    if(token == JsonToken.VALUE_STRING || token == JsonToken.VALUE_NUMBER_INT )
+                    {
+                        String key = jp.getCurrentName();
+                        if(key.equals("uuid")) {
+                            uuid = UUID.fromString(jp.getText());
+                            ownerEntryRef = em.getRef( uuid);
+                        }
+                        else
+                        {
+                            String value = jp.getText();
+                            properties.put(key,value);
+                        }
+                    }
+                    token = jp.nextToken();
+                }
+                em.updateProperties(ownerEntryRef,properties);
+            }
+        }
     }
 
 
-    public void setSch( final SchedulerService sch ) {
-        this.sch = sch;
-    }
-
-
-    public EntityManagerFactory getEmf() {
-        return emf;
-    }
-
-
-    public void setEmf( final EntityManagerFactory emf ) {
-        this.emf = emf;
-    }
-
-
-    public ManagementService getManagementService() {
-
-        return managementService;
-    }
-
-
-    public void setManagementService( final ManagementService managementService ) {
-        this.managementService = managementService;
-    }
 }

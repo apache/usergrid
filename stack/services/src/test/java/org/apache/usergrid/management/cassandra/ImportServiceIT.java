@@ -43,10 +43,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -98,6 +95,7 @@ public class ImportServiceIT {
             userProperties.put( "email", "user" + i + "@test.com" );
             entity[i] = em.create( "users", userProperties );
         }
+
     }
 
 
@@ -105,7 +103,6 @@ public class ImportServiceIT {
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     @Test
     public void testIntegrationImportCollection() throws Exception {
-
 
 
         ExportService exportService = setup.getExportService();
@@ -149,7 +146,9 @@ public class ImportServiceIT {
             ;
         }
 
+        //checks if temp import files are created i.e. downloaded from S3
         assertThat(importService.getEphemeralFile().size(), is(not(0)));
+
     }
 
     @Test
