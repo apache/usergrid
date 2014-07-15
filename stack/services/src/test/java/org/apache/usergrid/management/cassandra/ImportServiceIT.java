@@ -35,6 +35,8 @@ import org.apache.usergrid.management.importUG.S3Import;
 import org.apache.usergrid.management.importUG.S3ImportImpl;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -47,6 +49,7 @@ import java.util.*;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -149,12 +152,20 @@ public class ImportServiceIT {
         //checks if temp import files are created i.e. downloaded from S3
         assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
+        //check if entities are actually updated i.e. created and modified should be different
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
+        EntityRef appRef = em.getApplicationRef();
+        Results collections  = em.getCollection(applicationId,"users",null, Results.Level.ALL_PROPERTIES);
+        List<Entity> entities = collections.getEntities();
+        for(Entity entity: entities) {
+            Long created = entity.getCreated();
+            Long modified = entity.getModified();
+            assertNotEquals(created, modified);
+        }
     }
 
     @Test
     public void testIntegrationImportApplication() throws Exception {
-
-
 
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();

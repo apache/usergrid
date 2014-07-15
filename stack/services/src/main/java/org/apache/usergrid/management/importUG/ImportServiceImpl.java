@@ -471,8 +471,6 @@ public class ImportServiceImpl implements ImportService {
                 jp.nextToken(); // START_OBJECT
 
                 Map<String,Object> properties = new HashMap<String,Object>();
-                String type="";
-                UUID uuid=null;
 
                 JsonToken token = jp.nextToken();
 
@@ -481,8 +479,7 @@ public class ImportServiceImpl implements ImportService {
                     {
                         String key = jp.getCurrentName();
                         if(key.equals("uuid")) {
-                            uuid = UUID.fromString(jp.getText());
-                            ownerEntryRef = em.getRef( uuid);
+                            ownerEntryRef = em.getRef( UUID.fromString(jp.getText()));
                         }
                         else
                         {
@@ -496,6 +493,5 @@ public class ImportServiceImpl implements ImportService {
             }
         }
     }
-
 
 }
