@@ -24,17 +24,18 @@ import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
@@ -274,10 +275,109 @@ public class ImportServiceImpl implements ImportService {
         String appFileName = prepareInputFileName("application", application.getName(),(String) config.get("collectionName"));
 
         files = fileTransfer( importUG, appFileName, config, s3Import, 0 );
+        //method to read file by file, set up a json parser for each of them
+
+        jsonFilesParser(applicationUUID);
+
+
+        //another method to receive the JP token and then checkout the parts of it and call update
         //collectionExportAndQuery( applicationUUID, config, export, jobExecution );
 
 
     }
+
+    private void jsonFilesParser(UUID appId) throws Exception {
+
+        for(File collectionFile : files) {
+            //String organizationName = collectionFile.getPath().split("\\/")[0];
+            String applicationName = collectionFile.getPath().split("\\.")[0];
+
+            ApplicationInfo application = managementService.getApplicationInfo(applicationName);
+
+            JsonParser jp = getJsonParserForFile(collectionFile);
+
+            jp.nextToken();
+            EntityManager em = emf.getEntityManager(application.getId());
+
+            //reomve roles and take care of it later
+            while (jp.nextToken() != JsonToken.END_OBJECT) {
+                importEntitysStuff(jp, em);
+                //System.out.println("i guess this works");
+            }
+            jp.close();
+        }
+    }
+
+
+    private JsonParser getJsonParserForFile( File collectionFile ) throws Exception {
+        JsonParser jp = jsonFactory.createJsonParser( collectionFile );
+        jp.setCodec( new ObjectMapper() );
+        return jp;
+    }
+
+    /**
+     * Imports the entity's connecting references (collections and connections)
+     *
+     * @param jp JsonPrser pointing to the beginning of the object.
+     */
+    private void importEntitysStuff( JsonParser jp, EntityManager em ) throws Exception {
+        // The entity that owns the collections
+        String entityOwnerId = jp.getCurrentName();
+
+        EntityRef ownerEntityRef = em.getRef( UUID.fromString( entityOwnerId ) );
+
+        jp.nextToken(); // start object
+
+        // Go inside the value after getting the owner entity id.
+        while ( jp.nextToken() != JsonToken.END_OBJECT ) {
+            String collectionName = jp.getCurrentName();
+
+            if ( collectionName.equals( "connections" ) ) {
+
+                jp.nextToken(); // START_OBJECT
+                while ( jp.nextToken() != JsonToken.END_OBJECT ) {
+                    String connectionType = jp.getCurrentName();
+
+                    jp.nextToken(); // START_ARRAY
+                    while ( jp.nextToken() != JsonToken.END_ARRAY ) {
+                        String entryId = jp.getText();
+                        EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
+                        // Store in DB
+                        em.createConnection( ownerEntityRef, connectionType, entryRef );
+                    }
+                }
+            }
+            else if ( collectionName.equals( "dictionaries" ) ) {
+
+                jp.nextToken(); // START_OBJECT
+                while ( jp.nextToken() != JsonToken.END_OBJECT ) {
+
+
+                    String dictionaryName = jp.getCurrentName();
+
+                    jp.nextToken();
+
+                    @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs( HashMap.class );
+
+                    em.addMapToDictionary( ownerEntityRef, dictionaryName, dictionary );
+                }
+            }
+
+            else {
+                // Regular collections
+
+                jp.nextToken(); // START_ARRAY
+                while ( jp.nextToken() != JsonToken.END_ARRAY ) {
+                    String entryId = jp.getText();
+                    EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
+
+                    // store it
+                    em.addToCollection( ownerEntityRef, collectionName, entryRef );
+                }
+            }
+        }
+    }
+
 
     /**
      * Exports a specific applications from an organization

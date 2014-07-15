@@ -119,18 +119,26 @@ public class S3ImportImpl implements S3Import {
     void copyFile(String bucketName, String fname, int i) throws IOException {
         Blob blob = blobStore.getBlob(bucketName, fname);
         blobs.add(blob);
-        File ephemeral = new File("temp_file_" + i);
+        String[] fileOrg = fname.split("/");
+        File orgnaizationDirectory = new File(fileOrg[0]);
+
+        if (!orgnaizationDirectory.exists()) {
+            try {
+                orgnaizationDirectory.mkdir();
+            }catch(SecurityException se) {
+
+            }
+
+        }
+        File ephemeral = new File(fname);
 
         FileOutputStream fop = new FileOutputStream(ephemeral);
 
         blobs.get(i).getPayload().writeTo(fop);
-
 
         files.add(ephemeral);
 
         //ephemeral.deleteOnExit();
         fop.close();
     }
-
-
 }
