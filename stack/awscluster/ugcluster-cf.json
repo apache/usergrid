@@ -20,8 +20,8 @@
       "RestMinServers":{
          "Description":"Minimum number of REST servers.",
          "Type":"Number",
-         "Default":"3",
-         "MinValue":"3"
+         "Default":"1",
+         "MinValue":"1"
       },
       "RestMaxServers":{
          "Description":"Maximum number REST servers.",
@@ -79,7 +79,7 @@
          "Description":"Cassandra replication factor",
          "Type":"Number",
          "Default":"3",
-         "MinValue":"3"
+         "MinValue":"1"
       },
       "SuperUserEmail":{
          "Description":"Email for superuser user",
@@ -211,7 +211,7 @@
                   "Fn::Join":[
                      "",
                      [
-                        "#!/bin/bash -ex\n",
+                        "#!/bin/bash -x\n",
                         "sudo git clone https://github.com/hopsoft/docker-graphite-statsd.git \n",
                         "sudo ./docker-graphite-statsd/bin/start \n",
                         "sudo git clone https://github.com/dotcloud/collectd-graphite.git \n",

@@ -17,11 +17,11 @@
  */
 
 
-// 
-// wait_for_instances.groovy 
-// 
+//
+// wait_for_instances.groovy
+//
 // Wait for enough Cassandra servers are up before proceding,
-// Enough means count greater than or equal to replication factor. 
+// Enough means count greater than or equal to replication factor.
 //
 import com.amazonaws.auth.*
 import com.amazonaws.services.simpledb.*
@@ -39,7 +39,7 @@ def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
 
 println "Waiting for Cassandra nodes to register..."
-    
+
 def count = 0
 
 while (true) {
@@ -66,7 +66,6 @@ while (true) {
         println("Found ${count} nodes but need at least ${cassNumServers}.  Waiting...")
     } catch (Exception e) {
         println "ERROR waiting for Casasndra ${e.getMessage()}, will continue waiting"
-        return
     }
     Thread.sleep(2000)
 }
