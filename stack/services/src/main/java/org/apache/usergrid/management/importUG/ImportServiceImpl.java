@@ -22,6 +22,7 @@ import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
@@ -431,7 +432,7 @@ public class ImportServiceImpl implements ImportService {
      */
     private void importEntityStuff( JsonParser jp, EntityManager em ) throws Exception {
 
-        EntityRef ownerEntryRef=null;
+        EntityRef ownerEntityRef=null;
         // Go inside the value after getting the owner entity id.
         while ( jp.nextToken() != JsonToken.END_OBJECT ) {
             String collectionName = jp.getCurrentName();
@@ -447,7 +448,8 @@ public class ImportServiceImpl implements ImportService {
                         String entryId = jp.getText();
                         EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
                         // Store in DB
-                        //em.createConnection( ownerEntityRef, connectionType, entryRef );
+                        ConnectionRef ref = em.createConnection(ownerEntityRef, connectionType, entryRef);
+                        System.out.println();
                     }
                 }
             }
@@ -479,7 +481,7 @@ public class ImportServiceImpl implements ImportService {
                     {
                         String key = jp.getCurrentName();
                         if(key.equals("uuid")) {
-                            ownerEntryRef = em.getRef( UUID.fromString(jp.getText()));
+                            ownerEntityRef = em.getRef( UUID.fromString(jp.getText()));
                         }
                         else
                         {
@@ -489,7 +491,7 @@ public class ImportServiceImpl implements ImportService {
                     }
                     token = jp.nextToken();
                 }
-                em.updateProperties(ownerEntryRef,properties);
+                em.updateProperties(ownerEntityRef,properties);
             }
         }
     }

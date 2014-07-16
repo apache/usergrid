@@ -33,10 +33,7 @@ import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.management.importUG.ImportService;
 import org.apache.usergrid.management.importUG.S3Import;
 import org.apache.usergrid.management.importUG.S3ImportImpl;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -99,8 +96,14 @@ public class ImportServiceIT {
             entity[i] = em.create( "users", userProperties );
         }
 
+        createTestConnections(em,entity);
     }
 
+    static void createTestConnections(EntityManager em, Entity[] entity) throws Exception {
+        //creates connections
+        ConnectionRef ref = em.createConnection(em.getRef(entity[0].getUuid()), "related", em.getRef(entity[1].getUuid()));
+        em.createConnection( em.getRef( entity[1].getUuid() ), "related", em.getRef( entity[0].getUuid() ) );
+    }
 
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
@@ -162,6 +165,11 @@ public class ImportServiceIT {
             Long modified = entity.getModified();
             assertNotEquals(created, modified);
         }
+
+        // check if connections are created
+        assertThat(entities.get(0).getConnections("related").size(), is(not(0)));
+        assertThat(entities.get(1).getConnections("related").size(), is(not(0)));
+
     }
 
     @Test
@@ -214,12 +222,9 @@ public class ImportServiceIT {
     public void testIntegrationImportOrganization() throws Exception {
 
 
-
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
         HashMap<String, Object> payload = payloadBuilder();
-
-
 
         payload.put( "organizationId",  organization.getUuid());
 
