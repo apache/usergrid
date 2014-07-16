@@ -244,6 +244,8 @@ public class ImportServiceIT {
     public void testIntegrationImportApplication() throws Exception {
 
         createEntities();
+        createTestConnections();
+        createTestPermissions();
 
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
@@ -253,7 +255,7 @@ public class ImportServiceIT {
         payload.put( "organizationId",  organization.getUuid());
         payload.put( "applicationId", applicationId );
 
-        // export the application
+        // export the collection
         UUID exportUUID = exportService.schedule( payload );
 
         //create and initialize jobData returned in JobExecution.
@@ -285,6 +287,59 @@ public class ImportServiceIT {
             ;
         }
         assertThat(importService.getEphemeralFile().size(), is(not(0)));
+
+
+        Set<String> collections = em.getApplicationCollections();
+        Iterator<String> collectionsItr = collections.iterator();
+        while(collectionsItr.hasNext())
+        {
+
+            String collectionName = collectionsItr.next();
+            Results collection  = em.getCollection(applicationId,collectionName,null, Results.Level.ALL_PROPERTIES);
+            List<Entity> entities = collection.getEntities();
+            for(Entity entity: entities) {
+                Long created = entity.getCreated();
+                Long modified = entity.getModified();
+                assertThat(created, not(equalTo(modified)));
+
+                //check for dictionaries --> checking permissions in the dictionaries
+                EntityRef er;
+                Map<Object,Object> dictionaries;
+
+                if(collectionName.equals("roles")) {
+                    if(entity.getName().equalsIgnoreCase("admin"))
+                    {
+                        er = em.getRef(entity.getUuid());
+                        dictionaries = em.getDictionaryAsMap(er, "permissions");
+                        assertThat(dictionaries.size(), is(0));
+                    }
+                    else{
+                        er = em.getRef(entity.getUuid());
+                        dictionaries = em.getDictionaryAsMap(er, "permissions");
+                        assertThat(dictionaries.size(), is(not(0)));
+
+                    }
+
+                }
+
+            }
+            if(collectionName.equals("users")) {
+                //check if connections are made
+                Results r;
+                List<ConnectionRef> connections;
+
+                r = em.getConnectedEntities(entities.get(0).getUuid(), "related", null, Results.Level.IDS );
+                connections = r.getConnections();
+                assertNotNull( connections );
+
+                r = em.getConnectedEntities(entities.get(1).getUuid(), "related", null, Results.Level.IDS );
+                connections = r.getConnections();
+                assertNotNull( connections );
+            }
+
+
+
+        }
     }
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
