@@ -65,6 +65,8 @@ public class ImportServiceIT {
     private static UserInfo adminUser;
     private static OrganizationInfo organization;
     private static UUID applicationId;
+    private static EntityManager em;
+    private static Entity[] entity;
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -79,13 +81,15 @@ public class ImportServiceIT {
         adminUser = setup.getMgmtSvc().createAdminUser( "intern", "intern test", "intern@test.com", "test", false, false );
         organization = setup.getMgmtSvc().createOrganization( "test-organization", adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app" ).getId();
+    }
 
+    static void createEntites() throws Exception {
         // add collection with 5 entities
-        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        em = setup.getEmf().getEntityManager( applicationId );
 
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
-        Entity[] entity;
+
         entity = new Entity[5];
         //creates entities
         for ( int i = 0; i < 5; i++ ) {
@@ -94,26 +98,33 @@ public class ImportServiceIT {
             userProperties.put( "email", "user" + i + "@test.com" );
             entity[i] = em.create( "users", userProperties );
         }
-
-        createTestConnections(em,entity);
     }
 
-    static void createTestConnections(EntityManager em, Entity[] entity) throws Exception {
+    static void createTestConnections() throws Exception {
         //creates connections
-        ConnectionRef ref = em.createConnection(em.getRef(entity[0].getUuid()), "related", em.getRef(entity[1].getUuid()));
-        em.createConnection( em.getRef( entity[1].getUuid() ), "related", em.getRef( entity[0].getUuid() ) );
+        em.createConnection( em.getRef(entity[0].getUuid()), "related", em.getRef(entity[1].getUuid()));
+        em.createConnection( em.getRef(entity[1].getUuid()), "related", em.getRef( entity[0].getUuid()));
     }
 
+    static void createTestPermissions() throws Exception {
+        for ( int i = 0; i < 5; i++ ) {
+           em.grantUserPermission(entity[i].getUuid(), "get,post,put,delete:/**");
+        }
+    }
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     @Test
     public void testIntegrationImportCollection() throws Exception {
 
+        //create entities
+        createEntites();
+
+        // creates connections between entity 0 and entity 1
+        createTestConnections();
 
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
         HashMap<String, Object> payload = payloadBuilder();
-
 
         payload.put( "organizationId",  organization.getUuid());
         payload.put( "applicationId", applicationId );
@@ -156,7 +167,6 @@ public class ImportServiceIT {
 
         //check if entities are actually updated i.e. created and modified should be different
         EntityManager em = setup.getEmf().getEntityManager(applicationId);
-        EntityRef appRef = em.getApplicationRef();
         Results collections  = em.getCollection(applicationId,"users",null, Results.Level.ALL_PROPERTIES);
         List<Entity> entities = collections.getEntities();
         for(Entity entity: entities) {
@@ -165,52 +175,44 @@ public class ImportServiceIT {
             assertNotEquals(created, modified);
         }
 
-        // check if connections are created
+        // check if connections are created for only the 1st 2 entities in user collection
         Results r;
         List<ConnectionRef> connections;
 
-        r = em.getConnectedEntities(entities.get(0).getUuid(), "related", null, Results.Level.IDS );
-        connections = r.getConnections();
-        assertNotNull( connections );
-
-        r = em.getConnectedEntities(entities.get(1).getUuid(), "related", null, Results.Level.IDS );
-        connections = r.getConnections();
-        assertNotNull( connections );
+        for(int i=0;i<2;i++) {
+            r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
+            connections = r.getConnections();
+            assertNotNull(connections);
+        }
 
         //check if dictionary is created
         EntityRef er;
-        Map<Object,Object> dictionaries;
+        Map<Object,Object> dictionaries1,dictionaries2;
 
-        //check for entity 0
-        er = em.getRef(entities.get(0).getUuid());
-        dictionaries = em.getDictionaryAsMap(er,"connected_types");
-        assertThat(dictionaries.size(),is(not(0)));
+        for(int i=0;i<3;i++) {
 
-        dictionaries = em.getDictionaryAsMap(er,"connecting_types");
-        assertThat(dictionaries.size(),is(not(0)));
+            er = em.getRef(entities.get(i).getUuid());
+            dictionaries1 = em.getDictionaryAsMap(er,"connected_types");
+            dictionaries2 = em.getDictionaryAsMap(er,"connecting_types");
 
-        //check for entity 1
-        er = em.getRef(entities.get(1).getUuid());
-        dictionaries = em.getDictionaryAsMap(er,"connected_types");
-        assertThat(dictionaries.size(),is(not(0)));
+            if(i==2) {
+                //for entity 2, these should be empty
+                assertThat(dictionaries1.size(),is(0));
+                assertThat(dictionaries2.size(),is(0));
+            }
+            else {
+                assertThat(dictionaries1.size(), is(not(0)));
+                assertThat(dictionaries2.size(), is(not(0)));
+            }
 
-        dictionaries = em.getDictionaryAsMap(er,"connecting_types");
-        assertThat(dictionaries.size(),is(not(0)));
-
-        //for entity 2, these should be empty
-        er = em.getRef(entities.get(2).getUuid());
-        dictionaries = em.getDictionaryAsMap(er,"connected_types");
-        assertThat(dictionaries.size(),is(0));
-
-        dictionaries = em.getDictionaryAsMap(er,"connecting_types");
-        assertThat(dictionaries.size(),is(0));
-
+        }
 
     }
 
     @Test
     public void testIntegrationImportApplication() throws Exception {
 
+        createEntites();
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
         HashMap<String, Object> payload = payloadBuilder();
@@ -257,6 +259,9 @@ public class ImportServiceIT {
     @Test
     public void testIntegrationImportOrganization() throws Exception {
 
+        createEntites();
+        createTestConnections();
+        createTestPermissions();
 
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
@@ -296,6 +301,47 @@ public class ImportServiceIT {
             ;
         }
         assertThat(importService.getEphemeralFile().size(), is(not(0)));
+
+        //check if all collections-entities are updated - created and modified should be different
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
+        Set<String> collections = em.getApplicationCollections();
+        Iterator<String> itr = collections.iterator();
+        while(itr.hasNext())
+        {
+            String collectionName = itr.next();
+            Results collection  = em.getCollection(applicationId,collectionName,null, Results.Level.ALL_PROPERTIES);
+            List<Entity> entities = collection.getEntities();
+            for(Entity entity: entities) {
+                Long created = entity.getCreated();
+                Long modified = entity.getModified();
+                assertNotEquals(created, modified);
+
+                //check for dictionaries --> checking permissions in the dictionaries
+                EntityRef er;
+                Map<Object,Object> dictionaries;
+
+                //check for entity 0
+                if(collectionName.equals("users")) {
+                    er = em.getRef(entity.getUuid());
+                    dictionaries = em.getDictionaryAsMap(er, "permissions");
+                    assertThat(dictionaries.size(), is(not(0)));
+                }
+            }
+
+            if(collectionName.equals("users")) {
+                //check if connections are made
+                Results r;
+                List<ConnectionRef> connections;
+
+                r = em.getConnectedEntities(entities.get(0).getUuid(), "related", null, Results.Level.IDS );
+                connections = r.getConnections();
+                assertNotNull( connections );
+
+                r = em.getConnectedEntities(entities.get(1).getUuid(), "related", null, Results.Level.IDS );
+                connections = r.getConnections();
+                assertNotNull( connections );
+            }
+        }
     }
 
     /*Creates fake payload for testing purposes.*/
