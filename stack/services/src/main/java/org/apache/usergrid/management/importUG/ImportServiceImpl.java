@@ -22,7 +22,6 @@ import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.EntityRef;
@@ -446,10 +445,10 @@ public class ImportServiceImpl implements ImportService {
                     jp.nextToken(); // START_ARRAY
                     while ( jp.nextToken() != JsonToken.END_ARRAY ) {
                         String entryId = jp.getText();
+                        
                         EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
                         // Store in DB
-                        ConnectionRef ref = em.createConnection(ownerEntityRef, connectionType, entryRef);
-                        System.out.println();
+                        em.createConnection(ownerEntityRef, connectionType, entryRef);
                     }
                 }
             }
@@ -458,14 +457,13 @@ public class ImportServiceImpl implements ImportService {
                 jp.nextToken(); // START_OBJECT
                 while ( jp.nextToken() != JsonToken.END_OBJECT ) {
 
-
                     String dictionaryName = jp.getCurrentName();
 
                     jp.nextToken();
 
                     @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs( HashMap.class );
 
-                    //em.addMapToDictionary( ownerEntityRef, dictionaryName, dictionary );
+                    em.addMapToDictionary( ownerEntityRef, dictionaryName, dictionary );
                 }
             }
             else {

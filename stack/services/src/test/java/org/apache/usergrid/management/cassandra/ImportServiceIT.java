@@ -46,8 +46,7 @@ import java.util.*;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -167,8 +166,45 @@ public class ImportServiceIT {
         }
 
         // check if connections are created
-        assertThat(entities.get(0).getConnections("related").size(), is(not(0)));
-        assertThat(entities.get(1).getConnections("related").size(), is(not(0)));
+        Results r;
+        List<ConnectionRef> connections;
+
+        r = em.getConnectedEntities(entities.get(0).getUuid(), "related", null, Results.Level.IDS );
+        connections = r.getConnections();
+        assertNotNull( connections );
+
+        r = em.getConnectedEntities(entities.get(1).getUuid(), "related", null, Results.Level.IDS );
+        connections = r.getConnections();
+        assertNotNull( connections );
+
+        //check if dictionary is created
+        EntityRef er;
+        Map<Object,Object> dictionaries;
+
+        //check for entity 0
+        er = em.getRef(entities.get(0).getUuid());
+        dictionaries = em.getDictionaryAsMap(er,"connected_types");
+        assertThat(dictionaries.size(),is(not(0)));
+
+        dictionaries = em.getDictionaryAsMap(er,"connecting_types");
+        assertThat(dictionaries.size(),is(not(0)));
+
+        //check for entity 1
+        er = em.getRef(entities.get(1).getUuid());
+        dictionaries = em.getDictionaryAsMap(er,"connected_types");
+        assertThat(dictionaries.size(),is(not(0)));
+
+        dictionaries = em.getDictionaryAsMap(er,"connecting_types");
+        assertThat(dictionaries.size(),is(not(0)));
+
+        //for entity 2, these should be empty
+        er = em.getRef(entities.get(2).getUuid());
+        dictionaries = em.getDictionaryAsMap(er,"connected_types");
+        assertThat(dictionaries.size(),is(0));
+
+        dictionaries = em.getDictionaryAsMap(er,"connecting_types");
+        assertThat(dictionaries.size(),is(0));
+
 
     }
 
