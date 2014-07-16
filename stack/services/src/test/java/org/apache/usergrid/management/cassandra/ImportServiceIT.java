@@ -17,6 +17,7 @@
 
 package org.apache.usergrid.management.cassandra;
 
+import com.google.common.collect.BiMap;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.ServiceITSuite;
@@ -24,7 +25,6 @@ import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.export.ExportService;
@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -59,7 +60,6 @@ public class ImportServiceIT {
     private static final Logger LOG = LoggerFactory.getLogger(ExportServiceIT.class);
 
     private static CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
-    private static ManagementService managementService;
 
     // app-level data generated only once
     private static UserInfo adminUser;
@@ -77,13 +77,16 @@ public class ImportServiceIT {
 
     @BeforeClass
     public static void setup() throws Exception {
+        //creates sample test application
         LOG.info( "in setup" );
-        adminUser = setup.getMgmtSvc().createAdminUser( "intern", "intern test", "intern@test.com", "test", false, false );
+        adminUser = setup.getMgmtSvc().createAdminUser( "test", "test user", "test@test.com", "test", false, false );
         organization = setup.getMgmtSvc().createOrganization( "test-organization", adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app" ).getId();
     }
 
-    static void createEntites() throws Exception {
+    //creates 5 entities in user collection
+    void createEntities() throws Exception {
+        
         // add collection with 5 entities
         em = setup.getEmf().getEntityManager( applicationId );
 
@@ -100,16 +103,42 @@ public class ImportServiceIT {
         }
     }
 
-    static void createTestConnections() throws Exception {
+    //creates test connections between first 2 users
+    void createTestConnections() throws Exception {
         //creates connections
         em.createConnection( em.getRef(entity[0].getUuid()), "related", em.getRef(entity[1].getUuid()));
         em.createConnection( em.getRef(entity[1].getUuid()), "related", em.getRef( entity[0].getUuid()));
     }
 
-    static void createTestPermissions() throws Exception {
+    //grant permissions to each user
+    void createTestPermissions() throws Exception {
         for ( int i = 0; i < 5; i++ ) {
+           //grants user permission
            em.grantUserPermission(entity[i].getUuid(), "get,post,put,delete:/**");
         }
+    }
+
+    //creates 2nd application for testing import from an organization having multiple applications
+    void createAndSetup2ndApplication() throws Exception {
+
+        UUID appId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app-2" ).getId();
+        EntityManager emTest = setup.getEmf().getEntityManager(appId);
+
+        Map<String, Object> userProperties = null;
+
+        Entity entityTest[] = new Entity[5];
+        //creates entities and set permissions
+        for ( int i = 0; i < 5; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "user" + i );
+            userProperties.put( "email", "user" + i + "@test.com" );
+            entityTest[i] = emTest.create( "users", userProperties );
+            emTest.grantUserPermission(entityTest[i].getUuid(),"get,post,put,delete:/**");
+        }
+
+        //create connection
+        emTest.createConnection( emTest.getRef(entityTest[0].getUuid()), "related", emTest.getRef(entityTest[1].getUuid()));
+        emTest.createConnection( emTest.getRef(entityTest[1].getUuid()), "related", emTest.getRef( entityTest[0].getUuid()));
     }
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
@@ -117,11 +146,12 @@ public class ImportServiceIT {
     public void testIntegrationImportCollection() throws Exception {
 
         //create entities
-        createEntites();
+        createEntities();
 
         // creates connections between entity 0 and entity 1
         createTestConnections();
 
+        //Export the collection which needs to be tested for import
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
         HashMap<String, Object> payload = payloadBuilder();
@@ -172,7 +202,7 @@ public class ImportServiceIT {
         for(Entity entity: entities) {
             Long created = entity.getCreated();
             Long modified = entity.getModified();
-            assertNotEquals(created, modified);
+            assertThat(created, not(equalTo(modified)));
         }
 
         // check if connections are created for only the 1st 2 entities in user collection
@@ -209,10 +239,12 @@ public class ImportServiceIT {
 
     }
 
+    // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     @Test
     public void testIntegrationImportApplication() throws Exception {
 
-        createEntites();
+        createEntities();
+
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
         HashMap<String, Object> payload = payloadBuilder();
@@ -221,7 +253,7 @@ public class ImportServiceIT {
         payload.put( "organizationId",  organization.getUuid());
         payload.put( "applicationId", applicationId );
 
-        // export the collection
+        // export the application
         UUID exportUUID = exportService.schedule( payload );
 
         //create and initialize jobData returned in JobExecution.
@@ -255,13 +287,14 @@ public class ImportServiceIT {
         assertThat(importService.getEphemeralFile().size(), is(not(0)));
     }
 
-
+    // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     @Test
     public void testIntegrationImportOrganization() throws Exception {
 
-        createEntites();
+        createEntities();
         createTestConnections();
         createTestPermissions();
+        createAndSetup2ndApplication();
 
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
@@ -269,7 +302,7 @@ public class ImportServiceIT {
 
         payload.put( "organizationId",  organization.getUuid());
 
-        // export the collection
+        // export the organization
         UUID exportUUID = exportService.schedule( payload );
 
         //create and initialize jobData returned in JobExecution.
@@ -302,44 +335,45 @@ public class ImportServiceIT {
         }
         assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
-        //check if all collections-entities are updated - created and modified should be different
-        EntityManager em = setup.getEmf().getEntityManager(applicationId);
-        Set<String> collections = em.getApplicationCollections();
-        Iterator<String> itr = collections.iterator();
-        while(itr.hasNext())
+        BiMap<UUID,String> applications = setup.getMgmtSvc().getApplicationsForOrganization(organization.getUuid());
+        for (BiMap.Entry<UUID, String> app : applications.entrySet())
         {
-            String collectionName = itr.next();
-            Results collection  = em.getCollection(applicationId,collectionName,null, Results.Level.ALL_PROPERTIES);
-            List<Entity> entities = collection.getEntities();
-            for(Entity entity: entities) {
-                Long created = entity.getCreated();
-                Long modified = entity.getModified();
-                assertNotEquals(created, modified);
+            //check if all collections-entities are updated - created and modified should be different
+            UUID appID = app.getKey();
+            EntityManager em = setup.getEmf().getEntityManager(appID);
+            Set<String> collections = em.getApplicationCollections();
+            Iterator<String> itr = collections.iterator();
+            while(itr.hasNext())
+            {
+                String collectionName = itr.next();
+                Results collection  = em.getCollection(appID,collectionName,null, Results.Level.ALL_PROPERTIES);
+                List<Entity> entities = collection.getEntities();
+                for(Entity entity: entities) {
+                    Long created = entity.getCreated();
+                    Long modified = entity.getModified();
+                    assertThat(created, not(equalTo(modified)));
 
-                //check for dictionaries --> checking permissions in the dictionaries
-                EntityRef er;
-                Map<Object,Object> dictionaries;
+                    //check for dictionaries --> checking permissions in the dictionaries
+                    EntityRef er;
+                    Map<Object,Object> dictionaries;
 
-                //check for entity 0
-                if(collectionName.equals("users")) {
-                    er = em.getRef(entity.getUuid());
-                    dictionaries = em.getDictionaryAsMap(er, "permissions");
-                    assertThat(dictionaries.size(), is(not(0)));
+                    if(collectionName.equals("users")) {
+                        er = em.getRef(entity.getUuid());
+                        dictionaries = em.getDictionaryAsMap(er, "permissions");
+                        assertThat(dictionaries.size(), is(not(0)));
+                    }
                 }
-            }
 
-            if(collectionName.equals("users")) {
-                //check if connections are made
-                Results r;
-                List<ConnectionRef> connections;
-
-                r = em.getConnectedEntities(entities.get(0).getUuid(), "related", null, Results.Level.IDS );
-                connections = r.getConnections();
-                assertNotNull( connections );
-
-                r = em.getConnectedEntities(entities.get(1).getUuid(), "related", null, Results.Level.IDS );
-                connections = r.getConnections();
-                assertNotNull( connections );
+                if(collectionName.equals("users")) {
+                    // check if connections are created for only the 1st 2 entities in user collection
+                    Results r;
+                    List<ConnectionRef> connections;
+                    for(int i=0;i<2;i++) {
+                        r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
+                        connections = r.getConnections();
+                        assertNotNull(connections);
+                    }
+                }
             }
         }
     }
