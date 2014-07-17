@@ -17,13 +17,14 @@
 package org.apache.usergrid.management.export;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
+import com.google.common.collect.BiMap;
+import org.apache.usergrid.batch.JobExecution;
+import org.apache.usergrid.batch.service.SchedulerService;
+import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.Export;
+import org.apache.usergrid.persistence.entities.JobData;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -32,21 +33,12 @@ import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.batch.JobExecution;
-import org.apache.usergrid.batch.service.SchedulerService;
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.PagingResultsIterator;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.entities.Export;
-import org.apache.usergrid.persistence.entities.JobData;
-
-import com.google.common.collect.BiMap;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
@@ -425,6 +417,12 @@ public class ExportServiceImpl implements ExportService {
     private void saveCollectionMembers( JsonGenerator jg, EntityManager em, String collection, Entity entity )
             throws Exception {
 
+        // Write connections
+        saveConnections( entity, em, jg );
+
+        // Write dictionaries
+        saveDictionaries( entity, em, jg );
+
         Set<String> collections = em.getCollections( entity );
 
         // If your application doesn't have any e
@@ -454,12 +452,6 @@ public class ExportServiceImpl implements ExportService {
                 jg.writeEndArray();
             }
         }
-
-        // Write connections
-        saveConnections( entity, em, jg );
-
-        // Write dictionaries
-        saveDictionaries( entity, em, jg );
     }
 
 

@@ -120,11 +120,11 @@ public class S3ImportImpl implements S3Import {
         Blob blob = blobStore.getBlob(bucketName, fname);
         blobs.add(blob);
         String[] fileOrg = fname.split("/");
-        File orgnaizationDirectory = new File(fileOrg[0]);
+        File organizationDirectory = new File(fileOrg[0]);
 
-        if (!orgnaizationDirectory.exists()) {
+        if (!organizationDirectory.exists()) {
             try {
-                orgnaizationDirectory.mkdir();
+                organizationDirectory.mkdir();
             }catch(SecurityException se) {
 
             }
@@ -139,6 +139,7 @@ public class S3ImportImpl implements S3Import {
         files.add(ephemeral);
 
         ephemeral.deleteOnExit();
+        organizationDirectory.deleteOnExit();
         fop.close();
     }
 }
