@@ -62,6 +62,8 @@ public class ApplicationResource extends AbstractContextResource {
 
     @Autowired
     protected ExportService exportService;
+
+    @Autowired
     protected ImportService importService;
 
     OrganizationInfo organization;
@@ -206,7 +208,6 @@ public class ApplicationResource extends AbstractContextResource {
             throws OAuthSystemException {
 
 
-        OAuthResponse response = null;
         UUID jobUUID = null;
         Map<String, String> uuidRet = new HashMap<String, String>();
 
@@ -242,9 +243,7 @@ public class ApplicationResource extends AbstractContextResource {
             }
 
             json.put("organizationId", organization.getUuid());
-            //objEx.setOrganizationId( organization.getUuid() );
             json.put( "applicationId",applicationId);
-            //objEx.setApplicationId( applicationId );
 
             jobUUID = exportService.schedule( json );
             uuidRet.put( "Export Entity", jobUUID.toString() );
@@ -271,8 +270,6 @@ public class ApplicationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
-
-        OAuthResponse response = null;
         UUID jobUUID = null;
         String colExport = collection_name;
         Map<String, String> uuidRet = new HashMap<String, String>();
@@ -340,8 +337,6 @@ public class ApplicationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
-
-        OAuthResponse response = null;
         UUID jobUUID = null;
         Map<String, String> uuidRet = new HashMap<String, String>();
 
@@ -377,9 +372,7 @@ public class ApplicationResource extends AbstractContextResource {
             }
 
             json.put( "organizationId",organization.getUuid());
-            //objEx.setOrganizationId( organization.getUuid() );
             json.put( "applicationId",applicationId);
-            //objEx.setApplicationId( applicationId );
 
             jobUUID = importService.schedule( json );
             uuidRet.put( "Import Entity", jobUUID.toString() );
@@ -406,7 +399,6 @@ public class ApplicationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
-        OAuthResponse response = null;
         UUID jobUUID = null;
         String colImport = collection_name;
         Map<String, String> uuidRet = new HashMap<String, String>();

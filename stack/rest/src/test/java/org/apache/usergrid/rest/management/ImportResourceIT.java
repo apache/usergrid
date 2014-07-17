@@ -38,6 +38,7 @@ public class ImportResourceIT extends AbstractRestIT {
     public ImportResourceIT() throws Exception {
 
     }
+
     @Test
     public void importCallSuccessful() throws Exception {
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
@@ -117,6 +118,21 @@ public class ImportResourceIT extends AbstractRestIT {
 
         assertEquals( ClientResponse.Status.ACCEPTED, responseStatus );
         assertNotNull( node.get( "Import Entity" ) );
+
+        String uuid = String.valueOf( node.get( "Import Entity" ) );
+        uuid = uuid.replaceAll( "\"", "" );
+
+        try {
+            node = resource().path( "/management/orgs/test-organization/import/" + uuid )
+                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertEquals( ClientResponse.Status.ACCEPTED, responseStatus );
+        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
 
     }
 

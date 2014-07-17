@@ -68,4 +68,9 @@ public class ImportJob extends OnlyOnceJob {
     protected long getDelay(JobExecution execution) throws Exception {
         return 100;
     }
+
+    @Autowired
+    public void setImportService( final ImportService importService ) {
+        this.importService = importService;
+    }
 }
