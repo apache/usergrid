@@ -82,10 +82,19 @@ public class ImportServiceIT {
         adminUser = setup.getMgmtSvc().createAdminUser( "test", "test user", "test@test.com", "test", false, false );
         organization = setup.getMgmtSvc().createOrganization( "test-organization", adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app" ).getId();
+
+        //creates entities
+        createEntities();
+
+        // creates connections between entity 0 and entity 1
+        createTestConnections();
+
+        // grant permissions to all users
+        createTestPermissions();
     }
 
     //creates 5 entities in user collection
-    void createEntities() throws Exception {
+    static void createEntities() throws Exception {
         
         // add collection with 5 entities
         em = setup.getEmf().getEntityManager( applicationId );
@@ -104,14 +113,14 @@ public class ImportServiceIT {
     }
 
     //creates test connections between first 2 users
-    void createTestConnections() throws Exception {
+    static void createTestConnections() throws Exception {
         //creates connections
         em.createConnection( em.getRef(entity[0].getUuid()), "related", em.getRef(entity[1].getUuid()));
         em.createConnection( em.getRef(entity[1].getUuid()), "related", em.getRef( entity[0].getUuid()));
     }
 
     //grant permissions to each user
-    void createTestPermissions() throws Exception {
+    static void createTestPermissions() throws Exception {
         for ( int i = 0; i < 5; i++ ) {
            //grants user permission
            em.grantUserPermission(entity[i].getUuid(), "get,post,put,delete:/**");
@@ -142,14 +151,9 @@ public class ImportServiceIT {
     }
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    // test case to check if a collection file is imported correctly
     @Test
     public void testIntegrationImportCollection() throws Exception {
-
-        //create entities
-        createEntities();
-
-        // creates connections between entity 0 and entity 1
-        createTestConnections();
 
         //Export the collection which needs to be tested for import
         ExportService exportService = setup.getExportService();
@@ -160,7 +164,7 @@ public class ImportServiceIT {
         payload.put( "applicationId", applicationId );
         payload.put("collectionName", "users");
 
-        // export the collection
+        // schdeule the export job
         UUID exportUUID = exportService.schedule( payload );
 
         //create and initialize jobData returned in JobExecution.
@@ -169,16 +173,18 @@ public class ImportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+        //export the collection and wait till export finishes
         exportService.doExport( jobExecution );
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
             ;
         }
-        //TODo: can check if file got created
+        //TODo: can check if temp file got created
 
         // import
         S3Import s3Import = new S3ImportImpl();
         ImportService importService = setup.getImportService();
 
+        //schedule the import job
         UUID importUUID = importService.schedule( payload );
 
         //create and initialize jobData returned in JobExecution.
@@ -187,6 +193,7 @@ public class ImportServiceIT {
         jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+        //import the collection and wait till import job finishes
         importService.doImport(jobExecution);
         while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
             ;
@@ -240,22 +247,19 @@ public class ImportServiceIT {
     }
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    // test case to check if a collection file is imported correctly
     @Test
     public void testIntegrationImportApplication() throws Exception {
 
-        createEntities();
-        createTestConnections();
-        createTestPermissions();
-
+        //Export the application which needs to be tested for import
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
         HashMap<String, Object> payload = payloadBuilder();
 
-
         payload.put( "organizationId",  organization.getUuid());
         payload.put( "applicationId", applicationId );
 
-        // export the collection
+        // schedule the export job
         UUID exportUUID = exportService.schedule( payload );
 
         //create and initialize jobData returned in JobExecution.
@@ -264,16 +268,18 @@ public class ImportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+        //export the application and wait for the export job to finish
         exportService.doExport( jobExecution );
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
             ;
         }
-        //TODo: can check if file got created
+        //TODo: can check if the temp file got created
 
         // import
         S3Import s3Import = new S3ImportImpl();
         ImportService importService = setup.getImportService();
 
+        // scheduele the import job
         UUID importUUID = importService.schedule( payload );
 
         //create and initialize jobData returned in JobExecution.
@@ -282,18 +288,20 @@ public class ImportServiceIT {
         jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+        // import the application file and wait for it to finish
         importService.doImport(jobExecution);
         while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
             ;
         }
-        assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
+        //checks if temp import files are created i.e. downloaded from S3
+        assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
         Set<String> collections = em.getApplicationCollections();
         Iterator<String> collectionsItr = collections.iterator();
+        // check if all collections in the application are updated
         while(collectionsItr.hasNext())
         {
-
             String collectionName = collectionsItr.next();
             Results collection  = em.getCollection(applicationId,collectionName,null, Results.Level.ALL_PROPERTIES);
             List<Entity> entities = collection.getEntities();
@@ -317,47 +325,38 @@ public class ImportServiceIT {
                         er = em.getRef(entity.getUuid());
                         dictionaries = em.getDictionaryAsMap(er, "permissions");
                         assertThat(dictionaries.size(), is(not(0)));
-
                     }
-
                 }
-
             }
             if(collectionName.equals("users")) {
-                //check if connections are made
+                // check if connections are created for only the 1st 2 entities in user collection
                 Results r;
                 List<ConnectionRef> connections;
-
-                r = em.getConnectedEntities(entities.get(0).getUuid(), "related", null, Results.Level.IDS );
-                connections = r.getConnections();
-                assertNotNull( connections );
-
-                r = em.getConnectedEntities(entities.get(1).getUuid(), "related", null, Results.Level.IDS );
-                connections = r.getConnections();
-                assertNotNull( connections );
+                for(int i=0;i<2;i++) {
+                    r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
+                    connections = r.getConnections();
+                    assertNotNull(connections);
+                }
             }
-
-
-
         }
     }
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    // test case to check if all applications file for an organization are imported correctly
     @Test
     public void testIntegrationImportOrganization() throws Exception {
 
-        createEntities();
-        createTestConnections();
-        createTestPermissions();
+        //create 2nd test application, add entities to it, create connections and set permissions
         createAndSetup2ndApplication();
 
+        //export all applications in an organization
         ExportService exportService = setup.getExportService();
         S3Export s3Export = new S3ExportImpl();
         HashMap<String, Object> payload = payloadBuilder();
 
         payload.put( "organizationId",  organization.getUuid());
 
-        // export the organization
+        //schdeule the export job
         UUID exportUUID = exportService.schedule( payload );
 
         //create and initialize jobData returned in JobExecution.
@@ -366,16 +365,18 @@ public class ImportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+        //export organization data and wait for the export job to finish
         exportService.doExport( jobExecution );
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
             ;
         }
-        //TODo: can check if file got created
+        //TODo: can check if the temp files got created
 
         // import
         S3Import s3Import = new S3ImportImpl();
         ImportService importService = setup.getImportService();
 
+        //schedule the import job
         UUID importUUID = importService.schedule( payload );
 
         //create and initialize jobData returned in JobExecution.
@@ -384,12 +385,16 @@ public class ImportServiceIT {
         jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+        //import the all application files for the organization and wait for the import to finish
         importService.doImport(jobExecution);
         while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
             ;
         }
+
+        //checks if temp import files are created i.e. downloaded from S3
         assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
+        //get all applications for an organization
         BiMap<UUID,String> applications = setup.getMgmtSvc().getApplicationsForOrganization(organization.getUuid());
         for (BiMap.Entry<UUID, String> app : applications.entrySet())
         {
@@ -450,6 +455,7 @@ public class ImportServiceIT {
         return payload;
     }
 
+    //creates fake import job
     public JobData jobImportDataCreator(HashMap<String, Object> payload,UUID importUUID,S3Import s3Import) {
         JobData jobData = new JobData();
 
@@ -461,6 +467,7 @@ public class ImportServiceIT {
         return jobData;
     }
 
+    //creates fake export job
     public JobData jobExportDataCreator(HashMap<String, Object> payload,UUID exportUUID,S3Export s3Export) {
         JobData jobData = new JobData();
 
