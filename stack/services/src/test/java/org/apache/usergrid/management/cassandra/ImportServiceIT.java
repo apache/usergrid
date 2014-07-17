@@ -18,6 +18,8 @@
 package org.apache.usergrid.management.cassandra;
 
 import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Module;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.ServiceITSuite;
@@ -35,6 +37,13 @@ import org.apache.usergrid.management.importUG.S3Import;
 import org.apache.usergrid.management.importUG.S3ImportImpl;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.JobData;
+import org.jclouds.ContextBuilder;
+import org.jclouds.blobstore.BlobStore;
+import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
+import org.jclouds.logging.log4j.config.Log4JLoggingModule;
+import org.jclouds.netty.config.NettyPayloadModule;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -58,7 +67,7 @@ import static org.mockito.Mockito.when;
 @Concurrent
 public class ImportServiceIT {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExportServiceIT.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImportServiceIT.class);
 
     private static CassandraResource cassandraResource = ServiceITSuite.cassandraResource;
 
@@ -215,6 +224,9 @@ public class ImportServiceIT {
                 assertThat(dictionaries2.size(), is(not(0)));
             }
         }
+
+        //delete bucket
+        deleteBucket();
     }
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
@@ -329,6 +341,9 @@ public class ImportServiceIT {
                 }
             }
         }
+
+        //delete bucket
+        deleteBucket();
     }
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
@@ -458,6 +473,9 @@ public class ImportServiceIT {
                 }
             }
         }
+
+        //delete bucket
+        deleteBucket();
     }
 
     /*Creates fake payload for testing purposes.*/
@@ -499,5 +517,29 @@ public class ImportServiceIT {
         jobData.setProperty( "s3Export", s3Export);
 
         return jobData;
+    }
+
+    public void deleteBucket() {
+
+        String bucketName = System.getProperty( "bucketName" );
+        String accessId = System.getProperty( "accessKey" );
+        String secretKey = System.getProperty( "secretKey" );
+
+        Properties overrides = new Properties();
+        overrides.setProperty( "s3" + ".identity", accessId );
+        overrides.setProperty( "s3" + ".credential", secretKey );
+
+        Blob bo = null;
+        BlobStore blobStore = null;
+        final Iterable<? extends Module> MODULES = ImmutableSet
+                .of(new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(),
+                        new NettyPayloadModule());
+
+        BlobStoreContext context =
+                ContextBuilder.newBuilder("s3").credentials( accessId, secretKey ).modules( MODULES )
+                        .overrides( overrides ).buildView( BlobStoreContext.class );
+
+        blobStore = context.getBlobStore();
+        blobStore.deleteContainer( bucketName );
     }
 }

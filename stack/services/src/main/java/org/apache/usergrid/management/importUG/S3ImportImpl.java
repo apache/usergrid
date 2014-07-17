@@ -31,6 +31,8 @@ import org.jclouds.blobstore.options.ListContainerOptions;
 import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -46,7 +48,6 @@ import java.util.Properties;
 public class S3ImportImpl implements S3Import {
 
     private static BlobStore blobStore;
-
     private static ArrayList<Blob> blobs = new ArrayList<Blob>();
     private static ArrayList<File> files = new ArrayList<File>();
     private static int i=0;
@@ -88,21 +89,21 @@ public class S3ImportImpl implements S3Import {
                     case 0:
                         if(fname.contains(filename))
                         {
-                            copyFile(bucketName,fname,i);
+                            copyFile(bucketName,fname);
                             i++;
                         }
                         break;
                     case 1:
                         if(fname.matches(filename+"[0-9]+\\.json"))
                         {
-                            copyFile(bucketName,fname,i);
+                            copyFile(bucketName,fname);
                             i++;
                         }
                         break;
                     case 2:
                         if(fname.matches(filename+"[-a-zA-Z0-9]+\\.[0-9]+\\.json"))
                         {
-                            copyFile(bucketName,fname,i);
+                            copyFile(bucketName,fname);
                             i++;
                         }
                         break;
@@ -116,7 +117,9 @@ public class S3ImportImpl implements S3Import {
         return files;
 
     }
-    void copyFile(String bucketName, String fname, int i) throws IOException {
+    void copyFile(String bucketName, String fname) throws IOException {
+
+        Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
         Blob blob = blobStore.getBlob(bucketName, fname);
         blobs.add(blob);
         String[] fileOrg = fname.split("/");
@@ -126,10 +129,10 @@ public class S3ImportImpl implements S3Import {
             try {
                 organizationDirectory.mkdir();
             }catch(SecurityException se) {
-
+                logger.error(se.getMessage());
             }
-
         }
+
         File ephemeral = new File(fname);
 
         FileOutputStream fop = new FileOutputStream(ephemeral);
@@ -138,8 +141,8 @@ public class S3ImportImpl implements S3Import {
 
         files.add(ephemeral);
 
-        ephemeral.deleteOnExit();
         organizationDirectory.deleteOnExit();
+        ephemeral.deleteOnExit();
         fop.close();
     }
 }
