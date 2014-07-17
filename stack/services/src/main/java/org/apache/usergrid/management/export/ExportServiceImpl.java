@@ -419,7 +419,6 @@ public class ExportServiceImpl implements ExportService {
 
         // Write connections
         saveConnections( entity, em, jg );
-
         // Write dictionaries
         saveDictionaries( entity, em, jg );
 
