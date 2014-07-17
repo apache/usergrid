@@ -65,8 +65,6 @@ public class ImportServiceIT {
     private static UserInfo adminUser;
     private static OrganizationInfo organization;
     private static UUID applicationId;
-    private static EntityManager em;
-    private static Entity[] entity;
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -82,49 +80,6 @@ public class ImportServiceIT {
         adminUser = setup.getMgmtSvc().createAdminUser( "test", "test user", "test@test.com", "test", false, false );
         organization = setup.getMgmtSvc().createOrganization( "test-organization", adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app" ).getId();
-
-        //creates entities
-        createEntities();
-
-        // creates connections between entity 0 and entity 1
-        createTestConnections();
-
-        // grant permissions to all users
-        createTestPermissions();
-    }
-
-    //creates 5 entities in user collection
-    static void createEntities() throws Exception {
-        
-        // add collection with 5 entities
-        em = setup.getEmf().getEntityManager( applicationId );
-
-        //intialize user object to be posted
-        Map<String, Object> userProperties = null;
-
-        entity = new Entity[5];
-        //creates entities
-        for ( int i = 0; i < 5; i++ ) {
-            userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "user" + i );
-            userProperties.put( "email", "user" + i + "@test.com" );
-            entity[i] = em.create( "users", userProperties );
-        }
-    }
-
-    //creates test connections between first 2 users
-    static void createTestConnections() throws Exception {
-        //creates connections
-        em.createConnection( em.getRef(entity[0].getUuid()), "related", em.getRef(entity[1].getUuid()));
-        em.createConnection( em.getRef(entity[1].getUuid()), "related", em.getRef( entity[0].getUuid()));
-    }
-
-    //grant permissions to each user
-    static void createTestPermissions() throws Exception {
-        for ( int i = 0; i < 5; i++ ) {
-           //grants user permission
-           em.grantUserPermission(entity[i].getUuid(), "get,post,put,delete:/**");
-        }
     }
 
     //creates 2nd application for testing import from an organization having multiple applications
@@ -139,10 +94,9 @@ public class ImportServiceIT {
         //creates entities and set permissions
         for ( int i = 0; i < 5; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "user" + i );
+            userProperties.put( "user", "user" + i );
             userProperties.put( "email", "user" + i + "@test.com" );
-            entityTest[i] = emTest.create( "users", userProperties );
-            emTest.grantUserPermission(entityTest[i].getUuid(),"get,post,put,delete:/**");
+            entityTest[i] = emTest.create( "user-test-collection", userProperties );
         }
 
         //create connection
@@ -154,6 +108,25 @@ public class ImportServiceIT {
     // test case to check if a collection file is imported correctly
     @Test
     public void testIntegrationImportCollection() throws Exception {
+
+        // //creates 5 entities in user collection
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+
+        Entity entity[] = new Entity[5];
+        //creates entities
+        for ( int i = 0; i < 5; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "username", "user" + i );
+            userProperties.put( "email", "user" + i + "@test.com" );
+            entity[i] = em.create( "users", userProperties );
+        }
+
+        //creates test connections between first 2 users
+        em.createConnection( em.getRef(entity[0].getUuid()), "related", em.getRef(entity[1].getUuid()));
+        em.createConnection( em.getRef(entity[1].getUuid()), "related", em.getRef( entity[0].getUuid()));
 
         //Export the collection which needs to be tested for import
         ExportService exportService = setup.getExportService();
@@ -203,19 +176,18 @@ public class ImportServiceIT {
         assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
         //check if entities are actually updated i.e. created and modified should be different
-        EntityManager em = setup.getEmf().getEntityManager(applicationId);
+        //EntityManager em = setup.getEmf().getEntityManager(applicationId);
         Results collections  = em.getCollection(applicationId,"users",null, Results.Level.ALL_PROPERTIES);
         List<Entity> entities = collections.getEntities();
-        for(Entity entity: entities) {
-            Long created = entity.getCreated();
-            Long modified = entity.getModified();
+        for(Entity eachEntity: entities) {
+            Long created = eachEntity.getCreated();
+            Long modified = eachEntity.getModified();
             assertThat(created, not(equalTo(modified)));
         }
 
         // check if connections are created for only the 1st 2 entities in user collection
         Results r;
         List<ConnectionRef> connections;
-
         for(int i=0;i<2;i++) {
             r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
             connections = r.getConnections();
@@ -241,9 +213,7 @@ public class ImportServiceIT {
                 assertThat(dictionaries1.size(), is(not(0)));
                 assertThat(dictionaries2.size(), is(not(0)));
             }
-
         }
-
     }
 
     // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
@@ -346,6 +316,25 @@ public class ImportServiceIT {
     @Test
     public void testIntegrationImportOrganization() throws Exception {
 
+        // //creates 5 entities in user collection
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+
+        //intialize user object to be posted
+        Map<String, Object> userProperties = null;
+
+        Entity entity[] = new Entity[5];
+        //creates entities
+        for ( int i = 0; i < 5; i++ ) {
+            userProperties = new LinkedHashMap<String, Object>();
+            userProperties.put( "user", "user" + i );
+            userProperties.put( "email", "user" + i + "@test.com" );
+            entity[i] = em.create( "user-test-collection", userProperties );
+        }
+
+        //creates test connections between first 2 users
+        em.createConnection( em.getRef(entity[0].getUuid()), "related", em.getRef(entity[1].getUuid()));
+        em.createConnection( em.getRef(entity[1].getUuid()), "related", em.getRef( entity[0].getUuid()));
+
         //create 2nd test application, add entities to it, create connections and set permissions
         createAndSetup2ndApplication();
 
@@ -400,7 +389,7 @@ public class ImportServiceIT {
         {
             //check if all collections-entities are updated - created and modified should be different
             UUID appID = app.getKey();
-            EntityManager em = setup.getEmf().getEntityManager(appID);
+            em = setup.getEmf().getEntityManager(appID);
             Set<String> collections = em.getApplicationCollections();
             Iterator<String> itr = collections.iterator();
             while(itr.hasNext())
@@ -408,23 +397,15 @@ public class ImportServiceIT {
                 String collectionName = itr.next();
                 Results collection  = em.getCollection(appID,collectionName,null, Results.Level.ALL_PROPERTIES);
                 List<Entity> entities = collection.getEntities();
-                for(Entity entity: entities) {
-                    Long created = entity.getCreated();
-                    Long modified = entity.getModified();
+
+                for(Entity eachEntity: entities) {
+                    Long created = eachEntity.getCreated();
+                    Long modified = eachEntity.getModified();
                     assertThat(created, not(equalTo(modified)));
-
-                    //check for dictionaries --> checking permissions in the dictionaries
-                    EntityRef er;
-                    Map<Object,Object> dictionaries;
-
-                    if(collectionName.equals("users")) {
-                        er = em.getRef(entity.getUuid());
-                        dictionaries = em.getDictionaryAsMap(er, "permissions");
-                        assertThat(dictionaries.size(), is(not(0)));
-                    }
                 }
 
-                if(collectionName.equals("users")) {
+
+                if(collectionName.equals("user-test-collection")) {
                     // check if connections are created for only the 1st 2 entities in user collection
                     Results r;
                     List<ConnectionRef> connections;
@@ -432,6 +413,25 @@ public class ImportServiceIT {
                         r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
                         connections = r.getConnections();
                         assertNotNull(connections);
+                    }
+
+                    //check if dictionary is created
+                    EntityRef er;
+                    Map<Object,Object> dictionaries1,dictionaries2;
+                    for(int i=0;i<3;i++) {
+                        er = em.getRef(entities.get(i).getUuid());
+                        dictionaries1 = em.getDictionaryAsMap(er,"connected_types");
+                        dictionaries2 = em.getDictionaryAsMap(er,"connecting_types");
+
+                        if(i==2) {
+                            //for entity 2, these should be empty
+                            assertThat(dictionaries1.size(),is(0));
+                            assertThat(dictionaries2.size(),is(0));
+                        }
+                        else {
+                            assertThat(dictionaries1.size(), is(not(0)));
+                            assertThat(dictionaries2.size(), is(not(0)));
+                        }
                     }
                 }
             }

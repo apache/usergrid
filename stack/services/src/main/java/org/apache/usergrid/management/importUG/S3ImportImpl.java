@@ -138,7 +138,7 @@ public class S3ImportImpl implements S3Import {
 
         files.add(ephemeral);
 
-        //ephemeral.deleteOnExit();
+        ephemeral.deleteOnExit();
         fop.close();
     }
 }
