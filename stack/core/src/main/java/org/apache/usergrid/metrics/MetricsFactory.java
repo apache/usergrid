@@ -48,14 +48,6 @@ public class MetricsFactory {
 
     @PostConstruct
     void init() {
-        properties = new Properties();
-        try {
-            properties.load(Thread.currentThread()
-                    .getContextClassLoader()
-                    .getResourceAsStream("usergrid.properties"));
-        } catch (Exception e) {
-            LOG.error("Could not load props","");
-        }
         registry = new MetricRegistry();
         String badHost = "badhost";
         String metricsHost = properties.getProperty("usergrid.metrics.graphite.host", badHost);
