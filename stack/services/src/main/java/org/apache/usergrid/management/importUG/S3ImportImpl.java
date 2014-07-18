@@ -22,7 +22,6 @@ import com.google.inject.Module;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
-import org.jclouds.blobstore.ContainerNotFoundException;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.MutableBlobMetadata;
 import org.jclouds.blobstore.domain.PageSet;
@@ -122,8 +121,6 @@ public class S3ImportImpl implements S3Import {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (ContainerNotFoundException m) {
-            m.printStackTrace();
         }
         return files;
     }

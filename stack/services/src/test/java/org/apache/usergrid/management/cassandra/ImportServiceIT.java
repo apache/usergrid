@@ -519,6 +519,7 @@ public class ImportServiceIT {
         return jobData;
     }
 
+    // delete the s3 bucket which was created for testing
     public void deleteBucket() {
 
         String bucketName = System.getProperty( "bucketName" );
