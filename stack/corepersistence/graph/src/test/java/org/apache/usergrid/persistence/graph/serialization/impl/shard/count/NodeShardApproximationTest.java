@@ -61,6 +61,7 @@ import com.netflix.astyanax.retry.RetryPolicy;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -126,6 +127,7 @@ public class NodeShardApproximationTest {
     }
 
 
+    @Ignore // outdated and no longer relevant test 
     @Test
     public void testSingleShardMultipleThreads() throws ExecutionException, InterruptedException {
 
@@ -191,6 +193,7 @@ public class NodeShardApproximationTest {
 
 
 
+    @Ignore // outdated and no longer relevant test 
     @Test
     public void testMultipleShardMultipleThreads() throws ExecutionException, InterruptedException {
 
