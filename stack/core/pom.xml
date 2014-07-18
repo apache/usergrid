@@ -489,7 +489,6 @@
       <scope>test</scope>
     </dependency>
 
-
     <!-- Core Persistence deps -->
     <dependency>
 	    <groupId>org.apache.usergrid</groupId>
@@ -548,6 +547,16 @@
         <version>2.0.0-SNAPSHOT</version>
     </dependency>-->
 
+    <dependency>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>${metrics.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-graphite</artifactId>
+      <version>${metrics.version}</version>
+    </dependency>
   </dependencies>
 
 </project>

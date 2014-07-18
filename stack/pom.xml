@@ -115,7 +115,7 @@
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
     <elasticsearch.version>1.2.3</elasticsearch.version>
-
+    <metrics.version>3.0.0</metrics.version>
   </properties>
 
   <licenses>
