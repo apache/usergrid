@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractIteratingQueryIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractIteratingQueryIT.class );
 
-    public static final long WRITE_DELAY = 200; // milliseconds to delay between writes in loop
+    public static final long WRITE_DELAY = 0; // milliseconds to delay between writes in loop
 
     @ClassRule
     public static CoreITSetup setup = new CoreITSetupImpl( 
@@ -1252,7 +1252,9 @@ public abstract class AbstractIteratingQueryIT {
 
             Entity e = app.getEm().create( "test", entity );
 
-            Thread.sleep( WRITE_DELAY );
+            if ( WRITE_DELAY > 0 ) {
+                Thread.sleep( WRITE_DELAY );
+            }
 
             return e;
         }
@@ -1295,7 +1297,9 @@ public abstract class AbstractIteratingQueryIT {
             Entity created = super.writeEntity( entity );
             app.getEm().createConnection( rootEntity, CONNECTION, created );
 
-            Thread.sleep( WRITE_DELAY );
+            if ( WRITE_DELAY > 0 ) {
+                Thread.sleep( WRITE_DELAY );
+            }
 
             return created;
         }
