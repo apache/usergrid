@@ -56,8 +56,7 @@ import java.util.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -478,6 +477,197 @@ public class ImportServiceIT {
         deleteBucket();
     }
 
+    /**
+     * Test to schedule a job with null config
+     */
+    @Test
+    public void testScheduleJobWithNullConfig() throws Exception {
+        HashMap<String, Object> payload = null;
+
+        ImportService importService = setup.getImportService();
+        UUID importUUID = importService.schedule(payload);
+
+        assertNull(importUUID);
+    }
+
+    /**
+     * Test to get state of a job with null UUID
+     */
+    @Test
+    public void testGetStateWithNullUUID() throws Exception {
+        UUID uuid= null;
+
+        ImportService importService = setup.getImportService();
+        String state = importService.getState(uuid);
+
+        assertEquals(state,"UUID passed in cannot be null");
+    }
+
+    /**
+     * Test to get state of a job with fake UUID
+     */
+    @Test
+    public void testGetStateWithFakeUUID() throws Exception {
+        UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+
+        ImportService importService = setup.getImportService();
+        String state = importService.getState(fake);
+
+        assertEquals(state,"No Such Element found");
+    }
+
+    /**
+     * Test to get error message of a job with null appID
+     */
+    @Test
+    public void testErrorMessageWithNullAppID() throws Exception {
+        UUID state = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+        UUID appId = null;
+        ImportService importService = setup.getImportService();
+        String error = importService.getErrorMessage(appId,state);
+
+        assertEquals(error,"Application context cannot be found.");
+    }
+
+    /**
+     * Test to get error message of a job with null state
+     */
+    @Test
+    public void testErrorMessageWithNullState() throws Exception {
+        UUID appId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+        UUID state = null;
+        ImportService importService = setup.getImportService();
+        String error = importService.getErrorMessage(appId,state);
+
+        assertEquals(error,"UUID passed in cannot be null");
+    }
+
+    /**
+     * Test to get error message of a job with fake UUID
+     */
+    @Test
+    public void testErrorMessageWithFakeUUID() throws Exception {
+        UUID state = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+        UUID appId = applicationId;
+        ImportService importService = setup.getImportService();
+        String error = importService.getErrorMessage(appId,state);
+
+        assertEquals(error,"No Such Element found");
+    }
+
+    /**
+     * Test to the doImport method with null organziation ID
+     */
+    @Test
+    public void testDoImportWithNullOrganizationID() throws Exception {
+        // import
+        S3Import s3Import = new S3ImportImpl();
+        ImportService importService = setup.getImportService();
+
+        HashMap<String, Object> payload = payloadBuilder();
+
+        //schedule the import job
+        UUID importUUID = importService.schedule( payload );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = jobImportDataCreator(payload, importUUID, s3Import);
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        importService.doImport(jobExecution);
+        assertEquals(importService.getState(importUUID),"FAILED");
+    }
+
+    /**
+     * Test to the doImport method with fake organization ID
+     */
+    @Test
+    public void testDoImportWithFakeOrganizationID() throws Exception {
+
+        UUID fakeOrgId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+        // import
+        S3Import s3Import = new S3ImportImpl();
+        ImportService importService = setup.getImportService();
+
+        HashMap<String, Object> payload = payloadBuilder();
+
+        payload.put("organizationId",fakeOrgId);
+        //schedule the import job
+        UUID importUUID = importService.schedule( payload );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = jobImportDataCreator(payload, importUUID, s3Import);
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        //import the all application files for the organization and wait for the import to finish
+        importService.doImport(jobExecution);
+        assertEquals(importService.getState(importUUID),"FAILED");
+    }
+
+    /**
+     * Test to the doImport method with fake application ID
+     */
+    @Test
+    public void testDoImportWithFakeApplicationID() throws Exception {
+
+        UUID fakeappId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+        // import
+        S3Import s3Import = new S3ImportImpl();
+        ImportService importService = setup.getImportService();
+
+        HashMap<String, Object> payload = payloadBuilder();
+
+        payload.put("organizationId",organization.getUuid());
+        payload.put("applicationId",fakeappId);
+
+        //schedule the import job
+        UUID importUUID = importService.schedule( payload );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = jobImportDataCreator(payload, importUUID, s3Import);
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        //import the all application files for the organization and wait for the import to finish
+        importService.doImport(jobExecution);
+        assertEquals(importService.getState(importUUID),"FAILED");
+    }
+
+    /**
+     * Test to the doImport Collection method with fake application ID
+     */
+    @Test
+    public void testDoImportCollectionWithFakeApplicationID() throws Exception {
+
+        UUID fakeappId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
+        // import
+        S3Import s3Import = new S3ImportImpl();
+        ImportService importService = setup.getImportService();
+
+        HashMap<String, Object> payload = payloadBuilder();
+
+        payload.put("organizationId",organization.getUuid());
+        payload.put("applicationId",fakeappId);
+        payload.put("collectionName","custom-test");
+
+        //schedule the import job
+        UUID importUUID = importService.schedule( payload );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = jobImportDataCreator(payload, importUUID, s3Import);
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        //import the all application files for the organization and wait for the import to finish
+        importService.doImport(jobExecution);
+        assertEquals(importService.getState(importUUID),"FAILED");
+    }
+
     /*Creates fake payload for testing purposes.*/
     public HashMap<String, Object> payloadBuilder() {
         HashMap<String, Object> payload = new HashMap<String, Object>();
@@ -519,6 +709,7 @@ public class ImportServiceIT {
         return jobData;
     }
 
+    // delete the s3 bucket which was created for testing
     public void deleteBucket() {
 
         String bucketName = System.getProperty( "bucketName" );

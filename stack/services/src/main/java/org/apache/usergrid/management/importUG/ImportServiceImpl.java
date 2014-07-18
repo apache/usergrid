@@ -295,21 +295,13 @@ public class ImportServiceImpl implements ImportService {
             }
         }
         else {
+
+            //imports a single collection from an app org combo
             try {
-                //imports a single collection from an app org combo
-                try {
-                    importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution,s3Import);
-                }
-                catch ( Exception e ) {
-                    importUG.setErrorMessage( e.getMessage() );
-                    importUG.setState( Import.State.FAILED );
-                    em.update( importUG );
-                    return;
-                }
+                importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution,s3Import);
             }
             catch ( Exception e ) {
-                //if for any reason the backing up fails, then update the entity with a failed state.
-                importUG.setErrorMessage(e.getMessage());
+                importUG.setErrorMessage( e.getMessage() );
                 importUG.setState( Import.State.FAILED );
                 em.update( importUG );
                 return;
