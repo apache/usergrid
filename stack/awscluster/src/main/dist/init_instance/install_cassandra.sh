@@ -54,6 +54,9 @@ apt-get  --force-yes -y install opscenter
 sudo service opscenterd start
 
 
+
+
+
 ## Configure Priam
 #groovy configure_priam.groovy
 #

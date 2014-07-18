@@ -608,6 +608,16 @@
                 "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
             }
         },
+        "CassSecurityGroupPort7199": {
+                   "Type": "AWS::EC2::SecurityGroupIngress",
+                   "Properties": {
+                       "GroupName": {"Ref": "CassSecurityGroup"},
+                       "IpProtocol": "tcp",
+                       "FromPort": "7199",
+                       "ToPort": "7199",
+                       "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
+                   }
+               },
         "RestSecurityGroupPort9160" : {
                  "Type" : "AWS::EC2::SecurityGroupIngress",
                  "Properties" : {

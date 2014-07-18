@@ -56,6 +56,9 @@ cd /usr/share/usergrid/init_instance
 cd /usr/share/usergrid/init_instance
 ./install_cassandra.sh
 
+cd /usr/share/usergrid/init_instance
+./install_opscenter_agent.sh
+
 # Install and start ElasticSearch
 cd /usr/share/usergrid/init_instance
 ./install_elasticsearch.sh
