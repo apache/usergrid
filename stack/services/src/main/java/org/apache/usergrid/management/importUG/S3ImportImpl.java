@@ -52,9 +52,16 @@ public class S3ImportImpl implements S3Import {
     private static ArrayList<File> files = new ArrayList<File>();
     private static int i=0;
 
-    public ArrayList<File> copyFromS3( final Map<String,Object> exportInfo, String filename , int type) {
+    /**
+     *
+     * @param importInfo the information entered by the user required to perform import from S3
+     * @param filename the filename generated based on the request URI
+     * @param type  it indicates the type of import. 0 - Collection , 1 - Application and 2 - Organization
+     * @return It returns an ArrayList of files i.e. the files downloaded from s3
+     */
+    public ArrayList<File> copyFromS3( final Map<String,Object> importInfo, String filename , int type) {
 
-        Map<String,Object> properties = ( Map<String, Object> ) exportInfo.get( "properties" );
+        Map<String,Object> properties = ( Map<String, Object> ) importInfo.get( "properties" );
 
         Map<String, Object> storage_info = (Map<String,Object>)properties.get( "storage_info" );
 
@@ -78,6 +85,7 @@ public class S3ImportImpl implements S3Import {
 
             blobStore = context.getBlobStore();
 
+            // gets all the files in the bucket recursively
             PageSet<? extends StorageMetadata> pageSet = blobStore.list(bucketName, new ListContainerOptions().recursive());
 
             Iterator itr = pageSet.iterator();
@@ -86,6 +94,7 @@ public class S3ImportImpl implements S3Import {
             {
                 String fname = ((MutableBlobMetadata)itr.next()).getName();
                 switch(type) {
+                    // check if file is a collection file and is in format <org_name>/<app_name>.<collection_name>.[0-9]+.json
                     case 0:
                         if(fname.contains(filename))
                         {
@@ -93,6 +102,7 @@ public class S3ImportImpl implements S3Import {
                             i++;
                         }
                         break;
+                    // check if file is an application file and is in format <org_name>/<app_name>.[0-9]+.json
                     case 1:
                         if(fname.matches(filename+"[0-9]+\\.json"))
                         {
@@ -100,6 +110,7 @@ public class S3ImportImpl implements S3Import {
                             i++;
                         }
                         break;
+                    // check if file is an application file and is in format <org_name>/[-a-zA-Z0-9]+.[0-9]+.json
                     case 2:
                         if(fname.matches(filename+"[-a-zA-Z0-9]+\\.[0-9]+\\.json"))
                         {
@@ -115,8 +126,14 @@ public class S3ImportImpl implements S3Import {
             m.printStackTrace();
         }
         return files;
-
     }
+
+    /**
+     *
+     * @param bucketName the S3 bucket name from where files need to be imported
+     * @param fname the filename by which the temp file should be created
+     * @throws IOException
+     */
     void copyFile(String bucketName, String fname) throws IOException {
 
         Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);

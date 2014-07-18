@@ -35,7 +35,7 @@ public interface ImportService {
     UUID schedule(Map<String, Object> json) throws Exception;
 
     /**
-     * Perform the import to the external resource
+     * Perform the import from the external resource
      */
     void doImport(JobExecution jobExecution) throws Exception;
 
@@ -46,6 +46,9 @@ public interface ImportService {
 
     String getErrorMessage(UUID appId, UUID state) throws Exception;
 
+    /**
+     * Returns the list of imported files from S3.
+     */
     ArrayList<File> getEphemeralFile();
 
 }
