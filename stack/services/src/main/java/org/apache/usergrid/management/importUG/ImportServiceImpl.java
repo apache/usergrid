@@ -63,6 +63,12 @@ public class ImportServiceImpl implements ImportService {
 
     private JsonFactory jsonFactory = new JsonFactory();
 
+    /**
+     *
+     * @param config configuration of the job to be scheduled
+     * @return it returns the UUID of the scheduled job
+     * @throws Exception
+     */
     @Override
     public UUID schedule(Map<String, Object> config) throws Exception {
 
@@ -100,7 +106,7 @@ public class ImportServiceImpl implements ImportService {
         importUG.setState( Import.State.CREATED );
         em.update( importUG );
 
-        //set data to be transferred to exportInfo
+        //set data to be transferred to importInfo
         JobData jobData = new JobData();
         jobData.setProperty( "importInfo", config );
         jobData.setProperty( IMPORT_ID, importUG.getUuid() );
@@ -141,6 +147,11 @@ public class ImportServiceImpl implements ImportService {
         return importUG.getState().toString();
     }
 
+    /**
+     * Query Entity Manager for the error message generated for an import job.
+     *
+     * @return String
+     */
     @Override
     public String getErrorMessage( final UUID appId, final UUID uuid ) throws Exception {
 
@@ -211,6 +222,11 @@ public class ImportServiceImpl implements ImportService {
         this.managementService = managementService;
     }
 
+    /**
+     *
+     * @param jobExecution the job created by the scheduler with all the required config data
+     * @throws Exception
+     */
     @Override
     public void doImport(JobExecution jobExecution) throws Exception {
 
@@ -222,6 +238,7 @@ public class ImportServiceImpl implements ImportService {
             logger.error( "Import Information passed through is null" );
             return;
         }
+
         //get the entity manager for the application, and the entity that this Import corresponds to.
         UUID importId = ( UUID ) jobExecution.getJobData().getProperty( IMPORT_ID );
 
@@ -362,14 +379,17 @@ public class ImportServiceImpl implements ImportService {
      */
     protected String prepareInputFileName( String type, String name, String CollectionName ) {
         StringBuilder str = new StringBuilder();
+        // in case of type organization --> the file name will be "<org_name>/"
         if(type.equals("organization")) {
             str.append(name);
             str.append("/");
         }
         else if(type.equals("application")) {
+            // in case of type application --> the file name will be "<org_name>/<app_name>."
             str.append(name);
             str.append(".");
             if (CollectionName != null) {
+                // in case of type application and collection import --> the file name will be "<org_name>/<app_name>.<collection_name>."
                 str.append(CollectionName);
                 str.append(".");
             }
@@ -380,6 +400,15 @@ public class ImportServiceImpl implements ImportService {
         return inputFileName;
     }
 
+    /**
+     *
+     * @param importUG Import instance
+     * @param appFileName   the base file name for the files to be downloaded
+     * @param config    the config information for the import job
+     * @param s3Import  s3import instance
+     * @param type  it indicates the type of import. 0 - Collection , 1 - Application and 2 - Organization
+     * @return
+     */
     public ArrayList<File> fileTransfer( Import importUG, String appFileName, Map<String, Object> config,
                                          S3Import s3Import , int type) {
         ArrayList<File> files;
@@ -394,6 +423,10 @@ public class ImportServiceImpl implements ImportService {
         return files;
     }
 
+    /**
+     * The loops through each temp file and parses it to store the entities from the json back into usergrid
+     * @throws Exception
+     */
     private void FileParser() throws Exception {
 
         for(File collectionFile : files) {
@@ -425,7 +458,7 @@ public class ImportServiceImpl implements ImportService {
     }
 
     /**
-     * Imports the entity's connecting references (collections and connections)
+     * Imports the entity's connecting references (collections, connections and dictionaries)
      *
      * @param jp JsonPrser pointing to the beginning of the object.
      */
@@ -436,6 +469,7 @@ public class ImportServiceImpl implements ImportService {
         while ( jp.nextToken() != JsonToken.END_OBJECT ) {
             String collectionName = jp.getCurrentName();
 
+            // create the connections
             if ( collectionName.equals( "connections" ) ) {
 
                 jp.nextToken(); // START_OBJECT
@@ -452,6 +486,7 @@ public class ImportServiceImpl implements ImportService {
                     }
                 }
             }
+            // add dictionaries
             else if ( collectionName.equals( "dictionaries" ) ) {
 
                 jp.nextToken(); // START_OBJECT
@@ -489,6 +524,7 @@ public class ImportServiceImpl implements ImportService {
                     }
                     token = jp.nextToken();
                 }
+                // updates the properties, this indeed changes the modified property of the entity
                 em.updateProperties(ownerEntityRef,properties);
             }
         }
