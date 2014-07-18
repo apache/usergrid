@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.Application;
 import org.apache.usergrid.CoreApplication;
+import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.index.query.Identifier;
@@ -50,7 +51,7 @@ import static org.junit.Assert.fail;
 
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
-//@Concurrent()
+@Concurrent()
 public class CollectionIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 

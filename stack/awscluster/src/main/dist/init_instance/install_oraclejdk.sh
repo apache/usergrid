@@ -27,13 +27,13 @@ pushd /tmp
 echo ${RELEASE_BUCKET}
 
 # Get JDK from the release bucket
-s3cmd --config=/etc/s3cfg get s3://${RELEASE_BUCKET}/jdk-7u45-linux-x64.gz
+s3cmd --config=/etc/s3cfg get s3://${RELEASE_BUCKET}/jdk-7u60-linux-x64.gz
 
 # Install it as they do here: 
 # http://askubuntu.com/questions/56104/how-can-i-install-sun-oracles-proprietary-java-6-7-jre-or-jdk
-tar -xvf jdk-7u45-linux-x64.gz
+tar -xvf jdk-7u60-linux-x64.gz
 mkdir -p /usr/lib/jvm
-mv ./jdk1.7.0_45 /usr/lib/jvm/jdk1.7.0
+mv ./jdk1.7.0_60 /usr/lib/jvm/jdk1.7.0
 
 update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk1.7.0/bin/java" 2000
 update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk1.7.0/bin/javac" 2000

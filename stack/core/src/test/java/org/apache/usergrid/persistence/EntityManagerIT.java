@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import static org.apache.usergrid.AbstractCoreIT.setup;
+import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.Query.Level;
@@ -44,7 +45,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-//@Concurrent()
+@Concurrent()
 public class EntityManagerIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( EntityManagerIT.class );
 
