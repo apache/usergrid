@@ -17,28 +17,28 @@
 
 package org.apache.usergrid.management.importUG;
 
-import org.apache.usergrid.batch.JobExecution;
-import org.apache.usergrid.batch.service.SchedulerService;
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.entities.Import;
-import org.apache.usergrid.persistence.entities.JobData;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+        import org.apache.usergrid.batch.JobExecution;
+        import org.apache.usergrid.batch.service.SchedulerService;
+        import org.apache.usergrid.management.ApplicationInfo;
+        import org.apache.usergrid.management.ManagementService;
+        import org.apache.usergrid.management.OrganizationInfo;
+        import org.apache.usergrid.persistence.EntityManager;
+        import org.apache.usergrid.persistence.EntityManagerFactory;
+        import org.apache.usergrid.persistence.EntityRef;
+        import org.apache.usergrid.persistence.entities.Import;
+        import org.apache.usergrid.persistence.entities.JobData;
+        import org.codehaus.jackson.JsonFactory;
+        import org.codehaus.jackson.JsonParseException;
+        import org.codehaus.jackson.JsonParser;
+        import org.codehaus.jackson.JsonToken;
+        import org.codehaus.jackson.map.ObjectMapper;
+        import org.slf4j.Logger;
+        import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.*;
+        import java.io.File;
+        import java.util.*;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+        import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 /**
  * Created by ApigeeCorporation on 7/8/14.
@@ -270,7 +270,7 @@ public class ImportServiceImpl implements ImportService {
                 importApplicationsFromOrg((UUID) config.get("organizationId"), config, jobExecution, s3Import);
             } else if (config.get("collectionName") == null) {
                 //imports an Application from a single organization
-                    importApplicationFromOrg((UUID) config.get("organizationId"), (UUID) config.get("applicationId"), config, jobExecution, s3Import);
+                importApplicationFromOrg((UUID) config.get("organizationId"), (UUID) config.get("applicationId"), config, jobExecution, s3Import);
             } else {
                 //imports a single collection from an app org combo
                 importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution, s3Import);
@@ -441,26 +441,69 @@ public class ImportServiceImpl implements ImportService {
      */
     private void FileParser(JobExecution jobExecution) throws Exception {
 
+        // add properties to the import entity
+        Import importUG = getImportEntity(jobExecution);
+        EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+
+        Map<String,Object> fileMetadata = new HashMap<String, Object>();
+        ArrayList<Map<String,Object>> value = new ArrayList<Map<String, Object>>();
+
+        // create the structure for file metadata and initialize it
         for(File collectionFile : files) {
-            String applicationName = collectionFile.getPath().split("\\.")[0];
+            Map<String,Object> singleFile = new HashMap<String, Object>();
+            singleFile.put("name",collectionFile.getName());
+            singleFile.put("completed",new Boolean(false));
+            singleFile.put("lastUpdatedUUID",new String(""));
+            value.add(singleFile);
+        }
 
-            ApplicationInfo application = managementService.getApplicationInfo(applicationName);
+        fileMetadata.put("files",value);
+        importUG.addProperties(fileMetadata);
+        rootEm.update(importUG);
 
+        ArrayList fileNames = (ArrayList)importUG.getDynamicProperties().get("files");
+        int i=0;
 
-            JsonParser jp = getJsonParserForFile(collectionFile);
+        for(File collectionFile : files) {
 
-            while(jp.getCurrentToken() != JsonToken.START_OBJECT) {
-                jp.nextToken();
+            Map<String,Object> fileInfo = (Map<String,Object>)fileNames.get(i);
+            boolean completed = ((Boolean)fileInfo.get("completed")).booleanValue();
+            // on resume, completed files will not be traversed again
+            if(!completed) {
+
+                String applicationName = collectionFile.getPath().split("\\.")[0];
+
+                ApplicationInfo application = managementService.getApplicationInfo(applicationName);
+
+                JsonParser jp = getJsonParserForFile(collectionFile);
+                String lastUpdatedUUID  = fileInfo.get("lastUpdatedUUID").toString();
+
+                // this handles partially completed files by updating entities from the point of failure
+                if(!lastUpdatedUUID.equals(""))
+                {
+                    // go till the next entity
+                     while(!jp.getText().equals(lastUpdatedUUID)) {
+                         jp.nextToken();
+                     }
+                }
+
+                while(jp.getCurrentToken() != JsonToken.START_OBJECT) {
+                    jp.nextToken();
+                }
+
+                EntityManager em = emf.getEntityManager(application.getId());
+
+                //TODO: remove roles and take care of it later when importing applications
+                while (jp.nextToken() != JsonToken.END_ARRAY) {
+                    importEntityStuff(jp, em, rootEm, importUG, i);
+                }
+                jp.close();
             }
 
-            EntityManager em = emf.getEntityManager(application.getId());
-
-            //TODO: remove roles and take care of it later when importing applications
-            while (jp.nextToken() != JsonToken.END_ARRAY) {
-                importEntityStuff(jp, em);
-            }
-            jp.close();
-
+            // mark file as completed
+            ((Map<String,Object>)fileNames.get(i)).put("completed",true);
+            rootEm.update(importUG);
+            i++;
         }
     }
 
@@ -476,9 +519,11 @@ public class ImportServiceImpl implements ImportService {
      *
      * @param jp JsonPrser pointing to the beginning of the object.
      */
-    private void importEntityStuff( JsonParser jp, EntityManager em ) throws Exception {
+    private void importEntityStuff( JsonParser jp, EntityManager em, EntityManager rootEm, Import importUG, int index) throws Exception {
 
         EntityRef ownerEntityRef=null;
+        String entityUuid="";
+
         // Go inside the value after getting the owner entity id.
         while ( jp.nextToken() != JsonToken.END_OBJECT ) {
             String collectionName = jp.getCurrentName();
@@ -493,7 +538,7 @@ public class ImportServiceImpl implements ImportService {
                     jp.nextToken(); // START_ARRAY
                     while ( jp.nextToken() != JsonToken.END_ARRAY ) {
                         String entryId = jp.getText();
-                        
+
                         EntityRef entryRef = em.getRef( UUID.fromString( entryId ) );
                         // Store in DB
                         em.createConnection(ownerEntityRef, connectionType, entryRef);
@@ -528,7 +573,8 @@ public class ImportServiceImpl implements ImportService {
                     {
                         String key = jp.getCurrentName();
                         if(key.equals("uuid")) {
-                            ownerEntityRef = em.getRef( UUID.fromString(jp.getText()));
+                            entityUuid = jp.getText();
+                            ownerEntityRef = em.getRef( UUID.fromString(entityUuid));
                         }
                         else if(key.equals("type")) {
 
@@ -550,7 +596,13 @@ public class ImportServiceImpl implements ImportService {
                 // updates the properties, this indeed changes the modified property of the entity
                 em.updateProperties(ownerEntityRef,properties);
             }
+
         }
+
+        // update the last updated entity
+        ArrayList fileNames = (ArrayList) importUG.getDynamicProperties().get("files");
+        ((Map<String,Object>)fileNames.get(index)).put("lastUpdatedUUID",entityUuid);
+        rootEm.update(importUG);
     }
 }
 

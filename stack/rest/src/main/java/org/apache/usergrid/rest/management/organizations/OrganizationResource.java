@@ -411,13 +411,13 @@ public class OrganizationResource extends AbstractContextResource {
     @GET
     @RequireOrganizationAccess
     @Path("import/{importEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-    public Response importGetJson( @Context UriInfo ui, @PathParam("importEntity") UUID exportEntityUUIDStr,
+    public Response importGetJson( @Context UriInfo ui, @PathParam("importEntity") UUID importEntityUUIDStr,
                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         Import entity;
         try {
             entity = smf.getServiceManager( CassandraService.MANAGEMENT_APPLICATION_ID ).getEntityManager()
-                    .get( exportEntityUUIDStr, Import.class );
+                    .get( importEntityUUIDStr, Import.class );
         }
         catch ( Exception e ) { //this might not be a bad request and needs better error checking
             return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
