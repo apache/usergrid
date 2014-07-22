@@ -134,17 +134,18 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
         writeLockLock.lock();
 
+        final MutationBatch batch;
+
         try {
             flushPending = currentCounter;
             currentCounter = new Counter();
+
+            //copy to the batch outside of the command for performance
+            batch = nodeShardCounterSerialization.flush( flushPending );
         }
         finally {
             writeLockLock.unlock();
         }
-
-
-        //copy to the batch outside of the command for performance
-        final MutationBatch batch = nodeShardCounterSerialization.flush( flushPending );
 
         /**
          * Execute the command in hystrix to avoid slamming cassandra
