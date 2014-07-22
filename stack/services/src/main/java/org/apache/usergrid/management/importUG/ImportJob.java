@@ -58,7 +58,7 @@ public class ImportJob extends OnlyOnceJob {
         catch ( Exception e ) {
             logger.error( "Import Service failed to complete job" );
             logger.error(e.getMessage());
-            return;
+            throw e;
         }
 
         logger.info( "executed ImportJob process completed" );

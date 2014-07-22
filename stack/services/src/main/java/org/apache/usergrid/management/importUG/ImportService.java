@@ -44,7 +44,7 @@ public interface ImportService {
      */
     String getState(UUID state) throws Exception;
 
-    String getErrorMessage(UUID appId, UUID state) throws Exception;
+    String getErrorMessage(UUID state) throws Exception;
 
     /**
      * Returns the list of imported files from S3.

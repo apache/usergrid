@@ -119,7 +119,7 @@ public class S3ImportImpl implements S3Import {
                         break;
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return files;

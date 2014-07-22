@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -153,20 +154,16 @@ public class ImportServiceImpl implements ImportService {
      * @return String
      */
     @Override
-    public String getErrorMessage( final UUID appId, final UUID uuid ) throws Exception {
+    public String getErrorMessage(final UUID uuid ) throws Exception {
 
         //get application entity manager
-        if ( appId == null ) {
-            logger.error( "Application context cannot be found." );
-            return "Application context cannot be found.";
-        }
 
         if ( uuid == null ) {
             logger.error( "UUID passed in cannot be null." );
             return "UUID passed in cannot be null";
         }
 
-        EntityManager rootEm = emf.getEntityManager( appId );
+        EntityManager rootEm = emf.getEntityManager(  MANAGEMENT_APPLICATION_ID );
 
         //retrieve the import entity.
         Import importUG = rootEm.get( uuid, Import.class );
@@ -175,7 +172,7 @@ public class ImportServiceImpl implements ImportService {
             logger.error( "no entity with that uuid was found" );
             return "No Such Element found";
         }
-        return importUG.getState().toString();
+        return importUG.getErrorMessage().toString();
     }
 
 
@@ -230,86 +227,89 @@ public class ImportServiceImpl implements ImportService {
     @Override
     public void doImport(JobExecution jobExecution) throws Exception {
 
-        Map<String, Object> config = ( Map<String, Object> ) jobExecution.getJobData().getProperty( "importInfo" );
-        Object s3PlaceHolder = jobExecution.getJobData().getProperty( "s3Import" );
+        Map<String, Object> config = (Map<String, Object>) jobExecution.getJobData().getProperty("importInfo");
+        Object s3PlaceHolder = jobExecution.getJobData().getProperty("s3Import");
         S3Import s3Import = null;
 
-        if ( config == null ) {
-            logger.error( "Import Information passed through is null" );
+        if (config == null) {
+            logger.error("Import Information passed through is null");
             return;
         }
 
         //get the entity manager for the application, and the entity that this Import corresponds to.
-        UUID importId = ( UUID ) jobExecution.getJobData().getProperty( IMPORT_ID );
+        UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-        Import importUG = em.get( importId, Import.class );
+        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        Import importUG = em.get(importId, Import.class);
 
         //update the entity state to show that the job has officially started.
         importUG.setState(Import.State.STARTED);
-        em.update( importUG );
+        em.update(importUG);
         try {
-            if ( s3PlaceHolder != null ) {
-                s3Import = ( S3Import ) s3PlaceHolder;
+            if (s3PlaceHolder != null) {
+                s3Import = (S3Import) s3PlaceHolder;
+            } else {
+                s3Import = new S3ImportImpl();
             }
-            else {
-                s3Import =  new S3ImportImpl();
-            }
-        }
-        catch ( Exception e ) {
-            logger.error( "S3Import doesn't exist" );
+        } catch (Exception e) {
+            logger.error("S3Import doesn't exist");
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FAILED);
-            em.update( importUG );
+            em.update(importUG);
             return;
         }
 
-        if ( config.get( "organizationId" ) == null ) {
-            logger.error( "No organization could be found" );
-            importUG.setState(Import.State.FAILED);
-            em.update( importUG );
-            return;
-        }
-        else if ( config.get( "applicationId" ) == null ) {
-            //import All the applications from an organization
-            try {
+        try {
+            if (config.get("organizationId") == null) {
+                logger.error("No organization could be found");
+                importUG.setState(Import.State.FAILED);
+                em.update(importUG);
+                return;
+            } else if (config.get("applicationId") == null) {
+                //import All the applications from an organization
                 importApplicationsFromOrg((UUID) config.get("organizationId"), config, jobExecution, s3Import);
-            }
-            catch ( Exception e ) {
-                importUG.setErrorMessage(e.getMessage());
-                importUG.setState( Import.State.FAILED );
-                em.update( importUG );
-                return;
-            }
-        }
-        else if ( config.get( "collectionName" ) == null ) {
-            //imports an Application from a single organization
-            try {
-                importApplicationFromOrg((UUID) config.get("organizationId"),(UUID) config.get("applicationId"), config, jobExecution, s3Import);
-            }
-            catch ( Exception e ) {
-                importUG.setErrorMessage( e.getMessage() );
-                importUG.setState( Import.State.FAILED );
-                em.update( importUG );
-                return;
+            } else if (config.get("collectionName") == null) {
+                //imports an Application from a single organization
+                    importApplicationFromOrg((UUID) config.get("organizationId"), (UUID) config.get("applicationId"), config, jobExecution, s3Import);
+            } else {
+                //imports a single collection from an app org combo
+                importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution, s3Import);
             }
         }
-        else {
+        catch (OrganizationNotFoundException e) {
+            importUG.setErrorMessage(e.getMessage());
+            importUG.setState(Import.State.FAILED);
+            em.update(importUG);
+            return;
+        }
+        catch (ApplicationNotFoundException e) {
+            importUG.setErrorMessage(e.getMessage());
+            importUG.setState(Import.State.FAILED);
+            em.update(importUG);
+            return;
+        }
+        catch (CollectionNotFoundException e) {
+            importUG.setErrorMessage(e.getMessage());
+            importUG.setState(Import.State.FAILED);
+            em.update(importUG);
+            return;
+        }
+        catch (JsonParseException e) {
+            importUG.setErrorMessage(e.getMessage());
+            importUG.setState(Import.State.FAILED);
+            em.update(importUG);
+            return;
+        }
+        catch (Exception e) {
+            // the case where job will be retried i.e. resumed from the failed point
+            importUG.setErrorMessage(e.getMessage());
+            importUG.setState(Import.State.FAILED);
+            em.update(importUG);
+            throw e;
+        }
 
-            //imports a single collection from an app org combo
-            try {
-                importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution,s3Import);
-            }
-            catch ( Exception e ) {
-                importUG.setErrorMessage( e.getMessage() );
-                importUG.setState( Import.State.FAILED );
-                em.update( importUG );
-                return;
-            }
-        }
         importUG.setState( Import.State.FINISHED );
         em.update( importUG );
-
     }
 
     /**
@@ -322,11 +322,24 @@ public class ImportServiceImpl implements ImportService {
         Import importUG = getImportEntity(jobExecution);
         ApplicationInfo application = managementService.getApplicationInfo(applicationUUID);
 
-        String appFileName = prepareInputFileName("application", application.getName(),(String) config.get("collectionName"));
+        if(application == null) {
+            throw new ApplicationNotFoundException("Application Not Found");
+        }
+
+        EntityManager em = emf.getEntityManager(application.getId());
+
+        String collectionName = config.get("collectionName").toString();
+        Set<String> collections = em.getApplicationCollections();
+
+        if(!collections.contains(collectionName)) {
+            throw new CollectionNotFoundException("Collection Not Found");
+        }
+
+        String appFileName = prepareInputFileName("application", application.getName(),collectionName);
 
         files = fileTransfer( importUG, appFileName, config, s3Import, 0 );
 
-        FileParser();
+        FileParser(jobExecution);
     }
 
     /**
@@ -339,11 +352,16 @@ public class ImportServiceImpl implements ImportService {
         Import importUG = getImportEntity(jobExecution);
 
         ApplicationInfo application = managementService.getApplicationInfo( applicationId );
+
+        if(application == null) {
+            throw new ApplicationNotFoundException("Application Not Found");
+        }
+
         String appFileName = prepareInputFileName("application", application.getName(), null);
 
         files = fileTransfer( importUG, appFileName, config, s3Import, 1 );
 
-        FileParser();
+        FileParser(jobExecution);
     }
 
     /**
@@ -357,11 +375,14 @@ public class ImportServiceImpl implements ImportService {
         String appFileName = null;
 
         OrganizationInfo organizationInfo = managementService.getOrganizationByUuid(organizationUUID);
+        if(organizationInfo == null) {
+            throw new OrganizationNotFoundException("Organization Not Found");
+        }
 
         appFileName = prepareInputFileName( "organization", organizationInfo.getName() , null );
         files = fileTransfer( importUG, appFileName, config, s3Import, 2 );
 
-        FileParser();
+        FileParser(jobExecution);
     }
 
     /**
@@ -403,14 +424,13 @@ public class ImportServiceImpl implements ImportService {
      */
     public ArrayList<File> fileTransfer( Import importUG, String appFileName, Map<String, Object> config,
                                          S3Import s3Import , int type) {
-        ArrayList<File> files;
+        ArrayList<File> files = new ArrayList<File>();
         try {
             files  =  s3Import.copyFromS3(config, appFileName , type);
         }
         catch ( Exception e ) {
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FAILED);
-            return null;
         }
         return files;
     }
@@ -419,12 +439,13 @@ public class ImportServiceImpl implements ImportService {
      * The loops through each temp file and parses it to store the entities from the json back into usergrid
      * @throws Exception
      */
-    private void FileParser() throws Exception {
+    private void FileParser(JobExecution jobExecution) throws Exception {
 
         for(File collectionFile : files) {
             String applicationName = collectionFile.getPath().split("\\.")[0];
 
             ApplicationInfo application = managementService.getApplicationInfo(applicationName);
+
 
             JsonParser jp = getJsonParserForFile(collectionFile);
 
@@ -439,6 +460,7 @@ public class ImportServiceImpl implements ImportService {
                 importEntityStuff(jp, em);
             }
             jp.close();
+
         }
     }
 
@@ -508,6 +530,15 @@ public class ImportServiceImpl implements ImportService {
                         if(key.equals("uuid")) {
                             ownerEntityRef = em.getRef( UUID.fromString(jp.getText()));
                         }
+                        else if(key.equals("type")) {
+
+                            String value = jp.getText();
+                            Set<String> collections = em.getApplicationCollections();
+                            if(!collections.contains(value+"s")) {
+                                throw new CollectionNotFoundException("Collection Not Found");
+                            }
+                            properties.put(key,value);
+                        }
                         else
                         {
                             String value = jp.getText();
@@ -521,5 +552,23 @@ public class ImportServiceImpl implements ImportService {
             }
         }
     }
+}
 
+/**
+ * custom exceptions
+ */
+class OrganizationNotFoundException extends Exception {
+    OrganizationNotFoundException(String s) {
+        super(s);
+    }
+}
+class ApplicationNotFoundException extends Exception {
+    ApplicationNotFoundException(String s) {
+        super(s);
+    }
+}
+class CollectionNotFoundException extends Exception {
+    CollectionNotFoundException(String s) {
+        super(s);
+    }
 }

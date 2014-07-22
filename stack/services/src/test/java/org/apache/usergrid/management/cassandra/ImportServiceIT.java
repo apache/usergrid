@@ -516,28 +516,15 @@ public class ImportServiceIT {
         assertEquals(state,"No Such Element found");
     }
 
-    /**
-     * Test to get error message of a job with null appID
-     */
-    @Test
-    public void testErrorMessageWithNullAppID() throws Exception {
-        UUID state = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
-        UUID appId = null;
-        ImportService importService = setup.getImportService();
-        String error = importService.getErrorMessage(appId,state);
-
-        assertEquals(error,"Application context cannot be found.");
-    }
 
     /**
      * Test to get error message of a job with null state
      */
     @Test
     public void testErrorMessageWithNullState() throws Exception {
-        UUID appId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
         UUID state = null;
         ImportService importService = setup.getImportService();
-        String error = importService.getErrorMessage(appId,state);
+        String error = importService.getErrorMessage(state);
 
         assertEquals(error,"UUID passed in cannot be null");
     }
@@ -548,9 +535,8 @@ public class ImportServiceIT {
     @Test
     public void testErrorMessageWithFakeUUID() throws Exception {
         UUID state = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
-        UUID appId = applicationId;
         ImportService importService = setup.getImportService();
-        String error = importService.getErrorMessage(appId,state);
+        String error = importService.getErrorMessage(state);
 
         assertEquals(error,"No Such Element found");
     }
@@ -666,6 +652,36 @@ public class ImportServiceIT {
         //import the all application files for the organization and wait for the import to finish
         importService.doImport(jobExecution);
         assertEquals(importService.getState(importUUID),"FAILED");
+    }
+
+    /**
+     * Test to the doImport Collection method with fake application ID
+     */
+    @Test
+    public void testDoImportCollectionWithFakeCollectionName() throws Exception {
+        // import
+        S3Import s3Import = new S3ImportImpl();
+        ImportService importService = setup.getImportService();
+
+        HashMap<String, Object> payload = payloadBuilder();
+
+        payload.put("organizationId",organization.getUuid());
+        payload.put("applicationId",applicationId);
+        payload.put("collectionName","fake-collection");
+
+        //schedule the import job
+        UUID importUUID = importService.schedule( payload );
+
+        //create and initialize jobData returned in JobExecution.
+        JobData jobData = jobImportDataCreator(payload, importUUID, s3Import);
+
+        JobExecution jobExecution = mock( JobExecution.class );
+        when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        //import the all application files for the organization and wait for the import to finish
+        importService.doImport(jobExecution);
+        assertEquals(importService.getState(importUUID),"FAILED");
+        assertEquals(importService.getErrorMessage(importUUID),"Collection Not Found");
     }
 
     /*Creates fake payload for testing purposes.*/
