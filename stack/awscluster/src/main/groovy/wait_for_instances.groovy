@@ -33,7 +33,18 @@ String stackName = (String)System.getenv().get("STACK_NAME")
 String domain    = stackName
 
 //def replicationFactor = System.getenv().get("CASSANDRA_REPLICATION_FACTOR")
-int cassNumServers = System.getenv().get("CASSANDRA_NUM_SERVERS").toInteger()
+//int cassNumServers = System.getenv().get("CASSANDRA_NUM_SERVERS").toInteger()
+
+if (args.size() !=2 )  {
+  println "this script expects two arguments.  wait_for_instances.groovy nodeType numberOfServers"
+  // You can even print the usage here.
+  return
+}
+
+String nodeType = args[0]
+int numberOfServers = args[1]
+
+
 
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
@@ -47,7 +58,7 @@ while (true) {
 
 
 
-        def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null  order by itemName()"))
+        def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null and nodeType = '${nodeType}'  order by itemName()"))
 
 
         count = 0
@@ -58,8 +69,8 @@ while (true) {
                 count++
             }
         }
-        if (count >= cassNumServers) {
-            println("count = ${count}, total number of servers is ${cassNumServers}.  Breaking")
+        if (count >= numberOfServers) {
+            println("count = ${count}, total number of servers is ${numServers}.  Breaking")
             break
         }
 

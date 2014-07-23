@@ -35,8 +35,8 @@ chown cassandra /mnt/data/cassandra
 
 # Wait for other instances to start up
 cd /usr/share/usergrid/scripts
-groovy registry_register.groovy
-groovy wait_for_instances.groovy
+groovy registry_register.groovy cassandra
+groovy wait_for_instances.groovy cassandra
 
 cd /usr/share/usergrid/scripts
 groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
@@ -52,6 +52,9 @@ apt-get update
 apt-get  --force-yes -y install opscenter
 
 sudo service opscenterd start
+
+
+
 
 
 ## Configure Priam

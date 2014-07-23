@@ -22,6 +22,8 @@
 # Install and stop ElasticSearch
 pushd /etc/apt/sources.list.d
 
+groovy ./registry_register.groovy elasticsarch
+
 cat >> elasticsearch.sources.list << EOF
 deb http://packages.elasticsearch.org/elasticsearch/1.0/debian stable main
 EOF
@@ -38,6 +40,8 @@ chown elasticsearch /mnt/log/elasticsearch
 # Configure and restart ElasticSearch
 update-rc.d elasticsearch defaults 95 10
 cd /usr/share/usergrid/scripts
+
+
 groovy ./configure_elasticsearch.groovy > /etc/elasticsearch/elasticsearch.yml
 
 popd
