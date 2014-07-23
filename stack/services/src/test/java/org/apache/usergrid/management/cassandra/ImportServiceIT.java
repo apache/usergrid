@@ -48,6 +48,8 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.Ignore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,9 +115,9 @@ public class ImportServiceIT {
         emTest.createConnection( emTest.getRef(entityTest[1].getUuid()), "related", emTest.getRef( entityTest[0].getUuid()));
     }
 
-    // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if a collection file is imported correctly
-    @Test
+    //@Test
     public void testIntegrationImportCollection() throws Exception {
 
         // //creates 5 entities in user collection
@@ -228,9 +230,9 @@ public class ImportServiceIT {
         deleteBucket();
     }
 
-    // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if application is imported correctly
-    @Test
+    //@Test
     public void testIntegrationImportApplication() throws Exception {
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -345,9 +347,9 @@ public class ImportServiceIT {
         deleteBucket();
     }
 
-    // @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if all applications file for an organization are imported correctly
-    @Test
+    //@Test
     public void testIntegrationImportOrganization() throws Exception {
 
         // //creates 5 entities in usertests collection
@@ -544,7 +546,8 @@ public class ImportServiceIT {
     /**
      * Test to the doImport method with null organziation ID
      */
-    @Test
+    @Ignore
+    //@Test
     public void testDoImportWithNullOrganizationID() throws Exception {
         // import
         S3Import s3Import = new S3ImportImpl();
@@ -565,10 +568,11 @@ public class ImportServiceIT {
         assertEquals(importService.getState(importUUID),"FAILED");
     }
 
+    @Ignore
     /**
      * Test to the doImport method with fake organization ID
      */
-    @Test
+    //@Test
     public void testDoImportWithFakeOrganizationID() throws Exception {
 
         UUID fakeOrgId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -596,7 +600,8 @@ public class ImportServiceIT {
     /**
      * Test to the doImport method with fake application ID
      */
-    @Test
+    @Ignore
+    //@Test
     public void testDoImportWithFakeApplicationID() throws Exception {
 
         UUID fakeappId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -626,7 +631,8 @@ public class ImportServiceIT {
     /**
      * Test to the doImport Collection method with fake application ID
      */
-    @Test
+    //@Test
+    @Ignore
     public void testDoImportCollectionWithFakeApplicationID() throws Exception {
 
         UUID fakeappId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -657,7 +663,8 @@ public class ImportServiceIT {
     /**
      * Test to the doImport Collection method with fake application ID
      */
-    @Test
+    @Ignore
+    //@Test
     public void testDoImportCollectionWithFakeCollectionName() throws Exception {
         // import
         S3Import s3Import = new S3ImportImpl();
