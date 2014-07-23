@@ -1825,16 +1825,21 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    public String getSecret( UUID applicationId, AuthPrincipalType type, UUID entityId, String entityType ) throws Exception {
-        if ( AuthPrincipalType.ORGANIZATION.equals( type ) || AuthPrincipalType.APPLICATION.equals( type ) ) {
-            UUID ownerId =
-                    AuthPrincipalType.APPLICATION_USER.equals( type ) ? applicationId : smf.getManagementAppId();
+    public String getSecret( UUID applicationId, AuthPrincipalType type, UUID entityId ) throws Exception {
 
-            return getCredentialsSecret( readUserToken( ownerId, entityId, entityType ) );
+        if ( AuthPrincipalType.ORGANIZATION.equals( type )) {  
+            UUID ownerId = smf.getManagementAppId();
+            return getCredentialsSecret( readUserToken( ownerId, entityId, Group.ENTITY_TYPE ) );
+
+        } else if ( AuthPrincipalType.APPLICATION.equals( type ) ) {
+            UUID ownerId = smf.getManagementAppId();
+            return getCredentialsSecret( readUserToken( ownerId, entityId, Application.ENTITY_TYPE ) );
+
         }
         else if ( AuthPrincipalType.ADMIN_USER.equals( type ) || AuthPrincipalType.APPLICATION_USER.equals( type ) ) {
-            return getCredentialsSecret( readUserPasswordCredentials( applicationId, entityId, entityType ) );
+            return getCredentialsSecret( readUserPasswordCredentials( applicationId, entityId, User.ENTITY_TYPE ) );
         }
+
         throw new IllegalArgumentException( "Must specify an admin user, organization or application principal" );
     }
 
@@ -1847,7 +1852,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getClientSecretForOrganization( UUID organizationId ) throws Exception {
-        return getSecret( smf.getManagementAppId(), AuthPrincipalType.ORGANIZATION, organizationId, Group.ENTITY_TYPE );
+        return getSecret( smf.getManagementAppId(), AuthPrincipalType.ORGANIZATION, organizationId );
     }
 
 
@@ -1859,7 +1864,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getClientSecretForApplication( UUID applicationId ) throws Exception {
-        return getSecret( smf.getManagementAppId(), AuthPrincipalType.APPLICATION, applicationId, Application.ENTITY_TYPE );
+        return getSecret( smf.getManagementAppId(), AuthPrincipalType.APPLICATION, applicationId );
     }
 
 
@@ -1900,14 +1905,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         AccessInfo access_info = null;
 
-        String entityType = null;
-        if ( type.equals( AuthPrincipalType.APPLICATION )) {
-            entityType = Application.ENTITY_TYPE;
-        } else {
-            entityType = Group.ENTITY_TYPE;
-        } 
-
-        if ( clientSecret.equals( getSecret( smf.getManagementAppId(), type, uuid, entityType ) ) ) {
+        if ( clientSecret.equals( getSecret( smf.getManagementAppId(), type, uuid ) ) ) {
 
             String token = getTokenForPrincipal( ACCESS, null, smf.getManagementAppId(), type, uuid, ttl );
 
@@ -1944,15 +1942,8 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        String entityType = null;
-        if ( type.equals( AuthPrincipalType.APPLICATION )) {
-            entityType = Application.ENTITY_TYPE;
-        } else {
-            entityType = Group.ENTITY_TYPE;
-        } 
-
         PrincipalCredentialsToken token = null;
-        if ( clientSecret.equals( getSecret( smf.getManagementAppId(), type, uuid, entityType ))) {
+        if ( clientSecret.equals( getSecret( smf.getManagementAppId(), type, uuid))) {
             if ( type.equals( AuthPrincipalType.APPLICATION ) ) {
                 ApplicationInfo app = getApplicationInfo( uuid );
                 token = new PrincipalCredentialsToken( new ApplicationPrincipal( app ),

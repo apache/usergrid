@@ -78,7 +78,7 @@ public class PathQueryIT extends AbstractCoreIT {
         // query the users, ignoring page boundaries
         Results results = em.searchCollection( em.getApplicationRef(), "users", userQuery );
         PagingResultsIterator pri = new PagingResultsIterator( results );
-        long count = 2;
+        int count = 2;
         while ( pri.hasNext() ) {
             Entity e = ( Entity ) pri.next();
             assertEquals( count++, e.getProperty( "index" ) );

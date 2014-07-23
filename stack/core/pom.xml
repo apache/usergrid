@@ -27,7 +27,7 @@
   <properties>
     <!-- Up to 30x parallelism can be used -->
     <core.it.forkCount>2</core.it.forkCount>
-    <core.it.suite.concurrency>5</core.it.suite.concurrency>
+    <core.it.suite.concurrency>2</core.it.suite.concurrency>
   </properties>
 
   <artifactId>usergrid-core</artifactId>
@@ -130,27 +130,31 @@
   </profiles>
 
   <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*.xml</include>
-        </includes>
-      </resource>
-    </resources>
 
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*.yaml</include>
-          <include>**/*.xml</include>
-          <include>**/*.properties</include>
-        </includes>
-      </testResource>
-    </testResources>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.sh</include>
+                    <include>**/stack.json</include>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include> 
+                </includes>
+            </resource>
+        </resources>
+
+        <testResources> 
+            <testResource> 
+                <directory>src/test/resources</directory> 
+                <filtering>true</filtering> 
+                <includes>
+                    <include>**/*.yaml</include>
+                    <include>**/*.properties</include> 
+                    <include>**/*.xml</include> 
+                </includes> 
+            </testResource> 
+        </testResources>
 
     <plugins>
 
@@ -209,6 +213,33 @@
           <target>1.7</target>
         </configuration>
       </plugin>
+
+<!--            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.usergrid.chop</groupId>
+                <artifactId>chop-maven-plugin</artifactId>
+                <version>2.0.0-SNAPSHOT</version>
+                <configuration>
+                    <username>${chop.coordinator.username}</username>
+                    <password>${chop.coordinator.password}</password>
+                    <endpoint>https://${chop.coordinator.url}:8443</endpoint>
+                    <testPackageBase>ctest</testPackageBase>
+                    <runnerCount>1</runnerCount>
+                </configuration>
+            </plugin>-->
+
     </plugins>
   </build>
 
@@ -505,6 +536,17 @@
         <scope>test</scope>
     </dependency>
 
+<!--    <dependency>
+        <groupId>org.apache.usergrid.chop</groupId>
+        <artifactId>chop-api</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.usergrid.chop</groupId>
+        <artifactId>chop-stack</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </dependency>-->
 
   </dependencies>
 

@@ -45,6 +45,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import org.junit.Ignore;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
@@ -287,7 +288,7 @@ public class NodeShardAllocationTest {
 
 
 
-
+    @Ignore // outdated and no longer relevant test 
     @Test
     public void futureCountShardCleanup() {
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );

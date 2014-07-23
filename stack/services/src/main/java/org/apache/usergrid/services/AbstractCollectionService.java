@@ -271,7 +271,7 @@ public class AbstractCollectionService extends AbstractService {
 
         checkPermissionsForEntity( context, id );
 
-        Entity item = em.get( new SimpleEntityRef( getEntityType(), id) );
+        Entity item = em.get( id );
 
         if ( item != null ) {
             validateEntityType( item, id );
