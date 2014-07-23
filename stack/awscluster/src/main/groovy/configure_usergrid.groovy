@@ -43,15 +43,25 @@ def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
-def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}`"))
-def seeds = ""
+def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null and nodetype = 'cassandra'  order by itemName()"))
+def cassandras = ""
 def sep = ""
 for (item in selectResult.getItems()) {
     def att = item.getAttributes().get(0)
-    if (att.getValue().equals(stackName)) {
-        seeds = "${seeds}${sep}${item.getName()}:9160"
-        sep = ","
-    }
+    cassandras = "${cassandras}${sep}${item.getName()}:9160"
+    sep = ","
+
+}
+
+//TODO T.N Make this the graphite url
+selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null and nodetype = 'graphite'  order by itemName()"))
+def graphite = ""
+sep = ""
+for (item in selectResult.getItems()) {
+    def att = item.getAttributes().get(0)
+    graphite = "${graphite}${sep}${item.getName()}:2003"
+    sep = ","
+
 }
 
 def usergridConfig = """
@@ -59,7 +69,7 @@ def usergridConfig = """
 # Minimal Usergrid configuration properties for local Tomcat and Cassandra 
 #
 
-cassandra.url=${seeds}
+cassandra.url=${cassandras}
 cassanrda.cluster=${clusterName}
 cassandra.keyspace.strategy.options.replication_factor=${replFactor}
 cassandra.keyspace.strategy.options.us-west=${replFactor}
@@ -134,14 +144,18 @@ usergrid.view.management.users.user.activate=${baseUrl}/accounts/welcome
 usergrid.view.management.users.user.confirm=${baseUrl}/accounts/welcome
 
 usergrid.admin.confirmation.url=${baseUrl}/management/users/%s/confirm
-usergrid.user.confirmation.url=${baseUrl}/%s/%s/users/%s/confirm\n\\n\
+usergrid.user.confirmation.url=${baseUrl}/%s/%s/users/%s/confirm
 
-usergrid.organization.activation.url=${baseUrl}/management/organizations/%s/activate\n\
+usergrid.organization.activation.url=${baseUrl}/management/organizations/%s/activate
+
 usergrid.admin.activation.url=${baseUrl}/management/users/%s/activate
 usergrid.user.activation.url=${baseUrl}%s/%s/users/%s/activate
 
 usergrid.admin.resetpw.url=${baseUrl}/management/users/%s/resetpw
 usergrid.user.resetpw.url=${baseUrl}/%s/%s/users/%s/resetpw
+
+#TODO: Change this
+usergrid.graphite.url=${graphite}
 """
 
 println usergridConfig 

@@ -1125,6 +1125,20 @@
             ]
          }
       },
+       "CassSecurityGroupPortAll":{
+               "Type":"AWS::EC2::SecurityGroupIngress",
+               "Properties":{
+                  "GroupName":{
+                     "Ref":"CassSecurityGroup"
+                  },
+                  "IpProtocol":"tcp",
+                  "FromPort":"1",
+                  "ToPort":"65535",
+                  "SourceSecurityGroupName":{
+                     "Ref":"CassSecurityGroup"
+                  }
+               }
+            },
       "CassSecurityGroupPort7000":{
          "Type":"AWS::EC2::SecurityGroupIngress",
          "Properties":{
@@ -1132,7 +1146,7 @@
                "Ref":"CassSecurityGroup"
             },
             "IpProtocol":"tcp",
-            "FromPort":"7000",
+            "FromPort":"1",
             "ToPort":"7000",
             "SourceSecurityGroupName":{
                "Ref":"CassSecurityGroup"
@@ -1181,6 +1195,7 @@
             }
          }
       },
+
       "CassSecurityGroupPort9300":{
          "Type":"AWS::EC2::SecurityGroupIngress",
          "Properties":{
@@ -1214,6 +1229,37 @@
                }
             ]
          }
-      }
+      },
+
+       "GraphiteSecurityGroupRest":{
+               "Type":"AWS::EC2::SecurityGroupIngress",
+               "Properties":{
+                  "GroupName":{
+                     "Ref":"GraphiteSecurityGroup"
+                  },
+                  "IpProtocol":"tcp",
+                  "FromPort":"0",
+                  "ToPort":"65535",
+                  "SourceSecurityGroupName":{
+                     "Ref":"CassSecurityGroup"
+                  }
+               }
+            },
+
+       "GraphiteSecurityGroupCass":{
+                  "Type":"AWS::EC2::SecurityGroupIngress",
+                  "Properties":{
+                     "GroupName":{
+                        "Ref":"GraphiteSecurityGroup"
+                     },
+                     "IpProtocol":"tcp",
+                     "FromPort":"0",
+                     "ToPort":"65535",
+                     "SourceSecurityGroupName":{
+                        "Ref":"RestSecurityGroup"
+                     }
+                  }
+               },
+
    }
 }
