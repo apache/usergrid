@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.usergrid.chop.stack.Cluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +125,7 @@ public class CoordinatorUtils {
         InputStream stream = null;
         URLClassLoader classLoader = null;
         try {
-             // Access the jar file resources after adding it to a new ClassLoader
+            // Access the jar file resources after adding it to a new ClassLoader
             classLoader = new URLClassLoader( new URL[] { runnerJar.toURL() },
                     Thread.currentThread().getContextClassLoader() );
 
@@ -351,6 +352,62 @@ public class CoordinatorUtils {
 
         String destFile = sb.toString();
         commands.add( new SCPCommand( runnerJar.getAbsolutePath(), destFile ) );
+
+        sb = new StringBuilder();
+
+        /** Get runner scripts out of the jar file and prepare ssh & scp commands */
+        for ( Cluster cluster : stack.getClusters() ){
+
+            // Prepare setup environment variables
+            for( Object obj: cluster.getInstanceSpec().getScriptEnvironment().keySet() ) {
+
+                String envVar = obj.toString();
+                String value = cluster.getInstanceSpec().getScriptEnvironment().getProperty( envVar );
+                sb.append( "export " )
+                        .append( envVar )
+                        .append( "=\"" )
+                        .append( value )
+                        .append( "\";" );
+            }
+
+            String exportVars = sb.toString();
+
+            // Prepare SSH and SCP commands
+            for( URL scriptFile : cluster.getInstanceSpec().getRunnerScripts() ) {
+                /** First save file beside runner.jar */
+                File file = new File( scriptFile.getPath() );
+                File fileToSave = new File( runnerJar.getParentFile(), file.getName() );
+                writeToFile( getResourceAsStreamFromRunnerJar( runnerJar, file.getName() ), fileToSave.getPath() );
+
+                /** SCP the script to instance **/
+                sb = new StringBuilder();
+                sb.append( "/home/" )
+                        .append( Utils.DEFAULT_USER )
+                        .append( "/" )
+                        .append( fileToSave.getName() );
+
+                String destinationFile = sb.toString();
+                commands.add( new SCPCommand( fileToSave.getAbsolutePath(), destinationFile ) );
+
+                /** calling chmod first just in case **/
+                sb = new StringBuilder();
+                sb.append( "chmod 0755 " )
+                        .append( "/home/" )
+                        .append( Utils.DEFAULT_USER )
+                        .append( "/" )
+                        .append( fileToSave.getName() )
+                        .append( ";" );
+
+                /** Run the script command */
+                sb.append( exportVars )
+                        .append( "sudo -E " )
+                        .append( destinationFile );
+
+
+                commands.add( new SSHCommand( sb.toString() ) );
+            }
+        }
+
 
         /**
          * Start the runner.jar on instance.

@@ -66,6 +66,14 @@ public interface InstanceSpec {
     List<URL> getSetupScripts();
 
     /**
+     * A list of scripts executed on newly created runner instances of this instance specification.
+     *
+     * @return the runner scripts
+     */
+    @JsonProperty
+    List<URL> getRunnerScripts();
+
+    /**
      * The environment properties to inject into the shell before executing setup scripts.
      */
     @JsonProperty
