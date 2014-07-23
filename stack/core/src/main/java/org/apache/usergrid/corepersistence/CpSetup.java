@@ -96,8 +96,6 @@ public class CpSetup implements Setup {
         try {
             logger.info("Loading Core Persistence properties");
 
-            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid-default" );
-
             String hostsString = "";
             CassandraHost[] hosts = cass.getCassandraHostConfigurator().buildCassandraHosts();
             if ( hosts.length == 0 ) {
@@ -109,14 +107,24 @@ public class CpSetup implements Setup {
                 sep = ",";
             }
 
+            // Translate Usergrid properties into Core Persistence properties
+
             Properties cpProps = new Properties();
             cpProps.put("cassandra.hosts", hostsString);
             cpProps.put("cassandra.port", hosts[0].getPort());
+            cpProps.put("cassandra.cluster_name", 
+                    cass.getProperties().get("cassandra.cluster"));
+            cpProps.put("collections.keyspace.strategy.class", 
+                    cass.getProperties().get("cassandra.keyspace.strategy"));
+            cpProps.put("collections.keyspace.strategy.options", "replication_factor:" +  
+                    cass.getProperties().get("cassandra.keyspace.strategy.options.replication_factor"));
+            logger.debug("Set Cassandra properties for Core Persistence: " + cpProps.toString() );
+
+            cpProps.putAll( cass.getProperties() );
 
             ConfigurationManager.loadProperties( cpProps );
-            logger.debug("Set Cassandra properties for Core Persistence: " + cpProps.toString() );
         }
-        catch ( IOException e ) {
+        catch ( Exception e ) {
             throw new RuntimeException( "Fatal error loading configuration.", e );
         }
 
