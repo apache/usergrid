@@ -41,5 +41,8 @@
 #
 # sudo rm /usr/lib/jvm/default-java
 # sudo ln -s /usr/lib/jvm/jdk1.7.0 /usr/lib/jvm/default-java
-sudo apt-get update >> /dev/null
-sudo apt-get --yes --force-yes install openjdk-7-jdk >> /dev/null
+# sudo apt-get update >> /dev/null
+# sudo apt-get --yes --force-yes install openjdk-7-jdk >> /dev/null
+
+echo "Test script started running..."
+echo -e "Test script is run successfully, $TEST_PARAM" > /home/ubuntu/runnerOut.log
