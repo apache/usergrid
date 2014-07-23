@@ -38,7 +38,7 @@ def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
 
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
-def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null and nodeType = 'elasticsearch'  order by itemName()"))
+def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null and nodetype = 'elasticsearch'  order by itemName()"))
 def seeds = ""
 def sep = ""
 for (item in selectResult.getItems()) {

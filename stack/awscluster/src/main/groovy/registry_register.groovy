@@ -31,14 +31,15 @@ String secretKey = (String)System.getenv().get("AWS_SECRET_KEY")
 String stackName = (String)System.getenv().get("STACK_NAME")
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
 String domain    = stackName
-String nodeType = + args[0];
+
 
 if (args.size() != 1 )  {
-  println "this script expects one argument.  registry_register.groovy nodeType"
+  println "this script expects one argument.  registry_register.groovy nodetype"
   // You can even print the usage here.
-  return
+  return 1;
 }
 
+String nodetype = args[0];
 
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
@@ -56,7 +57,7 @@ if (response.getAttributes().size() == 1) {
     }
 } else {
     println "Registering..."
-    def stackAtt = new ReplaceableAttribute("nodetype", nodeType, true)
+    def stackAtt = new ReplaceableAttribute("nodetype", nodetype, true)
     def attrs = new ArrayList()
     attrs.add(stackAtt)
     def par = new PutAttributesRequest(domain, hostName, attrs)
