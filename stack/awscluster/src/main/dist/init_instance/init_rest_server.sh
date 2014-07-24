@@ -44,6 +44,10 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
 
+/etc/init.d/tomcat7 restart
+groovy tag_instance.groovy
+
+
 # Wait for enough Cassandra nodes then deploy and restart Tomcat 
 cd /usr/share/usergrid/scripts
 groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
@@ -57,5 +61,3 @@ cp -r /usr/share/usergrid/webapps/* /var/lib/tomcat7/webapps
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js 
 
 # Go
-/etc/init.d/tomcat7 restart
-groovy tag_instance.groovy

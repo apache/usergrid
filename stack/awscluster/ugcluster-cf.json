@@ -15,7 +15,7 @@
       "ReleaseBucket":{
          "Description":"S3 Bucket where Usergrid assembly is to be found.",
          "Type":"String",
-         "Default":"ug-cloudformation-todd"
+         "Default":"ug-cloudformation"
       },
       "RestMinServers":{
          "Description":"Minimum number of REST servers.",
@@ -47,7 +47,7 @@
       "KeyPair":{
          "Description":"EC2 key pair to be use for SSH access",
          "Type":"String",
-         "Default":"ug-cloudformation-todd"
+         "Default":"ug-cloudformation"
       },
       "CassClusterName":{
          "Description":"Name to be used for Cassandra cluster.",
@@ -391,7 +391,7 @@
                                          "AZ2"
                                       ]
                                    }
-                        ]
+                        ],
                    "LaunchConfigurationName":{
                       "Ref":"GraphiteAutoScalingLaunchConfiguration"
                    },
@@ -677,7 +677,7 @@
                                   "AZ2"
                                ]
                             }
-             ]
+             ],
             "LaunchConfigurationName":{
                "Ref":"CassAutoScalingLaunchConfiguration"
             },
@@ -773,6 +773,7 @@
                         {
                            "Ref":"CassNumServers"
                         },
+                        "\n",
                          "export GRAPHITE_NUM_SERVERS=",
                         {
                            "Ref":"GraphiteNumServers"

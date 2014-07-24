@@ -32,8 +32,6 @@ String secretKey = (String)System.getenv().get("AWS_SECRET_KEY")
 String stackName = (String)System.getenv().get("STACK_NAME")
 String domain = stackName
 
-//def replicationFactor = System.getenv().get("CASSANDRA_REPLICATION_FACTOR")
-//int cassNumServers = System.getenv().get("CASSANDRA_NUM_SERVERS").toInteger()
 
 if (args.size() !=2 )  {
   println "this script expects two arguments.  wait_for_instances.groovy nodetype numberOfServers"
