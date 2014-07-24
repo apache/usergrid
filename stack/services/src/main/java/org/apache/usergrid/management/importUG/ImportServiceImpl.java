@@ -456,7 +456,6 @@ public class ImportServiceImpl implements ImportService {
             if(!completed) {
 
                 if(!isValidJSON(collectionFile, fileInfo)){
-//                   fileInfo.put("errorMessage", "Something seems to be wrong in this file, do check the JSON before you parse it again");
                     continue;
                 }
 
@@ -505,14 +504,9 @@ public class ImportServiceImpl implements ImportService {
             valid = true;
         } catch (JsonParseException e) {
             e.printStackTrace();
-            //throw e;
             fileInfo.put("errorMessage", e.getMessage());
-
-//            fileInfo.put("errorMessage", "Something seems to be wrong in this file, do check the JSON before you parse it again");
-//            return true;
         } catch (IOException e) {
             e.printStackTrace();
-            //throw e;
             fileInfo.put("errorMessage", "Something seems to be wrong in this file, we could not access it. Please check before you parse it again");
         }
 
@@ -588,10 +582,7 @@ public class ImportServiceImpl implements ImportService {
                             entityUuid = jp.getText();
                         }
                         else if(key.equals("type")) {
-
                             entityType = jp.getText();
-                            //Set<String> collections = em.getApplicationCollections();
-                            //properties.put(key,entityType);
                         }
                         else
                         {

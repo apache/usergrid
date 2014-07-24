@@ -44,19 +44,13 @@ import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.Ignore;
-
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -182,52 +176,50 @@ public class ImportServiceIT {
         while ( !importService.getState( importUUID ).equals( "FINISHED" ) ) {
             ;
         }
+        try {
 
-        //checks if temp import files are created i.e. downloaded from S3
-        assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
-        //check if entities are actually updated i.e. created and modified should be different
-        //EntityManager em = setup.getEmf().getEntityManager(applicationId);
-        Results collections  = em.getCollection(applicationId,"users",null, Results.Level.ALL_PROPERTIES);
-        List<Entity> entities = collections.getEntities();
-        for(Entity eachEntity: entities) {
-            Long created = eachEntity.getCreated();
-            Long modified = eachEntity.getModified();
-            assertThat(created, not(equalTo(modified)));
-        }
+            //checks if temp import files are created i.e. downloaded from S3
+            assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
-        // check if connections are created for only the 1st 2 entities in user collection
-        Results r;
-        List<ConnectionRef> connections;
-        for(int i=0;i<2;i++) {
-            r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
-            connections = r.getConnections();
-            assertNotNull(connections);
-        }
+            //check if entities are actually updated i.e. created and modified should be different
+            //EntityManager em = setup.getEmf().getEntityManager(applicationId);
+            Results collections = em.getCollection(applicationId, "users", null, Results.Level.ALL_PROPERTIES);
+            List<Entity> entities = collections.getEntities();
 
-        //check if dictionary is created
-        EntityRef er;
-        Map<Object,Object> dictionaries1,dictionaries2;
-
-        for(int i=0;i<3;i++) {
-
-            er = em.getRef(entities.get(i).getUuid());
-            dictionaries1 = em.getDictionaryAsMap(er,"connected_types");
-            dictionaries2 = em.getDictionaryAsMap(er,"connecting_types");
-
-            if(i==2) {
-                //for entity 2, these should be empty
-                assertThat(dictionaries1.size(),is(0));
-                assertThat(dictionaries2.size(),is(0));
+            // check if connections are created for only the 1st 2 entities in user collection
+            Results r;
+            List<ConnectionRef> connections;
+            for (int i = 0; i < 2; i++) {
+                r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
+                connections = r.getConnections();
+                assertNotNull(connections);
             }
-            else {
-                assertThat(dictionaries1.size(), is(not(0)));
-                assertThat(dictionaries2.size(), is(not(0)));
+
+            //check if dictionary is created
+            EntityRef er;
+            Map<Object, Object> dictionaries1, dictionaries2;
+
+            for (int i = 0; i < 3; i++) {
+
+                er = em.getRef(entities.get(i).getUuid());
+                dictionaries1 = em.getDictionaryAsMap(er, "connected_types");
+                dictionaries2 = em.getDictionaryAsMap(er, "connecting_types");
+
+                if (i == 2) {
+                    //for entity 2, these should be empty
+                    assertThat(dictionaries1.size(), is(0));
+                    assertThat(dictionaries2.size(), is(0));
+                } else {
+                    assertThat(dictionaries1.size(), is(not(0)));
+                    assertThat(dictionaries2.size(), is(not(0)));
+                }
             }
         }
-
-        //delete bucket
-        deleteBucket();
+        finally {
+            //delete bucket
+            deleteBucket();
+        }
     }
 
     @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
@@ -239,8 +231,7 @@ public class ImportServiceIT {
 
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
-//
-        //em.createApplicationCollection("custom");
+
         Entity entity[] = new Entity[5];
         //creates entities for a custom collection called "custom"
         for ( int i = 0; i < 5; i++ ) {
@@ -296,55 +287,51 @@ public class ImportServiceIT {
             ;
         }
 
-        //checks if temp import files are created i.e. downloaded from S3
-        assertThat(importService.getEphemeralFile().size(), is(not(0)));
+        try {
+            //checks if temp import files are created i.e. downloaded from S3
+            assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
-        Set<String> collections = em.getApplicationCollections();
-        Iterator<String> collectionsItr = collections.iterator();
-        // check if all collections in the application are updated
-        while(collectionsItr.hasNext())
-        {
-            String collectionName = collectionsItr.next();
-            Results collection  = em.getCollection(applicationId,collectionName,null, Results.Level.ALL_PROPERTIES);
-            List<Entity> entities = collection.getEntities();
-            for(Entity eachEntity: entities) {
-                Long created = eachEntity.getCreated();
-                Long modified = eachEntity.getModified();
-                assertThat(created, not(equalTo(modified)));
+            Set<String> collections = em.getApplicationCollections();
+            Iterator<String> collectionsItr = collections.iterator();
+            // check if all collections in the application are updated
+            while (collectionsItr.hasNext()) {
+                String collectionName = collectionsItr.next();
+                Results collection = em.getCollection(applicationId, collectionName, null, Results.Level.ALL_PROPERTIES);
+                List<Entity> entities = collection.getEntities();
+                for (Entity eachEntity : entities) {
+                    //check for dictionaries --> checking permissions in the dictionaries
+                    EntityRef er;
+                    Map<Object, Object> dictionaries;
 
-                //check for dictionaries --> checking permissions in the dictionaries
-                EntityRef er;
-                Map<Object,Object> dictionaries;
-
-                //checking for permissions for the roles collection
-                if(collectionName.equals("roles")) {
-                    if(eachEntity.getName().equalsIgnoreCase("admin"))
-                    {
-                        er = em.getRef(eachEntity.getUuid());
-                        dictionaries = em.getDictionaryAsMap(er, "permissions");
-                        assertThat(dictionaries.size(), is(0));
-                    }
-                    else{
-                        er = em.getRef(eachEntity.getUuid());
-                        dictionaries = em.getDictionaryAsMap(er, "permissions");
-                        assertThat(dictionaries.size(), is(not(0)));
+                    //checking for permissions for the roles collection
+                    if (collectionName.equals("roles")) {
+                        if (eachEntity.getName().equalsIgnoreCase("admin")) {
+                            er = em.getRef(eachEntity.getUuid());
+                            dictionaries = em.getDictionaryAsMap(er, "permissions");
+                            assertThat(dictionaries.size(), is(0));
+                        } else {
+                            er = em.getRef(eachEntity.getUuid());
+                            dictionaries = em.getDictionaryAsMap(er, "permissions");
+                            assertThat(dictionaries.size(), is(not(0)));
+                        }
                     }
                 }
-            }
-            if(collectionName.equals("customs")) {
-                // check if connections are created for only the 1st 2 entities in the custom collection
-                Results r;
-                List<ConnectionRef> connections;
-                for(int i=0;i<2;i++) {
-                    r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
-                    connections = r.getConnections();
-                    assertNotNull(connections);
+                if (collectionName.equals("customs")) {
+                    // check if connections are created for only the 1st 2 entities in the custom collection
+                    Results r;
+                    List<ConnectionRef> connections;
+                    for (int i = 0; i < 2; i++) {
+                        r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
+                        connections = r.getConnections();
+                        assertNotNull(connections);
+                    }
                 }
             }
         }
-
-        //delete bucket
-        deleteBucket();
+        finally {
+            //delete bucket
+            deleteBucket();
+        }
     }
 
     @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
@@ -417,66 +404,59 @@ public class ImportServiceIT {
             ;
         }
 
-        //checks if temp import files are created i.e. downloaded from S3
-        assertThat(importService.getEphemeralFile().size(), is(not(0)));
+        try {
+            //checks if temp import files are created i.e. downloaded from S3
+            assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
-        //get all applications for an organization
-        BiMap<UUID,String> applications = setup.getMgmtSvc().getApplicationsForOrganization(organization.getUuid());
-        for (BiMap.Entry<UUID, String> app : applications.entrySet())
-        {
-            //check if all collections-entities are updated - created and modified should be different
-            UUID appID = app.getKey();
-            em = setup.getEmf().getEntityManager(appID);
-            Set<String> collections = em.getApplicationCollections();
-            Iterator<String> itr = collections.iterator();
-            while(itr.hasNext())
-            {
-                String collectionName = itr.next();
-                Results collection  = em.getCollection(appID,collectionName,null, Results.Level.ALL_PROPERTIES);
-                List<Entity> entities = collection.getEntities();
+            //get all applications for an organization
+            BiMap<UUID, String> applications = setup.getMgmtSvc().getApplicationsForOrganization(organization.getUuid());
+            for (BiMap.Entry<UUID, String> app : applications.entrySet()) {
+                //check if all collections-entities are updated - created and modified should be different
+                UUID appID = app.getKey();
+                em = setup.getEmf().getEntityManager(appID);
+                Set<String> collections = em.getApplicationCollections();
+                Iterator<String> itr = collections.iterator();
+                while (itr.hasNext()) {
+                    String collectionName = itr.next();
+                    Results collection = em.getCollection(appID, collectionName, null, Results.Level.ALL_PROPERTIES);
+                    List<Entity> entities = collection.getEntities();
 
-                for(Entity eachEntity: entities) {
-                    Long created = eachEntity.getCreated();
-                    Long modified = eachEntity.getModified();
-                    assertThat(created, not(equalTo(modified)));
-                }
+                    if (collectionName.equals("usertests")) {
 
-
-                if(collectionName.equals("usertests")) {
-                    
-                    // check if connections are created for only the 1st 2 entities in user collection
-                    Results r;
-                    List<ConnectionRef> connections;
-                    for(int i=0;i<2;i++) {
-                        r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
-                        connections = r.getConnections();
-                        assertNotNull(connections);
-                    }
-
-                    //check if dictionary is created
-                    EntityRef er;
-                    Map<Object,Object> dictionaries1,dictionaries2;
-                    for(int i=0;i<3;i++) {
-                        er = em.getRef(entities.get(i).getUuid());
-                        dictionaries1 = em.getDictionaryAsMap(er,"connected_types");
-                        dictionaries2 = em.getDictionaryAsMap(er,"connecting_types");
-
-                        if(i==2) {
-                            //for entity 2, these should be empty
-                            assertThat(dictionaries1.size(),is(0));
-                            assertThat(dictionaries2.size(),is(0));
+                        // check if connections are created for only the 1st 2 entities in user collection
+                        Results r;
+                        List<ConnectionRef> connections;
+                        for (int i = 0; i < 2; i++) {
+                            r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
+                            connections = r.getConnections();
+                            assertNotNull(connections);
                         }
-                        else {
-                            assertThat(dictionaries1.size(), is(not(0)));
-                            assertThat(dictionaries2.size(), is(not(0)));
+
+                        //check if dictionary is created
+                        EntityRef er;
+                        Map<Object, Object> dictionaries1, dictionaries2;
+                        for (int i = 0; i < 3; i++) {
+                            er = em.getRef(entities.get(i).getUuid());
+                            dictionaries1 = em.getDictionaryAsMap(er, "connected_types");
+                            dictionaries2 = em.getDictionaryAsMap(er, "connecting_types");
+
+                            if (i == 2) {
+                                //for entity 2, these should be empty
+                                assertThat(dictionaries1.size(), is(0));
+                                assertThat(dictionaries2.size(), is(0));
+                            } else {
+                                assertThat(dictionaries1.size(), is(not(0)));
+                                assertThat(dictionaries2.size(), is(not(0)));
+                            }
                         }
                     }
                 }
             }
         }
-
-        //delete bucket
-        deleteBucket();
+        finally {
+            //delete bucket
+            deleteBucket();
+        }
     }
 
     /**
@@ -623,7 +603,7 @@ public class ImportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        //import the all application files for the organization and wait for the import to finish
+        //import the application files for the organization and wait for the import to finish
         importService.doImport(jobExecution);
         assertEquals(importService.getState(importUUID),"FAILED");
     }
@@ -655,40 +635,9 @@ public class ImportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
-        //import the all application files for the organization and wait for the import to finish
+        //import the all collection files for the organization-application and wait for the import to finish
         importService.doImport(jobExecution);
         assertEquals(importService.getState(importUUID),"FAILED");
-    }
-
-    /**
-     * Test to the doImport Collection method with fake application ID
-     */
-    @Ignore
-    //@Test
-    public void testDoImportCollectionWithFakeCollectionName() throws Exception {
-        // import
-        S3Import s3Import = new S3ImportImpl();
-        ImportService importService = setup.getImportService();
-
-        HashMap<String, Object> payload = payloadBuilder();
-
-        payload.put("organizationId",organization.getUuid());
-        payload.put("applicationId",applicationId);
-        payload.put("collectionName","fake-collection");
-
-        //schedule the import job
-        UUID importUUID = importService.schedule( payload );
-
-        //create and initialize jobData returned in JobExecution.
-        JobData jobData = jobImportDataCreator(payload, importUUID, s3Import);
-
-        JobExecution jobExecution = mock( JobExecution.class );
-        when( jobExecution.getJobData() ).thenReturn( jobData );
-
-        //import the all application files for the organization and wait for the import to finish
-        importService.doImport(jobExecution);
-        assertEquals(importService.getState(importUUID),"FAILED");
-        assertEquals(importService.getErrorMessage(importUUID),"Collection Not Found");
     }
 
     /*Creates fake payload for testing purposes.*/
