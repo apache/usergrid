@@ -473,13 +473,9 @@ public class ImportServiceImpl implements ImportService {
                      while(!jp.getText().equals(lastUpdatedUUID)) {
                          jp.nextToken();
                      }
+
                     // skip the last one and start from teh next one
-                    // to avoid connections
-                    while(jp.getCurrentToken() != JsonToken.START_OBJECT) {
-                        jp.nextToken();
-                    }
-                    // to avoid dictionaries
-                    while(jp.getCurrentToken() != JsonToken.START_OBJECT) {
+                    while(!(jp.getCurrentToken()==JsonToken.END_OBJECT && jp.nextToken() == JsonToken.START_OBJECT)) {
                         jp.nextToken();
                     }
                 }
@@ -497,7 +493,6 @@ public class ImportServiceImpl implements ImportService {
                 }
                 jp.close();
             }
-
             // mark file as completed
             ((Map<String,Object>)fileNames.get(i)).put("completed",true);
             rootEm.update(importUG);
