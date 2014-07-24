@@ -22,9 +22,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import com.sun.jersey.api.client.WebResource;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 
@@ -70,46 +73,50 @@ public abstract class ValueResource extends NamedResource {
 
 
     /** Create a new entity with the specified data */
-    public JsonNode create( Map<String, ?> entity ) {
+    public JsonNode create( Map<String, ?> entity ) throws IOException {
         return postInternal( entity );
     }
 
 
-    public JsonNode delete() {
+    public JsonNode delete() throws IOException {
         return deleteInternal();
     }
 
 
     /** post to the entity set */
-    protected JsonNode postInternal( Map<String, ?> entity ) {
+    protected JsonNode postInternal( Map<String, ?> entity ) throws IOException {
 
-        return jsonMedia( withParams( withToken( resource() ) ) ).post( JsonNode.class, entity );
+        return mapper.readTree( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ));
     }
 
 
     /** post to the entity set */
-    protected JsonNode postInternal( Map<String, ?>[] entity ) {
+    protected JsonNode postInternal( Map<String, ?>[] entity ) throws IOException {
 
-        return jsonMedia( withParams( withToken( resource() ) ) ).post( JsonNode.class, entity );
+        return mapper.readTree( jsonMedia( withParams( withToken( resource() ) ) ).post( String.class, entity ));
     }
 
 
-    public JsonNode put( Map<String, ?> entity ) {
+    public JsonNode put( Map<String, ?> entity ) throws IOException {
 
         return putInternal( entity );
     }
 
 
     /** put to the entity set */
-    protected JsonNode putInternal( Map<String, ?> entity ) {
+    protected JsonNode putInternal( Map<String, ?> entity ) throws IOException {
 
-        return jsonMedia( withParams( withToken( resource() ) ) ).put( JsonNode.class, entity );
+        return mapper.readTree( jsonMedia( withParams( withToken( resource() ) ) ).put( String.class, entity ));
     }
 
 
     /** Get the data */
     public JsonNode get() {
-        return getInternal();
+        try {
+            return getInternal();
+        } catch (IOException ex) {
+            throw new RuntimeException("Cannot parse JSON data", ex);
+        }
     }
 
 
@@ -173,7 +180,7 @@ public abstract class ValueResource extends NamedResource {
 
 
     /** Get entities in this collection. Cursor is optional */
-    protected JsonNode getInternal() {
+    protected JsonNode getInternal() throws IOException {
 
 
         WebResource resource = withParams( withToken( resource() ) );
@@ -195,16 +202,16 @@ public abstract class ValueResource extends NamedResource {
             resource = resource.queryParam( "limit", limit.toString() );
         }
 
-        return jsonMedia( resource ).get( JsonNode.class );
+        return mapper.readTree( jsonMedia( resource ).get( String.class ));
     }
 
 
-    public JsonNode query( String query, String addition, String numAddition ) {
+    public JsonNode query( String query, String addition, String numAddition ) throws IOException {
         return getInternal( query, addition, numAddition );
     }
 
 
-    protected JsonNode getInternal( String query, String addition, String numAddition ) {
+    protected JsonNode getInternal( String query, String addition, String numAddition ) throws IOException {
         WebResource resource = withParams( withToken( resource() ) ).queryParam( "ql", query );
 
         if ( addition != null ) {
@@ -218,7 +225,7 @@ public abstract class ValueResource extends NamedResource {
             }
         }
 
-        return jsonMedia( resource ).get( JsonNode.class );
+        return mapper.readTree( jsonMedia( resource ).get( String.class ));
     }
 
 
@@ -282,7 +289,7 @@ public abstract class ValueResource extends NamedResource {
 
 
     /** Get entities in this collection. Cursor is optional */
-    protected JsonNode deleteInternal() {
+    protected JsonNode deleteInternal() throws IOException {
 
 
         WebResource resource = withParams( withToken( resource() ) );
@@ -303,6 +310,6 @@ public abstract class ValueResource extends NamedResource {
             resource = resource.queryParam( "limit", limit.toString() );
         }
 
-        return jsonMedia( resource ).delete( JsonNode.class );
+        return mapper.readTree( jsonMedia( resource ).delete( String.class ));
     }
 }

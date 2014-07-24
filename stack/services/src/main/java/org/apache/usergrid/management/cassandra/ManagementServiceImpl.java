@@ -1171,7 +1171,7 @@ public class ManagementServiceImpl implements ManagementService {
             ArrayList<CredentialsInfo> oldCreds = new ArrayList<CredentialsInfo>( credsMap.values() );
             Collections.sort( oldCreds );
 
-            currentCredentials = readUserPasswordCredentials( smf.getManagementAppId(), user.getUuid() );
+            currentCredentials = readUserPasswordCredentials( smf.getManagementAppId(), user.getUuid(), user.getType() );
 
             // check credential history
             if ( encryptionService.verify( newPassword, currentCredentials, userId, smf.getManagementAppId() ) ) {
@@ -1291,7 +1291,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        String mongo_pwd = readUserMongoPassword( smf.getManagementAppId(), user.getUuid() ).getSecret();
+        String mongo_pwd = readUserMongoPassword( smf.getManagementAppId(), user.getUuid(), user.getType() ).getSecret();
 
         if ( mongo_pwd == null ) {
             throw new IncorrectPasswordException( "Your mongo password has not be set" );
@@ -1484,7 +1484,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public Long getLastAdminPasswordChange( UUID userId ) throws Exception {
-        CredentialsInfo ci = readUserPasswordCredentials( smf.getManagementAppId(), userId );
+        CredentialsInfo ci = readUserPasswordCredentials( smf.getManagementAppId(), userId, User.ENTITY_TYPE );
         return ci.getCreated();
     }
 
@@ -1825,16 +1825,21 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    public String getSecret( UUID applicationId, AuthPrincipalType type, UUID id ) throws Exception {
-        if ( AuthPrincipalType.ORGANIZATION.equals( type ) || AuthPrincipalType.APPLICATION.equals( type ) ) {
-            UUID ownerId =
-                    AuthPrincipalType.APPLICATION_USER.equals( type ) ? applicationId : smf.getManagementAppId();
+    public String getSecret( UUID applicationId, AuthPrincipalType type, UUID entityId ) throws Exception {
 
-            return getCredentialsSecret( readUserToken( ownerId, id ) );
+        if ( AuthPrincipalType.ORGANIZATION.equals( type )) {  
+            UUID ownerId = smf.getManagementAppId();
+            return getCredentialsSecret( readUserToken( ownerId, entityId, Group.ENTITY_TYPE ) );
+
+        } else if ( AuthPrincipalType.APPLICATION.equals( type ) ) {
+            UUID ownerId = smf.getManagementAppId();
+            return getCredentialsSecret( readUserToken( ownerId, entityId, Application.ENTITY_TYPE ) );
+
         }
         else if ( AuthPrincipalType.ADMIN_USER.equals( type ) || AuthPrincipalType.APPLICATION_USER.equals( type ) ) {
-            return getCredentialsSecret( readUserPasswordCredentials( applicationId, id ) );
+            return getCredentialsSecret( readUserPasswordCredentials( applicationId, entityId, User.ENTITY_TYPE ) );
         }
+
         throw new IllegalArgumentException( "Must specify an admin user, organization or application principal" );
     }
 
@@ -1899,6 +1904,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
         AccessInfo access_info = null;
+
         if ( clientSecret.equals( getSecret( smf.getManagementAppId(), type, uuid ) ) ) {
 
             String token = getTokenForPrincipal( ACCESS, null, smf.getManagementAppId(), type, uuid, ttl );
@@ -1935,8 +1941,9 @@ public class ManagementServiceImpl implements ManagementService {
         if ( type == null ) {
             return null;
         }
+
         PrincipalCredentialsToken token = null;
-        if ( clientSecret.equals( getSecret( smf.getManagementAppId(), type, uuid ) ) ) {
+        if ( clientSecret.equals( getSecret( smf.getManagementAppId(), type, uuid))) {
             if ( type.equals( AuthPrincipalType.APPLICATION ) ) {
                 ApplicationInfo app = getApplicationInfo( uuid );
                 token = new PrincipalCredentialsToken( new ApplicationPrincipal( app ),
@@ -2734,7 +2741,7 @@ public class ManagementServiceImpl implements ManagementService {
         if ( user.getEmail() == null ) {
             return;
         }
-        String pin = getCredentialsSecret( readUserPin( applicationId, userId ) );
+        String pin = getCredentialsSecret( readUserPin( applicationId, userId, user.getType() ) );
 
         sendHtmlMail( properties, user.getDisplayEmailAddress(), properties.getProperty( PROPERTIES_MAILER_EMAIL ),
                 "Your app pin",
@@ -2749,7 +2756,7 @@ public class ManagementServiceImpl implements ManagementService {
         if ( user == null ) {
             return null;
         }
-        if ( pin.equals( getCredentialsSecret( readUserPin( applicationId, user.getUuid() ) ) ) ) {
+        if ( pin.equals( getCredentialsSecret( readUserPin( applicationId, user.getUuid(), user.getType() ) ) ) ) {
             return user;
         }
         return null;
@@ -2808,8 +2815,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     /** read the user password credential's info */
-    protected CredentialsInfo readUserPasswordCredentials( UUID appId, UUID ownerId ) throws Exception {
-        return readCreds( appId, ownerId, USER_PASSWORD );
+    protected CredentialsInfo readUserPasswordCredentials( UUID appId, UUID ownerId, String ownerType ) throws Exception {
+        return readCreds( appId, ownerId, ownerType, USER_PASSWORD );
     }
 
 
@@ -2820,8 +2827,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     /** Read the credentials info for the user's token */
-    protected CredentialsInfo readUserToken( UUID appId, UUID ownerId ) throws Exception {
-        return readCreds( appId, ownerId, USER_TOKEN );
+    protected CredentialsInfo readUserToken( UUID appId, UUID ownerId, String ownerType ) throws Exception {
+        return readCreds( appId, ownerId, ownerType, USER_TOKEN );
     }
 
 
@@ -2832,8 +2839,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     /** Read the mongo password */
-    protected CredentialsInfo readUserMongoPassword( UUID appId, UUID ownerId ) throws Exception {
-        return readCreds( appId, ownerId, USER_MONGO_PASSWORD );
+    protected CredentialsInfo readUserMongoPassword( UUID appId, UUID ownerId, String ownerType ) throws Exception {
+        return readCreds( appId, ownerId, ownerType, USER_MONGO_PASSWORD );
     }
 
 
@@ -2844,8 +2851,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     /** Read the user's pin */
-    protected CredentialsInfo readUserPin( UUID appId, UUID ownerId ) throws Exception {
-        return readCreds( appId, ownerId, USER_PIN );
+    protected CredentialsInfo readUserPin( UUID appId, UUID ownerId, String ownerType ) throws Exception {
+        return readCreds( appId, ownerId, ownerType, USER_PIN );
     }
 
 
@@ -2855,9 +2862,9 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private CredentialsInfo readCreds( UUID appId, UUID ownerId, String key ) throws Exception {
+    private CredentialsInfo readCreds( UUID appId, UUID ownerId, String ownerType, String key ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
-        Entity owner = em.get( new SimpleEntityRef("user", ownerId ));
+        Entity owner = em.get( new SimpleEntityRef( ownerType, ownerId ) );
         return ( CredentialsInfo ) em.getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, key );
     }
 
@@ -2905,7 +2912,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     private boolean verify( UUID applicationId, UUID userId, String password ) throws Exception {
-        CredentialsInfo ci = readUserPasswordCredentials( applicationId, userId );
+        CredentialsInfo ci = readUserPasswordCredentials( applicationId, userId, User.ENTITY_TYPE );
 
         if ( ci == null ) {
             return false;

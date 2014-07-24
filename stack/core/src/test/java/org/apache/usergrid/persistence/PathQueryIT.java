@@ -81,7 +81,7 @@ public class PathQueryIT extends AbstractCoreIT {
         int count = 2;
         while ( pri.hasNext() ) {
             Entity e = ( Entity ) pri.next();
-            assertEquals( count++, (int)e.getProperty( "index" ) );
+            assertEquals( count++, e.getProperty( "index" ) );
         }
         assertEquals( count, expectedUserQuerySize + 2 );
 

@@ -37,7 +37,7 @@ import org.apache.usergrid.chop.stack.BasicInstanceSpec;
 import org.apache.usergrid.chop.stack.CoordinatedStack;
 import org.apache.usergrid.chop.stack.ICoordinatedCluster;
 import org.apache.usergrid.chop.stack.Instance;
-import org.apache.usergrid.chop.stack.SetupStackState;
+import org.apache.usergrid.chop.stack.SetupStackSignal;
 import org.apache.usergrid.chop.webapp.ChopUiFig;
 import org.apache.usergrid.chop.webapp.dao.ProviderParamsDao;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
@@ -108,7 +108,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
                         " for cluster " + cluster.getName();
                 LOG.warn( errorMessage + ", aborting and terminating launched instances..." );
                 instanceManager.terminateInstances( launchedInstances );
-                stack.setSetupState( SetupStackState.SetupFailed );
+                stack.setSetupState( SetupStackSignal.FAIL );
                 stack.notifyAll();
                 return null;
             }
@@ -116,7 +116,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
                 errorMessage = "Key file " + keyFile + " for cluster " + cluster.getName() + " not found";
                 LOG.warn( errorMessage + ", aborting and terminating launched instances..." );
                 instanceManager.terminateInstances( launchedInstances );
-                stack.setSetupState( SetupStackState.SetupFailed );
+                stack.setSetupState( SetupStackSignal.FAIL );
                 stack.notifyAll();
                 return null;
             }
@@ -140,7 +140,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
             if ( ! success ) {
                 errorMessage = "SSH commands have failed, will not continue";
                 instanceManager.terminateInstances( launchedInstances );
-                stack.setSetupState( SetupStackState.SetupFailed );
+                stack.setSetupState( SetupStackSignal.FAIL );
                 stack.notifyAll();
                 return null;
             }
@@ -154,7 +154,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
             errorMessage = "No key found with name " + providerParams.getKeyName() + " for runners";
             LOG.warn( errorMessage + ", aborting and terminating launched instances..." );
             instanceManager.terminateInstances( launchedInstances );
-            stack.setSetupState( SetupStackState.SetupFailed );
+            stack.setSetupState( SetupStackSignal.FAIL );
             stack.notifyAll();
             return null;
         }
@@ -162,7 +162,7 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
             errorMessage = "Key file " + keyFile + " for runners not found";
             LOG.warn( errorMessage + ", aborting and terminating launched instances..." );
             instanceManager.terminateInstances( launchedInstances );
-            stack.setSetupState( SetupStackState.SetupFailed );
+            stack.setSetupState( SetupStackSignal.FAIL );
             stack.notifyAll();
             return null;
         }
@@ -190,12 +190,12 @@ public class SetupStackThread implements Callable<CoordinatedStack> {
         if ( ! success ) {
             errorMessage = "SSH commands have failed, will not continue";
             instanceManager.terminateInstances( launchedInstances );
-            stack.setSetupState( SetupStackState.SetupFailed );
+            stack.setSetupState( SetupStackSignal.FAIL );
             stack.notifyAll();
             return null;
         }
 
-        stack.setSetupState( SetupStackState.SetUp );
+        stack.setSetupState( SetupStackSignal.COMPLETE );
         LOG.info( "Stack {} is set up and ready...", stack.getName() );
 
         stack.notifyAll();

@@ -21,6 +21,7 @@ import java.util.UUID;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import org.apache.usergrid.mq.cassandra.QueuesCF;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
@@ -51,7 +52,7 @@ public class SetupImpl implements Setup {
     private final CassandraService cass;
 
 
-    public SetupImpl( EntityManagerFactoryImpl emf, CassandraService cass ) {
+    public SetupImpl( EntityManagerFactory emf, CassandraService cass ) {
         this.emf = emf;
         this.cass = cass;
     }
@@ -67,10 +68,10 @@ public class SetupImpl implements Setup {
 
     public void createDefaultApplications() throws Exception {
         // TODO unique check?
-        ( ( EntityManagerFactoryImpl ) emf ).initializeApplication( 
+        ( ( EntityManagerFactory ) emf ).initializeApplication( 
                 DEFAULT_ORGANIZATION, emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
 
-        ( ( EntityManagerFactoryImpl ) emf ).initializeApplication( 
+        ( ( EntityManagerFactory ) emf ).initializeApplication( 
                 DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
     }
 

@@ -20,8 +20,8 @@ package org.apache.usergrid.persistence.model.field;
 
 import java.io.Serializable;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.annotate.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**

@@ -23,7 +23,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -32,6 +32,7 @@ import org.apache.usergrid.rest.test.resource.CustomCollection;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import java.io.IOException;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
@@ -51,7 +52,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
 
     @Test
-    public void connectionsQueryTest() {
+    public void connectionsQueryTest() throws IOException {
 
 
         CustomCollection activities = context.collection( "peeps" );
@@ -69,14 +70,14 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+                .post( String.class, payload );
 
         payload.put( "username", "scott" );
 
 
         resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( JsonNode.class, payload );
+                .post( String.class, payload );
     /*finish setting up the two users */
 
 
@@ -86,18 +87,17 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         assertEquals( 200, toddWant.getStatus() );
 
-        JsonNode node =
-                resource().path( "/test-organization/test-app/peeps" ).queryParam( "access_token", access_token )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/peeps" ).queryParam( "access_token", access_token )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( JsonNode.class );
+                        .get( String.class ));
 
-        String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).getTextValue();
+        String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
 
 
         try {
-            node = resource().path( "/test-organization/test-app/users/scott/likes/" + uuid )
+            node = mapper.readTree( resource().path( "/test-organization/test-app/users/scott/likes/" + uuid )
                     .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
             assert ( false );
         }
         catch ( UniformInterfaceException uie ) {
@@ -107,7 +107,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
 
     @Test
-    public void connectionsLoopbackTest() {
+    public void connectionsLoopbackTest() throws IOException {
 
         CustomCollection things = context.collection( "things" );
 
@@ -162,7 +162,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
 
     @Test
-    public void connectionsUUIDTest() {
+    public void connectionsUUIDTest() throws IOException {
 
         CustomCollection things = context.collection( "things" );
 
@@ -208,7 +208,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
     }
 
     @Test //USERGRID-3011
-    public void connectionsDeleteSecondEntityInConnectionTest() {
+    public void connectionsDeleteSecondEntityInConnectionTest() throws IOException {
 
         CustomCollection things = context.collection( "things" );
 
@@ -228,7 +228,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
     }
 
     @Test //USERGRID-3011
-    public void connectionsDeleteFirstEntityInConnectionTest() {
+    public void connectionsDeleteFirstEntityInConnectionTest() throws IOException {
 
         CustomCollection things = context.collection( "things" );
 

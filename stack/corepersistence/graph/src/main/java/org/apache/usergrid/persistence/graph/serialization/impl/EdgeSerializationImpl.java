@@ -213,7 +213,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
 
             @Override
             public void countEdge( final Id rowId, final long shardId, final String... types ) {
-                edgeShardStrategy.increment( scope, rowId, shardId, 1l, types );
+                if(!isDeleted){
+                    edgeShardStrategy.increment( scope, rowId, shardId, 1l, types );
+                }
             }
 
 
@@ -278,7 +280,9 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
         EdgeUtils.validateEdge( edge );
 
         final Id sourceNodeId = edge.getSourceNode();
+        final String souceNodeType = sourceNodeId.getType();
         final Id targetNodeId = edge.getTargetNode();
+        final String targetNodeType = targetNodeId.getType();
         final long timestamp = edge.getTimestamp();
         final String type = edge.getType();
 
@@ -287,20 +291,24 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
          * Key in the serializers based on the edge
          */
 
-        final RowKey sourceRowKey = new RowKey( sourceNodeId, type,
-                edgeShardStrategy.getWriteShard( scope, sourceNodeId, timestamp, type ) );
+        final long sourceRowKeyShard = edgeShardStrategy.getWriteShard( scope, sourceNodeId, timestamp, type );
+        final RowKey sourceRowKey = new RowKey( sourceNodeId, type, sourceRowKeyShard);
 
-        final RowKeyType sourceRowKeyType = new RowKeyType( sourceNodeId, type, targetNodeId,
-                edgeShardStrategy.getWriteShard( scope, sourceNodeId, timestamp, type, targetNodeId.getType() ) );
+
+
+        final long sourceWithTypeRowKeyShard =  edgeShardStrategy.getWriteShard( scope, sourceNodeId, timestamp, type, targetNodeType );
+
+        final RowKeyType sourceRowKeyType = new RowKeyType( sourceNodeId, type, targetNodeId, sourceWithTypeRowKeyShard );
 
         final DirectedEdge sourceEdge = new DirectedEdge( targetNodeId, timestamp );
 
 
-        final RowKey targetRowKey = new RowKey( targetNodeId, type,
-                edgeShardStrategy.getWriteShard( scope, targetNodeId, timestamp, type ) );
 
-        final RowKeyType targetRowKeyType = new RowKeyType( targetNodeId, type, sourceNodeId,
-                edgeShardStrategy.getWriteShard( scope, targetNodeId, timestamp, type, sourceNodeId.getType() ) );
+        final long targetRowKeyShard = edgeShardStrategy.getWriteShard( scope, targetNodeId, timestamp, type );
+        final RowKey targetRowKey = new RowKey( targetNodeId, type, targetRowKeyShard);
+
+        final long targetWithTypeRowKeyShard = edgeShardStrategy.getWriteShard( scope, targetNodeId, timestamp, type, souceNodeType );
+        final RowKeyType targetRowKeyType = new RowKeyType( targetNodeId, type, sourceNodeId, targetWithTypeRowKeyShard );
 
         final DirectedEdge targetEdge = new DirectedEdge( sourceNodeId, timestamp );
 
@@ -315,22 +323,30 @@ public class EdgeSerializationImpl implements EdgeSerialization, Migration {
          */
 
         op.writeEdge( sourceNodeEdgesCf, sourceRowKey, sourceEdge );
+        op.countEdge( sourceNodeId, sourceRowKeyShard, type );
 
         op.writeEdge( sourceNodeTargetTypeCf, sourceRowKeyType, sourceEdge );
+        op.countEdge( sourceNodeId, sourceWithTypeRowKeyShard, type, targetNodeType );
+
+
 
 
         /**
          * write edges from target<-source
          */
         op.writeEdge( targetNodeEdgesCf, targetRowKey, targetEdge );
+        op.countEdge( targetNodeId, targetRowKeyShard, type );
 
         op.writeEdge( targetNodeSourceTypeCf, targetRowKeyType, targetEdge );
+        op.countEdge( targetNodeId, targetWithTypeRowKeyShard, type, souceNodeType );
 
 
         /**
          * Write this in the timestamp log for this edge of source->target
          */
         op.writeVersion( graphEdgeVersionsCf, edgeRowKey, timestamp );
+
+
     }
 
 

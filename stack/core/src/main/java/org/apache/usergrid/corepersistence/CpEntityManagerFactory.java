@@ -87,9 +87,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     // The System Application where we store app and org metadata
     public static final String SYSTEM_APPS_UUID = "b6768a08-b5d5-11e3-a495-10ddb1de66c3";
     
-    public static final  UUID MANAGEMENT_APPLICATION_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
+    public static final  UUID MANAGEMENT_APPLICATION_ID = 
+            UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
 
-    public static final  UUID DEFAULT_APPLICATION_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
+    public static final  UUID DEFAULT_APPLICATION_ID = 
+            UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
 
 
     // Three types of things we store in System Application
@@ -188,7 +190,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = applicationContext.getBean( "entityManager", EntityManager.class );
+        EntityManager em = new CpEntityManager();
         em.init( this, applicationId );
         return em;
     }
@@ -213,7 +215,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
 
         applicationId = UUIDGenerator.newTimeUUID();
-        logger.debug( "New application id " + applicationId.toString() );
+
+        logger.debug( "New application orgName {} name {} id {} ", 
+                new Object[] { orgName, name, applicationId.toString() } );
 
         initializeApplication( orgName, applicationId, appName, properties );
         return applicationId;
@@ -266,12 +270,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         properties.put( PROPERTY_NAME, appName );
 
-        Entity appInfoEntity = new Entity(generateApplicationId( UUIDGenerator.newTimeUUID() ));
+        Entity appInfoEntity = new Entity( generateApplicationId( applicationId ));
 
         long timestamp = System.currentTimeMillis();
         appInfoEntity.setField( new LongField( PROPERTY_CREATED, (long)(timestamp / 1000)));
         appInfoEntity.setField( new StringField( PROPERTY_NAME, name ));
-        appInfoEntity.setField( new UUIDField( PROPERTY_UUID, applicationId ));
+        appInfoEntity.setField( new UUIDField( "applicationUuid", applicationId ));
         appInfoEntity.setField( new UUIDField( "organizationUuid", orgUuid ));
 
         // create app in system app scope
@@ -288,8 +292,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // create app in its own scope
         EntityManager em = getEntityManager( applicationId );
-        em.create( TYPE_APPLICATION, APPLICATION_ENTITY_CLASS, properties );
+        em.create( applicationId, TYPE_APPLICATION, properties );
         em.resetRoles();
+        em.refreshIndex();
 
         return applicationId;
     }
@@ -297,7 +302,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     public ApplicationScope getApplicationScope( UUID applicationId ) {
 
-        //We can always generate a scope, it doesn't matter if  the application exists yet or not.
+        // We can always generate a scope, it doesn't matter if  the application exists yet or not.
 
         final ApplicationScopeImpl scope = new ApplicationScopeImpl( generateApplicationId( applicationId ) );
 
@@ -518,7 +523,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private Id generateApplicationId(UUID id){
         return new SimpleId( id, Application.ENTITY_TYPE );
     }
-   
 
     /**
      * Gets the setup.

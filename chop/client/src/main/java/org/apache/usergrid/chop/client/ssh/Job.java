@@ -51,7 +51,7 @@ public class Job implements Callable<ResponseInfo> {
 
     private static final Logger LOG = LoggerFactory.getLogger( Job.class );
 
-    protected static final int SESSION_CONNECT_TIMEOUT = 50000;
+    protected static final int SESSION_CONNECT_TIMEOUT = 100000;
 
     protected Collection<Command> commands;
     protected SshValues value;

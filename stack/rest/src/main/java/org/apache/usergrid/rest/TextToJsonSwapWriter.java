@@ -31,10 +31,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.codehaus.jackson.map.JsonSerializable;
-import org.codehaus.jackson.map.JsonSerializableWithType;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.spi.MessageBodyWorkers;
@@ -70,14 +66,13 @@ public class TextToJsonSwapWriter implements MessageBodyWriter<JSONWithPadding> 
             return false;
         }
 
+        return true;
 
-        final boolean serializableAnnotation = type.getAnnotation( XmlRootElement.class ) != null;
-
-
-        final boolean jsonSerializable = JsonSerializableWithType.class.isAssignableFrom( type );
-
-
-        return serializableAnnotation || jsonSerializable;
+// JsonSerializableWithType no longer exists in FasterXML Jackson
+//
+//        final boolean serializableAnnotation = type.getAnnotation( XmlRootElement.class ) != null;
+//        final boolean jsonSerializable = JsonSerializableWithType.class.isAssignableFrom( type );
+//        return serializableAnnotation || jsonSerializable;
     }
 
 

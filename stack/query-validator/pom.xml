@@ -94,7 +94,7 @@
                         </goals>
                         <configuration>
                             <includes>
-                                <include>**/org/usergrid/**</include>
+				    <include>**/org/apache/usergrid/**</include>
                             </includes>
                         </configuration>
                     </execution>
@@ -274,7 +274,7 @@
 
 
         <dependency>
-            <groupId>org.usergrid</groupId>
+            <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-java-client</artifactId>
         </dependency>
 

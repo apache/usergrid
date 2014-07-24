@@ -31,7 +31,7 @@ import org.apache.usergrid.chop.spi.InstanceManager;
 import org.apache.usergrid.chop.stack.CoordinatedStack;
 import org.apache.usergrid.chop.stack.ICoordinatedCluster;
 import org.apache.usergrid.chop.stack.Instance;
-import org.apache.usergrid.chop.stack.SetupStackState;
+import org.apache.usergrid.chop.stack.SetupStackSignal;
 import org.apache.usergrid.chop.webapp.dao.ProviderParamsDao;
 import org.apache.usergrid.chop.webapp.service.InjectorFactory;
 
@@ -82,7 +82,6 @@ public class StackDestroyer {
         }
         LOG.info( "Destroying all {} cluster and runner instances of {} stack...", instances.size(), stack.getName() );
         instanceManager.terminateInstances( instances );
-        stack.setSetupState( SetupStackState.NotSetUp );
         LOG.info( "Destroyed {} stack.", stack.getName() );
     }
 }

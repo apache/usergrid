@@ -39,6 +39,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
@@ -69,6 +70,7 @@ public class NodeShardCacheTest {
     }
 
 
+    @Ignore // outdated and no longer relevant test 
     @Test
     public void testNoShards() throws ConnectionException {
 
@@ -113,6 +115,7 @@ public class NodeShardCacheTest {
     }
 
 
+    @Ignore // outdated and no longer relevant test 
     @Test
     public void testSingleExistingShard() {
 
@@ -158,6 +161,7 @@ public class NodeShardCacheTest {
     }
 
 
+    @Ignore // outdated and no longer relevant test 
     @Test
     public void testRangeShard() {
 

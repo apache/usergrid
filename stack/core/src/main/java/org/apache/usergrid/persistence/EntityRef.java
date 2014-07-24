@@ -19,10 +19,6 @@ package org.apache.usergrid.persistence;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonTypeInfo;
-
-
-@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
 public interface EntityRef {
 
     /**

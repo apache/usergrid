@@ -58,7 +58,7 @@ public class AbstractCollectionService extends AbstractService {
         if ( !isRootService() ) {
             return null;
         }
-        Entity entity = em.get( uuid );
+        Entity entity = em.get( new SimpleEntityRef( getEntityType(), uuid ));
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -92,12 +92,12 @@ public class AbstractCollectionService extends AbstractService {
         EntityRef entity = null;
 
         if ( !context.moreParameters() ) {
-            entity = em.get( id );
+            entity = em.get( new SimpleEntityRef( getEntityType(), id) );
 
             entity = importEntity( context, ( Entity ) entity );
         }
         else {
-            entity = em.get( id );
+            entity = em.get( new SimpleEntityRef( getEntityType(), id) );
         }
 
         if ( entity == null ) {

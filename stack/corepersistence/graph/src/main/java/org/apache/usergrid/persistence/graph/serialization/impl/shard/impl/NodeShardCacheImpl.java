@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
 import org.apache.usergrid.persistence.graph.serialization.util.IterableUtil;
@@ -50,10 +51,6 @@ import com.google.inject.Inject;
  * shard, it will need to be searched via cassandra.
  */
 public class NodeShardCacheImpl implements NodeShardCache {
-
-
-    private static final int SHARD_PAGE_SIZE = 1000;
-
 
     private final NodeShardAllocation nodeShardAllocation;
     private final GraphFig graphFig;
@@ -106,7 +103,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
             entry = this.graphs.get( key );
         }
         catch ( ExecutionException e ) {
-            throw new RuntimeException( "Unable to load shard key for graph", e );
+            throw new GraphRuntimeException( "Unable to load shard key for graph", e );
         }
 
         final Long shardId = entry.getShardId( timestamp );
@@ -116,7 +113,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
         }
 
         //if we get here, something went wrong, our shard should always have a time UUID to return to us
-        throw new RuntimeException( "No time UUID shard was found and could not allocate one" );
+        throw new GraphRuntimeException( "No time UUID shard was found and could not allocate one" );
     }
 
 
@@ -130,7 +127,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
                   entry = this.graphs.get( key );
               }
               catch ( ExecutionException e ) {
-                  throw new RuntimeException( "Unable to load shard key for graph", e );
+                  throw new GraphRuntimeException( "Unable to load shard key for graph", e );
               }
 
         Iterator<Long> iterator = entry.getShards( maxTimestamp );
@@ -141,15 +138,6 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
         return iterator;
     }
-
-
-    @Override
-    public long increment( final ApplicationScope scope, final Id nodeId, final long shard, final long count,
-                                     final String... edgeTypes ) {
-        //TODO, implement this
-        return 0;
-    }
-
 
     /**
      * This is a race condition.  We could re-init the shard while another thread is reading it.  This is fine, the read
@@ -165,12 +153,12 @@ public class NodeShardCacheImpl implements NodeShardCache {
                       @Override
                       public CacheEntry load( final CacheKey key ) throws Exception {
 
-
-                          /**
-                           * Perform an audit in case we need to allocate a new shard
-                           */
-                          nodeShardAllocation.auditMaxShard( key.scope, key.id, key.types );
-                          //TODO, we need to put some sort of upper bounds on this, it could possibly get too large
+//
+//                          /**
+//                           * Perform an audit in case we need to allocate a new shard
+//                           */
+//                          nodeShardAllocation.auditMaxShard( key.scope, key.id, key.types );
+//                          //TODO, we need to put some sort of upper bounds on this, it could possibly get too large
 
 
                           final Iterator<Long> edges = nodeShardAllocation

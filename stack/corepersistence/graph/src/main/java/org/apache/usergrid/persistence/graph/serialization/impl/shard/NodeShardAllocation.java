@@ -38,7 +38,7 @@ public interface NodeShardAllocation {
     /**
      * Get all shards for the given info.  If none exist, a default shard should be allocated
      *
-     * @param scope
+     * @param scope The application scope
      * @param nodeId
      * @param maxShardId The max value to start seeking from.  Values <= this will be returned if specified
      * @param edgeTypes
@@ -51,7 +51,7 @@ public interface NodeShardAllocation {
     /**
      * Audit our highest shard for it's maximum capacity.  If it has reached the max capacity <=, it will allocate a new shard
      *
-     * @param scope The organization scope
+     * @param scope The app scope
      * @param nodeId The node id
      * @param edgeType The edge types
      * @return True if a new shard was allocated

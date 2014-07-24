@@ -26,6 +26,7 @@ import org.apache.usergrid.rest.test.resource.mgmt.Management;
 import org.apache.usergrid.rest.test.security.TestUser;
 
 import com.sun.jersey.test.framework.JerseyTest;
+import java.io.IOException;
 
 
 public class TestContext {
@@ -91,7 +92,7 @@ public class TestContext {
 
 
     /** Creates the org specified */
-    public TestContext createNewOrgAndUser() {
+    public TestContext createNewOrgAndUser() throws IOException {
         orgUuid = management().orgs().create( orgName, activeUser );
 
         return this;
@@ -99,7 +100,7 @@ public class TestContext {
 
 
     /** Creates the org specified */
-    public TestContext createAppForOrg() {
+    public TestContext createAppForOrg() throws IOException {
         appUuid = management().orgs().organization( orgName ).apps().create( appName );
 
         return this;
@@ -166,7 +167,7 @@ public class TestContext {
 
 
     /** Calls createNewOrgAndUser, logs in the user, then creates the app. All in 1 call. */
-    public TestContext initAll() {
+    public TestContext initAll() throws IOException {
         return createNewOrgAndUser().loginUser().createAppForOrg();
     }
 }

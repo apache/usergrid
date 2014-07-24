@@ -21,12 +21,13 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import org.codehaus.jackson.annotate.JsonAnyGetter;
-import org.codehaus.jackson.annotate.JsonAnySetter;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import org.apache.commons.lang.StringUtils;
+
 import org.apache.usergrid.utils.UUIDUtils;
 
-import org.apache.commons.lang.StringUtils;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import static java.util.UUID.nameUUIDFromBytes;
 

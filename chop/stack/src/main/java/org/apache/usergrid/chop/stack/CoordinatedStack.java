@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import org.apache.usergrid.chop.api.Commit;
@@ -38,6 +41,8 @@ import org.apache.usergrid.chop.api.Runner;
  * information used by the coordinator to control and manage it.
  */
 public class CoordinatedStack implements ICoordinatedStack {
+
+    private static final Logger LOG = LoggerFactory.getLogger( CoordinatedStack.class );
 
     private final Stack delegate;
     private final List<CoordinatedCluster> clusters;
@@ -160,7 +165,19 @@ public class CoordinatedStack implements ICoordinatedStack {
     }
 
 
-    public void setSetupState( SetupStackState setupState ) {
+    public void setSetupState( SetupStackSignal signal ) {
+        if ( setupState.accepts( signal ) ) {
+            LOG.info( setupState.getMessage( signal ) );
+            setupState = setupState.next( signal );
+            LOG.debug( "New state is: {}", setupState );
+        }
+        else {
+            LOG.error( setupState.getMessage( signal ) );
+        }
+    }
+
+
+    private void setSetupState( SetupStackState setupState ) {
         this.setupState = setupState;
     }
 

@@ -27,13 +27,20 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.annotate.JsonAnyGetter;
-import org.codehaus.jackson.annotate.JsonAnySetter;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
+
+//import org.codehaus.jackson.annotate.JsonAnyGetter;
+//import org.codehaus.jackson.annotate.JsonAnySetter;
+//import org.codehaus.jackson.annotate.JsonIgnore;
+//import org.codehaus.jackson.map.annotate.JsonSerialize;
+//import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 
 /**
@@ -57,7 +64,7 @@ public abstract class AbstractEntity implements Entity {
 
     @Override
     @EntityProperty(required = true, mutable = false, basic = true, indexed = false)
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public UUID getUuid() {
         return uuid;
     }
@@ -83,7 +90,7 @@ public abstract class AbstractEntity implements Entity {
 
     @Override
     @EntityProperty(indexed = true, required = true, mutable = false)
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getCreated() {
         return created;
     }
@@ -100,7 +107,7 @@ public abstract class AbstractEntity implements Entity {
 
     @Override
     @EntityProperty(indexed = true, required = true, mutable = true)
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getModified() {
         return modified;
     }
@@ -116,7 +123,7 @@ public abstract class AbstractEntity implements Entity {
 
 
     @Override
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getName() {
         Object value = getProperty( PROPERTY_NAME );
 
@@ -167,7 +174,7 @@ public abstract class AbstractEntity implements Entity {
 
 
     @Override
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Object getMetadata( String key ) {
         return getDataset( "metadata", key );
     }
@@ -267,7 +274,7 @@ public abstract class AbstractEntity implements Entity {
     @Override
     @JsonAnySetter
     public void setDynamicProperty( String key, Object value ) {
-        if (value.equals("")) {
+        if (value == null || value.equals("")) {
 			if (dynamic_properties.containsKey(key)) {
 				dynamic_properties.remove(key);
 			}
