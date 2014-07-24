@@ -37,6 +37,7 @@ package org.apache.usergrid.management.importUG;
 
         import java.io.File;
         import java.util.*;
+        import java.io.IOException;
 
         import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
@@ -454,6 +455,7 @@ public class ImportServiceImpl implements ImportService {
             singleFile.put("name",collectionFile.getName());
             singleFile.put("completed",new Boolean(false));
             singleFile.put("lastUpdatedUUID",new String(""));
+            singleFile.put("errorMessage",new String(""));
             value.add(singleFile);
         }
 
@@ -470,6 +472,11 @@ public class ImportServiceImpl implements ImportService {
             boolean completed = ((Boolean)fileInfo.get("completed")).booleanValue();
             // on resume, completed files will not be traversed again
             if(!completed) {
+
+                if(!isValidJSON(collectionFile, fileInfo)){
+//                   fileInfo.put("errorMessage", "Something seems to be wrong in this file, do check the JSON before you parse it again");
+                    continue;
+                }
 
                 String applicationName = collectionFile.getPath().split("\\.")[0];
 
@@ -507,6 +514,28 @@ public class ImportServiceImpl implements ImportService {
         }
     }
 
+    private boolean isValidJSON( File collectionFile, Map<String,Object> fileInfo ) throws Exception  {
+        boolean valid = false;
+        try {
+            final JsonParser jp = jsonFactory.createJsonParser(collectionFile);
+            while (jp.nextToken() != null) {
+            }
+            valid = true;
+        } catch (JsonParseException e) {
+            e.printStackTrace();
+            //throw e;
+            fileInfo.put("errorMessage", e.getMessage());
+
+//            fileInfo.put("errorMessage", "Something seems to be wrong in this file, do check the JSON before you parse it again");
+//            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            //throw e;
+            fileInfo.put("errorMessage", "Something seems to be wrong in this file, we could not access it. Please check before you parse it again");
+        }
+
+        return valid;
+    }
 
     private JsonParser getJsonParserForFile( File collectionFile ) throws Exception {
         JsonParser jp = jsonFactory.createJsonParser( collectionFile );
