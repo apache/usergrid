@@ -35,7 +35,7 @@ cd /usr/share/usergrid/init_instance
 # Install the easy stuff
 PKGS="ntp unzip groovy tomcat7 curl"
 apt-get update
-apt-get -y install ${PKGS}
+apt-get -y --force-yes install ${PKGS}
 /etc/init.d/tomcat7 stop
 
 # Install AWS Java SDK and get it into the Groovy classpath
@@ -49,12 +49,18 @@ cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
 
+cd /usr/share/usergrid/scripts
+groovy tag_instance.groovy
+
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 
 
 # Install and stop Cassandra 
 cd /usr/share/usergrid/init_instance
 ./install_cassandra.sh
+
+cd /usr/share/usergrid/init_instance
+./install_opscenter_agent.sh
 
 # Install and start ElasticSearch
 cd /usr/share/usergrid/init_instance
@@ -69,5 +75,4 @@ cd /usr/share/usergrid/init_instance
 #sleep 90
 #/etc/init.d/tomcat7 restart
 
-cd /usr/share/usergrid/scripts
-groovy tag_instance.groovy
+

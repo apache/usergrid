@@ -115,6 +115,11 @@ You should now be able to login to the Usergrid console and start configuring ap
 The Usergrid Portal's URL is `http://<YOUR HOST NAME>/portal` and you can login with username `superuser` and password `test`.
 
 
+You can also view the graphite metrics by navigating to
+
+http://<YOUR GRAPHITE IP>/
+
+
 
 Exploring a Cassandra node
 ---

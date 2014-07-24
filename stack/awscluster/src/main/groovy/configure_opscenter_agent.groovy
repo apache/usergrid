@@ -17,10 +17,10 @@
  */
 
 
+// configure_cassandra.groovy 
 // 
-// configure_usergrid.groovy 
-// 
-// Register this host machine as a Cassandra node in our stack. 
+// Emits Cassandra config file based on environment and Cassandra node 
+// registry in SimpleDB
 //
 import com.amazonaws.auth.*
 import com.amazonaws.services.simpledb.*
@@ -29,38 +29,30 @@ import com.amazonaws.services.simpledb.model.*
 String accessKey = (String)System.getenv().get("AWS_ACCESS_KEY")
 String secretKey = (String)System.getenv().get("AWS_SECRET_KEY")
 String stackName = (String)System.getenv().get("STACK_NAME")
-String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
+
 String domain    = stackName
-
-
-if (args.size() != 1 )  {
-  println "this script expects one argument.  registry_register.groovy nodetype"
-  // You can even print the usage here.
-  return 1;
-}
-
-String nodetype = args[0];
 
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
 
-// creates domain or no-op if it already exists
-sdbClient.createDomain(new CreateDomainRequest(domain))
+// build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
+def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null and nodetype = 'cassandra'  order by itemName()"))
 
-def gar = new GetAttributesRequest(domain, hostName);
-def response = sdbClient.getAttributes(gar);
-if (response.getAttributes().size() == 1) {
-    println "Already registered"
-    def attrs = response.getAttributes()
-    for (att in attrs) {
-        println("${hostName} -> ${att.getName()} : ${att.getValue()}")
+def opsCenterNode = null
+
+for (item in selectResult.getItems()) {
+    def att = item.getAttributes().get(0)
+    if (att.getValue().equals(stackName)) {
+            opsCenterNode = item.getName();
+        break;
     }
-} else {
-    println "Registering..."
-    def stackAtt = new ReplaceableAttribute("nodetype", nodetype, true)
-    def attrs = new ArrayList()
-    attrs.add(stackAtt)
-    def par = new PutAttributesRequest(domain, hostName, attrs)
-    sdbClient.putAttributes(par);
-    println "Registraition done."
+
 }
+
+def clientconfig = """
+
+
+stomp_interface: : ${opsCenterNode}
+"""
+
+println clientconfig
