@@ -8,10 +8,10 @@
     <div class="span6">
       <h4>User Information <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users profile information')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_profile_information}}" tooltip-placement="top">(?)</a></h4>
       <label for="ui-form-username" class="ui-dform-label">Username</label>
-      <input type="text" ug-validate name="ui-form-username" ng-pattern="usernameRegex" ng-attr-title="{{usernameRegexDescription}}" id="ui-form-username" class="ui-dform-text" ng-model="user.username">
+      <input type="text" ug-validate required  name="ui-form-username" ng-pattern="usernameRegex" ng-attr-title="{{usernameRegexDescription}}" id="ui-form-username" class="ui-dform-text" ng-model="user.username">
       <br/>
       <label for="ui-form-name" class="ui-dform-label">Full Name</label>
-      <input type="text" ug-validate ng-pattern="nameRegex" ng-attr-title="{{nameRegexDescription}}" name="ui-form-name" id="ui-form-name" class="ui-dform-text" ng-model="user.name">
+      <input type="text" ug-validate ng-pattern="nameRegex" ng-attr-title="{{nameRegexDescription}}" required name="ui-form-name" id="ui-form-name" class="ui-dform-text" ng-model="user.name">
       <br/>
       <label for="ui-form-title" class="ui-dform-label">Title</label>
       <input type="text" ug-validate name="ui-form-title" id="ui-form-title" class="ui-dform-text" ng-model="user.title">
@@ -20,7 +20,7 @@
       <input type="url" ug-validate name="ui-form-url" id="ui-form-url" title="Please enter a valid url." class="ui-dform-text" ng-model="user.url">
       <br/>
       <label for="ui-form-email" class="ui-dform-label">Email</label>
-      <input type="email" ug-validate name="ui-form-email" id="ui-form-email"  ng-pattern="emailRegex" ng-attr-title="{{emailRegexDescription}}" class="ui-dform-text" ng-model="user.email">
+      <input type="email" ug-validate required name="ui-form-email" id="ui-form-email"  ng-pattern="emailRegex" ng-attr-title="{{emailRegexDescription}}" class="ui-dform-text" ng-model="user.email">
       <br/>
       <label for="ui-form-tel" class="ui-dform-label">Telephone</label>
       <input type="tel" ug-validate name="ui-form-tel" id="ui-form-tel" class="ui-dform-text" ng-model="user.tel">
