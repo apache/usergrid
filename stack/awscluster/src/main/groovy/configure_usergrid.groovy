@@ -59,7 +59,7 @@ def graphite = ""
 sep = ""
 for (item in selectResult.getItems()) {
     def att = item.getAttributes().get(0)
-    graphite = "${graphite}${sep}${item.getName()}:2003"
+    graphite = "${graphite}${sep}${item.getName()}"
     sep = ","
 
 }
@@ -154,8 +154,8 @@ usergrid.user.activation.url=${baseUrl}%s/%s/users/%s/activate
 usergrid.admin.resetpw.url=${baseUrl}/management/users/%s/resetpw
 usergrid.user.resetpw.url=${baseUrl}/%s/%s/users/%s/resetpw
 
-#TODO: Change this
-usergrid.graphite.url=${graphite}
+
+usergrid.metrics.graphite.host=${graphite}
 """
 
 println usergridConfig 
