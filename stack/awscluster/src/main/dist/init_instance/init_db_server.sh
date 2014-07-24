@@ -35,7 +35,7 @@ cd /usr/share/usergrid/init_instance
 # Install the easy stuff
 PKGS="ntp unzip groovy tomcat7 curl"
 apt-get update
-apt-get -y install ${PKGS}
+apt-get -y --force-yes install ${PKGS}
 /etc/init.d/tomcat7 stop
 
 # Install AWS Java SDK and get it into the Groovy classpath

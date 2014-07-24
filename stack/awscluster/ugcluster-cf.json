@@ -356,8 +356,11 @@
                "Ref":"RootInstanceProfile"
             },
             "SecurityGroups":[
-               "graphite"
-            ]
+                            {
+                               "Ref":"GraphiteSecurityGroup"
+                            }
+                         ]
+
          }
       },
       "WaitForInstanceWaitHandle":{
@@ -1125,20 +1128,6 @@
             ]
          }
       },
-       "CassSecurityGroupPortAll":{
-               "Type":"AWS::EC2::SecurityGroupIngress",
-               "Properties":{
-                  "GroupName":{
-                     "Ref":"CassSecurityGroup"
-                  },
-                  "IpProtocol":"tcp",
-                  "FromPort":"1",
-                  "ToPort":"65535",
-                  "SourceSecurityGroupName":{
-                     "Ref":"CassSecurityGroup"
-                  }
-               }
-            },
       "CassSecurityGroupPort7000":{
          "Type":"AWS::EC2::SecurityGroupIngress",
          "Properties":{
@@ -1210,6 +1199,18 @@
             }
          }
       },
+       "CassSecurityGroupPort8888":{
+           "Type":"AWS::EC2::SecurityGroupIngress",
+                    "Properties":{
+                       "GroupName":{
+                          "Ref":"CassSecurityGroup"
+                       },
+                       "IpProtocol":"tcp",
+                       "FromPort":"8888",
+                       "ToPort":"8888",
+                       "CidrIp":"0.0.0.0/0"
+                    }
+            },
       "RestSecurityGroup":{
          "Type":"AWS::EC2::SecurityGroup",
          "Properties":{
@@ -1230,6 +1231,21 @@
             ]
          }
       },
+
+       "GraphiteSecurityGroup":{
+              "Type":"AWS::EC2::SecurityGroup",
+              "Properties":{
+                 "GroupDescription":"Database Machines",
+                 "SecurityGroupIngress":[
+                    {
+                       "IpProtocol":"tcp",
+                       "FromPort":"22",
+                       "ToPort":"22",
+                       "CidrIp":"0.0.0.0/0"
+                    }
+                 ]
+              }
+           },
 
        "GraphiteSecurityGroupRest":{
                "Type":"AWS::EC2::SecurityGroupIngress",
@@ -1259,7 +1275,8 @@
                         "Ref":"RestSecurityGroup"
                      }
                   }
-               },
+               }
+
 
    }
 }
