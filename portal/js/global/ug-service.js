@@ -847,15 +847,14 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     },
 
     resetUserPassword: function (user) {
-      var body = {};
-      body.oldpassword = user.oldPassword;
-      body.newpassword = user.newPassword;
-      body.username = user.username;
+      var pwdata = {};
+      pwdata.oldpassword = user.oldPassword;
+      pwdata.newpassword = user.newPassword;
+      pwdata.username = user.username;
       var options = {
         method:'PUT',
-        endpoint:'management/users/' + user.uuid + '/',
-        body:body,
-        mQuery:true
+        endpoint:'users/' + pwdata.uuid + '/',
+        body:pwdata
       }
       this.client().request(options, function (err, data) {
         if (err) {

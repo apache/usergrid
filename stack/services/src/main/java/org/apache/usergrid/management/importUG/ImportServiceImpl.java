@@ -18,27 +18,27 @@
 package org.apache.usergrid.management.importUG;
 
         import org.apache.usergrid.batch.JobExecution;
-        import org.apache.usergrid.batch.service.SchedulerService;
-        import org.apache.usergrid.management.ApplicationInfo;
-        import org.apache.usergrid.management.ManagementService;
-        import org.apache.usergrid.management.OrganizationInfo;
-        import org.apache.usergrid.persistence.EntityManager;
-        import org.apache.usergrid.persistence.EntityManagerFactory;
-        import org.apache.usergrid.persistence.EntityRef;
-        import org.apache.usergrid.persistence.entities.Import;
-        import org.apache.usergrid.persistence.entities.JobData;
-        import org.codehaus.jackson.JsonFactory;
-        import org.codehaus.jackson.JsonParseException;
-        import org.codehaus.jackson.JsonParser;
-        import org.codehaus.jackson.JsonToken;
-        import org.codehaus.jackson.map.ObjectMapper;
-        import org.slf4j.Logger;
-        import org.slf4j.LoggerFactory;
+import org.apache.usergrid.batch.service.SchedulerService;
+import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.entities.Import;
+import org.apache.usergrid.persistence.entities.JobData;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-        import java.io.File;
-        import java.util.*;
+import java.io.File;
+import java.util.*;
 
-        import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 /**
  * Created by ApigeeCorporation on 7/8/14.
@@ -288,18 +288,6 @@ public class ImportServiceImpl implements ImportService {
             em.update(importUG);
             return;
         }
-        catch (CollectionNotFoundException e) {
-            importUG.setErrorMessage(e.getMessage());
-            importUG.setState(Import.State.FAILED);
-            em.update(importUG);
-            return;
-        }
-        catch (JsonParseException e) {
-            importUG.setErrorMessage(e.getMessage());
-            importUG.setState(Import.State.FAILED);
-            em.update(importUG);
-            return;
-        }
         catch (Exception e) {
             // the case where job will be retried i.e. resumed from the failed point
             importUG.setErrorMessage(e.getMessage());
@@ -325,15 +313,8 @@ public class ImportServiceImpl implements ImportService {
         if(application == null) {
             throw new ApplicationNotFoundException("Application Not Found");
         }
-
-        EntityManager em = emf.getEntityManager(application.getId());
-
         String collectionName = config.get("collectionName").toString();
-        Set<String> collections = em.getApplicationCollections();
 
-        if(!collections.contains(collectionName)) {
-            throw new CollectionNotFoundException("Collection Not Found");
-        }
 
         String appFileName = prepareInputFileName("application", application.getName(),collectionName);
 
@@ -523,6 +504,7 @@ public class ImportServiceImpl implements ImportService {
 
         EntityRef ownerEntityRef=null;
         String entityUuid="";
+        String entityType="";
 
         // Go inside the value after getting the owner entity id.
         while ( jp.nextToken() != JsonToken.END_OBJECT ) {
@@ -574,16 +556,12 @@ public class ImportServiceImpl implements ImportService {
                         String key = jp.getCurrentName();
                         if(key.equals("uuid")) {
                             entityUuid = jp.getText();
-                            ownerEntityRef = em.getRef( UUID.fromString(entityUuid));
                         }
                         else if(key.equals("type")) {
 
-                            String value = jp.getText();
-                            Set<String> collections = em.getApplicationCollections();
-                            if(!collections.contains(value+"s")) {
-                                throw new CollectionNotFoundException("Collection Not Found");
-                            }
-                            properties.put(key,value);
+                            entityType = jp.getText();
+                            //Set<String> collections = em.getApplicationCollections();
+                            //properties.put(key,entityType);
                         }
                         else
                         {
@@ -593,12 +571,12 @@ public class ImportServiceImpl implements ImportService {
                     }
                     token = jp.nextToken();
                 }
-                // updates the properties, this indeed changes the modified property of the entity
-                em.updateProperties(ownerEntityRef,properties);
+
+                Entity e = em.create(UUID.fromString(entityUuid),entityType,properties);
+                ownerEntityRef = em.getRef(UUID.fromString(entityUuid));
+
             }
-
         }
-
         // update the last updated entity
         ArrayList fileNames = (ArrayList) importUG.getDynamicProperties().get("files");
         ((Map<String,Object>)fileNames.get(index)).put("lastUpdatedUUID",entityUuid);
@@ -619,8 +597,8 @@ class ApplicationNotFoundException extends Exception {
         super(s);
     }
 }
-class CollectionNotFoundException extends Exception {
-    CollectionNotFoundException(String s) {
-        super(s);
-    }
-}
+//class CollectionNotFoundException extends Exception {
+//    CollectionNotFoundException(String s) {
+//        super(s);
+//    }
+//}
