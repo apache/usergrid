@@ -30,15 +30,24 @@ import com.amazonaws.services.simpledb.model.*
 String accessKey = (String)System.getenv().get("AWS_ACCESS_KEY")
 String secretKey = (String)System.getenv().get("AWS_SECRET_KEY")
 String stackName = (String)System.getenv().get("STACK_NAME")
-String domain    = stackName
+String domain = stackName
 
-//def replicationFactor = System.getenv().get("CASSANDRA_REPLICATION_FACTOR")
-int cassNumServers = System.getenv().get("CASSANDRA_NUM_SERVERS").toInteger()
+
+if (args.size() !=2 )  {
+  println "this script expects two arguments.  wait_for_instances.groovy nodetype numberOfServers"
+  // You can even print the usage here.
+  return 1;
+}
+
+String nodetype = args[0]
+int numberOfServers = args[1].toInteger()
+
+
 
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
 
-println "Waiting for Cassandra nodes to register..."
+println "Waiting for ${numberOfServers} nodes of type ${nodetype} to register..."
 
 def count = 0
 
@@ -47,23 +56,17 @@ while (true) {
 
 
 
-        def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null  order by itemName()"))
+        def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null and nodetype = '${nodetype}'  order by itemName()"))
 
 
-        count = 0
+        count = selectResult.getItems().size();
 
-        for (item in selectResult.getItems()) {
-            def att = item.getAttributes().get(0)
-            if (att.getValue().equals(stackName)) {
-                count++
-            }
-        }
-        if (count >= cassNumServers) {
-            println("count = ${count}, total number of servers is ${cassNumServers}.  Breaking")
+        if (count >= numberOfServers) {
+            println("count = ${count}, total number of servers is ${numberOfServers}.  Breaking")
             break
         }
 
-        println("Found ${count} nodes but need at least ${cassNumServers}.  Waiting...")
+        println("Found ${count} nodes but need at least ${numberOfServers}.  Waiting...")
     } catch (Exception e) {
         println "ERROR waiting for Casasndra ${e.getMessage()}, will continue waiting"
     }

@@ -32,14 +32,13 @@ String accessKey = (String)System.getenv().get("AWS_ACCESS_KEY")
 String secretKey = (String)System.getenv().get("AWS_SECRET_KEY")
 String stackName = (String)System.getenv().get("STACK_NAME")
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
-def clusterName  = (String)System.getenv().get("CASSANDRA_CLUSTER_NAME")
 String domain    = stackName
 
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
 
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
-def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}`"))
+def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null and nodetype = 'elasticsearch'  order by itemName()"))
 def seeds = ""
 def sep = ""
 for (item in selectResult.getItems()) {
