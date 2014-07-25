@@ -456,6 +456,7 @@ public class ImportServiceImpl implements ImportService {
             if(!completed) {
 
                 if(!isValidJSON(collectionFile, fileInfo)){
+                    i++;
                     continue;
                 }
 

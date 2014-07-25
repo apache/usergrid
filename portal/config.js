@@ -4,7 +4,7 @@ Usergrid.showNotifcations = true;
 
 
 // used only if hostname does not match a real server name
-Usergrid.overrideUrl = 'http://import.usergrid.com/';
+Usergrid.overrideUrl = 'http://importtest2.usergrid.com/';
 
 Usergrid.options = {
   client:{
