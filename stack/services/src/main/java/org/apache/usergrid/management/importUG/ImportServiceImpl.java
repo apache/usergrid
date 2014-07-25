@@ -50,7 +50,7 @@ public class ImportServiceImpl implements ImportService {
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
     public static final String IMPORT_ID = "importId";
     public static final String IMPORT_JOB_NAME = "importJob";
-    private static ArrayList<File> files;
+    private ArrayList<File> files;
 
     //dependency injection
     private SchedulerService sch;
@@ -437,7 +437,6 @@ public class ImportServiceImpl implements ImportService {
             singleFile.put("name",collectionFile.getName());
             singleFile.put("completed",new Boolean(false));
             singleFile.put("lastUpdatedUUID",new String(""));
-            singleFile.put("errorMessage",new String(""));
             value.add(singleFile);
         }
 
@@ -455,7 +454,7 @@ public class ImportServiceImpl implements ImportService {
             // on resume, completed files will not be traversed again
             if(!completed) {
 
-                if(!isValidJSON(collectionFile, fileInfo)){
+                if(!isValidJSON(collectionFile,rootEm,importUG,i)){
                     i++;
                     continue;
                 }
@@ -501,7 +500,9 @@ public class ImportServiceImpl implements ImportService {
         }
     }
 
-    private boolean isValidJSON( File collectionFile, Map<String,Object> fileInfo ) throws Exception  {
+    private boolean isValidJSON( File collectionFile, EntityManager rootEm, Import importUG, int index) throws Exception  {
+
+        ArrayList fileNames = (ArrayList) importUG.getDynamicProperties().get("files");
         boolean valid = false;
         try {
             final JsonParser jp = jsonFactory.createJsonParser(collectionFile);
@@ -510,12 +511,13 @@ public class ImportServiceImpl implements ImportService {
             valid = true;
         } catch (JsonParseException e) {
             e.printStackTrace();
-            fileInfo.put("errorMessage", e.getMessage());
+            ((Map<String, Object>) fileNames.get(index)).put("Error Message", e.getMessage());
+            rootEm.update(importUG);
         } catch (IOException e) {
             e.printStackTrace();
-            fileInfo.put("errorMessage", "Something seems to be wrong in this file, we could not access it. Please check before you parse it again");
+            ((Map<String, Object>) fileNames.get(index)).put("Miscellaneous error", e.getMessage());
+            rootEm.update(importUG);
         }
-
         return valid;
     }
 
