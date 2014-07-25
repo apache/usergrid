@@ -87,6 +87,7 @@
             "m1.medium": {"Arch": "64"},
             "m1.large": {"Arch": "64"},
             "m1.xlarge": {"Arch": "64"},
+            "m3.large": {"Arch": "64"},
             "c3.4xlarge": {"Arch": "64"}
         },
         "AWSRegionArch2AMI": {
