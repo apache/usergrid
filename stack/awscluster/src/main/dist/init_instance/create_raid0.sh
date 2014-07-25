@@ -24,7 +24,7 @@ debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Si
 apt-get install -y postfix
 
 # install mdadm RAID controller
-apt-get -y install mdadm
+apt-get -y --force-yes install mdadm
 
 # m1.xlarge has four 414GB disks, but only /dev/xvdb is mounted
 # unmount /dev/xvdb so we can use it in our setup

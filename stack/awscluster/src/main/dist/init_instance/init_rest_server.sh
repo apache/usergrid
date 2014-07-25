@@ -27,7 +27,7 @@ dpkg-reconfigure -f noninteractive tzdata
 
 PKGS="openjdk-7-jdk tomcat7 s3cmd ntp unzip groovy"
 apt-get update
-apt-get -y install ${PKGS}
+apt-get -y --force-yes install ${PKGS}
 
 # Install AWS Java SDK and get it into the Groovy classpath
 curl http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip > /tmp/aws-sdk-java.zip
@@ -44,17 +44,30 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
 
+/etc/init.d/tomcat7 stop
+
+cd /usr/share/usergrid/scripts
+groovy tag_instance.groovy
+
+
 # Wait for enough Cassandra nodes then deploy and restart Tomcat 
 cd /usr/share/usergrid/scripts
-groovy wait_for_instances.groovy
+groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
+groovy wait_for_instances.groovy graphite ${GRAPHITE_NUM_SERVERS}
 
 mkdir -p /usr/share/tomcat7/lib 
-groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
+groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties
+
 
 rm -rf /var/lib/tomcat7/webapps/*
 cp -r /usr/share/usergrid/webapps/* /var/lib/tomcat7/webapps
-groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js 
+groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
+
+
+
+
+cd /usr/share/usergrid/init_instance
+./install_yourkit.sh
 
 # Go
-/etc/init.d/tomcat7 restart
-groovy tag_instance.groovy
+/etc/init.d/tomcat7 start

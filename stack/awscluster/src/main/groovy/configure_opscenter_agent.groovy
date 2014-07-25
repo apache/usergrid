@@ -32,22 +32,14 @@ String stackName = (String)System.getenv().get("STACK_NAME")
 
 String domain    = stackName
 
-def creds = new BasicAWSCredentials(accessKey, secretKey)
-def sdbClient = new AmazonSimpleDBClient(creds)
+
+NodeRegistry registry = new NodeRegistry();
 
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
-def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null order by itemName()"))
+def selectResult = registry.searchNode('cassandra')
 
-def opsCenterNode = null
+def opsCenterNode = selectResult[0]
 
-for (item in selectResult.getItems()) {
-    def att = item.getAttributes().get(0)
-    if (att.getValue().equals(stackName)) {
-            opsCenterNode = item.getName();
-        break;
-    }
-
-}
 
 def clientconfig = """
 

@@ -26,40 +26,29 @@ import com.amazonaws.auth.*
 import com.amazonaws.services.simpledb.*
 import com.amazonaws.services.simpledb.model.*
 
-String accessKey = (String)System.getenv().get("AWS_ACCESS_KEY")
-String secretKey = (String)System.getenv().get("AWS_SECRET_KEY")
-String stackName = (String)System.getenv().get("STACK_NAME")
+
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
 String clusterName  = (String)System.getenv().get("CASSANDRA_CLUSTER_NAME")
 int cassNumServers = ((String)System.getenv().get("CASSANDRA_NUM_SERVERS")).toInteger()
 
-String domain    = stackName
-
-def creds = new BasicAWSCredentials(accessKey, secretKey)
-def sdbClient = new AmazonSimpleDBClient(creds)
 
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
-def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null order by itemName()"))
+
+NodeRegistry registry = new NodeRegistry();
+
+def selectResult = registry.searchNode('cassandra')
 def seeds = ""
 def sep = ""
-for (item in selectResult.getItems()) {
-    def att = item.getAttributes().get(0)
-    if (att.getValue().equals(stackName)) {
-        seeds = "${seeds}${sep}${item.getName()}"
-        sep = ","
-    }
+for (host in selectResult) {
+    seeds = "${seeds}${sep}${host}"
+    sep = ","
 }
 
-
-//calculate what our token should be
-selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null  order by itemName()"))
 
 int index = 0;
 int count = 0;
 
-for (item in selectResult.getItems()) {
-
-    def name = item.getName()
+for (name in selectResult) {
 
     //get our index so that we know which token to get
     if (name == hostName) {
