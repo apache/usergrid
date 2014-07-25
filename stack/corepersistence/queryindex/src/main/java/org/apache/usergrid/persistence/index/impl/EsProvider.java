@@ -101,18 +101,17 @@ public class EsProvider {
 
             } else { // build client that connects to all configured hosts
 
-                final String hosts = fig.getHosts();
-
                 String allHosts = "";
                 String SEP = "";
                 for (String host : fig.getHosts().split(",")) {
-                    allHosts = SEP + host + ":" + fig.getPort();
+                    allHosts = allHosts + SEP + host + ":" + fig.getPort();
                     SEP = ",";
                 }
 
                 Settings settings = ImmutableSettings.settingsBuilder()
                     .put("client.transport.ping_timeout", 2000) // milliseconds
                     .put("client.transport.nodes_sampler_interval", 100)
+                    .put("cluster.name", fig.getClusterName())
                     .put("http.enabled", false)
 
                     // this assumes that we're using zen for host discovery.  Putting an 
@@ -123,7 +122,6 @@ public class EsProvider {
                 log.info("Creating ElasticSearch client with settings: " +  settings.getAsMap());
 
                 Node node = NodeBuilder.nodeBuilder().settings(settings)
-                    .clusterName(fig.getClusterName())
                     .client(true).node();
 
                 newClient = node.client();

@@ -41,6 +41,7 @@ import me.prettyprint.cassandra.service.CassandraHost;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
+import org.apache.commons.lang.StringUtils;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
@@ -103,24 +104,36 @@ public class CpSetup implements Setup {
             }
             String sep = "";
             for ( CassandraHost host : hosts ) {
-                hostsString = sep + host.getHost();
+                if (StringUtils.isEmpty(host.getHost())) {
+                    throw new RuntimeException("Fatal error: Cassandra hostname cannot be empty");
+                }
+                hostsString = hostsString + sep + host.getHost();
                 sep = ",";
             }
 
-            // Translate Usergrid properties into Core Persistence properties
+            logger.info("hostsString: " + hostsString);
 
             Properties cpProps = new Properties();
+
+            // Some Usergrid properties must be mapped to Core Persistence properties
             cpProps.put("cassandra.hosts", hostsString);
             cpProps.put("cassandra.port", hosts[0].getPort());
-            cpProps.put("cassandra.cluster_name", 
-                    cass.getProperties().get("cassandra.cluster"));
+            cpProps.put("cassandra.cluster_name", cass.getProperties().get("cassandra.cluster"));
+
             cpProps.put("collections.keyspace.strategy.class", 
                     cass.getProperties().get("cassandra.keyspace.strategy"));
+
             cpProps.put("collections.keyspace.strategy.options", "replication_factor:" +  
-                    cass.getProperties().get("cassandra.keyspace.strategy.options.replication_factor"));
+                    cass.getProperties().get("cassandra.keyspace.replication"));
+
+            cpProps.put("cassandra.keyspace.strategy.options.replication_factor",
+                    cass.getProperties().get("cassandra.keyspace.replication"));
+
             logger.debug("Set Cassandra properties for Core Persistence: " + cpProps.toString() );
 
+            // Make all Usergrid properties into Core Persistence config
             cpProps.putAll( cass.getProperties() );
+            logger.debug("All properties fed to Core Persistence: " + cpProps.toString() );
 
             ConfigurationManager.loadProperties( cpProps );
         }
