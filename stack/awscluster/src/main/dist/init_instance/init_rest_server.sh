@@ -57,15 +57,21 @@ cd /usr/share/usergrid/init_instance
 
 # Wait for enough Cassandra nodes then deploy and restart Tomcat 
 cd /usr/share/usergrid/scripts
-groovy wait_for_instances.groovy
+groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
+groovy wait_for_instances.groovy graphite ${GRAPHITE_NUM_SERVERS}
 
 mkdir -p /usr/share/tomcat7/lib 
 groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-custom.properties 
 
 rm -rf /var/lib/tomcat7/webapps/*
 cp -r /usr/share/usergrid/webapps/* /var/lib/tomcat7/webapps
-groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js 
+groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
+
+
+
+
+cd /usr/share/usergrid/init_instance
+./install_yourkit.sh
 
 # Go
-/etc/init.d/tomcat7 restart
-groovy tag_instance.groovy
+/etc/init.d/tomcat7 start

@@ -47,4 +47,9 @@ chown -R root:root /usr/lib/jvm/jdk1.7.0
 sudo rm /usr/lib/jvm/default-java
 sudo ln -s /usr/lib/jvm/jdk1.7.0 /usr/lib/jvm/default-java
 
+#Install the JNA for cassandra to use
+
+sudo apt-get install libjna-java
+
+
 popd

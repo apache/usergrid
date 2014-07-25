@@ -49,6 +49,9 @@ cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
 
+cd /usr/share/usergrid/scripts
+groovy tag_instance.groovy
+
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 
 
@@ -56,9 +59,14 @@ cd /usr/share/usergrid/init_instance
 cd /usr/share/usergrid/init_instance
 ./install_cassandra.sh
 
+cd /usr/share/usergrid/init_instance
+./install_opscenter_agent.sh
+
 # Install and start ElasticSearch
 cd /usr/share/usergrid/init_instance
 ./install_elasticsearch.sh
 
-cd /usr/share/usergrid/scripts
-groovy tag_instance.groovy
+# Use the CQL to crate the keyspaces
+cd /usr/share/usergrid/init_instance
+./create_keyspaces.sh
+

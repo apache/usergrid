@@ -19,36 +19,19 @@
 #
 
 
+# Install and stop Cassandra
 pushd /etc/apt/sources.list.d
 
-groovy ./registry_register.groovy elasticsearch
+echo "deb http://debian.datastax.com/community stable main" | sudo tee -a /etc/apt/sources.list.d/datastax.community.list
 
-# Install and stop ElasticSearch
-cat >> elasticsearch.sources.list << EOF
-deb http://packages.elasticsearch.org/elasticsearch/1.2/debian stable main
-EOF
-apt-get update
-apt-get --force-yes -y install elasticsearch
-/etc/init.d/elasticsearch stop
+curl -L https://debian.datastax.com/debian/repo_key | sudo apt-key add -
 
-mkdir -p /mnt/data/elasticsearch
-chown elasticsearch /mnt/data/elasticsearch
-
-mkdir -p /mnt/log/elasticsearch
-chown elasticsearch /mnt/log/elasticsearch
-
-# Configure ElasticSearch
-cat >> /etc/default/elasticsearch << EOF
-JAVA_HOME=/usr/lib/jvm/jdk1.7.0
-EOF
-
-update-rc.d elasticsearch defaults 95 10
-cd /usr/share/usergrid/scripts
+sudo apt-get update
+sudo apt-get install datastax-agent
 
 
-groovy ./configure_elasticsearch.groovy > /etc/elasticsearch/elasticsearch.yml
+groovy configure_opscenter_agent.groovy > /var/lib/datastax-agent/conf/address.yaml
 
-# Go!
-/etc/init.d/elasticsearch start
+sudo service datastax-agent start
 
 popd

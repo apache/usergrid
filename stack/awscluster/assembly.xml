@@ -45,6 +45,7 @@
             </includes>
         </fileSet>
 
+
         <fileSet>
             <outputDirectory>./scripts</outputDirectory>
             <directory>./src/main/groovy</directory>
@@ -52,6 +53,14 @@
                 <include>**</include>
             </includes>
         </fileSet>
+
+      <fileSet>
+               <outputDirectory>./cql</outputDirectory>
+               <directory>./src/main/cql</directory>
+               <includes>
+                   <include>**</include>
+               </includes>
+           </fileSet>
 
         <fileSet>
             <outputDirectory>./webapps/portal</outputDirectory>
