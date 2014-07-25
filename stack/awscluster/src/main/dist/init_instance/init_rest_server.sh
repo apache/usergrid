@@ -27,7 +27,7 @@ dpkg-reconfigure -f noninteractive tzdata
 
 PKGS="openjdk-7-jdk tomcat7 s3cmd ntp unzip groovy"
 apt-get update
-apt-get -y install ${PKGS}
+apt-get -y --force-yes install ${PKGS}
 
 # Install AWS Java SDK and get it into the Groovy classpath
 curl http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip > /tmp/aws-sdk-java.zip
@@ -44,12 +44,23 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
 
+# Copy in our own server.xml to set Tomcat's thread pool size
+cp /usr/share/usergrid/lib/server.xml /var/lib/tomcat7/conf
+chown tomcat7 /var/lib/tomcat7/conf/server.xml 
+
+# Set Tomcat RAM size and path to log4j.properties
+export JAVA_OPTS="-Djava.awt.headless=true -Xmx1024m -Dlog4j.configuration=file:/usr/share/usergrid/lib/log4j.properties"
+sed -i 's/Xmx128m/Xmx1024m -Dlog4j.configuration=file\:\/usr\/share\/usergrid\/lib\/log4j\.properties/' /etc/default/tomcat7
+
+cd /usr/share/usergrid/init_instance
+./install_oraclejdk.sh 
+
 # Wait for enough Cassandra nodes then deploy and restart Tomcat 
 cd /usr/share/usergrid/scripts
 groovy wait_for_instances.groovy
 
 mkdir -p /usr/share/tomcat7/lib 
-groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
+groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-custom.properties 
 
 rm -rf /var/lib/tomcat7/webapps/*
 cp -r /usr/share/usergrid/webapps/* /var/lib/tomcat7/webapps

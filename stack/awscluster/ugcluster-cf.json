@@ -21,19 +21,19 @@
             "Description": "Minimum number of REST servers.",
             "Type": "Number",
             "Default": "3",
-            "MinValue": "3"
+            "MinValue": "1"
         },
         "RestMaxServers": {
             "Description": "Maximum number REST servers.",
             "Type": "Number",
             "Default": "3",
-            "MinValue": "3"
+            "MinValue": "1"
         },
         "RestInstanceType": {
             "Description": "Instance type for REST servers",
             "Type": "String",
             "Default": "m1.large",
-            "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge"],
+            "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.large", "c3.4xlarge"],
             "ConstraintDescription": "must be valid instance type."
         },
         "KeyPair": {
@@ -50,20 +50,20 @@
             "Description": "Number of Cass servers to start.",
             "Type": "Number",
             "Default": "3",
-            "MinValue": "3"
+            "MinValue": "1"
         },
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
             "Type": "String",
             "Default": "m1.xlarge",
-            "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge"],
+            "AllowedValues": ["m1.small", "m1.medium", "m1.large", "m1.xlarge", "m3.xlarge", "m3.2xlarge", "c3.4xlarge"],
             "ConstraintDescription": "must be valid instance type."
         },
         "CassReplicationFactor": {
             "Description": "Cassandra replication factor",
             "Type": "Number",
             "Default": "3",
-            "MinValue": "3"
+            "MinValue": "1"
         },
         "SuperUserEmail": {
             "Description": "Email for superuser user",
@@ -86,7 +86,8 @@
             "m1.small": {"Arch": "64"},
             "m1.medium": {"Arch": "64"},
             "m1.large": {"Arch": "64"},
-            "m1.xlarge": {"Arch": "64"}
+            "m1.xlarge": {"Arch": "64"},
+            "c3.4xlarge": {"Arch": "64"}
         },
         "AWSRegionArch2AMI": {
             "ap-southeast-2": {"64": "ami-5993f663"},
@@ -171,8 +172,6 @@
                                     "\n",
                                     "export CASS_SECURITY_GROUP_NAME=", {"Ref": "CassSecurityGroup"}, "\n",
                                     "\n",
-                                    "#export JVM_EXTRA_OPTS=-javaagent:/usr/share/cassandra/lib/priam-cass-extensions-1.2.24.jar", "\n",
-                                    "\n",
                                     "export CASSANDRA_CLUSTER_NAME=", {"Ref": "CassClusterName"}, "\n",
                                     "export CASSANDRA_NUM_SERVERS=", {"Ref": "CassNumServers"}, "\n",
                                     "export CASSANDRA_KEYSPACE_NAME=usergrid", "\n",
@@ -187,13 +186,6 @@
                                 "cat >/etc/profile.d/aws-credentials.sh <<EOF\n",
                                 "export AWS_ACCESS_KEY=", {"Ref": "CassKey"}, "\n",
                                 "export AWS_SECRET_KEY=", {"Fn::GetAtt": ["CassKey", "SecretAccessKey"]}, "\n",
-                                "EOF\n",
-                                "\n",
-
-                                "# put AWS creds Priam's config file\n",
-                                "cat >/etc/awscredential.properties <<EOF\n",
-                                "AWSACCESSID=", {"Ref": "CassKey"}, "\n",
-                                "AWSKEY=", {"Fn::GetAtt": ["CassKey", "SecretAccessKey"]}, "\n",
                                 "EOF\n",
                                 "\n",
 
@@ -588,7 +580,7 @@
                     }]
             }
         },
-        "CassSecurityGroupPort7000": {
+        "CassAllow7000FromCass": {
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
                 "GroupName": {"Ref": "CassSecurityGroup"},
@@ -598,7 +590,7 @@
                 "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
             }
         },
-        "CassSecurityGroupPort9160": {
+        "CassAllow9160FromCass": {
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
                 "GroupName": {"Ref": "CassSecurityGroup"},
@@ -608,27 +600,7 @@
                 "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
             }
         },
-        "RestSecurityGroupPort9160" : {
-                 "Type" : "AWS::EC2::SecurityGroupIngress",
-                 "Properties" : {
-                     "GroupName" : { "Ref" : "CassSecurityGroup" },
-                     "IpProtocol": "tcp",
-                    "FromPort": "9160",
-                    "ToPort": "9160",
-                    "SourceSecurityGroupName": {"Ref": "RestSecurityGroup"}
-                 }
-             },
-        "CassSecurityGroupPort9200": {
-            "Type": "AWS::EC2::SecurityGroupIngress",
-            "Properties": {
-                "GroupName": {"Ref": "CassSecurityGroup"},
-                "IpProtocol": "tcp",
-                "FromPort": "9200",
-                "ToPort": "9200",
-                "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
-            }
-        },
-        "CassSecurityGroupPort9300": {
+        "CassAllow9300FromCass": {
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
                 "GroupName": {"Ref": "CassSecurityGroup"},
@@ -638,6 +610,26 @@
                 "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
             }
         },
+        "RestAllowAllFromCass": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {"Ref": "RestSecurityGroup"},
+                "IpProtocol": "tcp",
+                "FromPort": "0",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {"Ref": "CassSecurityGroup"}
+            }
+        },
+        "CassAlllowAllFromRest" : {
+                 "Type" : "AWS::EC2::SecurityGroupIngress",
+                 "Properties" : {
+                     "GroupName" : { "Ref" : "CassSecurityGroup" },
+                     "IpProtocol": "tcp",
+                    "FromPort": "0",
+                    "ToPort": "65535",
+                    "SourceSecurityGroupName": {"Ref": "RestSecurityGroup"}
+                 }
+         },
         "RestSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -656,7 +648,5 @@
             }
         }
     }
-
-
 
 }

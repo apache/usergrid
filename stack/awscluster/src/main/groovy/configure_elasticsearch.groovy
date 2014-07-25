@@ -38,22 +38,22 @@ String domain    = stackName
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def sdbClient = new AmazonSimpleDBClient(creds)
 
-// build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
+// build seed list by listing all nodes found in SimpleDB domain with our stackName
 def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}`"))
-def seeds = ""
+def esnodes = ""
 def sep = ""
 for (item in selectResult.getItems()) {
     def att = item.getAttributes().get(0)
     if (att.getValue().equals(stackName)) {
-        seeds = "${seeds}${sep}\"${item.getName()}\""
+        esnodes = "${esnodes}${sep}\"${item.getName()}\""
         sep = ","
     }
 }
 
 def elasticSearchConfig = """
-cluster.name: usergrid2
-discovery.zen.ping.multicast.enabled: false
-discovery.zen.ping.unicast.hosts: [${seeds}]
+cluster.name: ${clusterName}
+discovery.zen.ping.multicast.enabled: true
+discovery.zen.ping.unicast.hosts: [${esnodes}]
 node:
     name: ${hostName} 
 network:

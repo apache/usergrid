@@ -190,13 +190,13 @@
     <module>core</module>
     <module>services</module>
     <module>tools</module>
+    <module>rest</module>
+    <module>test-utils</module>
+    <module>build-tools</module>
+    <module>launcher</module>
+    <module>query-validator</module>
     <module>mongo-emulator</module>
     <module>websocket</module>
-    <module>rest</module>
-    <module>launcher</module>
-    <module>test-utils</module>
-    <module>query-validator</module>
-    <module>build-tools</module>
   </modules>
 
   <dependencyManagement>

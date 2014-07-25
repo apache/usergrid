@@ -54,23 +54,29 @@ for (item in selectResult.getItems()) {
     }
 }
 
+def esnodes = ""
+sep = ""
+for (item in selectResult.getItems()) {
+    def att = item.getAttributes().get(0)
+    if (att.getValue().equals(stackName)) {
+        esnodes = "${esnodes}${sep}${item.getName()}"
+        sep = ","
+    }
+}
+
 def usergridConfig = """
 ######################################################
 # Minimal Usergrid configuration properties for local Tomcat and Cassandra 
-#
 
 cassandra.url=${seeds}
-cassanrda.cluster=${clusterName}
-cassandra.keyspace.strategy.options.replication_factor=${replFactor}
-cassandra.keyspace.strategy.options.us-west=${replFactor}
-cassandra.keyspace.strategy.options.us-west=${replFactor}
+cassandra.cluster=${clusterName}
 cassandra.keyspace.strategy=org.apache.cassandra.locator.SimpleStrategy
+cassandra.keyspace.replication=${replFactor}
 
-# These settings seem to cause problems at startup time
-#cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
-#cassandra.writecl=LOCAL_QUORUM
-#cassandra.readcl=LOCAL_QUORUM
-
+elasticsearch.cluster_name=${clusterName}
+elasticsearch.index_prefix=usergrid
+elasticsearch.hosts=${esnodes}
+elasticsearch.port=9300
 
 ######################################################
 # Custom mail transport 

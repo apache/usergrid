@@ -43,13 +43,6 @@
             <includes>
                 <include>**</include>
             </includes>
-
-            <!-- Exclude Priam for now -->
-            <excludes>
-                <exclude>**/priam**</exclude>
-                <exclude>**/Priam**</exclude>
-            </excludes>
-
         </fileSet>
 
         <fileSet>

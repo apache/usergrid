@@ -44,11 +44,8 @@ def count = 0
 
 while (true) {
     try {
-
-
-
-        def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}` where itemName() is not null  order by itemName()"))
-
+        def selectResult = sdbClient.select( new SelectRequest(
+            (String)"select * from `${domain}` where itemName() is not null  order by itemName()"))
 
         count = 0
 
@@ -64,6 +61,7 @@ while (true) {
         }
 
         println("Found ${count} nodes but need at least ${cassNumServers}.  Waiting...")
+        
     } catch (Exception e) {
         println "ERROR waiting for Casasndra ${e.getMessage()}, will continue waiting"
         return
