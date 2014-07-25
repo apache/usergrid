@@ -17,48 +17,17 @@
 package org.apache.usergrid.management.cassandra;
 
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
-import org.apache.usergrid.management.AccountCreationProps;
-import org.apache.usergrid.management.ActivationState;
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
-import org.apache.usergrid.management.exceptions.DisabledAppUserException;
-import org.apache.usergrid.management.exceptions.IncorrectPasswordException;
-import org.apache.usergrid.management.exceptions.ManagementException;
-import org.apache.usergrid.management.exceptions.RecentlyUsedPasswordException;
-import org.apache.usergrid.management.exceptions.UnableToLeaveOrganizationException;
-import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
-import org.apache.usergrid.management.exceptions.UnactivatedAppUserException;
-import org.apache.usergrid.management.exceptions.UnconfirmedAdminUserException;
-import org.apache.usergrid.persistence.CredentialsInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
-import org.apache.usergrid.persistence.PagingResultsIterator;
-import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.management.*;
+import org.apache.usergrid.management.exceptions.*;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Results.Level;
-import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
@@ -80,89 +49,29 @@ import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
-import org.apache.usergrid.services.ServiceAction;
-import org.apache.usergrid.services.ServiceManager;
-import org.apache.usergrid.services.ServiceManagerFactory;
-import org.apache.usergrid.services.ServiceRequest;
-import org.apache.usergrid.services.ServiceResults;
-import org.apache.usergrid.utils.ConversionUtils;
-import org.apache.usergrid.utils.JsonUtils;
-import org.apache.usergrid.utils.MailUtils;
-import org.apache.usergrid.utils.StringUtils;
-import org.apache.usergrid.utils.UUIDUtils;
+import org.apache.usergrid.services.*;
+import org.apache.usergrid.utils.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.shiro.UnavailableSecurityManagerException;
-
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.Map.Entry;
 
 import static java.lang.Boolean.parseBoolean;
-
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.locking.LockHelper.getUniqueUpdateLock;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_ACTIVATION_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_CONFIRMATION_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_RESETPW_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_ACTIVATED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_CONFIRMATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_INVITED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_FOOTER;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_ACTIVATED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_CONFIRMATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ORGANIZATION_CONFIRMED_AWAITING_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ADMIN_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_SYSADMIN_ORGANIZATION_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_ACTIVATED;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_CONFIRMATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_CONFIRMED_AWAITING_ACTIVATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_PASSWORD_RESET;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_USER_PIN_REQUEST;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_MAILER_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ORGANIZATION_ACTIVATION_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SETUP_TEST_ACCOUNT;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_NAME;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_PASSWORD;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ADMIN_USER_USERNAME;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_APP;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_TEST_ACCOUNT_ORGANIZATION;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIVATION_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
+import static org.apache.usergrid.management.AccountCreationProps.*;
 import static org.apache.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_SECRET;
+import static org.apache.usergrid.persistence.Schema.*;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ACTOR;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ACTOR_NAME;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_CATEGORY;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_CONTENT;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_DISPLAY_NAME;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_ENTITY_TYPE;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_ENTITY_TYPE;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_NAME;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_OBJECT_TYPE;
+import static org.apache.usergrid.persistence.entities.Activity.*;
 import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_TITLE;
-import static org.apache.usergrid.persistence.entities.Activity.PROPERTY_VERB;
-import static org.apache.usergrid.security.AuthPrincipalType.ADMIN_USER;
-import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION;
-import static org.apache.usergrid.security.AuthPrincipalType.APPLICATION_USER;
-import static org.apache.usergrid.security.AuthPrincipalType.ORGANIZATION;
+import static org.apache.usergrid.security.AuthPrincipalType.*;
 import static org.apache.usergrid.security.oauth.ClientCredentialsInfo.getTypeFromClientId;
 import static org.apache.usergrid.security.oauth.ClientCredentialsInfo.getUUIDFromClientId;
 import static org.apache.usergrid.security.tokens.TokenCategory.ACCESS;
@@ -2027,7 +1936,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private String emailMsg( Map<String, String> values, String propertyName ) {
+    protected String emailMsg( Map<String, String> values, String propertyName ) {
         return new StrSubstitutor( values ).replace( properties.getProperty( propertyName ) );
     }
 
@@ -2535,7 +2444,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private String buildUserAppUrl( UUID applicationId, String url, User user, String token ) throws Exception {
+    protected String buildUserAppUrl( UUID applicationId, String url, User user, String token ) throws Exception {
         ApplicationInfo ai = getApplicationInfo( applicationId );
         OrganizationInfo oi = getOrganizationForApplication( applicationId );
         return String.format( url, oi.getName(), StringUtils.stringOrSubstringAfterFirst( ai.getName(), '/' ),
