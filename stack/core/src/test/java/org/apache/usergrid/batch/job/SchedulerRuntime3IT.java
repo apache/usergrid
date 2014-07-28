@@ -47,11 +47,13 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
 
         job.setLatch( latchValue );
 
+        getJobListener().setExpected( 3 );
+
         JobData returned = scheduler.createJob( "failureJobExceuction", System.currentTimeMillis(), new JobData() );
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
-        boolean waited = getJobListener().blockTilDone( 3, ( failCount + 2 ) * sleepTime + 5000L );
+        boolean waited = getJobListener().blockTilDone(( failCount + 2 ) * sleepTime + 5000L );
 
         //we shouldn't trip the latch.  It should fail failCount times, and not run again
         assertTrue( "Jobs ran", waited );
