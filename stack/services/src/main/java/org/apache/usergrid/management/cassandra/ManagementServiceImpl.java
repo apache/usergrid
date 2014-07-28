@@ -31,6 +31,11 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.shiro.UnavailableSecurityManagerException;
+
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.management.AccountCreationProps;
@@ -90,10 +95,6 @@ import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.MailUtils;
 import org.apache.usergrid.utils.StringUtils;
 import org.apache.usergrid.utils.UUIDUtils;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.shiro.UnavailableSecurityManagerException;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -2256,8 +2257,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     public void sendAdminUserConfirmedAwaitingActivationEmail( UserInfo user ) throws Exception {
-        sendAdminUserEmail( user, "User Account Confirmed",
-                properties.getProperty( PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION ) );
+        sendAdminUserEmail(user, "User Account Confirmed",
+                emailMsg( hashMap("confirmed_email",user.getEmail() ),PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION ) );
     }
 
 

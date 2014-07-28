@@ -35,6 +35,10 @@ import org.junit.rules.TestName;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
+
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.cassandra.CassandraResource;
@@ -46,15 +50,7 @@ import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
-
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_ACTIVATED;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_CONFIRMATION;
@@ -76,6 +72,11 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYS
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_ACTIVATION_URL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -165,6 +166,11 @@ public class EmailFlowIT {
         assertEquals( ActivationState.CONFIRMED_AWAITING_ACTIVATION, state );
 
         confirmation = user_inbox.get( 1 );
+        String body = ( ( MimeMultipart ) confirmation.getContent() ).getBodyPart( 0 ).getContent().toString();
+        Boolean subbedEmailed = StringUtils.contains( body, "$" );
+
+        assertFalse( subbedEmailed );
+
         assertEquals( "User Account Confirmed", confirmation.getSubject() );
 
         List<Message> sysadmin_inbox = Mailbox.get( "sysadmin-2@mockserver.com" );
