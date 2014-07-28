@@ -431,18 +431,20 @@ public class ImportServiceImpl implements ImportService {
         Map<String,Object> fileMetadata = new HashMap<String, Object>();
         ArrayList<Map<String,Object>> value = new ArrayList<Map<String, Object>>();
 
-        // create the structure for file metadata and initialize it
-        for(File collectionFile : files) {
-            Map<String,Object> singleFile = new HashMap<String, Object>();
-            singleFile.put("name",collectionFile.getName());
-            singleFile.put("completed",new Boolean(false));
-            singleFile.put("lastUpdatedUUID",new String(""));
-            value.add(singleFile);
-        }
+        if (!((Map<String,Object>)importUG.getDynamicProperties()).containsKey("files")) {
+            // create the structure for file metadata and initialize it
+            for (File collectionFile : files) {
+                Map<String, Object> singleFile = new HashMap<String, Object>();
+                singleFile.put("name", collectionFile.getName());
+                singleFile.put("completed", new Boolean(false));
+                singleFile.put("lastUpdatedUUID", new String(""));
+                value.add(singleFile);
+            }
 
-        fileMetadata.put("files",value);
-        importUG.addProperties(fileMetadata);
-        rootEm.update(importUG);
+            fileMetadata.put("files", value);
+            importUG.addProperties(fileMetadata);
+            rootEm.update(importUG);
+        }
 
         ArrayList fileNames = (ArrayList)importUG.getDynamicProperties().get("files");
         int i=0;
