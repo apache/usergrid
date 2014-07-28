@@ -46,10 +46,10 @@ import java.util.Properties;
  */
 public class S3ImportImpl implements S3Import {
 
-    private static BlobStore blobStore;
+    private BlobStore blobStore;
     private ArrayList<Blob> blobs = new ArrayList<Blob>();
     private ArrayList<File> files = new ArrayList<File>();
-    private static int i=0;
+    private int i=0;
 
     /**
      *
