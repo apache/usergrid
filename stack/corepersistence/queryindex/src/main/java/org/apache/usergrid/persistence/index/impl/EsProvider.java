@@ -79,10 +79,17 @@ public class EsProvider {
                 }
 
                 Settings settings = ImmutableSettings.settingsBuilder()
-                    .put("node.http.enabled", true)
+
+                    .put("cluster.name", fig.getClusterName())
+
+                    .put("network.publish_host","127.0.0.1")
                     .put("transport.tcp.port", port)
+                    .put("discovery.zen.ping.multicast.enabled","false")
+                    .put("node.http.enabled", false)
+
                     .put("path.logs", tempDir.toString())
                     .put("path.data", tempDir.toString())
+
                     .put("gateway.type", "none")
                     .put("index.store.type", "memory")
                     .put("index.number_of_shards", 1)
@@ -90,7 +97,7 @@ public class EsProvider {
                     .build();
 
                 log.info("-----------------------------------------------------------------------");
-                log.info("Starting ElasticSearch embedded with settings: \n" + settings.getAsMap() );
+                log.info("Starting ElasticSearch embedded server with settings: \n" + settings.getAsMap() );
                 log.info("-----------------------------------------------------------------------");
 
                 Node node = NodeBuilder.nodeBuilder().settings(settings)
@@ -109,17 +116,23 @@ public class EsProvider {
                 }
 
                 Settings settings = ImmutableSettings.settingsBuilder()
-                    .put("client.transport.ping_timeout", 2000) // milliseconds
-                    .put("client.transport.nodes_sampler_interval", 100)
+
                     .put("cluster.name", fig.getClusterName())
-                    .put("http.enabled", false)
 
                     // this assumes that we're using zen for host discovery.  Putting an 
                     // explicit set of bootstrap hosts ensures we connect to a valid cluster.
                     .put("discovery.zen.ping.unicast.hosts", allHosts)
+                    .put("discovery.zen.ping.multicast.enabled","false")
+                    .put("http.enabled", false) 
+
+                    .put("client.transport.ping_timeout", 2000) // milliseconds
+                    .put("client.transport.nodes_sampler_interval", 100)
+
                     .build();
 
+                log.info("-----------------------------------------------------------------------");
                 log.info("Creating ElasticSearch client with settings: " +  settings.getAsMap());
+                log.info("-----------------------------------------------------------------------");
 
                 Node node = NodeBuilder.nodeBuilder().settings(settings)
                     .client(true).node();

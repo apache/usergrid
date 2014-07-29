@@ -74,6 +74,8 @@ public class AndOrQueryTest extends AbstractRestIT {
             }
         }
 
+        this.reindex( context.getAppUuid() );
+
         String errorQuery = "select * where created >= " + created + "AND madeup = true";
         JsonNode incorrectNode = activities.withQuery( errorQuery ).get();
 
@@ -104,6 +106,8 @@ public class AndOrQueryTest extends AbstractRestIT {
             JsonNode activity = activities.create( props );
         }
 
+        this.reindex( context.getAppUuid() );
+
         String query = "select * where not verb = 'go'";
         JsonNode incorrectNode = activities.query( query, "limit", Integer.toString( 10 ) );
 
@@ -133,6 +137,8 @@ public class AndOrQueryTest extends AbstractRestIT {
 
         JsonNode[] correctValues = activities.createEntitiesWithOrdinal( props, numValuesTested );
 
+        this.reindex( context.getAppUuid() );
+
         String inCorrectQuery = "select * where verb = 'go' and ordinal >= 10 ";
 
         activities.verificationOfQueryResults( correctValues, true, inCorrectQuery );
@@ -147,6 +153,8 @@ public class AndOrQueryTest extends AbstractRestIT {
 
         JsonNode[] correctValues;
         correctValues = madeupStuff.createEntitiesWithOrdinal( character, 1000 );
+
+        this.reindex( context.getAppUuid() );
 
         String inquisitiveQuery =
                 "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff' ORDER BY " + "Ordinal asc";
@@ -166,6 +174,8 @@ public class AndOrQueryTest extends AbstractRestIT {
 
         JsonNode[] correctValues = madeupStuff.createEntitiesWithOrdinal( character, numOfEntities );
 
+        this.reindex( context.getAppUuid() );
+
         String inquisitiveQuery = "select * where Ordinal >= 0 and Ordinal <= 2000 or WhoHelpedYou = 'Ruff'";
 
         int totalEntitiesContained = madeupStuff.verificationOfQueryResults( correctValues, true, inquisitiveQuery );
@@ -180,6 +190,8 @@ public class AndOrQueryTest extends AbstractRestIT {
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 
         madeupStuff.createEntitiesWithOrdinal( character, 1000 );
+
+        this.reindex( context.getAppUuid() );
 
         String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
 

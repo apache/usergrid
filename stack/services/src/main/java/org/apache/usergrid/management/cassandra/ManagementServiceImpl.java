@@ -2864,7 +2864,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     private CredentialsInfo readCreds( UUID appId, UUID ownerId, String ownerType, String key ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
-        Entity owner = em.get( new SimpleEntityRef( ownerType, ownerId ) );
+        Entity owner = em.get( ownerId );
         return ( CredentialsInfo ) em.getDictionaryElementValue( owner, DICTIONARY_CREDENTIALS, key );
     }
 

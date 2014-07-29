@@ -120,6 +120,13 @@ public class CpSetup implements Setup {
             cpProps.put("cassandra.port", hosts[0].getPort());
             cpProps.put("cassandra.cluster_name", cass.getProperties().get("cassandra.cluster"));
 
+            String cassRemoteString = (String)cass.getProperties().get("cassandra.use_remote"); 
+            if ( cassRemoteString != null && cassRemoteString.equals("false")) {
+                cpProps.put("cassandra.embedded", "true");
+            } else {
+                cpProps.put("cassandra.embedded", "false");
+            }
+
             cpProps.put("collections.keyspace.strategy.class", 
                     cass.getProperties().get("cassandra.keyspace.strategy"));
 

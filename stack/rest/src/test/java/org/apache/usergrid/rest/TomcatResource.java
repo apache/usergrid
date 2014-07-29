@@ -121,7 +121,10 @@ public class TomcatResource extends ExternalResource {
 
         String javaHome = (String)System.getenv("JAVA_HOME");
 
-        ProcessBuilder pb = new ProcessBuilder(javaHome + "/bin/java",
+        String logConfig = "-Dlog4j.configuration=file:./src/test/resources/log4j.properties";
+        String maxMemory = "-Xmx5000m";
+
+        ProcessBuilder pb = new ProcessBuilder(javaHome + "/bin/java", maxMemory, logConfig,
                 "org.apache.usergrid.TomcatMain", "src/main/webapp", port + "");
 
         // ensure Tomcat gets same classpath we have
@@ -184,14 +187,7 @@ public class TomcatResource extends ExternalResource {
         pw.println("usergrid.sysadmin.login.email=superuser@usergrid.com");
         pw.println("usergrid.sysadmin.login.password=superpassword");
         pw.println("usergrid.sysadmin.login.allowed=true");
-        pw.flush();
-        pw.close();
         
-        pw = new PrintWriter( 
-                new FileWriter( propDirPath + File.separator + "corepersistence.properties"));
-        
-        pw.println("cassandra.hosts=127.0.0.1");
-        pw.println("cassandra.port=" + cassPort);
         pw.println("cassandra.version=1.2");
         pw.println("cassandra.cluster_name=Usergrid");
         pw.println("cassandra.connections=20");
@@ -204,10 +200,11 @@ public class TomcatResource extends ExternalResource {
         
         pw.println("elasticsearch.hosts=127.0.0.1");
         pw.println("elasticsearch.port=" + esPort);
-        pw.println("elasticsearch.cluster_name=usergrid_test");
+        pw.println("elasticsearch.cluster_name=test_cluster");
         pw.println("elasticsearch.index_prefix=usergrid");
         
         pw.println("index.query.limit.default=1000");
+        
         pw.flush();
         pw.close();
     }
