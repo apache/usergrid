@@ -38,8 +38,8 @@ public class BulkTestUtils {
          * @see org.apache.usergrid.batch.JobFactory#jobsFrom(org.apache.usergrid.batch.repository.JobDescriptor)
          */
         @Override
-        public List<Job> jobsFrom( JobDescriptor descriptor ) {
-            return Arrays.asList( new Job[] { new MyBulkJob() } );
+        public Job jobsFrom( JobDescriptor descriptor ) {
+            return  new MyBulkJob();
         }
     }
 
