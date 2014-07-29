@@ -66,6 +66,8 @@ public class ImportServiceImpl implements ImportService {
 
     private JsonFactory jsonFactory = new JsonFactory();
 
+    private int entityCount=0;
+
     /**
      *
      * @param config configuration of the job to be scheduled
@@ -428,6 +430,8 @@ public class ImportServiceImpl implements ImportService {
         Import importUG = getImportEntity(jobExecution);
         EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
+
+
         Map<String,Object> fileMetadata = new HashMap<String, Object>();
         ArrayList<Map<String,Object>> value = new ArrayList<Map<String, Object>>();
 
@@ -620,8 +624,12 @@ public class ImportServiceImpl implements ImportService {
         }
         // update the last updated entity
         if(entity != null) {
-            ((Map<String, Object>) fileNames.get(index)).put("lastUpdatedUUID", entityUuid);
-            rootEm.update(importUG);
+            entityCount++;
+            if(entityCount == 50) {
+                ((Map<String, Object>) fileNames.get(index)).put("lastUpdatedUUID", entityUuid);
+                rootEm.update(importUG);
+                entityCount = 0;
+            }
         }
     }
 }
