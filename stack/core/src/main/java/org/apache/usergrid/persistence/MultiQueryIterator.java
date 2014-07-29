@@ -25,7 +25,7 @@ import java.util.UUID;
  * For each in a set of source UUIDs, executes a sub-query and provides a unified iterator over the union of all
  * results. Honors page sizes for the Query to ensure memory isn't blown out.
  */
-public class MultiQueryIterator implements Iterator {
+public class MultiQueryIterator implements ResultsIterator {
 
     private EntityManager entityManager;
     private Iterator<UUID> source;
@@ -71,6 +71,10 @@ public class MultiQueryIterator implements Iterator {
         return false;
     }
 
+    @Override
+    public boolean hasPages(){
+        return currentIterator != null && currentIterator instanceof ResultsIterator && ((ResultsIterator)currentIterator).hasPages();
+    }
 
     @Override
     public Object next() {
