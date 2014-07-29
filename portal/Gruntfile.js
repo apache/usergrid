@@ -75,8 +75,6 @@ module.exports = function (grunt) {
             'js/libs/angular-1.2.5/angular-sanitize.min.js',
             'js/libs/usergrid.sdk.js',
             'js/libs/MD5.min.js',
-            'bower_components/angularitics/dist/angulartics.min.js',
-            'bower_components/angularitics/dist/angulartics-google-analytics.min.js',
             'js/libs/ui-bootstrap/ui-bootstrap-custom-tpls-0.3.0.min.js',
             'js/libs/jqueryui/jquery-ui-1.8.18.min.js',
             'js/libs/jqueryui/date.min.js',
@@ -164,7 +162,7 @@ module.exports = function (grunt) {
     cssmin: {
       combine: {
         files: {
-          'css/dash.min.css': ['css/apigeeGlobalNavigation.css', 'css/main.css']
+          'css/main.min.css': ['css/main.css']
         }
       }
     },
@@ -178,8 +176,7 @@ module.exports = function (grunt) {
         'js/**/*.js',
         'js/**/*.html',
         '!tests/',
-        '!archive/',
-        '!css/dash.min.css',
+        '!css/main.min.css',
         '!js/libs/',
         '!js/*.min.js',
         '!'+templateFile,
@@ -302,7 +299,7 @@ module.exports = function (grunt) {
       coverage:{
         files:[
           {
-            src:['js/*.min.js','js/libs/**','sdk/**','archive/**','js/charts/*.json','css/**','img/**','js/libs/**','config.js','bower_components/**'],
+            src:['js/*.min.js','js/libs/**','sdk/**','js/charts/*.json','css/**','img/**','js/libs/**','config.js','bower_components/**'],
             dest:coveragePath,
             expand:true
           },
@@ -318,7 +315,7 @@ module.exports = function (grunt) {
         files:[
           // includes files within path
           {expand: true, src: ['*.html','config.js', '*.ico'], dest: distPath, filter: 'isFile'},
-          {expand: true, src: ['sdk/**','css/**','img/**' ,'archive/**','js/charts/*.json'], dest: distPath},
+          {expand: true, src: ['sdk/**','css/**','img/**','js/charts/*.json'], dest: distPath},
           {expand: true, src: ['js/*.min.js','js/libs/**','css/**','img/**','bower_components/**'], dest: distPath}
 
         ]
