@@ -17,8 +17,21 @@
 package org.apache.usergrid.management.cassandra;
 
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
@@ -49,15 +62,19 @@ import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
-import org.apache.usergrid.services.*;
-import org.apache.usergrid.utils.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.usergrid.services.ServiceAction;
+import org.apache.usergrid.services.ServiceManager;
+import org.apache.usergrid.services.ServiceManagerFactory;
+import org.apache.usergrid.services.ServiceRequest;
+import org.apache.usergrid.services.ServiceResults;
+import org.apache.usergrid.utils.ConversionUtils;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.MailUtils;
+import org.apache.usergrid.utils.StringUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.Map.Entry;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
@@ -1935,7 +1952,6 @@ public class ManagementServiceImpl implements ManagementService {
         return !Boolean.TRUE.equals( em.getProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "disabled" ) );
     }
 
-
     protected String emailMsg( Map<String, String> values, String propertyName ) {
         return new StrSubstitutor( values ).replace( properties.getProperty( propertyName ) );
     }
@@ -2165,8 +2181,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     public void sendAdminUserConfirmedAwaitingActivationEmail( UserInfo user ) throws Exception {
-        sendAdminUserEmail( user, "User Account Confirmed",
-                properties.getProperty( PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION ) );
+        sendAdminUserEmail(user, "User Account Confirmed",
+                emailMsg( hashMap("confirmed_email",user.getEmail() ),PROPERTIES_EMAIL_ADMIN_CONFIRMED_AWAITING_ACTIVATION ) );
     }
 
 

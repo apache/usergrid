@@ -110,7 +110,8 @@ public class TestJobListenerTest {
         TestJobListener listener = new TestJobListener();
         long waitTime = 1000L;
         long startTime = System.currentTimeMillis();
-		listener.blockTilDone( 100, waitTime );
+        listener.setExpected( 100 );
+		listener.blockTilDone( waitTime );
         long elapsedTime = System.currentTimeMillis() - startTime;
         LOG.info( "IdleOut in {} millis", elapsedTime );
         // assertTrue( elapsedTime >= ( 1000L + TestJobListener.WAIT_MAX_MILLIS ) );
@@ -121,6 +122,8 @@ public class TestJobListenerTest {
     @Test
     public void testHitCount() throws InterruptedException {
         final TestJobListener listener = new TestJobListener();
+
+        listener.setExpected( 1000 );
 
         Thread t = new Thread( new Runnable() {
             @Override
@@ -138,6 +141,6 @@ public class TestJobListenerTest {
         });
         t.start();
 
-        assertTrue( listener.blockTilDone( 1000, 1000L ) );
+        assertTrue( listener.blockTilDone( 1000L ) );
     }
 }
