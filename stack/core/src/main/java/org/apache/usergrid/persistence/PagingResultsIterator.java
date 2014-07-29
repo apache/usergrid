@@ -22,7 +22,7 @@ import java.util.List;
 
 
 /** iterates over a Results object, crossing page boundaries automatically */
-public class PagingResultsIterator implements Iterator, Iterable {
+public class PagingResultsIterator implements ResultsIterator, Iterable {
 
     private Results results;
     private Iterator currentPageIterator;
@@ -56,6 +56,11 @@ public class PagingResultsIterator implements Iterator, Iterable {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean hasPages(){
+        return results != null && results.hasCursor();
     }
 
 
