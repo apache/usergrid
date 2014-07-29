@@ -74,16 +74,24 @@ class NodeRegistry {
      * Add the node to the database if it doesn't exist
      */
     def addNode(def nodeType) {
+
         def gar = new GetAttributesRequest(domain, hostName);
         def response = sdbClient.getAttributes(gar);
-        if (response.getAttributes().size() == 1) {
-            println "Already registered"
+
+        if (response.getAttributes().size() > 0) {
             def attrs = response.getAttributes()
             for (att in attrs) {
-                println("${hostName} -> ${att.getName()} : ${att.getValue()}")
             }
+        }
 
-            return false;
+        if (response.getAttributes().size() > 1) {
+            def attrs = response.getAttributes()
+            for (att in attrs) {
+                if ( att.getValue().equals(nodeType)) {
+                    println "Already registered"
+                    return false;
+                }
+            }
 
         } else {
             println "Registering..."
@@ -92,11 +100,9 @@ class NodeRegistry {
             attrs.add(stackAtt)
             def par = new PutAttributesRequest(domain, hostName, attrs)
             sdbClient.putAttributes(par);
-            println "Registraition done."
+            println "Registration done."
             return true;
         }
-
-
     }
 
     def deleteRegistry(){

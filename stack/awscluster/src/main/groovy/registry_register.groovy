@@ -28,8 +28,7 @@ import com.amazonaws.services.simpledb.model.*
 
 
 if (args.size() != 1 )  {
-  println "this script expects one argument.  registry_register.groovy nodetype"
-  // You can even print the usage here.
+  println "This script expects one argument. registry_register.groovy nodetype"
   return 1;
 }
 

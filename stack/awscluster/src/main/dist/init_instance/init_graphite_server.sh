@@ -49,15 +49,12 @@ cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
 
-cd /usr/share/usergrid/scripts
-groovy tag_instance.groovy
-
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh
-
 
 cd /usr/share/usergrid/scripts
 groovy registry_register.groovy graphite
 
-
-
+# tag last so we can see in the console that the script ran to completion
+cd /usr/share/usergrid/scripts
+groovy tag_instance.groovy

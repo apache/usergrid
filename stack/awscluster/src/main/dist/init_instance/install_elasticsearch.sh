@@ -21,8 +21,6 @@
 
 pushd /etc/apt/sources.list.d
 
-groovy ./registry_register.groovy elasticsearch
-
 # Install and stop ElasticSearch
 cat >> elasticsearch.sources.list << EOF
 deb http://packages.elasticsearch.org/elasticsearch/1.2/debian stable main
@@ -38,15 +36,19 @@ mkdir -p /mnt/log/elasticsearch
 chown elasticsearch /mnt/log/elasticsearch
 
 # Configure ElasticSearch
+cd /usr/share/usergrid/scripts
+
+# No need to do this, elasticsearch nodes are also cassandra nodes
+#groovy registry_register.groovy elasticsearch
+#groovy wait_for_instances.groovy elasticsearch ${CASSANDRA_NUM_SERVERS}
+
 cat >> /etc/default/elasticsearch << EOF
 JAVA_HOME=/usr/lib/jvm/jdk1.7.0
 EOF
 
-update-rc.d elasticsearch defaults 95 10
-cd /usr/share/usergrid/scripts
-
-
 groovy ./configure_elasticsearch.groovy > /etc/elasticsearch/elasticsearch.yml
+
+update-rc.d elasticsearch defaults 95 10
 
 # Go!
 /etc/init.d/elasticsearch start

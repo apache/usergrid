@@ -28,6 +28,7 @@ dpkg-reconfigure -f noninteractive tzdata
 PKGS="openjdk-7-jdk tomcat7 s3cmd ntp unzip groovy"
 apt-get update
 apt-get -y --force-yes install ${PKGS}
+/etc/init.d/tomcat7 stop
 
 # Install AWS Java SDK and get it into the Groovy classpath
 curl http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip > /tmp/aws-sdk-java.zip
@@ -67,11 +68,12 @@ rm -rf /var/lib/tomcat7/webapps/*
 cp -r /usr/share/usergrid/webapps/* /var/lib/tomcat7/webapps
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
 
-
-
-
 cd /usr/share/usergrid/init_instance
 ./install_yourkit.sh
 
 # Go
 /etc/init.d/tomcat7 start
+
+# tag last so we can see in the console that the script ran to completion
+cd /usr/share/usergrid/scripts
+groovy tag_instance.groovy

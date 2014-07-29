@@ -16,17 +16,15 @@
  * directory of this distribution.
  */
 
-
 //
 // wait_for_instances.groovy
 //
 // Wait for enough Cassandra servers are up before proceding,
 // Enough means count greater than or equal to replication factor.
-//
+
 import com.amazonaws.auth.*
 import com.amazonaws.services.simpledb.*
 import com.amazonaws.services.simpledb.model.*
-
 
 if (args.size() !=2 )  {
   println "this script expects two arguments.  wait_for_instances.groovy nodetype numberOfServers"
@@ -37,7 +35,6 @@ if (args.size() !=2 )  {
 String nodetype = args[0]
 int numberOfServers = args[1].toInteger()
 
-
 NodeRegistry registry = new NodeRegistry();
 
 println "Waiting for ${numberOfServers} nodes of type ${nodetype} to register..."
@@ -46,11 +43,7 @@ def count = 0
 
 while (true) {
     try {
-
-
-
         def selectResult = registry.searchNode(nodetype)
-
 
         count = selectResult.size();
 
@@ -58,8 +51,8 @@ while (true) {
             println("count = ${count}, total number of servers is ${numberOfServers}.  Breaking")
             break
         }
-
         println("Found ${count} nodes but need at least ${numberOfServers}.  Waiting...")
+
     } catch (Exception e) {
         println "ERROR waiting for Casasndra ${e.getMessage()}, will continue waiting"
     }

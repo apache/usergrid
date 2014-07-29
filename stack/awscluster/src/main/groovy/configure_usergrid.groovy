@@ -51,34 +51,31 @@ def sep = ""
 for (item in selectResult) {
     cassandras = "${cassandras}${sep}${item}:9160"
     sep = ","
-
 }
 
-//TODO T.N Make this the graphite url
+// TODO T.N Make this the graphite url
 selectResult = registry.searchNode('graphite')
 def graphite = ""
 sep = ""
 for (item in selectResult) {
     graphite = "${graphite}${sep}${item}"
     sep = ","
-
 }
 
+// cassandra nodes are also our elasticsearch nodes
+selectResult = registry.searchNode('cassandra')
 def esnodes = ""
 sep = ""
-for (item in selectResult.getItems()) {
-    def att = item.getAttributes().get(0)
-    if (att.getValue().equals(stackName)) {
-        esnodes = "${esnodes}${sep}${item.getName()}"
-        sep = ","
-    }
+for (item in selectResult) {
+    esnodes = "${esnodes}${sep}${item}"
+    sep = ","
 }
 
 def usergridConfig = """
 ######################################################
 # Minimal Usergrid configuration properties for local Tomcat and Cassandra 
 
-cassandra.url=${seeds}
+cassandra.url=${cassandras}
 cassandra.cluster=${clusterName}
 cassandra.keyspace.strategy=org.apache.cassandra.locator.SimpleStrategy
 cassandra.keyspace.replication=${replFactor}
