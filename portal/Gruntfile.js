@@ -261,30 +261,6 @@ module.exports = function (grunt) {
           }
         }
       },
-      prod: {
-        options: {
-          args: {
-            baseUrl:'http://apigee.com/usergrid/',
-            // Arguments passed to the command
-            browser: 'chrome',
-            params:{
-              useSso:true
-            }
-          }
-        }
-      },
-      mars:{
-        options:{
-          args:{
-            baseUrl:'http://appservices.apigee.com/mars/',
-            browser: 'chrome',
-            params:{
-              useSso:true,
-              orgName:'apijeep'
-            }
-          }
-        }
-      },
       firefox: {
         options: {
           args: {
@@ -314,7 +290,7 @@ module.exports = function (grunt) {
       main:{
         files:[
           // includes files within path
-          {expand: true, src: ['*.html','config.js', '*.ico'], dest: distPath, filter: 'isFile'},
+          {expand: true, src: ['*.html','config.js', '*.ico', 'helpJson.json'], dest: distPath, filter: 'isFile'},
           {expand: true, src: ['sdk/**','css/**','img/**','js/charts/*.json'], dest: distPath},
           {expand: true, src: ['js/*.min.js','js/libs/**','css/**','img/**','bower_components/**'], dest: distPath}
 
@@ -358,33 +334,6 @@ module.exports = function (grunt) {
         }
       }
     },
-    s3: {
-      options: {
-        key: process.env.AWS_KEY || 'noidea',
-        secret: process.env.AWS_SECRET || 'noidea',
-        bucket: 'appservices-deployments',
-        access: 'public-read',
-        headers: {
-          // Two Year cache policy (1000 * 60 * 60 * 24 * 730)
-          "Cache-Control": "max-age=630720000, public",
-          "Expires": new Date(Date.now() + 63072000000).toUTCString()
-        }
-      },
-      dev: {
-        // These options override the defaults
-        options: {
-          encodePaths: false,
-          maxOperations: 20
-        },
-        // Files to be uploaded.
-        upload: [
-          {
-            src: 'dist/'+bower.name+'.'+bower.version+'.zip',
-            dest: '/production-releases/dist/'+bower.name+'.'+bower.version+'.zip'
-          }
-        ]
-      }
-    },
     instrument: {
       files: 'js/**/*.js',
       options: {
@@ -414,7 +363,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-protractor-runner');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-dom-munger');
-  grunt.loadNpmTasks('grunt-s3');
+
   grunt.loadNpmTasks('grunt-istanbul');
 
   // Default task(s).
@@ -423,8 +372,7 @@ module.exports = function (grunt) {
   grunt.registerTask('validate', ['jshint', 'complexity']);
   grunt.registerTask('report', ['build', 'coverage']);
 
-  grunt.registerTask('build-release', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy']);
-  grunt.registerTask('build', ['bower:install','ngtemplates', 'uglify','cssmin','dom_munger','karma:unit']);
+  grunt.registerTask('build', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','karma:unit','copy']);
   grunt.registerTask('build-dev', [ 'build']);
   grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
 

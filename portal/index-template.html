@@ -21,7 +21,7 @@ under the License.
 
 <head>
   <meta charset="utf-8">
-  <title>Apigee App Services</title>
+  <title>Usergrid Admin Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="">
   <meta name="author" content="">
@@ -53,7 +53,6 @@ under the License.
         <span class="icon-bar"></span>
       </button>
       <a class="brand" href="#"><img src="img/logo.png"/></a>
-      <div appswitcher ></div>
 
 
       <div class="nav-collapse collapse"  ng-show="loaded">
@@ -111,12 +110,12 @@ under the License.
                       <li class="sdks span12">
                         <ul id="intro-9-sdks" class="pull-right">
                           <li class="title"><label>SDKs and Modules</label></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#ios"><i class="sdk-icon-ios"></i></a></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#android"><i class="sdk-icon-android"></i></a></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#javascript"><i class="sdk-icon-js"></i></a></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#nodejs"><i class="sdk-icon-node"></i></a></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#ruby"><i class="sdk-icon-ruby"></i></a></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#c"><i class="sdk-icon-net"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-ios"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-android"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-js"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-node"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-ruby"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-net"></i></a></li>
                         </ul>
                       </li>
                     </ul>
@@ -138,7 +137,7 @@ under the License.
 
         <footer>
           <hr>
-          <p class="pull-right">&copy; Apigee 2014</p>
+          <p class="pull-right">&copy; Apache Usergrid 2014</p>
         </footer>
       </div>
     </div>
@@ -152,21 +151,5 @@ under the License.
 <!--<script type="text/javascript" src="js/libs/angular-ui-ng-grid/ng-grid-2.0.2.debug.js"></script>-->
 <script src="config.js"></script>
 <script id="main-script" src="js/usergrid.min.js"></script>
-<script type="text/javascript">
-    //Google Analytics
-    var _gaq = _gaq || [];
-    //_gaq.push(['_setAccount', 'yours']);
-    try{
-        (function(document) {
-            if(!document){
-                return;
-            }
-            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-        })(document || null);
-    }catch(e){};
-    //End Google Analytics
-</script>
 </body>
 </html>

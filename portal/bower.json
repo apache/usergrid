@@ -20,14 +20,11 @@
     ".gitignore"
   ],
   "dependencies": {
-    "angularitics": "~0.8.7",
-    "apigee-sdk": "~2.0.8",
     "angular-intro.js": "~1.0.3",
     "sizzle": "1.10.16"
   },
   "devDependencies": {},
   "keywords": [
-    "apigee",
     "usergrid"
   ]
 }

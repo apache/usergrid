@@ -1747,8 +1747,8 @@ li.selected .btn.btn-primary.toolbar {
     padding: 5px 8px;
     text-align: center;
     vertical-align: middle;
-    color: #ffd6ca;
-    border: 1px solid #ffbfab;
+    color: #fff;
+    border: 1px solid #fff;
     -webkit-border-radius: 3px;
        -moz-border-radius: 3px;
             border-radius: 3px;
@@ -1759,8 +1759,8 @@ li.selected .btn.btn-primary.toolbar {
 
 .helpButton:hover {
     cursor: pointer;
-    background-color: #FFB7A5;
-    color: #dc3300;
+    background-color: #fff;
+    color: #333;
     /*transition*/
   -webkit-transition:background-color .1s;
      -moz-transition:background-color .1s;
@@ -1770,8 +1770,8 @@ li.selected .btn.btn-primary.toolbar {
 }
 
 .helpButtonClicked {
-    background-color: #FFB7A5;
-    color: #dc3300;
+    background-color: #fff;
+    color: #333;
     outline:none;
 }
 
