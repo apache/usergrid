@@ -195,6 +195,16 @@ public class JobSchedulerService extends AbstractScheduledService {
 
                 //this job is dead, treat it as such
                 if ( execution.getStatus() == Status.DEAD ) {
+
+                    try {
+                        job.dead( execution );
+                    }
+                    catch ( Exception t ) {
+                        //we purposefully swallow all exceptions here, we don't want it to effect the outcome
+                        //of finally popping this job from the queue
+                        LOG.error( "Unable to invoke dead event on job", t );
+                    }
+
                     return null;
                 }
 

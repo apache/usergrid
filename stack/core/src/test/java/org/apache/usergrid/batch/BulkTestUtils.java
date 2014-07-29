@@ -50,5 +50,11 @@ public class BulkTestUtils {
             // do some stuff
 
         }
+
+
+        @Override
+        public void dead( final JobExecution execution ) throws Exception {
+            //To change body of implemented methods use File | Settings | File Templates.
+        }
     }
 }
