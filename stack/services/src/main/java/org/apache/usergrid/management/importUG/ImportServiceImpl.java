@@ -22,10 +22,8 @@ import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.codehaus.jackson.JsonFactory;
@@ -129,6 +127,72 @@ public class ImportServiceImpl implements ImportService {
     }
 
     /**
+     *
+     * @param file  file to be scheduled
+     * @return it returns the UUID of the scheduled job
+     * @throws Exception
+     */
+    @Override
+    public UUID scheduleFile(File file,EntityRef importRef) throws Exception {
+
+        ApplicationInfo defaultImportApp = null;
+
+        EntityManager em = null;
+        Set<String> collections=new HashSet<String>();
+        try {
+            em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+            collections = em.getApplicationCollections();
+            if ( !collections.contains( "importFiles" ) ) {
+                em.createApplicationCollection( "importFiles" );
+            }
+        }
+        catch ( Exception e ) {
+            logger.error( "application doesn't exist within the current context" );
+            return null;
+        }
+
+        RelationManager rm = em.getRelationManager(importRef);
+        FileImport fileImport = new FileImport();
+
+        fileImport.setFileName(file.getName());
+        fileImport.setCompleted(false);
+        fileImport.setLastUpdatedUUID("");
+        fileImport.setErrorMessage("");
+        fileImport.setState(FileImport.State.CREATED);
+
+        fileImport = em.create(fileImport);
+        EntityRef fileRef = em.getRef(fileImport.getUuid());
+
+        //update state
+        try {
+            rm.addToCollection("importFiles",fileRef);
+        }
+        catch ( Exception e ) {
+            logger.error(e.getMessage());
+            return null;
+        }
+        fileImport.setState( FileImport.State.CREATED );
+        em.update( fileImport );
+
+        //set data to be transferred to importInfo
+        JobData jobData = new JobData();
+        jobData.setProperty( "File ", file );
+        jobData.setProperty( "fileImportId", fileImport.getUuid() );
+        jobData.setProperty("importUUID",importRef);
+
+        long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
+
+        //schedule job
+        sch.createJob("fileImportJob", soonestPossible, jobData );
+
+        //update state
+        fileImport.setState( FileImport.State.SCHEDULED );
+        em.update( fileImport );
+
+        return fileImport.getUuid();
+    }
+
+    /**
      * Query Entity Manager for the string state of the Import Entity. This corresponds to the GET /import
      *
      * @return String
@@ -179,13 +243,22 @@ public class ImportServiceImpl implements ImportService {
         return importUG.getErrorMessage().toString();
     }
 
-
+    @Override
     public Import getImportEntity( final JobExecution jobExecution ) throws Exception {
 
         UUID importId = ( UUID ) jobExecution.getJobData().getProperty( IMPORT_ID );
         EntityManager importManager = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
         return importManager.get( importId, Import.class );
+    }
+
+    @Override
+    public FileImport getFileImportEntity( final JobExecution jobExecution ) throws Exception {
+
+        UUID fileImportId = ( UUID ) jobExecution.getJobData().getProperty("fileImportId");
+        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+
+        return em.get( fileImportId, FileImport.class );
     }
 
     @Override
@@ -248,6 +321,7 @@ public class ImportServiceImpl implements ImportService {
 
         //update the entity state to show that the job has officially started.
         importUG.setState(Import.State.STARTED);
+        importUG.setStarted(System.currentTimeMillis());
         em.update(importUG);
         try {
             if (s3PlaceHolder != null) {
@@ -264,8 +338,10 @@ public class ImportServiceImpl implements ImportService {
         }
 
         try {
+
             if (config.get("organizationId") == null) {
                 logger.error("No organization could be found");
+                importUG.setErrorMessage("No organization could be found");
                 importUG.setState(Import.State.FAILED);
                 em.update(importUG);
                 return;
@@ -279,29 +355,20 @@ public class ImportServiceImpl implements ImportService {
                 //imports a single collection from an app org combo
                 importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution, s3Import);
             }
-        }
-        catch (OrganizationNotFoundException e) {
-            importUG.setErrorMessage(e.getMessage());
-            importUG.setState(Import.State.FAILED);
-            em.update(importUG);
-            return;
-        }
-        catch (ApplicationNotFoundException e) {
-            importUG.setErrorMessage(e.getMessage());
-            importUG.setState(Import.State.FAILED);
-            em.update(importUG);
+
+            Map<String,Object> FileJobID = new HashMap<String,Object>();
+            for(File eachfile: files) {
+                UUID jobID = scheduleFile(eachfile, em.getRef(importId));
+                FileJobID.put(eachfile.getName(), jobID.toString());
+            }
             return;
         }
         catch (Exception e) {
             // the case where job will be retried i.e. resumed from the failed point
             importUG.setErrorMessage(e.getMessage());
-            importUG.setState(Import.State.FAILED);
             em.update(importUG);
             throw e;
         }
-
-        importUG.setState( Import.State.FINISHED );
-        em.update( importUG );
     }
 
     /**
@@ -324,7 +391,6 @@ public class ImportServiceImpl implements ImportService {
 
         files = fileTransfer( importUG, appFileName, config, s3Import, 0 );
 
-        FileParser(jobExecution);
     }
 
     /**
@@ -346,7 +412,6 @@ public class ImportServiceImpl implements ImportService {
 
         files = fileTransfer( importUG, appFileName, config, s3Import, 1 );
 
-        FileParser(jobExecution);
     }
 
     /**
@@ -367,7 +432,6 @@ public class ImportServiceImpl implements ImportService {
         appFileName = prepareInputFileName( "organization", organizationInfo.getName() , null );
         files = fileTransfer( importUG, appFileName, config, s3Import, 2 );
 
-        FileParser(jobExecution);
     }
 
     /**
@@ -424,91 +488,107 @@ public class ImportServiceImpl implements ImportService {
      * The loops through each temp file and parses it to store the entities from the json back into usergrid
      * @throws Exception
      */
-    private void FileParser(JobExecution jobExecution) throws Exception {
+    @Override
+    public void FileParser(JobExecution jobExecution) throws Exception {
+
 
         // add properties to the import entity
-        Import importUG = getImportEntity(jobExecution);
+        FileImport fileImport = getFileImportEntity(jobExecution);
+        File file = (File)jobExecution.getJobData().getProperty("file");
+
         EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
+        boolean completed = fileImport.getCompleted();
+        // on resume, completed files will not be traversed again
+        if(!completed) {
 
+            if (isValidJSON(file, rootEm, fileImport)) {
 
-        Map<String,Object> fileMetadata = new HashMap<String, Object>();
-        ArrayList<Map<String,Object>> value = new ArrayList<Map<String, Object>>();
-
-        if (!((Map<String,Object>)importUG.getDynamicProperties()).containsKey("files")) {
-            // create the structure for file metadata and initialize it
-            for (File collectionFile : files) {
-                Map<String, Object> singleFile = new HashMap<String, Object>();
-                singleFile.put("name", collectionFile.getName());
-                singleFile.put("completed", new Boolean(false));
-                singleFile.put("lastUpdatedUUID", new String(""));
-                value.add(singleFile);
-            }
-
-            fileMetadata.put("files", value);
-            importUG.addProperties(fileMetadata);
-            rootEm.update(importUG);
-        }
-
-        ArrayList fileNames = (ArrayList)importUG.getDynamicProperties().get("files");
-        int i=0;
-
-        for(File collectionFile : files) {
-
-            Map<String,Object> fileInfo = (Map<String,Object>)fileNames.get(i);
-            boolean completed = ((Boolean)fileInfo.get("completed")).booleanValue();
-            // on resume, completed files will not be traversed again
-            if(!completed) {
-
-                if(!isValidJSON(collectionFile,rootEm,importUG,i)){
-                    i++;
-                    continue;
-                }
-
-                String applicationName = collectionFile.getPath().split("\\.")[0];
+                String applicationName = file.getPath().split("\\.")[0];
 
                 ApplicationInfo application = managementService.getApplicationInfo(applicationName);
 
-                JsonParser jp = getJsonParserForFile(collectionFile);
-                String lastUpdatedUUID  = fileInfo.get("lastUpdatedUUID").toString();
+                JsonParser jp = getJsonParserForFile(file);
+                String lastUpdatedUUID = fileImport.getLastUpdatedUUID();
 
                 // this handles partially completed files by updating entities from the point of failure
-                if(!lastUpdatedUUID.equals(""))
-                {
+                if (!lastUpdatedUUID.equals("")) {
                     // go till the last updated entity
-                     while(!jp.getText().equals(lastUpdatedUUID)) {
-                         jp.nextToken();
-                     }
+                    while (!jp.getText().equals(lastUpdatedUUID)) {
+                        jp.nextToken();
+                    }
 
                     // skip the last one and start from teh next one
-                    while(!(jp.getCurrentToken()==JsonToken.END_OBJECT && jp.nextToken() == JsonToken.START_OBJECT)) {
+                    while (!(jp.getCurrentToken() == JsonToken.END_OBJECT && jp.nextToken() == JsonToken.START_OBJECT)) {
                         jp.nextToken();
                     }
                 }
 
                 // get to start of an object i.e next entity.
-                while(jp.getCurrentToken() != JsonToken.START_OBJECT) {
+                while (jp.getCurrentToken() != JsonToken.START_OBJECT) {
                     jp.nextToken();
                 }
 
                 EntityManager em = emf.getEntityManager(application.getId());
-
-                //TODO: remove roles and take care of it later when importing applications
-                while (jp.nextToken() != JsonToken.END_ARRAY) {
-                    importEntityStuff(jp, em, rootEm, importUG, i);
+                try {
+                    while (jp.nextToken() != JsonToken.END_ARRAY) {
+                        importEntityStuff(jp, em, rootEm, fileImport);
+                    }
+                    jp.close();
                 }
-                jp.close();
+                catch (OrganizationNotFoundException e) {
+                    fileImport.setErrorMessage(e.getMessage());
+                    fileImport.setState(FileImport.State.FINISHED);
+                    em.update(fileImport);
+                    return;
+                }
+                catch (ApplicationNotFoundException e) {
+                    fileImport.setErrorMessage(e.getMessage());
+                    fileImport.setState(FileImport.State.FINISHED);
+                    em.update(fileImport);
+                    return;
+                }
+                catch (Exception e) {
+                    // the case where job will be retried i.e. resumed from the failed point
+                    fileImport.setErrorMessage(e.getMessage());
+                    em.update(fileImport);
+                    throw e;
+                }
+
+                if(!fileImport.getState().equals("FAILED")) {
+                    // mark file as completed
+                    fileImport.setCompleted(true);
+                    fileImport.setState(FileImport.State.FINISHED);
+                    rootEm.update(fileImport);
+                    //check other files status and mark the status of import Job.
+                    Results filesCollection = rootEm.getCollection(MANAGEMENT_APPLICATION_ID,"importFiles",null, Results.Level.ALL_PROPERTIES);
+                    List<Entity> entities = filesCollection.getEntities();
+                    UUID importId = UUID.fromString(jobExecution.getJobData().getProperty("importUUID").toString());
+                    Import importUG = rootEm.get(importId, Import.class);
+                    int count = 0;
+                    for(Entity eachEntity: entities) {
+
+                        FileImport fi = em.get(eachEntity.getUuid(),FileImport.class);
+                        if(fi.getState().equals("FINISHED")) {
+                            count++;
+                        }
+                        else if(fi.getState().equals("FAILED")) {
+                            importUG.setState(Import.State.FAILED);
+                            rootEm.update(importUG);
+                            break;
+                        }
+                    }
+                    if(count == entities.size()) {
+                       importUG.setState(Import.State.FINISHED);
+                       rootEm.update(importUG);
+                    }
+                }
             }
-            // mark file as completed
-            ((Map<String,Object>)fileNames.get(i)).put("completed",true);
-            rootEm.update(importUG);
-            i++;
         }
     }
 
-    private boolean isValidJSON( File collectionFile, EntityManager rootEm, Import importUG, int index) throws Exception  {
+    private boolean isValidJSON( File collectionFile, EntityManager rootEm, FileImport fileImport) throws Exception  {
 
-        ArrayList fileNames = (ArrayList) importUG.getDynamicProperties().get("files");
         boolean valid = false;
         try {
             final JsonParser jp = jsonFactory.createJsonParser(collectionFile);
@@ -517,12 +597,11 @@ public class ImportServiceImpl implements ImportService {
             valid = true;
         } catch (JsonParseException e) {
             e.printStackTrace();
-            ((Map<String, Object>) fileNames.get(index)).put("Error Message", e.getMessage());
-            rootEm.update(importUG);
+            fileImport.setErrorMessage(e.getMessage());
+            rootEm.update(fileImport);
         } catch (IOException e) {
-            e.printStackTrace();
-            ((Map<String, Object>) fileNames.get(index)).put("Miscellaneous error", e.getMessage());
-            rootEm.update(importUG);
+            fileImport.setErrorMessage(e.getMessage());
+            rootEm.update(fileImport);
         }
         return valid;
     }
@@ -538,9 +617,8 @@ public class ImportServiceImpl implements ImportService {
      *
      * @param jp JsonPrser pointing to the beginning of the object.
      */
-    private void importEntityStuff( JsonParser jp, EntityManager em, EntityManager rootEm, Import importUG, int index) throws Exception {
+    private void importEntityStuff( JsonParser jp, EntityManager em, EntityManager rootEm, FileImport fileImport) throws Exception {
 
-        ArrayList fileNames = (ArrayList) importUG.getDynamicProperties().get("files");
         Entity entity = null;
         EntityRef ownerEntityRef=null;
         String entityUuid="";
@@ -613,21 +691,22 @@ public class ImportServiceImpl implements ImportService {
             }
             catch (IllegalArgumentException e) {
                 // skip illegal entity UUID and go to next one
-                ((Map<String, Object>) fileNames.get(index)).put("Entity Creation Error", e.getMessage());
-                rootEm.update(importUG);
+                fileImport.setErrorMessage(e.getMessage());
+                rootEm.update(fileImport);
             }
             catch (Exception e) {
                 // skip illegal entity UUID and go to next one
-                ((Map<String, Object>) fileNames.get(index)).put("Miscellaneous Error", e.getMessage());
-                rootEm.update(importUG);
+                fileImport.setErrorMessage(e.getMessage());
+                rootEm.update(fileImport);
             }
         }
+
         // update the last updated entity
         if(entity != null) {
             entityCount++;
-            if(entityCount == 50) {
-                ((Map<String, Object>) fileNames.get(index)).put("lastUpdatedUUID", entityUuid);
-                rootEm.update(importUG);
+            if(entityCount == 1000) {
+                fileImport.setLastUpdatedUUID(entityUuid);
+                rootEm.update(fileImport);
                 entityCount = 0;
             }
         }

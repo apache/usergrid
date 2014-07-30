@@ -21,7 +21,7 @@ import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.job.OnlyOnceJob;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.entities.Import;
+import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,11 +33,11 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEM
 /**
  * Created by ApigeeCorporation on 7/8/14.
  */
-@Component("importJob")
-public class ImportJob extends OnlyOnceJob {
+@Component("fileImportJob")
+public class FileImportJob extends OnlyOnceJob {
 
-    public static final String IMPORT_ID = "importId";
-    private static final Logger logger = LoggerFactory.getLogger(ImportJob.class);
+    public static final String FILE_IMPORT_ID = "fileImportId";
+    private static final Logger logger = LoggerFactory.getLogger(FileImportJob.class);
 
     @Autowired
     ImportService importService;
@@ -45,13 +45,13 @@ public class ImportJob extends OnlyOnceJob {
     //injected the Entity Manager Factory
     protected EntityManagerFactory emf;
 
-    public ImportJob() {
-        logger.info( "ImportJob created " + this );
+    public FileImportJob() {
+        logger.info( "FileImportJob created " + this );
     }
 
     @Override
     protected void doJob(JobExecution jobExecution) throws Exception {
-        logger.info( "execute ImportJob {}", jobExecution );
+        logger.info( "execute FileImportJob {}", jobExecution );
 
         JobData jobData = jobExecution.getJobData();
         if ( jobData == null ) {
@@ -61,15 +61,15 @@ public class ImportJob extends OnlyOnceJob {
 
         jobExecution.heartbeat();
         try {
-            importService.doImport( jobExecution );
+            importService.FileParser( jobExecution );
         }
         catch ( Exception e ) {
-            logger.error( "Import Service failed to complete job" );
+            logger.error( " Import Service failed to complete file import job" );
             logger.error(e.getMessage());
             throw e;
         }
 
-        logger.info( "executed ImportJob process completed" );
+        logger.info( "executed FileImportJob process completed" );
     }
 
     @Override
@@ -86,10 +86,11 @@ public class ImportJob extends OnlyOnceJob {
     public void dead( final JobExecution execution ) throws Exception {
 
         EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        Import importUG = importService.getImportEntity(execution);
-        importUG.setErrorMessage("The Job has been tried maximum times but still failed");
-        importUG.setState(Import.State.FAILED);
-        rootEm.update(importUG);
+
+        FileImport fileImport = importService.getFileImportEntity(execution);
+        fileImport.setErrorMessage("The Job has been tried maximum times but still failed");
+        fileImport.setState(FileImport.State.FAILED);
+        rootEm.update(fileImport);
         //To change body of implemented methods use File | Settings | File Templates.
     }
 }

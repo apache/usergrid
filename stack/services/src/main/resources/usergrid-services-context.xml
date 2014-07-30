@@ -96,5 +96,6 @@
   </bean>
 
   <bean id="importJob" class="org.apache.usergrid.management.importUG.ImportJob" />
+  <bean id="fileImportJob" class="org.apache.usergrid.management.importUG.FileImportJob" />
 
 </beans>
