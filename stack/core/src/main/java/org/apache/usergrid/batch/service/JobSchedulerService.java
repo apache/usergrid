@@ -191,13 +191,13 @@ public class JobSchedulerService extends AbstractScheduledService {
 
                 execution.start( maxFailCount );
 
-                jobAccessor.save( execution );
 
                 //this job is dead, treat it as such
                 if ( execution.getStatus() == Status.DEAD ) {
 
                     try {
                         job.dead( execution );
+                        jobAccessor.save( execution );
                     }
                     catch ( Exception t ) {
                         //we purposefully swallow all exceptions here, we don't want it to effect the outcome
@@ -208,8 +208,13 @@ public class JobSchedulerService extends AbstractScheduledService {
                     return null;
                 }
 
+                jobAccessor.save( execution );
+
                 // TODO wrap and throw specifically typed exception for onFailure,
                 // needs jobId
+
+                LOG.info( "Starting job {} with execution data {}", job, execution );
+
                 job.execute( execution );
 
                 if ( currentListener != null ) {
