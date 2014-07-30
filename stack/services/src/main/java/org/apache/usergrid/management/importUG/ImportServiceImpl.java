@@ -625,7 +625,7 @@ public class ImportServiceImpl implements ImportService {
         // update the last updated entity
         if(entity != null) {
             entityCount++;
-            if(entityCount == 1000) {
+            if(entityCount == 2000) {
                 ((Map<String, Object>) fileNames.get(index)).put("lastUpdatedUUID", entityUuid);
                 rootEm.update(importUG);
                 entityCount = 0;
