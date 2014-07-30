@@ -18,7 +18,6 @@
 package org.apache.usergrid.management.importUG;
 
 import org.apache.usergrid.batch.JobExecution;
-import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.entities.FileImport;
 import org.apache.usergrid.persistence.entities.Import;
 
@@ -36,11 +35,6 @@ public interface ImportService {
      * Schedules the import to execute
      */
     UUID schedule(Map<String, Object> json) throws Exception;
-
-    /**
-     * Schedules the import to execute
-     */
-    UUID scheduleFile(File fileName,EntityRef importRef) throws Exception;
 
     /**
      * Perform the import from the external resource
@@ -76,7 +70,7 @@ public interface ImportService {
     /**
      *
      * @param jobExecution
-     * @return getImportEntity
+     * @return ImportEntity
      * @throws Exception
      */
     Import getImportEntity( final JobExecution jobExecution ) throws Exception;

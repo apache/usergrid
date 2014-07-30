@@ -65,6 +65,8 @@ public class ImportServiceImpl implements ImportService {
     private JsonFactory jsonFactory = new JsonFactory();
 
     private int entityCount=0;
+    private File file;
+    private EntityRef importRef;
 
     /**
      *
@@ -132,26 +134,20 @@ public class ImportServiceImpl implements ImportService {
      * @return it returns the UUID of the scheduled job
      * @throws Exception
      */
-    @Override
-    public UUID scheduleFile(File file,EntityRef importRef) throws Exception {
+    public UUID scheduleFile(File file, EntityRef importRef) throws Exception {
 
         ApplicationInfo defaultImportApp = null;
 
         EntityManager em = null;
-        Set<String> collections=new HashSet<String>();
+
         try {
             em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-            collections = em.getApplicationCollections();
-            if ( !collections.contains( "importFiles" ) ) {
-                em.createApplicationCollection( "importFiles" );
-            }
         }
         catch ( Exception e ) {
             logger.error( "application doesn't exist within the current context" );
             return null;
         }
 
-        RelationManager rm = em.getRelationManager(importRef);
         FileImport fileImport = new FileImport();
 
         fileImport.setFileName(file.getName());
@@ -159,13 +155,10 @@ public class ImportServiceImpl implements ImportService {
         fileImport.setLastUpdatedUUID("");
         fileImport.setErrorMessage("");
         fileImport.setState(FileImport.State.CREATED);
-
         fileImport = em.create(fileImport);
-        EntityRef fileRef = em.getRef(fileImport.getUuid());
 
-        //update state
         try {
-            rm.addToCollection("importFiles",fileRef);
+            em.createConnection(importRef,"includes",fileImport);
         }
         catch ( Exception e ) {
             logger.error(e.getMessage());
@@ -176,7 +169,7 @@ public class ImportServiceImpl implements ImportService {
 
         //set data to be transferred to importInfo
         JobData jobData = new JobData();
-        jobData.setProperty( "File ", file );
+        jobData.setProperty( "File", file );
         jobData.setProperty( "fileImportId", fileImport.getUuid() );
         jobData.setProperty("importUUID",importRef);
 
@@ -356,10 +349,30 @@ public class ImportServiceImpl implements ImportService {
                 importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution, s3Import);
             }
 
-            Map<String,Object> FileJobID = new HashMap<String,Object>();
-            for(File eachfile: files) {
-                UUID jobID = scheduleFile(eachfile, em.getRef(importId));
-                FileJobID.put(eachfile.getName(), jobID.toString());
+            if(files.size() == 0)
+            {
+                importUG.setState(Import.State.FINISHED);
+                importUG.setErrorMessage("no files found in the bucket with the relevant context");
+                em.update(importUG);
+            }
+            else
+            {
+                Map<String,Object> fileMetadata = new HashMap<String, Object>();
+
+                ArrayList<Map<String,Object>> value = new ArrayList<Map<String, Object>>();
+
+                for(File eachfile: files) {
+
+                    UUID jobID = scheduleFile(eachfile, em.getRef(importId));
+                    Map<String,Object> fileJobID = new HashMap<String,Object>();
+                    fileJobID.put("FileName",eachfile.getName());
+                    fileJobID.put("JobID", jobID.toString());
+                    value.add(fileJobID);
+                }
+
+                fileMetadata.put("files", value);
+                importUG.addProperties(fileMetadata);
+                em.update(importUG);
             }
             return;
         }
@@ -499,6 +512,7 @@ public class ImportServiceImpl implements ImportService {
         EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
         boolean completed = fileImport.getCompleted();
+
         // on resume, completed files will not be traversed again
         if(!completed) {
 
@@ -560,11 +574,13 @@ public class ImportServiceImpl implements ImportService {
                     fileImport.setCompleted(true);
                     fileImport.setState(FileImport.State.FINISHED);
                     rootEm.update(fileImport);
+
                     //check other files status and mark the status of import Job.
-                    Results filesCollection = rootEm.getCollection(MANAGEMENT_APPLICATION_ID,"importFiles",null, Results.Level.ALL_PROPERTIES);
-                    List<Entity> entities = filesCollection.getEntities();
+
                     UUID importId = UUID.fromString(jobExecution.getJobData().getProperty("importUUID").toString());
                     Import importUG = rootEm.get(importId, Import.class);
+                    List<Entity> entities = importUG.getConnections("includes");
+
                     int count = 0;
                     for(Entity eachEntity: entities) {
 
