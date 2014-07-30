@@ -14,33 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.batch;
+package org.apache.usergrid.persistence;
 
+import java.util.Iterator;
 
 /**
- * Defines only an execute method. Implementation functionality is completely up to the {@link JobFactory}
- *
- * @author zznate
+ * Iterator to know if we have more records in cursor.
  */
-public interface Job {
-
+public interface ResultsIterator extends Iterator {
     /**
-     * Invoked when a job should execute
-     *
-     * @param execution The execution information.  This will be the same from the last run.  By default you should call
-     * exeuction.start() once processing starts
-     *
-     * @throws Exception If the job cannot be executed
+     * is there a cursor
+     * @return
      */
-    public void execute( JobExecution execution ) throws Exception;
-
-
-    /**
-     * Invoked when a job is marked as dead by the scheduler.  In some instances, jobs need to know
-     * this information to handle this case appropriately
-     *
-     * @param execution
-     * @throws Exception
-     */
-    public void dead(JobExecution execution) throws Exception;
+    boolean hasPages();
 }

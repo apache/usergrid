@@ -33,15 +33,16 @@ import org.apache.usergrid.batch.JobExecution;
  */
 @Component("failureJobExceuction")
 @Ignore("Not a test")
-public class FailureJobExceuction implements Job {
+public class FailureJobExecution implements Job {
 
     private CountDownLatch latch = null;
+    private CountDownLatch deadLatch = null;
 
 
     /**
      *
      */
-    public FailureJobExceuction() {
+    public FailureJobExecution() {
     }
 
 
@@ -58,13 +59,25 @@ public class FailureJobExceuction implements Job {
     }
 
 
+    @Override
+    public void dead( final JobExecution execution ) throws Exception {
+        deadLatch.countDown();;
+    }
+
+
     public void setLatch( int calls ) {
         latch = new CountDownLatch( calls );
+        deadLatch = new CountDownLatch( 1 );
     }
+
 
 
     public boolean waitForCount( long timeout, TimeUnit unit ) throws InterruptedException {
         return latch.await( timeout, unit );
+    }
+
+    public boolean waitForDead(long timeout, TimeUnit unit) throws InterruptedException {
+        return deadLatch.await( timeout, unit );
     }
 
 

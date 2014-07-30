@@ -56,6 +56,8 @@ public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
         test.setProperty( "stringprop", "test" );
         test.setProperty( "notificationId", notificationId );
 
+        getJobListener().setExpected( 1 );
+
         JobData saved = scheduler.createJob( "countdownLatch", fireTime, test );
 
         // now query and make sure it equals the saved value
@@ -88,7 +90,7 @@ public class SchedulerRuntime8IT extends AbstractSchedulerRuntimeIT {
 
         long waitTime = Math.max( 0, fireTime - System.currentTimeMillis() + 1000 );
 
-        boolean waited = getJobListener().blockTilDone( 1, waitTime );
+        boolean waited = getJobListener().blockTilDone( waitTime );
 
         assertFalse( "Job ran ", waited );
     }

@@ -40,8 +40,7 @@ public class UsergridJobFactoryTest {
         JobDescriptor jobDescriptor = new JobDescriptor( "", jobId, UUID.randomUUID(), null, null, null );
 
 
-        List<Job> bulkJobs = BulkTestUtils.getBulkJobFactory().jobsFrom( jobDescriptor );
+        Job bulkJobs = BulkTestUtils.getBulkJobFactory().jobsFrom( jobDescriptor );
         assertNotNull( bulkJobs );
-        assertEquals( 1, bulkJobs.size() );
     }
 }
