@@ -31,27 +31,12 @@ AppServices.Controllers.controller('AppOverviewCtrl',
         $scope.collections = [];
         $scope.graph = '';
         $scope.$on('top-collections-received', function (event, collections) {
-//alert('yes');
-          //todo add this to charts service as helper
-          $scope.collections = collections;
-          var arr = [];
-          for (var i in collections) {
-            if (collections.hasOwnProperty(i)) {
-              arr.push(collections[i]);
-            }
-          }
-          $scope.appOverview = {};
 
+          $scope.collections = collections;
+          $scope.applyScope();
 
         });
         ug.getTopCollections();
-        /*
-        $scope.$on('app-initialized',function(){
-          ug.getTopCollections();
-        });
-        if($rootScope.activeUI){
-           ug.getTopCollections();
-        }
-         */
+
 
       }]);
