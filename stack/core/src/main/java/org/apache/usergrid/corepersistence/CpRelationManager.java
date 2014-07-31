@@ -939,7 +939,7 @@ public class CpRelationManager implements RelationManager {
         EntityIndex ei = managerCache.getEntityIndex(indexScope);
         ei.index( targetEntity );
 
-        // Index the new connection in app|source|type context
+        // Index the new connection in app|scope|all-types context
         IndexScope allTypesIndexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
@@ -1593,35 +1593,36 @@ public class CpRelationManager implements RelationManager {
         IndexUpdate indexUpdate = batchStartIndexUpdate( batch, entity, setName, elementValue, 
                 timestampUuid, true, true, removeFromSet, false );
 
-        // Update collections
-        Map<String, Set<CollectionInfo>> containers =
-                getDefaultSchema().getContainersIndexingDictionary( entity.getType(), setName );
+        // Update collections - Not needed because we index collections and connections via ES now
 
-        if ( containers != null ) {
-            Map<EntityRef, Set<String>> containerEntities = getContainers();
-            for ( EntityRef containerEntity : containerEntities.keySet() ) {
-                if ( containerEntity.getType().equals( TYPE_APPLICATION ) && Schema
-                        .isAssociatedEntityType( entity.getType() ) ) {
-                    logger.debug( "Extended properties for {} not indexed by application", 
-                            entity.getType() );
-                    continue;
-                }
-                Set<String> collectionNames = containerEntities.get( containerEntity );
-                Set<CollectionInfo> collections = containers.get( containerEntity.getType() );
-
-                if ( collections != null ) {
-
-                    for ( CollectionInfo collection : collections ) {
-                        if ( collectionNames.contains( collection.getName() ) ) {
-                            batchUpdateCollectionIndex( 
-                                    indexUpdate, containerEntity, collection.getName() );
-                        }
-                    }
-                }
-            }
-        }
-
-        batchUpdateBackwardConnectionsDictionaryIndexes( indexUpdate );
+//        Map<String, Set<CollectionInfo>> containers =
+//                getDefaultSchema().getContainersIndexingDictionary( entity.getType(), setName );
+//
+//        if ( containers != null ) {
+//            Map<EntityRef, Set<String>> containerEntities = getContainers();
+//            for ( EntityRef containerEntity : containerEntities.keySet() ) {
+//                if ( containerEntity.getType().equals( TYPE_APPLICATION ) && Schema
+//                        .isAssociatedEntityType( entity.getType() ) ) {
+//                    logger.debug( "Extended properties for {} not indexed by application", 
+//                            entity.getType() );
+//                    continue;
+//                }
+//                Set<String> collectionNames = containerEntities.get( containerEntity );
+//                Set<CollectionInfo> collections = containers.get( containerEntity.getType() );
+//
+//                if ( collections != null ) {
+//
+//                    for ( CollectionInfo collection : collections ) {
+//                        if ( collectionNames.contains( collection.getName() ) ) {
+//                            batchUpdateCollectionIndex( 
+//                                    indexUpdate, containerEntity, collection.getName() );
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        batchUpdateBackwardConnectionsDictionaryIndexes( indexUpdate );
     }
 
     /**

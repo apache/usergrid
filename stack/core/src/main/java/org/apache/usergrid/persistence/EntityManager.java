@@ -507,6 +507,8 @@ public interface EntityManager {
 
     public void deleteRole( String roleName ) throws Exception;
 
+    public EntityRef getGroupRoleRef( UUID ownerId, String roleName ) throws Exception;
+
     // Group roles
 
     public Map<String, String> getGroupRoles( UUID groupId ) throws Exception;

@@ -85,15 +85,19 @@ public class MUUserResourceIT extends AbstractRestIT {
      * From USERGRID-2075
      */
     @Test
-//    @Ignore( "aok - check this please" )
     public void testCaseSensitivityAdminUser() throws Exception {
         LOG.info( "Starting testCaseSensitivityAdminUser()" );
         UserInfo mixcaseUser = setup.getMgmtSvc()
-                                    .createAdminUser( "AKarasulu", "Alex Karasulu", "AKarasulu@Apache.org", "test",
-                                            true, false );
+            .createAdminUser( "AKarasulu", "Alex Karasulu", "AKarasulu@Apache.org", "test", true, false );
+
+        reindex("test-organization","test-app");
+
         AuthPrincipalInfo adminPrincipal =
                 new AuthPrincipalInfo( AuthPrincipalType.ADMIN_USER, mixcaseUser.getUuid(), UUIDUtils.newTimeUUID() );
         OrganizationInfo organizationInfo = setup.getMgmtSvc().createOrganization( "MixedCaseOrg", mixcaseUser, true );
+
+        reindex("test-organization","test-app");
+
         String tokenStr = mgmtToken( "akarasulu@apache.org", "test" );
 
         // Should succeed even when we use all lowercase
@@ -184,6 +188,8 @@ public class MUUserResourceIT extends AbstractRestIT {
 
             client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
             client.processMail();
+
+            reindex("test-organization","test-app");
 
             // Attempt to authenticate again but this time should pass
             // -------------------------------------------
@@ -413,11 +419,15 @@ public class MUUserResourceIT extends AbstractRestIT {
         assertNotNull( email );
         assertEquals( "MUUserResourceIT-reactivate@apigee.com", email );
 
+        reindex("test-organization","test-app");
+
         // reactivate should send activation email
 
         node = mapper.readTree( resource().path( String.format( "/management/users/%s/reactivate", uuid ) )
                 .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+
+        reindex("test-organization","test-app");
 
         List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get( email );
 
@@ -440,6 +450,8 @@ public class MUUserResourceIT extends AbstractRestIT {
 //    @Ignore( "because of that jstl classloader error thing" )
     public void checkPasswordReset() throws Exception {
 
+        reindex("test-organization","test-app");
+
         TestUser user = context.getActiveUser();
 
         String email = user.getEmail();
@@ -447,6 +459,8 @@ public class MUUserResourceIT extends AbstractRestIT {
         String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser( userInfo.getUuid(), 15000 );
 
         assertTrue( setup.getMgmtSvc().checkPasswordResetTokenForAdminUser( userInfo.getUuid(), resetToken ) );
+
+        reindex("test-organization","test-app");
 
         Form formData = new Form();
         formData.add( "token", resetToken );
@@ -457,6 +471,8 @@ public class MUUserResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
 
         assertTrue( html.contains( "password set" ) );
+
+        reindex("test-organization","test-app");
 
         assertFalse( setup.getMgmtSvc().checkPasswordResetTokenForAdminUser( userInfo.getUuid(), resetToken ) );
 
@@ -504,8 +520,12 @@ public class MUUserResourceIT extends AbstractRestIT {
                 setup.getMgmtSvc().createAdminUser( "edanuff", "Ed Anuff", "ed@anuff.com", passwords[0], true, false );
         assertNotNull( user );
 
+        reindex("test-organization","test-app");
+
         OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "ed-organization", user, true );
         assertNotNull( organization );
+
+        reindex("test-organization","test-app");
 
         // set history to 1
         Map<String, Object> props = new HashMap<String, Object>();
@@ -513,12 +533,15 @@ public class MUUserResourceIT extends AbstractRestIT {
         organization.setProperties( props );
         setup.getMgmtSvc().updateOrganization( organization );
 
+        reindex("test-organization","test-app");
+
         UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( "ed@anuff.com" );
 
         Map<String, String> payload = hashMap( "oldpassword", passwords[0] ).map( "newpassword", passwords[0] ); // fail
 
         try {
-            JsonNode node = mapper.readTree( resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
+            JsonNode node = mapper.readTree( resource().path( "/management/users/edanuff/password" )
+                    .accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
             fail( "should fail with conflict" );
         }
@@ -527,13 +550,17 @@ public class MUUserResourceIT extends AbstractRestIT {
         }
 
         payload.put( "newpassword", passwords[1] ); // ok
-        JsonNode node = mapper.readTree( resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
+        JsonNode node = mapper.readTree( resource().path( "/management/users/edanuff/password" )
+                .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         payload.put( "oldpassword", passwords[1] );
 
+        reindex("test-organization","test-app");
+
         payload.put( "newpassword", passwords[0] ); // fail
         try {
-            node = mapper.readTree( resource().path( "/management/users/edanuff/password" ).accept( MediaType.APPLICATION_JSON )
+            node = mapper.readTree( resource().path( "/management/users/edanuff/password" )
+                    .accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
             fail( "should fail with conflict" );
         }
@@ -552,6 +579,8 @@ public class MUUserResourceIT extends AbstractRestIT {
         UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
         String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser( userInfo.getUuid(), 15000 );
 
+        reindex("test-organization","test-app");
+
         Form formData = new Form();
         formData.add( "token", resetToken );
         formData.add( "password1", "sesame" );
@@ -561,8 +590,12 @@ public class MUUserResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
         assertTrue( html.contains( "password set" ) );
 
-        JsonNode node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", email ).queryParam( "password", "sesame" ).accept( MediaType.APPLICATION_JSON )
+        reindex("test-organization","test-app");
+
+        JsonNode node = mapper.readTree( resource().path( "/management/token" )
+                .queryParam( "grant_type", "password" )
+                .queryParam( "username", email ).queryParam( "password", "sesame" )
+                .accept( MediaType.APPLICATION_JSON )
                 .get( String.class ));
 
         Long changeTime = node.get( "passwordChanged" ).longValue();
@@ -573,8 +606,13 @@ public class MUUserResourceIT extends AbstractRestIT {
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                 .post( String.class, payload ));
 
-        node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", email ).queryParam( "password", "test" ).accept( MediaType.APPLICATION_JSON )
+        reindex("test-organization","test-app");
+
+        node = mapper.readTree( resource().path( "/management/token" )
+                .queryParam( "grant_type", "password" )
+                .queryParam( "username", email )
+                .queryParam( "password", "test" )
+                .accept( MediaType.APPLICATION_JSON )
                 .get( String.class ));
 
         Long changeTime2 = node.get( "passwordChanged" ).longValue();

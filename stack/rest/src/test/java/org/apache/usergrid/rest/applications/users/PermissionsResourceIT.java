@@ -76,12 +76,16 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertEquals( ROLE, getEntity( node, 0 ).get( "name" ).asText() );
 
+        reindex("test-organization", "test-app");
+
         // add the user to the role
         node = mapper.readTree( resource().path( "/test-organization/test-app/roles/" + ROLE + "/users/" + USER )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
         assertNull( node.get( "error" ) );
+
+        reindex("test-organization", "test-app");
 
         // now check the user has the role
         node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + USER + "/roles" )
@@ -95,6 +99,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
         node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + USER + "/roles/" + ROLE )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
+
+        reindex("test-organization", "test-app");
 
         // check if the role was deleted
 
@@ -125,11 +131,15 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertNull( node.get( "error" ) );
 
+        reindex("test-organization", "test-app");
+
         node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
         assertNull( node.get( "error" ) );
+
+        reindex("test-organization", "test-app");
 
         Map<String, Group> groups = client.getGroupsForUser( USER );
 
@@ -142,6 +152,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
 
         assertNull( node.get( "error" ) );
+
+        reindex("test-organization", "test-app");
 
         groups = client.getGroupsForUser( USER );
 
@@ -185,6 +197,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
                 .post( String.class, data ));
 
         assertNull( getError( node ) );
+
+        reindex("test-organization", "test-app");
 
         // now try to add permission as the user, this should work
         addPermission( orgname, applicationName, "usercreatedrole", "get,put,post:/foo/**" );
@@ -253,12 +267,16 @@ public class PermissionsResourceIT extends AbstractRestIT {
         UUID userId = createRoleUser( orgs.getOrganization().getUuid(), appInfo.getId(), adminToken, "reviewer1",
                 "reviewer1@usergrid.com" );
 
+        reindex("test-organization", "test-app");
+
         // grant this user the "reviewer" role
         node = mapper.readTree( resource().path( String.format( "/%s/%s/users/reviewer1/roles/reviewer", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
         assertNull( getError( node ) );
+
+        reindex("test-organization", "test-app");
 
         String reviewer1Token = setup.getMgmtSvc().getAccessTokenForAppUser( appInfo.getId(), userId, 0 );
 
@@ -272,10 +290,14 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         review = hashMap( "rating", "4" ).map( "name", "4peaks" ).map( "review", "Huge beer selection" );
 
+        reindex("test-organization", "test-app");
+
         // put a review as the reviewer1 user
         resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
                 .queryParam( "access_token", reviewer1Token ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, review );
+
+        reindex("test-organization", "test-app");
 
         // get the reviews
 
@@ -301,6 +323,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertEquals( Status.UNAUTHORIZED, status );
 
+        reindex("test-organization", "test-app");
+
         status = null;
 
         try {
@@ -314,6 +338,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertEquals( Status.UNAUTHORIZED, status );
 
+        reindex("test-organization", "test-app");
+
         // now test some groups
         UUID secondUserId = createRoleUser( orgs.getOrganization().getUuid(), appInfo.getId(), adminToken, "reviewer2",
                 "reviewer2@usergrid.com" );
@@ -325,15 +351,21 @@ public class PermissionsResourceIT extends AbstractRestIT {
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, group );
 
+        reindex("test-organization", "test-app");
+
         // link the group to the role
         resource().path( String.format( "/%s/%s/groups/reviewergroup/roles/reviewer", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, group );
 
+        reindex("test-organization", "test-app");
+
         // add the user to the group
         resource().path( String.format( "/%s/%s/users/reviewer2/groups/reviewergroup", orgname, applicationName ) )
                 .queryParam( "access_token", adminToken ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class );
+
+        reindex("test-organization", "test-app");
 
         // post 2 reviews. Should get permissions from the group
 
@@ -348,10 +380,14 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         review = hashMap( "rating", "4" ).map( "name", "currycorner" ).map( "review", "Authentic" );
 
+        reindex("test-organization", "test-app");
+
         // post a review as the reviewer2 user
         resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
                 .queryParam( "access_token", secondUserToken ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, review );
+
+        reindex("test-organization", "test-app");
 
         // get all reviews as a user
         node = mapper.readTree( resource().path( String.format( "/%s/%s/reviews", orgname, applicationName ) )
@@ -377,6 +413,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
         }
 
         assertEquals( Status.UNAUTHORIZED, status );
+
+        reindex("test-organization", "test-app");
 
         status = null;
 
@@ -428,6 +466,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
         assertNull( getError( node ) );
 
+        reindex("test-organization", "test-app");
+
         // allow access to reviews
         addPermission( params.get( "orgName" ), params.get( "appName" ), adminToken, "reviewer",
                 "get,put,post:/reviews/**" );
@@ -451,12 +491,15 @@ public class PermissionsResourceIT extends AbstractRestIT {
                         "wildcardpermusertwo@apigee.com" );
         assertNotNull( userTwoId );
 
+        reindex("test-organization", "test-app");
 
         // assign userOne the reviewer role
         node = mapper.readTree( resource().path( String
                 .format( "/%s/%s/users/%s/roles/reviewer", params.get( "orgName" ), params.get( "appName" ),
                         userOneId.toString() ) ).queryParam( "access_token", adminToken )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+
+        reindex("test-organization", "test-app");
 
         Map<String, String> book = hashMap( "title", "Ready Player One" ).map( "author", "Earnest Cline" );
 
@@ -468,6 +511,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
         logNode( node );
         assertEquals( "Ready Player One", getEntity( node, 0 ).get( "title" ).textValue() );
         String bookId = getEntity( node, 0 ).get( "uuid" ).textValue();
+
+        reindex("test-organization", "test-app");
 
         String userOneToken = setup.getMgmtSvc().getAccessTokenForAppUser( appInfo.getId(), userOneId, 0 );
         // post a review of the book as user1
@@ -496,6 +541,9 @@ public class PermissionsResourceIT extends AbstractRestIT {
                         reviewId ) ).queryParam( "access_token", userOneToken ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
         logNode( node );
+
+        reindex("test-organization", "test-app");
+
         // now try to post the same thing to books to verify as userOne the failure
         Status status = null;
         try {

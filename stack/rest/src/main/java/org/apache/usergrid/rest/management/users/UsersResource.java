@@ -71,7 +71,7 @@ public class UsersResource extends AbstractContextResource {
 
 
     public UsersResource() {
-        logger.info( "ManagementUsersResource initialized" );
+        logger.debug( "ManagementUsersResource initialized" );
     }
 
 
