@@ -48,6 +48,9 @@ public class ImportServiceImpl implements ImportService {
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
     public static final String IMPORT_ID = "importId";
     public static final String IMPORT_JOB_NAME = "importJob";
+
+    public static final String FILE_IMPORT_ID = "fileImportId";
+    public static final String FILE_IMPORT_JOB_NAME = "fileImportJob";
     private ArrayList<File> files;
 
     //dependency injection
@@ -157,8 +160,11 @@ public class ImportServiceImpl implements ImportService {
         fileImport.setState(FileImport.State.CREATED);
         fileImport = em.create(fileImport);
 
+        Import importUG = em.get(importRef,Import.class);
+
         try {
-            em.createConnection(importRef,"includes",fileImport);
+            ConnectionRef test = em.createConnection(importUG,"includes",fileImport);
+            System.out.println();
         }
         catch ( Exception e ) {
             logger.error(e.getMessage());
@@ -171,12 +177,12 @@ public class ImportServiceImpl implements ImportService {
         JobData jobData = new JobData();
         jobData.setProperty( "File", file );
         jobData.setProperty( "fileImportId", fileImport.getUuid() );
-        jobData.setProperty("importUUID",importRef);
+        jobData.setProperty(FILE_IMPORT_ID,importRef);
 
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
         //schedule job
-        sch.createJob("fileImportJob", soonestPossible, jobData );
+        sch.createJob(FILE_IMPORT_JOB_NAME, soonestPossible, jobData );
 
         //update state
         fileImport.setState( FileImport.State.SCHEDULED );
