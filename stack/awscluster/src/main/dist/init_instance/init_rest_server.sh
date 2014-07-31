@@ -44,6 +44,7 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 # Build environment for Groovy scripts
 . /etc/profile.d/aws-credentials.sh
 . /etc/profile.d/usergrid-env.sh
+chmod +x /usr/share/usergrid/update.sh
 
 # Copy in our own server.xml to set Tomcat's thread pool size
 cp /usr/share/usergrid/lib/server.xml /var/lib/tomcat7/conf
@@ -70,6 +71,12 @@ groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
 
 cd /usr/share/usergrid/init_instance
 ./install_yourkit.sh
+
+cd ~ubuntu
+ln -s /var/log varlog
+ln -s /var/log varlog/tomcat7 tomcat7logs
+ln -s /usr/share/tomcat7 tomcat7
+ln -s /usr/share/usergrid usergrid
 
 # Go
 /etc/init.d/tomcat7 start

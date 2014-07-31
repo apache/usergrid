@@ -1,4 +1,5 @@
-# 
+#!/bin/bash 
+
 #  Licensed to the Apache Software Foundation (ASF) under one or more
 #   contributor license agreements.  The ASF licenses this file to You
 #  under the Apache License, Version 2.0 (the "License"); you may not
@@ -19,8 +20,8 @@
 sudo mkdir __tmpupdate__
 pushd __tmpupdate__
 
-    sudo s3cmd --config=/etc/s3cfg get s3://${RELEASE_BUCKET}/usergrid-cloudformation-1.0-SNAPSHOT-any.tar.gz
-    sudo tar xzvf usergrid-cloudformation-1.0-SNAPSHOT-any.tar.gz 
+    sudo s3cmd --config=/etc/s3cfg get s3://${RELEASE_BUCKET}/awscluster-1.0-SNAPSHOT-any.tar.gz
+    sudo tar xzvf awscluster-1.0-SNAPSHOT-any.tar.gz 
     sudo /etc/init.d/tomcat7 stop
     sudo cp -r webapps/* /var/lib/tomcat7/webapps
 
