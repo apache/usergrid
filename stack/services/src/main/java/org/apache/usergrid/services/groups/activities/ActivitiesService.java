@@ -38,7 +38,7 @@ public class ActivitiesService extends GenericCollectionService {
 
     public ActivitiesService() {
         super();
-        logger.info( "/groups/*/activities" );
+        logger.debug( "/groups/*/activities" );
     }
 
 

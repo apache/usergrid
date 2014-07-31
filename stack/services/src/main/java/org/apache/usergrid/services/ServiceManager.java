@@ -63,7 +63,7 @@ public class ServiceManager {
     public static final String COLLECTION_SUFFIX = "." + COLLECTION;
     public static final String OSS_PACKAGE_PREFIX = "org.apache.usergrid.services";
     public static final String COM_PACKAGE_PREFIX = "com.usergrid.services";
-    public static final String SERVICE_PACKAGE_PREFIXES = "usergird.service.packages";
+    public static final String SERVICE_PACKAGE_PREFIXES = "usergrid.service.packages";
 
     public static final String APPLICATION_REQUESTS = "application.requests";
     public static final String APPLICATION_REQUESTS_PER = APPLICATION_REQUESTS + ".";
@@ -82,7 +82,7 @@ public class ServiceManager {
 
     // search for commercial packages first for SaaS version
     public static String[] package_prefixes = {
-            COM_PACKAGE_PREFIX, OSS_PACKAGE_PREFIX
+            OSS_PACKAGE_PREFIX
     };
 
 

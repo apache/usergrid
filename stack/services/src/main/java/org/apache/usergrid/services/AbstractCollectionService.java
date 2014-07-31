@@ -356,11 +356,11 @@ public class AbstractCollectionService extends AbstractService {
         if ( context.getPayload().isBatch() ) {
             List<Entity> entities = new ArrayList<Entity>();
             List<Map<String, Object>> batch = context.getPayload().getBatchProperties();
-            logger.info( "Attempting to batch create " + batch.size() + " entities in collection " + context
+            logger.debug( "Attempting to batch create " + batch.size() + " entities in collection " + context
                     .getCollectionName() );
             int i = 1;
             for ( Map<String, Object> p : batch ) {
-                logger.info( "Creating entity " + i + " in collection " + context.getCollectionName() );
+                logger.debug( "Creating entity " + i + " in collection " + context.getCollectionName() );
 
                 Entity item = null;
 
@@ -376,7 +376,7 @@ public class AbstractCollectionService extends AbstractService {
                     continue;
                 }
 
-                logger.info(
+                logger.debug(
                         "Entity " + i + " created in collection " + context.getCollectionName() + " with UUID " + item
                                 .getUuid() );
 

@@ -1138,7 +1138,6 @@ public class ManagementServiceImpl implements ManagementService {
         User user = emf.getEntityManager( smf.getManagementAppId() ).get( userId, User.class );
 
         if ( !verify( smf.getManagementAppId(), user.getUuid(), oldPassword ) ) {
-            logger.info( "Old password doesn't match" );
             throw new IncorrectPasswordException( "Old password does not match" );
         }
 

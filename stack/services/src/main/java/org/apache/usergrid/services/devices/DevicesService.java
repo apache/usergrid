@@ -33,13 +33,13 @@ public class DevicesService extends AbstractCollectionService {
 
     public DevicesService() {
         super();
-        logger.info( "/devices" );
+        logger.debug( "/devices" );
     }
 
 
     @Override
     public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
-        logger.info( "Registering device {}", id );
+        logger.debug( "Registering device {}", id );
         return super.putItemById( context, id );
     }
 
