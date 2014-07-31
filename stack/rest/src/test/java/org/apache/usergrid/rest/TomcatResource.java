@@ -33,6 +33,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,35 +49,60 @@ public class TomcatResource extends ExternalResource {
     private static final Logger log = LoggerFactory.getLogger(TomcatResource.class);
 
     public static final TomcatResource instance = new TomcatResource();
+
     private static final Object mutex = new Object();
     private String webAppsPath;
     private int port;
     private int esPort;
     private int cassPort;
     private boolean started = false;
+    private Properties properties;
+
+    private static AtomicInteger clientCount = new AtomicInteger(0);
 
     Process process = null;
 
 
     protected TomcatResource() {}
 
+
     @Override
     protected void after() {    
-        process.destroy();
+        log.info("Entering after");
+
+        synchronized (mutex) {
+
+            if ( clientCount.decrementAndGet() == 0 ) {
+                log.info("Destroying Tomcat running on port " + port);
+                process.destroy();
+                started = false;
+            } else {
+                log.info("NOT stopping Tomcat because it is still in use");
+            }
+        }
+
+        log.info("Leaving after");
     }
         
     @Override
     protected void before() throws Throwable {
+        log.info("Entering before");
 
-        if (started) {
-            return;
-        }
+//        if (started) {
+//            log.info("NOT starting Tomcat because it is already started #1");
+//            return;
+//        }
 
         synchronized (mutex) {
 
+            clientCount.incrementAndGet();
+
             if (started) {
+                log.info("NOT starting Tomcat because it is already started #2");
                 return;
             }
+
+            started = true;
 
             port = AvailablePortFinder.getNextAvailable(9998 + RandomUtils.nextInt(10));
 
@@ -87,8 +114,15 @@ public class TomcatResource extends ExternalResource {
 
             waitForTomcat();
 
-            started = true;
+            Runtime.getRuntime().addShutdownHook( new Thread() {
+                @Override
+                public void run() {
+                    after();
+                }
+            } );
         }
+
+        log.info("Leaving before");
     }
 
     private String createPropDir() {
@@ -122,7 +156,7 @@ public class TomcatResource extends ExternalResource {
         String javaHome = (String)System.getenv("JAVA_HOME");
 
         String logConfig = "-Dlog4j.configuration=file:./src/test/resources/log4j.properties";
-        String maxMemory = "-Xmx5000m";
+        String maxMemory = "-Xmx1000m";
 
         ProcessBuilder pb = new ProcessBuilder(javaHome + "/bin/java", maxMemory, logConfig,
                 "org.apache.usergrid.TomcatMain", "src/main/webapp", port + "");
@@ -151,7 +185,7 @@ public class TomcatResource extends ExternalResource {
 
         final Process p = pb.start();
 
-        log.debug("Started Tomcat process with classpath = " + newClasspath );
+        //log.debug("Started Tomcat process with classpath = " + newClasspath );
 
         // use thread to log Tomcat output
         new Thread( new Runnable() {
@@ -163,10 +197,11 @@ public class TomcatResource extends ExternalResource {
                     while ((line = br.readLine()) != null) {
                         log.info(line);
                     }
-                } catch (IOException ex) {
+
+                } catch (Exception ex) {
                     log.error("Error reading from Tomcat process", ex);
                     return;
-                }
+                } 
             }
         }).start();
 
@@ -176,37 +211,83 @@ public class TomcatResource extends ExternalResource {
     private void createPropertyFiles( String propDirPath ) throws IOException {
 
         PrintWriter pw = new PrintWriter( 
-                new FileWriter( propDirPath + File.separator + "usergrid-custom.properties"));
+            new FileWriter( propDirPath + File.separator + "usergrid-custom.properties"));
         
         pw.println("cassandra.url=localhost:" + cassPort);
-        pw.println("usergrid.mongo.disable=true");
-        pw.println("swagger.basepath=http://sometestvalue");
-        pw.println("usergrid.counter.batch.size=1");
-        pw.println("usergrid.test=true");
-        pw.println("usergrid.sysadmin.login.name=superuser");
-        pw.println("usergrid.sysadmin.login.email=superuser@usergrid.com");
-        pw.println("usergrid.sysadmin.login.password=superpassword");
-        pw.println("usergrid.sysadmin.login.allowed=true");
-        
         pw.println("cassandra.version=1.2");
         pw.println("cassandra.cluster_name=Usergrid");
-        pw.println("cassandra.connections=20");
+        pw.println("cassandra.connections=600");
         pw.println("cassandra.timeout=5000");
-        
-        pw.println("collections.keyspace=Usergrid_Applications");
-        pw.println("collections.keyspace.strategy.options=replication_factor:1");
-        pw.println("collections.keyspace.strategy.class=org.apache.cassandra.locator.SimpleStrategy");
-        pw.println("collection.stage.transient.timeout=6");
-        
+
         pw.println("elasticsearch.hosts=127.0.0.1");
         pw.println("elasticsearch.port=" + esPort);
         pw.println("elasticsearch.cluster_name=test_cluster");
         pw.println("elasticsearch.index_prefix=usergrid");
         
+        pw.println("collections.keyspace=Usergrid_Applications");
+        pw.println("collections.keyspace.strategy.options=replication_factor:1");
+        pw.println("collections.keyspace.strategy.class=org.apache.cassandra.locator.SimpleStrategy");
+        pw.println("collection.stage.transient.timeout=6");
+
+        pw.println("usergrid.mongo.disable=true");
+        pw.println("swagger.basepath=http://sometestvalue");
+        pw.println("usergrid.counter.batch.size=1");
+        pw.println("usergrid.test=true");
+
+        pw.println("usergrid.sysadmin.login.name=superuser");
+        pw.println("usergrid.sysadmin.login.email=superuser@usergrid.com");
+        pw.println("usergrid.sysadmin.login.password=superpassword");
+        pw.println("usergrid.sysadmin.login.allowed=true");
+
+        
+        pw.println("mail.transport.protocol=smtp");
+        pw.println("mail.store.protocol=imap");
+        pw.println("mail.smtp.host=usergrid.com");
+        pw.println("mail.smtp.username=testuser");
+        pw.println("mail.smtp.password=testpassword");
+        
         pw.println("index.query.limit.default=1000");
+
+        pw.println("usergrid.recaptcha.public=");
+        pw.println("usergrid.recaptcha.private=");
+        pw.println("usergrid.sysadmin.email=");
+        pw.println("usergrid.management.admin_users_require_confirmation=false");
+        pw.println("usergrid.management.admin_users_require_activation=false");
+        pw.println("usergrid.management.notify_admin_of_activation=false");
+        pw.println("usergrid.management.organizations_require_confirmation=false");
+        pw.println("usergrid.management.organizations_require_activation=false");
+        pw.println("usergrid.management.notify_sysadmin_of_new_organizations=false");
+        pw.println("usergrid.management.notify_sysadmin_of_new_admin_users=false");
+        pw.println("usergrid.setup-test-account=true");
+        pw.println("usergrid.test-account.app=test-app");
+        pw.println("usergrid.test-account.organization=test-organization");
+        pw.println("usergrid.test-account.admin-user.username=test");
+        pw.println("usergrid.test-account.admin-user.name=Test User");
+        pw.println("usergrid.test-account.admin-user.email=test@usergrid.com");
+        pw.println("usergrid.test-account.admin-user.password=test");
         
         pw.flush();
         pw.close();
+
+
+//        // include all properties 
+//        Map<String, String> allProperties = new HashMap<String, String>();
+//        for ( Object name : properties.keySet() ) { 
+//            allProperties.put( (String)name, properties.getProperty((String)name));
+//        }
+//
+//        // override some properties with correct port numbers
+//        allProperties.put("cassandra.url", "localhost:" + cassPort);
+//        allProperties.put("elasticsearch.hosts", "127.0.0.1");
+//        allProperties.put("elasticsearch.port", ""+esPort );
+//
+//        PrintWriter pw = new PrintWriter( 
+//            new FileWriter( propDirPath + File.separator + "usergrid-custom.properties"));
+//        for ( String name : allProperties.keySet() ) {
+//            pw.println(name + "=" + allProperties.get( name ));
+//        } 
+//        pw.flush();
+//        pw.close();
     }
 
     /**
@@ -230,5 +311,9 @@ public class TomcatResource extends ExternalResource {
 
     void setElasticSearchPort(int esPort) {
         this.esPort = esPort;
+    }
+
+    void setProperties(Properties properties) {
+        this.properties = properties;
     }
 }

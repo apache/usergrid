@@ -56,14 +56,19 @@ public class ITSetup extends ExternalResource {
 
     public ITSetup( CassandraResource cassandraResource) {
         this.cassandraResource = cassandraResource;
+        managementService = cassandraResource.getBean( ManagementService.class );
         tomcatResource = TomcatResource.instance;
-        tomcatResource.setWebAppsPath("src/main/webapp");
+        tomcatResource.setWebAppsPath( "src/main/webapp" );
+        tomcatResource.setProperties( managementService.getProperties() );
     }
+
 
     public ITSetup( CassandraResource cassandraResource, String webAppsPath ) {
         this.cassandraResource = cassandraResource;
+        managementService = cassandraResource.getBean( ManagementService.class );
         tomcatResource = TomcatResource.instance;
         tomcatResource.setWebAppsPath(webAppsPath);
+        tomcatResource.setProperties( managementService.getProperties() );
     }
 
 
@@ -71,8 +76,6 @@ public class ITSetup extends ExternalResource {
     protected void before() throws Throwable {
         synchronized ( cassandraResource ) {
             super.before();
-
-            managementService = cassandraResource.getBean( ManagementService.class );
 
             if ( !setupCalled ) {
                 managementService.setup();
@@ -87,7 +90,8 @@ public class ITSetup extends ExternalResource {
             applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
 
             tomcatResource.setCassandraPort( cassandraResource.getRpcPort() );
-            tomcatResource.setElasticSearchPort( Integer.parseInt( System.getProperty("EMBEDDED_ES_PORT")) );
+            tomcatResource.setElasticSearchPort( 
+                    Integer.parseInt( System.getProperty("EMBEDDED_ES_PORT")) );
 
             tomcatResource.before();
 

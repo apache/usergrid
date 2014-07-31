@@ -140,7 +140,7 @@ public class CpSetup implements Setup {
 
             // Make all Usergrid properties into Core Persistence config
             cpProps.putAll( cass.getProperties() );
-            logger.debug("All properties fed to Core Persistence: " + cpProps.toString() );
+            //logger.debug("All properties fed to Core Persistence: " + cpProps.toString() );
 
             ConfigurationManager.loadProperties( cpProps );
         }
