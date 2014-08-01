@@ -31,5 +31,5 @@ import org.apache.usergrid.batch.repository.JobDescriptor;
 public interface JobFactory {
 
     /** Return one or more BulkJob ready for execution by a worker thread */
-    List<Job> jobsFrom( JobDescriptor descriptor ) throws JobNotFoundException;
+    Job jobsFrom( JobDescriptor descriptor ) throws JobNotFoundException;
 }
