@@ -19,14 +19,20 @@ package org.apache.usergrid.management.importUG;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.job.OnlyOnceJob;
+import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.FileImport;
+import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.UUID;
 
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
@@ -91,6 +97,15 @@ public class FileImportJob extends OnlyOnceJob {
         fileImport.setErrorMessage("The Job has been tried maximum times but still failed");
         fileImport.setState(FileImport.State.FAILED);
         rootEm.update(fileImport);
+
+        // If one file Job fails, mark the import Job also as failed
+        Results ImportJobResults = rootEm.getConnectingEntities(fileImport.getUuid(), "includes", null, Results.Level.ALL_PROPERTIES);
+        List<Entity> importEntity = ImportJobResults.getEntities();
+        UUID importId = importEntity.get(0).getUuid();
+        Import importUG = rootEm.get(importId, Import.class);
+        importUG.setState(Import.State.FAILED);
+        rootEm.update(importUG);
+
         //To change body of implemented methods use File | Settings | File Templates.
     }
 }

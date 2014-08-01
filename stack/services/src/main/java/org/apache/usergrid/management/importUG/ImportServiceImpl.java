@@ -17,7 +17,7 @@
 
 package org.apache.usergrid.management.importUG;
 
-        import org.apache.usergrid.batch.JobExecution;
+import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
@@ -254,7 +254,7 @@ public class ImportServiceImpl implements ImportService {
     @Override
     public FileImport getFileImportEntity( final JobExecution jobExecution ) throws Exception {
 
-        UUID fileImportId = ( UUID ) jobExecution.getJobData().getProperty("fileImportId");
+        UUID fileImportId = ( UUID ) jobExecution.getJobData().getProperty(FILE_IMPORT_ID);
         EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
         return em.get( fileImportId, FileImport.class );
@@ -379,6 +379,9 @@ public class ImportServiceImpl implements ImportService {
                 fileMetadata.put("files", value);
                 importUG.addProperties(fileMetadata);
                 em.update(importUG);
+
+                Results results = em.getConnectedEntities(importUG.getUuid(),"includes",null, Results.Level.ALL_PROPERTIES);
+                System.out.println();
             }
             return;
         }
@@ -513,8 +516,10 @@ public class ImportServiceImpl implements ImportService {
 
         // add properties to the import entity
         FileImport fileImport = getFileImportEntity(jobExecution);
-        File file = (File)jobExecution.getJobData().getProperty("file");
 
+        fileImport.setState(FileImport.State.STARTED);
+
+        File file = (File)jobExecution.getJobData().getProperty("file");
         EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
         boolean completed = fileImport.getCompleted();
@@ -583,13 +588,19 @@ public class ImportServiceImpl implements ImportService {
 
                     //check other files status and mark the status of import Job.
 
-                    UUID importId = UUID.fromString(jobExecution.getJobData().getProperty("importUUID").toString());
+                    Results ImportJobResults = em.getConnectingEntities(fileImport.getUuid(), "includes", null, Results.Level.ALL_PROPERTIES);
+                    List<Entity> importEntity = ImportJobResults.getEntities();
+                    UUID importId = importEntity.get(0).getUuid();
                     Import importUG = rootEm.get(importId, Import.class);
-                    List<Entity> entities = importUG.getConnections("includes");
+
+                    Results entities = em.getConnectedEntities(importId,"includes",null,Results.Level.ALL_PROPERTIES);
+
+                    Iterator<Entity> resultIterator = entities.iterator();
 
                     int count = 0;
-                    for(Entity eachEntity: entities) {
+                    while (resultIterator.hasNext()){
 
+                        Entity eachEntity = resultIterator.next();
                         FileImport fi = em.get(eachEntity.getUuid(),FileImport.class);
                         if(fi.getState().equals("FINISHED")) {
                             count++;

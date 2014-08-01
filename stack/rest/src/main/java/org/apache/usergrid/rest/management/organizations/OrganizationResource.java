@@ -23,7 +23,7 @@ import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
-import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.Import;
@@ -51,7 +51,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.List;
 import java.util.UUID;
 
 import static javax.servlet.http.HttpServletResponse.*;
@@ -440,10 +439,10 @@ public class OrganizationResource extends AbstractContextResource {
     public Response importFileGetJson( @Context UriInfo ui, @PathParam("importEntity") UUID importEntityUUIDStr,
                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
-        List<Entity> entity;
+        Results entity;
         try {
             entity = smf.getServiceManager( CassandraService.MANAGEMENT_APPLICATION_ID ).getEntityManager()
-                    .get( importEntityUUIDStr, Import.class ).getConnections("includes");
+                    .getConnectedEntities(importEntityUUIDStr ,"includes",null, Results.Level.ALL_PROPERTIES);
         }
         catch ( Exception e ) { //this might not be a bad request and needs better error checking
             return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
