@@ -35,6 +35,10 @@ import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+import rx.Subscriber;
+import rx.functions.Action1;
+import rx.functions.Func1;
 
 import java.io.File;
 import java.io.IOException;
@@ -128,6 +132,8 @@ public class ImportServiceImpl implements ImportService {
         return importUG.getUuid();
     }
 
+
+
     /**
      * Query Entity Manager for the string state of the Import Entity. This corresponds to the GET /import
      *
@@ -180,6 +186,7 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
+    //@Override
     public Import getImportEntity( final JobExecution jobExecution ) throws Exception {
 
         UUID importId = ( UUID ) jobExecution.getJobData().getProperty( IMPORT_ID );
@@ -187,6 +194,7 @@ public class ImportServiceImpl implements ImportService {
 
         return importManager.get( importId, Import.class );
     }
+
 
     @Override
     public ArrayList<File> getEphemeralFile() {
@@ -476,9 +484,9 @@ public class ImportServiceImpl implements ImportService {
                 if(!lastUpdatedUUID.equals(""))
                 {
                     // go till the last updated entity
-                     while(!jp.getText().equals(lastUpdatedUUID)) {
-                         jp.nextToken();
-                     }
+                    while(!jp.getText().equals(lastUpdatedUUID)) {
+                        jp.nextToken();
+                    }
 
                     // skip the last one and start from teh next one
                     while(!(jp.getCurrentToken()==JsonToken.END_OBJECT && jp.nextToken() == JsonToken.START_OBJECT)) {
@@ -527,116 +535,185 @@ public class ImportServiceImpl implements ImportService {
         return valid;
     }
 
+
     private JsonParser getJsonParserForFile( File collectionFile ) throws Exception {
         JsonParser jp = jsonFactory.createJsonParser( collectionFile );
         jp.setCodec( new ObjectMapper() );
         return jp;
     }
 
+
+ private static class EntityWrapper{
+     UUID entityUuid;
+     String entityType;
+     Map<String, Object> properties;
+     EntityWrapper(UUID entityUuid, String entityType,Map<String, Object> properties){
+         this.entityUuid = entityUuid;
+         this.entityType = entityType;
+         this.properties = properties;
+     }
+ }
     /**
      * Imports the entity's connecting references (collections, connections and dictionaries)
      *
      * @param jp JsonPrser pointing to the beginning of the object.
      */
-    private void importEntityStuff( JsonParser jp, EntityManager em, EntityManager rootEm, Import importUG, int index) throws Exception {
+    private void importEntityStuff(final JsonParser jp, final EntityManager em, EntityManager rootEm, Import importUG, int index) throws Exception {
 
-        ArrayList fileNames = (ArrayList) importUG.getDynamicProperties().get("files");
-        Entity entity = null;
-        EntityRef ownerEntityRef=null;
-        String entityUuid="";
-        String entityType="";
+        final JsonParserObservable subscribe = new JsonParserObservable(jp,em,rootEm,importUG, index);
 
-        // Go inside the value after getting the owner entity id.
-        while (jp.nextToken() != JsonToken.END_OBJECT) {
+        final Observable<EntityWrapper> observable = Observable.create(subscribe);
 
-            String collectionName = jp.getCurrentName();
+        final Action1<EntityWrapper> doWork = new Action1<EntityWrapper>() {
+            @Override
+            public void call(EntityWrapper jsonEntity){
+                try {
+                            em.create(jsonEntity.entityUuid, jsonEntity.entityType, jsonEntity.properties);
+                            em.getRef(jsonEntity.entityUuid);
 
-            try {
-                // create the connections
-                if (collectionName.equals("connections")) {
-
-                    jp.nextToken(); // START_OBJECT
-                    while (jp.nextToken() != JsonToken.END_OBJECT) {
-                        String connectionType = jp.getCurrentName();
-
-                        jp.nextToken(); // START_ARRAY
-                        while (jp.nextToken() != JsonToken.END_ARRAY) {
-                            String entryId = jp.getText();
-
-                            EntityRef entryRef = em.getRef(UUID.fromString(entryId));
-                            // Store in DB
-                            em.createConnection(ownerEntityRef, connectionType, entryRef);
-                        }
-                    }
+                }catch (Exception e) {
                 }
-                // add dictionaries
-                else if (collectionName.equals("dictionaries")) {
+            }
 
-                    jp.nextToken(); // START_OBJECT
-                    while (jp.nextToken() != JsonToken.END_OBJECT) {
+        };
 
-                        String dictionaryName = jp.getCurrentName();
+        observable.parallel(new Func1<Observable<EntityWrapper>, Observable<EntityWrapper>>() {
+            @Override
+            public Observable< EntityWrapper> call(Observable<EntityWrapper> entityWrapperObservable) {
+                return entityWrapperObservable.doOnNext(doWork);
+            }
+        });
 
-                        jp.nextToken();
 
-                        @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs(HashMap.class);
+    }
 
-                        em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
-                    }
-                } else {
-                    // Regular collections
-                    jp.nextToken(); // START_OBJECT
 
-                    Map<String, Object> properties = new HashMap<String, Object>();
+    private static final class JsonParserObservable implements Observable.OnSubscribe<EntityWrapper> {
+        private final JsonParser jp;
+        EntityManager em;
+        EntityManager rootEm;
+        Import importUG;
+        int index;
 
-                    JsonToken token = jp.nextToken();
 
-                    while (token != JsonToken.END_OBJECT) {
-                        if (token == JsonToken.VALUE_STRING || token == JsonToken.VALUE_NUMBER_INT) {
-                            String key = jp.getCurrentName();
-                            if (key.equals("uuid")) {
-                                entityUuid = jp.getText();
+        private int entityCount = 0;
 
-                            } else if (key.equals("type")) {
-                                entityType = jp.getText();
-                            } else if (key.length() != 0 && jp.getText().length() != 0) {
-                                String value = jp.getText();
-                                properties.put(key, value);
+        JsonParserObservable(JsonParser parser, EntityManager em, EntityManager rootEm, Import importUG, int index ) {
+            this.jp = parser;
+            this.em = em;
+            this.rootEm = rootEm;
+            this.importUG = importUG;
+            this.index = index;
+        }
+
+        @Override
+        public void call(final Subscriber<? super EntityWrapper> subscriber) {
+            ArrayList fileNames = (ArrayList) importUG.getDynamicProperties().get("files");
+
+            EntityWrapper entityWrapper = null;
+            // while(entityWrapper != null && jp.nextToken() != JsonToken.END_OBJECT) {
+            Entity entity = null;
+            EntityRef ownerEntityRef = null;
+            String entityUuid = "";
+            String entityType = "";
+            try {
+                //JsonToken token = jp.nextToken();
+                while (!subscriber.isUnsubscribed() && jp.nextToken() != JsonToken.END_OBJECT) {
+
+                    String collectionName = jp.getCurrentName();
+
+                    try {
+                        // create the connections
+                        if (collectionName.equals("connections")) {
+
+                            jp.nextToken(); // START_OBJECT
+                            while (jp.nextToken() != JsonToken.END_OBJECT) {
+                                String connectionType = jp.getCurrentName();
+
+                                jp.nextToken(); // START_ARRAY
+                                while (jp.nextToken() != JsonToken.END_ARRAY) {
+                                    String entryId = jp.getText();
+
+                                    EntityRef entryRef = em.getRef(UUID.fromString(entryId));
+                                    // Store in DB
+                                    em.createConnection(ownerEntityRef, connectionType, entryRef);
+                                }
                             }
                         }
-                        token = jp.nextToken();
-                    }
+                        // add dictionaries
+                        else if (collectionName.equals("dictionaries")) {
 
-                    entity = em.create(UUID.fromString(entityUuid), entityType, properties);
-                    ownerEntityRef = em.getRef(UUID.fromString(entityUuid));
+                            jp.nextToken(); // START_OBJECT
+                            while (jp.nextToken() != JsonToken.END_OBJECT) {
+
+                                String dictionaryName = jp.getCurrentName();
+
+                                jp.nextToken();
+
+                                @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs(HashMap.class);
+
+                                em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
+                            }
+                        } else {
+                            // Regular collections
+                            jp.nextToken(); // START_OBJECT
+
+                            Map<String, Object> properties = new HashMap<String, Object>();
+
+                            JsonToken token = jp.nextToken();
+
+                            while (token != JsonToken.END_OBJECT) {
+                                if (token == JsonToken.VALUE_STRING || token == JsonToken.VALUE_NUMBER_INT) {
+                                    String key = jp.getCurrentName();
+                                    if (key.equals("uuid")) {
+                                        entityUuid = jp.getText();
+
+                                    } else if (key.equals("type")) {
+                                        entityType = jp.getText();
+                                    } else if (key.length() != 0 && jp.getText().length() != 0) {
+                                        String value = jp.getText();
+                                        properties.put(key, value);
+                                    }
+                                }
+                                token = jp.nextToken();
+                            }
+                            entityWrapper = new EntityWrapper(UUID.fromString(entityUuid), entityType, properties);
+                            subscriber.onNext(entityWrapper);
+                            ownerEntityRef = em.getRef(UUID.fromString(entityUuid));
+                            //break;
+                        }
+                    } catch (IllegalArgumentException e) {
+                        // skip illegal entity UUID and go to next one
+                        ((Map<String, Object>) fileNames.get(index)).put("Entity Creation Error", e.getMessage());
+                        rootEm.update(importUG);
+                    } catch (Exception e) {
+                        // skip illegal entity UUID and go to next one
+                        ((Map<String, Object>) fileNames.get(index)).put("Miscellaneous Error", e.getMessage());
+                        rootEm.update(importUG);
+                    }
                 }
+
+                // update the last updated entity
+                if (entity != null) {
+                    entityCount++;
+                    if (entityCount == 2000) {
+                        ((Map<String, Object>) fileNames.get(index)).put("lastUpdatedUUID", entityUuid);
+                        rootEm.update(importUG);
+                        entityCount = 0;
+                    }
+                }
+
+
+            } catch (Exception e) {
+
             }
-            catch (IllegalArgumentException e) {
-                // skip illegal entity UUID and go to next one
-                ((Map<String, Object>) fileNames.get(index)).put("Entity Creation Error", e.getMessage());
-                rootEm.update(importUG);
-            }
-            catch (Exception e) {
-                // skip illegal entity UUID and go to next one
-                ((Map<String, Object>) fileNames.get(index)).put("Miscellaneous Error", e.getMessage());
-                rootEm.update(importUG);
-            }
-        }
-        // update the last updated entity
-        if(entity != null) {
-            entityCount++;
-            if(entityCount == 2000) {
-                ((Map<String, Object>) fileNames.get(index)).put("lastUpdatedUUID", entityUuid);
-                rootEm.update(importUG);
-                entityCount = 0;
-            }
+
         }
     }
+
 }
 
-/**
- * custom exceptions
- */
+
 class OrganizationNotFoundException extends Exception {
     OrganizationNotFoundException(String s) {
         super(s);

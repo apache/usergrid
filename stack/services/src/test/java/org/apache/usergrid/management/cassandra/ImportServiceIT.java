@@ -109,9 +109,9 @@ public class ImportServiceIT {
         emTest.createConnection( emTest.getRef(entityTest[1].getUuid()), "related", emTest.getRef( entityTest[0].getUuid()));
     }
 
-    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+//    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if a collection file is imported correctly
-    //@Test
+    @Test
     public void testIntegrationImportCollection() throws Exception {
 
         // //creates 5 entities in user collection
@@ -124,9 +124,9 @@ public class ImportServiceIT {
         //creates entities
         for ( int i = 0; i < 5; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
-            userProperties.put( "username", "user" + i );
-            userProperties.put( "email", "user" + i + "@test.com" );
-            entity[i] = em.create( "users", userProperties );
+            userProperties.put( "username", "yabauser" + i );
+            userProperties.put( "email", "yavauser" + i + "@test.com" );
+            entity[i] = em.create( "yabas", userProperties );
         }
 
         //creates test connections between first 2 users
@@ -140,7 +140,7 @@ public class ImportServiceIT {
 
         payload.put( "organizationId",  organization.getUuid());
         payload.put( "applicationId", applicationId );
-        payload.put("collectionName", "users");
+        payload.put("collectionName", "yabas");
 
         // schdeule the export job
         UUID exportUUID = exportService.schedule( payload );
@@ -178,13 +178,12 @@ public class ImportServiceIT {
         }
         try {
 
-
             //checks if temp import files are created i.e. downloaded from S3
             assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
             //check if entities are actually updated i.e. created and modified should be different
             //EntityManager em = setup.getEmf().getEntityManager(applicationId);
-            Results collections = em.getCollection(applicationId, "users", null, Results.Level.ALL_PROPERTIES);
+            Results collections = em.getCollection(applicationId, "yabas", null, Results.Level.ALL_PROPERTIES);
             List<Entity> entities = collections.getEntities();
 
             // check if connections are created for only the 1st 2 entities in user collection

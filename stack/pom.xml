@@ -113,6 +113,7 @@
     <tomcat-version>7.0.42</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
+    <rx.version>0.19.6</rx.version>
 
   </properties>
 

@@ -559,5 +559,17 @@
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-core</artifactId>
+      <version>0.19.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-math</artifactId>
+      <version>0.19.6</version>
+    </dependency>
   </dependencies>
 </project>
