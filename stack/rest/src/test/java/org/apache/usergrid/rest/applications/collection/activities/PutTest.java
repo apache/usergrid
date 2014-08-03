@@ -59,10 +59,11 @@ public class PutTest extends AbstractRestIT {
 
 
         for ( int i = 0; i < 5; i++ ) {
-
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
         }
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         String query = "select * ";
 
@@ -70,12 +71,13 @@ public class PutTest extends AbstractRestIT {
         String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
         StringBuilder buf = new StringBuilder( uuid );
 
-
         activities.addToUrlEnd( buf );
         props.put( "actor", newActor );
         node = activities.put( props );
-        node = activities.withQuery( query ).get();
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
+        node = activities.withQuery( query ).get();
         assertEquals( 6, node.get( "entities" ).size() );
     }
 }

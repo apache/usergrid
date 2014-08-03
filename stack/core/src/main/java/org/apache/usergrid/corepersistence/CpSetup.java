@@ -183,9 +183,9 @@ public class CpSetup implements Setup {
 
 
     /** @return statically constructed reference to the default application */
-    public static Application getDefaultApp() {
-        return SystemDefaults.defaultApp;
-    }
+//    public static Application getDefaultApp() {
+//        return SystemDefaults.defaultApp;
+//    }
 
     @Override
     public void setupSystemKeyspace() throws Exception {
@@ -273,12 +273,12 @@ public class CpSetup implements Setup {
         private static final Application managementApp = 
                 new Application( CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID);
 
-        private static final Application defaultApp = 
-                new Application( CpEntityManagerFactory.DEFAULT_APPLICATION_ID );
+//        private static final Application defaultApp = 
+//                new Application( CpEntityManagerFactory.DEFAULT_APPLICATION_ID );
 
         static {
             managementApp.setName( MANAGEMENT_APPLICATION );
-            defaultApp.setName( DEFAULT_APPLICATION );
+//            defaultApp.setName( DEFAULT_APPLICATION );
         }
     }
 }

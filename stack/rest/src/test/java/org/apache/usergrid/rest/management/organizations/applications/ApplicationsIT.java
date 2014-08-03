@@ -54,7 +54,9 @@ public class ApplicationsIT extends AbstractRestIT {
             appNames.add( name );
 
             context.withApp( name ).createAppForOrg();
+            refreshIndex(context.getOrgName(), name);
         }
+
 
         //now go through and ensure each entry is present
 

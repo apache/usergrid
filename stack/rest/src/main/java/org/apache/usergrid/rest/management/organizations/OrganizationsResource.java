@@ -103,6 +103,9 @@ public class OrganizationsResource extends AbstractContextResource {
     public JSONWithPadding newOrganization( @Context UriInfo ui, Map<String, Object> json,
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
+
+        logger.debug("newOrganization");
+
         ApiResponse response = createApiResponse();
         response.setAction( "new organization" );
 

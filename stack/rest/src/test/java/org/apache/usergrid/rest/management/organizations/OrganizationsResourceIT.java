@@ -120,26 +120,37 @@ public class OrganizationsResourceIT extends AbstractRestIT {
 
     @Test
     public void testCreateDuplicateOrgName() throws Exception {
-        Map<String, String> payload =
-                hashMap( "email", "create-duplicate-org@mockserver.com" ).map( "password", "password" )
-                        .map( "organization", "create-duplicate-orgname-org" );
 
+        // create organization with name
+        Map<String, String> payload =
+                hashMap( "email", "create-duplicate-org@mockserver.com" )
+                        .map( "password", "password" )
+                        .map( "organization", "create-duplicate-orgname-org" );
         JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
         logNode( node );
         assertNotNull( node );
 
-        payload = hashMap( "email", "create-duplicate-org2@mockserver.com" ).map( "username", "create-dupe-orgname2" )
-                .map( "password", "password" ).map( "organization", "create-duplicate-orgname-org" );
+        refreshIndex("test-organization", "test-app");
 
+        // create another org with that same name, but a different user
+        payload = hashMap( "email", "create-duplicate-org2@mockserver.com" )
+                .map( "username", "create-dupe-orgname2" )
+                .map( "password", "password" )
+                .map( "organization", "create-duplicate-orgname-org" );
         try {
             node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( Exception ex ) {
         }
-        payload = hashMap( "grant_type", "password" ).map( "username", "create-dupe-orgname2" )
+
+        refreshIndex("test-organization", "test-app");
+
+        // now attempt to login as the user for the second organization
+        payload = hashMap( "grant_type", "password" )
+                .map( "username", "create-dupe-orgname2" )
                 .map( "password", "password" );
         try {
             node = mapper.readTree( resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
@@ -150,7 +161,10 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         }
         logNode( node );
 
-        payload = hashMap( "username", "create-duplicate-org@mockserver.com" ).map( "grant_type", "password" )
+        refreshIndex("test-organization", "test-app");
+
+        payload = hashMap( "username", "create-duplicate-org@mockserver.com" )
+                .map( "grant_type", "password" )
                 .map( "password", "password" );
         node = mapper.readTree( resource().path( "/management/token" ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
@@ -193,6 +207,8 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         }
         Assert.assertTrue(failed);
 
+        refreshIndex("test-organization", "test-app");
+
         payload = hashMap( "grant_type", "password" )
             .map( "username", "create-dupe-orgname2" )
             .map( "password", "password" );
@@ -207,6 +223,8 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         }
 
         logNode( node );
+
+        refreshIndex("test-organization", "test-app");
 
         payload = hashMap( "username", "duplicate-email@mockserver.com" )
                 .map( "grant_type", "password" )

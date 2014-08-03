@@ -37,20 +37,19 @@ import org.apache.usergrid.rest.AbstractContextResource;
 
 
 /** 
- * Reindex one application, for testing purposes only and only works with usergrid.test=true .
+ * Refresh index of an application, FOR TESTING PURPOSES ONLY. Only works with usergrid.test=true.
  */
 @Component
 @Scope("prototype")
-@Path("/testreindex")
+@Path("/refreshindex")
 @Produces({ MediaType.APPLICATION_JSON })
-public class ReindexResource extends AbstractContextResource {
-    static final Logger logger = LoggerFactory.getLogger( ReindexResource.class );
+public class RefreshIndexResource extends AbstractContextResource {
+    static final Logger logger = LoggerFactory.getLogger( RefreshIndexResource.class );
 
-    public ReindexResource() {}
-
+    public RefreshIndexResource() {}
 
     @POST
-    public Response setProperties( 
+    public Response refresh( 
             @QueryParam("org_name") String orgName, 
             @QueryParam("app_name") String appName, 
             @QueryParam("app_id") String appIdString ) throws IOException, Exception {
@@ -68,9 +67,13 @@ public class ReindexResource extends AbstractContextResource {
         } else {
             appId = UUID.fromString(appIdString);
         }
-         
-        EntityManager em = emf.getEntityManager( appId );
-        em.refreshIndex();
+        
+        if ( appId != null ) {
+            EntityManager em = emf.getEntityManager( appId );
+            em.refreshIndex();
+        } else {
+            emf.refreshIndex();
+        }
 
         return Response.created( null ).build();
     }

@@ -70,6 +70,8 @@ public class GeoPagingTest extends AbstractRestIT {
             index[i] = activity.findValue( "created" ).longValue();
         }
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         String query =
                 "select * where location within 20000 of 37,-75 and created > " + index[2] + " and " + "created < "
                         + index[4] + "";
@@ -105,6 +107,8 @@ public class GeoPagingTest extends AbstractRestIT {
             JsonNode activity = groups.create( props ).get( "entities" ).get( 0 );
             saved[i] = activity;
         }
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         JsonNode node = null;
         for ( int consistent = 0; consistent < 20; consistent++ ) {

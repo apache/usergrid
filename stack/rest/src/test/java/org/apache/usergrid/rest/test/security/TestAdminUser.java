@@ -19,8 +19,6 @@ package org.apache.usergrid.rest.test.security;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.usergrid.rest.test.resource.TestContext;
 
 

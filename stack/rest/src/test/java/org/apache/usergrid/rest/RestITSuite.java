@@ -16,7 +16,6 @@
  */
 package org.apache.usergrid.rest;
 
-
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -39,15 +38,14 @@ import org.apache.usergrid.rest.management.organizations.OrganizationResourceIT;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResourceIT;
 import org.apache.usergrid.rest.management.users.organizations.UsersOrganizationsResourceIT;
 
-
 @RunWith(Suite.class)
 @Suite.SuiteClasses(
         {
-                ActivityResourceIT.class, AdminEmailEncodingIT.class, ApplicationRequestCounterIT.class,
-                AssetResourceIT.class, BasicIT.class, CollectionsResourceIT.class, ContentTypeResourceIT.class,
-                DevicesResourceIT.class, EventsResourceIT.class, GroupResourceIT.class, OrganizationResourceIT.class,
-                OrganizationsResourceIT.class, OwnershipResourceIT.class, PagingResourceIT.class,
-                PermissionsResourceIT.class, UserResourceIT.class, UsersOrganizationsResourceIT.class
+            ActivityResourceIT.class, AdminEmailEncodingIT.class, ApplicationRequestCounterIT.class,
+            AssetResourceIT.class, BasicIT.class, CollectionsResourceIT.class, ContentTypeResourceIT.class,
+            DevicesResourceIT.class, EventsResourceIT.class, GroupResourceIT.class, OrganizationResourceIT.class,
+            OrganizationsResourceIT.class, OwnershipResourceIT.class, PagingResourceIT.class,
+            PermissionsResourceIT.class, UserResourceIT.class, UsersOrganizationsResourceIT.class
         })
 @Concurrent()
 public class RestITSuite {

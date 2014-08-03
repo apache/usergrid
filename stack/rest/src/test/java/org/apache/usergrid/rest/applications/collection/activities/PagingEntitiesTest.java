@@ -71,6 +71,9 @@ public class PagingEntitiesTest extends AbstractRestIT {
             }
         }
         ArrayUtils.reverse( verifyCreated );
+        
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         String query = "select * where created >= " + created;
 
 
@@ -119,6 +122,8 @@ public class PagingEntitiesTest extends AbstractRestIT {
                 created = activity.findValue( "created" ).longValue();
             }
         }
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         String query = "select * where created >= " + created + " or verb = 'stop'";
 

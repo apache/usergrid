@@ -73,7 +73,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void usernameQuery() throws IOException {
 
         UserRepo.INSTANCE.load( resource(), access_token );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         String ql = "username = 'user*'";
 
@@ -91,7 +91,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void nameQuery() throws IOException {
 
         UserRepo.INSTANCE.load( resource(), access_token );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         String ql = "name = 'John*'";
 
@@ -107,7 +107,7 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void nameQueryByUUIDs() throws Exception {
         UserRepo.INSTANCE.load( resource(), access_token );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         String ql = "select uuid name = 'John*'";
 
@@ -124,7 +124,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void nameFullTextQuery() throws IOException {
 
         UserRepo.INSTANCE.load( resource(), access_token );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         String ql = "name contains 'Smith' order by name ";
 
@@ -146,7 +146,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void fullTextQueryNotFullTextIndexed() throws IOException {
 
         UserRepo.INSTANCE.load( resource(), access_token );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         String ql = "username contains 'user' ";
 
@@ -164,7 +164,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void fullQueryNotIndexed() throws IOException {
 
         UserRepo.INSTANCE.load( resource(), access_token );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         String ql = "picture = 'foo' ";
 
@@ -181,7 +181,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void emtpyActorActivity() throws IOException {
         UserRepo.INSTANCE.load( resource(), access_token );
         UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         Activity activity = new Activity();
         activity.setProperty( "email", "rod@rodsimpson.com" );
@@ -215,7 +215,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void noUUIDorEmail() throws IOException {
 
         UserRepo.INSTANCE.load( resource(), access_token );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
 
@@ -258,7 +258,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void ignoreUUIDandEmail() throws IOException {
         UserRepo.INSTANCE.load( resource(), access_token );
         UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID testUUID = UUIDUtils.newTimeUUID();
         String testEmail = "foo@bar.com";
@@ -305,7 +305,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void userActivitiesDefaultOrder() throws IOException {
         UserRepo.INSTANCE.load( resource(), access_token );
         UUID userId = UserRepo.INSTANCE.getByUserName( "user1" );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         Activity activity = new Activity();
         activity.setProperty( "email", "rod@rodsimpson.com" );
@@ -316,7 +316,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         Entity entity = response.getFirstEntity();
 
@@ -331,7 +331,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         entity = response.getFirstEntity();
 
@@ -359,7 +359,8 @@ public class UserResourceIT extends AbstractRestIT {
 
         ApiResponse response = client.createUser( username, name, email, "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+
+        refreshIndex("test-organization", "test-app");
 
         Entity userEntity = response.getEntities().get( 0 );
 
@@ -389,6 +390,9 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void resultSizeSame() throws IOException {
         UserRepo.INSTANCE.load( resource(), access_token );
+
+        refreshIndex("test-organization", "test-app");
+
         UUID userId1 = UserRepo.INSTANCE.getByUserName( "user1" );
         UUID userId2 = UserRepo.INSTANCE.getByUserName( "user2" );
         UUID userId3 = UserRepo.INSTANCE.getByUserName( "user3" );
@@ -444,7 +448,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         ApiResponse response = client.createUser( username, name, id + "@usergrid.org", "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID createdId = response.getEntities().get( 0 ).getUuid();
 
@@ -465,7 +469,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         ApiResponse response = client.createUser( username, name, id + "@usergrid.org", "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID createdId = response.getEntities().get( 0 ).getUuid();
 
@@ -481,7 +485,7 @@ public class UserResourceIT extends AbstractRestIT {
         // now create that same user again, it should work
         response = client.createUser( username, name, id + "@usergrid.org", "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         createdId = response.getEntities().get( 0 ).getUuid();
 
@@ -499,7 +503,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         ApiResponse response = client.createUser( username, name, email, "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID firstCreatedId = response.getEntities().get( 0 ).getUuid();
 
@@ -509,7 +513,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         response = client.createUser( username, name, email, "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID secondCreatedId = response.getEntities().get( 0 ).getUuid();
 
@@ -524,7 +528,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         // singular collection name
         path = String.format( "/test-organization/test-app/user/%s/conn2/%s", firstCreatedId, secondCreatedId );
@@ -534,7 +538,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         path = String.format( "/test-organization/test-app/users/%s/conn1", firstCreatedId );
 
@@ -576,7 +580,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         ApiResponse response = client.createUser( username1, name1, email1, "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID firstCreatedId = response.getEntities().get( 0 ).getUuid();
 
@@ -586,7 +590,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         response = client.createUser( username2, name2, email2, "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID secondCreatedId = response.getEntities().get( 0 ).getUuid();
 
@@ -623,7 +627,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         ApiResponse response = client.createUser( email, name, email, "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID userId = response.getEntities().get( 0 ).getUuid();
 
@@ -667,7 +671,7 @@ public class UserResourceIT extends AbstractRestIT {
         node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                          .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, perms ));
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         //connect the entities where role is the root
         path = String.format( "/test-organization/test-app/roles/%s/users/%s", roleId1, userId );
@@ -680,7 +684,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertEquals( userId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
 
         //connect the second role
@@ -692,7 +696,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertEquals( userId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         //query the second role, it should work
         path = String.format( "/test-organization/test-app/roles/%s/users", roleId2 );
@@ -725,7 +729,7 @@ public class UserResourceIT extends AbstractRestIT {
         //query the first role, it should 404
         path = String.format( "/test-organization/test-app/roles/%s/users", roleId1 );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         try {
             node = mapper.readTree( resource().path( path ).queryParam( "access_token", access_token )
@@ -759,7 +763,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         ApiResponse response = client.createUser( username1, name1, email1, "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID firstCreatedId = response.getEntities().get( 0 ).getUuid();
 
@@ -775,7 +779,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         UUID secondCreatedId = response.getEntities().get( 0 ).getUuid();
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
@@ -789,7 +793,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertEquals( secondCreatedId.toString(), getEntity( node, 0 ).get( "uuid" ).asText() );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         // named entity in collection name
         path = String.format( "/test-organization/test-app/users/%s/conn2/pizzas/%s", username1, name );
@@ -812,7 +816,7 @@ public class UserResourceIT extends AbstractRestIT {
         ApiResponse response = client.createUser( username, name, email, "password" );
 
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         Entity userEntity = response.getEntities().get( 0 );
 
@@ -839,7 +843,7 @@ public class UserResourceIT extends AbstractRestIT {
                          .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                          .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, userEntity.getProperties() ));
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         // now see if we've updated
         node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "username", username )
@@ -912,7 +916,7 @@ public class UserResourceIT extends AbstractRestIT {
                   .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                   .post( String.class, payload );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         JsonNode response = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
                           .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
@@ -1047,7 +1051,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         ApiResponse response = client.createUser( username, name, email, "password" );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         UUID createdId = response.getEntities().get( 0 ).getUuid();
 
@@ -1062,7 +1066,7 @@ public class UserResourceIT extends AbstractRestIT {
         // check it
         assertNull( node.get( "errors" ) );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         // add Role
 
@@ -1077,7 +1081,7 @@ public class UserResourceIT extends AbstractRestIT {
         assertNotNull( node.get( "entities" ).get( 0 ).get( "name" ) );
         assertEquals( node.get( "entities" ).get( 0 ).get( "name" ).asText(), roleName );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + createdId + "/roles" )
             .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
@@ -1098,7 +1102,7 @@ public class UserResourceIT extends AbstractRestIT {
         // check it
         assertNull( node.get( "errors" ) );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + createdId + "/roles" )
                          .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
@@ -1218,7 +1222,7 @@ public class UserResourceIT extends AbstractRestIT {
         createUser( "test_1", "test_1@test.com", "test123", "Test1 User" ); // client.setApiUrl(apiUrl);
         createUser( "test_2", "test_2@test.com", "test123", "Test2 User" ); // client.setApiUrl(apiUrl);
         createUser( "test_3", "test_3@test.com", "test123", "Test3 User" ); // client.setApiUrl(apiUrl);
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
 
@@ -1238,7 +1242,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertNotNull( user_token_from_client_credentials );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         Status status = null;
 
@@ -1285,7 +1289,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         setup.getMgmtSvc().deactivateUser( appInfo.getId(), userId );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         try {
             resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
@@ -1306,7 +1310,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void delegatePutOnNotFound() throws Exception {
         String randomName = "user1_" + UUIDUtils.newTimeUUID().toString();
         createUser( randomName, randomName + "@apigee.com", "password", randomName );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         // should update a field
         JsonNode response = mapper.readTree( resource().path( "/test-organization/test-app/users/" + randomName )
@@ -1327,7 +1331,7 @@ public class UserResourceIT extends AbstractRestIT {
                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                              .put( String.class, payload ));
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         logNode( response );
         response = mapper.readTree( resource().path( "/test-organization/test-app/users/" + randomName )
@@ -1373,7 +1377,7 @@ public class UserResourceIT extends AbstractRestIT {
     public void queryForUserUuids() throws Exception {
 
         UserRepo.INSTANCE.load( resource(), access_token );
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         Status status = null;
 
@@ -1395,7 +1399,7 @@ public class UserResourceIT extends AbstractRestIT {
 
         assertNotNull( userId );
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         ql = "uuid = " + userId;
 

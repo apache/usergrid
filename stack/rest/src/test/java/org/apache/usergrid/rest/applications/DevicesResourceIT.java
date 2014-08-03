@@ -46,6 +46,8 @@ public class DevicesResourceIT extends AbstractRestIT {
 
         String path = "devices/" + uuid;
 
+        refreshIndex("test-organization", "test-app");
+
         JsonNode response = mapper.readTree( appPath( path ).put( String.class, payload ));
 
         // create
@@ -57,6 +59,8 @@ public class DevicesResourceIT extends AbstractRestIT {
         // delete
         response = mapper.readTree( appPath( path ).delete( String.class ));
         assertNotNull( getEntity( response, 0 ) );
+
+        refreshIndex("test-organization", "test-app");
 
         // check deleted
         try {
@@ -71,6 +75,8 @@ public class DevicesResourceIT extends AbstractRestIT {
         response = mapper.readTree( appPath( path ).put( String.class, payload ));
         entity = getEntity( response, 0 );
         assertNotNull( entity );
+
+        refreshIndex("test-organization", "test-app");
 
         // check existence
         response = mapper.readTree( appPath( path ).get( String.class ));

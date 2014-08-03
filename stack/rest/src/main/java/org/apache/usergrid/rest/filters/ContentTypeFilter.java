@@ -88,7 +88,11 @@ public class ContentTypeFilter implements Filter {
         HeaderWrapperRequest newRequest = new HeaderWrapperRequest( origRequest );
         newRequest.adapt();
 
-        chain.doFilter( newRequest, response );
+        try {
+            chain.doFilter( newRequest, response );
+        } catch ( Exception e ) {
+            logger.debug("Error in filter", e);
+        }
     }
 
 

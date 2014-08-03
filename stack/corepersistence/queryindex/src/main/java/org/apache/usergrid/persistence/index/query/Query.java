@@ -191,6 +191,7 @@ public class Query {
         if ( ql == null ) {
             return null;
         }
+        logger.debug("Processing raw query: " + ql);
         String originalQl = ql;
         ql = ql.trim();
 

@@ -50,7 +50,6 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
@@ -131,7 +130,7 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import org.apache.usergrid.persistence.Schema;
 import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
 import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
 import org.apache.usergrid.persistence.SimpleRoleRef;
@@ -400,7 +399,7 @@ public class CpEntityManager implements EntityManager {
      */
     public <A extends Entity> A getEntity( UUID entityId, Class<A> entityClass ) throws Exception {
 
-        String type = getDefaultSchema().getEntityType( entityClass );
+        String type = Schema.getDefaultSchema().getEntityType( entityClass );
 
         Id id = new SimpleId( entityId, type );
         String collectionName = getCollectionScopeNameFromEntityType( type );
@@ -443,7 +442,7 @@ public class CpEntityManager implements EntityManager {
         Collection<UUID> entityIds, Class<? extends Entity> entityClass, Level resultsLevel )
          throws Exception {
 
-        String type = getDefaultSchema().getEntityType( entityClass );
+        String type = Schema.getDefaultSchema().getEntityType( entityClass );
 
         ArrayList<Entity> entities = new ArrayList<Entity>();
 
@@ -501,7 +500,11 @@ public class CpEntityManager implements EntityManager {
                 cpEntity, entity.getProperties(), entity.getType(), true );
 
         try {
+            logger.debug("About to Write {}:{} version {}", new Object[] { 
+                cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
+
             cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+
             logger.debug("Wrote {}:{} version {}", new Object[] { 
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
         }
@@ -754,15 +757,12 @@ public class CpEntityManager implements EntityManager {
         Map<String, Long> counts = getApplicationCounters();
         Map<String, Object> metadata = new HashMap<String, Object>();
         if ( collections != null ) {
-            for ( String collectionName : collections ) {
+            for ( String collectionCode : collections ) {
+
+                String collectionName = collectionCode.split("\\|")[0];
+
                 if ( !Schema.isAssociatedEntityType( collectionName ) ) {
                     Long count = counts.get( APPLICATION_COLLECTION + collectionName );
-                    /*
-                     * int count = emf .countColumns(
-					 * getApplicationKeyspace(applicationId),
-					 * ApplicationCF.ENTITY_ID_SETS, key(applicationId,
-					 * DICTIONARY_COLLECTIONS, collectionName));
-					 */
                     Map<String, Object> entry = new HashMap<String, Object>();
                     entry.put( "count", count != null ? count : 0 );
                     entry.put( "type", singularize( collectionName ) );
@@ -958,7 +958,7 @@ public class CpEntityManager implements EntityManager {
 
         Entity entity = get( entityRef );
 
-        propertyValue = getDefaultSchema().validateEntityPropertyValue( 
+        propertyValue = Schema.getDefaultSchema().validateEntityPropertyValue( 
                 entity.getType(), propertyName, propertyValue );
 
         entity.setProperty( propertyName, propertyValue );
@@ -972,7 +972,7 @@ public class CpEntityManager implements EntityManager {
     public void updateProperties( EntityRef ref, Map<String, Object> properties ) throws Exception {
 
         ref = validate( ref );
-        properties = getDefaultSchema().cleanUpdatedProperties( ref.getType(), properties, false );
+        properties = Schema.getDefaultSchema().cleanUpdatedProperties( ref.getType(), properties, false );
 
         EntityRef entityRef = ref;
         if ( entityRef instanceof CollectionRef ) {
@@ -991,7 +991,7 @@ public class CpEntityManager implements EntityManager {
 
             boolean entitySchemaHasProperty = defaultSchema.hasProperty( entity.getType(), propertyName );
 
-            propertyValue = getDefaultSchema().validateEntityPropertyValue( 
+            propertyValue = Schema.getDefaultSchema().validateEntityPropertyValue( 
                     entity.getType(), propertyName, propertyValue );
 
             if ( entitySchemaHasProperty ) {
@@ -1043,7 +1043,11 @@ public class CpEntityManager implements EntityManager {
 
         cpEntity.removeField( propertyName );
 
+        logger.debug("About to Write {}:{} version {}", new Object[] { 
+            cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
+
         cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+
         logger.debug("Wrote {}:{} version {}", new Object[] { 
             cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
 
@@ -1149,7 +1153,7 @@ public class CpEntityManager implements EntityManager {
         ApplicationCF dictionaryCf = null;
 
         boolean entityHasDictionary = 
-                getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
+                Schema.getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
 
         if ( entityHasDictionary ) {
             dictionaryCf = ENTITY_DICTIONARIES;
@@ -1158,9 +1162,9 @@ public class CpEntityManager implements EntityManager {
             dictionaryCf = ENTITY_COMPOSITE_DICTIONARIES;
         }
 
-        Class<?> setType = getDefaultSchema().getDictionaryKeyType( 
+        Class<?> setType = Schema.getDefaultSchema().getDictionaryKeyType( 
                 entity.getType(), dictionaryName );
-        Class<?> setCoType = getDefaultSchema().getDictionaryValueType( 
+        Class<?> setCoType = Schema.getDefaultSchema().getDictionaryValueType( 
                 entity.getType(), dictionaryName );
         boolean coTypeIsBasic = ClassUtils.isBasicType( setCoType );
 
@@ -1196,12 +1200,28 @@ public class CpEntityManager implements EntityManager {
     public Object getDictionaryElementValue( 
             EntityRef entity, String dictionaryName, String elementName ) throws Exception {
 
+        if ( entity == null) {
+            throw new RuntimeException("Entity is null");
+        }
+
+        if ( dictionaryName == null) {
+            throw new RuntimeException("dictionaryName is null");
+        }
+
+        if ( elementName == null) {
+            throw new RuntimeException("elementName is null");
+        }
+
+        if ( Schema.getDefaultSchema() == null) {
+            throw new RuntimeException("Schema.getDefaultSchema() is null");
+        }
+
         Object value = null;
 
         ApplicationCF dictionaryCf = null;
 
         boolean entityHasDictionary = 
-                getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
+                Schema.getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
 
         if ( entityHasDictionary ) {
             dictionaryCf = ENTITY_DICTIONARIES;
@@ -1210,7 +1230,7 @@ public class CpEntityManager implements EntityManager {
             dictionaryCf = ENTITY_COMPOSITE_DICTIONARIES;
         }
 
-        Class<?> dictionaryCoType = getDefaultSchema().getDictionaryValueType( 
+        Class<?> dictionaryCoType = Schema.getDefaultSchema().getDictionaryValueType( 
                 entity.getType(), dictionaryName );
         boolean coTypeIsBasic = ClassUtils.isBasicType( dictionaryCoType );
 
@@ -1246,7 +1266,7 @@ public class CpEntityManager implements EntityManager {
         ApplicationCF dictionaryCf = null;
 
         boolean entityHasDictionary = 
-                getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
+                Schema.getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
 
         if ( entityHasDictionary ) {
             dictionaryCf = ENTITY_DICTIONARIES;
@@ -1255,7 +1275,7 @@ public class CpEntityManager implements EntityManager {
             dictionaryCf = ENTITY_COMPOSITE_DICTIONARIES;
         }
 
-        Class<?> dictionaryCoType = getDefaultSchema().getDictionaryValueType( 
+        Class<?> dictionaryCoType = Schema.getDefaultSchema().getDictionaryValueType( 
                 entity.getType(), dictionaryName );
         boolean coTypeIsBasic = ClassUtils.isBasicType( dictionaryCoType );
 
@@ -2377,7 +2397,7 @@ public class CpEntityManager implements EntityManager {
 
         String eType = Schema.normalizeEntityType( entityType );
 
-        Schema schema = getDefaultSchema();
+        Schema schema = Schema.getDefaultSchema();
 
         boolean is_application = TYPE_APPLICATION.equals( eType );
 
@@ -2525,7 +2545,11 @@ public class CpEntityManager implements EntityManager {
         }
 
         try {
-            cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+            logger.debug("About to Write {}:{} version {}", new Object[] { 
+                cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
+
+             cpEntity = ecm .write( cpEntity ).toBlockingObservable().last();
+
             logger.debug("Wrote {}:{} version {}", new Object[] { 
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
         }
@@ -2634,7 +2658,7 @@ public class CpEntityManager implements EntityManager {
         }
 
         boolean entityHasDictionary = 
-                getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
+                Schema.getDefaultSchema().hasDictionary( entity.getType(), dictionaryName );
 
         // Don't index dynamic dictionaries not defined by the schema
         if ( entityHasDictionary ) {
@@ -2710,7 +2734,7 @@ public class CpEntityManager implements EntityManager {
             }
         }
 
-        Set<String> schemaSets = getDefaultSchema().getDictionaryNames( entity.getType() );
+        Set<String> schemaSets = Schema.getDefaultSchema().getDictionaryNames( entity.getType() );
         if ( ( schemaSets != null ) && !schemaSets.isEmpty() ) {
             dictionaryNames.addAll( schemaSets );
         }

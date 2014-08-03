@@ -73,37 +73,40 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
 public class MUUserResourceIT extends AbstractRestIT {
     private Logger LOG = LoggerFactory.getLogger( MUUserResourceIT.class );
 
-
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
-
     /**
-     * Tests mixed case creation of an administrative user, and failures to authenticate against management interfaces
-     * when case is different from user creation case.
+     * Tests mixed case creation of an administrative user, and failures to authenticate against 
+     * management interfaces when case is different from user creation case.
      * <p/>
      * From USERGRID-2075
      */
     @Test
     public void testCaseSensitivityAdminUser() throws Exception {
+
         LOG.info( "Starting testCaseSensitivityAdminUser()" );
+
         UserInfo mixcaseUser = setup.getMgmtSvc()
             .createAdminUser( "AKarasulu", "Alex Karasulu", "AKarasulu@Apache.org", "test", true, false );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
-        AuthPrincipalInfo adminPrincipal =
-                new AuthPrincipalInfo( AuthPrincipalType.ADMIN_USER, mixcaseUser.getUuid(), UUIDUtils.newTimeUUID() );
-        OrganizationInfo organizationInfo = setup.getMgmtSvc().createOrganization( "MixedCaseOrg", mixcaseUser, true );
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo( 
+                AuthPrincipalType.ADMIN_USER, mixcaseUser.getUuid(), UUIDUtils.newTimeUUID() );
+        OrganizationInfo organizationInfo = 
+                setup.getMgmtSvc().createOrganization( "MixedCaseOrg", mixcaseUser, true );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         String tokenStr = mgmtToken( "akarasulu@apache.org", "test" );
 
         // Should succeed even when we use all lowercase
-        JsonNode node = mapper.readTree( resource().path( "/management/users/akarasulu@apache.org" ).queryParam( "access_token", tokenStr )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( String.class ));
+        JsonNode node = mapper.readTree( resource().path( "/management/users/akarasulu@apache.org" )
+                .queryParam( "access_token", tokenStr )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .get( String.class ));
         logNode( node );
     }
 
@@ -189,7 +192,7 @@ public class MUUserResourceIT extends AbstractRestIT {
             client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
             client.processMail();
 
-            reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
             // Attempt to authenticate again but this time should pass
             // -------------------------------------------
@@ -419,7 +422,7 @@ public class MUUserResourceIT extends AbstractRestIT {
         assertNotNull( email );
         assertEquals( "MUUserResourceIT-reactivate@apigee.com", email );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // reactivate should send activation email
 
@@ -427,7 +430,7 @@ public class MUUserResourceIT extends AbstractRestIT {
                 .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get( email );
 
@@ -450,7 +453,7 @@ public class MUUserResourceIT extends AbstractRestIT {
 //    @Ignore( "because of that jstl classloader error thing" )
     public void checkPasswordReset() throws Exception {
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         TestUser user = context.getActiveUser();
 
@@ -460,7 +463,7 @@ public class MUUserResourceIT extends AbstractRestIT {
 
         assertTrue( setup.getMgmtSvc().checkPasswordResetTokenForAdminUser( userInfo.getUuid(), resetToken ) );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         Form formData = new Form();
         formData.add( "token", resetToken );
@@ -472,7 +475,7 @@ public class MUUserResourceIT extends AbstractRestIT {
 
         assertTrue( html.contains( "password set" ) );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         assertFalse( setup.getMgmtSvc().checkPasswordResetTokenForAdminUser( userInfo.getUuid(), resetToken ) );
 
@@ -520,12 +523,12 @@ public class MUUserResourceIT extends AbstractRestIT {
                 setup.getMgmtSvc().createAdminUser( "edanuff", "Ed Anuff", "ed@anuff.com", passwords[0], true, false );
         assertNotNull( user );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         OrganizationInfo organization = setup.getMgmtSvc().createOrganization( "ed-organization", user, true );
         assertNotNull( organization );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // set history to 1
         Map<String, Object> props = new HashMap<String, Object>();
@@ -533,7 +536,7 @@ public class MUUserResourceIT extends AbstractRestIT {
         organization.setProperties( props );
         setup.getMgmtSvc().updateOrganization( organization );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( "ed@anuff.com" );
 
@@ -555,7 +558,7 @@ public class MUUserResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         payload.put( "oldpassword", passwords[1] );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         payload.put( "newpassword", passwords[0] ); // fail
         try {
@@ -579,7 +582,7 @@ public class MUUserResourceIT extends AbstractRestIT {
         UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
         String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser( userInfo.getUuid(), 15000 );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         Form formData = new Form();
         formData.add( "token", resetToken );
@@ -590,7 +593,7 @@ public class MUUserResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
         assertTrue( html.contains( "password set" ) );
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         JsonNode node = mapper.readTree( resource().path( "/management/token" )
                 .queryParam( "grant_type", "password" )
@@ -606,7 +609,7 @@ public class MUUserResourceIT extends AbstractRestIT {
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                 .post( String.class, payload ));
 
-        reindex("test-organization","test-app");
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         node = mapper.readTree( resource().path( "/management/token" )
                 .queryParam( "grant_type", "password" )

@@ -304,16 +304,19 @@ public class EsEntityIndexImpl implements EntityIndex {
         // entityAsMap.put("created", entity.getId().getUuid().timestamp();
         // entityAsMap.put("updated", entity.getVersion().timestamp());
 
-        log.debug("Indexing entity: " + entityAsMap);
-
         String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
+
+        log.debug("Indexing entity id {} data {} ", indexId, entityAsMap);
 
         IndexRequestBuilder irb = client
             .prepareIndex( indexName, this.indexType, indexId)
-            .setSource(entityAsMap)
-            .setRefresh(refresh);
+            .setSource(entityAsMap);
 
         irb.execute().actionGet();
+
+        if ( refresh) {
+            refresh();
+        }
 
         //log.debug("Indexed Entity with index id " + indexId);
 
@@ -347,8 +350,11 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         String indexId = createIndexDocId( id, version ); 
         client.prepareDelete( indexName, indexType, indexId )
-            .setRefresh( refresh )
             .execute().actionGet();
+
+        if ( refresh) {
+            refresh();
+        }
 
         log.debug("Deindexed Entity with index id " + indexId);
     }
@@ -415,10 +421,17 @@ public class EsEntityIndexImpl implements EntityIndex {
             searchResponse = srb.execute().actionGet();
 
         } else {
-            log.debug("Executing query with cursor: {} ", query.getCursor());
+            String scrollId = query.getCursor();
+            if ( scrollId.startsWith("\"")) {
+                scrollId = scrollId.substring(1);
+            }
+            if ( scrollId.endsWith("\"")) {
+                scrollId = scrollId.substring(0, scrollId.length() - 1 );
+            }
+            log.debug("Executing query with cursor: {} ", scrollId);
 
             SearchScrollRequestBuilder ssrb = client
-                .prepareSearchScroll(query.getCursor())
+                .prepareSearchScroll(scrollId)
                 .setScroll( cursorTimeout + "m" );
             searchResponse = ssrb.execute().actionGet();
         }
@@ -515,9 +528,15 @@ public class EsEntityIndexImpl implements EntityIndex {
                 entityMap.put(field.getName(), entityToMap(eo)); // recursion
 
             } else if (f instanceof StringField) {
-                // index in lower case because Usergrid queries are case insensitive
-                entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
-                entityMap.put(field.getName() + ANALYZED_SUFFIX, field.getValue());
+
+                if ( field.getName().equals("username") || field.getName().equals("email") || field.getName().equals("path")) {
+                    entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase() );
+                    entityMap.put(field.getName() + ANALYZED_SUFFIX, ((String)field.getValue()).toLowerCase());
+                    
+                } else {
+                    entityMap.put(field.getName(), ((String) field.getValue()));
+                    entityMap.put(field.getName() + ANALYZED_SUFFIX, ((String) field.getValue()));
+                }
 
             } else if (f instanceof LocationField) {
                 LocationField locField = (LocationField) f;

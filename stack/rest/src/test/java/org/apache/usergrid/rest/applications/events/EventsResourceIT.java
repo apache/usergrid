@@ -59,6 +59,8 @@ public class EventsResourceIT extends AbstractRestIT {
         assertNotNull( node.get( "entities" ) );
         String advertising = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
 
+        refreshIndex("test-organization","test-app");
+
         payload = new LinkedHashMap<String, Object>();
         payload.put( "timestamp", 0 );
         payload.put( "category", "sales" );
@@ -67,13 +69,15 @@ public class EventsResourceIT extends AbstractRestIT {
                 put( "ad_sales", 20 );
             }
         } );
-
+        
         node = mapper.readTree( resource().path( "/test-organization/test-app/events" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                 .post( String.class, payload ));
 
         assertNotNull( node.get( "entities" ) );
         String sales = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
+
+        refreshIndex("test-organization","test-app");
 
         payload = new LinkedHashMap<String, Object>();
         payload.put( "timestamp", 0 );
@@ -90,6 +94,8 @@ public class EventsResourceIT extends AbstractRestIT {
 
         assertNotNull( node.get( "entities" ) );
         String marketing = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
+
+        refreshIndex("test-organization","test-app");
 
         String lastId = null;
 

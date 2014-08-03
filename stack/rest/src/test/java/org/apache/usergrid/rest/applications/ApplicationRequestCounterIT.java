@@ -61,6 +61,8 @@ public class ApplicationRequestCounterIT extends AbstractRestIT {
         String uuid = node.get( "application" ).asText();
         assertEquals( true, UUIDUtils.isUUID( uuid ) );
 
+        refreshIndex("test-organization", "test-app");
+
         UUID applicationId = UUID.fromString( uuid );
         EntityManagerFactory emf = setup.getEmf();
         EntityManager em = emf.getEntityManager( applicationId );

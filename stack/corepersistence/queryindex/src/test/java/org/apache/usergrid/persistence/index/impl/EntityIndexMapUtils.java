@@ -240,7 +240,6 @@ class EntityIndexMapUtils {
                 entityMap.put(field.getName(), toMap(eo)); // recursion
 
             } else if (f instanceof StringField) {
-                // index in lower case because Usergrid queries are case insensitive
                 entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
                 entityMap.put(field.getName() + ANALYZED_SUFFIX, field.getValue());
 

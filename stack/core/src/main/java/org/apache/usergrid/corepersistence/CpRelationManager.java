@@ -153,7 +153,7 @@ public class CpRelationManager implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
 
-    public static final String ALL_TYPES = "zzzalltypesnzzz";
+    public static final String ALL_TYPES = "zzzalltypeszzz";
 
     private static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
 
@@ -1390,12 +1390,12 @@ public class CpRelationManager implements RelationManager {
             }
         }
 
-        if ( query.isReversed() ) {
-
-            Query.SortPredicate newsp = new Query.SortPredicate( 
-                PROPERTY_CREATED, Query.SortDirection.DESCENDING );
-            query.addSort( newsp ); 
-        }
+//        if ( query.isReversed() ) {
+//
+//            Query.SortPredicate newsp = new Query.SortPredicate( 
+//                PROPERTY_CREATED, Query.SortDirection.DESCENDING );
+//            query.addSort( newsp ); 
+//        }
 
         // reverse chrono order by default
         if ( query.getSortPredicates().isEmpty() ) {
@@ -1535,8 +1535,9 @@ public class CpRelationManager implements RelationManager {
 //                }
 
                 if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
-                    logger.debug("Stale version uuid:{} type:{} version:{}", 
-                        new Object[] {cr.getId().getUuid(), cr.getId().getType(), cr.getVersion()});
+                    logger.debug("Stale version uuid:{} type:{} version:{} latest version:{}", 
+                        new Object[] {cr.getId().getUuid(), cr.getId().getType(), cr.getVersion(), 
+                            e.getVersion() });
                     continue;
                 }
 
@@ -1593,36 +1594,36 @@ public class CpRelationManager implements RelationManager {
         IndexUpdate indexUpdate = batchStartIndexUpdate( batch, entity, setName, elementValue, 
                 timestampUuid, true, true, removeFromSet, false );
 
-        // Update collections - Not needed because we index collections and connections via ES now
+        // Update collections 
 
-//        Map<String, Set<CollectionInfo>> containers =
-//                getDefaultSchema().getContainersIndexingDictionary( entity.getType(), setName );
-//
-//        if ( containers != null ) {
-//            Map<EntityRef, Set<String>> containerEntities = getContainers();
-//            for ( EntityRef containerEntity : containerEntities.keySet() ) {
-//                if ( containerEntity.getType().equals( TYPE_APPLICATION ) && Schema
-//                        .isAssociatedEntityType( entity.getType() ) ) {
-//                    logger.debug( "Extended properties for {} not indexed by application", 
-//                            entity.getType() );
-//                    continue;
-//                }
-//                Set<String> collectionNames = containerEntities.get( containerEntity );
-//                Set<CollectionInfo> collections = containers.get( containerEntity.getType() );
-//
-//                if ( collections != null ) {
-//
-//                    for ( CollectionInfo collection : collections ) {
-//                        if ( collectionNames.contains( collection.getName() ) ) {
-//                            batchUpdateCollectionIndex( 
-//                                    indexUpdate, containerEntity, collection.getName() );
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        batchUpdateBackwardConnectionsDictionaryIndexes( indexUpdate );
+        Map<String, Set<CollectionInfo>> containers =
+                getDefaultSchema().getContainersIndexingDictionary( entity.getType(), setName );
+
+        if ( containers != null ) {
+            Map<EntityRef, Set<String>> containerEntities = getContainers();
+            for ( EntityRef containerEntity : containerEntities.keySet() ) {
+                if ( containerEntity.getType().equals( TYPE_APPLICATION ) && Schema
+                        .isAssociatedEntityType( entity.getType() ) ) {
+                    logger.debug( "Extended properties for {} not indexed by application", 
+                            entity.getType() );
+                    continue;
+                }
+                Set<String> collectionNames = containerEntities.get( containerEntity );
+                Set<CollectionInfo> collections = containers.get( containerEntity.getType() );
+
+                if ( collections != null ) {
+
+                    for ( CollectionInfo collection : collections ) {
+                        if ( collectionNames.contains( collection.getName() ) ) {
+                            batchUpdateCollectionIndex( 
+                                    indexUpdate, containerEntity, collection.getName() );
+                        }
+                    }
+                }
+            }
+        }
+
+        batchUpdateBackwardConnectionsDictionaryIndexes( indexUpdate );
     }
 
     /**

@@ -238,8 +238,11 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
             logger.debug( "OrganizationFilter.authorize" );
 
             if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() ) ) {
+                logger.debug("No organization access authorized");
                 throw mappableSecurityException( "unauthorized", "No organization access authorized" );
             }
+
+            logger.debug( "OrganizationFilter.authorize - leaving" );
         }
     }
 

@@ -79,10 +79,14 @@ public class OwnershipResourceIT extends AbstractRestIT {
         // anonymous user
         context.clearUser();
 
-        TestUser user1 =
-                new TestAppUser( "testuser1@usergrid.org", "password", "testuser1@usergrid.org" ).create( context )
-                                                                                                 .login( context )
-                                                                                                 .makeActive( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
+
+        TestUser user1 = new TestAppUser( "testuser1@usergrid.org", "password", "testuser1@usergrid.org" ).create( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
+        user1.login( context );
+        user1.makeActive( context );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // create device 1 on user1 devices
         context.application().users().user( "me" ).devices()
@@ -90,15 +94,20 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         // anonymous user
         context.clearUser();
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // create device 2 on user 2
-        TestUser user2 =
-                new TestAppUser( "testuser2@usergrid.org", "password", "testuser2@usergrid.org" ).create( context )
-                                                                                                 .login( context )
-                                                                                                 .makeActive( context );
+        TestUser user2 = new TestAppUser( "testuser2@usergrid.org", "password", "testuser2@usergrid.org" ).create( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
+        user2.login( context );
+        user2.makeActive( context );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         context.application().users().user( "me" ).devices()
                .create( MapUtils.hashMap( "name", "device2" ).map( "number", "5552223333" ) );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // now query on user 1.
 
@@ -169,6 +178,8 @@ public class OwnershipResourceIT extends AbstractRestIT {
         // anonymous user
         context.clearUser();
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         TestUser user1 =
                 new TestAppUser( "testuser1@usergrid.org", "password", "testuser1@usergrid.org" ).create( context )
                                                                                                  .login( context )
@@ -182,7 +193,9 @@ public class OwnershipResourceIT extends AbstractRestIT {
         data = context.application().users().user( "me" ).connection( "likes" ).collection( "restaurants" )
                       .entity( "4peaks" ).post();
 
-        String peaksId = getEntity( data, 0 ).get( "uuid" ).asText();
+        refreshIndex(context.getOrgName(), context.getAppName());
+
+       String peaksId = getEntity( data, 0 ).get( "uuid" ).asText();
 
         // anonymous user
         context.clearUser();
@@ -193,11 +206,15 @@ public class OwnershipResourceIT extends AbstractRestIT {
                                                                                                  .login( context )
                                                                                                  .makeActive( context );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         data = context.application().collection( "restaurants" )
                       .create( MapUtils.hashMap( "name", "arrogantbutcher" ) );
 
         data = context.application().users().user( "me" ).connection( "likes" ).collection( "restaurants" )
                       .entity( "arrogantbutcher" ).post();
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         String arrogantButcherId = getEntity( data, 0 ).get( "uuid" ).asText();
 
@@ -206,6 +223,8 @@ public class OwnershipResourceIT extends AbstractRestIT {
         CustomCollection likeRestaurants =
                 context.withUser( user1 ).application().users().user( "me" ).connection( "likes" )
                        .collection( "restaurants" );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // check we can get it via id
         data = likeRestaurants.entity( peaksId ).get();
@@ -297,6 +316,8 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
         JsonNode city = context.application().collection( "cities" ).create( MapUtils.hashMap( "name", "tempe" ) );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         String cityId = getEntity( city, 0 ).get( "uuid" ).asText();
 

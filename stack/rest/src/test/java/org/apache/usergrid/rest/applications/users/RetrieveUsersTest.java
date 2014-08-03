@@ -59,6 +59,8 @@ public class RetrieveUsersTest extends AbstractRestIT {
         props.put( "username", "Bob" );
         users.create( props );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         String query = "select *";
         String incorrectQuery = "select * where username = 'Alica'";
 
@@ -74,6 +76,8 @@ public class RetrieveUsersTest extends AbstractRestIT {
         props.put( "username", "Nina" );
 
         JsonNode response = users.create( props );
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         JsonNode entity = response.get( "entities" ).get( 0 );
         JsonNode metadata = entity.get( "metadata" );
         JsonNode sets = metadata.get( "sets" );

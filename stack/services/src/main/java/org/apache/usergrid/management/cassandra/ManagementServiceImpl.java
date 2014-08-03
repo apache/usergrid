@@ -436,6 +436,7 @@ public class ManagementServiceImpl implements ManagementService {
     public OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
                                                              String email, String password ) throws Exception {
 
+        logger.debug("createOwnerAndOrganization1");
         boolean activated = !newAdminUsersNeedSysAdminApproval() && !newOrganizationsNeedSysAdminApproval();
         boolean disabled = newAdminUsersRequireConfirmation();
         // if we are active and enabled, skip the send email step
@@ -449,8 +450,9 @@ public class ManagementServiceImpl implements ManagementService {
     public OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
                                                              String email, String password, boolean activated,
                                                              boolean disabled ) throws Exception {
-        return createOwnerAndOrganization( organizationName, username, name, email, password, activated, disabled, null,
-                null );
+        logger.debug("createOwnerAndOrganization2");
+        return createOwnerAndOrganization( organizationName, username, name, email, password, 
+                activated, disabled, null, null );
     }
 
 
@@ -460,6 +462,8 @@ public class ManagementServiceImpl implements ManagementService {
                                                              boolean disabled, Map<String, Object> userProperties,
                                                              Map<String, Object> organizationProperties )
             throws Exception {
+
+        logger.debug("createOwnerAndOrganization3");
 
         /**
          * Only lock on the target values. We don't want lock contention if another
@@ -493,7 +497,8 @@ public class ManagementServiceImpl implements ManagementService {
             else {
                 user = createAdminUserInternal( username, name, email, password, activated, disabled, userProperties );
             }
-
+            
+            logger.debug("User created");
             organization = createOrganizationInternal( organizationName, user, true, organizationProperties );
         }
         finally {
@@ -508,16 +513,25 @@ public class ManagementServiceImpl implements ManagementService {
 
     private OrganizationInfo createOrganizationInternal( String organizationName, UserInfo user, boolean activated )
             throws Exception {
+        logger.debug("createOrganizationInternal1");
         return createOrganizationInternal( organizationName, user, activated, null );
     }
 
 
     private OrganizationInfo createOrganizationInternal( String organizationName, UserInfo user, boolean activated,
                                                          Map<String, Object> properties ) throws Exception {
-        if ( ( organizationName == null ) || ( user == null ) ) {
+
+        logger.info( "createOrganizationInternal2: {}", organizationName );
+
+        if (  organizationName == null ) {
+            logger.debug("organizationName = null");
             return null;
         }
-        logger.info( "createOrganizationInternal: {}", organizationName );
+        if ( user == null ) {
+            logger.debug("user = null");
+            return null;
+        }
+
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         Group organizationEntity = new Group();
@@ -536,13 +550,14 @@ public class ManagementServiceImpl implements ManagementService {
                 new OrganizationInfo( organizationEntity.getUuid(), organizationName, properties );
         updateOrganization( organization );
 
-        logger.info( "createOrganizationInternal: {}", organizationName );
         postOrganizationActivity( organization.getUuid(), user, "create", organizationEntity, "Organization",
                 organization.getName(),
                 "<a href=\"mailto:" + user.getEmail() + "\">" + user.getName() + " (" + user.getEmail()
                         + ")</a> created a new organization account named " + organizationName, null );
 
         startOrganizationActivationFlow( organization );
+
+        em.refreshIndex();
 
         return organization;
     }
@@ -552,9 +567,15 @@ public class ManagementServiceImpl implements ManagementService {
     public OrganizationInfo createOrganization( String organizationName, UserInfo user, boolean activated )
             throws Exception {
 
-        if ( ( organizationName == null ) || ( user == null ) ) {
+        if (  organizationName == null ) {
+            logger.debug("organizationName = null");
             return null;
         }
+        if ( user == null ) {
+            logger.debug("user = null");
+            return null;
+        }
+        
         Lock groupLock =
                 getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", PROPERTY_PATH );
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
@@ -852,6 +873,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo createAdminUser( String username, String name, String email, String password, boolean activated,
                                      boolean disabled, Map<String, Object> userProperties ) throws Exception {
+
         if ( !validateAdminInfo( username, name, email, password ) ) {
             return null;
         }
@@ -1205,6 +1227,8 @@ public class ManagementServiceImpl implements ManagementService {
         writeUserMongoPassword( smf.getManagementAppId(), user, encryptionService
                 .plainTextCredentials( mongoPassword( ( String ) user.getProperty( "username" ), newPassword ),
                         user.getUuid(), smf.getManagementAppId() ) );
+
+        em.refreshIndex();
     }
 
 
@@ -1247,6 +1271,8 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo verifyAdminUserPasswordCredentials( String name, String password ) throws Exception {
         UserInfo userInfo = null;
+
+        logger.debug("verifyAdminUserPasswordCredentials for {}/{}", name, password);
 
         User user = findUserEntity( smf.getManagementAppId(), name );
         if ( user == null ) {

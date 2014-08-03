@@ -90,6 +90,8 @@ public class ActivityResourceIT extends AbstractRestIT {
         client.postGroupActivity( GROUP, "POST", activityTitle, activityDesc, "testCategory", null, null, null, null,
                 null );
 
+        refreshIndex("test-organization", "test-app");
+
         Query results = client.queryActivityFeedForGroup( GROUP );
 
         ApiResponse response = results.getResponse();
@@ -126,6 +128,8 @@ public class ActivityResourceIT extends AbstractRestIT {
         String activityDesc = "testActivity" + UUIDUtils.newTimeUUID();
 
         client.postUserActivity( "POST", activityTitle, activityDesc, "testCategory", current, null, null, null, null );
+
+        refreshIndex("test-organization", "test-app");
 
         Query results = client.queryActivityFeedForUser( USER );
 
@@ -164,6 +168,8 @@ public class ActivityResourceIT extends AbstractRestIT {
         String activityDesc = "testActivity" + UUIDUtils.newTimeUUID();
 
         client.postActivity( "POST", activityTitle, activityDesc, "testCategory", current, null, null, null, null );
+
+        refreshIndex("test-organization", "test-app");
 
         Query results = client.queryActivity();
 

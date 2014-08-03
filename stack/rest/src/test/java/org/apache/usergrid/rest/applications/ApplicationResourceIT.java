@@ -59,6 +59,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         String clientId = setup.getMgmtSvc().getClientIdForOrganization( orgInfo.getUuid() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForOrganization( orgInfo.getUuid() );
 
+        refreshIndex("test-organization", "test-app");
+
         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "client_id", clientId )
                 .queryParam( "client_secret", clientSecret ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
@@ -73,6 +75,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( appInfo.getId() );
+
+        refreshIndex("test-organization", "test-app");
 
         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "client_id", clientId )
                 .queryParam( "client_secret", clientSecret ).accept( MediaType.APPLICATION_JSON )
@@ -91,6 +95,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         ApplicationInfo app = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
         String clientId = setup.getMgmtSvc().getClientIdForApplication( app.getId() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( app.getId() );
+
+        refreshIndex("test-organization", "test-app");
 
         JsonNode node = mapper.readTree( resource()
                 .path( "/test-organization/test-app" )
@@ -111,6 +117,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         ApplicationInfo app = setup.getMgmtSvc().getApplicationInfo("test-organization/test-app");
         String clientId = setup.getMgmtSvc().getClientIdForApplication( app.getId() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( app.getId() );
+
+        refreshIndex("test-organization", "test-app");
 
         JsonNode node = mapper.readTree( resource()
                 .path( "/test-organization/test-app" )
@@ -140,6 +148,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         assertNotNull( getEntity( node, 0 ) );
 
+        refreshIndex("test-organization", "test-app");
+
         payload = hashMap( "username", "applicationWithJsonCreds" ).map( "password", "applicationWithJsonCreds" )
                 .map( "grant_type", "password" );
 
@@ -164,6 +174,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         String clientId = setup.getMgmtSvc().getClientIdForOrganization( orgInfo.getUuid() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForOrganization( orgInfo.getUuid() );
 
+        refreshIndex("test-organization", "test-app");
+
         JsonNode node = mapper.readTree( resource().path( "/" + appInfo.getId() ).queryParam( "client_id", clientId )
                 .queryParam( "client_secret", clientSecret ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
@@ -184,6 +196,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
     public void test_GET_credentials_ok() throws IOException {
         String mgmtToken = adminToken();
 
+        refreshIndex("test-organization", "test-app");
+
         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/credentials" ).queryParam( "access_token", mgmtToken )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                         .get( String.class ));
@@ -195,6 +209,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
     @Test
     public void testResetAppCredentials() throws IOException {
         String mgmtToken = adminToken();
+
+        refreshIndex("test-organization", "test-app");
 
         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/credentials" ).queryParam( "access_token", mgmtToken )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
@@ -210,6 +226,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         Status status = null;
         JsonNode node = null;
+
+        refreshIndex("test-organization", "test-app");
 
         try {
             node = mapper.readTree( resource().path( "/test-organization/test-app" ).queryParam( "access_token", mgmtToken )
@@ -337,6 +355,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
     public void authorizationCodeWithWrongCredentials() throws Exception {
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
+
+        refreshIndex("test-organization", "test-app");
 
         Form payload = new Form();
         payload.add( "username", "wrong_user" );

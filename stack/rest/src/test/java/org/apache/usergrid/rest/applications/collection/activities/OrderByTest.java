@@ -66,6 +66,8 @@ public class OrderByTest extends AbstractRestIT {
             }
         }
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         String query = "select * where created > " + created;
         JsonNode node = activities.withQuery( query ).get();
         assertEquals( 10, node.get( "entities" ).size() );
@@ -94,6 +96,8 @@ public class OrderByTest extends AbstractRestIT {
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
         }
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         String query = "select * where created > " + 1 + " order by created desc";
 
@@ -136,6 +140,8 @@ public class OrderByTest extends AbstractRestIT {
             JsonNode activity = activities.create( props ).get( "entities" ).get( 0 );
             activites.add( activity );
         }
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         long lastCreated = activites.get( activites.size() - 1 ).get( "created" ).asLong();
 

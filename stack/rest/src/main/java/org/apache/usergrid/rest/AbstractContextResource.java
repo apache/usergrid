@@ -44,6 +44,9 @@ import net.tanesha.recaptcha.ReCaptchaFactory;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.removeEnd;
+import org.apache.usergrid.rest.management.ManagementResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public abstract class AbstractContextResource {
@@ -89,6 +92,8 @@ public abstract class AbstractContextResource {
     @Autowired
     protected TokenService tokens;
 
+    private static final Logger logger = LoggerFactory.getLogger( AbstractContextResource.class );
+
 
     public AbstractContextResource() {
     }
@@ -105,6 +110,7 @@ public abstract class AbstractContextResource {
 
 
     public <T extends AbstractContextResource> T getSubResource( Class<T> t ) {
+        logger.debug("getSubResource: " + t.getCanonicalName());
         T subResource = resourceContext.getResource( t );
         subResource.setParent( this );
         return subResource;

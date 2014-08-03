@@ -78,6 +78,8 @@ public class AssetResourceIT extends AbstractRestIT {
         byte[] foundData = IOUtils.toByteArray( is );
         assertEquals( 7979, foundData.length );
 
+        refreshIndex("test-organization", "test-app");
+
         node = mapper.readTree( resource().path( "/test-organization/test-app/assets/my/clean/path" )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON_TYPE )
                 .get( String.class ));
@@ -122,6 +124,8 @@ public class AssetResourceIT extends AbstractRestIT {
 
         byte[] foundData = IOUtils.toByteArray( is );
         assertEquals( 7979, foundData.length );
+
+        refreshIndex("test-organization", "test-app");
 
         // get data by name
         is = resource().path( "/test-organization/test-app/foos/assetname" ).queryParam( "access_token", access_token )

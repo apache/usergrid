@@ -57,6 +57,8 @@ public class BadGrammarQueryTest extends AbstractRestIT {
 
         JsonNode activity = things.create( props );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         String query = "select * where name != 'go'";
 
         ClientResponse.Status status = null;

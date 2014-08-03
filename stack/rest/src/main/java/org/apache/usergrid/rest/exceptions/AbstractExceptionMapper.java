@@ -71,6 +71,8 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
         if ( status >= 500 ) {
             // only log real errors as errors
             logger.error( e.getClass().getCanonicalName() + " Server Error (" + status + ")", e );
+        } else if ( logger.isDebugEnabled() ) {
+            logger.debug( e.getClass().getCanonicalName() + " Server Error (" + status + ")", e );
         }
         ApiResponse response = new ApiResponse();
         AuthErrorInfo authError = AuthErrorInfo.getForException( e );
@@ -94,6 +96,8 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
         if ( status >= 500 ) {
             // only log real errors as errors
             logger.error( "Server Error (" + status + "):\n" + jsonResponse );
+        } else if ( logger.isDebugEnabled() ) {
+            logger.debug( "Server Error (" + status + "):\n" + jsonResponse );
         }
         String callback = httpServletRequest.getParameter( "callback" );
         if ( isJSONP() && isNotBlank( callback ) ) {

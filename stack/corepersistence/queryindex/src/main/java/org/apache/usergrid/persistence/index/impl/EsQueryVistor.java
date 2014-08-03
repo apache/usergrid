@@ -126,18 +126,19 @@ public class EsQueryVistor implements QueryVisitor {
     public void visit( Equal op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         Object value = op.getLiteral().getValue();
+
         if ( value instanceof String ) {
             String svalue = (String)value;
 
             if ( svalue.indexOf("*") != -1 ) {
-                // for regex expression we need analuzed field, add suffix
-                name = addAnayzedSuffix( name );
-                stack.push( QueryBuilders.regexpQuery(name, svalue) );
+                // for wildcard expression we need analuzed field, add suffix
+                //name = addAnayzedSuffix( name );
+                stack.push( QueryBuilders.wildcardQuery(name, svalue) );
                 return;
             } 
 
             // for equal operation on string, need to use unanalyzed field, leave off the suffix
-            value = svalue.toLowerCase();
+            value = svalue; 
         } 
         stack.push( QueryBuilders.termQuery( name, value ));
     }

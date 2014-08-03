@@ -78,6 +78,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         assertNull( getError( node ) );
 
+        refreshIndex("test-organization", "test-app");
+
         adminAccessToken = mgmtToken( "test", newPassword );
 
         data.put( "oldpassword", newPassword );
@@ -137,6 +139,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         assertNull( getError( node ) );
 
+        refreshIndex("test-organization", "test-app");
+
         // log in with the new password
         String token = mgmtToken( "test", newPassword );
 
@@ -161,6 +165,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization( "crossOrgsNotViewable",
                 "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password" );
+
+        refreshIndex("test-organization", "test-app");
 
         // check that the test admin cannot access the new org info
 
@@ -242,6 +248,9 @@ public class ManagementResourceIT extends AbstractRestIT {
         for ( i = 0; i < 10; i++ ) {
             users1.add( "follower" + Integer.toString( i ) );
         }
+
+        refreshIndex("test-organization", "test-app");
+
         checkFeed( "leader1", users1 );
         //try with 11
         List<String> users2 = new ArrayList<String>();
@@ -335,9 +344,17 @@ public class ManagementResourceIT extends AbstractRestIT {
         logNode( appdata );
         appdata = getEntity( appdata, 0 );
 
+        refreshIndex("test-organization", "test-app");
+
         assertEquals( "test-organization/mgmt-org-app", appdata.get( "name" ).asText() );
+        assertNotNull(appdata.get( "metadata" ));
+        assertNotNull(appdata.get( "metadata" ).get( "collections" ));
+        assertNotNull(appdata.get( "metadata" ).get( "collections" ).get( "roles" ));
+        assertNotNull(appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "title" ));
         assertEquals( "Roles", appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "title" ).asText() );
         assertEquals( 3, appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "count" ).asInt() );
+
+        refreshIndex("test-organization", "test-app");
 
         // GET /applications/mgmt-org-app
         appdata = mapper.readTree( resource().path( "/management/orgs/" + orgInfo.getUuid() + "/applications/mgmt-org-app" )
@@ -412,6 +429,8 @@ public class ManagementResourceIT extends AbstractRestIT {
                          .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
                          .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, payload ));
 
+        refreshIndex("test-organization", "test-app");
+
         // ensure the organization property is included
         node = mapper.readTree( resource().path( "/management/token" ).queryParam( "access_token", token )
                          .accept( MediaType.APPLICATION_JSON ).get( String.class ));
@@ -469,7 +488,9 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         assertNotNull( token );
 
-        node = mapper.readTree( resource().path( "/management/me" ).queryParam( "access_token", token )
+        refreshIndex("test-organization", "test-app");
+
+       node = mapper.readTree( resource().path( "/management/me" ).queryParam( "access_token", token )
                          .accept( MediaType.APPLICATION_JSON ).get( String.class ));
         logNode( node );
     }
@@ -491,6 +512,8 @@ public class ManagementResourceIT extends AbstractRestIT {
         String token = node.get( "access_token" ).textValue();
 
         assertNotNull( token );
+
+        refreshIndex("test-organization", "test-app");
 
         node = mapper.readTree( resource().path( "/management/me" ).queryParam( "access_token", token )
                          .accept( MediaType.APPLICATION_JSON ).get( String.class ));
@@ -560,6 +583,8 @@ public class ManagementResourceIT extends AbstractRestIT {
         response = mapper.readTree( resource().path( "/management/users/test/revoketokens" ).queryParam( "access_token", superAdminToken() )
                           .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                           .post( String.class ));
+
+        refreshIndex("test-organization", "test-app");
 
         // the tokens shouldn't work
 

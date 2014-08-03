@@ -20,10 +20,9 @@ package org.apache.usergrid.rest.exceptions;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
-import org.apache.usergrid.persistence.exceptions.QueryTokenException;
-
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import org.apache.usergrid.persistence.index.exceptions.QueryTokenException;
 
 
 @Provider

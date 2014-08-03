@@ -101,7 +101,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         setupUsers();
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         LOG.info( "acquiring token" );
         access_token = userToken( "ed@anuff.com", "sesame" );
@@ -109,20 +109,26 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         loginClient();
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
     }
 
 
-    public void reindex( UUID appId ) {
-        resource().path( "/testreindex" )
+    public void refreshIndex( UUID appId ) {
+
+        LOG.debug("Refreshing index for appId {}", appId );
+
+        resource().path( "/refreshindex" )
             .queryParam( "app_id", appId.toString() )
             .accept( MediaType.APPLICATION_JSON )
             .post();
     }
 
 
-    public void reindex( String orgName, String appName ) {
-        resource().path( "/testreindex" )
+    public void refreshIndex( String orgName, String appName ) {
+
+        LOG.debug("Refreshing index for app {}/{}", orgName, appName );
+
+        resource().path( "/refreshindex" )
             .queryParam( "org_name", orgName )
             .queryParam( "app_name", appName )
             .accept( MediaType.APPLICATION_JSON )

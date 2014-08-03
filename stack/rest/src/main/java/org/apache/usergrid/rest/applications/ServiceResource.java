@@ -90,7 +90,7 @@ import static org.apache.usergrid.utils.JsonUtils.normalizeJsonTree;
 })
 public class ServiceResource extends AbstractContextResource {
 
-    private static final Logger LOG = LoggerFactory.getLogger( ServiceResource.class );
+    protected static final Logger LOG = LoggerFactory.getLogger( ServiceResource.class );
     private static final String FILE_FIELD_NAME = "file";
 
     @Autowired

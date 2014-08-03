@@ -71,6 +71,8 @@ public class BrowserCompatibilityTest extends AbstractRestIT {
         Map<String, String> entity = hashMap( "name", "thing1" );
         JsonNode response = things.create( entity );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         UUID entityId = getEntityId( response, 0 );
 
         assertNotNull( entityId );

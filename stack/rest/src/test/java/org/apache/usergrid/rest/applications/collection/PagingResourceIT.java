@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.applications.collection;
 
 
-import com.fasterxml.jackson.core.JsonParser;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -41,7 +40,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
-import org.codehaus.jackson.JsonFactory;
 
 
 /** Simple tests to test querying at the REST tier */
@@ -68,6 +66,8 @@ public class PagingResourceIT extends AbstractRestIT {
 
             created.add( entity );
         }
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // now page them all
         ApiResponse response = null;
@@ -106,6 +106,8 @@ public class PagingResourceIT extends AbstractRestIT {
 
             created.add( entity );
         }
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // now page them all
         ApiResponse response = null;
@@ -152,6 +154,7 @@ public class PagingResourceIT extends AbstractRestIT {
             created.add( entity );
         }
 
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         ApiResponse response;
         int deletePageSize = 10;
@@ -160,6 +163,8 @@ public class PagingResourceIT extends AbstractRestIT {
 
         for ( int i = 0; i < size / deletePageSize; i++ ) {
             response = parse( things.delete() );
+
+            refreshIndex(context.getOrgName(), context.getAppName());
 
             assertEquals( "Only 10 entities should have been deleted", 10, response.getEntityCount() );
         }
@@ -184,6 +189,8 @@ public class PagingResourceIT extends AbstractRestIT {
         Map<String, String> data = hashMap( "name", "thing1" );
         JsonNode response = things.create( data );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         JsonNode entity = getEntity( response, 0 );
 
         String uuid = entity.get( "uuid" ).asText();
@@ -204,6 +211,8 @@ public class PagingResourceIT extends AbstractRestIT {
         returnedEntity = getEntity( entityRequest.delete(), 0 );
 
         assertEquals( entity, returnedEntity );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // verify it's gone
         returnedEntity = getEntity( things.entity( uuid ).get(), 0 );
