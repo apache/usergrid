@@ -163,8 +163,7 @@ public class ImportServiceImpl implements ImportService {
         Import importUG = em.get(importRef,Import.class);
 
         try {
-            ConnectionRef test = em.createConnection(importUG,"includes",fileImport);
-            System.out.println();
+            em.createConnection(importUG,"includes",fileImport);
         }
         catch ( Exception e ) {
             logger.error(e.getMessage());
@@ -335,7 +334,7 @@ public class ImportServiceImpl implements ImportService {
             return;
         }
 
-        try {
+//        try {
 
             if (config.get("organizationId") == null) {
                 logger.error("No organization could be found");
@@ -378,18 +377,15 @@ public class ImportServiceImpl implements ImportService {
                 fileMetadata.put("files", value);
                 importUG.addProperties(fileMetadata);
                 em.update(importUG);
-
-                Results results = em.getConnectedEntities(importUG.getUuid(),"includes",null, Results.Level.ALL_PROPERTIES);
-                System.out.println();
             }
             return;
-        }
-        catch (Exception e) {
-            // the case where job will be retried i.e. resumed from the failed point
-            importUG.setErrorMessage(e.getMessage());
-            em.update(importUG);
-            throw e;
-        }
+//        }
+//        catch (Exception e) {
+//            // the case where job will be retried i.e. resumed from the failed point
+//            importUG.setErrorMessage(e.getMessage());
+//            em.update(importUG);
+//            throw e;
+//        }
     }
 
     /**
@@ -398,7 +394,7 @@ public class ImportServiceImpl implements ImportService {
     private void importCollectionFromOrgApp( UUID applicationUUID, final Map<String, Object> config,
                                              final JobExecution jobExecution, S3Import s3Import ) throws Exception {
 
-        //retrieves export entity
+        //retrieves import entity
         Import importUG = getImportEntity(jobExecution);
         ApplicationInfo application = managementService.getApplicationInfo(applicationUUID);
 
@@ -520,8 +516,6 @@ public class ImportServiceImpl implements ImportService {
 
         File file = new File(jobExecution.getJobData().getProperty("File").toString());
 
-        logger.error(file.getName());
-
         EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         rootEm.update(fileImport);
 
@@ -537,8 +531,6 @@ public class ImportServiceImpl implements ImportService {
                 logger.error(applicationName);
 
                 ApplicationInfo application = managementService.getApplicationInfo(applicationName);
-
-
 
                 JsonParser jp = getJsonParserForFile(file);
                 String lastUpdatedUUID = fileImport.getLastUpdatedUUID();
@@ -567,6 +559,8 @@ public class ImportServiceImpl implements ImportService {
                     while (jp.nextToken() != JsonToken.END_ARRAY) {
                         importEntityStuff(jp, em, rootEm, fileImport);
                     }
+                    //one file completed
+                    //TODO: update last updated UUID
                     jp.close();
                 }
                 catch (OrganizationNotFoundException e) {
@@ -581,13 +575,13 @@ public class ImportServiceImpl implements ImportService {
                     em.update(fileImport);
                     return;
                 }
-                catch (Exception e) {
-                    // the case where job will be retried i.e. resumed from the failed point
-                    fileImport.setErrorMessage(e.getMessage());
-                    em.update(fileImport);
-                    //TODO : check this.
-                    throw e;
-                }
+//                catch (Exception e) {
+//                    // the case where job will be retried i.e. resumed from the failed point
+//                    fileImport.setErrorMessage(e.getMessage());
+//                    em.update(fileImport);
+//                    //TODO : check this.
+//                    throw e;
+//                }
 
                 if(!fileImport.getState().equals("FAILED")) {
                     // mark file as completed
@@ -737,7 +731,7 @@ public class ImportServiceImpl implements ImportService {
                 rootEm.update(fileImport);
             }
             catch (Exception e) {
-                // skip illegal entity UUID and go to next one
+                // skip illegal entity and go to next one
                 fileImport.setErrorMessage(e.getMessage());
                 rootEm.update(fileImport);
             }

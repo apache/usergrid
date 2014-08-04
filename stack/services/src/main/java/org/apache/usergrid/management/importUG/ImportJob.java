@@ -60,16 +60,14 @@ public class ImportJob extends OnlyOnceJob {
         }
 
         jobExecution.heartbeat();
-        try {
+        //try {
             importService.doImport( jobExecution );
-        }
-        catch ( Exception e ) {
-            logger.error( "Import Service failed to complete job" );
-            logger.error(e.getMessage());
-            throw e;
-        }
-
-        logger.info( "executed ImportJob process completed" );
+        //}
+//        catch ( Exception e ) {
+//            logger.error("Import Service failed to complete job");
+//            logger.error(e.getMessage());
+//            throw e;
+//        }
     }
 
     @Override

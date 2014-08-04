@@ -66,16 +66,14 @@ public class FileImportJob extends OnlyOnceJob {
         }
 
         jobExecution.heartbeat();
-        try {
+        //try {
             importService.FileParser( jobExecution );
-        }
-        catch ( Exception e ) {
-            logger.error( " Import Service failed to complete file import job" );
-            logger.error(e.getMessage());
-            throw e;
-        }
-
-        logger.info( "executed FileImportJob process completed" );
+        //}
+//        catch ( Exception e ) {
+//            logger.error( " Import Service failed to complete file import job" );
+//            logger.error(e.getMessage());
+//            throw e;
+//        }
     }
 
     @Override
@@ -105,7 +103,5 @@ public class FileImportJob extends OnlyOnceJob {
         Import importUG = rootEm.get(importId, Import.class);
         importUG.setState(Import.State.FAILED);
         rootEm.update(importUG);
-
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 }
