@@ -1005,6 +1005,20 @@
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
                 "GroupName": {
+                    "Ref": "CassSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "RestSecurityGroup"
+                }
+            }
+        },
+        "AllowCassToRestOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
                     "Ref": "RestSecurityGroup"
                 },
                 "IpProtocol": "tcp",

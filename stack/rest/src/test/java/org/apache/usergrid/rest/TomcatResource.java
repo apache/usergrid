@@ -223,6 +223,7 @@ public class TomcatResource extends ExternalResource {
         pw.println("elasticsearch.port=" + esPort);
         pw.println("elasticsearch.cluster_name=test_cluster");
         pw.println("elasticsearch.index_prefix=usergrid");
+        pw.println("elasticsearch.force_refresh=false");
         
         pw.println("collections.keyspace=Usergrid_Applications");
         pw.println("collections.keyspace.strategy.options=replication_factor:1");
@@ -251,6 +252,7 @@ public class TomcatResource extends ExternalResource {
         pw.println("usergrid.recaptcha.public=");
         pw.println("usergrid.recaptcha.private=");
         pw.println("usergrid.sysadmin.email=");
+
         pw.println("usergrid.management.admin_users_require_confirmation=false");
         pw.println("usergrid.management.admin_users_require_activation=false");
         pw.println("usergrid.management.notify_admin_of_activation=false");
@@ -258,6 +260,7 @@ public class TomcatResource extends ExternalResource {
         pw.println("usergrid.management.organizations_require_activation=false");
         pw.println("usergrid.management.notify_sysadmin_of_new_organizations=false");
         pw.println("usergrid.management.notify_sysadmin_of_new_admin_users=false");
+
         pw.println("usergrid.setup-test-account=true");
         pw.println("usergrid.test-account.app=test-app");
         pw.println("usergrid.test-account.organization=test-organization");
