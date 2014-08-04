@@ -20,12 +20,13 @@ var bower = require('./bower.json');
 
 var distPath = 'dist/'+bower.name,
   coveragePath = 'dist-cov/'+bower.name,
-  libsFile = 'js/libs/usergrid-libs.min.js',
-  devFile = 'js/usergrid-dev.min.js',
+  libsFile = 'js/generated/usergrid-libs.min.js',
+  devFile = 'js/generated/usergrid-dev.js',
+  mainFile = 'js/generated/usergrid.min.js',
+  templateFile = 'js/generated-templates/templates.js',
   coverageDir = 'test/coverage/instrument/',
   coverageFile = 'test/coverage/instrument/js/usergrid-coverage.min.js',
-  mainFile = 'js/usergrid.min.js',
-  templateFile = 'js/templates.js',
+
   distName = bower.name,
   licenseHeader =' /**\n \
  Licensed to the Apache Software Foundation (ASF) under one\n \
@@ -64,7 +65,7 @@ module.exports = function (grunt) {
           beautify: false
         },
         files:{
-          'js/libs/usergrid-libs.min.js':[
+          'js/generated/usergrid-libs.min.js':[
             'js/libs/jquery/jquery-1.9.1.min.js',
             'js/libs/jquery/jquery-migrate-1.1.1.min.js',
             'js/libs/jquery/jquery.sparkline.min.js',
@@ -91,13 +92,12 @@ module.exports = function (grunt) {
           wrap: true
         },
         files: {
-          'js/usergrid-dev.min.js': [
+          'js/generated/usergrid-dev.js': [
             'js/app.js',
             'js/**/*.js',
             '!js/config.js',
             '!js/libs/**/*.js',
-            '!'+mainFile,
-            '!'+devFile
+            '!js/generated/*.js'
           ]
         }
       },
@@ -112,10 +112,10 @@ module.exports = function (grunt) {
           'test/coverage/instrument/js/usergrid-coverage.min.js': [
             coverageDir+'js/app.js',
             coverageDir+'js/**/*.js',
-            'js/templates.js',
+            'js/generated-templates/templates.js',
             '!'+coverageDir+'js/config.js',
             '!'+coverageDir+'js/libs/**/*.js',
-            '!'+coverageDir+''+mainFile,
+            '!'+coverageDir+'js/generated/*.js',
             '!'+coverageDir+'js/usergrid-coverage.min.js'
           ]
         }
@@ -139,7 +139,7 @@ module.exports = function (grunt) {
           beautify: false
         },
         files: {
-          'js/usergrid.min.js': [
+          'js/generated/usergrid.min.js': [
             devFile
           ]
         }
@@ -178,9 +178,8 @@ module.exports = function (grunt) {
         '!tests/',
         '!css/main.min.css',
         '!js/libs/',
-        '!js/*.min.js',
-        '!'+templateFile,
-        '!'+libsFile
+        '!js/generated/*.js',
+        '!js/generated-templates/*.js'
       ],
       tasks: ['build-dev']
     },
@@ -298,7 +297,7 @@ module.exports = function (grunt) {
       }
     },
     clean: {
-        build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile,'index.html','index-debug.html'],
+        build: ['dist/','dist-cov/','test/','js/generated/','js/*.min.js',templateFile,'index.html','index-debug.html'],
         coverage: ['reports/']
     },
     dom_munger: {

@@ -48,3 +48,9 @@ stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/q
 portal/js/templates.js
 
 /portal/dist/usergrid-portal.zip
+
+/portal/js/usergrid-dev.js
+
+/portal/js/generated/
+
+/portal/js/generated-templates/
