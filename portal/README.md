@@ -5,7 +5,7 @@ The admin portal source code is fully open source and forkable. You can easily e
 
 The admin portal source is in the Usergrid repo here:
 
-<https://github.com/usergrid/usergrid>
+<https://github.com/apache/incubator-usergrid/tree/master/portal>
 
 ##About the admin portal
 Use the admin portal for administrative operations, including:
@@ -24,7 +24,13 @@ If you are just running the portal:
 1. Install Node.js from http://nodejs.org/download/.
 2. From the root directory, run `./build.sh dev`.
 3. This will build and run a lightweight server. Naviate to http://localhost:3000
-4. If that doesn't work, in dist is a built copy and a file called rel-usergrid-portal.zip. Unzip and deploy to your favorite web server.
+
+If you are deploying the portal to a server:
+
+1. Install Node.js from http://nodejs.org/download/.
+2. From the root directory, run `./build.sh`.
+3. Check the /dist/usergrid-portal directory.  This will contain a built copy of the source code.
+4. Deploy the contents to your favorite web server.
 
 If you are developing:
 
