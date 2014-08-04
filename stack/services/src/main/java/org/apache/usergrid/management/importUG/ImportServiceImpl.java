@@ -39,6 +39,7 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import java.io.File;
 import java.io.IOException;
@@ -564,6 +565,9 @@ public class ImportServiceImpl implements ImportService {
 
         final Observable<EntityWrapper> observable = Observable.create(subscribe);
 
+        /**
+         * This is the action we want to perform for every UUID we receive
+         */
         final Action1<EntityWrapper> doWork = new Action1<EntityWrapper>() {
             @Override
             public void call(EntityWrapper jsonEntity){
@@ -571,18 +575,30 @@ public class ImportServiceImpl implements ImportService {
                             em.create(jsonEntity.entityUuid, jsonEntity.entityType, jsonEntity.properties);
                             em.getRef(jsonEntity.entityUuid);
 
+
+                    System.out.println(
+                            "Emitting UUID " + jsonEntity.entityUuid + " on thread " + Thread.currentThread()
+                                    .getName() );
+
                 }catch (Exception e) {
+                    System.out.println("something went wrong while creating this - " + e);
+
                 }
             }
 
         };
 
+
+        /**
+         * This is boilerplate glue code.  We have to follow this for the parallel operation.  In the "call"
+         * method we want to simply return the input observable + the chain of operations we want to invoke
+         */
         observable.parallel(new Func1<Observable<EntityWrapper>, Observable<EntityWrapper>>() {
             @Override
             public Observable< EntityWrapper> call(Observable<EntityWrapper> entityWrapperObservable) {
                 return entityWrapperObservable.doOnNext(doWork);
             }
-        });
+        }, Schedulers.io() ).toBlocking().last();
 
 
     }
@@ -681,15 +697,18 @@ public class ImportServiceImpl implements ImportService {
                             subscriber.onNext(entityWrapper);
                             ownerEntityRef = em.getRef(UUID.fromString(entityUuid));
                             //break;
+                            subscriber.onCompleted();
                         }
                     } catch (IllegalArgumentException e) {
                         // skip illegal entity UUID and go to next one
                         ((Map<String, Object>) fileNames.get(index)).put("Entity Creation Error", e.getMessage());
                         rootEm.update(importUG);
+                        subscriber.onError( e );
                     } catch (Exception e) {
                         // skip illegal entity UUID and go to next one
                         ((Map<String, Object>) fileNames.get(index)).put("Miscellaneous Error", e.getMessage());
                         rootEm.update(importUG);
+                        subscriber.onError( e );
                     }
                 }
 
@@ -705,6 +724,8 @@ public class ImportServiceImpl implements ImportService {
 
 
             } catch (Exception e) {
+                System.out.println("something went wrong in observable json parser - " + e);
+
 
             }
 
