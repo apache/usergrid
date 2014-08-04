@@ -512,8 +512,6 @@ public class ImportServiceImpl implements ImportService {
         // add properties to the import entity
         FileImport fileImport = getFileImportEntity(jobExecution);
 
-        fileImport.setState(FileImport.State.STARTED);
-
         File file = new File(jobExecution.getJobData().getProperty("File").toString());
 
         EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
@@ -525,6 +523,8 @@ public class ImportServiceImpl implements ImportService {
         if(!completed) {
 
             if (isValidJSON(file, rootEm, fileImport)) {
+
+                fileImport.setState(FileImport.State.STARTED);
 
                 String applicationName = file.getPath().split("\\.")[0];
 
@@ -556,11 +556,18 @@ public class ImportServiceImpl implements ImportService {
 
                 EntityManager em = emf.getEntityManager(application.getId());
                 try {
+
+                    String uuid=" ";
                     while (jp.nextToken() != JsonToken.END_ARRAY) {
-                        importEntityStuff(jp, em, rootEm, fileImport);
+                        uuid = importEntityStuff(jp, em, rootEm, fileImport);
                     }
+
                     //one file completed
                     //TODO: update last updated UUID
+                    if(!uuid.equals(" "))
+                    {
+                        fileImport.setLastUpdatedUUID(uuid);
+                    }
                     jp.close();
                 }
                 catch (OrganizationNotFoundException e) {
@@ -653,12 +660,12 @@ public class ImportServiceImpl implements ImportService {
      *
      * @param jp JsonPrser pointing to the beginning of the object.
      */
-    private void importEntityStuff( JsonParser jp, EntityManager em, EntityManager rootEm, FileImport fileImport) throws Exception {
+    private String importEntityStuff( JsonParser jp, EntityManager em, EntityManager rootEm, FileImport fileImport) throws Exception {
 
         Entity entity = null;
-        EntityRef ownerEntityRef=null;
-        String entityUuid="";
-        String entityType="";
+        EntityRef ownerEntityRef = null;
+        String entityUuid = "";
+        String entityType = "";
 
         // Go inside the value after getting the owner entity id.
         while (jp.nextToken() != JsonToken.END_OBJECT) {
@@ -693,7 +700,7 @@ public class ImportServiceImpl implements ImportService {
 
                         jp.nextToken();
 
-                        @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs(HashMap.class);
+                        Map<String, Object> dictionary = jp.readValueAs(HashMap.class);
 
                         em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
                     }
@@ -724,13 +731,11 @@ public class ImportServiceImpl implements ImportService {
                     entity = em.create(UUID.fromString(entityUuid), entityType, properties);
                     ownerEntityRef = em.getRef(UUID.fromString(entityUuid));
                 }
-            }
-            catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException e) {
                 // skip illegal entity UUID and go to next one
                 fileImport.setErrorMessage(e.getMessage());
                 rootEm.update(fileImport);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 // skip illegal entity and go to next one
                 fileImport.setErrorMessage(e.getMessage());
                 rootEm.update(fileImport);
@@ -738,14 +743,16 @@ public class ImportServiceImpl implements ImportService {
         }
 
         // update the last updated entity
-        if(entity != null) {
+        if (entity != null) {
             entityCount++;
-            if(entityCount == 1000) {
+            if (entityCount == 1000) {
                 fileImport.setLastUpdatedUUID(entityUuid);
                 rootEm.update(fileImport);
                 entityCount = 0;
             }
+            return entityUuid;
         }
+        return new String(" ");
     }
 }
 
