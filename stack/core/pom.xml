@@ -570,5 +570,16 @@
       <artifactId>metrics-graphite</artifactId>
       <version>${metrics.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-core</artifactId>
+      <version>${rx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-math</artifactId>
+      <version>${rx.version}</version>
+    </dependency>
   </dependencies>
 </project>

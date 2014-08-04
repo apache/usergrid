@@ -21,14 +21,14 @@ under the License.
 
 <head>
   <meta charset="utf-8">
-  <title>Apigee App Services</title>
+  <title>Usergrid Admin Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="">
   <meta name="author" content="">
 
   <link id="libScript" href="js/libs/bootstrap/custom/css/bootstrap.min.css" rel="stylesheet"/>
   <link id="libScript" rel="stylesheet" href="bower_components/intro.js/introjs.css">
-  <link id="libScript" href="css/dash.min.css" rel="stylesheet"/>
+  <link id="libScript" href="css/main.min.css" rel="stylesheet"/>
 
   <!--styles for jquery ui calendar component-->
   <link id="libScript" rel="stylesheet" type="text/css" href="js/libs/jqueryui/jquery-ui-1.8.9.custom.css"/>
@@ -52,8 +52,7 @@ under the License.
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="brand" href="#"><img src="img/logo.gif"/></a>
-      <div appswitcher ></div>
+      <a class="brand" href="#"><img src="img/logo.png"/></a>
 
 
       <div class="nav-collapse collapse"  ng-show="loaded">
@@ -63,9 +62,8 @@ under the License.
         </div>
         <div class="navbar-text pull-right" ng-if="activeUI">
           <span class="navbar-text" id="userEmail" >{{userEmail}}</span> |
-          <span ng-controller="LoginCtrl"><a id="logout-link" ng-click="logout()" title="logout"><i class="pictogram">&#59201</i></a></span> | 
+          <span ng-controller="LoginCtrl"><a id="logout-link" ng-click="logout()" title="logout"><i class="pictogram">&#59201</i></a></span> |
           <span ><a ng-click="profile()" title="profile"><i class="pictogram">&#59170</i></a></span> | <span ><a href="#!/organizations" title="organizations"><i class="pictogram">&#128362;</i></a></span>
-          <span><a href="archive/" target="_blank">Legacy Portal</a></span> |
         </div>
 
       </div>
@@ -112,12 +110,12 @@ under the License.
                       <li class="sdks span12">
                         <ul id="intro-9-sdks" class="pull-right">
                           <li class="title"><label>SDKs and Modules</label></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#ios"><i class="sdk-icon-ios"></i></a></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#android"><i class="sdk-icon-android"></i></a></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#javascript"><i class="sdk-icon-js"></i></a></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#nodejs"><i class="sdk-icon-node"></i></a></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#ruby"><i class="sdk-icon-ruby"></i></a></li>
-                          <li><a target="_blank" href="http://apigee.com/docs/usergrid/content/sdks-and-examples#c"><i class="sdk-icon-net"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-ios"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-android"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-js"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-node"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-ruby"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/incubator-usergrid/tree/master/sdks"><i class="sdk-icon-net"></i></a></li>
                         </ul>
                       </li>
                     </ul>
@@ -139,35 +137,19 @@ under the License.
 
         <footer>
           <hr>
-          <p class="pull-right">&copy; Apigee 2014</p>
+          <p class="pull-right">&copy; Apache Usergrid 2014</p>
         </footer>
       </div>
     </div>
   </div>
 </section>
-<script id="libScript" src="js/libs/usergrid-libs.min.js"></script>
+<script id="libScript" src="js/generated/usergrid-libs.min.js"></script>
 <script id="libScript" src="js/libs/bootstrap/custom/js/bootstrap.min.js"></script>
 <!--todo - remove this. temporarily including jquery ui for calendar in push-->
 <script id="libScript" src="js/libs/jqueryui/jquery.ui.timepicker.min.js" type="text/javascript"></script>
 <!-- In dev use: <script src="js/libs/angular-1.1.5.js"></script> -->
 <!--<script type="text/javascript" src="js/libs/angular-ui-ng-grid/ng-grid-2.0.2.debug.js"></script>-->
 <script src="config.js"></script>
-<script id="main-script" src="js/usergrid.min.js"></script>
-<script type="text/javascript">
-    //Google Analytics
-    var _gaq = _gaq || [];
-    //_gaq.push(['_setAccount', 'yours']);
-    try{
-        (function(document) {
-            if(!document){
-                return;
-            }
-            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-        })(document || null);
-    }catch(e){};
-    //End Google Analytics
-</script>
+<script id="main-script" src="js/generated/usergrid.min.js"></script>
 </body>
 </html>
