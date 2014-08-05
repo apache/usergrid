@@ -61,7 +61,7 @@ public class TomcatResource extends ExternalResource {
     private int cassPort;
     private boolean started = false;
     private Properties properties;
-    private boolean forkTomcat = false;
+    private boolean forkTomcat = true;
 
     private static AtomicInteger clientCount = new AtomicInteger(0);
 
@@ -77,7 +77,7 @@ public class TomcatResource extends ExternalResource {
 
         synchronized (mutex) {
 
-            if ( clientCount.decrementAndGet() == 0 ) {
+            if ( clientCount.decrementAndGet() == 0 && process != null ) {
                 log.info("Destroying Tomcat running on port " + port);
                 process.destroy();
                 started = false;
@@ -108,8 +108,6 @@ public class TomcatResource extends ExternalResource {
                 return;
             }
 
-            started = true;
-
             if ( forkTomcat ) {
                 process = startTomcatProcess();
             } else {
@@ -132,19 +130,23 @@ public class TomcatResource extends ExternalResource {
 
 
     private void waitForTomcat() throws RuntimeException {
+        String url = "http://localhost:" + port + "/status"; 
         int count = 0;
-        while (count++ < 60) {
+        while (count++ < 30) {
             try {
                 Thread.sleep(1000);
                 Client c = Client.create();
-                WebResource wr = c.resource("http://localhost:" + port + "/status");
+                WebResource wr = c.resource( url );
                 wr.get(String.class);
                 log.info("Tomcat is started.");
+                started = true;
                 break;
                 
             } catch (Exception e) {
-                log.info("Cannot connect: " + e.getMessage());
+                log.info("Cannot connect to url {} error: {}", url, e.getMessage());
             }
+        }
+        if ( !started ) {
             throw new RuntimeException("Tomcat process never started.");
         }
     }
@@ -163,9 +165,11 @@ public class TomcatResource extends ExternalResource {
             tomcat.addWebapp( "/", new File( getWebAppsPath() ).getAbsolutePath() );
 
             log.info("-----------------------------------------------------------------");
-            log.info("Starting Tomcat port {} dir {}", port, dataDir.getAbsolutePath());
+            log.info("Starting Tomcat embedded port {} dir {}", port, dataDir.getAbsolutePath());
             log.info("-----------------------------------------------------------------");
             tomcat.start();
+
+            waitForTomcat();
     }
 
 

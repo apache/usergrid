@@ -63,15 +63,6 @@ public class ITSetup extends ExternalResource {
     }
 
 
-    public ITSetup( CassandraResource cassandraResource, String webAppsPath ) {
-        this.cassandraResource = cassandraResource;
-        managementService = cassandraResource.getBean( ManagementService.class );
-        tomcatResource = TomcatResource.instance;
-        tomcatResource.setWebAppsPath(webAppsPath);
-        tomcatResource.setProperties( managementService.getProperties() );
-    }
-
-
     @Override
     protected void before() throws Throwable {
         synchronized ( cassandraResource ) {
