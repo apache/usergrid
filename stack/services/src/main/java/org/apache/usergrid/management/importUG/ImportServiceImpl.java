@@ -22,11 +22,8 @@ import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.entities.Import;
+        import org.apache.usergrid.persistence.*;
+        import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParseException;
@@ -628,6 +625,7 @@ public class ImportServiceImpl implements ImportService {
             this.ownerEntityRef = ownerEntityRef;
             this.connectionType = connectionType;
             this.entryRef = entryRef;
+
         }
 
         @Override
@@ -706,7 +704,7 @@ public class ImportServiceImpl implements ImportService {
                                 while (jp.nextToken() != JsonToken.END_ARRAY) {
                                     String entryId = jp.getText();
 
-                                    EntityRef entryRef = em.getRef(UUID.fromString(entryId));
+                                    EntityRef entryRef = new SimpleEntityRef(UUID.fromString(entityUuid));
                                     entityWrapper = new ConnectionEvent(ownerEntityRef, connectionType, entryRef);
                                     subscriber.onNext(entityWrapper);
                                     subscriber.onCompleted();
@@ -753,7 +751,8 @@ public class ImportServiceImpl implements ImportService {
                             }
                             entityWrapper = new EntityEvent(UUID.fromString(entityUuid), entityType, properties);
                             subscriber.onNext(entityWrapper);
-                            ownerEntityRef = em.getRef(UUID.fromString(entityUuid));
+                            ownerEntityRef = new SimpleEntityRef(entityType,UUID.fromString(entityUuid));
+                          //  ownerEntityRef = em.getRef(UUID.fromString(entityUuid));
                             subscriber.onCompleted();
                         }
                     } catch (IllegalArgumentException e) {
