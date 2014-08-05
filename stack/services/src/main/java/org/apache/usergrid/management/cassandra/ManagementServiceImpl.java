@@ -31,7 +31,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
@@ -75,7 +74,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-
 import static java.lang.Boolean.parseBoolean;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
@@ -1952,7 +1950,8 @@ public class ManagementServiceImpl implements ManagementService {
         return !Boolean.TRUE.equals( em.getProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "disabled" ) );
     }
 
-    protected String emailMsg( Map<String, String> values, String propertyName ) {
+
+    public String emailMsg( Map<String, String> values, String propertyName ) {
         return new StrSubstitutor( values ).replace( properties.getProperty( propertyName ) );
     }
 
@@ -2460,7 +2459,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    protected String buildUserAppUrl( UUID applicationId, String url, User user, String token ) throws Exception {
+    public String buildUserAppUrl( UUID applicationId, String url, User user, String token ) throws Exception {
         ApplicationInfo ai = getApplicationInfo( applicationId );
         OrganizationInfo oi = getOrganizationForApplication( applicationId );
         return String.format( url, oi.getName(), StringUtils.stringOrSubstringAfterFirst( ai.getName(), '/' ),

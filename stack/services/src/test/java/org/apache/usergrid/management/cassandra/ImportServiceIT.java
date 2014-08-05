@@ -109,9 +109,9 @@ public class ImportServiceIT {
         emTest.createConnection( emTest.getRef(entityTest[1].getUuid()), "related", emTest.getRef( entityTest[0].getUuid()));
     }
 
-    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+//    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if a collection file is imported correctly
-    //@Test
+    @Test
     public void testIntegrationImportCollection() throws Exception {
 
         // //creates 5 entities in user collection
@@ -177,7 +177,6 @@ public class ImportServiceIT {
             ;
         }
         try {
-
 
             //checks if temp import files are created i.e. downloaded from S3
             assertThat(importService.getEphemeralFile().size(), is(not(0)));
