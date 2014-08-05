@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.applications.users;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.UUID;
 
@@ -104,15 +105,19 @@ public class UserResource extends ServiceResource {
     @PUT
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
+    public JSONWithPadding executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> json = mapper.readValue( body, mapTypeReference );
+
         if ( json != null ) {
             json.remove( "password" );
             json.remove( "pin" );
         }
 
-        return super.executePut( ui, json, callback );
+        return super.executePutWithMap( ui, json, callback );
     }
 
 

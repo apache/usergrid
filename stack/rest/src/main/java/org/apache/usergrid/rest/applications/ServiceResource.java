@@ -17,6 +17,9 @@
 package org.apache.usergrid.rest.applications;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -64,11 +67,11 @@ import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.core.provider.EntityHolder;
 import com.sun.jersey.multipart.BodyPart;
 import com.sun.jersey.multipart.BodyPartEntity;
 import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataMultiPart;
+import java.io.IOException;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
@@ -92,6 +95,9 @@ public class ServiceResource extends AbstractContextResource {
 
     protected static final Logger LOG = LoggerFactory.getLogger( ServiceResource.class );
     private static final String FILE_FIELD_NAME = "file";
+
+    protected static TypeReference<Map<String, Object>> mapTypeReference = new TypeReference<Map<String, Object>>() {};
+    protected static TypeReference<List<Object>> listTypeReference = new TypeReference<List<Object>>() {};
 
     @Autowired
     private BinaryStore binaryStore;
@@ -323,16 +329,31 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
-    @POST
-    @RequireApplicationAccess
-    @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePost( @Context UriInfo ui, EntityHolder<Object> body,
-                                        @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    /**
+     * Next three new methods necessary to work around inexplicable problems with EntityHolder.
+     * This problem happens consistently when you deploy "two-dot-o" to Tomcat:
+     * https://groups.google.com/forum/#!topic/usergrid/yyAJdmsBfig
+     */
+    protected Object readJsonToObject( String content ) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree( content );
+        Object jsonObject;
+        if ( jsonNode.isArray() ) {
+            jsonObject = mapper.readValue( content, listTypeReference );
+        } else {
+            jsonObject = mapper.readValue( content, mapTypeReference );
+        }
+        return jsonObject;
+    }
 
-        LOG.debug( "ServiceResource.executePost" );
+    /**
+     * Necessary to work around inexplicable problems with EntityHolder.
+     * See above.
+     */
+    public JSONWithPadding executePostWithObject( @Context UriInfo ui, Object json, 
+            @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
-        Object json = body.getEntity();
+        LOG.debug( "ServiceResource.executePostWithMap" );
 
         ApiResponse response = createApiResponse();
 
@@ -349,14 +370,12 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
-    @PUT
-    @RequireApplicationAccess
-    @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
-                                       @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
-
-        LOG.debug( "ServiceResource.executePut" );
+    /**
+     * Necessary to work around inexplicable problems with EntityHolder.
+     * See above.
+     */
+    public JSONWithPadding executePutWithMap( @Context UriInfo ui, Map<String, Object> json,
+            @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "put" );
@@ -370,6 +389,53 @@ public class ServiceResource extends AbstractContextResource {
         executeServiceRequest( ui, response, ServiceAction.PUT, payload );
 
         return new JSONWithPadding( response, callback );
+    }
+
+
+    @POST
+    @RequireApplicationAccess
+    @Consumes(MediaType.APPLICATION_JSON)
+    public JSONWithPadding executePost( @Context UriInfo ui, String body, 
+            @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+
+        LOG.debug( "ServiceResource.executePost: body = " + body );
+
+        Object json;
+        if ( StringUtils.isEmpty( body ) ) {
+            json = null;
+        } else {
+            json = readJsonToObject( body );
+        }
+
+        ApiResponse response = createApiResponse();
+
+
+        response.setAction( "post" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
+
+        ServicePayload payload = getPayload( json );
+
+        executeServiceRequest( ui, response, ServiceAction.POST, payload );
+
+        return new JSONWithPadding( response, callback );
+    }
+
+
+
+    @PUT
+    @RequireApplicationAccess
+    @Consumes(MediaType.APPLICATION_JSON)
+    public JSONWithPadding executePut( @Context UriInfo ui, String body,
+                                       @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
+
+        LOG.debug( "ServiceResource.executePut" );
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> json = mapper.readValue( body, mapTypeReference );
+
+        return executePutWithMap(ui, json, callback);
     }
 
 
