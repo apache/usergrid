@@ -30,7 +30,17 @@ public interface Job {
      * @param execution The execution information.  This will be the same from the last run.  By default you should call
      * exeuction.start() once processing starts
      *
-     * @throws JobExecutionException If the job cannot be executed
+     * @throws Exception If the job cannot be executed
      */
     public void execute( JobExecution execution ) throws Exception;
+
+
+    /**
+     * Invoked when a job is marked as dead by the scheduler.  In some instances, jobs need to know
+     * this information to handle this case appropriately
+     *
+     * @param execution
+     * @throws Exception
+     */
+    public void dead(JobExecution execution) throws Exception;
 }

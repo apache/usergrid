@@ -60,7 +60,7 @@ You can also use the Usergrid Command Line (ugc) for terminal access to the User
 ## Contributing
 We welcome your enhancements!
 
-Like [Usergrid](https://github.com/apigee/usergrid-node-module), the admin portal is open source and licensed under the Apache License, Version 2.0.
+Like [Usergrid](http://usergrid.incubator.apache.org/), the admin portal is open source and licensed under the Apache License, Version 2.0.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)

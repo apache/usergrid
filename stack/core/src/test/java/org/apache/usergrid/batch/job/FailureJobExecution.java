@@ -31,17 +31,18 @@ import org.apache.usergrid.batch.JobExecution;
  *
  * @author tnine
  */
-@Component("countdownLatch")
+@Component("failureJobExceuction")
 @Ignore("Not a test")
-public class CountdownLatchJob implements Job {
+public class FailureJobExecution implements Job {
 
     private CountDownLatch latch = null;
+    private CountDownLatch deadLatch = null;
 
 
     /**
      *
      */
-    public CountdownLatchJob() {
+    public FailureJobExecution() {
     }
 
 
@@ -53,21 +54,34 @@ public class CountdownLatchJob implements Job {
     @Override
     public void execute( JobExecution execution ) throws Exception {
         latch.countDown();
+
+        throw new RuntimeException( "Job Failed" );
     }
 
 
     @Override
     public void dead( final JobExecution execution ) throws Exception {
-        //To change body of implemented methods use File | Settings | File Templates.
+        deadLatch.countDown();;
     }
 
 
-    public void setLatch( int size ) {
-        latch = new CountDownLatch( size );
+    public void setLatch( int calls ) {
+        latch = new CountDownLatch( calls );
+        deadLatch = new CountDownLatch( 1 );
     }
+
 
 
     public boolean waitForCount( long timeout, TimeUnit unit ) throws InterruptedException {
         return latch.await( timeout, unit );
+    }
+
+    public boolean waitForDead(long timeout, TimeUnit unit) throws InterruptedException {
+        return deadLatch.await( timeout, unit );
+    }
+
+
+    public long getLatchCount() {
+        return latch.getCount();
     }
 }

@@ -14,33 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//
-//  UGHTTPResult.m
-//  UGAPIApp
-//
-//  Created by Tim Burks on 4/3/13.
-//
-//
+package org.apache.usergrid.persistence;
 
-#import "UGHTTPResult.h"
+import java.util.Iterator;
 
-@implementation UGHTTPResult
-
-- (id) object {
-    if (!_object && !_error) {
-        NSError *error;
-        // NSLog(@"JSON %@", [[NSString alloc] initWithData:_data encoding:NSUTF8StringEncoding]);
-        _object = [NSJSONSerialization JSONObjectWithData:_data options:0 error:&error];
-        _error = error;
-        if (_error) {
-            NSLog(@"JSON ERROR: %@", [error description]);
-        }
-    }
-    return _object;
+/**
+ * Iterator to know if we have more records in cursor.
+ */
+public interface ResultsIterator extends Iterator {
+    /**
+     * is there a cursor
+     * @return
+     */
+    boolean hasPages();
 }
-
-- (NSString *) UTF8String {
-    return [[NSString alloc] initWithData:self.data encoding:NSUTF8StringEncoding];
-}
-
-@end

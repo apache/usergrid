@@ -29,6 +29,11 @@ dev) buildMain
 esac
 
 echo ####
-echo zip has been delivered to ./dist/
+echo The Admin Portal has been built and delivered to /dist
+echo deploy the contents directory to your webserver
+echo or run it now using the following command:
+echo grunt dev
+echo ###
+echo Happy Usergriding!
 
 

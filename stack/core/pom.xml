@@ -561,15 +561,25 @@
     </dependency>
 
     <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-core</artifactId>
-      <version>0.19.6</version>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>${metrics.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-graphite</artifactId>
+      <version>${metrics.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-core</artifactId>
+      <version>${rx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
       <artifactId>rxjava-math</artifactId>
-      <version>0.19.6</version>
+      <version>${rx.version}</v<version>  
     </dependency>
   </dependencies>
 </project>

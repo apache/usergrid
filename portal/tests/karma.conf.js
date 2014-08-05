@@ -8,9 +8,9 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'config.js',
-       'js/libs/usergrid-libs.min.js',
+       'js/generated/usergrid-libs.min.js',
        'js/libs/angular-1.2.5/angular-mocks.js',
-      'js/usergrid-dev.min.js',
+       'js/generated/usergrid-dev.js',
        'tests/unit/*.js'
     ],
 
