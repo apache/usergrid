@@ -704,7 +704,7 @@ public class ImportServiceImpl implements ImportService {
                                 while (jp.nextToken() != JsonToken.END_ARRAY) {
                                     String entryId = jp.getText();
 
-                                    EntityRef entryRef = new SimpleEntityRef(UUID.fromString(entityUuid));
+                                    EntityRef entryRef = new SimpleEntityRef(UUID.fromString(entryId));
                                     entityWrapper = new ConnectionEvent(ownerEntityRef, connectionType, entryRef);
                                     subscriber.onNext(entityWrapper);
                                     subscriber.onCompleted();
