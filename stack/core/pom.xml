@@ -579,7 +579,7 @@
     <dependency>
       <groupId>com.netflix.rxjava</groupId>
       <artifactId>rxjava-math</artifactId>
-      <version>${rx.version}</v<version>  
+      <version>${rx.version}</version>
     </dependency>
   </dependencies>
 </project>
