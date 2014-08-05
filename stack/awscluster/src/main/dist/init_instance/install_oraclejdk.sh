@@ -1,5 +1,4 @@
 #!/bin/bash
-pushd /tmp
 
 # 
 #  Licensed to the Apache Software Foundation (ASF) under one or more
@@ -19,6 +18,7 @@ pushd /tmp
 #  directory of this distribution.
 #
 
+pushd /tmp
 
 # Build environment for scripts
 . /etc/profile.d/aws-credentials.sh

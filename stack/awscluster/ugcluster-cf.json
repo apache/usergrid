@@ -1001,7 +1001,7 @@
                 }
             }
         },
-        "AllowCassToRestOnAllPorts": {
+        "AllowRestToCassOnAllPorts": {
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
                 "GroupName": {

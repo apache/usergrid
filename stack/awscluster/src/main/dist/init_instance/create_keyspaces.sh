@@ -20,9 +20,8 @@
 #Install keyspaces
 pushd /etc/apt/sources.list.d
 
-
-# Run the cassandra cql to create the keyspaces.  Note this only works for 
-# the us-east region for the replication factor on the keyspaces
+#Run the cassandra cql to create the keyspaces.  Note this only works for the
+# us-east region for the replication factor on the keyspaces
 
 cd /usr/share/usergrid/scripts
 FIRSTHOST="$(groovy get_first_instance.groovy cassandra)"

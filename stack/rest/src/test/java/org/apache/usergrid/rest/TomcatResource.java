@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.rest;
 
+import com.google.common.io.Files;
 import java.io.File;
 
 import org.junit.rules.ExternalResource;
@@ -35,6 +36,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.servlet.ServletException;
+import org.apache.catalina.LifecycleException;
+import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +61,7 @@ public class TomcatResource extends ExternalResource {
     private int cassPort;
     private boolean started = false;
     private Properties properties;
+    private boolean forkTomcat = false;
 
     private static AtomicInteger clientCount = new AtomicInteger(0);
 
@@ -83,7 +88,8 @@ public class TomcatResource extends ExternalResource {
 
         log.info("Leaving after");
     }
-        
+
+
     @Override
     protected void before() throws Throwable {
         log.info("Entering before");
@@ -104,26 +110,17 @@ public class TomcatResource extends ExternalResource {
 
             started = true;
 
-            port = AvailablePortFinder.getNextAvailable(9998 + RandomUtils.nextInt(10));
+            if ( forkTomcat ) {
+                process = startTomcatProcess();
+            } else {
+                startTomcatEmbedded();
+            }
 
-            String propDirPath = createPropDir();
-
-            createPropertyFiles( propDirPath );
-
-            process = startTomcatProcess( propDirPath );
-
-            waitForTomcat();
-
-            Runtime.getRuntime().addShutdownHook( new Thread() {
-                @Override
-                public void run() {
-                    after();
-                }
-            } );
         }
 
         log.info("Leaving before");
     }
+
 
     private String createPropDir() {
         String propDirName = "target" + File.separator + "tomcat_" + port;
@@ -132,6 +129,7 @@ public class TomcatResource extends ExternalResource {
         String propDirPath = newDir.getAbsolutePath();
         return propDirPath;
     }
+
 
     private void waitForTomcat() throws RuntimeException {
         int count = 0;
@@ -151,7 +149,33 @@ public class TomcatResource extends ExternalResource {
         }
     }
 
-    private Process startTomcatProcess( String propDirPath ) throws IOException {
+
+    private void startTomcatEmbedded() throws ServletException, LifecycleException {
+
+            File dataDir = Files.createTempDir();
+            dataDir.deleteOnExit();
+
+            port = AvailablePortFinder.getNextAvailable( 9998 + RandomUtils.nextInt(10)  );
+
+            Tomcat tomcat = new Tomcat();
+            tomcat.setBaseDir( dataDir.getAbsolutePath() );
+            tomcat.setPort( port );
+            tomcat.addWebapp( "/", new File( getWebAppsPath() ).getAbsolutePath() );
+
+            log.info("-----------------------------------------------------------------");
+            log.info("Starting Tomcat port {} dir {}", port, dataDir.getAbsolutePath());
+            log.info("-----------------------------------------------------------------");
+            tomcat.start();
+    }
+
+
+    private Process startTomcatProcess() throws IOException {
+
+        port = AvailablePortFinder.getNextAvailable(9998 + RandomUtils.nextInt(10));
+
+        String propDirPath = createPropDir();
+
+        createPropertyFilesForForkedTomcat( propDirPath );
 
         String javaHome = (String)System.getenv("JAVA_HOME");
 
@@ -205,10 +229,21 @@ public class TomcatResource extends ExternalResource {
             }
         }).start();
 
+
+        waitForTomcat();
+
+        Runtime.getRuntime().addShutdownHook( new Thread() {
+            @Override
+            public void run() {
+                after();
+            }
+        } );
+
         return p;
     }
 
-    private void createPropertyFiles( String propDirPath ) throws IOException {
+
+    private void createPropertyFilesForForkedTomcat( String propDirPath ) throws IOException {
 
         PrintWriter pw = new PrintWriter( 
             new FileWriter( propDirPath + File.separator + "usergrid-custom.properties"));
