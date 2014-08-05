@@ -509,6 +509,7 @@ public class ImportServiceImpl implements ImportService {
     public void FileParser(JobExecution jobExecution) throws Exception {
 
 
+
         // add properties to the import entity
         FileImport fileImport = getFileImportEntity(jobExecution);
 
@@ -519,6 +520,8 @@ public class ImportServiceImpl implements ImportService {
 
         boolean completed = fileImport.getCompleted();
 
+        logger.error("File parser called for " + file.getName());
+
         // on resume, completed files will not be traversed again
         if(!completed) {
 
@@ -528,14 +531,11 @@ public class ImportServiceImpl implements ImportService {
 
                 String applicationName = file.getPath().split("\\.")[0];
 
-                logger.error(applicationName);
-
                 ApplicationInfo application = managementService.getApplicationInfo(applicationName);
 
                 JsonParser jp = getJsonParserForFile(file);
                 String lastUpdatedUUID = fileImport.getLastUpdatedUUID();
 
-                logger.error(lastUpdatedUUID);
                 // this handles partially completed files by updating entities from the point of failure
                 if (!lastUpdatedUUID.equals(" ")) {
                     // go till the last updated entity
@@ -559,7 +559,7 @@ public class ImportServiceImpl implements ImportService {
 
                     String uuid=" ";
                     while (jp.nextToken() != JsonToken.END_ARRAY) {
-                        uuid = importEntityStuff(jp, em, rootEm, fileImport);
+                        uuid = importEntityStuff(jp, em, rootEm, fileImport, jobExecution);
                     }
 
                     //one file completed
@@ -591,6 +591,9 @@ public class ImportServiceImpl implements ImportService {
 //                }
 
                 if(!fileImport.getState().equals("FAILED")) {
+
+                    logger.error("File parsing completed called for " + file.getName());
+
                     // mark file as completed
                     fileImport.setCompleted(true);
                     fileImport.setState(FileImport.State.FINISHED);
@@ -660,7 +663,7 @@ public class ImportServiceImpl implements ImportService {
      *
      * @param jp JsonPrser pointing to the beginning of the object.
      */
-    private String importEntityStuff( JsonParser jp, EntityManager em, EntityManager rootEm, FileImport fileImport) throws Exception {
+    private String importEntityStuff( JsonParser jp, EntityManager em, EntityManager rootEm, FileImport fileImport,  JobExecution jobExecution) throws Exception {
 
         Entity entity = null;
         EntityRef ownerEntityRef = null;
@@ -745,6 +748,9 @@ public class ImportServiceImpl implements ImportService {
         // update the last updated entity
         if (entity != null) {
             entityCount++;
+            if( (entityCount%10) == 0) {
+                jobExecution.heartbeat();
+            }
             if (entityCount == 1000) {
                 fileImport.setLastUpdatedUUID(entityUuid);
                 rootEm.update(fileImport);

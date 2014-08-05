@@ -74,6 +74,7 @@ public class FileImportJob extends OnlyOnceJob {
 //            logger.error(e.getMessage());
 //            throw e;
 //        }
+        logger.error("File Import Service completed job");
     }
 
     @Override

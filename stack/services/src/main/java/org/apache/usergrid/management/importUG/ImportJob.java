@@ -68,6 +68,7 @@ public class ImportJob extends OnlyOnceJob {
 //            logger.error(e.getMessage());
 //            throw e;
 //        }
+        logger.error("Import Service completed job");
     }
 
     @Override
