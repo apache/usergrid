@@ -544,16 +544,6 @@ public class ImportServiceImpl implements ImportService {
     }
 
 
- private static class EntityWrapper{
-     UUID entityUuid;
-     String entityType;
-     Map<String, Object> properties;
-     EntityWrapper(UUID entityUuid, String entityType,Map<String, Object> properties){
-         this.entityUuid = entityUuid;
-         this.entityType = entityType;
-         this.properties = properties;
-     }
- }
     /**
      * Imports the entity's connecting references (collections, connections and dictionaries)
      *
@@ -563,28 +553,30 @@ public class ImportServiceImpl implements ImportService {
 
         final JsonParserObservable subscribe = new JsonParserObservable(jp,em,rootEm,importUG, index);
 
-        final Observable<EntityWrapper> observable = Observable.create(subscribe);
+        final Observable<WriteEvent> observable = Observable.create(subscribe);
 
         /**
          * This is the action we want to perform for every UUID we receive
          */
-        final Action1<EntityWrapper> doWork = new Action1<EntityWrapper>() {
+        final Action1<WriteEvent> doWork = new Action1<WriteEvent>() {
             @Override
-            public void call(EntityWrapper jsonEntity){
-                try {
-                            em.create(jsonEntity.entityUuid, jsonEntity.entityType, jsonEntity.properties);
-                            em.getRef(jsonEntity.entityUuid);
-
-
-                    System.out.println(
-                            "Emitting UUID " + jsonEntity.entityUuid + " on thread " + Thread.currentThread()
-                                    .getName() );
-
-                }catch (Exception e) {
-                    System.out.println("something went wrong while creating this - " + e);
-
-                }
+            public void call(WriteEvent writeEvent) {
+                writeEvent.doWrite(em);
             }
+//            @Override
+//            public void call(EntityWrapper jsonEntity){
+//                try {
+//                            em.create(jsonEntity.entityUuid, jsonEntity.entityType, jsonEntity.properties);
+//                            em.getRef(jsonEntity.entityUuid);
+//
+//
+//                    System.out.println("Emitting UUID " + jsonEntity.entityUuid + " on thread " + Thread.currentThread().getName() );
+//
+//                }catch (Exception e) {
+//                    System.out.println("something went wrong while creating this - " + e);
+//
+//                }
+//            }
 
         };
 
@@ -593,9 +585,9 @@ public class ImportServiceImpl implements ImportService {
          * This is boilerplate glue code.  We have to follow this for the parallel operation.  In the "call"
          * method we want to simply return the input observable + the chain of operations we want to invoke
          */
-        observable.parallel(new Func1<Observable<EntityWrapper>, Observable<EntityWrapper>>() {
+        observable.parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
-            public Observable< EntityWrapper> call(Observable<EntityWrapper> entityWrapperObservable) {
+            public Observable< WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
                 return entityWrapperObservable.doOnNext(doWork);
             }
         }, Schedulers.io() ).toBlocking().last();
@@ -603,14 +595,82 @@ public class ImportServiceImpl implements ImportService {
 
     }
 
+    private interface WriteEvent{
+        public void doWrite(EntityManager em);
+    }
 
-    private static final class JsonParserObservable implements Observable.OnSubscribe<EntityWrapper> {
+    private final class EntityEvent implements WriteEvent{
+        UUID entityUuid;
+        String entityType;
+        Map<String, Object> properties;
+        EntityEvent(UUID entityUuid, String entityType,Map<String, Object> properties){
+            this.entityUuid = entityUuid;
+            this.entityType = entityType;
+            this.properties = properties;
+        }
+        @Override
+        public void doWrite(EntityManager em) {
+            try {
+                em.create(entityUuid, entityType, properties);
+                em.getRef(entityUuid);
+                System.out.println("Emitting UUID " + entityUuid + " on thread " + Thread.currentThread().getName() );
+                }catch (Exception e) {
+                    System.out.println("something went wrong while creating this - " + e);
+                }
+        }
+    }
+    private final class ConnectionEvent implements WriteEvent{
+        EntityRef ownerEntityRef;
+        String connectionType;
+        EntityRef entryRef;
+
+        ConnectionEvent(EntityRef ownerEntityRef, String connectionType, EntityRef entryRef){
+            this.ownerEntityRef = ownerEntityRef;
+            this.connectionType = connectionType;
+            this.entryRef = entryRef;
+        }
+
+        @Override
+        public void doWrite(EntityManager em) {
+            try {
+                em.createConnection(ownerEntityRef, connectionType, entryRef);
+                System.out.println("creating connection " + connectionType + " on thread " + Thread.currentThread().getName() );
+            }catch (Exception e) {
+                System.out.println("something went wrong while creating this - " + e);
+            }
+        }
+    }
+    private final class DictionaryEvent implements WriteEvent{
+
+        EntityRef ownerEntityRef;
+        String dictionaryName;
+        Map<String, Object> dictionary;
+
+        DictionaryEvent(EntityRef ownerEntityRef, String dictionaryName, Map<String, Object> dictionary){
+            this.ownerEntityRef = ownerEntityRef;
+            this.dictionaryName = dictionaryName;
+            this.dictionary = dictionary;
+        }
+
+        @Override
+        public void doWrite(EntityManager em) {
+            try {
+                em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
+                System.out.println("creating dictionary  " + dictionaryName + " on thread " + Thread.currentThread().getName() );
+            }catch (Exception e) {
+                System.out.println("something went wrong while creating this - " + e);
+            }
+        }
+    }
+
+
+
+    private final class JsonParserObservable implements Observable.OnSubscribe<WriteEvent> {
         private final JsonParser jp;
         EntityManager em;
         EntityManager rootEm;
         Import importUG;
         int index;
-
 
         private int entityCount = 0;
 
@@ -623,21 +683,17 @@ public class ImportServiceImpl implements ImportService {
         }
 
         @Override
-        public void call(final Subscriber<? super EntityWrapper> subscriber) {
+        public void call(final Subscriber<? super WriteEvent> subscriber) {
             ArrayList fileNames = (ArrayList) importUG.getDynamicProperties().get("files");
 
-            EntityWrapper entityWrapper = null;
-            // while(entityWrapper != null && jp.nextToken() != JsonToken.END_OBJECT) {
+            WriteEvent entityWrapper = null;
             Entity entity = null;
             EntityRef ownerEntityRef = null;
             String entityUuid = "";
             String entityType = "";
             try {
-                //JsonToken token = jp.nextToken();
                 while (!subscriber.isUnsubscribed() && jp.nextToken() != JsonToken.END_OBJECT) {
-
                     String collectionName = jp.getCurrentName();
-
                     try {
                         // create the connections
                         if (collectionName.equals("connections")) {
@@ -651,8 +707,9 @@ public class ImportServiceImpl implements ImportService {
                                     String entryId = jp.getText();
 
                                     EntityRef entryRef = em.getRef(UUID.fromString(entryId));
-                                    // Store in DB
-                                    em.createConnection(ownerEntityRef, connectionType, entryRef);
+                                    entityWrapper = new ConnectionEvent(ownerEntityRef, connectionType, entryRef);
+                                    subscriber.onNext(entityWrapper);
+                                    subscriber.onCompleted();
                                 }
                             }
                         }
@@ -667,8 +724,9 @@ public class ImportServiceImpl implements ImportService {
                                 jp.nextToken();
 
                                 @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs(HashMap.class);
-
-                                em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
+                                entityWrapper = new DictionaryEvent(ownerEntityRef, dictionaryName, dictionary);
+                                subscriber.onNext(entityWrapper);
+                                subscriber.onCompleted();
                             }
                         } else {
                             // Regular collections
@@ -693,10 +751,9 @@ public class ImportServiceImpl implements ImportService {
                                 }
                                 token = jp.nextToken();
                             }
-                            entityWrapper = new EntityWrapper(UUID.fromString(entityUuid), entityType, properties);
+                            entityWrapper = new EntityEvent(UUID.fromString(entityUuid), entityType, properties);
                             subscriber.onNext(entityWrapper);
                             ownerEntityRef = em.getRef(UUID.fromString(entityUuid));
-                            //break;
                             subscriber.onCompleted();
                         }
                     } catch (IllegalArgumentException e) {
