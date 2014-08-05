@@ -60,14 +60,7 @@ public class ImportJob extends OnlyOnceJob {
         }
 
         jobExecution.heartbeat();
-        //try {
-            importService.doImport( jobExecution );
-        //}
-//        catch ( Exception e ) {
-//            logger.error("Import Service failed to complete job");
-//            logger.error(e.getMessage());
-//            throw e;
-//        }
+        importService.doImport( jobExecution );
         logger.error("Import Service completed job");
     }
 
@@ -89,6 +82,5 @@ public class ImportJob extends OnlyOnceJob {
         importUG.setErrorMessage("The Job has been tried maximum times but still failed");
         importUG.setState(Import.State.FAILED);
         rootEm.update(importUG);
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 }

@@ -66,14 +66,7 @@ public class FileImportJob extends OnlyOnceJob {
         }
 
         jobExecution.heartbeat();
-        //try {
-            importService.FileParser( jobExecution );
-        //}
-//        catch ( Exception e ) {
-//            logger.error( " Import Service failed to complete file import job" );
-//            logger.error(e.getMessage());
-//            throw e;
-//        }
+        importService.FileParser( jobExecution );
         logger.error("File Import Service completed job");
     }
 

@@ -68,8 +68,7 @@ public class ImportServiceImpl implements ImportService {
     private JsonFactory jsonFactory = new JsonFactory();
 
     private int entityCount=0;
-    private File file;
-    private EntityRef importRef;
+
 
     /**
      *
@@ -79,8 +78,6 @@ public class ImportServiceImpl implements ImportService {
      */
     @Override
     public UUID schedule(Map<String, Object> config) throws Exception {
-
-        ApplicationInfo defaultImportApp = null;
 
         if ( config == null ) {
             logger.error( "import information cannot be null" );
@@ -156,7 +153,7 @@ public class ImportServiceImpl implements ImportService {
         fileImport.setFileName(file);
         fileImport.setCompleted(false);
         fileImport.setLastUpdatedUUID(" ");
-        fileImport.setErrorMessage("");
+        fileImport.setErrorMessage(" ");
         fileImport.setState(FileImport.State.CREATED);
         fileImport = em.create(fileImport);
 
@@ -319,6 +316,7 @@ public class ImportServiceImpl implements ImportService {
         //update the entity state to show that the job has officially started.
         importUG.setState(Import.State.STARTED);
         importUG.setStarted(System.currentTimeMillis());
+        importUG.setErrorMessage(" ");
         em.update(importUG);
         try {
             if (s3PlaceHolder != null) {
@@ -334,58 +332,50 @@ public class ImportServiceImpl implements ImportService {
             return;
         }
 
-//        try {
 
-            if (config.get("organizationId") == null) {
-                logger.error("No organization could be found");
-                importUG.setErrorMessage("No organization could be found");
-                importUG.setState(Import.State.FAILED);
-                em.update(importUG);
-                return;
-            } else if (config.get("applicationId") == null) {
-                //import All the applications from an organization
-                importApplicationsFromOrg((UUID) config.get("organizationId"), config, jobExecution, s3Import);
-            } else if (config.get("collectionName") == null) {
-                //imports an Application from a single organization
-                importApplicationFromOrg((UUID) config.get("organizationId"), (UUID) config.get("applicationId"), config, jobExecution, s3Import);
-            } else {
-                //imports a single collection from an app org combo
-                importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution, s3Import);
-            }
-
-            if(files.size() == 0)
-            {
-                importUG.setState(Import.State.FINISHED);
-                importUG.setErrorMessage("no files found in the bucket with the relevant context");
-                em.update(importUG);
-            }
-            else
-            {
-                Map<String,Object> fileMetadata = new HashMap<String, Object>();
-
-                ArrayList<Map<String,Object>> value = new ArrayList<Map<String, Object>>();
-
-                for(File eachfile: files) {
-
-                    UUID jobID = scheduleFile(eachfile.getPath(), em.getRef(importId));
-                    Map<String,Object> fileJobID = new HashMap<String,Object>();
-                    fileJobID.put("FileName",eachfile.getName());
-                    fileJobID.put("JobID", jobID.toString());
-                    value.add(fileJobID);
-                }
-
-                fileMetadata.put("files", value);
-                importUG.addProperties(fileMetadata);
-                em.update(importUG);
-            }
+        if (config.get("organizationId") == null) {
+            logger.error("No organization could be found");
+            importUG.setErrorMessage("No organization could be found");
+            importUG.setState(Import.State.FAILED);
+            em.update(importUG);
             return;
-//        }
-//        catch (Exception e) {
-//            // the case where job will be retried i.e. resumed from the failed point
-//            importUG.setErrorMessage(e.getMessage());
-//            em.update(importUG);
-//            throw e;
-//        }
+        } else if (config.get("applicationId") == null) {
+            //import All the applications from an organization
+            importApplicationsFromOrg((UUID) config.get("organizationId"), config, jobExecution, s3Import);
+        } else if (config.get("collectionName") == null) {
+            //imports an Application from a single organization
+            importApplicationFromOrg((UUID) config.get("organizationId"), (UUID) config.get("applicationId"), config, jobExecution, s3Import);
+        } else {
+            //imports a single collection from an app org combo
+            importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution, s3Import);
+        }
+
+        if(files.size() == 0)
+        {
+            importUG.setState(Import.State.FINISHED);
+            importUG.setErrorMessage("no files found in the bucket with the relevant context");
+            em.update(importUG);
+        }
+        else
+        {
+            Map<String,Object> fileMetadata = new HashMap<String, Object>();
+
+            ArrayList<Map<String,Object>> value = new ArrayList<Map<String, Object>>();
+
+            for(File eachfile: files) {
+
+                UUID jobID = scheduleFile(eachfile.getPath(), em.getRef(importId));
+                Map<String,Object> fileJobID = new HashMap<String,Object>();
+                fileJobID.put("FileName",eachfile.getName());
+                fileJobID.put("JobID", jobID.toString());
+                value.add(fileJobID);
+            }
+
+            fileMetadata.put("files", value);
+            importUG.addProperties(fileMetadata);
+            em.update(importUG);
+        }
+        return;
     }
 
     /**
@@ -520,14 +510,13 @@ public class ImportServiceImpl implements ImportService {
 
         boolean completed = fileImport.getCompleted();
 
-        logger.error("File parser called for " + file.getName());
-
         // on resume, completed files will not be traversed again
         if(!completed) {
 
             if (isValidJSON(file, rootEm, fileImport)) {
 
                 fileImport.setState(FileImport.State.STARTED);
+                rootEm.update(fileImport);
 
                 String applicationName = file.getPath().split("\\.")[0];
 
@@ -561,38 +550,27 @@ public class ImportServiceImpl implements ImportService {
                     while (jp.nextToken() != JsonToken.END_ARRAY) {
                         uuid = importEntityStuff(jp, em, rootEm, fileImport, jobExecution);
                     }
-
-                    //one file completed
-                    //TODO: update last updated UUID
                     if(!uuid.equals(" "))
                     {
                         fileImport.setLastUpdatedUUID(uuid);
+                        rootEm.update(fileImport);
                     }
                     jp.close();
                 }
                 catch (OrganizationNotFoundException e) {
                     fileImport.setErrorMessage(e.getMessage());
                     fileImport.setState(FileImport.State.FINISHED);
-                    em.update(fileImport);
+                    rootEm.update(fileImport);
                     return;
                 }
                 catch (ApplicationNotFoundException e) {
                     fileImport.setErrorMessage(e.getMessage());
                     fileImport.setState(FileImport.State.FINISHED);
-                    em.update(fileImport);
+                    rootEm.update(fileImport);
                     return;
                 }
-//                catch (Exception e) {
-//                    // the case where job will be retried i.e. resumed from the failed point
-//                    fileImport.setErrorMessage(e.getMessage());
-//                    em.update(fileImport);
-//                    //TODO : check this.
-//                    throw e;
-//                }
 
                 if(!fileImport.getState().equals("FAILED")) {
-
-                    logger.error("File parsing completed called for " + file.getName());
 
                     // mark file as completed
                     fileImport.setCompleted(true);
@@ -600,31 +578,27 @@ public class ImportServiceImpl implements ImportService {
                     rootEm.update(fileImport);
 
                     //check other files status and mark the status of import Job.
-                    //TODO: need to fix this
-                    Results ImportJobResults = em.getConnectingEntities(fileImport.getUuid(), "includes", null, Results.Level.ALL_PROPERTIES);
+                    Results ImportJobResults = rootEm.getConnectingEntities(fileImport.getUuid(), "includes", null, Results.Level.ALL_PROPERTIES);
                     List<Entity> importEntity = ImportJobResults.getEntities();
                     UUID importId = importEntity.get(0).getUuid();
                     Import importUG = rootEm.get(importId, Import.class);
 
-                    Results entities = em.getConnectedEntities(importId,"includes",null,Results.Level.ALL_PROPERTIES);
-
-                    Iterator<Entity> resultIterator = entities.iterator();
+                    Results entities = rootEm.getConnectedEntities(importId,"includes",null,Results.Level.ALL_PROPERTIES);
+                    List<Entity> importFile = entities.getEntities();
 
                     int count = 0;
-                    while (resultIterator.hasNext()){
-
-                        Entity eachEntity = resultIterator.next();
-                        FileImport fi = em.get(eachEntity.getUuid(),FileImport.class);
-                        if(fi.getState().equals("FINISHED")) {
+                    for(Entity eachEntity: importFile) {
+                        FileImport fi = rootEm.get(eachEntity.getUuid(),FileImport.class);
+                        if(fi.getState().toString().equals("FINISHED")) {
                             count++;
                         }
-                        else if(fi.getState().equals("FAILED")) {
+                        else if(fi.getState().toString().equals("FAILED")) {
                             importUG.setState(Import.State.FAILED);
                             rootEm.update(importUG);
                             break;
                         }
                     }
-                    if(count == entities.size()) {
+                    if(count == importFile.size()) {
                         importUG.setState(Import.State.FINISHED);
                         rootEm.update(importUG);
                     }
@@ -753,7 +727,7 @@ public class ImportServiceImpl implements ImportService {
             }
             if (entityCount == 1000) {
                 fileImport.setLastUpdatedUUID(entityUuid);
-                rootEm.update(fileImport);
+                rootEm.update(fileIsmport);
                 entityCount = 0;
             }
             return entityUuid;
