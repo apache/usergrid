@@ -560,20 +560,6 @@ public class ImportServiceImpl implements ImportService {
             public void call(WriteEvent writeEvent) {
                 writeEvent.doWrite(em);
             }
-//            @Override
-//            public void call(EntityWrapper jsonEntity){
-//                try {
-//                            em.create(jsonEntity.entityUuid, jsonEntity.entityType, jsonEntity.properties);
-//                            em.getRef(jsonEntity.entityUuid);
-//
-//
-//                    System.out.println("Emitting UUID " + jsonEntity.entityUuid + " on thread " + Thread.currentThread().getName() );
-//
-//                }catch (Exception e) {
-//                    System.out.println("something went wrong while creating this - " + e);
-//
-//                }
-//            }
 
         };
 
@@ -609,7 +595,6 @@ public class ImportServiceImpl implements ImportService {
         public void doWrite(EntityManager em) {
             try {
                 em.create(entityUuid, entityType, properties);
-                em.getRef(entityUuid);
                 System.out.println("Emitting UUID " + entityUuid + " on thread " + Thread.currentThread().getName() );
                 }catch (Exception e) {
                     System.out.println("something went wrong while creating this - " + e);
@@ -707,7 +692,6 @@ public class ImportServiceImpl implements ImportService {
                                     EntityRef entryRef = new SimpleEntityRef(UUID.fromString(entryId));
                                     entityWrapper = new ConnectionEvent(ownerEntityRef, connectionType, entryRef);
                                     subscriber.onNext(entityWrapper);
-                                    subscriber.onCompleted();
                                 }
                             }
                         }
@@ -721,11 +705,11 @@ public class ImportServiceImpl implements ImportService {
 
                                 jp.nextToken();
 
-                                @SuppressWarnings("unchecked") Map<String, Object> dictionary = jp.readValueAs(HashMap.class);
+                                Map<String, Object> dictionary = jp.readValueAs(HashMap.class);
                                 entityWrapper = new DictionaryEvent(ownerEntityRef, dictionaryName, dictionary);
                                 subscriber.onNext(entityWrapper);
-                                subscriber.onCompleted();
                             }
+                            subscriber.onCompleted();
                         } else {
                             // Regular collections
                             jp.nextToken(); // START_OBJECT
@@ -752,8 +736,6 @@ public class ImportServiceImpl implements ImportService {
                             entityWrapper = new EntityEvent(UUID.fromString(entityUuid), entityType, properties);
                             subscriber.onNext(entityWrapper);
                             ownerEntityRef = new SimpleEntityRef(entityType,UUID.fromString(entityUuid));
-                          //  ownerEntityRef = em.getRef(UUID.fromString(entityUuid));
-                            subscriber.onCompleted();
                         }
                     } catch (IllegalArgumentException e) {
                         // skip illegal entity UUID and go to next one
@@ -777,12 +759,8 @@ public class ImportServiceImpl implements ImportService {
                         entityCount = 0;
                     }
                 }
-
-
             } catch (Exception e) {
                 System.out.println("something went wrong in observable json parser - " + e);
-
-
             }
 
         }
