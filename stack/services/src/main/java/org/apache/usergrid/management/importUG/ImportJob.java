@@ -73,4 +73,9 @@ public class ImportJob extends OnlyOnceJob {
     public void setImportService( final ImportService importService ) {
         this.importService = importService;
     }
+
+    @Override
+    public void dead(JobExecution execution) throws Exception {
+
+    }
 }

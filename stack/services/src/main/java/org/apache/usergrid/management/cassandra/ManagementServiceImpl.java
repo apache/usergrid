@@ -16,21 +16,8 @@
  */
 package org.apache.usergrid.management.cassandra;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
@@ -61,7 +48,6 @@ import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
-<<<<<<< HEAD
 import org.apache.usergrid.services.*;
 import org.apache.usergrid.utils.*;
 import org.slf4j.Logger;
@@ -71,21 +57,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.Map.Entry;
-=======
-import org.apache.usergrid.services.ServiceAction;
-import org.apache.usergrid.services.ServiceManager;
-import org.apache.usergrid.services.ServiceManagerFactory;
-import org.apache.usergrid.services.ServiceRequest;
-import org.apache.usergrid.services.ServiceResults;
-import org.apache.usergrid.utils.ConversionUtils;
-import org.apache.usergrid.utils.JsonUtils;
-import org.apache.usergrid.utils.MailUtils;
-import org.apache.usergrid.utils.StringUtils;
-import org.apache.usergrid.utils.UUIDUtils;
-
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
->>>>>>> 9fc1ab40878c4a4756e9734bd444ccdad436d4fd
 
 import static java.lang.Boolean.parseBoolean;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
@@ -1964,11 +1935,8 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-<<<<<<< HEAD
-    protected String emailMsg( Map<String, String> values, String propertyName ) {
-=======
+
     public String emailMsg( Map<String, String> values, String propertyName ) {
->>>>>>> 9fc1ab40878c4a4756e9734bd444ccdad436d4fd
         return new StrSubstitutor( values ).replace( properties.getProperty( propertyName ) );
     }
 
@@ -2476,11 +2444,8 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-<<<<<<< HEAD
-    protected String buildUserAppUrl( UUID applicationId, String url, User user, String token ) throws Exception {
-=======
+
     public String buildUserAppUrl( UUID applicationId, String url, User user, String token ) throws Exception {
->>>>>>> 9fc1ab40878c4a4756e9734bd444ccdad436d4fd
         ApplicationInfo ai = getApplicationInfo( applicationId );
         OrganizationInfo oi = getOrganizationForApplication( applicationId );
         return String.format( url, oi.getName(), StringUtils.stringOrSubstringAfterFirst( ai.getName(), '/' ),
