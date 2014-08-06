@@ -49,7 +49,17 @@ public abstract class BooleanNode extends QueryNode {
 
 
     @Override
+    public boolean ignoreHintSize() {
+        return false;
+    }
+
+
+    @Override
     public String toString() {
         return "BooleanNode [left=" + left + ", right=" + right + "]";
     }
+
+
+
+
 }
