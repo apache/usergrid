@@ -17,7 +17,13 @@ Use the admin portal for administrative operations, including:
 * View and modify your data, with full support for users, groups, and custom entities and collections.
 * Generate and access credentials for API access.
 
-##Deploying or Developing
+##Running, Deploying, or Developing
+
+For all cases, edit the "config.js" file in the root of the portal so that it points to your Usergrid:
+
+	Usergrid.overrideUrl = 'https://api.usergrid.com/';
+
+Change 'https://api.usergrid.com/' to the url of your Usergrid.
 
 If you are just running the portal:
 
