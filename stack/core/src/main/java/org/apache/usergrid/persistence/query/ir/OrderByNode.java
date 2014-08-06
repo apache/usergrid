@@ -89,6 +89,12 @@ public class OrderByNode extends QueryNode {
     }
 
 
+    @Override
+    public boolean ignoreHintSize() {
+        return false;
+    }
+
+
     /* (non-Javadoc)
          * @see java.lang.Object#toString()
          */
