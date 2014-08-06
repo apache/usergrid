@@ -1,24 +1,10 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.usergrid.android.client;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+
 import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
 import org.apache.usergrid.android.client.callbacks.ApiResponseCallback;
@@ -35,6 +21,7 @@ import org.apache.usergrid.android.client.utils.DeviceUuidFactory;
 
 import android.content.Context;
 import android.location.Location;
+import android.util.Log;
 
 /**
  * The Client class for accessing the Usergrid API. Start by instantiating this
@@ -43,7 +30,13 @@ import android.location.Location;
  */
 public class Client extends org.usergrid.java.client.Client {
 
-	private static final String TAG = "UsergridClient";
+
+  /**
+   * Default tag applied to all logging messages sent from an instance of Client
+   */
+  public static final String LOGGING_TAG = "UsergridClient";	
+
+  private static final String TAG = "UsergridClient";
 
 	public static boolean FORCE_PUBLIC_API = false;
 
@@ -59,7 +52,39 @@ public class Client extends org.usergrid.java.client.Client {
 	// Local API
 	public static String LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
 
-	
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final String HTTP_METHOD_DELETE = "DELETE";
+
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final String HTTP_METHOD_GET    = "GET";
+
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final String HTTP_METHOD_POST   = "POST";
+
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final String HTTP_METHOD_PUT    = "PUT";
+
+	private String organizationId;
+  private String applicationId;
+  private String clientId;
+  private String clientSecret;
+
 	static RestTemplate restTemplate = new RestTemplate(true);
 
 	/**
@@ -77,8 +102,87 @@ public class Client extends org.usergrid.java.client.Client {
 	 */
 	public Client(String organizationId, String applicationId) {
 		super(organizationId, applicationId);
+		this.organizationId = organizationId;
+		this.applicationId = applicationId;		
 	}
 
+  /**
+   * Logs a trace-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logTrace(String logMessage) {
+  	if(logMessage != null) {
+  		Log.v(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs a debug-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logDebug(String logMessage) {
+  	if(logMessage != null) {
+  		Log.d(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs an info-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logInfo(String logMessage) {
+  	if(logMessage != null) {
+  		Log.i(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs a warn-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logWarn(String logMessage) {
+  	if(logMessage != null) {
+  		Log.w(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs an error-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logError(String logMessage) {
+  	if(logMessage != null) {
+  		Log.e(LOGGING_TAG,logMessage);
+  	}
+  }
+
+  /**
+   * Logs a debug-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void writeLog(String logMessage) {
+    //TODO: do we support different log levels in this class?
+    Log.d(LOGGING_TAG, logMessage);      
+  }
+
+  public static boolean isEmpty(Object s) {
+		if (s == null) {
+			return true;
+		}
+		if ((s instanceof String) && (((String) s).trim().length() == 0)) {
+			return true;
+		}
+		if (s instanceof Map) {
+			return ((Map<?, ?>) s).isEmpty();
+		}
+		return false;
+	}
 
 	/**
 	 * Log the user in and get a valid access token. Executes asynchronously in
@@ -161,7 +265,124 @@ public class Client extends org.usergrid.java.client.Client {
 		}).execute();
 	}
 
-	
+	    /**
+     * Log out a user and destroy the access token currently stored in DataClient 
+     * on the server and in the DataClient.
+     * 
+     * @param  username  The username to be logged out
+     * @return  non-null ApiResponse if request succeeds
+     */
+    public ApiResponse logOutAppUser(String username) {
+        String token = getAccessToken();
+        Map<String,Object> params = new HashMap<String,Object>();
+        params.put("token",token);
+        ApiResponse response = apiRequest(HTTP_METHOD_PUT, params, null,
+                organizationId,  applicationId, "users",username,"revoketoken?");
+        if (response == null) {
+            return response;
+        } else {
+            logInfo("logoutAppUser(): Response: " + response);
+            setAccessToken(null);
+        }
+        return response;
+    }
+
+    /**
+     * Log out a user and destroy the access token currently stored in DataClient 
+     * on the server and in the DataClient.
+     * Executes asynchronously in background and the callbacks are called in the
+     * UI thread.
+     * 
+     * @param  username  The username to be logged out
+     * @param  callback  an ApiResponseCallback to handle the async response     
+     */
+    public void logOutAppUserAsync(final String username, final ApiResponseCallback callback) {
+        (new ClientAsyncTask<ApiResponse>(callback) {
+            @Override
+            public ApiResponse doTask() {
+                return logOutAppUser(username);
+            }
+        }).execute();
+    }
+
+   /**
+     * Destroy a specific user token on the server. The token will also be cleared 
+     * from the DataClient instance, if it matches the token provided.
+     * 
+     * @param username The username to be logged out
+     * @param token The access token to be destroyed on the server
+     * @return  non-null ApiResponse if request succeeds
+     */
+    public ApiResponse logOutAppUserForToken(String username, String token) {                
+        Map<String,Object> params = new HashMap<String,Object>();
+        params.put("token",token);
+        ApiResponse response = apiRequest(HTTP_METHOD_PUT, params, null,
+                organizationId,  applicationId, "users",username,"revoketoken?");
+        if (response == null) {
+            return response;
+        } else {
+            logInfo("logoutAppWithTokenUser(): Response: " + response);
+            if (token.equals(getAccessToken())) {
+                setAccessToken(null);
+            }
+        }
+        return response;
+    }
+
+    /**
+     * Destroy a specific user token on the server. The token will also be cleared 
+     * from the DataClient instance, if it matches the token provided.
+     * Executes asynchronously in background and the callbacks are called in the UI thread.
+     * 
+     * @param  username  The username to be logged out
+     * @param  token  The access token to be destroyed on the server   
+     * @param callback A callback for the async response  
+     */
+    public void logOutAppUserForTokenAsync(final String username, final String token, final ApiResponseCallback callback) {
+        (new ClientAsyncTask<ApiResponse>(callback) {
+            @Override
+            public ApiResponse doTask() {
+                return logOutAppUserForToken(username, token);
+            }
+        }).execute();
+    }
+
+    /**
+     * Log out a user and destroy all associated tokens on the server.
+     * The token stored in DataClient will also be destroyed.
+     * 
+     * @param  username The username to be logged out
+     * @return  non-null ApiResponse if request succeeds
+     */
+    public ApiResponse logOutAppUserForAllTokens(String username) {
+        ApiResponse response = apiRequest(HTTP_METHOD_PUT, null, null,
+                organizationId,  applicationId, "users",username,"revoketokens");
+        if (response == null) {
+            return response;
+        } else {
+            logInfo("logoutAppUserForAllTokens(): Response: " + response);
+            setAccessToken(null);
+        }
+        return response;
+    }
+
+    /**
+     * Log out a user and destroy all associated tokens on the server.
+     * The token stored in DataClient will also be destroyed.
+     * Executes asynchronously in background and the callbacks are called in the UI thread.
+     * 
+     * @param  username  The username to be logged out
+     * @param callback A callback for the response
+     */
+    public void logOutAppUserForAllTokensAsync(final String username, final ApiResponseCallback callback) {
+        (new ClientAsyncTask<ApiResponse>(callback) {
+            @Override
+            public ApiResponse doTask() {
+                return logOutAppUserForAllTokens(username);
+            }
+        }).execute();
+    }
+
 	/**
 	 * Registers a device using the device's unique device ID. Executes
 	 * asynchronously in background and the callbacks are called in the UI
@@ -209,6 +430,46 @@ public class Client extends org.usergrid.java.client.Client {
     }).execute();
   }
 
+      /**
+     * Requests all entities of specified type that match the provided query string.
+     *
+     * @param  type  the entity type to be retrieved
+     * @param  queryString  a query string to send with the request
+     * @return  a non-null ApiResponse object if successful
+    */
+    public ApiResponse getEntities(String type,String queryString)
+    {
+        Map<String, Object> params = null;
+
+        if (queryString.length() > 0) {
+            params = new HashMap<String, Object>();
+            params.put("ql", queryString);
+        }
+        
+        return apiRequest(HTTP_METHOD_GET, // method
+                            params, // params
+                            null, // data
+                            organizationId,
+                            applicationId,
+                            type);
+    }
+    
+    /**
+     * Asynchronously requests all entities of specified type that match the provided query string.
+     *
+     * @param  type  the entity type to be retrieved
+     * @param  queryString  a query string to send with the request
+     * @param  callback an ApiResponseCallback to handle the async response
+    */
+    public void getEntitiesAsync(final String type,
+            final String queryString, final ApiResponseCallback callback) {
+        (new ClientAsyncTask<ApiResponse>(callback) {
+            @Override
+            public ApiResponse doTask() {
+                return getEntities(type, queryString);
+            }
+        }).execute();
+    }
 
   /**
 	 * Create a new entity on the server. Executes asynchronously in background
@@ -246,6 +507,44 @@ public class Client extends org.usergrid.java.client.Client {
 		}).execute();
 	}
 
+	/**
+	 * Create a set of entities on the server from an ArrayList. Each item in the array
+	 * contains a set of properties that define a entity.
+	 * 
+	 * @param type The type of entities to create.
+	 * @param entities A list of maps where keys are entity property names and values
+	 * are property values.
+	 * @return An instance with response data from the server.
+	 */
+	public ApiResponse createEntities(String type, ArrayList<Map<String, Object>> entities) {
+      assertValidApplicationId();                
+      if (isEmpty(type)) {
+          throw new IllegalArgumentException("Missing entity type");
+      }
+      ApiResponse response = apiRequest(HTTP_METHOD_POST, null, entities,
+ 		     organizationId, applicationId, type);	           		
+ 		return response;	
+  }
+  
+  /**
+	 * Create a set of entities on the server from an ArrayList. Each item in the array
+	 * contains a set of properties that define a entity. Executes asynchronously in 
+	 * background and the callbacks are called in the UI thread.
+	 * 
+	 * @param type The type of entities to create.
+	 * @param entities A list of maps where keys are entity property names and values
+	 * are property values.
+	 * @param callback A callback for the async response
+	 */
+  public void createEntitiesAsync(final String type, final ArrayList<Map<String, Object>> entities,
+			final ApiResponseCallback callback) {
+		(new ClientAsyncTask<ApiResponse>(callback) {
+			@Override
+			public ApiResponse doTask() {
+				return createEntities(type, entities);
+			}
+		}).execute();
+	}
 
 	/**
 	 * Creates a user. Executes asynchronously in background and the callbacks
@@ -419,7 +718,7 @@ public class Client extends org.usergrid.java.client.Client {
 	 */
 	public void queryUsersAsync(QueryResultsCallback callback) {
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, null, null,
-				getApplicationId(), "users");
+				organizationId, applicationId, "users");
 	}
 
 	/**
@@ -434,7 +733,7 @@ public class Client extends org.usergrid.java.client.Client {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
-				getApplicationId(), "users");
+				organizationId, applicationId, "users");
 	}
 
 	
@@ -448,7 +747,7 @@ public class Client extends org.usergrid.java.client.Client {
 	public void queryUsersForGroupAsync(String groupId,
 			QueryResultsCallback callback) {
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, null, null,
-				getApplicationId(), "groups", groupId, "users");
+				applicationId, "groups", groupId, "users");
 	}
 
 	/**
@@ -506,6 +805,41 @@ public class Client extends org.usergrid.java.client.Client {
 		}).execute();
 	}
 
+	/**
+     * Connect two entities together.
+     * 
+     * @param connectingEntityType The type of the first entity.
+     * @param connectingEntityId The ID of the first entity.
+     * @param connectionType The type of connection between the entities.
+     * @param connectedEntityId The ID of the second entity.
+     * @return An instance with the server's response.
+     */
+    public ApiResponse connectEntities(String connectingEntityType,
+            String connectingEntityId, String connectionType,
+            String connectedEntityId) {
+        return apiRequest(HTTP_METHOD_POST, null, null,  organizationId, applicationId,
+                connectingEntityType, connectingEntityId, connectionType,
+                connectedEntityId);
+    }
+    
+    /**
+     * Connect two entities together
+     * 
+     * @param connectorType The type of the first entity in the connection.
+     * @param connectorID The first entity's ID.
+     * @param connectionType The type of connection to make.
+     * @param connecteeType The type of the second entity.
+     * @param connecteeID The second entity's ID
+     * @return An instance with the server's response.
+     */
+    public ApiResponse connectEntities(String connectorType,
+    		String connectorID,
+    		String connectionType,
+    		String connecteeType,
+    		String connecteeID) {
+		return apiRequest(HTTP_METHOD_POST, null, null, organizationId, applicationId,
+				connectorType, connectorID, connectionType, connecteeType, connecteeID);
+    }
 	
 	/**
 	 * Connect two entities together. Executes asynchronously in background and
@@ -529,7 +863,47 @@ public class Client extends org.usergrid.java.client.Client {
 		}).execute();
 	}
 
+  /**
+   * Connect two entities together. Allows the 'name' of the connected entity
+   * to be specified but requires the type also be specified. Executes asynchronously 
+   * in background and the callbacks are called in the UI thread.
+   * 
+   * @param connectingEntityType The type of the first entity.
+   * @param connectingEntityId The UUID or 'name' property of the first entity.
+   * @param connectionType The type of connection between the entities.
+   * @param connectedEntityType The type of connection between the entities.
+   * @param connectedEntityId The UUID or 'name' property of the second entity.
+   * @param callback A callback with the async response.
+   */
+  public void connectEntitiesAsync(final String connectingEntityType,
+          final String connectingEntityId, final String connectionType,
+          final String connectedEntityType, final String connectedEntityId, 
+          final ApiResponseCallback callback) {
+      (new ClientAsyncTask<ApiResponse>(callback) {
+          @Override
+          public ApiResponse doTask() {
+              return connectEntities(connectingEntityType,
+                      connectingEntityId, connectionType, connectedEntityType, connectedEntityId);
+          }
+      }).execute();
+    }
 
+  /**
+   * Disconnect two entities.
+   * 
+   * @param connectingEntityType The collection name or UUID of the first entity.
+   * @param connectingEntityId The name or UUID of the first entity.
+   * @param connectionType The type of connection between the entities.     
+   * @param connectedEntityId The name or UUID of the second entity.
+   * @return An instance with the server's response.
+   */
+  public ApiResponse disconnectEntities(String connectingEntityType,
+          String connectingEntityId, String connectionType,
+          String connectedEntityId) {
+      return apiRequest(HTTP_METHOD_DELETE, null, null,  organizationId, applicationId,
+              connectingEntityType, connectingEntityId, connectionType,
+              connectedEntityId);
+  }
 
 	/**
 	 * Disconnect two entities. Executes asynchronously in background and the
@@ -547,13 +921,53 @@ public class Client extends org.usergrid.java.client.Client {
 		(new ClientAsyncTask<ApiResponse>(callback) {
 			@Override
 			public ApiResponse doTask() {
-				return connectEntities(connectingEntityType,
+				return disconnectEntities(connectingEntityType,
 						connectingEntityId, connectionType, connectedEntityId);
 			}
 		}).execute();
 	}
 
+	/**
+   * Disconnect two entities.
+   * 
+   * @param connectingEntityType The collection name or UUID of the first entity.
+   * @param connectingEntityId The name or UUID of the first entity.
+   * @param connectionType The type of connection between the entities.
+   * @param connectedEntityType The collection name or UUID of the second entity.
+   * @param connectedEntityId The name or UUID of the second entity.
+   * @return An instance with the server's response.
+   */
+  public ApiResponse disconnectEntities(String connectingEntityType,
+          String connectingEntityId, String connectionType,
+          String connectedEntityType, String connectedEntityId) {
+      return apiRequest(HTTP_METHOD_DELETE, null, null,  organizationId, applicationId,
+              connectingEntityType, connectingEntityId, connectionType,
+              connectedEntityType, connectedEntityId);
+  }
 
+  /**
+   * Disconnect two entities. Executes asynchronously in background and the
+   * callbacks are called in the UI thread.
+   * 
+   * @param connectingEntityType The collection name or UUID of the first entity.
+   * @param connectingEntityId The name or UUID of the first entity.
+   * @param connectionType The type of connection between the entities.
+   * @param connectedEntityType The collection name or UUID of the second entity.
+   * @param connectedEntityId The name or UUID of the second entity.
+   * @param callback A callback with the async response.
+   */
+  public void disconnectEntitiesAsync(final String connectingEntityType,
+          final String connectingEntityId, final String connectionType,
+          final String connectedEntityType, final String connectedEntityId, 
+          final ApiResponseCallback callback) {
+      (new ClientAsyncTask<ApiResponse>(callback) {
+          @Override
+          public ApiResponse doTask() {
+              return disconnectEntities(connectingEntityType,
+                      connectingEntityId, connectionType, connectedEntityType, connectedEntityId);
+          }
+      }).execute();
+  }
 
 	/**
 	 * Query the connected entities. Executes asynchronously in background and
@@ -571,7 +985,7 @@ public class Client extends org.usergrid.java.client.Client {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
-				getApplicationId(), connectingEntityType, connectingEntityId,
+				organizationId, applicationId, connectingEntityType, connectingEntityId,
 				connectionType);
 	}
 
@@ -597,7 +1011,7 @@ public class Client extends org.usergrid.java.client.Client {
 		params.put("ql", makeLocationQL(distance, location.getLatitude(), location.getLongitude(), ql));
 		params.put("ql", ql);
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
-				getApplicationId(), connectingEntityType, connectingEntityId,
+				organizationId, applicationId, connectingEntityType, connectingEntityId,
 				connectionType);
 	}
 

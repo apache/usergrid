@@ -3,6 +3,13 @@
 Usergrid_ironhorse is based on Usergrid_iron and enables Ruby or Rails applications
 native Rails-style access to Apigee's App Services (aka Usergrid) REST API.
 
+## Compatibility
+
+**Usergrid_ironhorse is currently only compatible with Ruby on Rails 3.2.**
+
+Thus, if you are using Rails 4.x, you must use Usergrid_iron (the low-level API for Ruby).
+Alternatively, we would welcome your contributions to make Usergrid_ironhorse compatible with Rails 4.x. Thanks!
+
 ## Installation
 
 Add this line to your application's Gemfile:

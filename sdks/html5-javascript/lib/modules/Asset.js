@@ -1,4 +1,25 @@
 /*
+ *Licensed to the Apache Software Foundation (ASF) under one
+ *or more contributor license agreements.  See the NOTICE file
+ *distributed with this work for additional information
+ *regarding copyright ownership.  The ASF licenses this file
+ *to you under the Apache License, Version 2.0 (the
+ *"License"); you may not use this file except in compliance
+ *with the License.  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+
+ *Unless required by applicable law or agreed to in writing,
+ *software distributed under the License is distributed on an
+ *"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *KIND, either express or implied.  See the License for the
+ *specific language governing permissions and limitations
+ *under the License.
+ */
+
+
+
+/*
  *  XMLHttpRequest.prototype.sendAsBinary polyfill
  *  from: https://developer.mozilla.org/en-US/docs/DOM/XMLHttpRequest#sendAsBinary()
  *
@@ -95,6 +116,61 @@ Usergrid.Asset.prototype.addToFolder = function(options, callback) {
 	}
 };
 
+Usergrid.Entity.prototype.attachAsset = function (file, callback) { 
+    
+    if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
+        doCallback(callback, [ new UsergridError("The File APIs are not fully supported by your browser."), null, this ], this);
+        return;
+    }
+    var self = this;
+    var args = arguments;
+    var type = this._data.type;
+    var attempts = self.get("attempts");
+    if (isNaN(attempts)) {
+        attempts = 3;
+    }
+
+    if(type != 'assets' && type != 'asset') {        
+        var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, type, self.get("uuid") ].join("/");            
+    } else {
+        self.set("content-type", file.type);
+        self.set("size", file.size);
+        var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");    
+    }
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", endpoint, true);
+    xhr.onerror = function(err) {
+        doCallback(callback, [ new UsergridError("The File APIs are not fully supported by your browser.") ], xhr, self);
+    };
+    xhr.onload = function(ev) {
+        if (xhr.status >= 500 && attempts > 0) {
+            self.set("attempts", --attempts);
+            setTimeout(function() {
+                self.attachAsset.apply(self, args);
+            }, 100);
+        } else if (xhr.status >= 300) {
+            self.set("attempts");
+            doCallback(callback, [ new UsergridError(JSON.parse(xhr.responseText)), xhr, self ], self);
+        } else {
+            self.set("attempts");
+            self.fetch();
+            doCallback(callback, [ null, xhr, self ], self);
+        }
+    };
+    var fr = new FileReader();
+    fr.onload = function() {
+        var binary = fr.result;        
+        if (type === 'assets' || type === 'asset') {
+            xhr.overrideMimeType("application/octet-stream");
+            xhr.setRequestHeader("Content-Type", "application/octet-stream");
+        }
+        xhr.sendAsBinary(binary);
+    };
+    fr.readAsBinaryString(file);
+
+};
+
 /*
  *  Upload Asset data
  *
@@ -104,45 +180,54 @@ Usergrid.Asset.prototype.addToFolder = function(options, callback) {
  *  @returns {callback} callback(err, asset)
  */
 Usergrid.Asset.prototype.upload = function(data, callback) {
-	if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
-		doCallback(callback, [new UsergridError('The File APIs are not fully supported by your browser.'), null, this], this);
-		return;
-	}
-	var self = this;
-	var args=arguments;
-	var attempts=self.get("attempts");
-	if(isNaN(attempts)){
-		attempts=3;
-	}
-	self.set('content-type', data.type);
-	self.set('size', data.size);
-	var endpoint = [this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), 'data'].join('/'); //self._client.buildAssetURL(self.get("uuid"));
+   this.attachAsset(data, function(err, response) {
+        if(!err){
+            doCallback(callback, [ null, response, self ], self);
+        } else {
+            doCallback(callback, [ new UsergridError(err), response, self ], self);
+        }
+    }); 
+};
 
-	var xhr = new XMLHttpRequest();
-	xhr.open("POST", endpoint, true);
-	xhr.onerror = function(err) {
-		//callback(true, err);
-		doCallback(callback, [new UsergridError('The File APIs are not fully supported by your browser.')], xhr, self);
-	};
-	xhr.onload = function(ev) {
-		if(xhr.status >= 500 && attempts>0){
-			self.set('attempts', --attempts);
-			setTimeout(function(){self.upload.apply(self, args);}, 100);
-		}else if (xhr.status >= 300) {
-			self.set('attempts')
-			doCallback(callback, [new UsergridError(JSON.parse(xhr.responseText)), xhr, self], self);
-		} else {
-			self.set('attempts')
-			doCallback(callback, [null, xhr, self], self);
-		}
-	};
-	var fr = new FileReader();
-	fr.onload = function() {
-		var binary = fr.result;
-		xhr.overrideMimeType('application/octet-stream');
-		xhr.sendAsBinary(binary);
-	};
-	fr.readAsBinaryString(data);
+/*
+ *  Download Asset data
+ *
+ *  @method download
+ *  @public
+ *  @returns {callback} callback(err, blob) blob is a javascript Blob object.
+ */
+Usergrid.Entity.prototype.downloadAsset = function(callback) {
+    var self = this;    
+    var endpoint;
+    var type = this._data.type;
+
+    var xhr = new XMLHttpRequest();
+    if(type != "assets" && type != 'asset') {
+        endpoint = [ this._client.URI, this._client.orgName, this._client.appName, type, self.get("uuid") ].join("/");     
+    } else {        
+        endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");        
+    }
+    xhr.open("GET", endpoint, true);
+    xhr.responseType = "blob";
+    xhr.onload = function(ev) {
+        var blob = xhr.response;
+        if(type != "assets" && type != 'asset') {
+            doCallback(callback, [ null, blob, xhr ], self);
+        } else {
+            doCallback(callback, [ null, xhr, self ], self);
+        }
+    };
+    xhr.onerror = function(err) {
+        callback(true, err);
+        doCallback(callback, [ new UsergridError(err), xhr, self ], self);
+    };
+
+    if(type != "assets" && type != 'asset') {            
+        xhr.setRequestHeader("Accept", self._data["file-metadata"]["content-type"]);
+    } else {        
+        xhr.overrideMimeType(self.get("content-type"));
+    }
+    xhr.send();
 };
 
 /*
@@ -153,20 +238,11 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
  *  @returns {callback} callback(err, blob) blob is a javascript Blob object.
  */
 Usergrid.Asset.prototype.download = function(callback) {
-	var self = this;
-	var endpoint = [this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), 'data'].join('/');
-	var xhr = new XMLHttpRequest();
-
-	xhr.open("GET", endpoint, true);
-	xhr.responseType = "blob";
-	xhr.onload = function(ev) {
-		var blob = xhr.response;
-		doCallback(callback, [null, xhr, self], self);
-	};
-	xhr.onerror = function(err) {
-		callback(true, err);
-		doCallback(callback, [new UsergridError(err), xhr, self], self);
-	};
-	xhr.overrideMimeType(self.get('content-type'));
-	xhr.send();
+    this.downloadAsset(function(err, response) {
+        if(!err){
+            doCallback(callback, [ null, response, self ], self);
+        } else {
+            doCallback(callback, [ new UsergridError(err), response, self ], self);
+        }
+    });
 };

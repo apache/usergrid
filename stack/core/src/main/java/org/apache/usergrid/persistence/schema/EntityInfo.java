@@ -45,8 +45,6 @@ public class EntityInfo {
     private boolean publicVisible = true;
 
     private boolean includedInExport = true;
-    ;
-
 
     public EntityInfo() {
     }
@@ -116,29 +114,20 @@ public class EntityInfo {
 
     public boolean isPropertyMutable( String propertyName ) {
         PropertyInfo property = properties.get( propertyName );
-        if ( property == null ) {
-            return false;
-        }
-        return property.isMutable();
+        return property != null && property.isMutable();
     }
 
 
     /** A property is unique if it has either been declared as unique, or as an alias property */
     public boolean isPropertyUnique( String propertyName ) {
         PropertyInfo property = properties.get( propertyName );
-        if ( property == null ) {
-            return false;
-        }
-        return property.isUnique() || property.isAliasProperty();
+        return property != null && (property.isUnique() || property.isAliasProperty());
     }
 
 
     public boolean isPropertyTimestamp( String propertyName ) {
         PropertyInfo property = properties.get( propertyName );
-        if ( property == null ) {
-            return false;
-        }
-        return property.isTimestamp();
+        return property != null && property.isTimestamp();
     }
 
 

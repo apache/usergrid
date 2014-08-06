@@ -51,6 +51,7 @@ import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.NumberUtils.roundLong;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 /**
  * Searches in the queue without transactions

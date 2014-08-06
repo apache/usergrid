@@ -166,7 +166,7 @@ public class CredentialsInfo implements Comparable<CredentialsInfo> {
 
     @Override
     public int compareTo( CredentialsInfo o ) {
-        if ( created == o.created ) {
+        if (created.equals(o.created)) {
             return 0;
         }
         if ( o.created == null ) {

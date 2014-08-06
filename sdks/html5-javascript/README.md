@@ -469,66 +469,46 @@ Once you have completed your testing, you can reset these values to 0.
 		});
 
 ##Assets
-Assets are used to model binary resources. This can be used by your application to store images and other file types.
 
-####Creating an asset
+Assets can be attached to any entity as binary data. This can be used by your application to store images and other file types. There is a limit of one asset per entity.
 
-An asset is created in the same manner as any Usergrid entity
+####Attaching an asset
 
-	var imageName='test_image.jpg';
-	var options = {
-		type:'asset',
-		name:imageName,
-		path: '/uploads/'+imageName,
-		owner:user.get("uuid")
+An asset can be attached to any entity using Enity.attachAsset(file, callback). You can also call attachAsset() on the same entity to change the asset attached to it.
+
+	//Create a new entity to attach an asset to - you can also use an existing entity
+	var properties = {
+	    type:'user',
+	    username:'someUser', 
 	};
-	
-	var asset=new Usergrid.Asset(
-		{client:client, data:options},
-		function(err, asset){
-			if (err) { 
-			   // Error - there was a problem creating the asset
-			} else { 
-				// Success - the asset was created properly
-			}
-		});
-##Adding data
 
-You can upload data to your asset from a File input or by retrieving it via another request.
-**Note:** Due to security concerns, you cannot browse and select a file programmatically from the local filesystem via javascript
+	dataClient.createEntity(properties, function(err, response, entity) {
+		if (!err) {
+			//The entity was created, so call attachAsset() on it.
+			entity.attachAsset(file, function(err, response){
+				if (!err){
+					//Success - the asset was attached
+				} else {
+					//Error
+				}
+			});
+		}
+	});
 
-On your page, you would have an input element:
+##Retrieving Assets
 
-	<input type="file" id="upload"/>
+To retrieve the data, call Entity.downloadAsset(callback). A blob is returned
+in the success callback.
 
-Once a file is selected, read the data and upload it to the asset.
-
-	var files = document.getElementById('upload').files;
-	if(files.length===0){
-		  //No files have been selected
-	}else{
-		//take the first file off the front of the array
-		var file=files.unshift();
-		asset.upload(file, function(err, asset){
-			if (err) { 
-			  // Error - there was a problem uploading the data
-			} else { 
-			  // Success - the data was uploaded successfully
-			} 
-		})
-	}
-
-To retrieve the data and display it via HTML
-
-	asset.download(function(err, file){
+	entity.downloadAsset(function(err, file){
 		if (err) { 
 			// Error - there was a problem retrieving the data
 		} else { 
-			// Success - the entity was found
-			// and retrieved by the Apigee API
+			// Success - the asset was downloaded			
 
 			// Create an image tag to hold our downloaded image data
 			var img = document.createElement("img");
+			
 			// Create a FileReader to feed the image
 			// into our newly-created element
 			var reader = new FileReader();
@@ -538,6 +518,7 @@ To retrieve the data and display it via HTML
 					}; 
 				})(img);
 			reader.readAsDataURL(file);
+			
 			// Append the img element to our page
 			document.body.appendChild(img);
 		} 
@@ -874,6 +855,9 @@ Like [Usergrid](https://github.com/apigee/usergrid-node-module), the Usergrid Ja
 3. Commit your changes (`git commit -am 'Added some feature'`).
 4. Push your changes to the upstream branch (`git push origin my-new-feature`).
 5. Create new Pull Request (make sure you describe what you did and why your mod is needed).
+
+###Contributing to usergrid.js
+usergrid.js and usergrid.min.js are built from modular components using Grunt. If you want to contribute updates to these files, please commit your changes to the modules in /lib/modules. Do not contribute directly to usergrid.js or your changes could get overwritten in a future build.
 
 ##More information
 For more information on Usergrid, visit <http://usergrid.incubator.apache.org/>.

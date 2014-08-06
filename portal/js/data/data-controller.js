@@ -114,6 +114,12 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
 
     });
 
+    $scope.$on('query-error', function(event) {
+      $scope.loading = false;
+      $scope.applyScope();
+      $scope.queryBoxesSelected = false;
+    });
+
     $scope.$on('indexes-received', function(event, indexes) {
       //todo - do something with the indexes
       var fred = indexes;
@@ -147,6 +153,10 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
 
     $scope.addToPath = function(uuid){
       $scope.data.queryPath = '/' + $rootScope.queryCollection._type + '/' + uuid;
+    }
+
+    $scope.removeFromPath = function(){
+      $scope.data.queryPath = '/' + $rootScope.queryCollection._type;
     }
 
     $scope.isDeep = function(item){
@@ -267,9 +277,13 @@ AppServices.Controllers.controller('DataCtrl', ['ug', '$scope', '$rootScope', '$
       }
     }
 
-    $scope.selectEntity = function(uuid){
+    $scope.selectEntity = function(uuid, addToPath){
       $rootScope.selectedEntity = $rootScope.queryCollection.getEntityByUUID(uuid);
-      $scope.addToPath(uuid);
+      if (addToPath) {
+        $scope.addToPath(uuid);
+      } else {
+        $scope.removeFromPath();
+      }
     }
 
     $scope.getJSONView = function(entity){

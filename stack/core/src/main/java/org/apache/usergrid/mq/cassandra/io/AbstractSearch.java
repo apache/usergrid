@@ -36,8 +36,6 @@ import org.apache.usergrid.persistence.exceptions.QueueException;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -57,7 +55,6 @@ import static org.apache.usergrid.mq.cassandra.CassandraMQUtils.deserializeMessa
 import static org.apache.usergrid.mq.cassandra.CassandraMQUtils.getQueueShardRowKey;
 import static org.apache.usergrid.mq.cassandra.QueueManagerImpl.ALL_COUNT;
 import static org.apache.usergrid.mq.cassandra.QueueManagerImpl.QUEUE_SHARD_INTERVAL;
-import static org.apache.usergrid.mq.cassandra.QueueManagerImpl.se;
 import static org.apache.usergrid.mq.cassandra.QueuesCF.CONSUMERS;
 import static org.apache.usergrid.mq.cassandra.QueuesCF.MESSAGE_PROPERTIES;
 import static org.apache.usergrid.mq.cassandra.QueuesCF.QUEUE_INBOX;
@@ -66,6 +63,7 @@ import static org.apache.usergrid.utils.NumberUtils.roundLong;
 import static org.apache.usergrid.utils.UUIDUtils.MAX_TIME_UUID;
 import static org.apache.usergrid.utils.UUIDUtils.MIN_TIME_UUID;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /** @author tnine */
@@ -73,10 +71,6 @@ public abstract class AbstractSearch implements QueueSearch
 {
 
     private static final Logger logger = LoggerFactory.getLogger( AbstractSearch.class );
-
-    protected static final UUIDSerializer ue = new UUIDSerializer();
-
-    protected static final ByteBufferSerializer be = new ByteBufferSerializer();
 
     protected Keyspace ko;
 

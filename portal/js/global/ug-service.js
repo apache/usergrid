@@ -54,13 +54,13 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
         case host === 'appservices.apigee.com' && location.pathname.indexOf('/dit') >= 0 :
           //DIT
           BASE_URL = 'https://accounts.jupiter.apigee.net';
-          DATA_URL = 'http://apigee-internal-prod.jupiter.apigee.net';
+          DATA_URL = 'https://apigee-internal-prod.jupiter.apigee.net';
           use_sso = true;
           break;
         case host === 'appservices.apigee.com' && location.pathname.indexOf('/mars') >= 0  :
           //staging
           BASE_URL = 'https://accounts.mars.apigee.net';
-          DATA_URL = 'http://apigee-internal-prod.mars.apigee.net';
+          DATA_URL = 'https://apigee-internal-prod.mars.apigee.net';
           use_sso = true;
           break;
         case host === 'appservices.apigee.com' :
@@ -381,6 +381,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       this.client().createCollection(options, function (err, collection, data) {
         if (err) {
           $rootScope.$broadcast('alert', 'error', 'error getting ' + collection._type + ': ' + data.error_description);
+          $rootScope.$broadcast(type + '-error', collection);
         } else {
           $rootScope.$broadcast(type + '-received', collection);
         }
@@ -821,7 +822,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     },
 
     updateUser: function (user) {
-      var body = $rootScope.currentUser;
+      var body = {};
       body.username = user.username;
       body.name = user.name;
       body.email = user.email;
@@ -846,14 +847,15 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     },
 
     resetUserPassword: function (user) {
-      var pwdata = {};
-      pwdata.oldpassword = user.oldPassword;
-      pwdata.newpassword = user.newPassword;
-      pwdata.username = user.username;
+      var body = {};
+      body.oldpassword = user.oldPassword;
+      body.newpassword = user.newPassword;
+      body.username = user.username;
       var options = {
         method:'PUT',
-        endpoint:'users/' + pwdata.uuid + '/',
-        body:pwdata
+        endpoint:'management/users/' + user.uuid + '/',
+        body:body,
+        mQuery:true
       }
       this.client().request(options, function (err, data) {
         if (err) {

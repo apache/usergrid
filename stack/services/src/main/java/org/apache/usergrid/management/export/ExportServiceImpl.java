@@ -425,6 +425,11 @@ public class ExportServiceImpl implements ExportService {
     private void saveCollectionMembers( JsonGenerator jg, EntityManager em, String collection, Entity entity )
             throws Exception {
 
+        // Write connections
+        saveConnections( entity, em, jg );
+        // Write dictionaries
+        saveDictionaries( entity, em, jg );
+
         Set<String> collections = em.getCollections( entity );
 
         // If your application doesn't have any e

@@ -152,8 +152,8 @@ public class PingIdentityProvider extends AbstractProvider {
     public static long extractExpiration( User user ) {
         Long expiration = ( Long ) user.getProperty( "expiration" );
         if ( expiration == null ) {
-            expiration = new Long( 7200 );
+            expiration = (long) 7200;
         }
-        return expiration.longValue() * 1000;
+        return expiration * 1000;
     }
 }

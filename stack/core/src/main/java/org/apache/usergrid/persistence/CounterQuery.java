@@ -91,33 +91,25 @@ public class CounterQuery {
     public static CounterQuery fromQueryParams( Map<String, List<String>> params ) {
 
         CounterQuery q = null;
-        Integer limit = null;
-        Long startTime = null;
-        Long finishTime = null;
-        Boolean pad = null;
         CounterResolution resolution = null;
         List<CounterFilterPredicate> counterFilters = null;
-        List<String> categories = null;
+        Integer limit = firstInteger( params.get( "limit" ) );
+        Long startTime = firstLong( params.get( "start_time" ) );
+        Long finishTime = firstLong( params.get( "end_time" ) );
 
-        List<String> l = null;
-
-        limit = firstInteger( params.get( "limit" ) );
-        startTime = firstLong( params.get( "start_time" ) );
-        finishTime = firstLong( params.get( "end_time" ) );
-
-        l = params.get( "resolution" );
+        List<String> l = params.get( "resolution" );
         if ( !isEmpty( l ) ) {
             resolution = CounterResolution.fromString( l.get( 0 ) );
         }
 
-        categories = params.get( "category" );
+        List<String> categories = params.get( "category" );
 
         l = params.get( "counter" );
         if ( !isEmpty( l ) ) {
             counterFilters = CounterFilterPredicate.fromList( l );
         }
 
-        pad = firstBoolean( params.get( "pad" ) );
+        Boolean pad = firstBoolean( params.get( "pad" ) );
 
         if ( limit != null ) {
             q = newQueryIfNull( q );
@@ -165,12 +157,7 @@ public class CounterQuery {
 
     public int getLimit( int defaultMax ) {
         if ( limit <= 0 ) {
-            if ( defaultMax > 0 ) {
-                return defaultMax;
-            }
-            else {
-                return DEFAULT_MAX_RESULTS;
-            }
+            return defaultMax > 0 ? defaultMax : DEFAULT_MAX_RESULTS;
         }
         return limit;
     }

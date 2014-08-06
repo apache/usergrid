@@ -42,12 +42,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.yammer.metrics.annotation.Metered;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.cassandra.serializers.BytesArraySerializer;
-import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
-import me.prettyprint.cassandra.serializers.LongSerializer;
-import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -72,6 +66,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICA
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.RETRY_COUNT;
 import static org.apache.usergrid.utils.ConversionUtils.uuid;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 /**
@@ -87,12 +82,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     public static final Class<DynamicEntity> APPLICATION_ENTITY_CLASS = DynamicEntity.class;
 
-    public static final StringSerializer se = new StringSerializer();
-    public static final ByteBufferSerializer be = new ByteBufferSerializer();
-    public static final UUIDSerializer ue = new UUIDSerializer();
-    public static final BytesArraySerializer bae = new BytesArraySerializer();
-    public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
-    public static final LongSerializer le = new LongSerializer();
 
     ApplicationContext applicationContext;
 
@@ -296,8 +285,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         HColumn<String, ByteBuffer> column =
                 cass.getColumn( cass.getSystemKeyspace(), APPLICATIONS_CF, name, PROPERTY_UUID );
         if ( column != null ) {
-            UUID uuid = uuid( column.getValue() );
-            return uuid;
+            return uuid( column.getValue() );
         }
         return null;
     }
@@ -389,10 +377,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     @Override
     public Map<String, String> getServiceProperties() {
-        Map<String, String> properties = null;
         try {
-            properties = asMap( cass.getAllColumns( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF, se, se ) );
-            return properties;
+            return asMap( cass.getAllColumns( cass.getSystemKeyspace(), PROPERTIES_CF, PROPERTIES_CF, se, se ) );
         }
         catch ( Exception e ) {
             logger.error( "Unable to load properties: " + e.getMessage() );

@@ -114,9 +114,6 @@ public class QueryFilterParser extends Parser {
     public static class property_return extends ParserRuleReturnScope {}
 
 
-    ;
-
-
     // $ANTLR start "property"
     // org/usergrid/persistence/query/QueryFilter.g:101:1: property : ( ID ) ;
     public final QueryFilterParser.property_return property() throws RecognitionException {
@@ -148,9 +145,6 @@ public class QueryFilterParser extends Parser {
 
 
     public static class operator_return extends ParserRuleReturnScope {}
-
-
-    ;
 
 
     // $ANTLR start "operator"
@@ -192,9 +186,6 @@ public class QueryFilterParser extends Parser {
     public static class value_return extends ParserRuleReturnScope {}
 
 
-    ;
-
-
     // $ANTLR start "value"
     // org/usergrid/persistence/query/QueryFilter.g:107:1: value : ( BOOLEAN | STRING | INT | FLOAT | UUID ) ;
     public final QueryFilterParser.value_return value() throws RecognitionException {
@@ -232,9 +223,6 @@ public class QueryFilterParser extends Parser {
     public static class second_value_return extends ParserRuleReturnScope {}
 
 
-    ;
-
-
     // $ANTLR start "second_value"
     // org/usergrid/persistence/query/QueryFilter.g:109:1: second_value : ( BOOLEAN | STRING | INT | FLOAT | UUID ) ;
     public final QueryFilterParser.second_value_return second_value() throws RecognitionException {
@@ -270,9 +258,6 @@ public class QueryFilterParser extends Parser {
 
 
     public static class third_value_return extends ParserRuleReturnScope {}
-
-
-    ;
 
 
     // $ANTLR start "third_value"
@@ -427,9 +412,6 @@ public class QueryFilterParser extends Parser {
     public static class select_subject_return extends ParserRuleReturnScope {}
 
 
-    ;
-
-
     // $ANTLR start "select_subject"
     // org/usergrid/persistence/query/QueryFilter.g:127:1: select_subject : ID ;
     public final QueryFilterParser.select_subject_return select_subject() throws RecognitionException {
@@ -462,9 +444,6 @@ public class QueryFilterParser extends Parser {
     public static class select_assign_target_return extends ParserRuleReturnScope {}
 
 
-    ;
-
-
     // $ANTLR start "select_assign_target"
     // org/usergrid/persistence/query/QueryFilter.g:134:1: select_assign_target : ID ;
     public final QueryFilterParser.select_assign_target_return select_assign_target() throws RecognitionException {
@@ -492,9 +471,6 @@ public class QueryFilterParser extends Parser {
 
 
     public static class select_assign_source_return extends ParserRuleReturnScope {}
-
-
-    ;
 
 
     // $ANTLR start "select_assign_source"
@@ -697,9 +673,6 @@ public class QueryFilterParser extends Parser {
 
 
     public static class direction_return extends ParserRuleReturnScope {}
-
-
-    ;
 
 
     // $ANTLR start "direction"

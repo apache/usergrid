@@ -19,12 +19,15 @@
     </fieldset>
   </bsmodal>
 
-  <page-title title=" Collections" icon="&#128254;"></page-title>
+  <div id="intro-page">    
+    <page-title title=" Collections" icon="&#128254;"></page-title>
+  </div>
 
   <section class="row-fluid">
-    <div class="span3 user-col">
-        <a class="btn btn-primary" id="new-collection-link" ng-click="showModal('newCollection')">New Collection</a>
-        <ul  class="user-list">
+    <div id="intro-list" class="span3 user-col">
+      <a class="btn btn-primary" id="new-collection-link" ng-click="showModal('newCollection')" title="new collection"><i class="pictogram">&#57347;</i></a>
+      <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data new collection')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_new_collection}}" tooltip-placement="right">(?)</a>
+        <ul  class="user-list" style="margin-top:5px;">
           <li ng-class="queryCollection._type === entity.name ? 'selected' : ''" ng-repeat="entity in collectionList" ng-click="loadCollection('/'+entity.name);">
             <a id="collection-{{entity.name}}-link" href="javaScript:void(0)">/{{entity.name}} </a>
           </li>
@@ -34,7 +37,7 @@
 
     <div class="span9 tab-content">
       <div class="content-page">
-      <form name="dataForm" ng-submit="run();">
+        <form id="intro-collection-query" name="dataForm" ng-submit="run();">
         <fieldset>
           <div class="control-group">
             <div class="" data-toggle="buttons-radio">
@@ -44,7 +47,7 @@
               <input type="radio" id="create-rb" name="query-action" style="margin-top: -2px;" ng-click="selectPOST();" ng-checked="verb=='POST'"> CREATE &nbsp; &nbsp;
               <input type="radio" id="read-rb" name="query-action" style="margin-top: -2px;" ng-click="selectGET();" ng-checked="verb=='GET'"> READ &nbsp; &nbsp;
               <input type="radio" id="update-rb" name="query-action" style="margin-top: -2px;" ng-click="selectPUT();" ng-checked="verb=='PUT'"> UPDATE &nbsp; &nbsp;
-              <input type="radio" id="delete-rb" name="query-action" style="margin-top: -2px;" ng-click="selectDELETE();" ng-checked="verb=='DELETE'"> DELETE
+                <input type="radio" id="delete-rb" name="query-action" style="margin-top: -2px;" ng-click="selectDELETE();" ng-checked="verb=='DELETE'"> DELETE             <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data query verbs')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_verb_buttons}}" tooltip-placement="right">(?)</a>
             </div>
           </div>
 
@@ -52,6 +55,7 @@
             <strong>Path </strong>
             <div class="controls">
               <input ng-model="data.queryPath" type="text" ug-validate id="pathDataQuery" ng-attr-title="{{pathRegexDescription}}" ng-pattern="pathRegex" class="span6" autocomplete="off" placeholder="ex: /users" required/>
+              <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data query path')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_path_box}}" tooltip-placement="right">(?)</a>
             </div>
           </div>
           <div class="control-group">
@@ -61,6 +65,7 @@
             <strong>Query</strong>
             <div class="controls">
               <input ng-model="data.searchString" type="text" class="span6" autocomplete="off" placeholder="ex: select * where name='fred'"/>
+              <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data query string')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_query_box}}" tooltip-placement="right">(?)</a>
               <div style="display:none">
                 <a class="btn dropdown-toggle " data-toggle="dropdown">
                   <span id="query-collections-caret" class="caret"></span>
@@ -73,7 +78,8 @@
 
 
           <div class="control-group" ng-show="verb=='GET' || verb=='DELETE'">
-            <label class="control-label" for="query-limit"><strong>Limit</strong> <a id="query-limit-help" href="#" ng-show="false" class="help-link">get help</a></label>
+            <label class="control-label" for="query-limit"><strong>Limit</strong>
+              <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data limit')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_limit}}" tooltip-placement="right">(?)</a><a id="query-limit-help" href="#" ng-show="false" class="help-link">get help</a></label>
             <div class="controls">
               <div class="input-append">
                 <input ng-model="data.queryLimit" type="text" class="span5" id="query-limit" placeholder="ex: 10">
@@ -82,33 +88,35 @@
           </div>
 
           <div class="control-group" style="display:{{queryBodyDisplay}}">
-            <label class="control-label" for="query-source"><strong>JSON Body</strong> <a id="query-json-help" href="#" ng-show="false" class="help-link">get help</a></label>
+            <label class="control-label" for="query-source"><strong>JSON Body</strong>
+              <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data json body')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_json_body}}" tooltip-placement="right">(?)</a> <a id="query-json-help" href="#" ng-show="false" class="help-link">get help</a></label>
             <div class="controls">
             <textarea ng-model="data.queryBody" id="query-source" class="span6 pull-left" rows="4">
       { "name":"value" }
             </textarea>
               <br>
             <a class="btn pull-left" ng-click="validateJson();">Validate JSON</a>
+                <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data validate json')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_json_validate}}" tooltip-placement="right">(?)</a>
             </div>
           </div>
           <div style="clear: both; height: 10px;"></div>
           <div class="control-group">
             <input type="submit" ng-disabled="!dataForm.$valid || loading" class="btn btn-primary" id="button-query"  value="{{loading ? loadingText : 'Run Query'}}"/>
+            <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('data run query')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_run_query}}" tooltip-placement="right">(?)</a>
           </div>
         </fieldset>
        </form>
-        <div ng-include="display=='generic' ? 'data/display-generic.html' : ''"></div>
-        <div ng-include="display=='users' ? 'data/display-users.html' : ''"></div>
-        <div ng-include="display=='groups' ? 'data/display-groups.html' : ''"></div>
-        <div ng-include="display=='roles' ? 'data/display-roles.html' : ''"></div>
+        <div id="intro-entity-list">
+          <div ng-include="display=='generic' ? 'data/display-generic.html' : ''"></div>
+          <div ng-include="display=='users' ? 'data/display-users.html' : ''"></div>
+          <div ng-include="display=='groups' ? 'data/display-groups.html' : ''"></div>
+          <div ng-include="display=='roles' ? 'data/display-roles.html' : ''"></div>
+        </div>
 
       </div>
 
       </div>
     </section>
-
-
-
 
 </div>
 
