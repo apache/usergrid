@@ -48,7 +48,8 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEM
 /**
  * Created by ApigeeCorporation on 7/8/14.
  */
-public class ImportServiceImpl implements ImportService {
+public class
+        ImportServiceImpl implements ImportService {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
     public static final String IMPORT_ID = "importId";
@@ -683,7 +684,7 @@ public class ImportServiceImpl implements ImportService {
                         jobExecution.heartbeat();
                     }
                     if (entityCount == 2000) {
-                        fileImport.setLastUpdatedUUID(entityUuid.toString());
+                        fileImport.setLastUpdatedUUID(entity.getUuid().toString());
                         rootEm.update(fileImport);
                         entityCount = 0;
                     }
