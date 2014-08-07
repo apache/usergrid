@@ -52,7 +52,7 @@ public class S3ImportImpl implements S3Import {
     private int i=0;
 
     /**
-     *
+     * Downloads the files from s3 into temp local files
      * @param importInfo the information entered by the user required to perform import from S3
      * @param filename the filename generated based on the request URI
      * @param type  it indicates the type of import. 0 - Collection , 1 - Application and 2 - Organization
@@ -126,7 +126,7 @@ public class S3ImportImpl implements S3Import {
     }
 
     /**
-     *
+     * Copy the file from s3 into a temp local file
      * @param bucketName the S3 bucket name from where files need to be imported
      * @param fname the filename by which the temp file should be created
      * @throws IOException

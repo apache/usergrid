@@ -17,20 +17,18 @@
 
 package org.apache.usergrid.persistence.entities;
 
-
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
-
 /**
- * Contains state information for an Entity Job
+ * Contains state information for an Entity Import Job
  */
 @XmlRootElement
 public class Import extends TypedEntity {
-    //canceled , and expired states aren't used in current iteration.
+
+    //canceled  and expired states aren't used in current iteration.
     public static enum State {
         CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
     }
@@ -39,7 +37,7 @@ public class Import extends TypedEntity {
     protected State curState;
 
     /**
-     * Time send started
+     * Time job started
      */
     @EntityProperty
     protected Long started;
@@ -54,16 +52,24 @@ public class Import extends TypedEntity {
     public Import() {
     }
 
+    /**
+     * get the started time for the import job
+     */
     public Long getStarted() {
         return started;
     }
 
-
+    /**
+     * set the started time for the import job
+     */
     public void setStarted( final Long started ) {
         this.started = started;
     }
 
-    //state should moved to a derived state, but it is not there yet.
+    /**
+     * sets the state of the current job
+     * @param setter state of the job
+     */
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     @EntityProperty
     public void setState( State setter ) {
@@ -71,15 +77,26 @@ public class Import extends TypedEntity {
     }
 
 
+    /**
+     * gets the state of the current job
+     * @return state
+     */
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     @EntityProperty
     public State getState() { return curState; }
 
+    /**
+     * Get error message for the job
+     * @return
+     */
     public String getErrorMessage() {
         return errorMessage;
     }
 
-
+    /**
+     * Sets the error message for the job
+     * @param errorMessage error message
+     */
     public void setErrorMessage( final String errorMessage ) {
         this.errorMessage = errorMessage;
     }

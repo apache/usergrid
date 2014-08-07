@@ -17,19 +17,18 @@
 
 package org.apache.usergrid.persistence.entities;
 
-
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
 
 /**
- * Contains state information for an Entity Job
+ * Contains state information for an Entity FileImport Job
  */
 @XmlRootElement
 public class FileImport extends TypedEntity {
+
     //canceled , and expired states aren't used in current iteration.
     public static enum State {
         CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
@@ -43,7 +42,6 @@ public class FileImport extends TypedEntity {
      */
     @EntityProperty
     protected String errorMessage;
-
 
     /**
      * file name
@@ -66,55 +64,88 @@ public class FileImport extends TypedEntity {
     public FileImport() {
     }
 
-
+    /**
+     * Gets the last updated entity UUID for the File being handled by the File Import Job
+     * @return last updated entity UUID
+     */
     public String getLastUpdatedUUID() {
         return lastUpdatedUUID;
     }
 
-
-    public void setLastUpdatedUUID( final String lastUpdatedUUID ) {
+    /**
+     * Sets the lastupdated UUID
+     * @param lastUpdatedUUID entity UUID
+     */
+    public void setLastUpdatedUUID(final String lastUpdatedUUID) {
         this.lastUpdatedUUID = lastUpdatedUUID;
     }
 
+    /**
+     * Get the completed status of the file i.e. if the file is completely parsed or not.
+     * @return completed status
+     */
     public Boolean getCompleted() {
         return completed;
     }
 
-
-    public void setCompleted( final Boolean completed ) {
-        this.completed  = completed;
+    /**
+     * Get the completed status of the file i.e. if the file is completely parsed or not.
+     * @param completed Boolean indicating whether parsing this file is complete or not
+     */
+    public void setCompleted(final Boolean completed) {
+        this.completed = completed;
     }
 
-    //state should moved to a derived state, but it is not there yet.
+    /**
+     * gets the state of the current job
+     * @return state
+     */
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     @EntityProperty
-    public void setState( State setter ) {
+    public State getState() {
+        return curState;
+    }
+
+    /**
+     * sets the state of the current job
+     * @param setter state of the job
+     */
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @EntityProperty
+    public void setState(State setter) {
         curState = setter;
     }
 
-
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    @EntityProperty
-    public State getState() { return curState; }
-
+    /**
+     * Get error message for the job
+     * @return
+     */
     public String getErrorMessage() {
         return errorMessage;
     }
 
-
-    public void setErrorMessage( final String errorMessage ) {
+    /**
+     * Sets the error message for the job
+     * @param errorMessage error message
+     */
+    public void setErrorMessage(final String errorMessage) {
         this.errorMessage = errorMessage;
     }
 
+    /**
+     * Get the filename of the file being imported by this FileImport Job
+     * @return filename
+     */
     public String getFileName() {
         return fileName;
     }
 
-
-    public void setFileName( final String fileName ) {
+    /**
+     * Sets the filename of the file being imported by this FileImport Job
+     * @param fileName file name
+     */
+    public void setFileName(final String fileName) {
         this.fileName = fileName;
     }
-
-
 
 }

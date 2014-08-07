@@ -24,7 +24,8 @@ import java.io.File;
 /**
  * Created by ApigeeCorporation on 7/8/14.
  */
+
+// interface for S3ImportImpl
 public interface S3Import {
     ArrayList<File> copyFromS3(Map<String, Object> exportInfo, String filename, int type);
-
 }

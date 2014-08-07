@@ -48,35 +48,34 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEM
 /**
  * Created by ApigeeCorporation on 7/8/14.
  */
-public class
-        ImportServiceImpl implements ImportService {
+public class ImportServiceImpl implements ImportService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
     public static final String IMPORT_ID = "importId";
     public static final String IMPORT_JOB_NAME = "importJob";
-
     public static final String FILE_IMPORT_ID = "fileImportId";
     public static final String FILE_IMPORT_JOB_NAME = "fileImportJob";
+
+    //Amount of time that has passed before sending another heart beat in millis
+    public static final int TIMESTAMP_DELTA = 5000;
+
+    private static final Logger logger = LoggerFactory.getLogger(ImportServiceImpl.class);
+
+    //injected the Entity Manager Factory
+    protected EntityManagerFactory emf;
     private ArrayList<File> files;
 
     //dependency injection
     private SchedulerService sch;
 
-    //injected the Entity Manager Factory
-    protected EntityManagerFactory emf;
-
     //inject Management Service to access Organization Data
     private ManagementService managementService;
-
-    //Amount of time that has passed before sending another heart beat in millis
-    public static final int TIMESTAMP_DELTA = 5000;
-
     private JsonFactory jsonFactory = new JsonFactory();
 
     private int entityCount = 0;
 
-
     /**
+     * This schedules the main import Job
+     *
      * @param config configuration of the job to be scheduled
      * @return it returns the UUID of the scheduled job
      * @throws Exception
@@ -89,12 +88,12 @@ public class
             return null;
         }
 
-        EntityManager em = null;
+        EntityManager rootEm = null;
         try {
-            em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-            Set<String> collections = em.getApplicationCollections();
+            rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            Set<String> collections = rootEm.getApplicationCollections();
             if (!collections.contains("imports")) {
-                em.createApplicationCollection("imports");
+                rootEm.createApplicationCollection("imports");
             }
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
@@ -103,51 +102,54 @@ public class
 
         Import importUG = new Import();
 
-        //update state
+        // create the import entity to store all metadata about the import job
         try {
-            importUG = em.create(importUG);
+            importUG = rootEm.create(importUG);
         } catch (Exception e) {
             logger.error("Import entity creation failed");
             return null;
         }
 
+        // update state for import job to created
         importUG.setState(Import.State.CREATED);
-        em.update(importUG);
+        rootEm.update(importUG);
 
-        //set data to be transferred to importInfo
+        // set data to be transferred to importInfo
         JobData jobData = new JobData();
         jobData.setProperty("importInfo", config);
         jobData.setProperty(IMPORT_ID, importUG.getUuid());
 
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
-        //schedule job
+        // schedule import job
         sch.createJob(IMPORT_JOB_NAME, soonestPossible, jobData);
 
-        //update state
+        // update state for import job to created
         importUG.setState(Import.State.SCHEDULED);
-        em.update(importUG);
+        rootEm.update(importUG);
 
         return importUG.getUuid();
     }
 
-
     /**
+     * This schedules the sub  FileImport Job
+     *
      * @param file file to be scheduled
      * @return it returns the UUID of the scheduled job
      * @throws Exception
      */
     public UUID scheduleFile(String file, EntityRef importRef) throws Exception {
 
-        EntityManager em = null;
+        EntityManager rootEm = null;
 
         try {
-            em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         } catch (Exception e) {
             logger.error("application doesn't exist within the current context");
             return null;
         }
 
+        // create a FileImport entity to store metadata about the fileImport job
         FileImport fileImport = new FileImport();
 
         fileImport.setFileName(file);
@@ -155,38 +157,41 @@ public class
         fileImport.setLastUpdatedUUID(" ");
         fileImport.setErrorMessage(" ");
         fileImport.setState(FileImport.State.CREATED);
-        fileImport = em.create(fileImport);
+        fileImport = rootEm.create(fileImport);
 
-        Import importUG = em.get(importRef, Import.class);
+        Import importUG = rootEm.get(importRef, Import.class);
 
         try {
-            em.createConnection(importUG, "includes", fileImport);
+            // create a connection between the main import job and the sub FileImport Job
+            rootEm.createConnection(importUG, "includes", fileImport);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return null;
         }
-        fileImport.setState(FileImport.State.CREATED);
-        em.update(fileImport);
 
-        //set data to be transferred to importInfo
+        // mark the File Import Job as created
+        fileImport.setState(FileImport.State.CREATED);
+        rootEm.update(fileImport);
+
+        //set data to be transferred to the FileImport Job
         JobData jobData = new JobData();
         jobData.setProperty("File", file);
         jobData.setProperty(FILE_IMPORT_ID, fileImport.getUuid());
 
         long soonestPossible = System.currentTimeMillis() + 250; //sch grace period
 
-        //schedule job
+        //schedule file import job
         sch.createJob(FILE_IMPORT_JOB_NAME, soonestPossible, jobData);
 
-        //update state
+        //update state of the job to Scheduled
         fileImport.setState(FileImport.State.SCHEDULED);
-        em.update(fileImport);
+        rootEm.update(fileImport);
 
         return fileImport.getUuid();
     }
 
     /**
-     * Query Entity Manager for the string state of the Import Entity. This corresponds to the GET /import
+     * Query Entity Manager for the state of the Import Entity. This corresponds to the GET /import
      *
      * @return String
      */
@@ -236,6 +241,12 @@ public class
         return importUG.getErrorMessage().toString();
     }
 
+    /**
+     * Returns the Import Entity that stores all meta-data for the particular import Job
+     * @param jobExecution the import job details
+     * @return Import Entity
+     * @throws Exception
+     */
     @Override
     public Import getImportEntity(final JobExecution jobExecution) throws Exception {
 
@@ -246,6 +257,12 @@ public class
     }
 
 
+    /**
+     * Returns the File Import Entity that stores all meta-data for the particular sub File import Job
+     * @param jobExecution the file import job details
+     * @return File Import Entity
+     * @throws Exception
+     */
     @Override
     public FileImport getFileImportEntity(final JobExecution jobExecution) throws Exception {
 
@@ -255,6 +272,9 @@ public class
         return em.get(fileImportId, FileImport.class);
     }
 
+    /**
+     * This returns the temporary files downloaded form s3
+     */
     @Override
     public ArrayList<File> getEphemeralFile() {
         return files;
@@ -291,6 +311,7 @@ public class
     }
 
     /**
+     * This method gets the files from s3 and also creates sub-jobs for each file i.e. File Import Jobs
      * @param jobExecution the job created by the scheduler with all the required config data
      * @throws Exception
      */
@@ -309,14 +330,14 @@ public class
         //get the entity manager for the application, and the entity that this Import corresponds to.
         UUID importId = (UUID) jobExecution.getJobData().getProperty(IMPORT_ID);
 
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
-        Import importUG = em.get(importId, Import.class);
+        EntityManager rooteEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        Import importUG = rooteEm.get(importId, Import.class);
 
         //update the entity state to show that the job has officially started.
         importUG.setState(Import.State.STARTED);
         importUG.setStarted(System.currentTimeMillis());
         importUG.setErrorMessage(" ");
-        em.update(importUG);
+        rooteEm.update(importUG);
         try {
             if (s3PlaceHolder != null) {
                 s3Import = (S3Import) s3PlaceHolder;
@@ -327,7 +348,7 @@ public class
             logger.error("S3Import doesn't exist");
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FAILED);
-            em.update(importUG);
+            rooteEm.update(importUG);
             return;
         }
 
@@ -337,7 +358,7 @@ public class
                 logger.error("No organization could be found");
                 importUG.setErrorMessage("No organization could be found");
                 importUG.setState(Import.State.FAILED);
-                em.update(importUG);
+                rooteEm.update(importUG);
                 return;
             } else if (config.get("applicationId") == null) {
                 //import All the applications from an organization
@@ -349,31 +370,35 @@ public class
                 //imports a single collection from an app org combo
                 importCollectionFromOrgApp((UUID) config.get("applicationId"), config, jobExecution, s3Import);
             }
-        }
-        catch (OrganizationNotFoundException e) {
+
+        } catch (OrganizationNotFoundException e) {
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FINISHED);
-            em.update(importUG);
+            rooteEm.update(importUG);
             return;
         } catch (ApplicationNotFoundException e) {
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FINISHED);
-            em.update(importUG);
+            rooteEm.update(importUG);
             return;
         }
 
         if (files.size() == 0) {
+
             importUG.setState(Import.State.FINISHED);
             importUG.setErrorMessage("no files found in the bucket with the relevant context");
-            em.update(importUG);
+            rooteEm.update(importUG);
+
         } else {
+
             Map<String, Object> fileMetadata = new HashMap<String, Object>();
 
             ArrayList<Map<String, Object>> value = new ArrayList<Map<String, Object>>();
 
+            // schedule each file as a separate job
             for (File eachfile : files) {
 
-                UUID jobID = scheduleFile(eachfile.getPath(), em.getRef(importId));
+                UUID jobID = scheduleFile(eachfile.getPath(), rooteEm.getRef(importId));
                 Map<String, Object> fileJobID = new HashMap<String, Object>();
                 fileJobID.put("FileName", eachfile.getName());
                 fileJobID.put("JobID", jobID.toString());
@@ -382,7 +407,7 @@ public class
 
             fileMetadata.put("files", value);
             importUG.addProperties(fileMetadata);
-            em.update(importUG);
+            rooteEm.update(importUG);
         }
         return;
     }
@@ -400,9 +425,10 @@ public class
         if (application == null) {
             throw new ApplicationNotFoundException("Application Not Found");
         }
+
         String collectionName = config.get("collectionName").toString();
 
-
+        // prepares the prefix path for the files to be imported depending on the endpoint being hit
         String appFileName = prepareInputFileName("application", application.getName(), collectionName);
 
         files = fileTransfer(importUG, appFileName, config, s3Import, 0);
@@ -424,6 +450,7 @@ public class
             throw new ApplicationNotFoundException("Application Not Found");
         }
 
+        // prepares the prefix path for the files to be imported depending on the endpoint being hit
         String appFileName = prepareInputFileName("application", application.getName(), null);
 
         files = fileTransfer(importUG, appFileName, config, s3Import, 1);
@@ -445,29 +472,39 @@ public class
             throw new OrganizationNotFoundException("Organization Not Found");
         }
 
+        // prepares the prefix path for the files to be imported depending on the endpoint being hit
         appFileName = prepareInputFileName("organization", organizationInfo.getName(), null);
+
         files = fileTransfer(importUG, appFileName, config, s3Import, 2);
 
     }
 
     /**
+     * prepares the prefix path for the files to be imported depending on the endpoint being hit
      * @param type just a label such us: organization, application.
      * @return the file name concatenated with the type and the name of the collection
      */
     protected String prepareInputFileName(String type, String name, String CollectionName) {
         StringBuilder str = new StringBuilder();
+
         // in case of type organization --> the file name will be "<org_name>/"
         if (type.equals("organization")) {
+
             str.append(name);
             str.append("/");
+
         } else if (type.equals("application")) {
+
             // in case of type application --> the file name will be "<org_name>/<app_name>."
             str.append(name);
             str.append(".");
+
             if (CollectionName != null) {
+
                 // in case of type application and collection import --> the file name will be "<org_name>/<app_name>.<collection_name>."
                 str.append(CollectionName);
                 str.append(".");
+
             }
         }
 
@@ -485,13 +522,17 @@ public class
      * @return
      */
     public ArrayList<File> fileTransfer(Import importUG, String appFileName, Map<String, Object> config,
-                                        S3Import s3Import, int type) {
+                                        S3Import s3Import, int type) throws Exception {
+
+        EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         ArrayList<File> files = new ArrayList<File>();
+
         try {
             files = s3Import.copyFromS3(config, appFileName, type);
         } catch (Exception e) {
             importUG.setErrorMessage(e.getMessage());
             importUG.setState(Import.State.FAILED);
+            rootEm.update(importUG);
         }
         return files;
     }
@@ -503,7 +544,6 @@ public class
      */
     @Override
     public void FileParser(JobExecution jobExecution) throws Exception {
-
 
         // add properties to the import entity
         FileImport fileImport = getFileImportEntity(jobExecution);
@@ -518,26 +558,32 @@ public class
         // on resume, completed files will not be traversed again
         if (!completed) {
 
+            // validates the JSON structure
             if (isValidJSON(file, rootEm, fileImport)) {
 
+                // mark the File import job as started
                 fileImport.setState(FileImport.State.STARTED);
                 rootEm.update(fileImport);
 
+                // gets the application anme from the filename
                 String applicationName = file.getPath().split("\\.")[0];
 
                 ApplicationInfo application = managementService.getApplicationInfo(applicationName);
 
                 JsonParser jp = getJsonParserForFile(file);
+
+                // incase of resume, retrieve the last updated UUID for this file
                 String lastUpdatedUUID = fileImport.getLastUpdatedUUID();
 
                 // this handles partially completed files by updating entities from the point of failure
                 if (!lastUpdatedUUID.equals(" ")) {
+
                     // go till the last updated entity
                     while (!jp.getText().equals(lastUpdatedUUID)) {
                         jp.nextToken();
                     }
 
-                    // skip the last one and start from teh next one
+                    // skip the last one and start from the next one
                     while (!(jp.getCurrentToken() == JsonToken.END_OBJECT && jp.nextToken() == JsonToken.START_OBJECT)) {
                         jp.nextToken();
                     }
@@ -548,13 +594,16 @@ public class
                     jp.nextToken();
                 }
 
+                // get entity manager for the application
                 EntityManager em = emf.getEntityManager(application.getId());
 
                 while (jp.nextToken() != JsonToken.END_ARRAY) {
+                    // import the entities in this file
                     importEntityStuff(jp, em, rootEm, fileImport, jobExecution);
                 }
                 jp.close();
 
+                // Updates the state of file import job
                 if (!fileImport.getState().equals("FAILED")) {
 
                     // mark file as completed
@@ -562,7 +611,7 @@ public class
                     fileImport.setState(FileImport.State.FINISHED);
                     rootEm.update(fileImport);
 
-                    //check other files status and mark the status of import Job.
+                    //check other files status and mark the status of import Job as Finished if all others are finished
                     Results ImportJobResults = rootEm.getConnectingEntities(fileImport.getUuid(), "includes", null, Results.Level.ALL_PROPERTIES);
                     List<Entity> importEntity = ImportJobResults.getEntities();
                     UUID importId = importEntity.get(0).getUuid();
@@ -591,6 +640,14 @@ public class
         }
     }
 
+    /**
+     * Checks if a file is a valid JSON
+     * @param collectionFile the file being validated
+     * @param rootEm    the Entity Manager for the Management application
+     * @param fileImport the file import entity
+     * @return
+     * @throws Exception
+     */
     private boolean isValidJSON(File collectionFile, EntityManager rootEm, FileImport fileImport) throws Exception {
 
         boolean valid = false;
@@ -611,6 +668,12 @@ public class
     }
 
 
+    /**
+     * Gets the JSON parser for given file
+     * @param collectionFile the file for which JSON parser is required
+     * @return
+     * @throws Exception
+     */
     private JsonParser getJsonParserForFile(File collectionFile) throws Exception {
         JsonParser jp = jsonFactory.createJsonParser(collectionFile);
         jp.setCodec(new ObjectMapper());
@@ -618,12 +681,16 @@ public class
     }
 
 
+
     /**
      * Imports the entity's connecting references (collections, connections and dictionaries)
-     *
-     * @param jp JsonPrser pointing to the beginning of the object.
+     * @param jp  JsonParser pointing to the beginning of the object.
+     * @param em Entity Manager for the application being imported
+     * @param rootEm Entity manager for the root applicaition
+     * @param fileImport the file import entity
+     * @param jobExecution  execution details for the import jbo
+     * @throws Exception
      */
-
     private void importEntityStuff(final JsonParser jp, final EntityManager em, EntityManager rootEm, final FileImport fileImport, final JobExecution jobExecution) throws Exception {
 
         final JsonParserObservable subscribe = new JsonParserObservable(jp, em, rootEm, fileImport);
@@ -671,6 +738,7 @@ public class
             this.properties = properties;
         }
 
+        // Creates entities
         @Override
         public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
             EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
@@ -680,25 +748,21 @@ public class
                 // update the last updated entity
                 if (entity != null) {
                     entityCount++;
-
-                    logger.error(entityCount+"");
                     if ((entityCount % 10) == 0) {
                         jobExecution.heartbeat();
                     }
                     if (entityCount == 2000) {
-                        logger.error("updated entity count");
                         fileImport.setLastUpdatedUUID(entity.getUuid().toString());
                         rootEm.update(fileImport);
-                        logger.error("updated entity count for file "+ fileImport.getFileName());
                         entityCount = 0;
                     }
                 }
             } catch (Exception e) {
-                logger.error("something went wrong while creating this - " + e);
                 fileImport.setErrorMessage(e.getMessage());
                 try {
                     rootEm.update(fileImport);
-                } catch (Exception ex) { }
+                } catch (Exception ex) {
+                }
             }
         }
     }
@@ -715,6 +779,7 @@ public class
 
         }
 
+        // creates connections between entities
         @Override
         public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
             EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
@@ -723,12 +788,11 @@ public class
                 em.createConnection(ownerEntityRef, connectionType, entryRef);
 
             } catch (Exception e) {
-
-                logger.error("something went wrong while creating this - " + e);
                 fileImport.setErrorMessage(e.getMessage());
                 try {
                     rootEm.update(fileImport);
-                } catch (Exception ex) { }
+                } catch (Exception ex) {
+                }
             }
         }
     }
@@ -745,20 +809,18 @@ public class
             this.dictionary = dictionary;
         }
 
+        // adds map to the dictionary
         @Override
         public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
             EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
             try {
-
                 em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
-
             } catch (Exception e) {
-
-                logger.error("something went wrong while creating this - " + e);
                 fileImport.setErrorMessage(e.getMessage());
                 try {
                     rootEm.update(fileImport);
-                } catch (Exception ex) { }
+                } catch (Exception ex) {
+                }
             }
         }
     }
@@ -769,7 +831,6 @@ public class
         EntityManager em;
         EntityManager rootEm;
         FileImport fileImport;
-
 
 
         JsonParserObservable(JsonParser parser, EntityManager em, EntityManager rootEm, FileImport fileImport) {
@@ -790,7 +851,7 @@ public class
                 while (!subscriber.isUnsubscribed() && jp.nextToken() != JsonToken.END_OBJECT) {
                     String collectionName = jp.getCurrentName();
 
-                    // create the connections
+                    // create the  wrapper for connections
                     if (collectionName.equals("connections")) {
 
                         jp.nextToken(); // START_OBJECT
@@ -803,11 +864,14 @@ public class
 
                                 EntityRef entryRef = new SimpleEntityRef(UUID.fromString(entryId));
                                 entityWrapper = new ConnectionEvent(ownerEntityRef, connectionType, entryRef);
+
+                                // Creates a new subscriber to the observer with the given connection wrapper
                                 subscriber.onNext(entityWrapper);
                             }
                         }
+
                     }
-                    // add dictionaries
+                    // create the  wrapper for dictionaries
                     else if (collectionName.equals("dictionaries")) {
 
                         jp.nextToken(); // START_OBJECT
@@ -819,15 +883,18 @@ public class
 
                             Map<String, Object> dictionary = jp.readValueAs(HashMap.class);
                             entityWrapper = new DictionaryEvent(ownerEntityRef, dictionaryName, dictionary);
+
+                            // Creates a new subscriber to the observer with the given dictionary wrapper
                             subscriber.onNext(entityWrapper);
                         }
                         subscriber.onCompleted();
+
                     } else {
+
                         // Regular collections
                         jp.nextToken(); // START_OBJECT
 
                         Map<String, Object> properties = new HashMap<String, Object>();
-
                         JsonToken token = jp.nextToken();
 
                         while (token != JsonToken.END_OBJECT) {
@@ -845,28 +912,40 @@ public class
                             }
                             token = jp.nextToken();
                         }
-                        entityWrapper = new EntityEvent(UUID.fromString(entityUuid), entityType, properties);
-                        subscriber.onNext(entityWrapper);
+
                         ownerEntityRef = new SimpleEntityRef(entityType, UUID.fromString(entityUuid));
+                        entityWrapper = new EntityEvent(UUID.fromString(entityUuid), entityType, properties);
+
+                        // Creates a new subscriber to the observer with the given dictionary wrapper
+                        subscriber.onNext(entityWrapper);
+
                     }
                 }
-            }  catch (Exception e) {
+            } catch (Exception e) {
                 // skip illegal entity UUID and go to next one
                 fileImport.setErrorMessage(e.getMessage());
                 try {
                     rootEm.update(fileImport);
-                } catch(Exception ex) {}
+                } catch (Exception ex) {
+                }
                 subscriber.onError(e);
             }
         }
     }
 }
 
+/**
+ * Custom Exception class for Organization Not Found
+ */
 class OrganizationNotFoundException extends Exception {
     OrganizationNotFoundException(String s) {
         super(s);
     }
 }
+
+/**
+ * Custom Exception class for Application Not Found
+ */
 class ApplicationNotFoundException extends Exception {
     ApplicationNotFoundException(String s) {
         super(s);

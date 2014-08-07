@@ -43,37 +43,47 @@ public interface ImportService {
 
     /**
      * Parses the input file and creates entities
+     *
      * @param jobExecution
      * @throws Exception
      */
     void FileParser(JobExecution jobExecution) throws Exception;
 
     /**
-     * Returns the current state of the service.
+     * Get the state for the Job with UUID
+     * @param uuid Job UUID
+     * @return State of Job
+     * @throws Exception
      */
-    String getState(UUID state) throws Exception;
-
-    String getErrorMessage(UUID state) throws Exception;
+    String getState(UUID uuid) throws Exception;
 
     /**
-     * Returns the list of imported files from S3.
+     * Returns error message for the job with UUID
+     * @param uuid Job UUID
+     * @return error message
+     * @throws Exception
+     */
+    String getErrorMessage(UUID uuid) throws Exception;
+
+    /**
+     * Returns all the temp files downloaded from s3
+     * @return the list of downloaded files from S3.
      */
     ArrayList<File> getEphemeralFile();
 
     /**
-     *
      * @param jobExecution
      * @return FileImportEntity
      * @throws Exception
      */
-    FileImport getFileImportEntity( final JobExecution jobExecution ) throws Exception;
+    FileImport getFileImportEntity(final JobExecution jobExecution) throws Exception;
+
     /**
-     *
      * @param jobExecution
      * @return ImportEntity
      * @throws Exception
      */
-    Import getImportEntity( final JobExecution jobExecution ) throws Exception;
+    Import getImportEntity(final JobExecution jobExecution) throws Exception;
 
 
 }

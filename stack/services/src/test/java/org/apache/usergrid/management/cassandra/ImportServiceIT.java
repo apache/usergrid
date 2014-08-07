@@ -47,9 +47,7 @@ import org.jclouds.netty.config.NettyPayloadModule;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.*;
-
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.*;
@@ -84,7 +82,7 @@ public class ImportServiceIT {
         LOG.info( "in setup" );
         adminUser = setup.getMgmtSvc().createAdminUser( "test", "test user", "test@test.com", "test", false, false );
         organization = setup.getMgmtSvc().createOrganization( "test-organization", adminUser, true );
-        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app" ).getId();
+        applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "intern-app" ).getId();
     }
 
     //creates 2nd application for testing import from an organization having multiple applications
@@ -109,20 +107,20 @@ public class ImportServiceIT {
         emTest.createConnection( emTest.getRef(entityTest[1].getUuid()), "related", emTest.getRef( entityTest[0].getUuid()));
     }
 
-//    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
+    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
     // test case to check if a collection file is imported correctly
-    @Test
+    //@Test
     public void testIntegrationImportCollection() throws Exception {
 
-        // //creates 5 entities in user collection
+        // creates 5 entities in user collection
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
 
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
 
-        Entity entity[] = new Entity[5];
+        Entity entity[] = new Entity[10];
         //creates entities
-        for ( int i = 0; i < 5; i++ ) {
+        for ( int i = 0; i < 10; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "user" + i );
             userProperties.put( "email", "user" + i + "@test.com" );
@@ -156,7 +154,7 @@ public class ImportServiceIT {
         while ( !exportService.getState( exportUUID ).equals( "FINISHED" ) ) {
             ;
         }
-        //TODo: can check if temp file got created
+        //TODO: can check if temp file got created
 
         // import
         S3Import s3Import = new S3ImportImpl();
@@ -182,7 +180,6 @@ public class ImportServiceIT {
             assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
             //check if entities are actually updated i.e. created and modified should be different
-            //EntityManager em = setup.getEmf().getEntityManager(applicationId);
             Results collections = em.getCollection(applicationId, "users", null, Results.Level.ALL_PROPERTIES);
             List<Entity> entities = collections.getEntities();
 

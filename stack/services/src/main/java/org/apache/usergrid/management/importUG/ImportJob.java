@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 /**
@@ -39,11 +38,10 @@ public class ImportJob extends OnlyOnceJob {
     public static final String IMPORT_ID = "importId";
     private static final Logger logger = LoggerFactory.getLogger(ImportJob.class);
 
-    @Autowired
-    ImportService importService;
-
     //injected the Entity Manager Factory
     protected EntityManagerFactory emf;
+    @Autowired
+    ImportService importService;
 
     public ImportJob() {
         logger.info( "ImportJob created " + this );
@@ -59,8 +57,12 @@ public class ImportJob extends OnlyOnceJob {
             return;
         }
 
+        // heartbeat to indicate job has started
         jobExecution.heartbeat();
+
+        // call the doImport method from import service which schedules the sub-jobs i.e. parsing of files to FileImport Job
         importService.doImport( jobExecution );
+
         logger.error("Import Service completed job");
     }
 
@@ -74,13 +76,18 @@ public class ImportJob extends OnlyOnceJob {
         this.importService = importService;
     }
 
+    /*
+    This method is called when the job is retried maximum times by the scheduler but still fails. Thus the scheduler marks it as DEAD.
+     */
     @Override
     public void dead( final JobExecution execution ) throws Exception {
 
+        // marks the job as failed as it will not be retried by the scheduler.
         EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
         Import importUG = importService.getImportEntity(execution);
         importUG.setErrorMessage("The Job has been tried maximum times but still failed");
         importUG.setState(Import.State.FAILED);
         rootEm.update(importUG);
+
     }
 }

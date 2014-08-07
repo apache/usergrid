@@ -30,10 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.UUID;
-
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 /**
@@ -45,11 +43,11 @@ public class FileImportJob extends OnlyOnceJob {
     public static final String FILE_IMPORT_ID = "fileImportId";
     private static final Logger logger = LoggerFactory.getLogger(FileImportJob.class);
 
-    @Autowired
-    ImportService importService;
-
     //injected the Entity Manager Factory
     protected EntityManagerFactory emf;
+
+    @Autowired
+    ImportService importService;
 
     public FileImportJob() {
         logger.info( "FileImportJob created " + this );
@@ -65,8 +63,12 @@ public class FileImportJob extends OnlyOnceJob {
             return;
         }
 
+        // heartbeat to indicate job has started
         jobExecution.heartbeat();
+
+        // call the File Parser for the file set in job execution
         importService.FileParser( jobExecution );
+
         logger.error("File Import Service completed job");
     }
 
@@ -80,17 +82,22 @@ public class FileImportJob extends OnlyOnceJob {
         this.importService = importService;
     }
 
+    /*
+    This method is called when the job is retried maximum times by the scheduler but still fails. Thus the scheduler marks it as DEAD.
+     */
     @Override
     public void dead( final JobExecution execution ) throws Exception {
 
+        // Get the root entity manager
         EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
+        // Mark the sub-job i.e. File Import Job as Failed
         FileImport fileImport = importService.getFileImportEntity(execution);
         fileImport.setErrorMessage("The Job has been tried maximum times but still failed");
         fileImport.setState(FileImport.State.FAILED);
         rootEm.update(fileImport);
 
-        // If one file Job fails, mark the import Job also as failed
+        // If one file Job fails, mark the main import Job also as failed
         Results ImportJobResults = rootEm.getConnectingEntities(fileImport.getUuid(), "includes", null, Results.Level.ALL_PROPERTIES);
         List<Entity> importEntity = ImportJobResults.getEntities();
         UUID importId = importEntity.get(0).getUuid();
