@@ -680,16 +680,19 @@ public class
                 // update the last updated entity
                 if (entity != null) {
                     entityCount++;
+
+                    logger.error(entityCount+"");
                     if ((entityCount % 10) == 0) {
                         jobExecution.heartbeat();
                     }
                     if (entityCount == 2000) {
+                        logger.error("updated entity count");
                         fileImport.setLastUpdatedUUID(entity.getUuid().toString());
                         rootEm.update(fileImport);
+                        logger.error("updated entity count for file "+ fileImport.getFileName());
                         entityCount = 0;
                     }
                 }
-
             } catch (Exception e) {
                 logger.error("something went wrong while creating this - " + e);
                 fileImport.setErrorMessage(e.getMessage());
