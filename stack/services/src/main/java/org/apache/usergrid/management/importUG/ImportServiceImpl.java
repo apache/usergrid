@@ -42,6 +42,7 @@ import rx.schedulers.Schedulers;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
@@ -691,7 +692,7 @@ public class ImportServiceImpl implements ImportService {
      * @param jobExecution  execution details for the import jbo
      * @throws Exception
      */
-    private void importEntityStuff(final JsonParser jp, final EntityManager em, EntityManager rootEm, final FileImport fileImport, final JobExecution jobExecution) throws Exception {
+    private void importEntityStuff(final JsonParser jp, final EntityManager em, final EntityManager rootEm, final FileImport fileImport, final JobExecution jobExecution) throws Exception {
 
         final JsonParserObservable subscribe = new JsonParserObservable(jp, em, rootEm, fileImport);
 
@@ -709,6 +710,8 @@ public class ImportServiceImpl implements ImportService {
         };
 
 
+        final AtomicLong entityCounter = new AtomicLong();
+        final AtomicLong eventCounter = new AtomicLong();
         /**
          * This is boilerplate glue code.  We have to follow this for the parallel operation.  In the "call"
          * method we want to simply return the input observable + the chain of operations we want to invoke
@@ -716,11 +719,34 @@ public class ImportServiceImpl implements ImportService {
         observable.parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
             public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-                return entityWrapperObservable.doOnNext(doWork);
+                return entityWrapperObservable.doOnNext(doWork).doOnNext(new Action1<WriteEvent>() {
+
+                         @Override
+                         public void call(WriteEvent writeEvent) {
+                             if (!(writeEvent instanceof EntityEvent)) {
+                                 final long val = eventCounter.incrementAndGet();
+                                 if(val % 50 == 0) {
+                                     jobExecution.heartbeat();
+                                 }
+                                 return;
+                             }
+
+                             final long value = entityCounter.incrementAndGet();
+                             if (value % 2000 == 0) {
+                                 try {
+                                     fileImport.setLastUpdatedUUID(((EntityEvent) writeEvent).getEntityUuid().toString());
+                                     //checkpoint the UUID here.
+                                     rootEm.update(fileImport);
+                                 } catch(Exception ex) {}
+                             }
+                             if(value % 100 == 0) {
+                                 jobExecution.heartbeat();
+                             }
+                         }
+                     }
+                );
             }
         }, Schedulers.io()).toBlocking().last();
-
-
     }
 
     private interface WriteEvent {
@@ -738,25 +764,17 @@ public class ImportServiceImpl implements ImportService {
             this.properties = properties;
         }
 
+        public UUID getEntityUuid() {
+            return entityUuid;
+        }
+
         // Creates entities
         @Override
         public void doWrite(EntityManager em, JobExecution jobExecution, FileImport fileImport) {
             EntityManager rootEm = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
 
             try {
-                Entity entity = em.create(entityUuid, entityType, properties);
-                // update the last updated entity
-                if (entity != null) {
-                    entityCount++;
-                    if ((entityCount % 10) == 0) {
-                        jobExecution.heartbeat();
-                    }
-                    if (entityCount == 2000) {
-                        fileImport.setLastUpdatedUUID(entity.getUuid().toString());
-                        rootEm.update(fileImport);
-                        entityCount = 0;
-                    }
-                }
+                em.create(entityUuid, entityType, properties);
             } catch (Exception e) {
                 fileImport.setErrorMessage(e.getMessage());
                 try {
@@ -786,7 +804,6 @@ public class ImportServiceImpl implements ImportService {
 
             try {
                 em.createConnection(ownerEntityRef, connectionType, entryRef);
-
             } catch (Exception e) {
                 fileImport.setErrorMessage(e.getMessage());
                 try {
