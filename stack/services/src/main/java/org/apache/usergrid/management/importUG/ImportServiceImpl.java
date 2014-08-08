@@ -719,34 +719,41 @@ public class ImportServiceImpl implements ImportService {
         observable.parallel(new Func1<Observable<WriteEvent>, Observable<WriteEvent>>() {
             @Override
             public Observable<WriteEvent> call(Observable<WriteEvent> entityWrapperObservable) {
-                return entityWrapperObservable.doOnNext(doWork).doOnNext(new Action1<WriteEvent>() {
 
-                         @Override
-                         public void call(WriteEvent writeEvent) {
-                             if (!(writeEvent instanceof EntityEvent)) {
-                                 final long val = eventCounter.incrementAndGet();
-                                 if(val % 50 == 0) {
-                                     jobExecution.heartbeat();
-                                 }
-                                 return;
-                             }
+                /* TODO:
+                 * need to fixed so that number of entities created can be counted correctly
+                 * and also update the last updated UUID for the fileImport which is a must for resumability
+                 */
+//                return entityWrapperObservable.doOnNext(doWork).doOnNext(new Action1<WriteEvent>() {
+//
+//                         @Override
+//                         public void call(WriteEvent writeEvent) {
+//                             if (!(writeEvent instanceof EntityEvent)) {
+//                                 final long val = eventCounter.incrementAndGet();
+//                                 if(val % 50 == 0) {
+//                                     jobExecution.heartbeat();
+//                                 }
+//                                 return;
+//                             }
+//
+//                             final long value = entityCounter.incrementAndGet();
+//                             if (value % 2000 == 0) {
+//                                 try {
+//                                     logger.error("UUID = " +((EntityEvent) writeEvent).getEntityUuid().toString() + " value = " + value +"");
+//                                     fileImport.setLastUpdatedUUID(((EntityEvent) writeEvent).getEntityUuid().toString());
+//                                     //checkpoint the UUID here.
+//                                     rootEm.update(fileImport);
+//                                 } catch(Exception ex) {}
+//                             }
+//                             if(value % 100 == 0) {
+//                                 logger.error("heartbeat sent by " + fileImport.getFileName());
+//                                 jobExecution.heartbeat();
+//                             }
+//                         }
+//                     }
+//                );
 
-                             final long value = entityCounter.incrementAndGet();
-                             if (value % 2000 == 0) {
-                                 try {
-                                     logger.error("UUID = " +((EntityEvent) writeEvent).getEntityUuid().toString() + " value = " + value +"");
-                                     fileImport.setLastUpdatedUUID(((EntityEvent) writeEvent).getEntityUuid().toString());
-                                     //checkpoint the UUID here.
-                                     rootEm.update(fileImport);
-                                 } catch(Exception ex) {}
-                             }
-                             if(value % 100 == 0) {
-                                 logger.error("heartbeat sent by " + fileImport.getFileName());
-                                 jobExecution.heartbeat();
-                             }
-                         }
-                     }
-                );
+                return entityWrapperObservable.doOnNext(doWork);
             }
         }, Schedulers.io()).toBlocking().last();
     }
