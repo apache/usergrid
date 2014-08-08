@@ -72,7 +72,7 @@ public class TomcatResource extends ExternalResource {
 
 
     protected TomcatResource() {
-            try {
+        try {
             String[] locations = { "usergrid-properties-context.xml" };
             ConfigurableApplicationContext appContext = 
                     new ClassPathXmlApplicationContext( locations );
@@ -194,6 +194,7 @@ public class TomcatResource extends ExternalResource {
             tomcat = new Tomcat();
             tomcat.setBaseDir( dataDir.getAbsolutePath() );
             tomcat.setPort( port );
+            tomcat.getConnector().setAttribute("maxThreads", "1500");
             tomcat.addWebapp( "/", new File( getWebAppsPath() ).getAbsolutePath() );
 
             log.info("-----------------------------------------------------------------");
@@ -202,6 +203,8 @@ public class TomcatResource extends ExternalResource {
             tomcat.start();
 
             waitForTomcat();
+
+            mutex.notifyAll();
     }
 
 
@@ -276,6 +279,8 @@ public class TomcatResource extends ExternalResource {
                 after();
             }
         } );
+
+        mutex.notifyAll();
 
         return p;
     }

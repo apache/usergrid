@@ -17,10 +17,14 @@
 package org.apache.usergrid.cassandra;
 
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -34,6 +38,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.apache.cassandra.service.CassandraDaemon;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 
 
@@ -90,20 +95,26 @@ public class CassandraResource extends ExternalResource {
     private static CassandraResource instance;
     private Thread shutdown;
 
+    private Process process = null;
+
+    private boolean forkCassandra = false;
+
 
     /**
-     * Creates a Cassandra starting ExternalResource for JUnit test cases which uses the default SchemaManager for
-     * Cassandra.
+     * Creates a Cassandra starting ExternalResource for JUnit test cases which uses the 
+     * default SchemaManager for Cassandra.
      */
     @SuppressWarnings("UnusedDeclaration")
     CassandraResource() throws IOException {
-        this( null, DEFAULT_RPC_PORT, DEFAULT_STORAGE_PORT, DEFAULT_SSL_STORAGE_PORT, DEFAULT_NATIVE_TRANSPORT_PORT );
+        this( null, DEFAULT_RPC_PORT, DEFAULT_STORAGE_PORT, DEFAULT_SSL_STORAGE_PORT, 
+                DEFAULT_NATIVE_TRANSPORT_PORT );
+
     }
 
 
     /**
-     * Creates a Cassandra starting ExternalResource for JUnit test cases which uses the specified SchemaManager for
-     * Cassandra.
+     * Creates a Cassandra starting ExternalResource for JUnit test cases which uses the 
+     * specified SchemaManager for Cassandra.
      */
     CassandraResource( String schemaManagerName, int rpcPort, int storagePort, int sslStoragePort,
                        int nativeTransportPort ) {
@@ -123,12 +134,25 @@ public class CassandraResource extends ExternalResource {
             LOG.error( "Failed to create temporary directory for Cassandra instance.", e );
             throw new RuntimeException( e );
         }
+
+        try {
+            String[] locations = { "usergrid-properties-context.xml" };
+            ConfigurableApplicationContext appContext = 
+                    new ClassPathXmlApplicationContext( locations );
+            
+            Properties properties = (Properties)appContext.getBean("properties");
+            String forkString = properties.getProperty("cassandra.startup");
+            forkCassandra = "forked".equals( forkString );
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Error getting properties", ex);
+        }
     }
 
 
     /**
-     * Creates a Cassandra starting ExternalResource for JUnit test cases which uses the specified SchemaManager for
-     * Cassandra.
+     * Creates a Cassandra starting ExternalResource for JUnit test cases which uses the specified 
+     * SchemaManager for Cassandra.
      */
     public CassandraResource( int rpcPort, int storagePort, int sslStoragePort, int nativeTransportPort ) throws IOException {
         this( null, rpcPort, storagePort, sslStoragePort, nativeTransportPort );
@@ -221,7 +245,6 @@ public class CassandraResource extends ExternalResource {
 
     @Override
     public String toString() {
-
         return "\n" + "cassandra.yaml = " + new File(tempDir, "cassandra.yaml") + "\n" + RPC_PORT_KEY + " = " + rpcPort + "\n" + STORAGE_PORT_KEY + " = " + storagePort + "\n" + SSL_STORAGE_PORT_KEY + " = " + sslStoragePort + "\n" + NATIVE_TRANSPORT_PORT_KEY + " = " + nativeTransportPort + "\n" + DATA_FILE_DIR_KEY + " = " + new File(tempDir, "data").toString() + "\n" + COMMIT_FILE_DIR_KEY + " = " + new File(tempDir, "commitlog").toString() + "\n" + SAVED_CACHES_DIR_KEY + " = " + new File(tempDir, "saved_caches").toString() + "\n";
     }
 
@@ -263,86 +286,227 @@ public class CassandraResource extends ExternalResource {
                 return;
             }
 
-            LOG.info( "-------------------------------------------------------------------");
-            LOG.info( "Initializing Embedded Cassandra at {} ...", tempDir.toString() );
-            LOG.info( "-------------------------------------------------------------------");
-
-            // Create temp directory, setup to create new File configuration there
-            File newYamlFile = new File( tempDir, "cassandra.yaml" );
-            URL newYamlUrl = FileUtils.toURLs( new File[] { newYamlFile } )[0];
-
-            // Read the original yaml file, make changes, and dump to new position in tmpdir
-            Yaml yaml = new Yaml();
-            @SuppressWarnings("unchecked") Map<String, Object> map =
-                    ( Map<String, Object> ) yaml.load( ClassLoader.getSystemResourceAsStream( "cassandra.yaml" ) );
-            map.put( RPC_PORT_KEY, getRpcPort() );
-            map.put( STORAGE_PORT_KEY, getStoragePort() );
-            map.put( SSL_STORAGE_PORT_KEY, getSslStoragePort() );
-            map.put( NATIVE_TRANSPORT_PORT_KEY, getNativeTransportPort() );
-            map.put( COMMIT_FILE_DIR_KEY, new File( tempDir, "commitlog" ).toString() );
-            map.put( DATA_FILE_DIR_KEY, new String[] { new File( tempDir, "data" ).toString() } );
-            map.put( SAVED_CACHES_DIR_KEY, new File( tempDir, "saved_caches" ).toString() );
-            FileWriter writer = new FileWriter( newYamlFile );
-            yaml.dump( map, writer );
-            writer.flush();
-            writer.close();
-
-            // Fire up Cassandra by setting configuration to point to new yaml file
-            System.setProperty( "cassandra.url", "localhost:" + Integer.toString( rpcPort ) );
-            System.setProperty( "cassandra-foreground", "true" );
-            System.setProperty( "log4j.defaultInitOverride", "true" );
-            System.setProperty( "log4j.configuration", "log4j.properties" );
-            System.setProperty( "cassandra.ring_delay_ms", "100" );
-            System.setProperty( "cassandra.config", newYamlUrl.toString() );
-            System.setProperty( "cassandra.tempName", tempDir.getName() );
-
-            
-            //while ( !AvailablePortFinder.available( rpcPort ) || rpcPort == 9042 ) {
-            // why previously has a or condition of rpc == 9042?
-            while ( !AvailablePortFinder.available( rpcPort ) ) {
-                rpcPort++;
-            }
-            
-            while ( !AvailablePortFinder.available( storagePort ) ) {
-                storagePort++;
-            }
-            
-            while ( !AvailablePortFinder.available( sslStoragePort ) ) {
-                sslStoragePort++;
-            }
-            
-            while ( !AvailablePortFinder.available( nativeTransportPort ) ) {
-                nativeTransportPort++;
-            }
-
-            System.setProperty( "cassandra." + RPC_PORT_KEY, Integer.toString( rpcPort ) );
-            System.setProperty( "cassandra." + STORAGE_PORT_KEY, Integer.toString( storagePort ) );
-            System.setProperty( "cassandra." + SSL_STORAGE_PORT_KEY, Integer.toString( sslStoragePort ) );
-            System.setProperty( "cassandra." + NATIVE_TRANSPORT_PORT_KEY, Integer.toString( nativeTransportPort ) );
-
-            LOG.info("before() test, setting system properties for ports : [rpc, storage, sslStoage, native] = [{}, {}, {}, {}]", new Object[] {rpcPort, storagePort, sslStoragePort, nativeTransportPort});
-            if ( !newYamlFile.exists() ) {
-                throw new RuntimeException( "Cannot find new Yaml file: " + newYamlFile );
-            }
-            
-            cassandraDaemon = new CassandraDaemon();
-            cassandraDaemon.activate();
-
-            Runtime.getRuntime().addShutdownHook( new Thread() {
-                @Override
-                public void run() {
-                    after();
-                }
-            } );
-
-            String[] locations = { "usergrid-test-context.xml" };
-            applicationContext = new ClassPathXmlApplicationContext( locations );
-
-            loadSchemaManager( schemaManagerName );
-            initialized = true;
-            LOG.info( "External Cassandra resource at {} is ready!", tempDir.toString() );
-            lock.notifyAll();
+            startCassandraForked();
         }
+    }
+
+    private void startCassandraEmbedded() throws Throwable {
+
+        LOG.info( "-------------------------------------------------------------------");
+        LOG.info( "Initializing Embedded Cassandra at {} ...", tempDir.toString() );
+        LOG.info( "-------------------------------------------------------------------");
+
+        // Create temp directory, setup to create new File configuration there
+        File newYamlFile = new File( tempDir, "cassandra.yaml" );
+        URL newYamlUrl = FileUtils.toURLs( new File[] { newYamlFile } )[0];
+
+        // Read the original yaml file, make changes, and dump to new position in tmpdir
+        Yaml yaml = new Yaml();
+        @SuppressWarnings("unchecked") Map<String, Object> map =
+                ( Map<String, Object> ) yaml.load( ClassLoader.getSystemResourceAsStream( "cassandra.yaml" ) );
+        map.put( RPC_PORT_KEY, getRpcPort() );
+        map.put( STORAGE_PORT_KEY, getStoragePort() );
+        map.put( SSL_STORAGE_PORT_KEY, getSslStoragePort() );
+        map.put( NATIVE_TRANSPORT_PORT_KEY, getNativeTransportPort() );
+        map.put( COMMIT_FILE_DIR_KEY, new File( tempDir, "commitlog" ).toString() );
+        map.put( DATA_FILE_DIR_KEY, new String[] { new File( tempDir, "data" ).toString() } );
+        map.put( SAVED_CACHES_DIR_KEY, new File( tempDir, "saved_caches" ).toString() );
+        FileWriter writer = new FileWriter( newYamlFile );
+        yaml.dump( map, writer );
+        writer.flush();
+        writer.close();
+
+        // Fire up Cassandra by setting configuration to point to new yaml file
+        System.setProperty( "cassandra.url", "localhost:" + Integer.toString( rpcPort ) );
+        System.setProperty( "cassandra-foreground", "true" );
+        System.setProperty( "log4j.defaultInitOverride", "true" );
+        System.setProperty( "log4j.configuration", "log4j.properties" );
+        System.setProperty( "cassandra.ring_delay_ms", "100" );
+        System.setProperty( "cassandra.config", newYamlUrl.toString() );
+        System.setProperty( "cassandra.tempName", tempDir.getName() );
+
+        
+        //while ( !AvailablePortFinder.available( rpcPort ) || rpcPort == 9042 ) {
+        // why previously has a or condition of rpc == 9042?
+        while ( !AvailablePortFinder.available( rpcPort ) ) {
+            rpcPort++;
+        }
+        
+        while ( !AvailablePortFinder.available( storagePort ) ) {
+            storagePort++;
+        }
+        
+        while ( !AvailablePortFinder.available( sslStoragePort ) ) {
+            sslStoragePort++;
+        }
+        
+        while ( !AvailablePortFinder.available( nativeTransportPort ) ) {
+            nativeTransportPort++;
+        }
+
+        System.setProperty( "cassandra." + RPC_PORT_KEY, Integer.toString( rpcPort ) );
+        System.setProperty( "cassandra." + STORAGE_PORT_KEY, Integer.toString( storagePort ) );
+        System.setProperty( "cassandra." + SSL_STORAGE_PORT_KEY, Integer.toString( sslStoragePort ) );
+        System.setProperty( "cassandra." + NATIVE_TRANSPORT_PORT_KEY, Integer.toString( nativeTransportPort ) );
+
+        LOG.info("before() test, setting system properties for ports : "
+                + "[rpc, storage, sslStoage, native] = [{}, {}, {}, {}]", 
+                new Object[] {rpcPort, storagePort, sslStoragePort, nativeTransportPort});
+        if ( !newYamlFile.exists() ) {
+            throw new RuntimeException( "Cannot find new Yaml file: " + newYamlFile );
+        }
+        
+        cassandraDaemon = new CassandraDaemon();
+        cassandraDaemon.activate();
+
+        Runtime.getRuntime().addShutdownHook( new Thread() {
+            @Override
+            public void run() {
+                after();
+            }
+        } );
+
+        String[] locations = { "usergrid-test-context.xml" };
+        applicationContext = new ClassPathXmlApplicationContext( locations );
+
+        loadSchemaManager( schemaManagerName );
+        initialized = true;
+        LOG.info( "External Cassandra resource at {} is ready!", tempDir.toString() );
+        lock.notifyAll();
+    }
+
+
+    private void startCassandraForked() throws Throwable {
+
+        LOG.info( "-------------------------------------------------------------------");
+        LOG.info( "Initializing Forked Cassandra at {} ...", tempDir.toString() );
+        LOG.info( "-------------------------------------------------------------------");
+
+        // Create temp directory, setup to create new File configuration there
+        File newYamlFile = new File( tempDir, "cassandra.yaml" );
+        URL newYamlUrl = FileUtils.toURLs( new File[] { newYamlFile } )[0];
+
+        // Read the original yaml file, make changes, and dump to new position in tmpdir
+        Yaml yaml = new Yaml();
+        @SuppressWarnings("unchecked") Map<String, Object> map =
+                ( Map<String, Object> ) yaml.load( ClassLoader.getSystemResourceAsStream( "cassandra.yaml" ) );
+        map.put( RPC_PORT_KEY, getRpcPort() );
+        map.put( STORAGE_PORT_KEY, getStoragePort() );
+        map.put( SSL_STORAGE_PORT_KEY, getSslStoragePort() );
+        map.put( NATIVE_TRANSPORT_PORT_KEY, getNativeTransportPort() );
+        map.put( COMMIT_FILE_DIR_KEY, new File( tempDir, "commitlog" ).toString() );
+        map.put( DATA_FILE_DIR_KEY, new String[] { new File( tempDir, "data" ).toString() } );
+        map.put( SAVED_CACHES_DIR_KEY, new File( tempDir, "saved_caches" ).toString() );
+        FileWriter writer = new FileWriter( newYamlFile );
+        yaml.dump( map, writer );
+        writer.flush();
+        writer.close();
+
+        // Fire up Cassandra by setting configuration to point to new yaml file
+        System.setProperty( "cassandra.url", "localhost:" + Integer.toString( rpcPort ) );
+        System.setProperty( "cassandra-foreground", "true" );
+        System.setProperty( "log4j.defaultInitOverride", "true" );
+        System.setProperty( "log4j.configuration", "log4j.properties" );
+        System.setProperty( "cassandra.ring_delay_ms", "100" );
+        System.setProperty( "cassandra.config", newYamlUrl.toString() );
+        System.setProperty( "cassandra.tempName", tempDir.getName() );
+
+        
+        //while ( !AvailablePortFinder.available( rpcPort ) || rpcPort == 9042 ) {
+        // why previously has a or condition of rpc == 9042?
+        while ( !AvailablePortFinder.available( rpcPort ) ) {
+            rpcPort++;
+        }
+        
+        while ( !AvailablePortFinder.available( storagePort ) ) {
+            storagePort++;
+        }
+        
+        while ( !AvailablePortFinder.available( sslStoragePort ) ) {
+            sslStoragePort++;
+        }
+        
+        while ( !AvailablePortFinder.available( nativeTransportPort ) ) {
+            nativeTransportPort++;
+        }
+
+        System.setProperty( "cassandra." + RPC_PORT_KEY, Integer.toString( rpcPort ) );
+        System.setProperty( "cassandra." + STORAGE_PORT_KEY, Integer.toString( storagePort ) );
+        System.setProperty( "cassandra." + SSL_STORAGE_PORT_KEY, Integer.toString( sslStoragePort ) );
+        System.setProperty( "cassandra." + NATIVE_TRANSPORT_PORT_KEY, Integer.toString( nativeTransportPort ) );
+
+        LOG.info("before() test, setting system properties for ports : "
+                + "[rpc, storage, sslStoage, native] = [{}, {}, {}, {}]", 
+                new Object[] {rpcPort, storagePort, sslStoragePort, nativeTransportPort});
+
+        if ( !newYamlFile.exists() ) {
+            throw new RuntimeException( "Cannot find new Yaml file: " + newYamlFile );
+        }
+        
+        String javaHome = (String)System.getenv("JAVA_HOME");
+
+        String maxMemory = "-Xmx1000m";
+
+        ProcessBuilder pb = new ProcessBuilder(javaHome + "/bin/java", maxMemory,
+                "org.apache.usergrid.cassandra.CassandraMain", 
+                newYamlUrl.toString(), tempDir.getName(), 
+                getTargetDir() + "/src/test/resources/log4j.properties",
+                ""+rpcPort, ""+storagePort, ""+sslStoragePort, ""+nativeTransportPort );
+
+        // ensure Cassandra gets same classpath we have, but with...
+        String classpath = System.getProperty("java.class.path");
+        List<String> path = new ArrayList<String>();
+
+        String parts[] = classpath.split( File.pathSeparator );
+        for ( String part : parts ) {
+            if ( part.endsWith("test-classes") ) {
+                continue;
+            }
+            path.add(part);
+        }
+        String newClasspath = StringUtils.join( path, File.pathSeparator );
+
+        Map<String, String> env = pb.environment();
+        StringBuilder sb = new StringBuilder();
+        sb.append( newClasspath );
+        env.put("CLASSPATH", sb.toString());
+
+        pb.redirectErrorStream(true);
+
+        process = pb.start();
+
+        // use thread to log Cassandra output
+        new Thread( new Runnable() {
+            @Override
+            public void run() {
+                BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String line = null;
+                try {
+                    while ((line = br.readLine()) != null) {
+                        LOG.info(line);
+                    }
+
+                } catch (Exception ex) {
+                    LOG.error("Error reading from Cassandra process", ex);
+                    return;
+                } 
+            }
+        }).start();
+
+        Runtime.getRuntime().addShutdownHook( new Thread() {
+            @Override
+            public void run() {
+                after();
+            }
+        } );
+
+        String[] locations = { "usergrid-test-context.xml" };
+        applicationContext = new ClassPathXmlApplicationContext( locations );
+
+        loadSchemaManager( schemaManagerName );
+        initialized = true;
+        LOG.info( "External Cassandra resource at {} is ready!", tempDir.toString() );
+        lock.notifyAll();
     }
 
 
@@ -351,46 +515,49 @@ public class CassandraResource extends ExternalResource {
     protected synchronized void after() {
         super.after();
 
-        shutdown = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    Thread.currentThread().sleep( 100L );
-                }
-                catch ( InterruptedException e ) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                }
-
-                LOG.info( "Shutting down Cassandra instance in {}", tempDir.toString() );
-
-                if ( schemaManager != null ) {
-                    LOG.info( "Destroying schemaManager..." );
+        if ( process != null ) {
+            process.destroy();
+        }
+        else { 
+            shutdown = new Thread() {
+                @Override
+                public void run() {
                     try {
-                        schemaManager.destroy();
+                        Thread.currentThread().sleep( 100L );
                     }
-                    catch ( Exception e ) {
-                        LOG.error( "Ignoring failures while dropping keyspaces: {}", e.getMessage() );
+                    catch ( InterruptedException ignored ) {}
+
+                    LOG.info( "Shutting down Cassandra instance in {}", tempDir.toString() );
+
+                    if ( schemaManager != null ) {
+                        LOG.info( "Destroying schemaManager..." );
+                        try {
+                            schemaManager.destroy();
+                        }
+                        catch ( Exception e ) {
+                            LOG.error( "Ignoring failures while dropping keyspaces: {}", e.getMessage() );
+                        }
+
+                        LOG.info( "SchemaManager destroyed..." );
                     }
 
-                    LOG.info( "SchemaManager destroyed..." );
-                }
+                    applicationContext.stop();
+                    LOG.info( "ApplicationContext stopped..." );
 
-                applicationContext.stop();
-                LOG.info( "ApplicationContext stopped..." );
-
-                try {
-                    if ( cassandraDaemon != null ) {
-                        LOG.info( "Deactivating CassandraDaemon..." );
-                        cassandraDaemon.deactivate();
+                    try {
+                        if ( cassandraDaemon != null ) {
+                            LOG.info( "Deactivating CassandraDaemon..." );
+                            cassandraDaemon.deactivate();
+                        }
+                    }
+                    catch ( Exception ex ) {
+                        LOG.error("Error deactivating Cassandra", ex);
                     }
                 }
-                catch ( Exception ex ) {
-                    ex.printStackTrace();
-                }
-            }
-        };
+            };
 
-        shutdown.start();
+            shutdown.start();
+        }
     }
 
 
@@ -504,5 +671,13 @@ public class CassandraResource extends ExternalResource {
         }
 
         return tmpdir;
+    }
+
+
+    public static String getTargetDir() throws IOException {
+        Properties props = new Properties();
+        props.load( ClassLoader.getSystemResourceAsStream( PROPERTIES_FILE ) );
+        File basedir = new File( ( String ) props.get( TARGET_DIRECTORY_KEY ) );
+        return basedir.getAbsolutePath();
     }
 }

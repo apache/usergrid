@@ -40,7 +40,7 @@ public class TomcatMain {
         Tomcat tomcat = new Tomcat();
         tomcat.setBaseDir(dataDir.getAbsolutePath());
         tomcat.setPort(port);
-        tomcat.getConnector().setAttribute("maxThreads", "600");
+        tomcat.getConnector().setAttribute("maxThreads", "1000");
         tomcat.addWebapp("/", new File(webappsPath).getAbsolutePath());
 
         log.info("-----------------------------------------------------------------");
