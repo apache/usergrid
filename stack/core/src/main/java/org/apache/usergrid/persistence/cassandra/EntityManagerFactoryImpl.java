@@ -411,4 +411,9 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         // no op
     }
 
+    @Override
+    public void flushEntityManagerCaches() {
+        // no-op
+    }
+
 }

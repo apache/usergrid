@@ -172,12 +172,7 @@ public class EntityIndexTest extends BaseIT {
         CandidateResults candidateResults = entityIndex.search( query );
         timer.stop();
 
-        if ( num == 1 ) {
-            assertNotNull( candidateResults.get( 0 ) != null );
-        }
-        else {
-            assertEquals( num, candidateResults.size() );
-        }
+        assertEquals( num, candidateResults.size() );
         log.debug( "Query time {}ms", timer.getTime() );
     }
 

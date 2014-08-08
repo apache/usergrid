@@ -118,4 +118,7 @@ public interface EntityManagerFactory {
     public void refreshIndex();
 
     public void setApplicationContext(ApplicationContext ac);
+
+    /** For testing purposes */
+    public void flushEntityManagerCaches();
 }

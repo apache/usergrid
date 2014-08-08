@@ -51,5 +51,11 @@ import org.apache.usergrid.rest.management.users.organizations.UsersOrganization
 public class RestITSuite {
 
     @ClassRule
+    public static ElasticSearchResource elasticSearchResource = ElasticSearchResource.instance;
+
+    @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+
+//   @ClassRule
+//    public static TomcatResource tomcatResource = TomcatResource.instance;
 }

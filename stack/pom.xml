@@ -114,6 +114,7 @@
     <tomcat-version>7.0.52</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
+    <elasticsearch.version>1.2.3</elasticsearch.version>
 
   </properties>
 
@@ -500,14 +501,8 @@
 
       <dependency>
         <groupId>org.apache.tomcat</groupId>
-        <artifactId>catalina</artifactId>
-        <version>6.0.29</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.tomcat</groupId>
-        <artifactId>juli</artifactId>
-        <version>6.0.29</version>
+        <artifactId>tomcat-catalina</artifactId>
+        <version>${tomcat-version}</version>
       </dependency>
 
       <dependency>
@@ -1404,7 +1399,15 @@
         <artifactId>activation</artifactId>
         <version>1.1</version>
       </dependency>
+
+    <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch</artifactId>
+        <version>${elasticsearch.version}</version>
+    </dependency>
+
     </dependencies>
+
   </dependencyManagement>
 
   <dependencies>

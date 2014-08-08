@@ -2618,10 +2618,17 @@ public class CpEntityManager implements EntityManager {
 
         // we may have multiple conflicts, but caller expects only one 
         Map<String, Field> violiations = wuve.getVioliations();
-        Field conflict = violiations.get( violiations.keySet().iterator().next() );
 
-        throw new DuplicateUniquePropertyExistsException( 
-                entity.getType(), conflict.getName(), conflict.getValue() );
+        if ( violiations != null ) {
+            Field conflict = violiations.get( violiations.keySet().iterator().next() );
+
+            throw new DuplicateUniquePropertyExistsException( 
+                    entity.getType(), conflict.getName(), conflict.getValue() );
+        } else {
+            throw new DuplicateUniquePropertyExistsException( 
+                    entity.getType(), "Unknown property name", "Unknown property value" );
+        }
+
     }
 
 
@@ -2801,6 +2808,11 @@ public class CpEntityManager implements EntityManager {
                 cpEntity, entity.getDynamicProperties(), entity.getType(), true );
 
         return cpEntity;
+    }
+
+    @Override
+    public void flushManagerCaches() {
+        managerCache.flush();
     }
 }
 

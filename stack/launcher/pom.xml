@@ -148,25 +148,18 @@
     <!-- Apache Dependencies -->
 
     <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>jasper</artifactId>
-      <version>6.0.33</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>servlet-api</artifactId>
-          <groupId>org.apache.tomcat</groupId>
-        </exclusion>
-
-        <exclusion>
-          <groupId>org.apache.tomcat</groupId>
-          <artifactId>juli</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>juli</artifactId>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-jasper</artifactId>
+        <exclusions>
+            <exclusion>
+                <artifactId>servlet-api</artifactId>
+                <groupId>org.apache.tomcat</groupId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>juli</artifactId>
+            </exclusion>
+        </exclusions>
     </dependency>
 
     <dependency>

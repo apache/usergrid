@@ -685,4 +685,7 @@ public interface EntityManager {
     void refreshIndex();
 
     public void init( EntityManagerFactory emf, UUID applicationId);
+
+    /** For testing purposes */
+    public void flushManagerCaches();
 }

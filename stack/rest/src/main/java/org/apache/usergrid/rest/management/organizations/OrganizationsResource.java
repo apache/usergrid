@@ -116,6 +116,8 @@ public class OrganizationsResource extends AbstractContextResource {
         String password = ( String ) json.remove( "password" );
         Map<String, Object> properties = ( Map<String, Object> ) json.remove( ORGANIZATION_PROPERTIES );
 
+        logger.debug("newOrganization");
+
         return newOrganization( ui, organizationName, username, name, email, password, json, properties, callback );
     }
 
@@ -136,6 +138,8 @@ public class OrganizationsResource extends AbstractContextResource {
                                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
+        logger.debug( "New organization: {}", organizationNameForm );
+
         String organizationName = organizationNameForm != null ? organizationNameForm : organizationNameQuery;
         String username = usernameForm != null ? usernameForm : usernameQuery;
         String name = nameForm != null ? nameForm : nameQuery;
@@ -153,7 +157,7 @@ public class OrganizationsResource extends AbstractContextResource {
         Preconditions
                 .checkArgument( StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
 
-        logger.info( "New organization: {}", organizationName );
+        logger.debug( "New organization: {}", organizationName );
 
         ApiResponse response = createApiResponse();
         response.setAction( "new organization" );

@@ -310,7 +310,8 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         IndexRequestBuilder irb = client
             .prepareIndex( indexName, this.indexType, indexId)
-            .setSource(entityAsMap);
+            .setSource(entityAsMap)
+            .setRefresh(refresh);
 
         irb.execute().actionGet();
 
@@ -350,6 +351,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         String indexId = createIndexDocId( id, version ); 
         client.prepareDelete( indexName, indexType, indexId )
+            .setRefresh( refresh )
             .execute().actionGet();
 
         if ( refresh) {
@@ -529,13 +531,21 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             } else if (f instanceof StringField) {
 
-                if ( field.getName().equals("username") || field.getName().equals("email") || field.getName().equals("path")) {
+                // index in lower case because Usergrid queries are case insensitive
+//                entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
+//                entityMap.put(field.getName() + ANALYZED_SUFFIX, field.getValue());
+
+                if ( field.getName().equals("username") 
+                        || field.getName().equals("email") 
+                        || field.getName().equals("path")) {
                     entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase() );
-                    entityMap.put(field.getName() + ANALYZED_SUFFIX, ((String)field.getValue()).toLowerCase());
+                    entityMap.put(field.getName() 
+                            + ANALYZED_SUFFIX, ((String)field.getValue()).toLowerCase());
                     
                 } else {
                     entityMap.put(field.getName(), ((String) field.getValue()));
-                    entityMap.put(field.getName() + ANALYZED_SUFFIX, ((String) field.getValue()));
+                    entityMap.put(field.getName() 
+                            + ANALYZED_SUFFIX, ((String) field.getValue()));
                 }
 
             } else if (f instanceof LocationField) {

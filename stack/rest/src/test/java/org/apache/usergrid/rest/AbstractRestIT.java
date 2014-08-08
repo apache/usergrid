@@ -26,7 +26,6 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
-import com.sun.jersey.test.framework.spi.container.TestContainerException;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import java.io.IOException;
 import java.net.URI;
@@ -75,14 +74,20 @@ public abstract class AbstractRestIT extends JerseyTest {
     @ClassRule
     public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
-    private static final URI baseURI = setup.getBaseURI();
+    //private static final URI baseURI = setup.getBaseURI();
 
     protected ObjectMapper mapper = new ObjectMapper();
 
 
+    public AbstractRestIT() {
+        super( descriptor );
+    }
+
+
     static {
         clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-        descriptor = new WebAppDescriptor.Builder( "org.apache.usergrid.rest" ).clientConfig( clientConfig ).build();
+        descriptor = new WebAppDescriptor.Builder( "org.apache.usergrid.rest" )
+                .clientConfig( clientConfig ).build();
         dumpClasspath( AbstractRestIT.class.getClassLoader() );
     }
 
@@ -117,10 +122,19 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         LOG.debug("Refreshing index for appId {}", appId );
 
-        resource().path( "/refreshindex" )
-            .queryParam( "app_id", appId.toString() )
-            .accept( MediaType.APPLICATION_JSON )
-            .post();
+        try {
+
+            resource().path( "/refreshindex" )
+                .queryParam( "app_id", appId.toString() )
+                .accept( MediaType.APPLICATION_JSON )
+                .post();
+            
+        } catch ( Exception e) {
+            LOG.debug("Error refreshing index", e);
+            return;
+        }
+
+        LOG.debug("Refreshed index for appId {}", appId );
     }
 
 
@@ -128,11 +142,20 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         LOG.debug("Refreshing index for app {}/{}", orgName, appName );
 
-        resource().path( "/refreshindex" )
-            .queryParam( "org_name", orgName )
-            .queryParam( "app_name", appName )
-            .accept( MediaType.APPLICATION_JSON )
-            .post();
+        try {
+
+            resource().path( "/refreshindex" )
+                .queryParam( "org_name", orgName )
+                .queryParam( "app_name", appName )
+                .accept( MediaType.APPLICATION_JSON )
+                .post();
+                    
+        } catch ( Exception e) {
+            LOG.debug("Error refreshing index", e);
+            return;
+        }
+
+        LOG.debug("Refreshed index for app {}/{}", orgName, appName );
     }
 
 
@@ -153,14 +176,12 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    public AbstractRestIT() throws TestContainerException {
-        super( descriptor );
-    }
-
-
     protected void setupUsers() {
 
+        LOG.info("Entering setupUsers");
+
         if ( usersSetup ) {
+            LOG.info("Leaving setupUsers: already setup");
             return;
         }
 
@@ -168,6 +189,7 @@ public abstract class AbstractRestIT extends JerseyTest {
         createUser( "edanuff", "ed@anuff.com", "sesame", "Ed Anuff" ); // client.setApiUrl(apiUrl);
 
         usersSetup = true;
+        LOG.info("Leaving setupUsers success");
     }
 
 
@@ -201,7 +223,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     @Override
     protected URI getBaseURI() {
-        return baseURI;
+        return setup.getBaseURI();
     }
 
 
@@ -215,15 +237,23 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     protected String userToken( String name, String password ) throws Exception {
 
-        setUserPassword( "ed@anuff.com", "sesame" );
+        try {
+            setUserPassword( "ed@anuff.com", "sesame" );
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", name ).queryParam( "password", password ).accept( MediaType.APPLICATION_JSON )
-                .get( String.class ));
+            JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+                    .queryParam( "grant_type", "password" )
+                    .queryParam( "username", name )
+                    .queryParam( "password", password ).accept( MediaType.APPLICATION_JSON )
+                    .get( String.class ));
 
-        String userToken = node.get( "access_token" ).textValue();
-        LOG.info( "returning user token: {}", userToken );
-        return userToken;
+            String userToken = node.get( "access_token" ).textValue();
+            LOG.info( "returning user token: {}", userToken );
+            return userToken;
+
+        } catch ( Exception e ) {
+            LOG.debug("Error getting user token", e);
+            throw e;
+        }
     }
 
 

@@ -54,27 +54,35 @@ public class RefreshIndexResource extends AbstractContextResource {
             @QueryParam("app_name") String appName, 
             @QueryParam("app_id") String appIdString ) throws IOException, Exception {
 
-        // only works in test mode
-        Properties props = management.getProperties();
-        String testProp = ( String ) props.get( "usergrid.test" );
-        if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
-            throw new UnsupportedOperationException();
+        try {
+
+            // only works in test mode
+            Properties props = management.getProperties();
+            String testProp = ( String ) props.get( "usergrid.test" );
+            if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
+                throw new UnsupportedOperationException();
+            }
+
+            UUID appId;
+            if ( orgName != null && appName != null ) {
+                appId = emf.lookupApplication( orgName + "/" + appName );
+            } else {
+                appId = UUID.fromString(appIdString);
+            }
+            
+            if ( appId != null ) {
+                EntityManager em = emf.getEntityManager( appId );
+                em.refreshIndex();
+            } else {
+                emf.refreshIndex();
+            }
+
+
+        } catch (Exception e) {
+            logger.error("Error in refresh", e);
+            return Response.serverError().build();
         }
 
-        UUID appId;
-        if ( orgName != null && appName != null ) {
-            appId = emf.lookupApplication( orgName + "/" + appName );
-        } else {
-            appId = UUID.fromString(appIdString);
-        }
-        
-        if ( appId != null ) {
-            EntityManager em = emf.getEntityManager( appId );
-            em.refreshIndex();
-        } else {
-            emf.refreshIndex();
-        }
-
-        return Response.created( null ).build();
+        return Response.ok().build();
     }
 }

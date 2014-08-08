@@ -138,4 +138,9 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     public void setApplicationContext(ApplicationContext ac) throws BeansException {
         factory.setApplicationContext(ac);
     }
+
+    @Override
+    public void flushEntityManagerCaches() {
+        factory.flushEntityManagerCaches();
+    }
 }

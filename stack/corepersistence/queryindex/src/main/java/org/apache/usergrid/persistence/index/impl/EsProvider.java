@@ -35,6 +35,7 @@ import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * Provides access to ElasticSearch client and, optionally, embedded ElasticSearch for testing.
  */
@@ -45,6 +46,9 @@ public class EsProvider {
 
     private final IndexFig indexFig;
     private static Client client;
+
+    public static String LOCAL_ES_PORT_PROPNAME = "EMBEDDED_ES_PORT";
+
 
     @Inject
     public EsProvider(IndexFig fig) {
@@ -58,17 +62,23 @@ public class EsProvider {
         return client;
     }
 
+    
+    public void releaseClient() {
+        client = null;
+    }
+
+
     public static synchronized Client getClient(IndexFig fig) {
 
         if (client == null) {
 
             Client newClient = null;
 
-            if (fig.isEmbedded()) {
+            if ("embedded".equals( fig.getStartUp()) ) {
 
                 int port = AvailablePortFinder.getNextAvailable(2000);
 
-                System.setProperty("EMBEDDED_ES_PORT", port+"");
+                System.setProperty( LOCAL_ES_PORT_PROPNAME, port+"" );
 
                 File tempDir;
                 try {
@@ -106,13 +116,24 @@ public class EsProvider {
                 newClient = node.client();
 
 
-            } else { // build client that connects to all configured hosts
-
+            } else {
+                
                 String allHosts = "";
-                String SEP = "";
-                for (String host : fig.getHosts().split(",")) {
-                    allHosts = allHosts + SEP + host + ":" + fig.getPort();
-                    SEP = ",";
+
+                if ("remote".equals( fig.getStartUp()) ) { 
+
+                    // we will connect to ES on all configured hosts
+                    String SEP = "";
+                    for (String host : fig.getHosts().split(",")) {
+                        allHosts = allHosts + SEP + host + ":" + fig.getPort();
+                        SEP = ",";
+                    }
+
+                } else {
+
+                    // we will connect to forked ES on localhost
+                    allHosts = "localhost:" + System.getProperty(LOCAL_ES_PORT_PROPNAME);
+
                 }
 
                 Settings settings = ImmutableSettings.settingsBuilder()
@@ -130,9 +151,7 @@ public class EsProvider {
 
                     .build();
 
-                log.info("-----------------------------------------------------------------------");
-                log.info("Creating ElasticSearch client with settings: " +  settings.getAsMap());
-                log.info("-----------------------------------------------------------------------");
+                log.debug("Creating ElasticSearch client with settings: " +  settings.getAsMap());
 
                 Node node = NodeBuilder.nodeBuilder().settings(settings)
                     .client(true).node();
@@ -140,7 +159,7 @@ public class EsProvider {
                 newClient = node.client();
 
             }
-            client = newClient;
+                client = newClient;
         }
         return client;
     }

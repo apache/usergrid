@@ -2894,4 +2894,9 @@ public class EntityManagerImpl implements EntityManager {
         return new SimpleEntityRef( Role.ENTITY_TYPE, SimpleRoleRef.getIdForGroupIdAndRoleName( ownerId, roleName ));
     }
 
+    @Override
+    public void flushManagerCaches() {
+        // no-op
+    }
+
 }

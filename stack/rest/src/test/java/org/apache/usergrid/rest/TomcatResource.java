@@ -42,6 +42,8 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 
 /**
@@ -65,10 +67,22 @@ public class TomcatResource extends ExternalResource {
 
     private static AtomicInteger clientCount = new AtomicInteger(0);
 
+    Tomcat tomcat = null;
     Process process = null;
 
 
-    protected TomcatResource() {}
+    protected TomcatResource() {
+            try {
+            String[] locations = { "usergrid-properties-context.xml" };
+            ConfigurableApplicationContext appContext = 
+                    new ClassPathXmlApplicationContext( locations );
+            
+            properties = (Properties)appContext.getBean("properties");
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Error getting properties", ex);
+        }
+    }
 
 
     @Override
@@ -77,12 +91,27 @@ public class TomcatResource extends ExternalResource {
 
         synchronized (mutex) {
 
-            if ( clientCount.decrementAndGet() == 0 && process != null ) {
+            if ( clientCount.decrementAndGet() < 1 ) {
+
+                log.info("----------------------------------------------------------------------");
                 log.info("Destroying Tomcat running on port " + port);
-                process.destroy();
+                log.info("----------------------------------------------------------------------");
+
+                if ( process != null ) {
+                    process.destroy();
+                    
+                } else if ( tomcat != null ) {
+                    try {
+                        tomcat.stop();
+                        tomcat.destroy();
+                    } catch (LifecycleException ex) {
+                        log.error("Error stopping Tomcat", ex);
+                    }
+                }
                 started = false;
+
             } else {
-                log.info("NOT stopping Tomcat because it is still in use");
+                log.info("NOT stopping Tomcat because it is still in use by {}", clientCount.get());
             }
         }
 
@@ -94,17 +123,20 @@ public class TomcatResource extends ExternalResource {
     protected void before() throws Throwable {
         log.info("Entering before");
 
-//        if (started) {
-//            log.info("NOT starting Tomcat because it is already started #1");
-//            return;
-//        }
+        String esStartup = properties.getProperty("tomcat.startup");
+        if ( "forked".equals( esStartup )) {
+            forkTomcat = true;
+        } else {
+            forkTomcat = false;
+        }
 
         synchronized (mutex) {
 
             clientCount.incrementAndGet();
 
             if (started) {
-                log.info("NOT starting Tomcat because it is already started #2");
+                log.info("NOT starting Tomcat because it is already started");
+                log.info("Leaving before: {} users of Tomcat", clientCount.get());
                 return;
             }
 
@@ -114,9 +146,9 @@ public class TomcatResource extends ExternalResource {
                 startTomcatEmbedded();
             }
 
+            log.info("Leaving before: Started Tomcat, now {} users", clientCount.get());
         }
 
-        log.info("Leaving before");
     }
 
 
@@ -143,7 +175,7 @@ public class TomcatResource extends ExternalResource {
                 break;
                 
             } catch (Exception e) {
-                log.info("Cannot connect to url {} error: {}", url, e.getMessage());
+                log.info("Waiting for Tomcat on url {}", url);
             }
         }
         if ( !started ) {
@@ -159,7 +191,7 @@ public class TomcatResource extends ExternalResource {
 
             port = AvailablePortFinder.getNextAvailable( 9998 + RandomUtils.nextInt(10)  );
 
-            Tomcat tomcat = new Tomcat();
+            tomcat = new Tomcat();
             tomcat.setBaseDir( dataDir.getAbsolutePath() );
             tomcat.setPort( port );
             tomcat.addWebapp( "/", new File( getWebAppsPath() ).getAbsolutePath() );
@@ -189,9 +221,13 @@ public class TomcatResource extends ExternalResource {
         ProcessBuilder pb = new ProcessBuilder(javaHome + "/bin/java", maxMemory, logConfig,
                 "org.apache.usergrid.TomcatMain", "src/main/webapp", port + "");
 
-        // ensure Tomcat gets same classpath we have
+        // ensure Tomcat gets same classpath we have, but with...
         String classpath = System.getProperty("java.class.path");
         List<String> path = new ArrayList<String>();
+
+        // our properties dir at the start
+        path.add( propDirPath );
+
         String parts[] = classpath.split( File.pathSeparator );
         for ( String part : parts ) {
             if ( part.endsWith("test-classes") ) {
@@ -199,8 +235,6 @@ public class TomcatResource extends ExternalResource {
             }
             path.add(part);
         }
-        // plus our special properties directory
-        path.add( propDirPath );
         String newClasspath = StringUtils.join( path, File.pathSeparator );
 
         Map<String, String> env = pb.environment();
@@ -262,7 +296,8 @@ public class TomcatResource extends ExternalResource {
         pw.println("elasticsearch.port=" + esPort);
         pw.println("elasticsearch.cluster_name=test_cluster");
         pw.println("elasticsearch.index_prefix=usergrid");
-        pw.println("elasticsearch.force_refresh=false");
+        pw.println("elasticsearch.startup=remote");
+        pw.println("elasticsearch.force_refresh=" + properties.getProperty("elasticsearch.force_refresh"));
         
         pw.println("collections.keyspace=Usergrid_Applications");
         pw.println("collections.keyspace.strategy.options=replication_factor:1");
@@ -278,7 +313,6 @@ public class TomcatResource extends ExternalResource {
         pw.println("usergrid.sysadmin.login.email=superuser@usergrid.com");
         pw.println("usergrid.sysadmin.login.password=superpassword");
         pw.println("usergrid.sysadmin.login.allowed=true");
-
         
         pw.println("mail.transport.protocol=smtp");
         pw.println("mail.store.protocol=imap");

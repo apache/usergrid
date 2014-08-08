@@ -146,6 +146,8 @@ public class GeoIndexManager {
                                                              UUID appId, UUID[] index_keys, String propertyName,
                                                              EntityLocationRef location ) {
 
+        logger.debug("batchStoreLocationInConnectionsIndex");
+
         Point p = location.getPoint();
         List<String> cells = GeocellManager.generateGeoCell( p );
 
@@ -231,6 +233,8 @@ public class GeoIndexManager {
     public static void batchDeleteLocationInConnectionsIndex( Mutator<ByteBuffer> m, IndexBucketLocator locator,
                                                               UUID appId, UUID[] index_keys, String propertyName,
                                                               EntityLocationRef location ) {
+
+        logger.debug("batchDeleteLocationInConnectionsIndex");
 
         Point p = location.getPoint();
         List<String> cells = GeocellManager.generateGeoCell( p );

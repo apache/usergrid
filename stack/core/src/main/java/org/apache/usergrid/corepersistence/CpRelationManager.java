@@ -1912,6 +1912,8 @@ public class CpRelationManager implements RelationManager {
     private IndexUpdate doBackwardConnectionsUpdate( IndexUpdate indexUpdate ) throws Exception {
         final Entity targetEntity = indexUpdate.getEntity();
 
+        logger.debug( "doBackwardConnectionsUpdate" );
+
         final ConnectionTypesIterator connectionTypes =
             new ConnectionTypesIterator( cass, applicationId, targetEntity.getUuid(), false, 100 );
 
@@ -1949,6 +1951,8 @@ public class CpRelationManager implements RelationManager {
     @Metered(group = "core", name = "RelationManager_batchUpdateConnectionIndex")
     public IndexUpdate batchUpdateConnectionIndex( 
             IndexUpdate indexUpdate, ConnectionRefImpl connection ) throws Exception {
+
+        logger.debug( "batchUpdateConnectionIndex" );
 
         // UUID connection_id = connection.getUuid();
 
@@ -2074,6 +2078,8 @@ public class CpRelationManager implements RelationManager {
                                                                   ConnectionRefImpl connection, UUID[] index_keys )
             throws Exception {
 
+        logger.debug("batchDeleteConnectionIndexEntries");
+
         // entity_id,prop_name
         Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
                 indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL],
@@ -2123,6 +2129,8 @@ public class CpRelationManager implements RelationManager {
     @Metered(group = "core", name = "RelationManager_batchAddConnectionIndexEntries")
     public Mutator<ByteBuffer> batchAddConnectionIndexEntries( IndexUpdate indexUpdate, 
         IndexUpdate.IndexEntry entry, ConnectionRefImpl conn, UUID[] index_keys ) {
+
+        logger.debug("batchAddConnectionIndexEntries");
 
         // entity_id,prop_name
         Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], 

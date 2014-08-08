@@ -87,11 +87,13 @@ public class OrganizationResource extends AbstractContextResource {
 
 
     public OrganizationResource() {
+        logger.debug("OrganizationResource created");
     }
 
 
     public OrganizationResource init( OrganizationInfo organization ) {
         this.organization = organization;
+        logger.debug("OrganizationResource initialized for org {}", organization.getName());
         return this;
     }
 
@@ -261,7 +263,7 @@ public class OrganizationResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug( "OrganizationResource.executePut" );
+        logger.debug( "executePut" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "put" );
@@ -283,6 +285,7 @@ public class OrganizationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
+        logger.debug( "executePostJson" );
 
         OAuthResponse response = null;
         UUID jobUUID = null;
