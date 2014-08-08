@@ -107,30 +107,6 @@ public class ElasticSearchResource extends ExternalResource {
     }
 
 
-    private void waitForElasticSearch() throws RuntimeException {
-//        String url = "http://localhost:" + port + "/status"; 
-//        int count = 0;
-//        while (count++ < 30) {
-//            try {
-//                Thread.sleep(1000);
-//                Client c = Client.create();
-//                WebResource wr = c.resource( url );
-//                wr.get(String.class);
-//                log.info("Tomcat is started.");
-//                started = true;
-//                break;
-//                
-//            } catch (Exception e) {
-//                log.info("Cannot connect to url {} error: {}", url, e.getMessage());
-//            }
-//        }
-//        if ( !started ) {
-//            throw new RuntimeException("Tomcat process never started.");
-//        }
-        started = true;
-    }
-
-
     private Process startElasticSearchProcess() throws IOException {
 
         port = AvailablePortFinder.getNextAvailable(4000 + RandomUtils.nextInt(10));
@@ -184,7 +160,7 @@ public class ElasticSearchResource extends ExternalResource {
             }
         }).start();
 
-        waitForElasticSearch();
+        started = true;
 
         Runtime.getRuntime().addShutdownHook( new Thread() {
             @Override

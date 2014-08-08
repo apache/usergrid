@@ -532,21 +532,8 @@ public class EsEntityIndexImpl implements EntityIndex {
             } else if (f instanceof StringField) {
 
                 // index in lower case because Usergrid queries are case insensitive
-//                entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
-//                entityMap.put(field.getName() + ANALYZED_SUFFIX, field.getValue());
-
-                if ( field.getName().equals("username") 
-                        || field.getName().equals("email") 
-                        || field.getName().equals("path")) {
-                    entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase() );
-                    entityMap.put(field.getName() 
-                            + ANALYZED_SUFFIX, ((String)field.getValue()).toLowerCase());
-                    
-                } else {
-                    entityMap.put(field.getName(), ((String) field.getValue()));
-                    entityMap.put(field.getName() 
-                            + ANALYZED_SUFFIX, ((String) field.getValue()));
-                }
+                entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
+                entityMap.put(field.getName() + ANALYZED_SUFFIX, field.getValue());
 
             } else if (f instanceof LocationField) {
                 LocationField locField = (LocationField) f;

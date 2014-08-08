@@ -286,7 +286,11 @@ public class CassandraResource extends ExternalResource {
                 return;
             }
 
-            startCassandraForked();
+            if ( forkCassandra ) {
+                startCassandraForked();
+            } else {
+                startCassandraEmbedded();
+            }
         }
     }
 

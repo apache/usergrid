@@ -61,7 +61,6 @@ import com.google.inject.Inject;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 
 @RunWith(ITRunner.class)
