@@ -734,12 +734,14 @@ public class ImportServiceImpl implements ImportService {
                              final long value = entityCounter.incrementAndGet();
                              if (value % 2000 == 0) {
                                  try {
+                                     logger.error("UUID = " +((EntityEvent) writeEvent).getEntityUuid().toString() + " value = " + value +"");
                                      fileImport.setLastUpdatedUUID(((EntityEvent) writeEvent).getEntityUuid().toString());
                                      //checkpoint the UUID here.
                                      rootEm.update(fileImport);
                                  } catch(Exception ex) {}
                              }
                              if(value % 100 == 0) {
+                                 logger.error("heartbeat sent by " + fileImport.getFileName());
                                  jobExecution.heartbeat();
                              }
                          }
