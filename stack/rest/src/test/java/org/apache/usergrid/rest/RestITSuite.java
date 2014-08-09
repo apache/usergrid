@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.rest;
 
+import org.apache.usergrid.ElasticSearchResource;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -55,7 +56,4 @@ public class RestITSuite {
 
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
-
-//   @ClassRule
-//    public static TomcatResource tomcatResource = TomcatResource.instance;
 }

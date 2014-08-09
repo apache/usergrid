@@ -118,6 +118,7 @@
               </includes>
               <excludes>
                 <exclude>**/*Concurrent*Suite.java</exclude>
+                <exclude>**/ExportServiceIT.java</exclude>
                 <exclude>**/ActivitiesServiceIT.java</exclude>
                 <exclude>**/ApplicationCreatorIT.java</exclude>
                 <exclude>**/ApplicationsServiceIT.java</exclude>

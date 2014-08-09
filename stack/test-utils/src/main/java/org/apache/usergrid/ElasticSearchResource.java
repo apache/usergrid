@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest;
+package org.apache.usergrid;
 
 
 import org.junit.rules.ExternalResource;
@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Properties;
-import static org.apache.usergrid.persistence.index.impl.EsProvider.LOCAL_ES_PORT_PROPNAME;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -68,7 +67,7 @@ public class ElasticSearchResource extends ExternalResource {
 
 
     @Override
-    protected void after() {    
+    public void after() {    
         log.info("Entering after");
 
         synchronized (mutex) {
@@ -87,7 +86,7 @@ public class ElasticSearchResource extends ExternalResource {
 
 
     @Override
-    protected void before() throws Throwable {
+    public void before() throws Throwable {
         log.info("Entering before");
 
         if ( "forked".equals( startupType ) ) {
@@ -110,7 +109,7 @@ public class ElasticSearchResource extends ExternalResource {
     private Process startElasticSearchProcess() throws IOException {
 
         port = AvailablePortFinder.getNextAvailable(4000 + RandomUtils.nextInt(10));
-        System.setProperty( LOCAL_ES_PORT_PROPNAME, port+"" );
+        System.setProperty( "EMBEDDED_ES_PORT", port+"" );
 
         String javaHome = (String)System.getenv("JAVA_HOME");
 

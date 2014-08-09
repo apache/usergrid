@@ -247,10 +247,11 @@ public class AbstractCollectionService extends AbstractService {
             return getItemsByQuery( context, new Query() );
         }
 
-        int count = 10;
-        Results r =
-                em.getCollection( context.getOwner(), context.getCollectionName(), null, count, Level.ALL_PROPERTIES,
-                        isCollectionReversed( context ) );
+        logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
+        int count = Query.DEFAULT_LIMIT; 
+
+        Results r = em.getCollection( context.getOwner(), context.getCollectionName(), 
+            null, count, Level.ALL_PROPERTIES, isCollectionReversed( context ) );
 
         importEntities( context, r );
 

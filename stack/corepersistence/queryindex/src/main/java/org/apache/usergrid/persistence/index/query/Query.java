@@ -17,6 +17,9 @@
 package org.apache.usergrid.persistence.index.query;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -27,21 +30,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.Token;
 import org.antlr.runtime.TokenRewriteStream;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
-
+import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
@@ -57,22 +54,17 @@ import org.apache.usergrid.persistence.index.query.tree.LessThan;
 import org.apache.usergrid.persistence.index.query.tree.LessThanEqual;
 import org.apache.usergrid.persistence.index.query.tree.Operand;
 import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
+import org.apache.usergrid.persistence.index.utils.ClassUtils;
+import org.apache.usergrid.persistence.index.utils.ConversionUtils;
 import org.apache.usergrid.persistence.index.utils.JsonUtils;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import static org.apache.commons.codec.binary.Base64.decodeBase64;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.split;
-import static org.apache.usergrid.persistence.index.utils.ClassUtils.cast;
-import static org.apache.usergrid.persistence.index.utils.ConversionUtils.uuid;
-import static org.apache.usergrid.persistence.index.utils.ListUtils.first;
-import static org.apache.usergrid.persistence.index.utils.ListUtils.firstBoolean;
-import static org.apache.usergrid.persistence.index.utils.ListUtils.firstInteger;
-import static org.apache.usergrid.persistence.index.utils.ListUtils.firstLong;
-import static org.apache.usergrid.persistence.index.utils.ListUtils.firstUuid;
-import static org.apache.usergrid.persistence.index.utils.ListUtils.isEmpty;
-import static org.apache.usergrid.persistence.index.utils.MapUtils.toMapList;
+import org.apache.usergrid.persistence.index.utils.ListUtils;
+import org.apache.usergrid.persistence.index.utils.MapUtils;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.safehaus.guicyfig.GuicyFigModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -188,7 +180,7 @@ public class Query {
 
 
     public static Query fromQL( String ql ) throws QueryParseException {
-        if ( ql == null ) {
+        if ( StringUtils.isEmpty(ql) ) {
             return null;
         }
         logger.debug("Processing raw query: " + ql);
@@ -245,7 +237,7 @@ public class Query {
         Object o = JsonUtils.parse( json );
         if ( o instanceof Map ) {
             @SuppressWarnings({ "unchecked", "rawtypes" }) Map<String, List<String>> params =
-                    cast( toMapList( ( Map ) o ) );
+                    ClassUtils.cast( MapUtils.toMapList( ( Map ) o ) );
             return fromQueryParams( params );
         }
         return null;
@@ -259,28 +251,28 @@ public class Query {
         List<CounterFilterPredicate> counterFilters = null;
 
         String ql = QueryUtils.queryStrFrom( params );
-        String type = first( params.get( "type" ) );
-        Boolean reversed = firstBoolean( params.get( "reversed" ) );
-        String connection = first( params.get( "connection" ) );
-        UUID start = firstUuid( params.get( "start" ) );
-        String cursor = first( params.get( "cursor" ) );
-        Integer limit = firstInteger( params.get( "limit" ) );
+        String type = ListUtils.first( params.get( "type" ) );
+        Boolean reversed = ListUtils.firstBoolean( params.get( "reversed" ) );
+        String connection = ListUtils.first( params.get( "connection" ) );
+        UUID start = ListUtils.firstUuid( params.get( "start" ) );
+        String cursor = ListUtils.first( params.get( "cursor" ) );
+        Integer limit = ListUtils.firstInteger( params.get( "limit" ) );
         List<String> permissions = params.get( "permission" );
-        Long startTime = firstLong( params.get( "start_time" ) );
-        Long finishTime = firstLong( params.get( "end_time" ) );
+        Long startTime = ListUtils.firstLong( params.get( "start_time" ) );
+        Long finishTime = ListUtils.firstLong( params.get( "end_time" ) );
 
         List<String> l = params.get( "resolution" );
-        if ( !isEmpty( l ) ) {
+        if ( !ListUtils.isEmpty( l ) ) {
             resolution = CounterResolution.fromString( l.get( 0 ) );
         }
 
         l = params.get( "counter" );
 
-        if ( !isEmpty( l ) ) {
+        if ( !ListUtils.isEmpty( l ) ) {
             counterFilters = CounterFilterPredicate.fromList( l );
         }
 
-        Boolean pad = firstBoolean( params.get( "pad" ) );
+        Boolean pad = ListUtils.firstBoolean( params.get( "pad" ) );
 
         for ( Entry<String, List<String>> param : params.entrySet() ) {
             Identifier identifier = Identifier.from( param.getKey() );
@@ -300,7 +292,7 @@ public class Query {
 
         l = params.get( "filter" );
 
-        if ( !isEmpty( l ) ) {
+        if ( !ListUtils.isEmpty( l ) ) {
             q = newQueryIfNull( q );
             for ( String s : l ) {
                 q.addFilter( decode( s ) );
@@ -308,7 +300,7 @@ public class Query {
         }
 
         l = params.get( "sort" );
-        if ( !isEmpty( l ) ) {
+        if ( !ListUtils.isEmpty( l ) ) {
             q = newQueryIfNull( q );
             for ( String s : l ) {
                 q.addSort( decode( s ) );
@@ -630,12 +622,12 @@ public class Query {
 
 
     public Query addSort( String propertyName ) {
-        if ( isBlank( propertyName ) ) {
+        if ( StringUtils.isBlank( propertyName ) ) {
             return this;
         }
         propertyName = propertyName.trim();
         if ( propertyName.indexOf( ',' ) >= 0 ) {
-            String[] propertyNames = split( propertyName, ',' );
+            String[] propertyNames = StringUtils.split( propertyName, ',' );
             for ( String s : propertyNames ) {
                 addSort( s );
             }
@@ -644,7 +636,7 @@ public class Query {
 
         SortDirection direction = SortDirection.ASCENDING;
         if ( propertyName.indexOf( ' ' ) >= 0 ) {
-            String[] parts = split( propertyName, ' ' );
+            String[] parts = StringUtils.split( propertyName, ' ' );
             if ( parts.length > 1 ) {
                 propertyName = parts[0];
                 direction = SortDirection.find( parts[1] );
@@ -664,7 +656,7 @@ public class Query {
 
 
     public Query addSort( String propertyName, SortDirection direction ) {
-        if ( isBlank( propertyName ) ) {
+        if ( StringUtils.isBlank( propertyName ) ) {
             return this;
         }
         propertyName = propertyName.trim();
@@ -844,9 +836,9 @@ public class Query {
 
     public UUID getStartResult() {
         if ( ( startResult == null ) && ( cursor != null ) ) {
-            byte[] cursorBytes = decodeBase64( cursor );
+            byte[] cursorBytes = Base64.decodeBase64( cursor );
             if ( ( cursorBytes != null ) && ( cursorBytes.length == 16 ) ) {
-                startResult = uuid( cursorBytes );
+                startResult = ConversionUtils.uuid( cursorBytes );
             }
         }
         return startResult;
@@ -1205,7 +1197,7 @@ public class Query {
             Identifier group = null;
             String category = null;
             String name = null;
-            String[] l = split( s, ':' );
+            String[] l = StringUtils.split( s, ':' );
 
             if ( l.length > 0 ) {
                 if ( !"*".equals( l[0] ) ) {

@@ -45,6 +45,11 @@ import org.apache.usergrid.system.UsergridSystemMonitorIT;
 })
 @Concurrent()
 public class CoreITSuite {
+    
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts( "coreManager" );
+
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = ElasticSearchResource.instance;
+
 }

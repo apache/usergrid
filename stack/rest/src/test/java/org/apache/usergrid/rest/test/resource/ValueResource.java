@@ -26,15 +26,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.usergrid.rest.applications.collection.PagingResourceIT;
 
 import static org.junit.Assert.assertEquals;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /** @author tnine */
 public abstract class ValueResource extends NamedResource {
 
+    private static final Logger logger = LoggerFactory.getLogger( ValueResource.class );
+    
     private String name;
     private String query;
     private String cursor;
@@ -202,7 +205,9 @@ public abstract class ValueResource extends NamedResource {
             resource = resource.queryParam( "limit", limit.toString() );
         }
 
-        return mapper.readTree( jsonMedia( resource ).get( String.class ));
+        String json = jsonMedia( resource ).get( String.class );
+        //logger.debug(json);
+        return mapper.readTree( json );
     }
 
 

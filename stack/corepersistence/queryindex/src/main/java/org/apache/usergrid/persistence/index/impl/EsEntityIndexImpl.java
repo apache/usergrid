@@ -32,9 +32,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -380,11 +378,12 @@ public class EsEntityIndexImpl implements EntityIndex {
         QueryBuilder qb = query.createQueryBuilder();
 
         if ( log.isDebugEnabled() ) {
-            log.debug("Searching index {}\n   type {}\n   query {}", 
+            log.debug("Searching index {}\n   type {}\n   query {} limit {}", 
                 new Object[] { 
                     this.indexName,
                     this.indexType,
-                    qb.toString().replace("\n", " ") 
+                    qb.toString().replace("\n", " "),
+                    query.getLimit()
             });
         }
             
@@ -454,38 +453,17 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             Id entityId = new SimpleId(UUID.fromString(id), type);
 
-
-//            String scopeString = hit.getSource().get( COLLECTION_SCOPE_FIELDNAME ).toString();
-            candidates.add(
-                new CandidateResult( 
-                    entityId, UUID.fromString(version) ));
+            candidates.add( new CandidateResult( entityId, UUID.fromString(version) ));
         }
 
         CandidateResults candidateResults = new CandidateResults( query, candidates );
 
-        if ( candidates.size() == query.getLimit() ) {
+        if ( candidates.size() >= query.getLimit() ) {
             candidateResults.setCursor(searchResponse.getScrollId());
             log.debug("   Cursor = " + searchResponse.getScrollId() );
-        }
+        } 
 
         return candidateResults;
-    }
-
-
-    private CollectionScope getCollectionScope( String scope ) {
-        
-        String[] scopeParts = scope.split( DOC_TYPE_SEPARATOR_SPLITTER );
-
-        String scopeName      =                  scopeParts[0];
-        UUID   scopeOwnerUuid = UUID.fromString( scopeParts[1] );
-        String scopeOwnerType =                  scopeParts[2];
-        UUID   scopeOrgUuid   = UUID.fromString( scopeParts[3] );
-        String scopeOrgType   =                  scopeParts[4];
-
-        Id ownerId = new SimpleId( scopeOwnerUuid, scopeOwnerType );
-        Id orgId = new SimpleId( scopeOrgUuid, scopeOrgType );
-
-        return new CollectionScopeImpl( orgId, ownerId, scopeName );
     }
 
 

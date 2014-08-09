@@ -153,14 +153,18 @@ public abstract class AbstractContextResource {
     }
 
 
-    public Viewable handleViewable( String template, Object model ) {
-        String template_property = "usergrid.view" + removeEnd( this.getClass().getName().toLowerCase(), "resource" )
+    public Viewable handleViewable( String template, Object model ) { 
+        String template_property = "usergrid.view" + 
+                removeEnd( this.getClass().getName().toLowerCase(), "resource" )
                 .substring( AbstractContextResource.class.getPackage().getName().length() ) + "." + template
                 .toLowerCase();
         String redirect_url = properties.getProperty( template_property );
         if ( isNotBlank( redirect_url ) ) {
+            logger.debug("Redirecting to URL: ", redirect_url);
             sendRedirect( redirect_url );
         }
+        logger.debug("Dispatching to viewable with template: {} template_property: {}", 
+                template, template_property );
         return new Viewable( template, model, this.getClass() );
     }
 

@@ -26,8 +26,8 @@
 
   <properties>
     <!-- Up to 30x parallelism can be used -->
-    <core.it.forkCount>2</core.it.forkCount>
-    <core.it.suite.concurrency>2</core.it.suite.concurrency>
+    <core.it.forkCount>1</core.it.forkCount>
+    <core.it.suite.concurrency>1</core.it.suite.concurrency>
   </properties>
 
   <artifactId>usergrid-core</artifactId>

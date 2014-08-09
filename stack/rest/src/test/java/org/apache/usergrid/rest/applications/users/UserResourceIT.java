@@ -75,15 +75,15 @@ public class UserResourceIT extends AbstractRestIT {
         UserRepo.INSTANCE.load( resource(), access_token );
         refreshIndex("test-organization", "test-app");
 
-        String ql = "username = 'user*'";
+        String ql = "username = 'unq_user*'";
 
         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "ql", ql )
                                   .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                                   .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user1" ), getIdFromSearchResults( node, 0 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user2" ), getIdFromSearchResults( node, 1 ) );
-        assertEquals( UserRepo.INSTANCE.getByUserName( "user3" ), getIdFromSearchResults( node, 2 ) );
+        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user1" ), getIdFromSearchResults( node, 0 ) );
+        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user2" ), getIdFromSearchResults( node, 1 ) );
+        assertEquals( UserRepo.INSTANCE.getByUserName( "unq_user3" ), getIdFromSearchResults( node, 2 ) );
     }
 
 

@@ -190,18 +190,18 @@
   </distributionManagement>
 
   <modules>
+    <module>build-tools</module>
+    <module>test-utils</module>
     <module>config</module>
     <module>corepersistence</module>
     <module>core</module>
     <module>services</module>
-    <module>tools</module>
-    <module>mongo-emulator</module>
-    <module>websocket</module>
     <module>rest</module>
+    <module>tools</module>
+    <module>websocket</module>
     <module>launcher</module>
-    <module>test-utils</module>
+    <module>mongo-emulator</module>
     <module>query-validator</module>
-    <module>build-tools</module>
   </modules>
 
   <dependencyManagement>
@@ -1480,8 +1480,8 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.1</version>
           <configuration>
-            <source>1.6</source>
-            <target>1.6</target>
+            <source>1.7</source>
+            <target>1.7</target>
             <optimize>true</optimize>
             <showDeprecation>true</showDeprecation>
             <debug>true</debug>

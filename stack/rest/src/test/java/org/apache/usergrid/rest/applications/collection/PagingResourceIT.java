@@ -17,16 +17,13 @@
 package org.apache.usergrid.rest.applications.collection;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Rule;
-import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.java.client.entities.Entity;
 import org.apache.usergrid.java.client.response.ApiResponse;
@@ -34,18 +31,22 @@ import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
 import org.apache.usergrid.rest.test.resource.EntityResource;
-
+import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
+import org.junit.Rule;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /** Simple tests to test querying at the REST tier */
 @Concurrent()
 public class PagingResourceIT extends AbstractRestIT {
 
+    private static final Logger logger = LoggerFactory.getLogger( PagingResourceIT.class );
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
@@ -54,7 +55,7 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void collectionPaging() throws Exception {
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().collection( "things1" );
 
         int size = 40;
 
@@ -80,21 +81,23 @@ public class PagingResourceIT extends AbstractRestIT {
             for ( Entity e : response.getEntities() ) {
                 assertTrue( entityItr.hasNext() );
                 assertEquals( entityItr.next().get( "name" ), e.getProperties().get( "name" ).asText() );
+                logger.debug("Got item value {}", e.getProperties().get( "name" ).asText());
             }
 
+            logger.debug("response cursor: " + response.getCursor() );
+            
             things = things.withCursor( response.getCursor() );
         }
         while ( response != null && response.getCursor() != null );
 
-        // we paged them all
-        assertFalse( entityItr.hasNext() );
+        assertFalse("Should have paged them all", entityItr.hasNext() );
     }
 
 
     @Test
     public void startPaging() throws Exception {
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().collection( "things2" );
 
         int size = 40;
 
@@ -120,6 +123,7 @@ public class PagingResourceIT extends AbstractRestIT {
             response = parse( things.get() );
 
             for ( Entity e : response.getEntities() ) {
+                logger.debug("Getting item {} value {}", index, e.getProperties().get( "name" ).asText());
                 assertEquals( created.get( index ).get( "name" ), e.getProperties().get( "name" ).asText() );
                 index++;
             }
@@ -139,9 +143,9 @@ public class PagingResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void colletionBatchDeleting() throws Exception {
+    public void collectionBatchDeleting() throws Exception {
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().collection( "things3" );
 
         int size = 40;
 
@@ -184,7 +188,7 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void emptyQlandLimitIgnored() throws Exception {
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().collection( "things4" );
 
         Map<String, String> data = hashMap( "name", "thing1" );
         JsonNode response = things.create( data );

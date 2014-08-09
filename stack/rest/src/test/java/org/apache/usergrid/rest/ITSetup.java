@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest;
 
 
+import org.apache.usergrid.ElasticSearchResource;
 import java.net.URI;
 import java.util.Properties;
 

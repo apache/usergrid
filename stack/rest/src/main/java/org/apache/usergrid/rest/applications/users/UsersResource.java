@@ -17,11 +17,9 @@
 package org.apache.usergrid.rest.applications.users;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.api.view.Viewable;
-import com.sun.jersey.core.provider.EntityHolder;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

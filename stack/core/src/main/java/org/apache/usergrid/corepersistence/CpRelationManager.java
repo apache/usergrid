@@ -1390,12 +1390,12 @@ public class CpRelationManager implements RelationManager {
             }
         }
 
-//        if ( query.isReversed() ) {
-//
-//            Query.SortPredicate newsp = new Query.SortPredicate( 
-//                PROPERTY_CREATED, Query.SortDirection.DESCENDING );
-//            query.addSort( newsp ); 
-//        }
+        if ( query.isReversed() ) {
+
+            Query.SortPredicate newsp = new Query.SortPredicate( 
+                PROPERTY_CREATED, Query.SortDirection.DESCENDING );
+            query.addSort( newsp ); 
+        }
 
         // reverse chrono order by default
         if ( query.getSortPredicates().isEmpty() ) {

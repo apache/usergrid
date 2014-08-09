@@ -20,6 +20,12 @@ package org.apache.usergrid.rest.applications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.json.JSONWithPadding;
+import com.sun.jersey.multipart.BodyPart;
+import com.sun.jersey.multipart.BodyPartEntity;
+import com.sun.jersey.multipart.FormDataBodyPart;
+import com.sun.jersey.multipart.FormDataMultiPart;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -41,48 +46,37 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
+import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.QueryUtils;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.services.*;
+import org.apache.usergrid.rest.applications.assets.AssetsResource;
+import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.apache.usergrid.security.oauth.AccessInfo;
+import org.apache.usergrid.services.ServiceAction;
+import org.apache.usergrid.services.ServiceManager;
+import org.apache.usergrid.services.ServiceParameter;
+import org.apache.usergrid.services.ServicePayload;
+import org.apache.usergrid.services.ServiceRequest;
+import org.apache.usergrid.services.ServiceResults;
+import org.apache.usergrid.services.assets.data.AssetUtils;
+import org.apache.usergrid.services.assets.data.BinaryStore;
+import org.apache.usergrid.utils.InflectionUtils;
+import org.apache.usergrid.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.rest.AbstractContextResource;
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.applications.assets.AssetsResource;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
-import org.apache.usergrid.security.oauth.AccessInfo;
-import org.apache.usergrid.services.assets.data.AssetUtils;
-import org.apache.usergrid.services.assets.data.BinaryStore;
-import org.apache.usergrid.utils.InflectionUtils;
-import org.apache.commons.lang.StringUtils;
-
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.multipart.BodyPart;
-import com.sun.jersey.multipart.BodyPartEntity;
-import com.sun.jersey.multipart.FormDataBodyPart;
-import com.sun.jersey.multipart.FormDataMultiPart;
-import java.io.IOException;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import org.apache.usergrid.persistence.QueryUtils;
-import static org.apache.usergrid.services.ServiceParameter.addParameter;
-import static org.apache.usergrid.services.ServicePayload.batchPayload;
-import static org.apache.usergrid.services.ServicePayload.idListPayload;
-import static org.apache.usergrid.services.ServicePayload.payload;
-import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
-import static org.apache.usergrid.utils.JsonUtils.normalizeJsonTree;
 
 
 @Component
@@ -158,7 +152,7 @@ public class ServiceResource extends AbstractContextResource {
         if ( params != null ) {
             Query query = Query.fromQueryParams( params );
             if ( query != null ) {
-                parameters = addParameter( parameters, query );
+                parameters = ServiceParameter.addParameter( parameters, query );
             }
         }
 
@@ -175,7 +169,7 @@ public class ServiceResource extends AbstractContextResource {
             //aren't getting decoded properly
             Query query = Query.fromQueryParams( params );
             if ( query != null ) {
-                parameters = addParameter( parameters, query );
+                parameters = ServiceParameter.addParameter( parameters, query );
             }
         }
 
@@ -186,7 +180,7 @@ public class ServiceResource extends AbstractContextResource {
     @Path("file")
     public AbstractContextResource getFileResource( @Context UriInfo ui ) throws Exception {
         LOG.debug( "in assets in ServiceResource" );
-        addParameter( getServiceParameters(), "assets" );
+        ServiceParameter.addParameter( getServiceParameters(), "assets" );
 
         PathSegment ps = getFirstPathSegment( "assets" );
         if ( ps != null ) {
@@ -205,7 +199,7 @@ public class ServiceResource extends AbstractContextResource {
 
         UUID itemId = UUID.fromString( entityId.getPath() );
 
-        addParameter( getServiceParameters(), itemId );
+        ServiceParameter.addParameter( getServiceParameters(), itemId );
 
         addMatrixParams( getServiceParameters(), ui, entityId );
 
@@ -224,11 +218,11 @@ public class ServiceResource extends AbstractContextResource {
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
             if ( query != null ) {
-                addParameter( getServiceParameters(), query );
+                ServiceParameter.addParameter( getServiceParameters(), query );
             }
         }
         else {
-            addParameter( getServiceParameters(), itemName.getPath() );
+            ServiceParameter.addParameter( getServiceParameters(), itemName.getPath() );
         }
 
         addMatrixParams( getServiceParameters(), ui, itemName );
@@ -306,19 +300,19 @@ public class ServiceResource extends AbstractContextResource {
     @SuppressWarnings({ "unchecked" })
     public ServicePayload getPayload( Object json ) {
         ServicePayload payload = null;
-        json = normalizeJsonTree( json );
+        json = JsonUtils.normalizeJsonTree( json );
         if ( json instanceof Map ) {
             Map<String, Object> jsonMap = ( Map<String, Object> ) json;
-            payload = payload( jsonMap );
+            payload = ServicePayload.payload( jsonMap );
         }
         else if ( json instanceof List ) {
             List<?> jsonList = ( List<?> ) json;
             if ( jsonList.size() > 0 ) {
                 if ( jsonList.get( 0 ) instanceof UUID ) {
-                    payload = idListPayload( ( List<UUID> ) json );
+                    payload = ServicePayload.idListPayload( ( List<UUID> ) json );
                 }
                 else if ( jsonList.get( 0 ) instanceof Map ) {
-                    payload = batchPayload( ( List<Map<String, Object>> ) jsonList );
+                    payload = ServicePayload.batchPayload( ( List<Map<String, Object>> ) jsonList );
                 }
             }
         }
@@ -522,7 +516,7 @@ public class ServiceResource extends AbstractContextResource {
 
 
     public static String wrapWithCallback( AccessInfo accessInfo, String callback ) {
-        return wrapWithCallback( mapToJsonString( accessInfo ), callback );
+        return wrapWithCallback( JsonUtils.mapToJsonString( accessInfo ), callback );
     }
 
 
@@ -535,7 +529,7 @@ public class ServiceResource extends AbstractContextResource {
 
 
     public static MediaType jsonMediaType( String callback ) {
-        return isNotBlank( callback ) ? new MediaType( "application", "javascript" ) : APPLICATION_JSON_TYPE;
+        return StringUtils.isNotBlank( callback ) ? new MediaType( "application", "javascript" ) : APPLICATION_JSON_TYPE;
     }
 
 

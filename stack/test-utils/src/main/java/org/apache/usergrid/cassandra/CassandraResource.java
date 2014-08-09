@@ -76,6 +76,7 @@ public class CassandraResource extends ExternalResource {
     public static final String RPC_PORT_KEY = "rpc_port";
     public static final String STORAGE_PORT_KEY = "storage_port";
     public static final String SSL_STORAGE_PORT_KEY = "ssl_storage_port";
+    public static final String JAMM_PATH = "jamm.path";
 
     private static final Object lock = new Object();
 
@@ -96,6 +97,8 @@ public class CassandraResource extends ExternalResource {
     private Thread shutdown;
 
     private Process process = null;
+
+    private static Properties properties = null;
 
     private boolean forkCassandra = false;
 
@@ -451,7 +454,8 @@ public class CassandraResource extends ExternalResource {
 
         String maxMemory = "-Xmx1000m";
 
-        ProcessBuilder pb = new ProcessBuilder(javaHome + "/bin/java", maxMemory,
+        ProcessBuilder pb = new ProcessBuilder(javaHome + "/bin/java", 
+                getJammArgument(), maxMemory,
                 "org.apache.usergrid.cassandra.CassandraMain", 
                 newYamlUrl.toString(), tempDir.getName(), 
                 getTargetDir() + "/src/test/resources/log4j.properties",
@@ -503,6 +507,9 @@ public class CassandraResource extends ExternalResource {
                 after();
             }
         } );
+
+        // give C* time to start
+        Thread.sleep(5000);
 
         String[] locations = { "usergrid-test-context.xml" };
         applicationContext = new ClassPathXmlApplicationContext( locations );
@@ -659,9 +666,7 @@ public class CassandraResource extends ExternalResource {
      */
     public static File getTempDirectory() throws IOException {
         File tmpdir;
-        Properties props = new Properties();
-        props.load( ClassLoader.getSystemResourceAsStream( PROPERTIES_FILE ) );
-        File basedir = new File( ( String ) props.get( TARGET_DIRECTORY_KEY ) );
+        File basedir = new File( ( String ) getProjectProperties().get( TARGET_DIRECTORY_KEY ) );
         String comp = RandomStringUtils.randomAlphanumeric( 7 );
         tmpdir = new File( basedir, comp );
 
@@ -679,9 +684,22 @@ public class CassandraResource extends ExternalResource {
 
 
     public static String getTargetDir() throws IOException {
-        Properties props = new Properties();
-        props.load( ClassLoader.getSystemResourceAsStream( PROPERTIES_FILE ) );
-        File basedir = new File( ( String ) props.get( TARGET_DIRECTORY_KEY ) );
+        File basedir = new File( ( String ) getProjectProperties().get( TARGET_DIRECTORY_KEY ) );
         return basedir.getAbsolutePath();
     }
+
+
+    public static String getJammArgument() throws IOException {
+        return ( String ) getProjectProperties().get( JAMM_PATH ); 
+    }
+
+
+    public static Properties getProjectProperties() throws IOException {
+        if ( properties == null ) {
+            properties = new Properties();
+            properties.load( ClassLoader.getSystemResourceAsStream( PROPERTIES_FILE ) );
+        } 
+        return properties;
+    }
+
 }

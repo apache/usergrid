@@ -39,11 +39,13 @@ public class CoreITSetupImpl implements CoreITSetup {
     protected IndexBucketLocator indexBucketLocator;
     protected CassandraService cassandraService;
     protected CassandraResource cassandraResource;
+    protected ElasticSearchResource elasticSearchResource;
     protected boolean enabled = false;
 
 
-    public CoreITSetupImpl( CassandraResource cassandraResource ) {
+    public CoreITSetupImpl( CassandraResource cassandraResource, ElasticSearchResource elasticSearchResource ) {
         this.cassandraResource = cassandraResource;
+        this.elasticSearchResource = elasticSearchResource;
     }
 
 
@@ -77,6 +79,7 @@ public class CoreITSetupImpl implements CoreITSetup {
      */
     protected void before( Description description ) throws Throwable {
         LOG.info( "Setting up for {}", description.getDisplayName() );
+        elasticSearchResource.before();
         initialize();
     }
 
@@ -95,6 +98,7 @@ public class CoreITSetupImpl implements CoreITSetup {
     /** Override to tear down your specific external resource. */
     protected void after( Description description ) {
         LOG.info( "Tearing down for {}", description.getDisplayName() );
+        elasticSearchResource.after();
     }
 
 
