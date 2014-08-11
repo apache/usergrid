@@ -55,7 +55,7 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void collectionPaging() throws Exception {
 
-        CustomCollection things = context.application().collection( "things1" );
+        CustomCollection things = context.application().collection( "test1things" );
 
         int size = 40;
 
@@ -97,7 +97,7 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void startPaging() throws Exception {
 
-        CustomCollection things = context.application().collection( "things2" );
+        CustomCollection things = context.application().collection( "test2things" );
 
         int size = 40;
 
@@ -145,7 +145,7 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void collectionBatchDeleting() throws Exception {
 
-        CustomCollection things = context.application().collection( "things3" );
+        CustomCollection things = context.application().collection( "test3things" );
 
         int size = 40;
 
@@ -188,7 +188,7 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void emptyQlandLimitIgnored() throws Exception {
 
-        CustomCollection things = context.application().collection( "things4" );
+        CustomCollection things = context.application().collection( "test4things" );
 
         Map<String, String> data = hashMap( "name", "thing1" );
         JsonNode response = things.create( data );

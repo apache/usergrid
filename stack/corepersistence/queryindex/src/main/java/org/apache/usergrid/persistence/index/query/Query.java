@@ -18,8 +18,6 @@ package org.apache.usergrid.persistence.index.query;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -38,7 +36,6 @@ import org.antlr.runtime.Token;
 import org.antlr.runtime.TokenRewriteStream;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
-import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 import org.apache.usergrid.persistence.index.impl.EsQueryVistor;
@@ -62,7 +59,6 @@ import org.apache.usergrid.persistence.index.utils.MapUtils;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.safehaus.guicyfig.GuicyFigModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -468,22 +464,6 @@ public class Query {
     }
 
 
-    public Query addSort( SortPredicate sort ) {
-        if ( sort == null ) {
-            return this;
-        }
-
-        for ( SortPredicate s : sortPredicates ) {
-            if ( s.getPropertyName().equals( sort.getPropertyName() ) ) {
-                throw new QueryParseException(
-                        String.format( "Attempted to set sort order for %s more than once", s.getPropertyName() ) );
-            }
-        }
-        sortPredicates.add( sort );
-        return this;
-    }
-
-
     @JsonIgnore
     public UUID getSingleUuidIdentifier() {
         if ( !containsSingleUuidIdentifier() ) {
@@ -618,6 +598,22 @@ public class Query {
 
     public boolean isMergeSelectResults() {
         return mergeSelectResults;
+    }
+
+
+    public Query addSort( SortPredicate sort ) {
+        if ( sort == null ) {
+            return this;
+        }
+
+        for ( SortPredicate s : sortPredicates ) {
+            if ( s.getPropertyName().equals( sort.getPropertyName() ) ) {
+                throw new QueryParseException(
+                        String.format( "Attempted to set sort order for %s more than once", s.getPropertyName() ) );
+            }
+        }
+        sortPredicates.add( sort );
+        return this;
     }
 
 

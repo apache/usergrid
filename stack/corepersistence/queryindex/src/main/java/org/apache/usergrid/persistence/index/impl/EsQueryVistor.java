@@ -35,7 +35,9 @@ import org.apache.usergrid.persistence.index.query.tree.NotOperand;
 import org.apache.usergrid.persistence.index.query.tree.OrOperand;
 import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
+import org.elasticsearch.common.geo.builders.ShapeBuilder;
 import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -56,22 +58,81 @@ public class EsQueryVistor implements QueryVisitor {
 
     @Override
     public void visit( AndOperand op ) throws IndexException {
+
+
         op.getLeft().visit( this );
+        QueryBuilder left = null;
+
+        // special handling for WithinOperand because ElasticSearch wants us to use
+        // a filter and not have WithinOperand as part of the actual query itself
+        if ( !(op.getLeft() instanceof WithinOperand) ) {
+            left = stack.peek();
+        }
+
         op.getRight().visit( this );
-        stack.push( QueryBuilders.boolQuery().must( stack.pop() ).must(  stack.pop() ));
+        QueryBuilder right = null;
+
+        // special handling for WithinOperand on the right too
+        if ( !(op.getRight()instanceof WithinOperand) ) {
+            right = stack.peek();
+        }
+
+        if ( left == right ) {
+            return;
+        }
+
+        if ( !(op.getLeft() instanceof WithinOperand) ) {
+            left = stack.pop();
+        }
+
+        if ( !(op.getRight()instanceof WithinOperand) ) {
+            right = stack.pop();
+        }
+
+        BoolQueryBuilder qb = QueryBuilders.boolQuery();
+        if ( left != null ) {
+            qb = qb.must( left );
+        }
+        if ( right != null ) {
+            qb = qb.must( right );
+        }
+
+        stack.push( qb );
     }
 
     @Override
     public void visit( OrOperand op ) throws IndexException {
+
         op.getLeft().visit( this );
         op.getRight().visit( this );
-        stack.push( QueryBuilders.boolQuery().should( stack.pop() ).should(  stack.pop() ));
+
+        QueryBuilder left = null;
+        if ( !(op.getLeft()instanceof WithinOperand) ) {
+            left = stack.pop();
+        }
+        QueryBuilder right = null;
+        if ( !(op.getRight()instanceof WithinOperand) ) {
+            right = stack.pop();
+        }
+
+        BoolQueryBuilder qb = QueryBuilders.boolQuery();
+        if ( left != null ) {
+            qb = qb.should( left );
+        }
+        if ( right != null ) {
+            qb = qb.should( right );
+        }
+
+        stack.push( qb );
     }
 
     @Override
     public void visit( NotOperand op ) throws IndexException {
         op.getOperation().visit( this );
-        stack.push( QueryBuilders.boolQuery().mustNot( stack.pop() ));
+
+        if ( !(op.getOperation() instanceof WithinOperand) ) {
+            stack.push( QueryBuilders.boolQuery().mustNot( stack.pop() ));
+        }
     }
 
     @Override
@@ -96,9 +157,9 @@ public class EsQueryVistor implements QueryVisitor {
         if ( !name.endsWith( EsEntityIndexImpl.GEO_SUFFIX )) {
             name += EsEntityIndexImpl.GEO_SUFFIX;
         }
+
         FilterBuilder fb = FilterBuilders.geoDistanceFilter( name )
            .lat( lat ).lon( lon ).distance( distance, DistanceUnit.METERS );
-
         filterBuilders.add( fb );
     } 
 

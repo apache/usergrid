@@ -132,7 +132,7 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         logNode( node );
         assertNotNull( node );
 
-        refreshIndex("test-organization", "test-app");
+        refreshIndex("create-duplicate-orgname-org", "dummy");
 
         // create another org with that same name, but a different user
         payload = hashMap( "email", "create-duplicate-org2@mockserver.com" )
@@ -146,7 +146,7 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         catch ( Exception ex ) {
         }
 
-        refreshIndex("test-organization", "test-app");
+        refreshIndex("create-duplicate-orgname-org", "dummy");
 
         // now attempt to login as the user for the second organization
         payload = hashMap( "grant_type", "password" )
@@ -161,7 +161,7 @@ public class OrganizationsResourceIT extends AbstractRestIT {
         }
         logNode( node );
 
-        refreshIndex("test-organization", "test-app");
+        refreshIndex("create-duplicate-orgname-org", "dummy");
 
         payload = hashMap( "username", "create-duplicate-org@mockserver.com" )
                 .map( "grant_type", "password" )

@@ -116,8 +116,6 @@ public class OrganizationsResource extends AbstractContextResource {
         String password = ( String ) json.remove( "password" );
         Map<String, Object> properties = ( Map<String, Object> ) json.remove( ORGANIZATION_PROPERTIES );
 
-        logger.debug("newOrganization");
-
         return newOrganization( ui, organizationName, username, name, email, password, json, properties, callback );
     }
 
@@ -154,8 +152,9 @@ public class OrganizationsResource extends AbstractContextResource {
     private JSONWithPadding newOrganization( @Context UriInfo ui, String organizationName, String username, String name,
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> properties, String callback ) throws Exception {
-        Preconditions
-                .checkArgument( StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
+
+        Preconditions.checkArgument( 
+            StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
 
         logger.debug( "New organization: {}", organizationName );
 

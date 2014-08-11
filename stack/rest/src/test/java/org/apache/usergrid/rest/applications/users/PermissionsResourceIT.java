@@ -125,17 +125,22 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         Map<String, String> data = hashMap( "type", "group" ).map( "path", groupPath );
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/groups" ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( String.class, data ));
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/groups" )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( String.class, data ));
 
         assertNull( node.get( "error" ) );
 
         refreshIndex("test-organization", "test-app");
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+        node = mapper.readTree( 
+            resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( String.class ));
 
         assertNull( node.get( "error" ) );
 
@@ -147,9 +152,12 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         // now delete the group
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
-                .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
+        node = mapper.readTree( 
+            resource().path( "/test-organization/test-app/groups/" + groupPath + "/users/" + USER )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .delete( String.class ));
 
         assertNull( node.get( "error" ) );
 

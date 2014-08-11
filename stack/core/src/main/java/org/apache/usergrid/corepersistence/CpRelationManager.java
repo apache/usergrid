@@ -109,6 +109,7 @@ import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
+import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_TYPES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_ENTITIES;
@@ -758,26 +759,45 @@ public class CpRelationManager implements RelationManager {
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
             new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlockingObservable().last();
 
+        // remove item from collection index
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             CpEntityManager.getCollectionScopeNameFromCollectionName( collName ));
-
-        // remove from collection index
         EntityIndex ei = managerCache.getEntityIndex(indexScope);
         ei.deindex( memberEntity );
 
-        // remove collection edge
-        Edge edge = new SimpleEdge( 
+        // remove collection from item index 
+        IndexScope itemScope = new IndexScopeImpl(
+            applicationScope.getApplication(), 
+            memberEntity.getId(), 
+            CpEntityManager.getCollectionScopeNameFromCollectionName( 
+                Schema.defaultCollectionName( cpHeadEntity.getId().getType() )));
+        ei = managerCache.getEntityIndex(itemScope);
+        ei.deindex( cpHeadEntity );
+
+        // remove edge from collection to item 
+        GraphManager gm = managerCache.getGraphManager(applicationScope);
+        Edge collectionToItemEdge = new SimpleEdge( 
             cpHeadEntity.getId(),
             getEdgeTypeFromCollectionName( collName, memberEntity.getId().getType() ), 
             memberEntity.getId(), 
             memberEntity.getId().getUuid().timestamp() );
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
-        gm.deleteEdge(edge).toBlockingObservable().last();
+        gm.deleteEdge(collectionToItemEdge).toBlockingObservable().last();
+
+        // remove edge from item to collection
+        Edge itemToCollectionEdge = new SimpleEdge( 
+            memberEntity.getId(), 
+            getEdgeTypeFromCollectionName( 
+                Schema.defaultCollectionName( cpHeadEntity.getId().getType() ), 
+                cpHeadEntity.getId().getType() ), 
+            cpHeadEntity.getId(),
+            cpHeadEntity.getId().getUuid().timestamp() );
+        gm.deleteEdge(itemToCollectionEdge).toBlockingObservable().last();
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
+
             if ( collName.equals( COLLECTION_ROLES ) ) {
                 String path = (String)( (Entity)itemRef ).getMetadata( "path" );
 
@@ -789,7 +809,8 @@ public class CpRelationManager implements RelationManager {
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
                     em.deleteRole( roleRef.getApplicationRoleName() );
                 }
-            }
+
+            } 
         }
     }
 
@@ -801,9 +822,11 @@ public class CpRelationManager implements RelationManager {
         headEntity = em.validate( headEntity );
         dstEntityRef = em.validate( dstEntityRef );
 
-        CollectionInfo srcCollection = getDefaultSchema().getCollection( headEntity.getType(), srcRelationName );
+        CollectionInfo srcCollection = 
+                getDefaultSchema().getCollection( headEntity.getType(), srcRelationName );
 
-        CollectionInfo dstCollection = getDefaultSchema().getCollection( dstEntityRef.getType(), dstRelationName );
+        CollectionInfo dstCollection = 
+                getDefaultSchema().getCollection( dstEntityRef.getType(), dstRelationName );
 
         Results results = null;
         do {
@@ -1394,17 +1417,13 @@ public class CpRelationManager implements RelationManager {
 
             Query.SortPredicate newsp = new Query.SortPredicate( 
                 PROPERTY_CREATED, Query.SortDirection.DESCENDING );
-            query.addSort( newsp ); 
+
+            try {
+                query.addSort( newsp ); 
+            } catch ( Exception e ) {
+                logger.warn("Attempted to reverse sort order already set", PROPERTY_CREATED);
+            }
         }
-
-        // reverse chrono order by default
-        if ( query.getSortPredicates().isEmpty() ) {
-
-            Query.SortPredicate newsp = new Query.SortPredicate( 
-                PROPERTY_CREATED, Query.SortDirection.ASCENDING);
-            query.addSort( newsp ); 
-        }
-
 
         return query;
     }

@@ -337,13 +337,14 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void deindex( final Id id, final UUID version) {
 
         if ( log.isDebugEnabled() ) {
-            log.debug("De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {}", 
+            log.debug("De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {} type {}", 
                 new Object[] { 
                     id.getType(), 
                     id.getUuid(), 
                     indexScope.getApplication(), 
                     indexScope.getOwner(), 
-                    indexScope.getName() 
+                    indexScope.getName(),
+                    indexType
             });
         }
 

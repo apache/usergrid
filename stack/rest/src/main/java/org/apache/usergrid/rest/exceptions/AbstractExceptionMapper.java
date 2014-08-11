@@ -40,8 +40,7 @@ import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 
 public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> implements ExceptionMapper<E> {
 
-    public static final Logger logger =
-            LoggerFactory.getLogger( AbstractExceptionMapper.class.getPackage().toString() );
+    public static final Logger logger = LoggerFactory.getLogger( AbstractExceptionMapper.class );
 
     @Context
     HttpHeaders hh;

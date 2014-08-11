@@ -320,10 +320,10 @@ public class ApplicationResource extends ServiceResource {
     @POST
     @Path("token")
     @Consumes(APPLICATION_JSON)
-    public Response getAccessTokenPostJson( @Context UriInfo ui, @HeaderParam("Authorization") String authorization,
-                                            Map<String, Object> json,
-                                            @QueryParam("callback") @DefaultValue("") String callback )
-            throws Exception {
+    public Response getAccessTokenPostJson( @Context UriInfo ui, 
+            @HeaderParam("Authorization") String authorization, 
+            Map<String, Object> json, 
+            @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );
@@ -344,8 +344,8 @@ public class ApplicationResource extends ServiceResource {
             }
         }
 
-        return getAccessToken( ui, authorization, grant_type, username, password, pin, client_id, client_secret, code,
-                ttl, redirect_uri, callback );
+        return getAccessToken( ui, authorization, grant_type, username, password, pin, client_id, 
+                client_secret, code, ttl, redirect_uri, callback );
     }
 
 

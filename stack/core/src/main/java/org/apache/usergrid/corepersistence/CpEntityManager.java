@@ -2218,7 +2218,12 @@ public class CpEntityManager implements EntityManager {
             String entityType, String propertyName, Object propertyValue )
             throws Exception {
 
-        return true; // TODO: is it OK to rely on Core Persistence write-time check for this?
+        Results results= this.searchCollection(
+                getApplication(), 
+                Schema.defaultCollectionName( entityType), 
+                Query.searchForProperty(propertyName, propertyValue));
+
+        return results.isEmpty();
     }
 
 

@@ -47,7 +47,7 @@ public class GeoPagingTest extends AbstractRestIT {
     @Test //("Test uses up to many resources to run reliably") // USERGRID-1403
     public void groupQueriesWithGeoPaging() throws IOException {
 
-        CustomCollection groups = context.application().collection( "groups" );
+        CustomCollection groups = context.application().collection( "test1groups" );
 
         int maxRangeLimit = 2000;
         long[] index = new long[maxRangeLimit];
@@ -72,9 +72,10 @@ public class GeoPagingTest extends AbstractRestIT {
 
         refreshIndex(context.getOrgName(), context.getAppName());
 
-        String query =
-                "select * where location within 20000 of 37,-75 and created > " + index[2] + " and " + "created < "
-                        + index[4] + "";
+        String query = "select * where location within 20000 of 37,-75 "
+                + " and created > " + index[2] 
+                + " and created < " + index[4] + "";
+
         JsonNode node = groups.withQuery( query ).get();
         assertEquals( 1, node.get( "entities" ).size() );
 
@@ -85,7 +86,7 @@ public class GeoPagingTest extends AbstractRestIT {
     @Test // USERGRID-1401
     public void groupQueriesWithConsistentResults() throws IOException {
 
-        CustomCollection groups = context.application().collection( "groups" );
+        CustomCollection groups = context.application().collection( "test2groups" );
 
         int maxRangeLimit = 20;
         JsonNode[] saved = new JsonNode[maxRangeLimit];
@@ -112,9 +113,10 @@ public class GeoPagingTest extends AbstractRestIT {
 
         JsonNode node = null;
         for ( int consistent = 0; consistent < 20; consistent++ ) {
-            String query =
-                    String.format( "select * where location within 100 of 37, -75 and ordinal >= %d and ordinal < %d",
-                            saved[7].get( "ordinal" ).asLong(), saved[10].get( "ordinal" ).asLong() );
+
+            String query = String.format( 
+                "select * where location within 100 of 37, -75 and ordinal >= %d and ordinal < %d", 
+                saved[7].get( "ordinal" ).asLong(), saved[10].get( "ordinal" ).asLong() );
 
             node = groups.withQuery( query ).get(); //groups.query(query);
 
@@ -123,8 +125,8 @@ public class GeoPagingTest extends AbstractRestIT {
             assertEquals( 3, entities.size() );
 
             for ( int i = 0; i < 3; i++ ) {
-                //shouldn't start at 10 since you're excluding it above in the query, it should return 9,8,7
-                assertEquals( saved[7 + i], entities.get( i ) );
+                // shouldn't start at 10 since you're excluding it above in the query, it should return 9,8,7
+                assertEquals( saved[9 - i], entities.get( i ) );
             }
         }
     }
