@@ -577,7 +577,6 @@ public class ExportServiceImpl implements ExportService {
         jg.writeStartArray();
 
         for ( String collectionName : metadata.keySet() ) {
-            collectionName = collectionName.substring( 0, collectionName.indexOf( "|" ) );
 
             if ( collectionName.equals( "exports" ) ) {
                 continue;
