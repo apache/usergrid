@@ -352,8 +352,6 @@ public abstract class AbstractService implements Service {
             metadata.putAll( defaultEntityMetadata );
         }
 
-        sm.getEntityManager().refreshIndex();
-
         Set<Object> connections = getConnectedTypesSet( entity );
         if ( connections != null ) {
             Map<String, Object> m = new LinkedHashMap<String, Object>();

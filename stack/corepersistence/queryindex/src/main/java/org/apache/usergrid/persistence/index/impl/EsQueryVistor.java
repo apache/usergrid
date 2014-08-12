@@ -35,7 +35,6 @@ import org.apache.usergrid.persistence.index.query.tree.NotOperand;
 import org.apache.usergrid.persistence.index.query.tree.OrOperand;
 import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.query.tree.WithinOperand;
-import org.elasticsearch.common.geo.builders.ShapeBuilder;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
@@ -138,6 +137,7 @@ public class EsQueryVistor implements QueryVisitor {
     @Override
     public void visit( ContainsOperand op ) throws NoFullTextIndexException {
         String name = op.getProperty().getValue();
+        name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
             name = addAnayzedSuffix( name );
@@ -149,6 +149,7 @@ public class EsQueryVistor implements QueryVisitor {
     public void visit( WithinOperand op ) {
 
         String name = op.getProperty().getValue();
+        name = name.toLowerCase();
 
         float lat = op.getLatitude().getFloatValue();
         float lon = op.getLongitude().getFloatValue();
@@ -166,6 +167,7 @@ public class EsQueryVistor implements QueryVisitor {
     @Override
     public void visit( LessThan op ) throws NoIndexException {
         String name = op.getProperty().getValue();
+        name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
             name = addAnayzedSuffix( name );
@@ -176,6 +178,7 @@ public class EsQueryVistor implements QueryVisitor {
     @Override
     public void visit( LessThanEqual op ) throws NoIndexException {
         String name = op.getProperty().getValue();
+        name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
             name = addAnayzedSuffix( name );
@@ -186,6 +189,7 @@ public class EsQueryVistor implements QueryVisitor {
     @Override
     public void visit( Equal op ) throws NoIndexException {
         String name = op.getProperty().getValue();
+        name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
 
         if ( value instanceof String ) {
@@ -207,6 +211,7 @@ public class EsQueryVistor implements QueryVisitor {
     @Override
     public void visit( GreaterThan op ) throws NoIndexException {
         String name = op.getProperty().getValue();
+        name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
             name = addAnayzedSuffix( name );
@@ -217,6 +222,7 @@ public class EsQueryVistor implements QueryVisitor {
     @Override
     public void visit( GreaterThanEqual op ) throws NoIndexException {
         String name = op.getProperty().getValue();
+        name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
         if ( value instanceof String ) {
             name = addAnayzedSuffix( name );

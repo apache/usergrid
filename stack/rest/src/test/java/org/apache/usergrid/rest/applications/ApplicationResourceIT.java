@@ -41,6 +41,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -50,6 +52,7 @@ import static org.apache.usergrid.utils.MapUtils.hashMap;
  */
 @Concurrent()
 public class ApplicationResourceIT extends AbstractRestIT {
+    private static final Logger logger = LoggerFactory.getLogger( ApplicationResourceIT.class );
 
     @Test
     public void applicationWithOrgCredentials() throws Exception {
@@ -370,6 +373,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).accept( MediaType.TEXT_HTML )
                 .post( String.class, payload );
 
+    
+        logger.debug("result: " + result);
         assertTrue( result.contains( "Username or password do not match" ) );
     }
 

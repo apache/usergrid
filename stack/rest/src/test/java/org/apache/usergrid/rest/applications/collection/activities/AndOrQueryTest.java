@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -148,20 +149,20 @@ public class AndOrQueryTest extends AbstractRestIT {
     @Test //Check to make sure that asc works
     public void queryCheckAsc() throws Exception {
 
-        CustomCollection madeupStuff = context.collection( "imagination" );
+        CustomCollection madeupStuff = context.collection( "imagination" + RandomStringUtils.randomAlphabetic(5));
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 
         JsonNode[] correctValues;
-        correctValues = madeupStuff.createEntitiesWithOrdinal( character, 1000 );
+        correctValues = madeupStuff.createEntitiesWithOrdinal( character, 10 );
 
         this.refreshIndex( context.getAppUuid() );
 
-        String inquisitiveQuery =
-                "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff' ORDER BY " + "Ordinal asc";
+        String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 10 "
+                + "or WhoHelpedYou eq 'Ruff' ORDER BY Ordinal asc";
 
         int totalEntitiesContained = madeupStuff.verificationOfQueryResults( correctValues, false, inquisitiveQuery );
 
-        assertEquals( 1000, totalEntitiesContained );
+        assertEquals( 10, totalEntitiesContained );
     }
 
 

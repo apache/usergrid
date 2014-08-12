@@ -32,12 +32,14 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 
 
 @Concurrent()
 public class DevicesResourceIT extends AbstractRestIT {
 
     @Test
+    @Ignore // cannot be supported with Core Persistence which requires time based UUIDs
     public void putWithUUIDShouldCreateAfterDelete() throws IOException {
 
         Map<String, String> payload = new HashMap<String, String>();

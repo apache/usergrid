@@ -237,6 +237,8 @@ public class GroupResourceIT extends AbstractRestIT {
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
 
+        refreshIndex("test-organization", "test-app");
+
         // check it
         assertNull( node.get( "errors" ) );
         assertEquals( node.get( "entities" ).get( 0 ).get( "name" ).asText(), roleName );

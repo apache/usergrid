@@ -197,11 +197,11 @@
     <module>core</module>
     <module>services</module>
     <module>rest</module>
-    <module>tools</module>
+<!--    <module>tools</module>
     <module>websocket</module>
     <module>launcher</module>
     <module>mongo-emulator</module>
-    <module>query-validator</module>
+    <module>query-validator</module>-->
   </modules>
 
   <dependencyManagement>

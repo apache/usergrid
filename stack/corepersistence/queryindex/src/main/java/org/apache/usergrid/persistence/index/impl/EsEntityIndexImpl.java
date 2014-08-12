@@ -353,7 +353,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             .setRefresh( refresh )
             .execute().actionGet();
 
-        if ( refresh) {
+        if ( refresh ) {
             refresh();
         }
 
@@ -481,14 +481,14 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             if (f instanceof ListField)  {
                 List list = (List) field.getValue();
-                    entityMap.put(field.getName(),
+                    entityMap.put(field.getName().toLowerCase(),
                             new ArrayList(processCollectionForMap(list)));
 
                 if ( !list.isEmpty() ) {
                     if ( list.get(0) instanceof String ) {
                         Joiner joiner = Joiner.on(" ").skipNulls();
                         String joined = joiner.join(list);
-                        entityMap.put(field.getName() + ANALYZED_SUFFIX,
+                        entityMap.put(field.getName().toLowerCase() + ANALYZED_SUFFIX,
                             new ArrayList(processCollectionForMap(list)));
                         
                     }
@@ -496,23 +496,23 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             } else if (f instanceof ArrayField) {
                 List list = (List) field.getValue();
-                entityMap.put(field.getName(),
+                entityMap.put(field.getName().toLowerCase(),
                         new ArrayList(processCollectionForMap(list)));
 
             } else if (f instanceof SetField) {
                 Set set = (Set) field.getValue();
-                entityMap.put(field.getName(),
+                entityMap.put(field.getName().toLowerCase(),
                         new ArrayList(processCollectionForMap(set)));
 
             } else if (f instanceof EntityObjectField) {
                 EntityObject eo = (EntityObject)field.getValue();
-                entityMap.put(field.getName(), entityToMap(eo)); // recursion
+                entityMap.put(field.getName().toLowerCase(), entityToMap(eo)); // recursion
 
             } else if (f instanceof StringField) {
 
                 // index in lower case because Usergrid queries are case insensitive
-                entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
-                entityMap.put(field.getName() + ANALYZED_SUFFIX, field.getValue());
+                entityMap.put(field.getName().toLowerCase(), ((String) field.getValue()).toLowerCase());
+                entityMap.put(field.getName().toLowerCase() + ANALYZED_SUFFIX, ((String) field.getValue()).toLowerCase());
 
             } else if (f instanceof LocationField) {
                 LocationField locField = (LocationField) f;
@@ -521,10 +521,10 @@ public class EsEntityIndexImpl implements EntityIndex {
                 // field names lat and lon trigger ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude());
                 locMap.put("lon", locField.getValue().getLongtitude());
-                entityMap.put(field.getName() + GEO_SUFFIX, locMap);
+                entityMap.put(field.getName().toLowerCase() + GEO_SUFFIX, locMap);
 
             } else {
-                entityMap.put(field.getName(), field.getValue());
+                entityMap.put(field.getName().toLowerCase(), field.getValue());
             }
         }
 

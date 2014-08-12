@@ -591,6 +591,17 @@ public class GrammarTreeTest {
 
 
     @Test
+    public void orderByGrammar() throws QueryParseException {
+
+        String s = "select * where name = 'bob' order by name asc";
+
+        Query query = Query.fromQL( s );
+
+        assertEquals( 1, query.getSortPredicates().size() );
+    }
+
+
+    @Test
     public void badOrderByGrammar() throws QueryParseException {
         // from isn't allowed
         String s = "select * where name = 'bob' order by";

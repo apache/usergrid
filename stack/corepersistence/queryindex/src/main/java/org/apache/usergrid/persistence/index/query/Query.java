@@ -196,7 +196,7 @@ public class Query {
             }
         }
 
-        ANTLRStringStream in = new ANTLRStringStream( ql.trim() );
+        ANTLRStringStream in = new ANTLRStringStream( ql.trim().toLowerCase() );
         CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
         CommonTokenStream tokens = new CommonTokenStream( lexer );
         CpQueryFilterParser parser = new CpQueryFilterParser( tokens );

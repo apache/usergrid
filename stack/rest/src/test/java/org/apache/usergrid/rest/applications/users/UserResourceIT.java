@@ -956,17 +956,23 @@ public class UserResourceIT extends AbstractRestIT {
     public void test_GET_user_ok() throws InterruptedException, IOException {
 
         // TODO figure out what is being overridden? why 400?
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", access_token )
-                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                          .get( String.class ));
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .get( String.class ));
 
         String uuid = node.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
+        String email = node.get( "entities" ).get( 0 ).get( "email" ).textValue();
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + uuid ).queryParam( "access_token", access_token )
-                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                         .get( String.class ));
+        node = mapper.readTree( resource().path( "/test-organization/test-app/users/" + uuid )
+                .queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .get( String.class ));
+        
         logNode( node );
-        assertEquals( "ed@anuff.com", node.get( "entities" ).get( 0 ).get( "email" ).textValue() );
+        assertEquals( email, node.get( "entities" ).get( 0 ).get( "email" ).textValue() );
     }
 
 

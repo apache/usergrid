@@ -26,7 +26,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
-import org.apache.usergrid.rest.applications.collection.PagingResourceIT;
 
 import static org.junit.Assert.assertEquals;
 import org.slf4j.Logger;
@@ -239,7 +238,7 @@ public abstract class ValueResource extends NamedResource {
 
         int totalEntitiesContained = 0;
 
-        JsonNode checkedNodes = this.withQuery( checkedQuery ).withLimit( 1000 ).get();
+        JsonNode checkedNodes = this.withQuery( checkedQuery ).withLimit( correctValues.length ).get();
 
         while ( correctValues.length != totalEntitiesContained )//correctNode.get("entities") != null)
         {
@@ -258,9 +257,8 @@ public abstract class ValueResource extends NamedResource {
             }
 
 
-      /*works because this method checks to make sure both queries return the same thing
-      therefore this if shouldn't be needed, but added just in case
-       */
+            // works because this method checks to make sure both queries return the same thing
+            // therefore this if shouldn't be needed, but added just in case
             if ( checkedNodes.get( "cursor" ) != null ) {
                 checkedNodes = this.query( checkedQuery, "cursor", checkedNodes.get( "cursor" ).toString() );
             }
