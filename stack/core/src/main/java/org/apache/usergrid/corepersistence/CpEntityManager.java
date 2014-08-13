@@ -2523,7 +2523,8 @@ public class CpEntityManager implements EntityManager {
             return entity;
         }
 
-        org.apache.usergrid.persistence.model.entity.Entity cpEntity = entityToCpEntity( entity, importId );
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
+                entityToCpEntity( entity, importId );
 
         // prepare to write and index Core Persistence Entity into default scope
         CollectionScope collectionScope = new CollectionScopeImpl( 

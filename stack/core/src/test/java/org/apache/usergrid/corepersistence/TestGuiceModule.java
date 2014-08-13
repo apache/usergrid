@@ -19,36 +19,9 @@
 package org.apache.usergrid.corepersistence;
 
 import com.google.inject.AbstractModule;
-import com.netflix.config.ConfigurationManager;
-import java.io.IOException;
-import java.util.Properties;
 
 
 public class TestGuiceModule extends AbstractModule {
-
-    static {
-
-       //--------------------------------------------------------------------
-       // Bootstrap the config for Archaius Configuration Settings.  
-       // We don't want to bootstrap more than once per JVM
-       //--------------------------------------------------------------------
-
-        try {
-            ConfigurationManager.loadCascadedPropertiesFromResources( "corepersistence" );
-
-            Properties testProps = new Properties() {{
-                String port = System.getProperty("cassandra.rpc_port");
-                if ( port == null && "null".equals(port) ) {
-                    port = "9160";
-                }
-                put("cassandra.hosts", "localhost:" + port);
-            }};
-            ConfigurationManager.loadProperties( testProps );
-        }
-        catch ( IOException e ) {
-            throw new RuntimeException( "Cannot do much without properly loading our configuration.", e );
-        }
-    }
 
     @Override
     protected void configure() {

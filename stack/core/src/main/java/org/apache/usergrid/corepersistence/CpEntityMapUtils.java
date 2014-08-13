@@ -51,12 +51,16 @@ import org.apache.usergrid.persistence.model.field.value.Location;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Utilities for converting entities to/from maps suitable for Core Persistence.
  * Aware of unique properties via Schema.
  */
 class CpEntityMapUtils {
+    private static final Logger logger = LoggerFactory.getLogger( CpEntityMapUtils.class );
 
     public static ObjectMapper objectMapper = new ObjectMapper(  );
 
@@ -73,31 +77,35 @@ class CpEntityMapUtils {
         for ( String fieldName : map.keySet() ) {
 
             Object value = map.get( fieldName );
-            boolean unqiue = Schema.getDefaultSchema().isPropertyUnique(entityType, fieldName);
+            boolean unique = Schema.getDefaultSchema().isPropertyUnique(entityType, fieldName);
+
+//            if ( unique ) {
+//                logger.debug("{} is a unique property", fieldName );
+//            }
 
             if ( value instanceof String ) {
-                entity.setField( new StringField( fieldName, (String)value, unqiue && topLevel ));
+                entity.setField( new StringField( fieldName, (String)value, unique && topLevel ));
 
             } else if ( value instanceof Boolean ) {
-                entity.setField( new BooleanField( fieldName, (Boolean)value, unqiue && topLevel ));
+                entity.setField( new BooleanField( fieldName, (Boolean)value, unique && topLevel ));
                         
             } else if ( value instanceof Integer ) {
-                entity.setField( new IntegerField( fieldName, (Integer)value, unqiue && topLevel ));
+                entity.setField( new IntegerField( fieldName, (Integer)value, unique && topLevel ));
 
             } else if ( value instanceof Double ) {
-                entity.setField( new DoubleField( fieldName, (Double)value, unqiue && topLevel ));
+                entity.setField( new DoubleField( fieldName, (Double)value, unique && topLevel ));
 
 		    } else if ( value instanceof Float ) {
-                entity.setField( new FloatField( fieldName, (Float)value, unqiue && topLevel ));
+                entity.setField( new FloatField( fieldName, (Float)value, unique && topLevel ));
 				
             } else if ( value instanceof Long ) {
-                entity.setField( new LongField( fieldName, (Long)value, unqiue && topLevel ));
+                entity.setField( new LongField( fieldName, (Long)value, unique && topLevel ));
 
             } else if ( value instanceof List) {
                 entity.setField( listToListField( fieldName, (List)value, entityType ));  
             
             } else if ( value instanceof UUID) {
-                entity.setField( new UUIDField( fieldName, (UUID)value, unqiue && topLevel ));
+                entity.setField( new UUIDField( fieldName, (UUID)value, unique && topLevel ));
 
             } else if ( value instanceof Map ) {
                 processMapValue( value, fieldName, entity, entityType);

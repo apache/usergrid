@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -47,6 +48,9 @@ import org.junit.runner.RunWith;
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class WriteUniqueVerifyIT {
+
+    @Inject 
+    SerializationFig serializationFig;
 
     @Inject
     @Rule
@@ -72,6 +76,11 @@ public class WriteUniqueVerifyIT {
 
         Entity entityFetched = entityManager.load( entity.getId() ).toBlocking().last();
         entityFetched.setField( new StringField("foo", "bar"));
+
+        // wait for temporary unique value records to time out
+        try { 
+            Thread.sleep(serializationFig.getTimeout() * 1100); 
+        } catch (InterruptedException ignored) { }
 
         // another enity that tries to use two unique values already taken by first
         final Entity entity2 = TestEntityGenerator.generateEntity();

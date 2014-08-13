@@ -107,10 +107,14 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
         // re-write the unique values but this time with no TTL
         for ( Field field : mvccEntity.getEntity().get().getFields() ) {
+
             if ( field.isUnique() ) {
-                UniqueValue written  = new UniqueValueImpl( 
-                        ioEvent.getEntityCollection(), field, mvccEntity.getId(), mvccEntity.getVersion());
+
+                UniqueValue written  = new UniqueValueImpl( ioEvent.getEntityCollection(), field, 
+                    mvccEntity.getEntity().get().getId(), mvccEntity.getEntity().get().getVersion());
                 MutationBatch mb = uniqueValueStrat.write( written );
+
+                LOG.debug("Finalizing {} unqiue value {}", field.getName(), field.getValue().toString());
 
                 // merge into our existing mutation batch
                 logMutation.mergeShallow( mb );
