@@ -42,7 +42,7 @@
 
 	
 	<!-- The Time Resolution used for the cluster -->
-	<bean id="microsecondsTimeResolution" class="me.prettyprint.cassandra.service.clock.MicrosecondsClockResolution" />
+  <bean id="microsecondsTimeResolution" class="me.prettyprint.cassandra.service.clock.MicrosecondsClockResolution" />
   <bean id="traceTagManager" class="org.apache.usergrid.persistence.cassandra.util.TraceTagManager"/>
   <bean id="traceTagReporter" class="org.apache.usergrid.persistence.cassandra.util.Slf4jTraceTagReporter"/>
 
@@ -50,11 +50,20 @@
     <constructor-arg ref="traceTagManager"/>
   </bean>
 
-	<bean id="cassandraHostConfigurator" class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
+    <bean name="staticHubInitializer" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="staticMethod" value="me.prettyprint.cassandra.service.CassandraHostConfigurator.setClockResolution"/>
+        <property name="arguments">
+            <list>
+                <ref bean="microsecondsTimeResolution"/>
+            </list>
+        </property>
+    </bean>
+
+
+    <bean id="cassandraHostConfigurator" class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
 		<constructor-arg value="${cassandra.url}" />
         <!-- set the pool size if it's available.  If not go with 50 -->
         <property name="maxActive" value="${cassandra.connections:20}"/>
-        <property name="clockResolution" ref="microsecondsTimeResolution" />
         <property name="opTimer" ref="taggedOpTimer"/>
         <property name="loadBalancingPolicy" ref="loadBalancingPolicy"/>
 	</bean>

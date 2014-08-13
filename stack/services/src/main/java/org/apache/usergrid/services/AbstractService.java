@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.schema.EntityInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -446,19 +447,36 @@ public abstract class AbstractService implements Service {
 
 
     @Override
-    public Entity updateEntity( ServiceRequest request, EntityRef ref, ServicePayload payload ) throws Exception {
-        if ( !isRootService() ) {
-            return sm.updateEntity( request, ref, payload );
+    public Entity updateEntity(ServiceRequest request, EntityRef ref, ServicePayload payload) throws Exception {
+        if (!isRootService()) {
+            return sm.updateEntity(request, ref, payload);
         }
 
-        if ( ref instanceof Entity ) {
-            Entity entity = ( Entity ) ref;
-            em.updateProperties( entity, payload.getProperties() );
-            entity.addProperties( payload.getProperties() );
+        if (ref instanceof Entity) {
+            Entity entity = (Entity) ref;
+            Map<String, Object> properties = payload.getProperties();
+            assertNoImmutableProperty(entity.getType(), properties);
+            em.updateProperties( entity, properties);
+            entity.addProperties(properties);
             return entity;
         }
-        logger.error( "Attempted update of entity reference rather than full entity, currently unsupport - MUSTFIX" );
+        logger.error("Attempted update of entity reference rather than full entity, currently unsupport - MUSTFIX");
         throw new NotImplementedException();
+    }
+
+    private void assertNoImmutableProperty(String entityType, Map<String, Object> properties) {
+        if (properties == null || properties.isEmpty()) {
+            return;
+        }
+        final Schema schema = Schema.getDefaultSchema();
+        final EntityInfo entityInfo = schema.getEntityInfo(entityType);
+        if (entityInfo != null) {
+            for (String propertyName : properties.keySet()) {
+                if (!entityInfo.isPropertyMutable(propertyName)) {
+                    throw new IllegalArgumentException("Cannot modify immutable property[" + propertyName + "] of entity " + entityType);
+                }
+            }
+        }
     }
 
 
@@ -485,15 +503,19 @@ public abstract class AbstractService implements Service {
 
     public Set<Object> getConnectedTypesSet( EntityRef ref ) throws Exception {
         Set<Object> connections = em.getDictionaryAsSet( ref, Schema.DICTIONARY_CONNECTED_TYPES );
+        return updateConnections(connections);
+    }
+
+    private Set<Object> updateConnections(Set<Object> connections) {
         if ( connections == null ) {
             return null;
         }
-        if ( connections.size() > 0 ) {
+        if ( !connections.isEmpty() ) {
             connections.remove( "connection" );
             if ( privateConnections != null ) {
                 connections.removeAll( privateConnections );
             }
-            if ( connections.size() > 0 ) {
+            if ( !connections.isEmpty() ) {
                 return new LinkedHashSet<Object>( connections );
             }
         }
@@ -503,19 +525,7 @@ public abstract class AbstractService implements Service {
 
     public Set<Object> getConnectingTypesSet( EntityRef ref ) throws Exception {
         Set<Object> connections = em.getDictionaryAsSet( ref, Schema.DICTIONARY_CONNECTING_TYPES );
-        if ( connections == null ) {
-            return null;
-        }
-        if ( connections.size() > 0 ) {
-            connections.remove( "connection" );
-            if ( privateConnections != null ) {
-                connections.removeAll( privateConnections );
-            }
-            if ( connections.size() > 0 ) {
-                return new LinkedHashSet<Object>( connections );
-            }
-        }
-        return null;
+        return updateConnections(connections);
     }
 
 
