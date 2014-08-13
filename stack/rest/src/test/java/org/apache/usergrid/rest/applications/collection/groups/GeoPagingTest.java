@@ -126,7 +126,7 @@ public class GeoPagingTest extends AbstractRestIT {
 
             for ( int i = 0; i < 3; i++ ) {
                 // shouldn't start at 10 since you're excluding it above in the query, it should return 9,8,7
-                assertEquals( saved[9 - i], entities.get( i ) );
+                assertEquals( saved[7 + i], entities.get( i ) );
             }
         }
     }

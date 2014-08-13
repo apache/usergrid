@@ -64,7 +64,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         refreshIndex("test-organization", "test-app");
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "client_id", clientId )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" )
+                .queryParam( "client_id", clientId )
                 .queryParam( "client_secret", clientSecret ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
@@ -81,8 +82,10 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         refreshIndex("test-organization", "test-app");
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "client_id", clientId )
-                .queryParam( "client_secret", clientSecret ).accept( MediaType.APPLICATION_JSON )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" )
+                .queryParam( "client_id", clientId )
+                .queryParam( "client_secret", clientSecret )
+                .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         assertNotNull( node.get( "entities" ) );
@@ -145,7 +148,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
                 .map( "username", "applicationWithJsonCreds" ).map( "name", "applicationWithJsonCreds" )
                 .map( "password", "applicationWithJsonCreds" ).map( "pin", "1234" );
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "client_id", clientId )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/users" )
+                .queryParam( "client_id", clientId )
                 .queryParam( "client_secret", clientSecret ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
@@ -179,7 +183,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         refreshIndex("test-organization", "test-app");
 
-        JsonNode node = mapper.readTree( resource().path( "/" + appInfo.getId() ).queryParam( "client_id", clientId )
+        JsonNode node = mapper.readTree( resource().path( "/" + appInfo.getId() )
+                .queryParam( "client_id", clientId )
                 .queryParam( "client_secret", clientSecret ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
@@ -201,7 +206,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         refreshIndex("test-organization", "test-app");
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/credentials" ).queryParam( "access_token", mgmtToken )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/credentials" )
+                .queryParam( "access_token", mgmtToken )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                         .get( String.class ));
         assertEquals( "ok", node.get( "status" ).textValue() );
@@ -215,7 +221,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         refreshIndex("test-organization", "test-app");
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/credentials" ).queryParam( "access_token", mgmtToken )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/credentials" )
+                .queryParam( "access_token", mgmtToken )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                         .post( String.class ));
         assertEquals( "ok", node.get( "status" ).textValue() );
@@ -233,7 +240,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         refreshIndex("test-organization", "test-app");
 
         try {
-            node = mapper.readTree( resource().path( "/test-organization/test-app" ).queryParam( "access_token", mgmtToken )
+            node = mapper.readTree( resource().path( "/test-organization/test-app" )
+                    .queryParam( "access_token", mgmtToken )
                     .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                     .delete( String.class ));
         }
@@ -271,8 +279,10 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         long ttl = 2000;
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", "ed@anuff.com" ).queryParam( "password", "sesame" )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+                .queryParam( "grant_type", "password" )
+                .queryParam( "username", "ed@anuff.com" )
+                .queryParam( "password", "sesame" )
                 .queryParam( "ttl", String.valueOf( ttl ) ).accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
         long startTime = System.currentTimeMillis();
@@ -284,7 +294,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         long expires_in = node.get( "expires_in" ).longValue();
         assertEquals( ttl, expires_in * 1000 );
 
-        JsonNode userdata = mapper.readTree( resource().path( "/test-organization/test-app/users/ed@anuff.com" ).queryParam( "access_token", token )
+        JsonNode userdata = mapper.readTree( resource().path( "/test-organization/test-app/users/ed@anuff.com" )
+                .queryParam( "access_token", token )
                         .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
         assertEquals( "ed@anuff.com", getEntity( userdata, 0 ).get( "email" ).asText() );
@@ -328,9 +339,12 @@ public class ApplicationResourceIT extends AbstractRestIT {
     @Test
     public void updateAccessTokenTtl() throws Exception {
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", "ed@anuff.com" ).queryParam( "password", "sesame" )
-                .accept( MediaType.APPLICATION_JSON ).get( String.class ));
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+                .queryParam( "grant_type", "password" )
+                .queryParam( "username", "ed@anuff.com" )
+                .queryParam( "password", "sesame" )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( String.class ));
 
         String token = node.get( "access_token" ).textValue();
         logNode( node );
@@ -341,13 +355,17 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         Map<String, String> payload = hashMap( "accesstokenttl", "31536000000" );
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app" ).queryParam( "access_token", adminAccessToken )
+        node = mapper.readTree( resource().path( "/test-organization/test-app" )
+                .queryParam( "access_token", adminAccessToken )
                 .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, payload ));
         logNode( node );
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", "ed@anuff.com" ).queryParam( "password", "sesame" )
-                .accept( MediaType.APPLICATION_JSON ).get( String.class ));
+        node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+                .queryParam( "grant_type", "password" )
+                .queryParam( "username", "ed@anuff.com" )
+                .queryParam( "password", "sesame" )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( String.class ));
 
         assertEquals( 31536000, node.get( "expires_in" ).longValue() );
         logNode( node );
@@ -355,6 +373,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
 
     @Test
+    @Ignore // Because JSP is broken in test setup, possibly due to JSTL classloader issue
+    // see also: https://issues.apache.org/jira/browse/USERGRID-209 
     public void authorizationCodeWithWrongCredentials() throws Exception {
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
@@ -373,7 +393,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).accept( MediaType.TEXT_HTML )
                 .post( String.class, payload );
 
-    
         logger.debug("result: " + result);
         assertTrue( result.contains( "Username or password do not match" ) );
     }
@@ -382,7 +401,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
     @Test
     public void authorizeWithInvalidClientIdRaisesError() throws Exception {
         String result =
-                resource().path( "/test-organization/test-app/authorize" ).queryParam( "response_type", "token" )
+                resource().path( "/test-organization/test-app/authorize" )
+                        .queryParam( "response_type", "token" )
                         .queryParam( "client_id", "invalid_client_id" )
                         .queryParam( "redirect_uri", "http://www.my_test.com" ).get( String.class );
 
@@ -408,7 +428,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         Status status = null;
         try {
             String result = resource().path( "/test-organization/test-app/authorize" )
-                    .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).accept( MediaType.TEXT_HTML )
+                    .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE )
+                    .accept( MediaType.TEXT_HTML )
                     .post( String.class, payload );
         }
         catch ( UniformInterfaceException uie ) {
@@ -505,8 +526,10 @@ public class ApplicationResourceIT extends AbstractRestIT {
         String clientId = setup.getMgmtSvc().getClientIdForOrganization( orgInfo.getUuid() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForOrganization( orgInfo.getUuid() );
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "client_id", clientId )
-                .queryParam( "client_secret", clientSecret ).queryParam( "grant_type", "client_credentials" )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+                .queryParam( "client_id", clientId )
+                .queryParam( "client_secret", clientSecret )
+                .queryParam( "grant_type", "client_credentials" )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         assertNotNull( node.get( "access_token" ) );
@@ -518,7 +541,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //check it's 1 day, should be the same as the default
         assertEquals( 604800, ttl );
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", accessToken )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/users" )
+                .queryParam( "access_token", accessToken )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         assertNotNull( node.get( "entities" ) );
@@ -533,8 +557,10 @@ public class ApplicationResourceIT extends AbstractRestIT {
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );
         String clientSecret = setup.getMgmtSvc().getClientSecretForApplication( appInfo.getId() );
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "client_id", clientId )
-                .queryParam( "client_secret", clientSecret ).queryParam( "grant_type", "client_credentials" )
+        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+                .queryParam( "client_id", clientId )
+                .queryParam( "client_secret", clientSecret )
+                .queryParam( "grant_type", "client_credentials" )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         assertNotNull( node.get( "access_token" ) );
@@ -546,7 +572,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //check it's 7 days, should be the same as the default
         assertEquals( 604800, ttl );
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).queryParam( "access_token", accessToken )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/users" )
+                .queryParam( "access_token", accessToken )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         assertNotNull( node.get( "entities" ) );

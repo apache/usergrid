@@ -118,47 +118,6 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    public void refreshIndex( UUID appId ) {
-
-        LOG.debug("Refreshing index for appId {}", appId );
-
-        try {
-
-            resource().path( "/refreshindex" )
-                .queryParam( "app_id", appId.toString() )
-                .accept( MediaType.APPLICATION_JSON )
-                .post();
-            
-        } catch ( Exception e) {
-            LOG.debug("Error refreshing index", e);
-            return;
-        }
-
-        LOG.debug("Refreshed index for appId {}", appId );
-    }
-
-
-    public void refreshIndex( String orgName, String appName ) {
-
-        LOG.debug("Refreshing index for app {}/{}", orgName, appName );
-
-        try {
-
-            resource().path( "/refreshindex" )
-                .queryParam( "org_name", orgName )
-                .queryParam( "app_name", appName )
-                .accept( MediaType.APPLICATION_JSON )
-                .post();
-                    
-        } catch ( Exception e) {
-            LOG.debug("Error refreshing index", e);
-            return;
-        }
-
-        LOG.debug("Refreshed index for app {}/{}", orgName, appName );
-    }
-
-
     public static void dumpClasspath( ClassLoader loader ) {
         System.out.println( "Classloader " + loader + ":" );
 
@@ -437,4 +396,46 @@ public abstract class AbstractRestIT extends JerseyTest {
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).get( Map.class );
     }
+
+
+    public void refreshIndex( UUID appId ) {
+
+        LOG.debug("Refreshing index for appId {}", appId );
+
+        try {
+
+            resource().path( "/refreshindex" )
+                .queryParam( "app_id", appId.toString() )
+                .accept( MediaType.APPLICATION_JSON )
+                .post();
+            
+        } catch ( Exception e) {
+            LOG.debug("Error refreshing index", e);
+            return;
+        }
+
+        LOG.debug("Refreshed index for appId {}", appId );
+    }
+
+
+    public void refreshIndex( String orgName, String appName ) {
+
+        LOG.debug("Refreshing index for app {}/{}", orgName, appName );
+
+        try {
+
+            resource().path( "/refreshindex" )
+                .queryParam( "org_name", orgName )
+                .queryParam( "app_name", appName )
+                .accept( MediaType.APPLICATION_JSON )
+                .post();
+                    
+        } catch ( Exception e) {
+            LOG.debug("Error refreshing index", e);
+            return;
+        }
+
+        LOG.debug("Refreshed index for app {}/{}", orgName, appName );
+    }
+
 }

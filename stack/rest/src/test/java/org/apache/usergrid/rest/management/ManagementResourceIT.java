@@ -263,10 +263,16 @@ public class ManagementResourceIT extends AbstractRestIT {
 
     private void checkFeed( String leader, List<String> followers ) throws IOException {
         JsonNode userFeed;
+
         //create user
         createUser( leader );
+        refreshIndex("test-organization", "test-app");
+
         String preFollowContent = leader + ": pre-something to look for " + UUID.randomUUID().toString();
+
         addActivity( leader, leader + " " + leader + "son", preFollowContent );
+        refreshIndex("test-organization", "test-app");
+        
         String lastUser = followers.get( followers.size() - 1 );
         int i = 0;
         for ( String user : followers ) {
@@ -281,6 +287,9 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertTrue( userFeed.size() == 1 );
         String postFollowContent = leader + ": something to look for " + UUID.randomUUID().toString();
         addActivity( leader, leader + " " + leader + "son", postFollowContent );
+
+        refreshIndex("test-organization", "test-app");
+
         //check feed
         userFeed = getUserFeed( lastUser );
         assertNotNull( userFeed );

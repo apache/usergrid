@@ -58,6 +58,8 @@ public class ActivityResourceIT extends AbstractRestIT {
 
         client.createGroup( GROUP );
 
+        refreshIndex("test-organization", "test-app");
+
         groupCreated = true;
     }
 
@@ -81,14 +83,13 @@ public class ActivityResourceIT extends AbstractRestIT {
     @Test
     public void postGroupActivity() {
 
-        // don't populate the user, it will use the currently authenticated
-        // user.
+        // don't populate the user, it will use the currently authenticated user.
 
         String activityTitle = "testTitle" + UUIDUtils.newTimeUUID();
         String activityDesc = "testActivity" + UUIDUtils.newTimeUUID();
 
-        client.postGroupActivity( GROUP, "POST", activityTitle, activityDesc, "testCategory", null, null, null, null,
-                null );
+        client.postGroupActivity( GROUP, "POST", 
+            activityTitle, activityDesc, "testCategory", null, null, null, null, null );
 
         refreshIndex("test-organization", "test-app");
 

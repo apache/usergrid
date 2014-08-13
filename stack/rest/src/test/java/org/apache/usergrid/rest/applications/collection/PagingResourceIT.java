@@ -36,6 +36,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -95,6 +96,10 @@ public class PagingResourceIT extends AbstractRestIT {
 
 
     @Test
+    @Ignore 
+    // ignored because currently startPaging is only be supported for 
+    // queues and not for  generic collections as this test assumes.
+    // see also: https://issues.apache.org/jira/browse/USERGRID-211 
     public void startPaging() throws Exception {
 
         CustomCollection things = context.application().collection( "test2things" );

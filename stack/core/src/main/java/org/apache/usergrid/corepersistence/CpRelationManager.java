@@ -527,11 +527,13 @@ public class CpRelationManager implements RelationManager {
     public Results getCollection(String collectionName, UUID startResult, int count, 
             Level resultsLevel, boolean reversed) throws Exception {
 
-        // TODO: how to set Query startResult?
-
         Query query = Query.fromQL("select *");
         query.setLimit(count);
         query.setReversed(reversed);
+
+        if ( startResult != null ) {
+            query.addGreaterThanEqualFilter("created", startResult.timestamp());
+        }
 
         return searchCollection(collectionName, query);
     }
@@ -1414,14 +1416,23 @@ public class CpRelationManager implements RelationManager {
 
         if ( query.isReversed() ) {
 
-            Query.SortPredicate newsp = new Query.SortPredicate( 
+            Query.SortPredicate desc = new Query.SortPredicate( 
                 PROPERTY_CREATED, Query.SortDirection.DESCENDING );
 
             try {
-                query.addSort( newsp ); 
+                query.addSort( desc ); 
             } catch ( Exception e ) {
                 logger.warn("Attempted to reverse sort order already set", PROPERTY_CREATED);
             }
+
+        } 
+            
+        if ( query.getSortPredicates().isEmpty() ) {
+
+            Query.SortPredicate asc = new Query.SortPredicate( 
+                PROPERTY_CREATED, Query.SortDirection.ASCENDING );
+
+            query.addSort( asc ); 
         }
 
         return query;

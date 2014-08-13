@@ -112,7 +112,10 @@ public class MUUserResourceIT extends AbstractRestIT {
 
 
     @Test
+    @Ignore // Because JSP is broken in test setup, possibly due to JSTL classloader issue
+    // see also: https://issues.apache.org/jira/browse/USERGRID-209 
     public void testUnconfirmedAdminLogin() throws Exception {
+
         // Setup properties to require confirmation of users
         // -------------------------------------------
 
@@ -450,7 +453,8 @@ public class MUUserResourceIT extends AbstractRestIT {
 
 
     @Test
-//    @Ignore( "because of that jstl classloader error thing" )
+    @Ignore // Because JSP is broken in test setup, possibly due to JSTL classloader issue
+    // see also: https://issues.apache.org/jira/browse/USERGRID-209 
     public void checkPasswordReset() throws Exception {
 
         refreshIndex(context.getOrgName(), context.getAppName());
@@ -574,7 +578,8 @@ public class MUUserResourceIT extends AbstractRestIT {
 
 
     @Test
-//    @Ignore( "because of that jstl classloader error thing" )
+    @Ignore // Because JSP is broken in test setup, possibly due to JSTL classloader issue
+    // see also: https://issues.apache.org/jira/browse/USERGRID-209 
     public void checkPasswordChangeTime() throws Exception {
 
         final TestUser user = context.getActiveUser();
