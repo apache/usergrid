@@ -16,7 +16,7 @@ e2e) buildMain
     webdriver-manager start --standalone > seleniumLog.txt &
     sleep 10
     # run the build
-    ./node_modules/grunt-cli/bin/grunt e2e
+    ./node_modules/grunt-cli/bin/grunt e2e-chrome
       # stop selenium
     curl -s -L http://localhost:4444/selenium-server/driver?cmd=shutDownSeleniumServer > seleniumLog.txt &
     ;;
