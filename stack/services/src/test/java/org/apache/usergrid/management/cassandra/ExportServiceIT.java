@@ -569,8 +569,7 @@ public class ExportServiceIT {
     @Test
     public void testExportOneOrganization() throws Exception {
 
-        //File f = new File( "exportOneOrganization.json" );
-        int entitiesToCreate = 123;
+        int entitiesToCreate = 20;
         File f = null;
 
 
@@ -603,7 +602,7 @@ public class ExportServiceIT {
         //creates 100s of organizations with some entities in each one to make sure we don't actually apply it
         OrganizationInfo orgMade = null;
         ApplicationInfo appMade = null;
-        for ( int i = 0; i < 100; i++ ) {
+        for ( int i = 0; i < 10; i++ ) {
             orgMade = setup.getMgmtSvc().createOrganization( "superboss" + i, adminUser, true );
             appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp" + i );
 
