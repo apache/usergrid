@@ -1,3 +1,5 @@
+<div class="modal show fade" tabindex="-1" role="dialog"
+  aria-hidden="true">
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -14,20 +16,22 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->    
+  <form ng-submit="extraDelegate(extrabutton)" name="dialogForm"
+    novalidate>
 
-<div class="modal show fade" tabindex="-1" role="dialog" aria-hidden="true">
-        <form ng-submit="extraDelegate(extrabutton)" name="dialogForm" novalidate>
+    <div class="modal-header">
+      <h1 class="title">{{title}}</h1>
+    </div>
 
-        <div class="modal-header">
-            <h1 class="title">{{title}}</h1>
-        </div>
-
-        <div class="modal-body" ng-transclude></div>
-        <div class="modal-footer">
-            {{footertext}}
-            <input type="submit" class="btn" id="dialogButton-{{buttonId}}" ng-if="extrabutton" ng-disabled="!dialogForm.$valid" aria-hidden="true" ng-value="extrabuttonlabel"/>
-            <button class="btn cancel pull-left" data-dismiss="modal" aria-hidden="true"
-                    ng-click="closeDelegate(close)">{{closelabel}}
-            </button>
-        </div>
-        </form>    </div>
+    <div class="modal-body" ng-transclude></div>
+    <div class="modal-footer">
+      {{footertext}} <input type="submit" class="btn"
+        id="dialogButton-{{buttonId}}" ng-if="extrabutton"
+        ng-disabled="!dialogForm.$valid" aria-hidden="true"
+        ng-value="extrabuttonlabel" />
+      <button class="btn cancel pull-left" data-dismiss="modal"
+        aria-hidden="true" ng-click="closeDelegate(close)">{{closelabel}}
+      </button>
+    </div>
+  </form>
+</div>

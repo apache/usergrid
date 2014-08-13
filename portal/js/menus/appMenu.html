@@ -1,3 +1,4 @@
+<ul id="app-menu" class="nav top-nav span12">
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -14,44 +15,38 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
-<ul id="app-menu" class="nav top-nav span12">
-    <li class="span7">
-      <bsmodal id="newApplication"
-               title="Create New Application"
-               close="hideModal"
-               closelabel="Cancel"
-               extrabutton="newApplicationDialog"
-               extrabuttonlabel="Create"
-               buttonid="app"
-               ng-cloak>
-        <div ng-show="!hasApplications" class="modal-instructions" >You have no applications, please create one.</div>
-        <div  ng-show="hasCreateApplicationError" class="alert-error">Application already exists!</div>
-        <p>New application name: <input ng-model="$parent.newApp.name" id="app-name-input" ng-pattern="appNameRegex"  ng-attr-title="{{appNameRegexDescription}}" type="text" required ug-validate /></p>
-      </bsmodal>
-        <div class="btn-group">
-            <a class="btn dropdown-toggle top-selector app-selector" id="current-app-selector" data-toggle="dropdown">
-                <i class="pictogram">&#9881;</i> {{myApp.currentApp}}
-                <span class="caret"></span>
-            </a>
-            <ul class="dropdown-menu app-nav">
-                <li name="app-selector" ng-repeat="app in applications">
-                    <a id="app-{{app.name}}-link-id" ng-click="appChange(app.name)">{{app.name}}</a>
-                </li>
-            </ul>
-        </div>
-    </li>
-    <li class="span5">
-      <a ng-if="activeUI"
-         class="btn btn-create zero-out pull-right"
-         ng-click="showModal('newApplication')"
-         analytics-on="click"
-         analytics-category="App Services"
-         analytics-label="Button"
-         analytics-event="Add New App"
-        >
-        <i class="pictogram">&#8862;</i>
-        Add New App
+  <li class="span7"><bsmodal id="newApplication"
+      title="Create New Application" close="hideModal"
+      closelabel="Cancel" extrabutton="newApplicationDialog"
+      extrabuttonlabel="Create" buttonid="app" ng-cloak>
+    <div ng-show="!hasApplications" class="modal-instructions">You
+      have no applications, please create one.</div>
+    <div ng-show="hasCreateApplicationError" class="alert-error">Application
+      already exists!</div>
+    <p>
+      New application name: <input ng-model="$parent.newApp.name"
+        id="app-name-input" ng-pattern="appNameRegex"
+        ng-attr-title="{{appNameRegexDescription}}" type="text" required
+        ug-validate />
+    </p>
+    </bsmodal>
+    <div class="btn-group">
+      <a class="btn dropdown-toggle top-selector app-selector"
+        id="current-app-selector" data-toggle="dropdown"> <i
+        class="pictogram">&#9881;</i> {{myApp.currentApp}} <span
+        class="caret"></span>
       </a>
-    </li>
+      <ul class="dropdown-menu app-nav">
+        <li name="app-selector" ng-repeat="app in applications"><a
+          id="app-{{app.name}}-link-id" ng-click="appChange(app.name)">{{app.name}}</a>
+        </li>
+      </ul>
+    </div></li>
+  <li class="span5"><a ng-if="activeUI"
+    class="btn btn-create zero-out pull-right"
+    ng-click="showModal('newApplication')" analytics-on="click"
+    analytics-category="App Services" analytics-label="Button"
+    analytics-event="Add New App"> <i class="pictogram">&#8862;</i>
+      Add New App
+  </a></li>
 </ul>
