@@ -1,4 +1,5 @@
-<!--
+<div class="content-page" ng-controller="UsersActivitiesCtrl">
+  <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
@@ -14,40 +15,49 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
-<div class="content-page" ng-controller="UsersActivitiesCtrl" >
-
-  <bsmodal id="addActivityToUser"
-           title="Add activity to user"
-           close="hideModal"
-           closelabel="Cancel"
-           extrabutton="addActivityToUserDialog"
-           extrabuttonlabel="Add"
-           ng-cloak>
-    <p>Content: <input id="activityMessage" ng-model="$parent.newActivity.activityToAdd" required name="activityMessage" ug-validate /> <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users add activity content')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_activities_add_activity_content}}" tooltip-placement="right">(?)</a></p>
+  <bsmodal id="addActivityToUser" title="Add activity to user"
+    close="hideModal" closelabel="Cancel"
+    extrabutton="addActivityToUserDialog" extrabuttonlabel="Add"
+    ng-cloak>
+  <p>
+    Content: <input id="activityMessage"
+      ng-model="$parent.newActivity.activityToAdd" required
+      name="activityMessage" ug-validate /> <a class="help_tooltip"
+      ng-mouseover="help.sendTooltipGA('users add activity content')"
+      ng-show="help.helpTooltipsEnabled" href="#"
+      ng-attr-tooltip="{{tooltip_activities_add_activity_content}}"
+      tooltip-placement="right">(?)</a>
+  </p>
   </bsmodal>
 
 
   <div ng:include="'users/users-tabs.html'"></div>
   <br>
-    <div class="button-strip"><a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users add activity button')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_activities_add_activity}}" tooltip-placement="left">(?)</a> 
-    <button class="btn btn-primary" ng-click="showModal('addActivityToUser')">Add activity to user</button>
+  <div class="button-strip">
+    <a class="help_tooltip"
+      ng-mouseover="help.sendTooltipGA('users add activity button')"
+      ng-show="help.helpTooltipsEnabled" href="#"
+      ng-attr-tooltip="{{tooltip_activities_add_activity}}"
+      tooltip-placement="left">(?)</a>
+    <button class="btn btn-primary"
+      ng-click="showModal('addActivityToUser')">Add activity to
+      user</button>
   </div>
   <div>
     <table class="table table-striped">
       <tbody>
-      <tr class="table-header">
-        <td>Date</td>
-        <td>Content</td>
-        <td>Verb</td>
-        <td>UUID</td>
-      </tr>
-      <tr class="zebraRows" ng-repeat="activity in activities">
-        <td>{{activity.createdDate}}</td>
-        <td>{{activity.content}}</td>
-        <td>{{activity.verb}}</td>
-        <td>{{activity.uuid}}</td>
-      </tr>
+        <tr class="table-header">
+          <td>Date</td>
+          <td>Content</td>
+          <td>Verb</td>
+          <td>UUID</td>
+        </tr>
+        <tr class="zebraRows" ng-repeat="activity in activities">
+          <td>{{activity.createdDate}}</td>
+          <td>{{activity.content}}</td>
+          <td>{{activity.verb}}</td>
+          <td>{{activity.uuid}}</td>
+        </tr>
       </tbody>
     </table>
   </div>

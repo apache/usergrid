@@ -1,3 +1,4 @@
+<div class="content-page">
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -14,14 +15,13 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
-<div class="content-page">
-
   <section class="row-fluid">
 
     <div class="span12">
       <div class="page-filters">
-        <h1 class="title" class="pull-left"><i class="pictogram title">&#128101;</i> Groups</h1>
+        <h1 class="title" class="pull-left">
+          <i class="pictogram title">&#128101;</i> Groups
+        </h1>
       </div>
     </div>
 
@@ -29,18 +29,28 @@
 
   <div id="user-panel" class="panel-buffer">
     <ul id="user-panel-tab-bar" class="nav nav-tabs">
-      <li><a href="javaScript:void(0);" ng-click="gotoPage('groups')">Group List</a></li>
-      <li ng-class="detailsSelected"><a href="javaScript:void(0);" ng-click="gotoPage('groups/details')">Details</a></li>
-      <li ng-class="membersSelected"><a href="javaScript:void(0);" ng-click="gotoPage('groups/members')">Users</a></li>
-      <li ng-class="activitiesSelected"><a href="javaScript:void(0);" ng-click="gotoPage('groups/activities')">Activities</a></li>
-      <li ng-class="rolesSelected"><a href="javaScript:void(0);" ng-click="gotoPage('groups/roles')">Roles &amp; Permissions</a></li>
+      <li><a href="javaScript:void(0);"
+        ng-click="gotoPage('groups')">Group List</a></li>
+      <li ng-class="detailsSelected"><a href="javaScript:void(0);"
+        ng-click="gotoPage('groups/details')">Details</a></li>
+      <li ng-class="membersSelected"><a href="javaScript:void(0);"
+        ng-click="gotoPage('groups/members')">Users</a></li>
+      <li ng-class="activitiesSelected"><a
+        href="javaScript:void(0);"
+        ng-click="gotoPage('groups/activities')">Activities</a></li>
+      <li ng-class="rolesSelected"><a href="javaScript:void(0);"
+        ng-click="gotoPage('groups/roles')">Roles &amp; Permissions</a></li>
     </ul>
   </div>
 
   <div style="float: left; margin-right: 10px;">
     <div style="float: left;">
-      <div class="user-header-title"><strong>Group Path: </strong>{{selectedGroup.get('path')}}</div>
-      <div class="user-header-title"><strong>Group Title: </strong>{{selectedGroup.get('title')}}</div>
+      <div class="user-header-title">
+        <strong>Group Path: </strong>{{selectedGroup.get('path')}}
+      </div>
+      <div class="user-header-title">
+        <strong>Group Title: </strong>{{selectedGroup.get('title')}}
+      </div>
     </div>
   </div>
 </div>

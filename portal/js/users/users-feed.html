@@ -1,3 +1,4 @@
+<div class="content-page" ng-controller="UsersFeedCtrl">
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -14,31 +15,28 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
-<div class="content-page" ng-controller="UsersFeedCtrl" >
-
-    <div ng:include="'users/users-tabs.html'"></div>
-    <br>
-    <div>
-        <table class="table table-striped">
-            <tbody>
-            <tr class="table-header">
-                <td>Date</td>
-                <td>User</td>
-                <td>Content</td>
-                <td>Verb</td>
-                <td>UUID</td>
-            </tr>
-            <tr class="zebraRows" ng-repeat="activity in activities">
-                <td>{{activity.createdDate}}</td>
-                <td>{{activity.actor.displayName}}</td>
-                <td>{{activity.content}}</td>
-                <td>{{activity.verb}}</td>
-                <td>{{activity.uuid}}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+  <div ng:include="'users/users-tabs.html'"></div>
+  <br>
+  <div>
+    <table class="table table-striped">
+      <tbody>
+        <tr class="table-header">
+          <td>Date</td>
+          <td>User</td>
+          <td>Content</td>
+          <td>Verb</td>
+          <td>UUID</td>
+        </tr>
+        <tr class="zebraRows" ng-repeat="activity in activities">
+          <td>{{activity.createdDate}}</td>
+          <td>{{activity.actor.displayName}}</td>
+          <td>{{activity.content}}</td>
+          <td>{{activity.verb}}</td>
+          <td>{{activity.uuid}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
 
 </div>

@@ -1,3 +1,4 @@
+<page-title title=" Account Settings" icon="&#59170"></page-title>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -14,15 +15,20 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
-<page-title title=" Account Settings" icon="&#59170"></page-title>
-
 <section class="row-fluid">
   <div class="span12 tab-content">
     <div class="menu-toolbar">
       <ul class="inline">
-        <li class="tab" ng-show="!use_sso" ng-class="currentAccountPage.route === '/profile/profile' ? 'selected' : ''"><a class="btn btn-primary toolbar" id="profile-link" ng-click="selectAccountPage('/profile/profile')"><i class="pictogram">&#59170;</i>Profile</a></li>
-        <li class="tab" ng-class="currentAccountPage.route === '/profile/organizations' ? 'selected' : ''"><a class="btn btn-primary toolbar" id="account-link" ng-click="selectAccountPage('/profile/organizations')"><i class="pictogram">&#128101;</i>Organizations</a></li>
+        <li class="tab" ng-show="!use_sso"
+          ng-class="currentAccountPage.route === '/profile/profile' ? 'selected' : ''"><a
+          class="btn btn-primary toolbar" id="profile-link"
+          ng-click="selectAccountPage('/profile/profile')"><i
+            class="pictogram">&#59170;</i>Profile</a></li>
+        <li class="tab"
+          ng-class="currentAccountPage.route === '/profile/organizations' ? 'selected' : ''"><a
+          class="btn btn-primary toolbar" id="account-link"
+          ng-click="selectAccountPage('/profile/organizations')"><i
+            class="pictogram">&#128101;</i>Organizations</a></li>
       </ul>
     </div>
     <span ng-include="currentAccountPage.template"></span>

@@ -1,3 +1,4 @@
+<div ng-if="securityWarning" ng-cloak class="demo-holder">
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -14,11 +15,13 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
-<div ng-if="securityWarning" ng-cloak class="demo-holder">
-    <div class="alert alert-demo alert-animate">
-        <div class="alert-text">
-            <i class="pictogram">&#9888;</i>Warning: This application has "sandbox" permissions and is not production ready. <a target="_blank" href="http://apigee.com/docs/app-services/content/securing-your-app">Please go to our security documentation to find out more.</a></span>
-        </div>
+  <div class="alert alert-demo alert-animate">
+    <div class="alert-text">
+      <i class="pictogram">&#9888;</i>Warning: This application has
+      "sandbox" permissions and is not production ready. <a
+        target="_blank"
+        href="http://apigee.com/docs/app-services/content/securing-your-app">Please
+        go to our security documentation to find out more.</a></span>
     </div>
+  </div>
 </div>
