@@ -573,7 +573,7 @@ public class CollectionIT extends AbstractCoreIT {
     public void emptyQueryReverse() throws Exception {
         LOG.debug( "emptyQueryReverse" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testEmptyQueryReverse" );
+        UUID applicationId = setup.createApplication( "emptyQueryReverseOrg", "testEmptyQueryReverseApp" );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
