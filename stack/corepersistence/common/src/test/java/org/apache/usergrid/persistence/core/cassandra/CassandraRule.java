@@ -5,6 +5,8 @@ import com.google.common.io.Files;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.netflix.astyanax.test.EmbeddedCassandra;
+import com.netflix.config.ConfigurationManager;
+
 import java.io.File;
 import java.io.IOException;
 import org.apache.cassandra.io.util.FileUtils;
@@ -32,9 +34,19 @@ public class CassandraRule extends EnvironResource {
 
     private final CassandraFig cassandraFig;
 
+    static{
+        ConfigurationManager.getDeploymentContext().setDeploymentEnvironment( "UNIT" );
+        try {
+            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
+        }
+        catch ( IOException e ) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public CassandraRule() {
         super( Env.UNIT );
+
         Injector injector = Guice.createInjector( new GuicyFigModule( CassandraFig.class ) );
         cassandraFig = injector.getInstance( CassandraFig.class );
     }
@@ -43,7 +55,8 @@ public class CassandraRule extends EnvironResource {
     protected void before() throws Throwable {
 
         if ( !cassandraFig.isEmbedded()) {
-            LOG.info("Using external Cassandra"); 
+            LOG.info("Using external Cassandra");
+            return;
         }
 
         if ( started ) {

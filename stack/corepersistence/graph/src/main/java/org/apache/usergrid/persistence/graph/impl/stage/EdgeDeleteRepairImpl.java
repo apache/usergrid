@@ -26,13 +26,13 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
-import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 
@@ -61,7 +61,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
 
     @Inject
-    public EdgeDeleteRepairImpl( @StorageEdgeSerialization final EdgeSerialization storageSerialization,
+    public EdgeDeleteRepairImpl( final EdgeSerialization storageSerialization,
                                  final GraphFig graphFig, final Keyspace keyspace ) {
 
         Preconditions.checkNotNull( "storageSerialization is required", storageSerialization );
@@ -95,12 +95,7 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
 
                                     //remove from storage
-                                    try {
-                                        storageSerialization.deleteEdge( scope, edge, timestamp ).execute();
-                                    }
-                                    catch ( ConnectionException e ) {
-                                        throw new GraphRuntimeException( "Unable to remove edge from storage", e );
-                                    }
+                                    HystrixCassandra.async(storageSerialization.deleteEdge( scope, edge, timestamp ));
                                 }
                             }
                         } );

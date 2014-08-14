@@ -27,13 +27,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
-import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
@@ -72,8 +72,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
     @Inject
     public EdgeMetaRepairImpl( final EdgeMetadataSerialization edgeMetadataSerialization, final Keyspace keyspace,
-                               final GraphFig graphFig,
-                               @StorageEdgeSerialization final EdgeSerialization storageEdgeSerialization ) {
+                               final GraphFig graphFig, final EdgeSerialization storageEdgeSerialization ) {
 
 
         Preconditions.checkNotNull( "edgeMetadataSerialization is required", edgeMetadataSerialization );
@@ -115,9 +114,9 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
         Preconditions.checkNotNull( serialization, "serialization is required" );
 
 
-        Observable<Integer> deleteCounts = serialization.loadEdgeSubTypes( scope, node, edgeType, maxTimestamp )
-                .buffer( graphFig.getRepairConcurrentSize() )
-                        //buffer them into concurrent groups based on the concurrent repair size
+        Observable<Integer> deleteCounts = serialization.loadEdgeSubTypes( scope, node, edgeType, maxTimestamp ).buffer(
+                graphFig.getRepairConcurrentSize() )
+                //buffer them into concurrent groups based on the concurrent repair size
                 .flatMap( new Func1<List<String>, Observable<Integer>>() {
 
                     @Override
@@ -154,15 +153,15 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                                           **/
                                                          if ( count != 0 ) {
                                                              LOG.debug( "Found edge with nodeId {}, type {}, "
-                                                                     + "and subtype {}. Not removing subtype. ", node,
-                                                                     edgeType, subType );
+                                                                             + "and subtype {}. Not removing subtype. ",
+                                                                     node, edgeType, subType );
                                                              return;
                                                          }
 
 
                                                          LOG.debug( "No edges with nodeId {}, type {}, "
-                                                                 + "and subtype {}. Removing subtype.", node, edgeType,
-                                                                 subType );
+                                                                         + "and subtype {}. Removing subtype.", node,
+                                                                 edgeType, subType );
                                                          batch.mergeShallow( serialization
                                                                  .removeEdgeSubType( scope, node, edgeType, subType,
                                                                          maxTimestamp ) );
@@ -179,22 +178,22 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                          */
                         return MathObservable.sumInteger( Observable.merge( checks ) )
                                              .doOnNext( new Action1<Integer>() {
-                                                 @Override
-                                                 public void call( final Integer count ) {
+                                                            @Override
+                                                            public void call( final Integer count ) {
 
 
-                                                     LOG.debug( "Executing batch for subtype deletion with type {}.  "
-                                                             + "Mutation has {} rows to mutate ", edgeType,
-                                                             batch.getRowCount() );
+                                                                LOG.debug(
+                                                                        "Executing batch for subtype deletion with " +
+                                                                                "type {}.  "
+                                                                                + "Mutation has {} rows to mutate ",
+                                                                        edgeType, batch.getRowCount() );
 
-                                                     try {
-                                                         batch.execute();
-                                                     }
-                                                     catch ( ConnectionException e ) {
-                                                         throw new GraphRuntimeException( "Unable to execute mutation", e );
-                                                     }
-                                                 }
-                                             } );
+                                                                HystrixCassandra.async( batch );
+                                                            }
+                                                        }
+
+
+                                                      );
                     }
                 } )
                         //if we get no edges, emit a 0 so the caller knows we can delete the type
@@ -217,15 +216,10 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                     return;
                 }
 
-                try {
 
-                    LOG.debug( "Type {} has no subtypes in use as of maxTimestamp {}.  Deleting type.", edgeType,
-                            maxTimestamp );
-                    serialization.removeEdgeType( scope, node, edgeType, maxTimestamp ).execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new GraphRuntimeException( "Unable to execute mutation" );
-                }
+                LOG.debug( "Type {} has no subtypes in use as of maxTimestamp {}.  Deleting type.", edgeType,
+                        maxTimestamp );
+                HystrixCassandra.async( serialization.removeEdgeType( scope, node, edgeType, maxTimestamp ) );
             }
         } );
     }

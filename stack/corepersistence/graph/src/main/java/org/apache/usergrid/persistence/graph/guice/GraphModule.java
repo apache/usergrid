@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.graph.guice;
 
 import org.safehaus.guicyfig.GuicyFigModule;
 
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
 import org.apache.usergrid.persistence.core.migration.Migration;
@@ -61,13 +60,9 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.Sizeb
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeShardStrategy;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Key;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
-import com.netflix.astyanax.Keyspace;
 
 
 public class GraphModule extends AbstractModule {
@@ -116,7 +111,13 @@ public class GraphModule extends AbstractModule {
         bind( NodeDeleteListener.class ).to( NodeDeleteListenerImpl.class );
         bind( EdgeDeleteListener.class ).to( EdgeDeleteListenerImpl.class );
 
+        bind( EdgeSerialization.class ).to( EdgeSerializationImpl.class );
 
+        bind( EdgeShardStrategy.class ).to( SizebasedEdgeShardStrategy.class );
+
+        bind( ShardedEdgeSerialization.class ).to( ShardedEdgeSerializationImpl.class );
+
+        bind( EdgeColumnFamilies.class ).to( SizebasedEdgeColumnFamilies.class );
 
 
         /**
@@ -134,49 +135,10 @@ public class GraphModule extends AbstractModule {
         migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class ) );
 
         //bind each singleton to the multi set.  Otherwise we won't migrate properly
-        migrationBinding.addBinding().to( Key.get( EdgeColumnFamilies.class, StorageEdgeSerialization.class ) );
+        migrationBinding.addBinding().to( Key.get( EdgeColumnFamilies.class ) );
 
         migrationBinding.addBinding().to( Key.get( EdgeShardSerialization.class ) );
         migrationBinding.addBinding().to( Key.get( NodeShardCounterSerialization.class ) );
-    }
-
-
-    /**
-     * Our permanent serialization strategy
-     */
-    @Provides
-    @Singleton
-    @Inject
-    @StorageEdgeSerialization
-    public EdgeSerialization storageSerialization( final NodeShardCache cache, final Keyspace keyspace,
-                                                   final CassandraConfig cassandraConfig, final GraphFig graphFig,
-                                                   final NodeShardApproximation shardApproximation,
-                                                   final TimeService timeService,
-                                                   @StorageEdgeSerialization
-                                                   final EdgeColumnFamilies edgeColumnFamilies ) {
-
-        final EdgeShardStrategy sizeBasedStrategy = new SizebasedEdgeShardStrategy( cache, shardApproximation );
-
-
-        final ShardedEdgeSerialization serialization = new ShardedEdgeSerializationImpl(keyspace, cassandraConfig, graphFig, sizeBasedStrategy,
-                timeService );
-
-
-        final EdgeSerializationImpl edgeSerialization =
-                new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy, edgeColumnFamilies,
-                        serialization );
-
-
-        return edgeSerialization;
-    }
-
-
-    @Provides
-    @Singleton
-    @Inject
-    @StorageEdgeSerialization
-    public EdgeColumnFamilies storageSerializationColumnFamilies() {
-        return new SizebasedEdgeColumnFamilies();
     }
 }
 

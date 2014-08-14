@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
+import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -45,6 +46,7 @@ import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
@@ -56,7 +58,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
     private static final Logger LOG = LoggerFactory.getLogger( NodeShardAllocationImpl.class );
 
-    private static final Shard MIN_SHARD = new Shard(0, 0, true);
+    private static final Shard MIN_SHARD = new Shard( 0, 0, true );
 
     private final EdgeShardSerialization edgeShardSerialization;
     private final EdgeColumnFamilies edgeColumnFamilies;
@@ -82,32 +84,29 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
     @Override
-    public Iterator<ShardEntryGroup> getShards( final ApplicationScope scope,
-                                                final Optional<Shard> maxShardId, final DirectedEdgeMeta directedEdgeMeta ) {
+    public Iterator<ShardEntryGroup> getShards( final ApplicationScope scope, final Optional<Shard> maxShardId,
+                                                final DirectedEdgeMeta directedEdgeMeta ) {
 
-        ValidationUtils.validateApplicationScope(scope);
+        ValidationUtils.validateApplicationScope( scope );
         Preconditions.checkNotNull( maxShardId, "maxShardId cannot be null" );
         GraphValidation.validateDirectedEdgeMeta( directedEdgeMeta );
 
         Iterator<Shard> existingShards;
 
         //its a new node, it doesn't need to check cassandra, it won't exist
-        if(isNewNode(directedEdgeMeta)){
+        if ( isNewNode( directedEdgeMeta ) ) {
             existingShards = Collections.singleton( MIN_SHARD ).iterator();
         }
 
-        else{
+        else {
             existingShards = edgeShardSerialization.getShardMetaData( scope, maxShardId, directedEdgeMeta );
         }
 
-        if(existingShards == null || !existingShards.hasNext()){
+        if ( existingShards == null || !existingShards.hasNext() ) {
 
-            try {
-                edgeShardSerialization.writeShardMeta( scope, MIN_SHARD, directedEdgeMeta ).execute();
-            }
-            catch ( ConnectionException e ) {
-                throw new GraphRuntimeException( "Unable to allocate minimum shard" );
-            }
+
+            final MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, MIN_SHARD, directedEdgeMeta );
+            HystrixCassandra.user( batch  );
 
             existingShards = Collections.singleton( MIN_SHARD ).iterator();
         }
@@ -117,9 +116,10 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
     @Override
-    public boolean auditShard( final ApplicationScope scope, final ShardEntryGroup shardEntryGroup, final DirectedEdgeMeta directedEdgeMeta) {
+    public boolean auditShard( final ApplicationScope scope, final ShardEntryGroup shardEntryGroup,
+                               final DirectedEdgeMeta directedEdgeMeta ) {
 
-        ValidationUtils.validateApplicationScope(scope);
+        ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateShardEntryGroup( shardEntryGroup );
         GraphValidation.validateDirectedEdgeMeta( directedEdgeMeta );
 
@@ -129,12 +129,12 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         /**
          * Nothing to do, it's been created very recently, we don't create a new one
          */
-        if (shardEntryGroup.isCompactionPending()) {
+        if ( shardEntryGroup.isCompactionPending() ) {
             return false;
         }
 
         //we can't allocate, we have more than 1 write shard currently.  We need to compact first
-        if(shardEntryGroup.entrySize() != 1){
+        if ( shardEntryGroup.entrySize() != 1 ) {
             return false;
         }
 
@@ -145,7 +145,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         final Shard shard = shardEntryGroup.getMinShard();
 
 
-        if (shard.getCreatedTime() >= getMinTime()){
+        if ( shard.getCreatedTime() >= getMinTime() ) {
             return false;
         }
 
@@ -154,8 +154,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Check out if we have a count for our shard allocation
          */
 
-        final long count =
-                nodeShardApproximation.getCount( scope, shard, directedEdgeMeta);
+        final long count = nodeShardApproximation.getCount( scope, shard, directedEdgeMeta );
 
 
         if ( count < graphFig.getShardSize() ) {
@@ -163,13 +162,12 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         }
 
 
-
-
         /**
          * Allocate the shard
          */
 
-        final Iterator<MarkedEdge> edges  = directedEdgeMeta.loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup, Long.MAX_VALUE );
+        final Iterator<MarkedEdge> edges = directedEdgeMeta
+                .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup, Long.MAX_VALUE );
 
 
         if ( !edges.hasNext() ) {
@@ -184,17 +182,12 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         final long createTimestamp = timeService.getCurrentTime();
 
-        final Shard newShard = new Shard(marked.getTimestamp(), createTimestamp, false);
+        final Shard newShard = new Shard( marked.getTimestamp(), createTimestamp, false );
 
 
-        try {
-            this.edgeShardSerialization
-                    .writeShardMeta( scope, newShard, directedEdgeMeta )
-                    .execute();
-        }
-        catch ( ConnectionException e ) {
-            throw new GraphRuntimeException( "Unable to write the new edge metadata" );
-        }
+        final MutationBatch batch = this.edgeShardSerialization.writeShardMeta( scope, newShard, directedEdgeMeta );
+
+        HystrixCassandra.user( batch );
 
 
         return true;
@@ -222,28 +215,22 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     /**
      * Return true if the node has been created within our timeout.  If this is the case, we dont' need to check
      * cassandra, we know it won't exist
-     *
-     * @param directedEdgeMeta
-     * @return
      */
-    private boolean isNewNode(DirectedEdgeMeta directedEdgeMeta){
+    private boolean isNewNode( DirectedEdgeMeta directedEdgeMeta ) {
 
         /**
          * the max time in microseconds we can allow
          */
-        final long maxTime = (timeService.getCurrentTime() + graphFig.getShardCacheTimeout() )* 10000;
+        final long maxTime = ( timeService.getCurrentTime() + graphFig.getShardCacheTimeout() ) * 10000;
 
-        for(DirectedEdgeMeta.NodeMeta node: directedEdgeMeta.getNodes()){
+        for ( DirectedEdgeMeta.NodeMeta node : directedEdgeMeta.getNodes() ) {
             final long uuidTime = node.getId().getUuid().timestamp();
 
-            if(uuidTime < maxTime){
+            if ( uuidTime < maxTime ) {
                 return true;
             }
         }
 
         return false;
-
     }
-
-
 }

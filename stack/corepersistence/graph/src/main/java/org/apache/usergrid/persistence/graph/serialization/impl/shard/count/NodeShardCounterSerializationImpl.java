@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -119,18 +120,20 @@ public class NodeShardCounterSerializationImpl implements NodeShardCounterSerial
 
 
         try {
-            OperationResult<Column<Boolean>> column =
-                    keyspace.prepareQuery( EDGE_SHARD_COUNTS ).getKey( rowKey ).getColumn( true ).execute();
+            OperationResult<Column<Boolean>> column = HystrixCassandra.user(
+                    keyspace.prepareQuery( EDGE_SHARD_COUNTS ).getKey( rowKey ).getColumn( true ) );
 
             return column.getResult().getLongValue();
         }
         //column not found, return 0
-        catch ( NotFoundException nfe ) {
-            return 0;
+        catch ( RuntimeException re ) {
+            if(re.getCause() instanceof NotFoundException) {
+                return 0;
+            }
+
+            throw  re;
         }
-        catch ( ConnectionException e ) {
-            throw new GraphRuntimeException( "An error occurred connecting to cassandra", e );
-        }
+
     }
 
 

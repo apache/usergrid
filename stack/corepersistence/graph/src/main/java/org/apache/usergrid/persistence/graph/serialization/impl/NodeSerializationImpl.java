@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.migration.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -81,16 +82,15 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     /**
-     * Columns are always a byte, and the entire value is contained within a row key.  This is intentional
-     * This allows us to make heavy use of Cassandra's bloom filters, as well as key caches.
-     * Since most nodes will only exist for a short amount of time in this CF, we'll most likely have them in the key
-     * cache, and we'll also bounce from the BloomFilter on read.  This means our performance will be no worse
-     * than checking a distributed cache in RAM for the existence of a marked node.
+     * Columns are always a byte, and the entire value is contained within a row key.  This is intentional This allows
+     * us to make heavy use of Cassandra's bloom filters, as well as key caches. Since most nodes will only exist for a
+     * short amount of time in this CF, we'll most likely have them in the key cache, and we'll also bounce from the
+     * BloomFilter on read.  This means our performance will be no worse than checking a distributed cache in RAM for
+     * the existence of a marked node.
      */
     private static final MultiTennantColumnFamily<ApplicationScope, Id, Boolean> GRAPH_DELETE =
             new MultiTennantColumnFamily<ApplicationScope, Id, Boolean>( "Graph_Marked_Nodes",
                     new OrganizationScopedRowKeySerializer<Id>( ROW_SERIALIZER ), BOOLEAN_SERIALIZER );
-
 
 
     protected final Keyspace keyspace;
@@ -108,7 +108,8 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
         return Collections.singleton(
                 new MultiTennantColumnFamilyDefinition( GRAPH_DELETE, BytesType.class.getSimpleName(),
-                        BooleanType.class.getSimpleName(), BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.ALL ) );
+                        BooleanType.class.getSimpleName(), BytesType.class.getSimpleName(),
+                        MultiTennantColumnFamilyDefinition.CacheOption.ALL ) );
     }
 
 
@@ -120,7 +121,7 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
         MutationBatch batch = keyspace.prepareMutationBatch().withConsistencyLevel( fig.getWriteCL() );
 
-        batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp(timestamp )
+        batch.withRow( GRAPH_DELETE, ScopedRowKey.fromKey( scope, node ) ).setTimestamp( timestamp )
              .putColumn( COLUMN_NAME, timestamp );
 
         return batch;
@@ -147,23 +148,26 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         ValidationUtils.validateApplicationScope( scope );
         ValidationUtils.verifyIdentity( node );
 
-        ColumnFamilyQuery<ScopedRowKey<ApplicationScope, Id>, Boolean> query = keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel(
-                fig.getReadCL() );
+        ColumnFamilyQuery<ScopedRowKey<ApplicationScope, Id>, Boolean> query =
+                keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel( fig.getReadCL() );
 
 
         try {
-            Column<Boolean> result =
-                    query.getKey( ScopedRowKey.fromKey( scope, node ) ).getColumn( COLUMN_NAME ).execute().getResult();
+            Column<Boolean> result = HystrixCassandra
+                    .user( query.getKey( ScopedRowKey.fromKey( scope, node ) ).getColumn( COLUMN_NAME ) )
+                    .getResult();
 
             return Optional.of( result.getLongValue() );
         }
-        catch ( NotFoundException e ) {
-            //swallow, there's just no column
-            return Optional.absent();
+        catch (RuntimeException re ) {
+            if(re.getCause().getCause() instanceof   NotFoundException) {
+                //swallow, there's just no column
+                return Optional.absent();
+            }
+
+            throw re;
         }
-        catch ( ConnectionException e ) {
-            throw new GraphRuntimeException( "Unable to connect to casandra", e );
-        }
+
     }
 
 
@@ -173,36 +177,34 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         Preconditions.checkNotNull( edges, "edges cannot be null" );
 
 
-        final ColumnFamilyQuery<ScopedRowKey<ApplicationScope, Id>, Boolean> query = keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel( fig.getReadCL() );
+        final ColumnFamilyQuery<ScopedRowKey<ApplicationScope, Id>, Boolean> query =
+                keyspace.prepareQuery( GRAPH_DELETE ).setConsistencyLevel( fig.getReadCL() );
 
 
-        final List<ScopedRowKey<ApplicationScope, Id>> keys = new ArrayList<ScopedRowKey<ApplicationScope, Id>>(edges.size());
+        final List<ScopedRowKey<ApplicationScope, Id>> keys =
+                new ArrayList<ScopedRowKey<ApplicationScope, Id>>( edges.size() );
 
         //worst case all are marked
-        final Map<Id, Long> versions = new HashMap<>(edges.size());
+        final Map<Id, Long> versions = new HashMap<>( edges.size() );
 
-        for(final Edge edge: edges){
+        for ( final Edge edge : edges ) {
             keys.add( ScopedRowKey.fromKey( scope, edge.getSourceNode() ) );
             keys.add( ScopedRowKey.fromKey( scope, edge.getTargetNode() ) );
         }
 
-        try {
-            final Rows<ScopedRowKey<ApplicationScope, Id>, Boolean>
-                    results = query.getRowSlice( keys ).withColumnSlice( Collections.singletonList( COLUMN_NAME ) ).execute().getResult();
 
-            for(Row<ScopedRowKey<ApplicationScope, Id>, Boolean> row: results){
-                Column<Boolean> column = row.getColumns().getColumnByName( COLUMN_NAME );
+        final Rows<ScopedRowKey<ApplicationScope, Id>, Boolean> results = HystrixCassandra
+                .user( query.getRowSlice( keys ).withColumnSlice( Collections.singletonList( COLUMN_NAME ) ) )
+                .getResult();
 
-                if(column != null){
-                    versions.put( row.getKey().getKey(), column.getLongValue() );
-                }
+        for ( Row<ScopedRowKey<ApplicationScope, Id>, Boolean> row : results ) {
+            Column<Boolean> column = row.getColumns().getColumnByName( COLUMN_NAME );
 
-
+            if ( column != null ) {
+                versions.put( row.getKey().getKey(), column.getLongValue() );
             }
         }
-        catch ( ConnectionException e ) {
-            throw new GraphRuntimeException( "Unable to execute multiget for all max versions", e );
-        }
+
 
         return versions;
     }
