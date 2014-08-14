@@ -143,6 +143,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.le;
 import static org.apache.usergrid.persistence.cassandra.Serializers.se;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
@@ -519,13 +520,15 @@ public class CpEntityManager implements EntityManager {
             }
         }
         
-        IndexScope indexScope = new IndexScopeImpl( 
+        // update item in collection index
+        IndexScope indexScope = new IndexScopeImpl(
             appScope.getApplication(), 
             appScope.getApplication(), 
             getCollectionScopeNameFromEntityType( entity.getType() ));
         EntityIndex ei = managerCache.getEntityIndex( indexScope );
         ei.index( cpEntity );
 
+        // update all items index
         IndexScope allTypesIndexScope = new IndexScopeImpl( 
             appScope.getApplication(), 
             appScope.getApplication(), 

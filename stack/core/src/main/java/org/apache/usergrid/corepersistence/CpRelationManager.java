@@ -338,7 +338,7 @@ public class CpRelationManager implements RelationManager {
      * @param edgeType Edge type, edge type prefix or null to allow any edge type
      * @param fromEntityType Only consider edges from entities of this type
      */
-    private Map<EntityRef, Set<String>> getContainers( int limit, String edgeType, String fromEntityType ) {
+    Map<EntityRef, Set<String>> getContainers( int limit, String edgeType, String fromEntityType ) {
 
         Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
 
@@ -1558,10 +1558,10 @@ public class CpRelationManager implements RelationManager {
                 org.apache.usergrid.persistence.model.entity.Entity e =
                     ecm.load( cr.getId() ).toBlockingObservable().last();
 
-//                if ( e == null ) {
-//                    logger.error("Entity {}:{} not found", cr.getId().getType(), cr.getId().getUuid());
-//                    continue;
-//                }
+                if ( e == null ) {
+                    logger.error("Entity {}:{} not found", cr.getId().getType(), cr.getId().getUuid());
+                    continue;
+                }
 
                 if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
                     logger.debug("Stale version uuid:{} type:{} version:{} latest version:{}", 
@@ -1607,6 +1607,8 @@ public class CpRelationManager implements RelationManager {
 
         results.setCursor( crs.getCursor() );
         results.setQueryProcessor( new CpQueryProcessor(em, query, headEntity, collName) );
+
+        logger.debug("Returning results size {}", results.getIds().size() );
 
         return results;
     }

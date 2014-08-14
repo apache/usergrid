@@ -2378,6 +2378,7 @@ public class ManagementServiceImpl implements ManagementService {
         if ( sendEmail ) {
             startOrganizationActivationFlow( organization );
         }
+        em.refreshIndex();
     }
 
 
