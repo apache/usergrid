@@ -80,6 +80,11 @@ cassandra.cluster=${clusterName}
 cassandra.keyspace.strategy=org.apache.cassandra.locator.SimpleStrategy
 cassandra.keyspace.replication=${replFactor}
 
+cassandra.timeout=2000
+cassandra.connections=800
+hystrix.threadpool.graph_user.coreSize=60
+hystrix.threadpool.graph_async.coreSize=60
+
 elasticsearch.cluster_name=${clusterName}
 elasticsearch.index_prefix=usergrid
 elasticsearch.hosts=${esnodes}

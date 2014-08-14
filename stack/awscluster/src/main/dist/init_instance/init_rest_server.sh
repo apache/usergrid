@@ -46,14 +46,6 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 . /etc/profile.d/usergrid-env.sh
 chmod +x /usr/share/usergrid/update.sh
 
-# Copy in our own server.xml to set Tomcat's thread pool size
-cp /usr/share/usergrid/lib/server.xml /var/lib/tomcat7/conf
-chown tomcat7 /var/lib/tomcat7/conf/server.xml 
-
-# Set Tomcat RAM size and path to log4j.properties
-export JAVA_OPTS="-Djava.awt.headless=true -Xmx1024m -Dlog4j.configuration=file:/usr/share/usergrid/lib/log4j.properties"
-sed -i 's/Xmx128m/Xmx1024m -Dlog4j.configuration=file\:\/usr\/share\/usergrid\/lib\/log4j\.properties/' /etc/default/tomcat7
-
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 
 
@@ -78,9 +70,48 @@ ln -s /var/log varlog/tomcat7 tomcat7logs
 ln -s /usr/share/tomcat7 tomcat7
 ln -s /usr/share/usergrid usergrid
 
-# Go
-/etc/init.d/tomcat7 start
+case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
+'m1.small' )
+    export TOMCAT_RAM=1250M
+    export TOMCAT_THREADS=250
+;;
+'m1.medium' )
+    export TOMCAT_RAM=3G
+    export TOMCAT_THREADS=500
+;;
+'m1.large' )
+    export TOMCAT_RAM=6G
+    export TOMCAT_THREADS=1000
+;;
+'m1.xlarge' )
+    export TOMCAT_RAM=12G
+    export TOMCAT_THREADS=2000
+;;
+'m3.xlarge' )
+    export TOMCAT_RAM=12G
+    export TOMCAT_THREADS=3250
+;;
+'m3.large' )
+    export TOMCAT_RAM=6G
+    export TOMCAT_THREADS=1600
+;;
+'c3.4xlarge' )
+    export TOMCAT_RAM=24G
+    export TOMCAT_THREADS=15000
+    export NOFILE=400000
+esac
+
+sudo sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM}/g" /etc/default/tomcat7
+sudo sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${TOMCAT_THREADS}\" maxConnections=\"${TOMCAT_THREADS}\"/g" /var/lib/tomcat7/conf/server.xml
+sudo sed -i.bak "/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
+echo 600000 | sudo tee /proc/sys/fs/nr_open
+echo 600000 | sudo tee /proc/sys/fs/file-max
 
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts
 groovy tag_instance.groovy
+
+# Go
+/etc/init.d/tomcat7 start
+sudo reboot
+
