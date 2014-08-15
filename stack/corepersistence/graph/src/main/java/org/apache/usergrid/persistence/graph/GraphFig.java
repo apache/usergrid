@@ -45,6 +45,12 @@ public interface GraphFig extends GuicyFig {
      */
     public static final String SHARD_CACHE_TIMEOUT = "usergrid.graph.shard.cache.timeout";
 
+    public static final String SHARD_CACHE_REFRESH_WORKERS = "usergrid.graph.shard.refresh.worker.count";
+
+    public static final String SHARD_REPAIR_CHANCE = "usergrid.graph.shard.repair.chance";
+
+
+
     /**
      * The minimum amount of time than can occur (in millis) between shard allocation.  Must be at least 2x the cache timeout.
      *
@@ -74,6 +80,10 @@ public interface GraphFig extends GuicyFig {
     int getRepairConcurrentSize();
 
 
+    @Default( ".10" )
+    @Key( SHARD_REPAIR_CHANCE  )
+    double getShardRepairChance();
+
 
     @Default("500000")
     @Key(SHARD_SIZE)
@@ -94,6 +104,9 @@ public interface GraphFig extends GuicyFig {
     long getShardCacheSize();
 
 
+    @Default( "2" )
+    @Key( SHARD_CACHE_REFRESH_WORKERS )
+    int getShardCacheRefreshWorkerCount();
 
 
     @Default( "10000" )

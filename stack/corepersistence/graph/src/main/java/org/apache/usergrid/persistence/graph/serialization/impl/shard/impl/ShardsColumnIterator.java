@@ -25,7 +25,7 @@ import com.netflix.astyanax.util.RangeBuilder;
  * @param <C> The column type
  * @param <T> The parsed return type
  */
-public class ShardRowIterator<R, C, T> implements Iterator<T> {
+public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
 
     private final EdgeSearcher<R, C, T> searcher;
 
@@ -40,7 +40,7 @@ public class ShardRowIterator<R, C, T> implements Iterator<T> {
     private final ConsistencyLevel consistencyLevel;
 
 
-    public ShardRowIterator( final EdgeSearcher<R, C, T> searcher,
+    public ShardsColumnIterator( final EdgeSearcher<R, C, T> searcher,
                              final MultiTennantColumnFamily<ApplicationScope, R, C> cf, final Keyspace keyspace,
                              final ConsistencyLevel consistencyLevel, final int pageSize ) {
         this.searcher = searcher;
@@ -53,21 +53,15 @@ public class ShardRowIterator<R, C, T> implements Iterator<T> {
 
     @Override
     public boolean hasNext() {
-        //we have more columns to return
-        if ( currentColumnIterator != null && currentColumnIterator.hasNext() ) {
-            return true;
-        }
 
         /**
-         * We have another row key, advance to it and re-check
+         * Iterator isn't initialized, start it
          */
-        if ( searcher.hasNext() ) {
-            advanceRow();
-            return hasNext();
+        if(currentColumnIterator == null){
+            startIterator();
         }
 
-        //we have no more columns, and no more row keys, we're done
-        return false;
+        return currentColumnIterator.hasNext();
     }
 
 
@@ -90,7 +84,7 @@ public class ShardRowIterator<R, C, T> implements Iterator<T> {
     /**
      * Advance our iterator to the next row (assumes the check for row keys is elsewhere)
      */
-    private void advanceRow() {
+    private void startIterator() {
 
         /**
          * If the edge is present, we need to being seeking from this
@@ -105,7 +99,7 @@ public class ShardRowIterator<R, C, T> implements Iterator<T> {
         /**
          * Get our list of slices
          */
-        final List<ScopedRowKey<ApplicationScope, R>> rowKeys = searcher.next();
+        final List<ScopedRowKey<ApplicationScope, R>> rowKeys = searcher.getRowKeys();
 
 
         final List<ColumnNameIterator<C, T>> columnNameIterators = new ArrayList<>( rowKeys.size() );

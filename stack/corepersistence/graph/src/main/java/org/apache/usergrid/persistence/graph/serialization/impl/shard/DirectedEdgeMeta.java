@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -87,6 +88,36 @@ public abstract class DirectedEdgeMeta {
         public NodeType getNodeType() {
             return nodeType;
         }
+
+
+        @Override
+        public boolean equals( final Object o ) {
+            if ( this == o ) {
+                return true;
+            }
+            if ( !( o instanceof NodeMeta ) ) {
+                return false;
+            }
+
+            final NodeMeta nodeMeta = ( NodeMeta ) o;
+
+            if ( !id.equals( nodeMeta.id ) ) {
+                return false;
+            }
+            if ( nodeType != nodeMeta.nodeType ) {
+                return false;
+            }
+
+            return true;
+        }
+
+
+        @Override
+        public int hashCode() {
+            int result = id.hashCode();
+            result = 31 * result + nodeType.hashCode();
+            return result;
+        }
     }
 
 
@@ -125,8 +156,10 @@ public abstract class DirectedEdgeMeta {
      */
     public abstract Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                     final EdgeColumnFamilies edgeColumnFamilies,
-                                                    final ApplicationScope scope, final ShardEntryGroup group,
+                                                    final ApplicationScope scope, final Collection<Shard> shards,
                                                     final long maxValue );
+
+
 
     /**
      * Get the type of this directed edge
@@ -192,7 +225,7 @@ public abstract class DirectedEdgeMeta {
             @Override
             public Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                    final EdgeColumnFamilies edgeColumnFamilies,
-                                                   final ApplicationScope scope, final ShardEntryGroup group,
+                                                   final ApplicationScope scope, final Collection<Shard>  shards,
                                                    final long maxValue ) {
 
                 final Id sourceId = nodes[0].id;
@@ -200,8 +233,7 @@ public abstract class DirectedEdgeMeta {
 
                 final SearchByEdgeType search = new SimpleSearchByEdgeType( sourceId, edgeType, maxValue, null );
 
-                return serialization.getEdgesFromSource( edgeColumnFamilies, scope, search,
-                        Collections.singleton( group ).iterator() );
+                return serialization.getEdgesFromSource( edgeColumnFamilies, scope, search, shards );
             }
 
 
@@ -233,9 +265,9 @@ public abstract class DirectedEdgeMeta {
             @Override
             public Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                    final EdgeColumnFamilies edgeColumnFamilies,
-                                                   final ApplicationScope scope, final ShardEntryGroup group,
+                                                   final ApplicationScope scope, final Collection<Shard>shards,
                                                    final long maxValue ) {
-
+//
                 final Id sourceId = nodes[0].id;
                 final String edgeType = types[0];
                 final String targetType = types[1];
@@ -243,8 +275,8 @@ public abstract class DirectedEdgeMeta {
                 final SearchByIdType search =
                         new SimpleSearchByIdType( sourceId, edgeType, maxValue, targetType, null );
 
-                return serialization.getEdgesFromSourceByTargetType( edgeColumnFamilies, scope, search,
-                        Collections.singleton( group ).iterator() );
+                return serialization.getEdgesFromSourceByTargetType( edgeColumnFamilies, scope, search, shards);
+
             }
 
 
@@ -272,7 +304,7 @@ public abstract class DirectedEdgeMeta {
             @Override
             public Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                    final EdgeColumnFamilies edgeColumnFamilies,
-                                                   final ApplicationScope scope, final ShardEntryGroup group,
+                                                   final ApplicationScope scope, final Collection<Shard>  shards,
                                                    final long maxValue ) {
 
 
@@ -281,8 +313,7 @@ public abstract class DirectedEdgeMeta {
 
                 final SearchByEdgeType search = new SimpleSearchByEdgeType( targetId, edgeType, maxValue, null );
 
-                return serialization.getEdgesToTarget( edgeColumnFamilies, scope, search,
-                        Collections.singleton( group ).iterator() );
+                return serialization.getEdgesToTarget( edgeColumnFamilies, scope, search, shards );
             }
 
 
@@ -311,7 +342,7 @@ public abstract class DirectedEdgeMeta {
             @Override
             public Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                    final EdgeColumnFamilies edgeColumnFamilies,
-                                                   final ApplicationScope scope, final ShardEntryGroup group,
+                                                   final ApplicationScope scope, final Collection<Shard> shards,
                                                    final long maxValue ) {
 
                 final Id targetId = nodes[0].id;
@@ -322,8 +353,7 @@ public abstract class DirectedEdgeMeta {
                 final SearchByIdType search =
                         new SimpleSearchByIdType( targetId, edgeType, maxValue, sourceType, null );
 
-                return serialization.getEdgesToTargetBySourceType( edgeColumnFamilies, scope, search,
-                        Collections.singleton( group ).iterator() );
+                return serialization.getEdgesToTargetBySourceType( edgeColumnFamilies, scope, search, shards);
             }
 
 
@@ -355,7 +385,7 @@ public abstract class DirectedEdgeMeta {
             @Override
             public Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                    final EdgeColumnFamilies edgeColumnFamilies,
-                                                   final ApplicationScope scope, final ShardEntryGroup group,
+                                                   final ApplicationScope scope, final Collection<Shard>  shards,
                                                    final long maxValue ) {
 
                 final Id sourceId = nodes[0].id;
@@ -365,8 +395,8 @@ public abstract class DirectedEdgeMeta {
                 final SimpleSearchByEdge search =
                         new SimpleSearchByEdge( sourceId, edgeType, targetId, maxValue, null );
 
-                return serialization.getEdgeVersions( edgeColumnFamilies, scope, search,
-                        Collections.singleton( group ).iterator() );
+                return serialization.getEdgeVersions( edgeColumnFamilies, scope, search, shards);
+
             }
 
 
@@ -376,6 +406,7 @@ public abstract class DirectedEdgeMeta {
             }
         };
     }
+
 
 
     /**

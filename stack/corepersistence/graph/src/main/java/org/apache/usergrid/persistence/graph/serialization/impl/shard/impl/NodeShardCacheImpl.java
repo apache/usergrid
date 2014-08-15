@@ -22,10 +22,16 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -49,10 +55,18 @@ import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import com.google.common.cache.Weigher;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -69,10 +83,14 @@ public class NodeShardCacheImpl implements NodeShardCache {
      */
     private static final int MAX_WEIGHT_PER_ELEMENT = 10000;
 
+
     private final NodeShardAllocation nodeShardAllocation;
     private final GraphFig graphFig;
     private final TimeService timeservice;
 
+
+
+    private ListeningScheduledExecutorService refreshExecutors;
     private LoadingCache<CacheKey, CacheEntry> graphs;
 
 
@@ -93,6 +111,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
         this.graphFig = graphFig;
         this.timeservice = timeservice;
 
+
         /**
          * Add our listener to reconstruct the shard
          */
@@ -102,7 +121,9 @@ public class NodeShardCacheImpl implements NodeShardCache {
                 final String propertyName = evt.getPropertyName();
 
                 if ( propertyName.equals( GraphFig.SHARD_CACHE_SIZE ) || propertyName
-                        .equals( GraphFig.SHARD_CACHE_TIMEOUT ) ) {
+                        .equals( GraphFig.SHARD_CACHE_TIMEOUT ) || propertyName
+                        .equals( GraphFig.SHARD_CACHE_REFRESH_WORKERS ) ) {
+
 
                     updateCache();
                 }
@@ -120,7 +141,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
     public ShardEntryGroup getWriteShardGroup( final ApplicationScope scope, final long timestamp,
                                                final DirectedEdgeMeta directedEdgeMeta ) {
 
-        ValidationUtils.validateApplicationScope(scope);
+        ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateDirectedEdgeMeta( directedEdgeMeta );
 
         final CacheKey key = new CacheKey( scope, directedEdgeMeta );
@@ -147,7 +168,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
     @Override
     public Iterator<ShardEntryGroup> getReadShardGroup( final ApplicationScope scope, final long maxTimestamp,
                                                         final DirectedEdgeMeta directedEdgeMeta ) {
-        ValidationUtils.validateApplicationScope(scope);
+        ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateDirectedEdgeMeta( directedEdgeMeta );
 
         final CacheKey key = new CacheKey( scope, directedEdgeMeta );
@@ -175,11 +196,25 @@ public class NodeShardCacheImpl implements NodeShardCache {
      * doesn't have to be precise.  The algorithm accounts for stale data.
      */
     private void updateCache() {
+        if ( this.refreshExecutors != null ) {
+            this.refreshExecutors.shutdown();
+        }
 
-        this.graphs = CacheBuilder.newBuilder().expireAfterWrite( graphFig.getShardCacheSize(), TimeUnit.MILLISECONDS )
-                                  .removalListener( new ShardRemovalListener() )
-                                  .maximumWeight( MAX_WEIGHT_PER_ELEMENT * graphFig.getShardCacheSize() )
-                                  .weigher( new ShardWeigher() ).build( new ShardCacheLoader() );
+        this.refreshExecutors = MoreExecutors
+                .listeningDecorator( Executors.newScheduledThreadPool( graphFig.getShardCacheRefreshWorkerCount() ) );
+
+
+        this.graphs = CacheBuilder.newBuilder()
+
+                //we want to asynchronously load new values for existing ones, that way we wont' have to
+                //wait for a trip to cassandra
+                .refreshAfterWrite( graphFig.getShardCacheTimeout(), TimeUnit.MILLISECONDS )
+
+                        //set our weight function, since not all shards are equal
+                .maximumWeight(MAX_WEIGHT_PER_ELEMENT * graphFig.getShardCacheSize() ).weigher( new ShardWeigher() )
+
+                        //set our shard loader
+                .build( new ShardCacheLoader() );
     }
 
 
@@ -296,15 +331,33 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
         @Override
-        public CacheEntry load( final CacheKey key ) throws Exception {
+        public CacheEntry load( final CacheKey key ) {
 
 
             final Iterator<ShardEntryGroup> edges =
                     nodeShardAllocation.getShards( key.scope, Optional.<Shard>absent(), key.directedEdgeMeta );
 
-            return new CacheEntry( edges );
+            final CacheEntry cacheEntry = new CacheEntry( edges );
+
+            return cacheEntry;
         }
+
+
+        @Override
+        public ListenableFuture<CacheEntry> reload( final CacheKey key, final CacheEntry oldValue ) throws Exception {
+            ListenableFutureTask<CacheEntry> task = ListenableFutureTask.create( new Callable<CacheEntry>() {
+                public CacheEntry call() {
+                    return load( key );
+                }
+            } );
+            //load via the refresh executor
+            refreshExecutors.execute( task );
+            return task;
+        }
+
+        //TODO, use RX for sliding window buffering and duplicate removal
     }
+
 
 
     /**
@@ -315,58 +368,6 @@ public class NodeShardCacheImpl implements NodeShardCache {
         @Override
         public int weigh( final CacheKey key, final CacheEntry value ) {
             return value.getCacheSize();
-        }
-    }
-
-
-    /**
-     * On removal from the cache, we want to audit the maximum shard.  If it needs to allocate a new shard, we want to
-     * do so. IF there's a compaction pending, we want to run the compaction task
-     */
-    final class ShardRemovalListener implements RemovalListener<CacheKey, CacheEntry> {
-
-        @Override
-        public void onRemoval( final RemovalNotification<CacheKey, CacheEntry> notification ) {
-
-
-            final CacheKey key = notification.getKey();
-            final CacheEntry entry = notification.getValue();
-
-
-            Iterator<ShardEntryGroup> groups = entry.getShards( Long.MAX_VALUE );
-
-
-            /**
-             * Start at our max, then
-             */
-
-            //audit all our groups
-            while ( groups.hasNext() ) {
-                ShardEntryGroup group = groups.next();
-
-                /**
-                 * We don't have a compaction pending.  Run an audit on the shards
-                 */
-                if ( !group.isCompactionPending() ) {
-                    LOG.debug( "No compaction pending, checking max shard on expiration" );
-                    /**
-                     * Check if we should allocate, we may want to
-                     */
-
-
-                    nodeShardAllocation.auditShard( key.scope, group, key.directedEdgeMeta );
-                    continue;
-                }
-                /**
-                 * Do the compaction
-                 */
-                if ( group.shouldCompact( timeservice.getCurrentTime() ) ) {
-                    //launch the compaction
-                }
-
-                //no op, there's nothing we need to do to this shard
-
-            }
         }
     }
 }

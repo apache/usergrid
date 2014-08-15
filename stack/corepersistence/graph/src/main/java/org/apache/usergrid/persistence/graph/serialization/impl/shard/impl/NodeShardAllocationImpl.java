@@ -42,7 +42,9 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -167,7 +169,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          */
 
         final Iterator<MarkedEdge> edges = directedEdgeMeta
-                .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup, Long.MAX_VALUE );
+                .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup.getReadShards(), Long.MAX_VALUE );
 
 
         if ( !edges.hasNext() ) {
@@ -218,15 +220,18 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
      */
     private boolean isNewNode( DirectedEdgeMeta directedEdgeMeta ) {
 
-        /**
-         * the max time in microseconds we can allow
-         */
-        final long maxTime = ( timeService.getCurrentTime() + graphFig.getShardCacheTimeout() ) * 10000;
+        //The timeout is in milliseconds.  Time for a time uuid is 1/10000 of a milli, so we need to get the units correct
+        final long uuidDelta =  graphFig.getShardCacheTimeout()  * 10000;
+
+        final long timeNow = UUIDGenerator.newTimeUUID().timestamp();
 
         for ( DirectedEdgeMeta.NodeMeta node : directedEdgeMeta.getNodes() ) {
+
             final long uuidTime = node.getId().getUuid().timestamp();
 
-            if ( uuidTime < maxTime ) {
+            final long uuidTimeDelta = uuidTime + uuidDelta;
+
+            if ( uuidTimeDelta < timeNow ) {
                 return true;
             }
         }

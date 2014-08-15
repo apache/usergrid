@@ -260,7 +260,7 @@ public class NodeShardAllocationTest {
         //mock up returning the value
         when( shardedEdgeSerialization
                 .getEdgesFromSourceByTargetType( same( edgeColumnFamilies ), same( scope ), any( SearchByIdType.class ),
-                        any( Iterator.class ) ) ).thenReturn( edgeIterator );
+                        any( Collection.class ) ) ).thenReturn( edgeIterator );
 
 
         final boolean result = approximation.auditShard( scope, shardEntryGroup, targetEdgeMeta );

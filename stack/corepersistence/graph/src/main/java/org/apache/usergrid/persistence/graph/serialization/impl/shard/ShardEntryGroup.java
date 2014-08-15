@@ -256,13 +256,13 @@ public class ShardEntryGroup {
     }
 
 
-    /**
-     * Helper method to create a shard entry group with a single shard
-     */
-    public static ShardEntryGroup singletonGroup( final Shard shard, final long delta ) {
-        ShardEntryGroup group = new ShardEntryGroup( delta );
-        group.addShard( shard );
-
-        return group;
+    @Override
+    public String toString() {
+        return "ShardEntryGroup{" +
+                "shards=" + shards +
+                ", delta=" + delta +
+                ", maxCreatedTime=" + maxCreatedTime +
+                ", compactionTarget=" + compactionTarget +
+                '}';
     }
 }

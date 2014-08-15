@@ -19,7 +19,9 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -44,19 +46,84 @@ public interface ShardedEdgeSerialization {
      * @param markedEdge The edge to write
      * @param timestamp The timestamp to use
      */
-    MutationBatch writeEdge( EdgeColumnFamilies columnFamilies, ApplicationScope scope, MarkedEdge markedEdge,
-                             UUID timestamp );
+    MutationBatch writeEdgeFromSource( EdgeColumnFamilies columnFamilies, ApplicationScope scope, MarkedEdge markedEdge,
+                                       Collection<Shard> shards,  DirectedEdgeMeta sourceEdgeMeta,  UUID timestamp );
+
 
     /**
-     * EdgeWrite both the source -->target edge and the target<--- source edge into the mutation
+     * Write the edge from source->target
+     */
+    MutationBatch writeEdgeFromSourceWithTargetType( EdgeColumnFamilies columnFamilies, ApplicationScope scope,
+                                                     MarkedEdge markedEdge, Collection<Shard> shards,  DirectedEdgeMeta sourceEdgeMeta, UUID timestamp );
+
+    /**
+     * Write the edge from target to source
+     */
+    MutationBatch writeEdgeToTarget( EdgeColumnFamilies columnFamilies, ApplicationScope scope, MarkedEdge markedEdge,
+                                     Collection<Shard> shards,  DirectedEdgeMeta sourceEdgeMeta, UUID timestamp );
+
+
+    /**
+     * Write the edge from target to source with source type
+     */
+    MutationBatch writeEdgeToTargetWithSourceType( EdgeColumnFamilies columnFamilies, ApplicationScope scope,
+                                                   MarkedEdge markedEdge, Collection<Shard> shards, DirectedEdgeMeta sourceEdgeMeta,  UUID timestamp );
+
+
+    /**
+        * EdgeWrite both the source--->Target edge and the target <----- source edge into the mutation
+        *
+        * @param columnFamilies The column families to use
+        * @param scope The org scope of the graph
+        * @param markedEdge The edge to write
+        * @param timestamp The timestamp to use
+        */
+       MutationBatch writeEdgeVersions( EdgeColumnFamilies columnFamilies, ApplicationScope scope, MarkedEdge markedEdge,
+                                          Collection<Shard> shards,  DirectedEdgeMeta sourceEdgeMeta,  UUID timestamp );
+
+
+
+    /**
+     * EdgeWrite both the source--->Target edge and the target <----- source edge into the mutation
      *
      * @param columnFamilies The column families to use
      * @param scope The org scope of the graph
      * @param markedEdge The edge to write
-     * @param timestamp The timestamp of the uuid
+     * @param timestamp The timestamp to use
      */
-    MutationBatch deleteEdge( EdgeColumnFamilies columnFamilies, ApplicationScope scope, MarkedEdge markedEdge,
-                              UUID timestamp );
+    MutationBatch deleteEdgeFromSource( EdgeColumnFamilies columnFamilies, ApplicationScope scope,
+                                        MarkedEdge markedEdge, Collection<Shard> shards,  DirectedEdgeMeta sourceEdgeMeta, UUID timestamp );
+
+
+    /**
+     * Write the edge from source->target
+     */
+    MutationBatch deleteEdgeFromSourceWithTargetType( EdgeColumnFamilies columnFamilies, ApplicationScope scope,
+                                                      MarkedEdge markedEdge, Collection<Shard> shards,  DirectedEdgeMeta sourceEdgeMeta,  UUID timestamp );
+
+    /**
+     * Write the edge from target to source
+     */
+    MutationBatch deleteEdgeToTarget( EdgeColumnFamilies columnFamilies, ApplicationScope scope, MarkedEdge markedEdge,
+                                      Collection<Shard> shards, DirectedEdgeMeta sourceEdgeMeta,  UUID timestamp );
+
+
+    /**
+     * Write the edge from target to source with source type
+     */
+    MutationBatch deleteEdgeToTargetWithSourceType( EdgeColumnFamilies columnFamilies, ApplicationScope scope,
+                                                    MarkedEdge markedEdge, Collection<Shard> shards,  DirectedEdgeMeta sourceEdgeMeta, UUID timestamp );
+
+    /**
+            * EdgeWrite both the source--->Target edge and the target <----- source edge into the mutation
+            *
+            * @param columnFamilies The column families to use
+            * @param scope The org scope of the graph
+            * @param markedEdge The edge to write
+            * @param timestamp The timestamp to use
+            */
+           MutationBatch deleteEdgeVersions( EdgeColumnFamilies columnFamilies, ApplicationScope scope, MarkedEdge markedEdge,
+                                              Collection<Shard> shards,  DirectedEdgeMeta sourceEdgeMeta,  UUID timestamp );
 
 
     /**
@@ -65,10 +132,10 @@ public interface ShardedEdgeSerialization {
      * @param columnFamilies The column families to use
      * @param scope The application scope
      * @param search The search criteria
-     * @param shards The shards to iterate when searching
+     * @param shards The shards multiget when reading
      */
     Iterator<MarkedEdge> getEdgeVersions( EdgeColumnFamilies columnFamilies, ApplicationScope scope,
-                                          SearchByEdge search, Iterator<ShardEntryGroup> shards );
+                                          SearchByEdge search, Collection<Shard> shards );
 
     /**
      * Get an iterator of all edges by edge type originating from source node
@@ -79,7 +146,7 @@ public interface ShardedEdgeSerialization {
      * @param shards The shards to iterate when searching
      */
     Iterator<MarkedEdge> getEdgesFromSource( EdgeColumnFamilies columnFamilies, ApplicationScope scope,
-                                             SearchByEdgeType search, Iterator<ShardEntryGroup> shards );
+                                             SearchByEdgeType search, Collection<Shard> shards );
 
 
     /**
@@ -91,7 +158,7 @@ public interface ShardedEdgeSerialization {
      * @param shards The shards to iterate when searching
      */
     Iterator<MarkedEdge> getEdgesFromSourceByTargetType( EdgeColumnFamilies columnFamilies, ApplicationScope scope,
-                                                         SearchByIdType search, Iterator<ShardEntryGroup> shards );
+                                                         SearchByIdType search, Collection<Shard> shards );
 
     /**
      * Get an iterator of all edges by edge type pointing to the target node.  Returns all versions
@@ -102,7 +169,7 @@ public interface ShardedEdgeSerialization {
      * @param shards The shards to iterate when searching
      */
     Iterator<MarkedEdge> getEdgesToTarget( EdgeColumnFamilies columnFamilies, ApplicationScope scope,
-                                           SearchByEdgeType search, Iterator<ShardEntryGroup> shards );
+                                           SearchByEdgeType search, Collection<Shard> shards );
 
 
     /**
@@ -115,5 +182,5 @@ public interface ShardedEdgeSerialization {
      * @param shards The shards to iterate when searching
      */
     Iterator<MarkedEdge> getEdgesToTargetBySourceType( EdgeColumnFamilies columnFamilies, ApplicationScope scope,
-                                                       SearchByIdType search, Iterator<ShardEntryGroup> shards );
+                                                       SearchByIdType search, Collection<Shard> shards );
 }

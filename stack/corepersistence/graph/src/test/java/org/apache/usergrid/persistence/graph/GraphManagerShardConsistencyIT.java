@@ -21,32 +21,29 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runners.model.InitializationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
-import org.apache.cassandra.thrift.Cassandra;
 import org.apache.commons.lang.time.StopWatch;
 
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.migration.MigrationException;
 import org.apache.usergrid.persistence.core.migration.MigrationManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -55,16 +52,20 @@ import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Slf4jReporter;
 import com.google.common.base.Optional;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.netflix.config.ConfigurationManager;
 
 import rx.Observable;
-import rx.Subscriber;
 
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
@@ -80,13 +81,50 @@ public class GraphManagerShardConsistencyIT {
     @ClassRule
     public static CassandraRule rule = new CassandraRule();
 
+    private static final MetricRegistry registry = new MetricRegistry();
+
+    private static final Meter writeMeter = registry.meter( "writeThroughput" );
+
+    private static final Slf4jReporter reporter = Slf4jReporter.forRegistry( registry )
+                                                .outputTo( log )
+                                                .convertRatesTo( TimeUnit.SECONDS )
+                                                .convertDurationsTo( TimeUnit.MILLISECONDS )
+                                                .build();
+
+
 
     protected ApplicationScope scope;
 
-    protected int numWorkers;
+
+    protected Object originalShardSize;
+
+    protected Object originalShardTimeout;
+
+    protected Object originalShardDelta;
 
     @Before
     public void setupOrg() {
+
+
+        originalShardSize = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_SIZE );
+
+        originalShardTimeout = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_CACHE_TIMEOUT );
+
+        originalShardDelta =  ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_MIN_DELTA );
+
+
+        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 10000 );
+
+
+        final long cacheTimeout = 10000;
+        //set our cache timeout to 10 seconds
+        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_CACHE_TIMEOUT, cacheTimeout );
+
+
+        final long minDelta = ( long ) (cacheTimeout * 2.5);
+
+        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_MIN_DELTA, minDelta );
+
 
 
 
@@ -95,8 +133,16 @@ public class GraphManagerShardConsistencyIT {
 
         scope = new ApplicationScopeImpl( createId( UUID.fromString( uuidString ), "test" ) );
 
-        numWorkers = Integer.parseInt( System.getProperty( "numWorkers", "4" ) );
-//        readCount = Integer.parseInt( System.getProperty( "readCount", "20000" ) );
+
+
+        reporter.start( 10, TimeUnit.SECONDS );
+    }
+
+
+    @After
+    public void tearDown(){
+        reporter.stop();
+        reporter.report();
     }
 
 
@@ -131,7 +177,7 @@ public class GraphManagerShardConsistencyIT {
     @Test
     public void writeThousandsSingleTarget() throws InterruptedException, ExecutionException, MigrationException {
 
-        final Id targetId = createId("target");
+        final Id sourceId = createId("source");
         final String edgeType = "test";
 
         EdgeGenerator generator = new EdgeGenerator() {
@@ -139,7 +185,7 @@ public class GraphManagerShardConsistencyIT {
 
             @Override
             public Edge newEdge() {
-                Edge edge = createEdge( createId( "source" ), edgeType,  targetId );
+                Edge edge = createEdge( sourceId, edgeType,  createId( "target" ) );
 
 
                 return edge;
@@ -148,33 +194,45 @@ public class GraphManagerShardConsistencyIT {
 
             @Override
             public Observable<Edge> doSearch( final GraphManager manager ) {
-                return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", System.currentTimeMillis(), null ) );
+                return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", System.currentTimeMillis(), null ) );
             }
         };
 
+
+        final int numInjectors = 2;
 
         /**
          * create 3 injectors.  This way all the caches are independent of one another.  This is the same as
          * multiple nodes
          */
-        final List<Injector> injectors = createInjectors(3);
+        final List<Injector> injectors = createInjectors(numInjectors);
 
 
         final GraphFig graphFig = getInstance( injectors, GraphFig.class );
 
         final long shardSize =  graphFig.getShardSize();
 
+
+        //we don't want to starve the cass runtime since it will be on the same box. Only take 50% of processing power for writes
+        final int numProcessors = Runtime.getRuntime().availableProcessors() /2 ;
+
+        final int numWorkers = numProcessors/numInjectors;
+
+
         /**
          * Do 4x shard size so we should have approximately 4 shards
          */
         final long numberOfEdges =  shardSize * 4;
+
 
         final long countPerWorker = numberOfEdges/numWorkers;
 
         final long writeLimit = countPerWorker;
 
 
-//        HystrixCassandra.ASYNC_GROUP.
+
+        //min stop time the min delta + 1 cache cycle timeout
+        final long minExecutionTime = graphFig.getShardMinDelta() + graphFig.getShardCacheTimeout();
 
 
 
@@ -185,7 +243,7 @@ public class GraphManagerShardConsistencyIT {
         for(Injector injector: injectors) {
             final GraphManagerFactory gmf = injector.getInstance( GraphManagerFactory.class );
 
-            futures.addAll( doTest( gmf, generator, writeLimit ) );
+            futures.addAll( doTest( gmf, generator, numWorkers,  writeLimit, minExecutionTime ) );
         }
 
         for(Future<Boolean> future: futures){
@@ -193,18 +251,20 @@ public class GraphManagerShardConsistencyIT {
         }
 
         //now get all our shards
-        final NodeShardAllocation allocation = getInstance( injectors, NodeShardAllocation.class );
+        final NodeShardCache cache = getInstance( injectors, NodeShardCache.class );
 
-        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromTargetNode( targetId, edgeType );
+        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( sourceId, edgeType );
 
         int count = 0;
 
-        while(count < 4) {
+        while(true) {
 
             //reset our count.  Ultimately we'll have 4 groups once our compaction completes
             count = 0;
 
-            final Iterator<ShardEntryGroup> groups = allocation.getShards( scope, Optional.<Shard>absent(), directedEdgeMeta );
+
+            //we have to get it from the cache, because this will trigger the compaction process
+            final Iterator<ShardEntryGroup> groups = cache.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
 
             while(groups.hasNext()){
                 final ShardEntryGroup group = groups.next();
@@ -214,6 +274,13 @@ public class GraphManagerShardConsistencyIT {
                 count++;
 
             }
+
+            //we're done
+            if(count == 4){
+                break;
+            }
+
+            Thread.sleep(5000);
         }
 
 
@@ -252,14 +319,14 @@ public class GraphManagerShardConsistencyIT {
     /**
      * Execute the test with the generator
      */
-    private List<Future<Boolean>> doTest(final GraphManagerFactory factory, final EdgeGenerator generator, final long writeCount ) throws InterruptedException, ExecutionException {
+    private List<Future<Boolean>> doTest(final GraphManagerFactory factory, final EdgeGenerator generator, final int numWorkers, final long writeCount, final long minExecutionTime ) throws InterruptedException, ExecutionException {
 
         ExecutorService executor = Executors.newFixedThreadPool( numWorkers );
 
         List<Future<Boolean>> futures = new ArrayList<>( numWorkers );
 
         for ( int i = 0; i < numWorkers; i++ ) {
-            Future<Boolean> future = executor.submit( new Worker(factory, generator, writeCount ) );
+            Future<Boolean> future = executor.submit( new Worker(factory, generator, writeCount, minExecutionTime ) );
 
             futures.add( future );
         }
@@ -273,12 +340,14 @@ public class GraphManagerShardConsistencyIT {
         private final GraphManagerFactory factory;
         private final EdgeGenerator generator;
         private final long writeLimit;
+        private final long minExecutionTime;
 
 
-        private Worker( final GraphManagerFactory factory, final EdgeGenerator generator, final long writeLimit) {
+        private Worker( final GraphManagerFactory factory, final EdgeGenerator generator, final long writeLimit, final long minExecutionTime ) {
             this.factory = factory;
             this.generator = generator;
             this.writeLimit = writeLimit;
+            this.minExecutionTime = minExecutionTime;
         }
 
 
@@ -287,10 +356,11 @@ public class GraphManagerShardConsistencyIT {
             GraphManager manager = factory.createEdgeManager( scope );
 
 
-            final StopWatch timer = new StopWatch();
-            timer.start();
 
-            for ( long i = 0; i < writeLimit; i++ ) {
+            final long startTime = System.currentTimeMillis();
+
+
+            for ( long i = 0; i < writeLimit || System.currentTimeMillis() - startTime < minExecutionTime ; i++ ) {
 
                 Edge edge = generator.newEdge();
 
@@ -300,13 +370,13 @@ public class GraphManagerShardConsistencyIT {
                 assertNotNull( "Returned has a version", returned.getTimestamp() );
 
 
+                writeMeter.mark();
+
                 if ( i % 1000 == 0 ) {
                     log.info( "   Wrote: " + i );
                 }
             }
 
-            timer.stop();
-            log.info( "Total time to write {} entries {} ms", writeLimit, timer.getTime() );
 
             return true;
         }

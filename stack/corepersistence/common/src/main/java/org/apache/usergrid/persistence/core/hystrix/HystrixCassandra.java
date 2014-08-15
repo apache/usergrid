@@ -42,20 +42,22 @@ public class HystrixCassandra {
     /**
      * Command group used for realtime user commands
      */
-    public static final HystrixCommandGroupKey USER_GROUP = HystrixCommandGroupKey.Factory.asKey( "user" );
+    public static final HystrixCommand.Setter
+            USER_GROUP = HystrixCommand.Setter.withGroupKey(   HystrixCommandGroupKey.Factory.asKey( "user" ) ).andThreadPoolPropertiesDefaults(
+            HystrixThreadPoolProperties.Setter().withCoreSize( 100 ) );
 
     /**
      * Command group for asynchronous operations
      */
-    public static final HystrixCommandGroupKey ASYNC_GROUP = HystrixCommandGroupKey.Factory.asKey( "async" );
+    public static final HystrixCommand.Setter
+            ASYNC_GROUP = HystrixCommand.Setter.withGroupKey( HystrixCommandGroupKey.Factory.asKey( "async" ) ).andThreadPoolPropertiesDefaults(
+            HystrixThreadPoolProperties.Setter().withCoreSize( 50 ) );
 
 
     /**
      * Execute an user operation
      */
     public static <R> OperationResult<R> user( final Execution<R> execution) {
-
-
         return new HystrixCommand<OperationResult<R>>( USER_GROUP ) {
 
             @Override

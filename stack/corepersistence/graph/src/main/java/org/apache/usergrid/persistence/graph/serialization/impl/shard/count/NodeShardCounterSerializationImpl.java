@@ -127,7 +127,7 @@ public class NodeShardCounterSerializationImpl implements NodeShardCounterSerial
         }
         //column not found, return 0
         catch ( RuntimeException re ) {
-            if(re.getCause() instanceof NotFoundException) {
+            if(re.getCause().getCause() instanceof NotFoundException) {
                 return 0;
             }
 

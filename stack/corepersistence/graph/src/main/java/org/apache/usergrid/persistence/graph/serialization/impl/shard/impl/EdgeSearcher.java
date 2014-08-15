@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
@@ -29,19 +30,18 @@ import com.netflix.astyanax.util.RangeBuilder;
  * @param <C> The column type
  * @param <T> The parsed return type
  */
-public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Comparator<T>,
-        Iterator<List<ScopedRowKey<ApplicationScope, R>>> {
+public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Comparator<T> {
 
     protected final Optional<Edge> last;
     protected final long maxTimestamp;
     protected final ApplicationScope scope;
-    protected final Iterator<ShardEntryGroup> shards;
+    protected final Collection<Shard> shards;
 
 
     protected EdgeSearcher( final ApplicationScope scope, final long maxTimestamp, final Optional<Edge> last,
-                            final Iterator<ShardEntryGroup> shards ) {
+                            final Collection<Shard> shards ) {
 
-        Preconditions.checkArgument(shards.hasNext(), "Cannot search with no possible shards");
+        Preconditions.checkArgument(shards.size() > 0 , "Cannot search with no possible shards");
 
         this.scope = scope;
         this.maxTimestamp = maxTimestamp;
@@ -50,19 +50,12 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Compa
     }
 
 
-    @Override
-    public boolean hasNext() {
-        return shards.hasNext();
-    }
 
+    public List<ScopedRowKey<ApplicationScope, R>> getRowKeys() {
 
-    @Override
-    public List<ScopedRowKey<ApplicationScope, R>> next() {
-        Collection<Shard> readShards = shards.next().getReadShards();
+        List<ScopedRowKey<ApplicationScope, R>> rowKeys = new ArrayList<>(shards.size());
 
-        List<ScopedRowKey<ApplicationScope, R>> rowKeys = new ArrayList<>(readShards.size());
-
-        for(Shard shard : readShards){
+        for(Shard shard : shards){
 
             final ScopedRowKey<ApplicationScope, R> rowKey = ScopedRowKey
                     .fromKey( scope, generateRowKey(shard.getShardIndex() ) );
@@ -74,11 +67,6 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Compa
         return rowKeys;
     }
 
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException( "Remove is unsupported" );
-    }
 
 
     /**
@@ -93,10 +81,7 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Compa
 
             builder.setStart( sourceEdge, getSerializer() );
         }
-        else {
 
-
-        }
     }
 
 
@@ -111,6 +96,7 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Compa
 
         return createEdge( edge, column.getBooleanValue() );
     }
+
 
 
     /**

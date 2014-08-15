@@ -453,6 +453,12 @@ public class NodeShardApproximationTest {
 
 
         @Override
+        public double getShardRepairChance() {
+            return 0;
+        }
+
+
+        @Override
         public long getShardSize() {
             return 0;  //To change body of implemented methods use File | Settings | File Templates.
         }
@@ -473,6 +479,12 @@ public class NodeShardApproximationTest {
         @Override
         public long getShardCacheSize() {
             return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+
+        @Override
+        public int getShardCacheRefreshWorkerCount() {
+            return 0;
         }
 
 
