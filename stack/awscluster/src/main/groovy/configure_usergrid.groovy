@@ -40,6 +40,9 @@ def clusterName  = System.getenv().get("CASSANDRA_CLUSTER_NAME")
 def superUserEmail     = System.getenv().get("SUPER_USER_EMAIL")
 def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 
+def cassThreads = System.getenv().get("TOMCAT_THREADS")
+def hystrixThreads = Integer.parseInt(cassThreads) / 100
+
 
 NodeRegistry registry = new NodeRegistry();
 
@@ -80,10 +83,10 @@ cassandra.cluster=${clusterName}
 cassandra.keyspace.strategy=org.apache.cassandra.locator.SimpleStrategy
 cassandra.keyspace.replication=${replFactor}
 
-cassandra.timeout=2000
-cassandra.connections=800
-hystrix.threadpool.graph_user.coreSize=60
-hystrix.threadpool.graph_async.coreSize=60
+cassandra.timeout=5000
+cassandra.connections=${cassThreads}
+hystrix.threadpool.graph_user.coreSize=${hystrixThreads}
+hystrix.threadpool.graph_async.coreSize=${hystrixThreads}
 
 elasticsearch.cluster_name=${clusterName}
 elasticsearch.index_prefix=usergrid

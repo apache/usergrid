@@ -49,18 +49,6 @@ chmod +x /usr/share/usergrid/update.sh
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 
 
-# Wait for enough Cassandra nodes then deploy and restart Tomcat 
-cd /usr/share/usergrid/scripts
-groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
-groovy wait_for_instances.groovy graphite ${GRAPHITE_NUM_SERVERS}
-
-mkdir -p /usr/share/tomcat7/lib 
-groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-custom.properties 
-
-rm -rf /var/lib/tomcat7/webapps/*
-cp -r /usr/share/usergrid/webapps/* /var/lib/tomcat7/webapps
-groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
-
 cd /usr/share/usergrid/init_instance
 ./install_yourkit.sh
 
@@ -70,10 +58,11 @@ ln -s /var/log varlog/tomcat7 tomcat7logs
 ln -s /usr/share/tomcat7 tomcat7
 ln -s /usr/share/usergrid usergrid
 
+# set Tomcat memory and threads based on instance type
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'm1.small' )
     export TOMCAT_RAM=1250M
-    export TOMCAT_THREADS=250
+    export TOMCAT_THREADS=300
 ;;
 'm1.medium' )
     export TOMCAT_RAM=3G
@@ -89,7 +78,7 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 ;;
 'm3.xlarge' )
     export TOMCAT_RAM=12G
-    export TOMCAT_THREADS=3250
+    export TOMCAT_THREADS=3300
 ;;
 'm3.large' )
     export TOMCAT_RAM=6G
@@ -97,15 +86,31 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 ;;
 'c3.4xlarge' )
     export TOMCAT_RAM=24G
-    export TOMCAT_THREADS=15000
-    export NOFILE=400000
+    export TOMCAT_THREADS=4000
+    export NOFILE=700000
 esac
 
+# set file limits high 
+export TOMCAT_CONNECTIONS=10000
 sudo sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM}/g" /etc/default/tomcat7
-sudo sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${TOMCAT_THREADS}\" maxConnections=\"${TOMCAT_THREADS}\"/g" /var/lib/tomcat7/conf/server.xml
+sudo sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${TOMCAT_THREADS}\" maxConnections=\"${TOMCAT_CONNECTIONS}\"/g" /var/lib/tomcat7/conf/server.xml
 sudo sed -i.bak "/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
-echo 600000 | sudo tee /proc/sys/fs/nr_open
-echo 600000 | sudo tee /proc/sys/fs/file-max
+echo 700000 | sudo tee /proc/sys/fs/nr_open
+echo 700000 | sudo tee /proc/sys/fs/file-max
+export NOFILE=700000
+
+# Wait for enough Cassandra nodes then deploy and restart Tomcat 
+cd /usr/share/usergrid/scripts
+groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
+groovy wait_for_instances.groovy graphite ${GRAPHITE_NUM_SERVERS}
+
+rm -rf /var/lib/tomcat7/webapps/*
+cp -r /usr/share/usergrid/webapps/* /var/lib/tomcat7/webapps
+groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
+
+# configure usergrid
+mkdir -p /usr/share/tomcat7/lib 
+groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-custom.properties 
 
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts

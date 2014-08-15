@@ -854,7 +854,7 @@
                 "HealthCheck": {
                     "Target": "HTTP:8080/status",
                     "HealthyThreshold": "2",
-                    "UnhealthyThreshold": "4",
+                    "UnhealthyThreshold": "8",
                     "Interval": "30",
                     "Timeout": "5"
                 }

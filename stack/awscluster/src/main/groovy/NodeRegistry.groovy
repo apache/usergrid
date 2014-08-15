@@ -48,7 +48,8 @@ class NodeRegistry {
      * @param defNodeType
      */
     def searchNode(def nodeType) {
-        def selectResult = sdbClient.select(new SelectRequest((String) "select * from `${domain}` where itemName() is not null and nodetype = '${nodeType}'  order by itemName()"))
+        def selectResult = sdbClient.select(new SelectRequest((String) \
+            "select * from `${domain}` where itemName() is not null and nodetype = '${nodeType}'  order by itemName()"))
         def result = []
 
         for (item in selectResult.getItems()) {
