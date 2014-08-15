@@ -37,8 +37,6 @@ unzip /tmp/aws-sdk-java.zip
 mkdir -p /home/ubuntu/.groovy/lib
 cp /usr/share/aws-java-sdk-*/third-party/*/*.jar /home/ubuntu/.groovy/lib
 cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib 
-# except for evil stax
-rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
 
 # Build environment for Groovy scripts
@@ -52,13 +50,8 @@ cd /usr/share/usergrid/init_instance
 cd /usr/share/usergrid/init_instance
 ./install_yourkit.sh
 
-cd ~ubuntu
-ln -s /var/log varlog
-ln -s /var/log varlog/tomcat7 tomcat7logs
-ln -s /usr/share/tomcat7 tomcat7
-ln -s /usr/share/usergrid usergrid
-
 # set Tomcat memory and threads based on instance type
+export NOFILE=100000
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'm1.small' )
     export TOMCAT_RAM=1250M
@@ -87,36 +80,45 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'c3.4xlarge' )
     export TOMCAT_RAM=24G
     export TOMCAT_THREADS=4000
-    export NOFILE=700000
+    export NOFILE=200000
 esac
 
-# set file limits high 
 export TOMCAT_CONNECTIONS=10000
 sudo sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM}/g" /etc/default/tomcat7
 sudo sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${TOMCAT_THREADS}\" maxConnections=\"${TOMCAT_CONNECTIONS}\"/g" /var/lib/tomcat7/conf/server.xml
-sudo sed -i.bak "/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
-echo 700000 | sudo tee /proc/sys/fs/nr_open
-echo 700000 | sudo tee /proc/sys/fs/file-max
-export NOFILE=700000
 
-# Wait for enough Cassandra nodes then deploy and restart Tomcat 
+# set file limits
+sudo sed -i.bak "/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
+echo "$NOFILE" | sudo tee > /proc/sys/fs/nr_open
+echo "$NOFILE" | sudo tee > /proc/sys/fs/file-max
+cat >> /etc/pam.d/su << EOF
+session    required   pam_limits.so
+EOF
+ulimit $NOFILE
+
+# increase system IP port limits, and ensure change persistence after reboot
+sysctl -w net.ipv4.ip_local_port_range="1024 65535"
+cat >> /etc/sysctl.conf << EOF
+net.ipv4.ip_local_port_range = 1024 65535
+EOF
+
+# wait for enough Cassandra nodes then delpoy and configure Usergrid 
 cd /usr/share/usergrid/scripts
 groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
 groovy wait_for_instances.groovy graphite ${GRAPHITE_NUM_SERVERS}
 
 rm -rf /var/lib/tomcat7/webapps/*
-cp -r /usr/share/usergrid/webapps/* /var/lib/tomcat7/webapps
-groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
+ln -s /usr/share/usergrid/webapps/ROOT.war /var/lib/tomcat7/webapps/ROOT.war
+ln -s /usr/share/usergrid/webapps/portal /var/lib/tomcat7/webapps/portal
 
 # configure usergrid
 mkdir -p /usr/share/tomcat7/lib 
 groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-custom.properties 
+groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
+
+# Go
+sh /etc/init.d/tomcat7 start
 
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts
 groovy tag_instance.groovy
-
-# Go
-/etc/init.d/tomcat7 start
-sudo reboot
-
