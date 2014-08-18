@@ -1405,7 +1405,7 @@
         <artifactId>elasticsearch</artifactId>
         <version>${elasticsearch.version}</version>
       </dependency>
-        
+
       <dependency>
         <groupId>com.relayrides</groupId>
         <artifactId>pushy</artifactId>
@@ -1413,7 +1413,13 @@
         <version>0.4-apigee-63dec68314c97c6e3ef40c88590e1b196d3ec55b</version>
       </dependency>
 
-     </dependencies>
+      <dependency>
+          <groupId>com.ganyo</groupId>
+          <artifactId>gcm-server</artifactId>
+          <version>1.0.2</version>
+      </dependency>
+
+    </dependencies>
 
   </dependencyManagement>
 
