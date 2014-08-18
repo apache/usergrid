@@ -1,0 +1,16 @@
+#NOTE: This is an internal implementation file, its format can be changed without prior notice.
+#Thu Jul 24 13:16:38 MDT 2014
+file\:///Users/apigee/develop/usergrid/usergrid-rest-apigee-production/m2/repository/.error=
+http\://oss.sonatype.org/content/repositories/snapshots/.lastUpdated=1406229398295
+http\://download.java.net/maven/2/.lastUpdated=1406229397326
+http\://repo.maven.apache.org/maven2/.lastUpdated=1406229398556
+http\://oss.sonatype.org/content/repositories/snapshots/.error=
+http\://download.java.net/maven/2/.error=
+file\:///Users/apigee/develop/usergrid/usergrid-rest-apigee-production/m2/repository/.lastUpdated=1406229398434
+http\://repo.maven.apache.org/maven2/.error=
+https\://repository-hector-dev.forge.cloudbees.com/snapshot/.error=
+http\://maven.springframework.org/milestone/.lastUpdated=1406229398432
+http\://repository.codehaus.org/.lastUpdated=1406229397898
+http\://repository.codehaus.org/.error=
+http\://maven.springframework.org/milestone/.error=
+https\://repository-hector-dev.forge.cloudbees.com/snapshot/.lastUpdated=1406229397817
