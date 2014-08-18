@@ -191,10 +191,12 @@ public class TomcatResource extends ExternalResource {
 
             port = AvailablePortFinder.getNextAvailable( 9998 + RandomUtils.nextInt(10)  );
 
+            String threads = (String)properties.get("tomcat.threads");
+
             tomcat = new Tomcat();
             tomcat.setBaseDir( dataDir.getAbsolutePath() );
             tomcat.setPort( port );
-            tomcat.getConnector().setAttribute("maxThreads", "1500");
+            tomcat.getConnector().setAttribute("maxThreads", "2000");
             tomcat.addWebapp( "/", new File( getWebAppsPath() ).getAbsolutePath() );
 
             log.info("-----------------------------------------------------------------");
