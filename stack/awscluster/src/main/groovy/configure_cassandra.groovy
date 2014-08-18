@@ -34,15 +34,7 @@ int cassNumServers = ((String)System.getenv().get("CASSANDRA_NUM_SERVERS")).toIn
 
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
 
-NodeRegistry registry = null
-while ( registry == null ) {
-    try {
-        registry = new NodeRegistry()
-    } catch ( Exception e ) {
-        Thread.sleep(2000);
-        continue;
-    }
-}
+NodeRegistry registry = new NodeRegistry();
 
 def selectResult = registry.searchNode('cassandra')
 def seeds = ""
