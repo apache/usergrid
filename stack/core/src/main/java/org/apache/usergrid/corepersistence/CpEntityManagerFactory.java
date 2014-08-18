@@ -538,6 +538,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     public void refreshIndex() {
         managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_APPS_INDEX_SCOPE ).refresh();
+        managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_ORGS_INDEX_SCOPE ).refresh();
+        managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_PROPS_INDEX_SCOPE ).refresh();
     }
 
     @Override

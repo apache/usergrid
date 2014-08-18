@@ -76,8 +76,10 @@ public class RefreshIndexResource extends AbstractContextResource {
                 em.refreshIndex();
             } 
 
-            // refresh the system app
+            // refresh the system apps
             emf.refreshIndex();
+            emf.getEntityManager( emf.getDefaultAppId() );
+            emf.getEntityManager( emf.getManagementAppId() );
 
         } catch (Exception e) {
             logger.error("Error in refresh", e);
