@@ -14,33 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.index.query.tree;
+package org.apache.usergrid.services.groups.users.devices.notifications;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
+public class NotificationsService extends
+        org.apache.usergrid.services.notifications.NotificationsService {
 
+    private static final Logger logger = LoggerFactory
+            .getLogger(NotificationsService.class);
 
-/** @author tnine */
-public class NotOperand extends Operand {
-
-
-    public NotOperand( Token t ) {
-        super( t );
+    public NotificationsService() {
+        logger.info("/groups/*/users/*/devices/*/notifications");
     }
 
-
-    /** get the only child operation */
-    public Operand getOperation() {
-        return ( Operand ) this.children.get( 0 );
-    }
-
-
-    /* (non-Javadoc)
-     * @see org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence.query.tree.QueryVisitor)
-     */
-    @Override
-    public void visit( QueryVisitor visitor ) throws IndexException {
-        visitor.visit( this );
-    }
 }

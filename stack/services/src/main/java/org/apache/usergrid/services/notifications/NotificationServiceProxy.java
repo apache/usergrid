@@ -14,33 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.index.query.tree;
+package org.apache.usergrid.services.notifications;
 
+import org.apache.usergrid.persistence.Notification;
+import org.apache.usergrid.persistence.Notifier;
 
-import org.antlr.runtime.Token;
-import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import java.util.Set;
 
+/**
+ * Created by ApigeeCorporation on 8/6/14.
+ */
+public interface NotificationServiceProxy {
 
-/** @author tnine */
-public class NotOperand extends Operand {
+    public void finishedBatch(Notification notification, long successes, long failures) throws Exception;
 
-
-    public NotOperand( Token t ) {
-        super( t );
-    }
-
-
-    /** get the only child operation */
-    public Operand getOperation() {
-        return ( Operand ) this.children.get( 0 );
-    }
-
-
-    /* (non-Javadoc)
-     * @see org.apache.usergrid.persistence.query.tree.Operand#visit(org.apache.usergrid.persistence.query.tree.QueryVisitor)
-     */
-    @Override
-    public void visit( QueryVisitor visitor ) throws IndexException {
-        visitor.visit( this );
-    }
+    void asyncCheckForInactiveDevices(Set<Notifier> notifiers) throws Exception;
 }
