@@ -70,7 +70,6 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
             return false;
         }
 
-
         return true;
     }
 
@@ -90,3 +89,4 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
                 "} " + super.toString();
     }
 }
+

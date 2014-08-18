@@ -29,62 +29,86 @@ import java.util.Iterator;
 
 import org.junit.Test;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 
 public class ShardEntryGroupIteratorTest {
 
+
     @Test(expected = IllegalArgumentException.class)
-    public void noShards(){
+    public void noShards() {
+
+        final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
+        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId( "source" ), "test" );
+        final ShardGroupCompaction shardGroupCompaction = mock( ShardGroupCompaction.class );
         final long delta = 10000;
         final Iterator<Shard> noShards = Collections.<Shard>emptyList().iterator();
 
         //should blow up, our iterator is empty
-        new ShardEntryGroupIterator(noShards, delta);
-
+        new ShardEntryGroupIterator( noShards, delta, shardGroupCompaction, scope, directedEdgeMeta );
     }
 
-    @Test
-    public void existingSingleShard(){
 
-        final Shard minShard = new Shard(0, 0, true);
+    @Test
+    public void existingSingleShard() {
+
+        final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
+        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId( "source" ), "test" );
+
+
+        final ShardGroupCompaction shardGroupCompaction = mock( ShardGroupCompaction.class );
+
+        final Shard minShard = new Shard( 0, 0, true );
         final long delta = 10000;
         final Iterator<Shard> noShards = Collections.singleton( minShard ).iterator();
 
-        ShardEntryGroupIterator entryGroupIterator = new ShardEntryGroupIterator(noShards, delta);
+        ShardEntryGroupIterator entryGroupIterator =
+                new ShardEntryGroupIterator( noShards, delta, shardGroupCompaction, scope, directedEdgeMeta );
 
-        assertTrue("Root shard always present", entryGroupIterator.hasNext());
+
+        assertTrue( "Root shard always present", entryGroupIterator.hasNext() );
 
         ShardEntryGroup group = entryGroupIterator.next();
 
-        assertNotNull("Group returned", group);
+        assertNotNull( "Group returned", group );
 
-        Collection<Shard> readShards = group.getReadShards();
+        //verify we ran our compaction check
+        verify( shardGroupCompaction ).evaluateShardGroup( same( scope ), same( directedEdgeMeta ), eq( group ) );
 
-        assertEquals("Min shard present", 1, readShards.size());
 
-        assertTrue("Min shard present", readShards.contains( minShard ));
+        Collection<Shard> readShards = group.getReadShards( );
+
+        assertEquals( "Min shard present", 1, readShards.size() );
+
+        assertTrue( "Min shard present", readShards.contains( minShard ) );
 
 
         Collection<Shard> writeShards = group.getWriteShards( 0 );
 
-        assertEquals("Min shard present", 1, writeShards.size());
+        assertEquals( "Min shard present", 1, writeShards.size() );
 
-        assertTrue("Min shard present", writeShards.contains( minShard ));
+        assertTrue( "Min shard present", writeShards.contains( minShard ) );
 
 
         writeShards = group.getWriteShards( Long.MAX_VALUE );
 
-        assertEquals("Min shard present", 1, writeShards.size());
+        assertEquals( "Min shard present", 1, writeShards.size() );
 
-        assertTrue("Min shard present", writeShards.contains( minShard ));
-
-
+        assertTrue( "Min shard present", writeShards.contains( minShard ) );
     }
 
 
@@ -93,140 +117,160 @@ public class ShardEntryGroupIteratorTest {
      * that only the last 1 or 2 groups will actually have more than 1 entry.
      */
     @Test
-    public void boundedShardSets(){
+    public void boundedShardSets() {
+
+        final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
+        final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( createId( "source" ), "test" );
+
+        final ShardGroupCompaction shardGroupCompaction = mock( ShardGroupCompaction.class );
+
 
         /**
          * Next shard group
          */
-        final Shard shardGroup1Shard1 = new Shard(0, 0, true);
+        final Shard shardGroup1Shard1 = new Shard( 0, 0, true );
 
-        final Shard shardGroup1Shard2 = new Shard(10000, 100, false);
+        final Shard shardGroup1Shard2 = new Shard( 10000, 100, false );
 
-        final Shard shardGroup1Shard3 = new Shard(20000, 200, false);
+        final Shard shardGroup1Shard3 = new Shard( 20000, 200, false );
 
 
         /**
          * Middle shard group
          */
-        final Shard shardGroup2Shard1 = new Shard(30000, 300, true);
+        final Shard shardGroup2Shard1 = new Shard( 30000, 300, true );
 
-        final Shard shardGroup2Shard2 = new Shard(40000, 400, false);
+        final Shard shardGroup2Shard2 = new Shard( 40000, 400, false );
 
 
         /**
          * Highest shard group
          */
 
-        final Shard shardGroup3Shard1 = new Shard(50000, 500, true);
+        final Shard shardGroup3Shard1 = new Shard( 50000, 500, true );
 
-        final Shard shardGroup3Shard2 = new Shard(60000, 600, false);
+        final Shard shardGroup3Shard2 = new Shard( 60000, 600, false );
 
-        final Shard shardGroup3Shard3 = new Shard(70000, 700, false);
-
-
+        final Shard shardGroup3Shard3 = new Shard( 70000, 700, false );
 
 
         final long delta = 10000;
-        final Iterator<Shard> noShards = Arrays.asList(shardGroup3Shard3, shardGroup3Shard2, shardGroup3Shard1, shardGroup2Shard2, shardGroup2Shard1, shardGroup1Shard3, shardGroup1Shard2, shardGroup1Shard1 ).iterator();
+
+        final Iterator<Shard> noShards =
+                Arrays.asList( shardGroup3Shard3, shardGroup3Shard2, shardGroup3Shard1, shardGroup2Shard2,
+                        shardGroup2Shard1, shardGroup1Shard3, shardGroup1Shard2, shardGroup1Shard1 ).iterator();
 
 
+        ShardEntryGroupIterator entryGroupIterator =
+                new ShardEntryGroupIterator( noShards, delta, shardGroupCompaction, scope, directedEdgeMeta );
 
-
-        ShardEntryGroupIterator entryGroupIterator = new ShardEntryGroupIterator(noShards, delta);
-
-        assertTrue("max group present", entryGroupIterator.hasNext());
+        assertTrue( "max group present", entryGroupIterator.hasNext() );
 
         ShardEntryGroup group = entryGroupIterator.next();
 
-        assertNotNull("Group returned", group);
+        assertNotNull( "Group returned", group );
 
-        Collection<Shard> readShards = group.getReadShards();
+        //verify we ran our compaction check
+        verify( shardGroupCompaction ).evaluateShardGroup( same( scope ), same( directedEdgeMeta ), eq( group ) );
 
-        assertEquals("Min shard present", 3, readShards.size());
+        Collection<Shard> readShards = group.getReadShards( );
 
-        assertTrue("shardGroup3Shard3 shard present", readShards.contains( shardGroup3Shard3 ));
+        assertEquals( "Both shards present", 2, readShards.size() );
 
-        assertTrue("shardGroup3Shard2 shard present", readShards.contains( shardGroup3Shard2 ));
+        assertTrue( "shardGroup3Shard2 shard present", readShards.contains( shardGroup3Shard2 ) );
 
-        assertTrue("shardGroup3Shard1 shard present", readShards.contains( shardGroup3Shard1 ));
+        assertTrue( "shardGroup3Shard1 shard present", readShards.contains( shardGroup3Shard1 ) );
 
 
         Collection<Shard> writeShards = group.getWriteShards( 0 );
 
-        assertEquals("Min shard present", 3, writeShards.size());
-
-        assertTrue("shardGroup3Shard3 shard present", writeShards.contains( shardGroup3Shard3 ));
-
-        assertTrue("shardGroup3Shard2 shard present", writeShards.contains( shardGroup3Shard2 ));
-
-        assertTrue("shardGroup3Shard1 shard present", writeShards.contains( shardGroup3Shard1 ));
+        assertEquals( "Min shard present", 1, writeShards.size() );
 
 
+        assertTrue( "shardGroup3Shard1 shard present", writeShards.contains( shardGroup3Shard1 ) );
+
+        writeShards = group.getWriteShards( shardGroup3Shard3.getCreatedTime() + delta );
+
+        assertEquals( "Min shard present", 1, writeShards.size() );
 
 
+        assertTrue( "shardGroup3Shard2 shard present", readShards.contains( shardGroup3Shard2 ) );
 
-        assertTrue("middle group present", entryGroupIterator.hasNext());
+        assertTrue( "shardGroup3Shard1 shard present", writeShards.contains( shardGroup3Shard1 ) );
+
+
+        /****
+         * Middle group
+         */
+
+        assertTrue( "middle group present", entryGroupIterator.hasNext() );
 
         group = entryGroupIterator.next();
 
-        assertNotNull("Group returned", group);
+        assertNotNull( "Group returned", group );
 
-       readShards = group.getReadShards();
+        //verify we ran our compaction check
+        verify( shardGroupCompaction ).evaluateShardGroup( same( scope ), same( directedEdgeMeta ), eq( group ) );
 
-        assertEquals("Min shard present", 2, readShards.size());
 
-        assertTrue("shardGroup2Shard1 shard present", readShards.contains( shardGroup2Shard1 ));
+        readShards = group.getReadShards( );
 
-        assertTrue("shardGroup2Shard2 shard present", readShards.contains( shardGroup2Shard2 ));
 
+        assertEquals( "Both shards present", 2, readShards.size() );
+
+        assertTrue( "shardGroup2Shard1 shard present", readShards.contains( shardGroup2Shard1 ) );
+
+        assertTrue( "shardGroup2Shard2 shard present", readShards.contains( shardGroup2Shard2 ) );
 
 
         writeShards = group.getWriteShards( 0 );
 
-        assertEquals("Min shard present", 2, writeShards.size());
+        assertEquals( "Min shard present", 1, writeShards.size() );
 
-        assertTrue("shardGroup2Shard1 shard present", writeShards.contains( shardGroup2Shard1 ));
-
-        assertTrue("shardGroup2Shard2 shard present", writeShards.contains( shardGroup2Shard2 ));
+        assertTrue( "shardGroup2Shard1 shard present", writeShards.contains( shardGroup2Shard1 ) );
 
 
+        writeShards = group.getWriteShards( shardGroup2Shard2.getCreatedTime() + delta +1 );
+
+        assertEquals( "Both shards present", 1, writeShards.size() );
+
+        assertTrue( "shardGroup2Shard2 shard present", writeShards.contains( shardGroup2Shard2 ) );
 
 
+        /*****
+         * Minimum group
+         */
 
-
-        assertTrue("min group present", entryGroupIterator.hasNext());
+        assertTrue( "min group present", entryGroupIterator.hasNext() );
 
         group = entryGroupIterator.next();
 
-        assertNotNull("Group returned", group);
+        assertNotNull( "Group returned", group );
+
+        //verify we ran our compaction check
+        verify( shardGroupCompaction ).evaluateShardGroup( same( scope ), same( directedEdgeMeta ), eq( group ) );
+
+
 
         readShards = group.getReadShards();
 
-        assertEquals("Min shard present", 3, readShards.size());
+        assertEquals( "Both shards present", 2, readShards.size() );
 
-        assertTrue("shardGroup1Shard3 shard present", readShards.contains( shardGroup1Shard3 ));
-
-        assertTrue("shardGroup1Shard2 shard present", readShards.contains( shardGroup1Shard2 ));
-
-        assertTrue("shardGroup1Shard1 shard present", readShards.contains( shardGroup1Shard1 ));
-
+        assertTrue( "shardGroup1Shard1 shard present", readShards.contains( shardGroup1Shard1 ) );
+        assertTrue( "shardGroup1Shard2 shard present", readShards.contains( shardGroup1Shard2 ) );
 
 
         writeShards = group.getWriteShards( 0 );
 
-        assertEquals("Min shard present", 3, writeShards.size());
+        assertEquals( "Min shard present", 1, writeShards.size() );
 
-        assertTrue("shardGroup1Shard3 shard present", writeShards.contains( shardGroup1Shard3 ));
-
-        assertTrue("shardGroup1Shard2 shard present", writeShards.contains( shardGroup1Shard2 ));
-
-        assertTrue("shardGroup1Shard1 shard present", writeShards.contains( shardGroup1Shard1 ));
+        assertTrue( "shardGroup1Shard1 shard present", writeShards.contains( shardGroup1Shard1 ) );
 
 
+        writeShards = group.getWriteShards( shardGroup1Shard3.getCreatedTime() + delta + 1 );
 
+        assertEquals( "Both shards present", 1, writeShards.size() );
 
-
-
+        assertTrue( "shardGroup1Shard2 shard present", writeShards.contains( shardGroup1Shard2 ) );
     }
-
 }

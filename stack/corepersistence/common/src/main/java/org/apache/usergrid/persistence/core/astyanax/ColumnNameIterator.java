@@ -35,9 +35,6 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 public class ColumnNameIterator<C, T> implements Iterable<T>, Iterator<T> {
 
 
-    private static final HystrixCommandGroupKey GROUP_KEY = HystrixCommandGroupKey.Factory.asKey( "CassRead" );
-
-
     private final RowQuery<?, C> rowQuery;
     private final ColumnParser<C, T> parser;
     private final boolean skipFirst;

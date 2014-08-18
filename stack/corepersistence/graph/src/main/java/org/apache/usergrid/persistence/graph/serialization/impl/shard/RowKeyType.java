@@ -57,5 +57,10 @@ public class RowKeyType extends RowKey {
     }
 
 
-
+    @Override
+    public String toString() {
+        return "RowKeyType{" +
+                "idType='" + idType + '\'' +
+                "} " + super.toString();
+    }
 }

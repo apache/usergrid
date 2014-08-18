@@ -23,10 +23,12 @@ package org.apache.usergrid.persistence.graph.impl;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 
 /**
@@ -40,6 +42,7 @@ public class SimpleSearchByEdge implements SearchByEdge {
     private final String type;
     private final long maxTimestamp;
     private final Optional<Edge> last;
+    private final SearchByEdgeType.Order order;
 
 
     /**
@@ -50,17 +53,20 @@ public class SimpleSearchByEdge implements SearchByEdge {
      * @param maxTimestamp The maximum timestamp to seek from
      * @param last The value to start seeking from.  Must be >= this value
      */
-    public SimpleSearchByEdge( final Id sourceNode, final String type, final Id targetNode, final long maxTimestamp, final Edge last ) {
+    public SimpleSearchByEdge( final Id sourceNode, final String type, final Id targetNode, final long maxTimestamp, final SearchByEdgeType.Order order, final Edge last ) {
+
         ValidationUtils.verifyIdentity(sourceNode);
         ValidationUtils.verifyIdentity(targetNode);
         ValidationUtils.verifyString( type, "type" );
         GraphValidation.validateTimestamp( maxTimestamp, "maxTimestamp" );
+        Preconditions.checkNotNull(order, "order must not be null");
 
 
         this.sourceNode = sourceNode;
         this.targetNode = targetNode;
         this.type = type;
         this.maxTimestamp = maxTimestamp;
+        this.order = order;
         this.last = Optional.fromNullable(last);
     }
 
@@ -92,5 +98,11 @@ public class SimpleSearchByEdge implements SearchByEdge {
     @Override
     public Optional<Edge> last() {
         return last;
+    }
+
+
+    @Override
+    public SearchByEdgeType.Order getOrder() {
+        return order;
     }
 }

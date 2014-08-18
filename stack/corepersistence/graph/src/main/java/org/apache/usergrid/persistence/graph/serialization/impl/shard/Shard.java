@@ -137,6 +137,7 @@ public class Shard implements Comparable<Shard> {
         return "Shard{" +
                 "shardIndex=" + shardIndex +
                 ", createdTime=" + createdTime +
-                "} ";
+                ", compacted=" + compacted +
+                '}';
     }
 }

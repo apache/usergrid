@@ -48,6 +48,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardS
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardApproximationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerialization;
@@ -55,6 +56,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.Node
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeShardSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardGroupCompactionImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardedEdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeShardStrategy;
@@ -118,6 +120,8 @@ public class GraphModule extends AbstractModule {
         bind( ShardedEdgeSerialization.class ).to( ShardedEdgeSerializationImpl.class );
 
         bind( EdgeColumnFamilies.class ).to( SizebasedEdgeColumnFamilies.class );
+
+        bind( ShardGroupCompaction.class).to( ShardGroupCompactionImpl.class);
 
 
         /**

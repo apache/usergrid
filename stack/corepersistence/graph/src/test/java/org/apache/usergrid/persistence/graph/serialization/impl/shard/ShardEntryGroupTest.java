@@ -264,13 +264,11 @@ public class ShardEntryGroupTest {
 
         Collection<Shard> readShards = shardEntryGroup.getReadShards();
 
-        assertEquals("Shard size correct", 3, readShards.size());
+        assertEquals("Shard size correct", 2, readShards.size());
 
-        assertTrue("First shard present",  readShards.contains( firstShard ) );
+        assertTrue("First shard present",  readShards.contains( secondShard ) );
 
-        assertTrue("Second shard present",  readShards.contains( firstShard ) );
-
-        assertTrue("Third shard present",  readShards.contains( firstShard ) );
+        assertTrue("Second shard present",  readShards.contains( compactedShard1 ) );
 
     }
 
@@ -308,23 +306,15 @@ public class ShardEntryGroupTest {
 
         Collection<Shard> writeShards = shardEntryGroup.getWriteShards( firstShard.getCreatedTime() + delta );
 
-        assertEquals("Shard size correct", 3, writeShards.size());
+        assertEquals("Shard size correct", 1, writeShards.size());
 
-        assertTrue("First shard present",  writeShards.contains( firstShard ) );
-
-        assertTrue("Second shard present",  writeShards.contains( secondShard ) );
-
-        assertTrue("Third shard present",  writeShards.contains( compactedShard ) );
+        assertTrue("Root shard present",  writeShards.contains( compactedShard ) );
 
 
 
         writeShards = shardEntryGroup.getWriteShards(secondShard.getCreatedTime()+delta);
 
-        assertEquals("Shard size correct", 3, writeShards.size());
-
-        assertTrue("First shard present",  writeShards.contains( firstShard ) );
-
-        assertTrue("Second shard present",  writeShards.contains( secondShard ) );
+        assertEquals("Shard size correct", 1, writeShards.size());
 
         assertTrue("Third shard present",  writeShards.contains( compactedShard ) );
 
@@ -334,13 +324,11 @@ public class ShardEntryGroupTest {
          */
         writeShards = shardEntryGroup.getWriteShards(secondShard.getCreatedTime() +1 + delta);
 
-        assertEquals("Shard size correct", 3, writeShards.size());
+        assertEquals("Shard size correct", 1, writeShards.size());
 
-        assertTrue("First shard present",  writeShards.contains( firstShard ) );
 
-        assertTrue("Second shard present",  writeShards.contains( secondShard ) );
+        assertTrue("Second shard present",  writeShards.contains( compactedShard ) );
 
-        assertTrue("Third shard present",  writeShards.contains( compactedShard ) );
 
 
 

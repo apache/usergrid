@@ -6,32 +6,51 @@ import java.util.NoSuchElementException;
 
 import org.apache.commons.collections4.iterators.PushbackIterator;
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
 
 import com.google.common.base.Preconditions;
 
+import rx.schedulers.Schedulers;
+
 
 /**
- * Utility class that will take an iterator of all shards, and combine them into an iterator
- * of ShardEntryGroups.  These groups can then be used in a distributed system to handle concurrent reads and writes
+ * Utility class that will take an iterator of all shards, and combine them into an iterator of ShardEntryGroups.  These
+ * groups can then be used in a distributed system to handle concurrent reads and writes
  */
 public class ShardEntryGroupIterator implements Iterator<ShardEntryGroup> {
 
 
-    private ShardEntryGroup next;
+    private final ShardGroupCompaction shardGroupCompaction;
     private final PushbackIterator<Shard> sourceIterator;
     private final long minDelta;
+    private final ApplicationScope scope;
+    private final DirectedEdgeMeta directedEdgeMeta;
+
+
+    private ShardEntryGroup next;
 
 
     /**
      * Create a shard iterator
-     * @param shardIterator The iterator of all shards.  Order is expected to be by the  shard index from Long.MAX to Long.MIN
+     *
+     * @param shardIterator The iterator of all shards.  Order is expected to be by the  shard index from Long.MAX to
+     * Long.MIN
      * @param minDelta The minimum delta we allow to consider shards the same group
      */
-    public ShardEntryGroupIterator( final Iterator<Shard> shardIterator, final long minDelta ) {
-        Preconditions.checkArgument(shardIterator.hasNext(), "Shard iterator must have shards present");
+    public ShardEntryGroupIterator( final Iterator<Shard> shardIterator, final long minDelta,
+                                    final ShardGroupCompaction shardGroupCompaction, final ApplicationScope scope,
+                                    final DirectedEdgeMeta directedEdgeMeta ) {
+
+
+        Preconditions.checkArgument( shardIterator.hasNext(), "Shard iterator must have shards present" );
+        this.scope = scope;
+        this.directedEdgeMeta = directedEdgeMeta;
         this.sourceIterator = new PushbackIterator( shardIterator );
+        this.shardGroupCompaction = shardGroupCompaction;
         this.minDelta = minDelta;
     }
 
@@ -78,7 +97,7 @@ public class ShardEntryGroupIterator implements Iterator<ShardEntryGroup> {
          */
         while ( sourceIterator.hasNext() ) {
 
-            if(next == null){
+            if ( next == null ) {
                 next = new ShardEntryGroup( minDelta );
             }
 
@@ -92,9 +111,13 @@ public class ShardEntryGroupIterator implements Iterator<ShardEntryGroup> {
 
 
             sourceIterator.pushback( shard );
+
             break;
         }
 
-
+        //now perform the audit (maybe)
+        if(next != null) {
+            shardGroupCompaction.evaluateShardGroup( scope, directedEdgeMeta, next );
+        }
     }
 }

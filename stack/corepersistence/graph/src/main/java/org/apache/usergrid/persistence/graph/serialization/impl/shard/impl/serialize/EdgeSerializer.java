@@ -19,7 +19,7 @@
  *
  */
 
-package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize;
 
 
 import java.nio.ByteBuffer;

@@ -299,13 +299,13 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
         /**
-         * Get all shards <= this one in decending order
+         * Get all shards <= this one in descending order
          */
         public Iterator<ShardEntryGroup> getShards( final Long maxShard ) {
 
             final Long firstKey = shards.floorKey( maxShard );
 
-            return shards.headMap( firstKey, true ).descendingMap().values().iterator();
+            return Collections.unmodifiableCollection( shards.headMap( firstKey, true ).descendingMap().values()).iterator();
         }
 
 

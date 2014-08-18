@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
@@ -40,16 +41,15 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardA
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
-import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.util.TimeUUIDUtils;
 
 
 /**
@@ -68,6 +68,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     private final NodeShardApproximation nodeShardApproximation;
     private final TimeService timeService;
     private final GraphFig graphFig;
+    private final ShardGroupCompaction shardGroupCompaction;
 
 
     @Inject
@@ -75,13 +76,14 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
                                     final EdgeColumnFamilies edgeColumnFamilies,
                                     final ShardedEdgeSerialization shardedEdgeSerialization,
                                     final NodeShardApproximation nodeShardApproximation, final TimeService timeService,
-                                    final GraphFig graphFig ) {
+                                    final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction ) {
         this.edgeShardSerialization = edgeShardSerialization;
         this.edgeColumnFamilies = edgeColumnFamilies;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
         this.nodeShardApproximation = nodeShardApproximation;
         this.timeService = timeService;
         this.graphFig = graphFig;
+        this.shardGroupCompaction = shardGroupCompaction;
     }
 
 
@@ -113,7 +115,8 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             existingShards = Collections.singleton( MIN_SHARD ).iterator();
         }
 
-        return new ShardEntryGroupIterator( existingShards, graphFig.getShardMinDelta() );
+        return new ShardEntryGroupIterator( existingShards, graphFig.getShardMinDelta(), shardGroupCompaction, scope,
+                directedEdgeMeta );
     }
 
 
@@ -158,10 +161,22 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         final long count = nodeShardApproximation.getCount( scope, shard, directedEdgeMeta );
 
+        final long shardSize = graphFig.getShardSize();
 
-        if ( count < graphFig.getShardSize() ) {
+
+        if ( count < shardSize ) {
             return false;
         }
+
+        /**
+         * We want to allocate a new shard as close to the max value as possible.  This way if we're filling up a shard rapidly, we split it near the head of the values.
+         * Further checks to this group will result in more splits, similar to creating a tree type structure and splitting each node.
+         *
+         * This means that the lower shard can be re-split later if it is still too large.  We do the division to truncate
+         * to a split point < what our current max is that would be approximately be our pivot ultimately if we split from the
+         * lower bound and moved forward.  Doing this will stop the current shard from expanding and avoid a point where we cannot
+         * ultimately compact to the correct shard size.
+         */
 
 
         /**
@@ -169,7 +184,8 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          */
 
         final Iterator<MarkedEdge> edges = directedEdgeMeta
-                .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup.getReadShards(), Long.MAX_VALUE );
+                .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup.getReadShards(), 0,
+                        SearchByEdgeType.Order.ASCENDING );
 
 
         if ( !edges.hasNext() ) {
@@ -178,14 +194,41 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             return false;
         }
 
-        //we have a next, allocate it based on the max
 
-        MarkedEdge marked = edges.next();
+        MarkedEdge marked = null;
+
+        /**
+         * Advance to the pivot point we should use.  Once it's compacted, we can split again.
+         * We either want to take the first one (unlikely) or we take our total count - the shard size.
+         * If this is a negative number, we're approaching our max count for this shard, so the first
+         * element will suffice.
+         */
+
+
+        for(long i = 1;  edges.hasNext(); i++){
+            //we hit a pivot shard, set it since it could be the last one we encounter
+            if(i% shardSize == 0){
+                marked = edges.next();
+            }
+            else{
+                edges.next();
+            }
+        }
+
+
+        /**
+         * Sanity check in case our counters become severely out of sync with our edge state in cassandra.
+         */
+        if(marked == null){
+            LOG.warn( "Incorrect shard count for shard group {}", shardEntryGroup );
+            return false;
+        }
 
         final long createTimestamp = timeService.getCurrentTime();
 
         final Shard newShard = new Shard( marked.getTimestamp(), createTimestamp, false );
 
+        LOG.info( "Allocating new shard {} for edge meta {}", newShard, directedEdgeMeta );
 
         final MutationBatch batch = this.edgeShardSerialization.writeShardMeta( scope, newShard, directedEdgeMeta );
 
@@ -220,22 +263,30 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
      */
     private boolean isNewNode( DirectedEdgeMeta directedEdgeMeta ) {
 
-        //The timeout is in milliseconds.  Time for a time uuid is 1/10000 of a milli, so we need to get the units correct
-        final long uuidDelta =  graphFig.getShardCacheTimeout()  * 10000;
 
-        final long timeNow = UUIDGenerator.newTimeUUID().timestamp();
+        //TODO: TN this is broken....
+        //The timeout is in milliseconds.  Time for a time uuid is 1/10000 of a milli, so we need to get the units correct
+        final long timeoutDelta = graphFig.getShardCacheTimeout() ;
+
+        final long timeNow = timeService.getCurrentTime();
+
+        boolean isNew = true;
 
         for ( DirectedEdgeMeta.NodeMeta node : directedEdgeMeta.getNodes() ) {
 
-            final long uuidTime = node.getId().getUuid().timestamp();
-
-            final long uuidTimeDelta = uuidTime + uuidDelta;
-
-            if ( uuidTimeDelta < timeNow ) {
-                return true;
+            //short circuit
+            if(!isNew){
+                return false;
             }
+
+            final long uuidTime =   TimeUUIDUtils.getTimeFromUUID( node.getId().getUuid());
+
+            final long newExpirationTimeout = uuidTime + timeoutDelta;
+
+            //our expiration is after our current time, treat it as new
+            isNew = isNew && newExpirationTimeout >  timeNow;
         }
 
-        return false;
+        return isNew;
     }
 }

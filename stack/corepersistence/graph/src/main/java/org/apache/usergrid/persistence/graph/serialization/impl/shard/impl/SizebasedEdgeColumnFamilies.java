@@ -37,6 +37,10 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumn
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeRowKey;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.RowKey;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.RowKeyType;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.EdgeRowKeySerializer;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.EdgeSerializer;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.RowSerializer;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.RowTypeSerializer;
 
 import com.netflix.astyanax.serializers.LongSerializer;
 

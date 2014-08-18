@@ -4,16 +4,16 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
+import org.apache.usergrid.persistence.core.astyanax.ColumnSearch;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -30,23 +30,26 @@ import com.netflix.astyanax.util.RangeBuilder;
  * @param <C> The column type
  * @param <T> The parsed return type
  */
-public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Comparator<T> {
+public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, ColumnSearch<T>{
 
-    protected final Optional<Edge> last;
+    protected final Optional<T> last;
     protected final long maxTimestamp;
     protected final ApplicationScope scope;
     protected final Collection<Shard> shards;
+    protected final SearchByEdgeType.Order order;
+    protected final Comparator<T> comparator;
 
 
-    protected EdgeSearcher( final ApplicationScope scope, final long maxTimestamp, final Optional<Edge> last,
-                            final Collection<Shard> shards ) {
+    protected EdgeSearcher( final ApplicationScope scope, final Collection<Shard> shards,  final SearchByEdgeType.Order order, final Comparator<T> comparator,  final long maxTimestamp, final Optional<T> last) {
 
         Preconditions.checkArgument(shards.size() > 0 , "Cannot search with no possible shards");
 
         this.scope = scope;
         this.maxTimestamp = maxTimestamp;
-        this.last = last;
+        this.order = order;
         this.shards = shards;
+        this.last = last;
+        this.comparator = comparator;
     }
 
 
@@ -69,20 +72,6 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Compa
 
 
 
-    /**
-     * Set the range on a search
-     */
-    public void setRange( final RangeBuilder builder ) {
-
-        //set our start range since it was supplied to us
-        if ( last.isPresent() ) {
-            C sourceEdge = getStartColumn( last.get() );
-
-
-            builder.setStart( sourceEdge, getSerializer() );
-        }
-
-    }
 
 
     public boolean hasPage() {
@@ -97,6 +86,50 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Compa
         return createEdge( edge, column.getBooleanValue() );
     }
 
+
+    @Override
+    public void buildRange( final RangeBuilder rangeBuilder, final T value ) {
+
+        C edge = createColumn( value );
+
+        rangeBuilder.setStart( edge, getSerializer() );
+
+        setRangeOptions( rangeBuilder );
+    }
+
+
+    @Override
+    public void buildRange( final RangeBuilder rangeBuilder ) {
+
+        //set our start range since it was supplied to us
+        if ( last.isPresent() ) {
+            C sourceEdge = createColumn( last.get() );
+
+
+            rangeBuilder.setStart( sourceEdge, getSerializer() );
+        }
+
+
+        setRangeOptions(rangeBuilder);
+
+
+    }
+
+    private void setRangeOptions(final RangeBuilder rangeBuilder){
+            //if we're ascending, this is opposite what cassandra sorts, so set the reversed flag
+        final boolean reversed = order == SearchByEdgeType.Order.ASCENDING;
+
+        rangeBuilder.setReversed( reversed );
+    }
+
+
+    /**
+     * Get the comparator
+     * @return
+     */
+    public Comparator<T> getComparator() {
+        return comparator;
+    }
 
 
     /**
@@ -116,7 +149,7 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Compa
     /**
      * Set the start column to begin searching from.  The last is provided
      */
-    protected abstract C getStartColumn( final Edge last );
+    protected abstract C createColumn( final T last );
 
 
     /**

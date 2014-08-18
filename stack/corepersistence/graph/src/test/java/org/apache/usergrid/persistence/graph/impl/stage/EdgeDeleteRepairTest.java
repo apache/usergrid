@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
@@ -131,7 +132,7 @@ public class EdgeDeleteRepairTest {
 
 
         Iterator<MarkedEdge> itr = storageEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), null ) );
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null ) );
 
         assertEquals( edge2, itr.next() );
         assertEquals( edge1, itr.next() );
@@ -142,7 +143,7 @@ public class EdgeDeleteRepairTest {
         assertEquals( edge1, deleted );
 
         itr = storageEdgeSerialization.getEdgeVersions( scope,
-                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), null ) );
+                new SimpleSearchByEdge( sourceId, edgeType, targetId, System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,  null ) );
 
         assertEquals( edge2, itr.next() );
         assertFalse( itr.hasNext() );

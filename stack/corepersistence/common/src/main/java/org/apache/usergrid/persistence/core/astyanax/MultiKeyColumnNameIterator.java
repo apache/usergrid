@@ -24,22 +24,21 @@ package org.apache.usergrid.persistence.core.astyanax;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Exchanger;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.rx.OrderedMerge;
 
 import com.amazonaws.services.redshift.model.UnsupportedOptionException;
-import com.google.common.base.Preconditions;
 
+import rx.Notification;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 
@@ -54,13 +53,26 @@ import rx.schedulers.Schedulers;
 public class MultiKeyColumnNameIterator<C, T> implements Iterable<T>, Iterator<T> {
 
 
-    private InnerIterator<T> iterator;
+    private static final Logger LOG = LoggerFactory.getLogger( MultiKeyColumnNameIterator.class );
+
+    private Iterator<T> iterator;
 
 
     public MultiKeyColumnNameIterator( final Collection<ColumnNameIterator<C, T>> columnNameIterators,
                                        final Comparator<T> comparator, final int bufferSize ) {
 
 
+        //optimization for single use case
+        if ( columnNameIterators.size() == 1 ) {
+            iterator = columnNameIterators.iterator().next();
+            return;
+        }
+
+
+        /**
+         * We have more than 1 iterator, subscribe to all of them on their own thread so they can
+         * produce in parallel.  This way our inner iterator will be filled and processed the fastest
+         */
         Observable<T>[] observables = new Observable[columnNameIterators.size()];
 
         int i = 0;
@@ -77,9 +89,11 @@ public class MultiKeyColumnNameIterator<C, T> implements Iterable<T>, Iterator<T
         Observable<T> merged = OrderedMerge.orderedMerge( comparator, bufferSize, observables ).distinctUntilChanged();
 
 
-        iterator = new InnerIterator(bufferSize);
+        InnerIterator innerIterator = new InnerIterator( bufferSize );
 
-        merged.subscribe( iterator );
+        merged.subscribe( innerIterator );
+
+        iterator = innerIterator;
     }
 
 
@@ -114,9 +128,12 @@ public class MultiKeyColumnNameIterator<C, T> implements Iterable<T>, Iterator<T
      */
     private final class InnerIterator<T> extends Subscriber<T> implements Iterator<T> {
 
-        private CountDownLatch startLatch = new CountDownLatch( 1 );
+        private final CountDownLatch startLatch = new CountDownLatch( 1 );
 
-        private final LinkedBlockingQueue<T> queue;
+        /**
+         * Use an ArrayBlockingQueue for faster access since our upper bounds is static
+         */
+        private final ArrayBlockingQueue<T> queue;
 
 
         private Throwable error;
@@ -126,7 +143,7 @@ public class MultiKeyColumnNameIterator<C, T> implements Iterable<T>, Iterator<T
 
 
         private InnerIterator( int maxSize ) {
-            queue = new LinkedBlockingQueue<>( maxSize );
+            queue = new ArrayBlockingQueue<>( maxSize );
         }
 
 
@@ -146,7 +163,6 @@ public class MultiKeyColumnNameIterator<C, T> implements Iterable<T>, Iterator<T
             catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unable to wait for start of submission" );
             }
-
 
 
             //this is almost a busy wait, and is intentional, if we have nothing to poll, we want to get it as soon
@@ -204,11 +220,13 @@ public class MultiKeyColumnNameIterator<C, T> implements Iterable<T>, Iterator<T
         public void onNext( final T t ) {
 
             //may block if we get full, that's expected behavior
+
             try {
+                LOG.trace( "Received element {}" , t );
                 queue.put( t );
             }
             catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unable to take from queue" );
+                throw new RuntimeException( "Unable to insert to queue" );
             }
 
             startLatch.countDown();

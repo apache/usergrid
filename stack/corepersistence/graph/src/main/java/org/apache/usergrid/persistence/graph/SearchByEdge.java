@@ -65,4 +65,10 @@ public interface SearchByEdge {
      */
     Optional<Edge> last();
 
+    /**
+     * Get the sort order
+     * @return
+     */
+    SearchByEdgeType.Order getOrder();
+
 }

@@ -489,6 +489,18 @@ public class NodeShardApproximationTest {
 
 
         @Override
+        public int getShardAuditWorkerCount() {
+            return 0;
+        }
+
+
+        @Override
+        public int getShardAuditWorkerQueueSize() {
+            return 0;
+        }
+
+
+        @Override
         public long getCounterFlushCount() {
             return 100000l;
         }

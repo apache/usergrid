@@ -118,7 +118,7 @@ public class GraphManagerStressTest {
                             for ( Id sourceId : sourceIds ) {
 
                                 final Iterable<Edge> edges = manager.loadEdgesFromSource(
-                                        new SimpleSearchByEdgeType( sourceId, "test", timestamp, null ) )
+                                        new SimpleSearchByEdgeType( sourceId, "test", timestamp, SearchByEdgeType.Order.DESCENDING, null ) )
                                                                     .toBlocking().toIterable();
 
                                 for ( Edge edge : edges ) {
@@ -192,7 +192,7 @@ public class GraphManagerStressTest {
 
             @Override
             public Observable<Edge> doSearch( final GraphManager manager ) {
-                return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", System.currentTimeMillis(), null ) );
+                return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null ) );
             }
         };
 
@@ -220,7 +220,7 @@ public class GraphManagerStressTest {
             @Override
             public Observable<Edge> doSearch( final GraphManager manager ) {
 
-                return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", System.currentTimeMillis(), null ) );
+                return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null ) );
             }
         };
 

@@ -8,6 +8,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.MultiKeyColumnNameIterator;
+import org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -86,6 +87,7 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
      */
     private void startIterator() {
 
+
         /**
          * If the edge is present, we need to being seeking from this
          */
@@ -94,7 +96,9 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
 
 
         //set the range into the search
-        searcher.setRange( rangeBuilder );
+        searcher.buildRange( rangeBuilder );
+
+
 
         /**
          * Get our list of slices
@@ -102,26 +106,21 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
         final List<ScopedRowKey<ApplicationScope, R>> rowKeys = searcher.getRowKeys();
 
 
-        final List<ColumnNameIterator<C, T>> columnNameIterators = new ArrayList<>( rowKeys.size() );
+        if(rowKeys.size() == 1){
 
-        for(ScopedRowKey<ApplicationScope, R> rowKey: rowKeys){
+            final  RowQuery<ScopedRowKey<ApplicationScope, R>, C> query =
+                           keyspace.prepareQuery( cf ).setConsistencyLevel( consistencyLevel ).getKey( rowKeys.get( 0 ) )
+                                   .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 
+            currentColumnIterator = new ColumnNameIterator<>( query, searcher, searcher.hasPage() );
+        }
 
+        else{
 
-           final  RowQuery<ScopedRowKey<ApplicationScope, R>, C> query =
-                    keyspace.prepareQuery( cf ).setConsistencyLevel( consistencyLevel ).getKey( rowKey )
-                            .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
-
-
-            final ColumnNameIterator<C, T> columnNameIterator = new ColumnNameIterator<>( query, searcher, searcher.hasPage() );
-
-            columnNameIterators.add( columnNameIterator );
-
+            currentColumnIterator = new MultiRowColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher, searcher.getComparator(), rowKeys, pageSize);
         }
 
 
-
-        currentColumnIterator = new MultiKeyColumnNameIterator<>(columnNameIterators, searcher, pageSize);
 
 
     }

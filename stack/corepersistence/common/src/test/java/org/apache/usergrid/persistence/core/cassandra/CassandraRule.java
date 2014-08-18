@@ -51,6 +51,15 @@ public class CassandraRule extends EnvironResource {
         cassandraFig = injector.getInstance( CassandraFig.class );
     }
 
+
+    /**
+     * Get the cassandra fig
+     * @return
+     */
+    public CassandraFig getCassandraFig(){
+        return cassandraFig;
+    }
+
     @Override
     protected void before() throws Throwable {
 

@@ -22,9 +22,11 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
@@ -49,9 +51,16 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.RowKey;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.RowKeyType;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators.DescendingTimestampComparator;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators.OrderedComparator;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators
+        .SourceDirectedEdgeDescendingComparator;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.comparators
+        .TargetDirectedEdgeDescendingComparator;
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -256,6 +265,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                             final Shard shard, final boolean isDeleted ) {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).deleteColumn( edge );
+                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -278,6 +288,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
                 batch.withRow( columnFamilies.getSourceNodeTargetTypeCfName(), ScopedRowKey.fromKey( scope, rowKey ) )
                      .deleteColumn( edge );
+                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -297,6 +308,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                             final Shard shard, final boolean isDeleted ) {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope, rowKey ) ).deleteColumn( edge );
+                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -319,6 +331,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
                 batch.withRow( columnFamilies.getTargetNodeSourceTypeCfName(), ScopedRowKey.fromKey( scope, rowKey ) )
                      .deleteColumn( edge );
+                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -338,6 +351,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                             final boolean isDeleted ) {
                 batch.withRow( columnFamilies.getGraphEdgeVersions(), ScopedRowKey.fromKey( scope, rowKey ) )
                      .deleteColumn( column );
+                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -357,8 +371,16 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 columnFamilies.getGraphEdgeVersions();
         final Serializer<Long> serializer = columnFamily.getColumnSerializer();
 
+
+        final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( DescendingTimestampComparator.INSTANCE, search.getOrder());
+
+
+
+
         final EdgeSearcher<EdgeRowKey, Long, MarkedEdge> searcher =
-                new EdgeSearcher<EdgeRowKey, Long, MarkedEdge>( scope, maxTimestamp, search.last(), shards ) {
+                new EdgeSearcher<EdgeRowKey, Long, MarkedEdge>( scope, shards, search.getOrder(),  comparator, maxTimestamp,
+                        search.last().transform( TRANSFORM ) ) {
+
 
                     @Override
                     protected Serializer<Long> getSerializer() {
@@ -367,11 +389,11 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
                     @Override
-                    public void setRange( final RangeBuilder builder ) {
+                    public void buildRange( final RangeBuilder builder ) {
 
 
                         if ( last.isPresent() ) {
-                            super.setRange( builder );
+                            super.buildRange( builder );
                             return;
                         }
 
@@ -387,7 +409,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
                     @Override
-                    protected Long getStartColumn( final Edge last ) {
+                    protected Long createColumn( final MarkedEdge last ) {
                         return last.getTimestamp();
                     }
 
@@ -398,10 +420,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                     }
 
 
-                    @Override
-                    public int compare( final MarkedEdge o1, final MarkedEdge o2 ) {
-                        return Long.compare( o1.getTimestamp(), o2.getTimestamp() );
-                    }
+
                 };
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
@@ -411,23 +430,27 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
     @Override
     public Iterator<MarkedEdge> getEdgesFromSource( final EdgeColumnFamilies columnFamilies,
-                                                    final ApplicationScope scope, final SearchByEdgeType edgeType,
+                                                    final ApplicationScope scope, final SearchByEdgeType search,
                                                     final Collection<Shard> shards ) {
 
         ValidationUtils.validateApplicationScope( scope );
-        GraphValidation.validateSearchByEdgeType( edgeType );
+        GraphValidation.validateSearchByEdgeType( search );
 
-        final Id sourceId = edgeType.getNode();
-        final String type = edgeType.getType();
-        final long maxTimestamp = edgeType.getMaxTimestamp();
+        final Id sourceId = search.getNode();
+        final String type = search.getType();
+        final long maxTimestamp = search.getMaxTimestamp();
         final MultiTennantColumnFamily<ApplicationScope, RowKey, DirectedEdge> columnFamily =
                 columnFamilies.getSourceNodeCfName();
         final Serializer<DirectedEdge> serializer = columnFamily.getColumnSerializer();
 
 
-        final SourceEdgeSearcher<RowKey, DirectedEdge, MarkedEdge> searcher =
-                new SourceEdgeSearcher<RowKey, DirectedEdge, MarkedEdge>( scope, maxTimestamp, edgeType.last(),
-                        shards ) {
+        final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( TargetDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
+
+
+
+        final EdgeSearcher<RowKey, DirectedEdge, MarkedEdge> searcher =
+                new EdgeSearcher<RowKey, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(), comparator, maxTimestamp,
+                        search.last().transform( TRANSFORM ) ) {
 
 
                     @Override
@@ -443,7 +466,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
                     @Override
-                    protected DirectedEdge getStartColumn( final Edge last ) {
+                    protected DirectedEdge createColumn( final MarkedEdge last ) {
                         return new DirectedEdge( last.getTargetNode(), last.getTimestamp() );
                     }
 
@@ -463,24 +486,26 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
     @Override
     public Iterator<MarkedEdge> getEdgesFromSourceByTargetType( final EdgeColumnFamilies columnFamilies,
                                                                 final ApplicationScope scope,
-                                                                final SearchByIdType edgeType,
+                                                                final SearchByIdType search,
                                                                 final Collection<Shard> shards ) {
 
         ValidationUtils.validateApplicationScope( scope );
-        GraphValidation.validateSearchByEdgeType( edgeType );
+        GraphValidation.validateSearchByEdgeType( search );
 
-        final Id targetId = edgeType.getNode();
-        final String type = edgeType.getType();
-        final String targetType = edgeType.getIdType();
-        final long maxTimestamp = edgeType.getMaxTimestamp();
+        final Id targetId = search.getNode();
+        final String type = search.getType();
+        final String targetType = search.getIdType();
+        final long maxTimestamp = search.getMaxTimestamp();
         final MultiTennantColumnFamily<ApplicationScope, RowKeyType, DirectedEdge> columnFamily =
                 columnFamilies.getSourceNodeTargetTypeCfName();
         final Serializer<DirectedEdge> serializer = columnFamily.getColumnSerializer();
 
+        final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( TargetDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
 
-        final SourceEdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge> searcher =
-                new SourceEdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge>( scope, maxTimestamp, edgeType.last(),
-                        shards ) {
+
+        final EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge> searcher =
+                new EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(), comparator, maxTimestamp,
+                        search.last().transform( TRANSFORM ) ) {
 
                     @Override
                     protected Serializer<DirectedEdge> getSerializer() {
@@ -495,7 +520,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
                     @Override
-                    protected DirectedEdge getStartColumn( final Edge last ) {
+                    protected DirectedEdge createColumn( final MarkedEdge last ) {
                         return new DirectedEdge( last.getTargetNode(), last.getTimestamp() );
                     }
 
@@ -513,20 +538,22 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
     @Override
     public Iterator<MarkedEdge> getEdgesToTarget( final EdgeColumnFamilies columnFamilies, final ApplicationScope scope,
-                                                  final SearchByEdgeType edgeType, final Collection<Shard> shards ) {
+                                                  final SearchByEdgeType search, final Collection<Shard> shards ) {
         ValidationUtils.validateApplicationScope( scope );
-        GraphValidation.validateSearchByEdgeType( edgeType );
+        GraphValidation.validateSearchByEdgeType( search );
 
-        final Id targetId = edgeType.getNode();
-        final String type = edgeType.getType();
-        final long maxTimestamp = edgeType.getMaxTimestamp();
+        final Id targetId = search.getNode();
+        final String type = search.getType();
+        final long maxTimestamp = search.getMaxTimestamp();
         final MultiTennantColumnFamily<ApplicationScope, RowKey, DirectedEdge> columnFamily =
                 columnFamilies.getTargetNodeCfName();
         final Serializer<DirectedEdge> serializer = columnFamily.getColumnSerializer();
 
-        final TargetEdgeSearcher<RowKey, DirectedEdge, MarkedEdge> searcher =
-                new TargetEdgeSearcher<RowKey, DirectedEdge, MarkedEdge>( scope, maxTimestamp, edgeType.last(),
-                        shards ) {
+        final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( SourceDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
+
+        final EdgeSearcher<RowKey, DirectedEdge, MarkedEdge> searcher =
+                new EdgeSearcher<RowKey, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(),comparator,  maxTimestamp,
+                        search.last().transform( TRANSFORM ) ) {
 
                     @Override
                     protected Serializer<DirectedEdge> getSerializer() {
@@ -541,7 +568,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
                     @Override
-                    protected DirectedEdge getStartColumn( final Edge last ) {
+                    protected DirectedEdge createColumn( final MarkedEdge last ) {
                         return new DirectedEdge( last.getSourceNode(), last.getTimestamp() );
                     }
 
@@ -561,24 +588,26 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
     @Override
     public Iterator<MarkedEdge> getEdgesToTargetBySourceType( final EdgeColumnFamilies columnFamilies,
                                                               final ApplicationScope scope,
-                                                              final SearchByIdType edgeType,
+                                                              final SearchByIdType search,
                                                               final Collection<Shard> shards ) {
 
         ValidationUtils.validateApplicationScope( scope );
-        GraphValidation.validateSearchByEdgeType( edgeType );
+        GraphValidation.validateSearchByEdgeType( search );
 
-        final Id targetId = edgeType.getNode();
-        final String sourceType = edgeType.getIdType();
-        final String type = edgeType.getType();
-        final long maxTimestamp = edgeType.getMaxTimestamp();
+        final Id targetId = search.getNode();
+        final String sourceType = search.getIdType();
+        final String type = search.getType();
+        final long maxTimestamp = search.getMaxTimestamp();
         final MultiTennantColumnFamily<ApplicationScope, RowKeyType, DirectedEdge> columnFamily =
                 columnFamilies.getTargetNodeSourceTypeCfName();
         final Serializer<DirectedEdge> serializer = columnFamily.getColumnSerializer();
 
+        final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( SourceDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
 
-        final TargetEdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge> searcher =
-                new TargetEdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge>( scope, maxTimestamp, edgeType.last(),
-                        shards ) {
+
+        final EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge> searcher =
+                new EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(), comparator, maxTimestamp,
+                        search.last().transform( TRANSFORM ) ) {
                     @Override
                     protected Serializer<DirectedEdge> getSerializer() {
                         return serializer;
@@ -592,7 +621,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
                     @Override
-                    protected DirectedEdge getStartColumn( final Edge last ) {
+                    protected DirectedEdge createColumn( final MarkedEdge last ) {
                         return new DirectedEdge( last.getTargetNode(), last.getTimestamp() );
                     }
 
@@ -608,50 +637,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
     }
 
 
-    /**
-     * Class for performing searched on rows based on source id
-     */
-    private static abstract class SourceEdgeSearcher<R, C, T extends Edge> extends EdgeSearcher<R, C, T> {
 
-        protected SourceEdgeSearcher( final ApplicationScope scope, final long maxTimestamp, final Optional<Edge> last,
-                                      final Collection<Shard> shards ) {
-            super( scope, maxTimestamp, last, shards );
-        }
-
-
-        public int compare( final T o1, final T o2 ) {
-            int compare = Long.compare( o1.getTimestamp(), o2.getTimestamp() );
-
-            if ( compare == 0 ) {
-                compare = o1.getTargetNode().compareTo( o2.getTargetNode() );
-            }
-
-            return compare;
-        }
-    }
-
-
-    /**
-     * Class for performing searched on rows based on target id
-     */
-    private static abstract class TargetEdgeSearcher<R, C, T extends Edge> extends EdgeSearcher<R, C, T> {
-
-        protected TargetEdgeSearcher( final ApplicationScope scope, final long maxTimestamp, final Optional<Edge> last,
-                                      final Collection<Shard> shards ) {
-            super( scope, maxTimestamp, last, shards );
-        }
-
-
-        public int compare( final T o1, final T o2 ) {
-            int compare = Long.compare( o1.getTimestamp(), o2.getTimestamp() );
-
-            if ( compare == 0 ) {
-                compare = o1.getTargetNode().compareTo( o2.getTargetNode() );
-            }
-
-            return compare;
-        }
-    }
 
 
     /**
@@ -994,4 +980,27 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
             return isDeleted;
         }
     }
+
+
+
+
+
+
+    private static final Function<Edge, MarkedEdge> TRANSFORM = new Function<Edge, MarkedEdge>() {
+        @Nullable
+        @Override
+        public MarkedEdge apply( @Nullable final Edge input ) {
+
+            if ( input == null ) {
+                return null;
+            }
+
+            if ( input instanceof MarkedEdge ) {
+                return ( MarkedEdge ) input;
+            }
+
+            return new SimpleMarkedEdge( input.getSourceNode(), input.getType(), input.getTargetNode(),
+                    input.getTimestamp(), false );
+        }
+    };
 }

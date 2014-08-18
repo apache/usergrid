@@ -42,4 +42,14 @@ public class RowKey {
         this.edgeType = edgeType;
         this.shardId = shardId;
     }
+
+
+    @Override
+    public String toString() {
+        return "RowKey{" +
+                "nodeId=" + nodeId +
+                ", edgeType='" + edgeType + '\'' +
+                ", shardId=" + shardId +
+                '}';
+    }
 }

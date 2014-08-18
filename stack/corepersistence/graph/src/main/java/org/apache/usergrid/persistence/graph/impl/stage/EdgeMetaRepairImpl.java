@@ -33,7 +33,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
@@ -46,7 +46,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -286,7 +285,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return storageEdgeSerialization.getEdgesToTargetBySourceType( scope,
-                            new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, subType, null ) );
+                            new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, SearchByEdgeType.Order.DESCENDING, subType,   null ) );
                 }
             } );
         }
@@ -332,7 +331,7 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                 @Override
                 protected Iterator<MarkedEdge> getIterator() {
                     return storageEdgeSerialization.getEdgesFromSourceByTargetType( scope,
-                            new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, subType, null ) );
+                            new SimpleSearchByIdType( nodeId, edgeType, maxTimestamp, SearchByEdgeType.Order.DESCENDING, subType, null ) );
                 }
             } );
         }

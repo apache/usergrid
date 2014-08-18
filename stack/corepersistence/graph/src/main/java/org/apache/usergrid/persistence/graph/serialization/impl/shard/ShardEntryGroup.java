@@ -20,9 +20,14 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -36,6 +41,7 @@ import com.google.common.base.Preconditions;
  */
 public class ShardEntryGroup {
 
+    private static final Logger LOG = LoggerFactory.getLogger( ShardEntryGroup.class );
 
     private List<Shard> shards;
 
@@ -44,6 +50,8 @@ public class ShardEntryGroup {
     private long maxCreatedTime;
 
     private Shard compactionTarget;
+
+    private Shard rootShard;
 
 
     /**
@@ -85,8 +93,11 @@ public class ShardEntryGroup {
         //shard is not compacted, or it's predecessor isn't, we should include it in this group
         if ( !minShard.isCompacted() ) {
             addShardInternal( shard );
+
             return true;
         }
+
+
 
 
         return false;
@@ -124,8 +135,24 @@ public class ShardEntryGroup {
      * Get the entries that we should read from.
      */
     public Collection<Shard> getReadShards() {
-        return shards;
+
+
+        final Shard staticShard = getRootShard();
+        final Shard compactionTarget = getCompactionTarget();
+
+
+
+        if(compactionTarget != null){
+            LOG.debug( "Returning shards {} and {} as read shards", compactionTarget, staticShard );
+            return Arrays.asList( compactionTarget, staticShard );
+        }
+
+
+        LOG.debug( "Returning shards {} read shard", staticShard );
+        return  Collections.singleton( staticShard );
     }
+
+
 
 
     /**
@@ -138,11 +165,22 @@ public class ShardEntryGroup {
          * adding data to other shards
          */
         if ( !isTooSmallToCompact() && shouldCompact( currentTime ) ) {
-            return Collections.singleton( getCompactionTarget() );
+
+            final Shard compactionTarget = getCompactionTarget();
+
+            LOG.debug( "Returning shard {} as write shard", compactionTarget);
+
+            return Collections.singleton( compactionTarget  );
+
         }
 
+        final Shard staticShard = getRootShard();
 
-        return shards;
+
+        LOG.debug( "Returning shard {} as write shard", staticShard);
+
+        return Collections.singleton( staticShard );
+
     }
 
 
@@ -153,6 +191,24 @@ public class ShardEntryGroup {
         return !isTooSmallToCompact();
     }
 
+
+    /**
+     * Get the root shard that was created in this group
+     * @return
+     */
+    private Shard getRootShard(){
+        if(rootShard != null){
+            return rootShard;
+        }
+
+        final Shard rootCandidate = shards.get( shards.size() -1 );
+
+        if(rootCandidate.isCompacted()){
+            rootShard = rootCandidate;
+        }
+
+        return rootShard;
+    }
 
     /**
      * Get the shard all compactions should write to.  Null indicates we cannot find a shard that could be used as a

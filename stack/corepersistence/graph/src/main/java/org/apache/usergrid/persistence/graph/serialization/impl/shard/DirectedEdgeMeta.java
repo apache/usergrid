@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -37,6 +38,8 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.netflix.astyanax.MutationBatch;
 
 
 /**
@@ -151,14 +154,52 @@ public abstract class DirectedEdgeMeta {
     }
 
 
+    @Override
+    public String toString() {
+        return "DirectedEdgeMeta{" +
+                "nodes=" + Arrays.toString( nodes ) +
+                ", types=" + Arrays.toString( types ) +
+                '}';
+    }
+
+
     /**
      * Given the edge serialization, load all shard in the shard group
      */
     public abstract Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                     final EdgeColumnFamilies edgeColumnFamilies,
                                                     final ApplicationScope scope, final Collection<Shard> shards,
-                                                    final long maxValue );
+                                                    final long maxValue, final SearchByEdgeType.Order order );
 
+
+    /**
+     * Write the edge for this meta data to the target edge
+     * @param shardedEdgeSerialization
+     * @param edgeColumnFamilies
+     * @param scope
+     * @param targetShard
+     * @param edge
+     * @param timestamp The timestamp on the operation
+     * @return
+     */
+    public abstract MutationBatch writeEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                             final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                             final Shard targetShard, final MarkedEdge edge, final UUID timestamp );
+
+
+    /**
+     * Delete the edge for this meta data from the shard
+     * @param shardedEdgeSerialization
+     * @param edgeColumnFamilies
+     * @param scope
+     * @param sourceShard
+     * @param edge
+     * @param timestamp The timestamp on the operation
+     * @return
+     */
+    public abstract MutationBatch deleteEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                              final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                              final Shard sourceShard, final MarkedEdge edge, final UUID timestamp );
 
 
     /**
@@ -225,15 +266,35 @@ public abstract class DirectedEdgeMeta {
             @Override
             public Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                    final EdgeColumnFamilies edgeColumnFamilies,
-                                                   final ApplicationScope scope, final Collection<Shard>  shards,
-                                                   final long maxValue ) {
+                                                   final ApplicationScope scope, final Collection<Shard> shards,
+                                                   final long maxValue, final SearchByEdgeType.Order order ) {
 
                 final Id sourceId = nodes[0].id;
                 final String edgeType = types[0];
 
-                final SearchByEdgeType search = new SimpleSearchByEdgeType( sourceId, edgeType, maxValue, null );
+                final SearchByEdgeType search = new SimpleSearchByEdgeType( sourceId, edgeType, maxValue, order, null);
 
                 return serialization.getEdgesFromSource( edgeColumnFamilies, scope, search, shards );
+            }
+
+
+            @Override
+            public MutationBatch writeEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                            final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                            final Shard targetShard, final MarkedEdge edge, final UUID timestamp ) {
+                return shardedEdgeSerialization
+                        .writeEdgeFromSource( edgeColumnFamilies, scope, edge, Collections.singleton( targetShard ),
+                                this, timestamp );
+            }
+
+
+            @Override
+            public MutationBatch deleteEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                             final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                             final Shard sourceShard, final MarkedEdge edge, final UUID timestamp ) {
+                return shardedEdgeSerialization
+                        .deleteEdgeFromSource( edgeColumnFamilies, scope, edge, Collections.singleton( sourceShard ),
+                                this, timestamp );
             }
 
 
@@ -264,19 +325,39 @@ public abstract class DirectedEdgeMeta {
 
             @Override
             public Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
-                                                   final EdgeColumnFamilies edgeColumnFamilies,
-                                                   final ApplicationScope scope, final Collection<Shard>shards,
-                                                   final long maxValue ) {
-//
+                                                             final EdgeColumnFamilies edgeColumnFamilies,
+                                                             final ApplicationScope scope, final Collection<Shard> shards,
+                                                             final long maxValue, final SearchByEdgeType.Order order ) {
+                //
                 final Id sourceId = nodes[0].id;
                 final String edgeType = types[0];
                 final String targetType = types[1];
 
                 final SearchByIdType search =
-                        new SimpleSearchByIdType( sourceId, edgeType, maxValue, targetType, null );
+                        new SimpleSearchByIdType( sourceId, edgeType, maxValue, order, targetType,  null );
 
-                return serialization.getEdgesFromSourceByTargetType( edgeColumnFamilies, scope, search, shards);
+                return serialization.getEdgesFromSourceByTargetType( edgeColumnFamilies, scope, search, shards );
+            }
 
+
+
+
+
+            @Override
+            public MutationBatch writeEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                            final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                            final Shard targetShard, final MarkedEdge edge, final UUID timestamp ) {
+                return shardedEdgeSerialization.writeEdgeFromSourceWithTargetType( edgeColumnFamilies, scope, edge,
+                        Collections.singleton( targetShard ), this, timestamp );
+            }
+
+
+            @Override
+            public MutationBatch deleteEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                             final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                             final Shard sourceShard, final MarkedEdge edge, final UUID timestamp ) {
+                return shardedEdgeSerialization.deleteEdgeFromSourceWithTargetType( edgeColumnFamilies, scope, edge,
+                        Collections.singleton( sourceShard ), this, timestamp );
             }
 
 
@@ -304,16 +385,36 @@ public abstract class DirectedEdgeMeta {
             @Override
             public Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                    final EdgeColumnFamilies edgeColumnFamilies,
-                                                   final ApplicationScope scope, final Collection<Shard>  shards,
-                                                   final long maxValue ) {
+                                                   final ApplicationScope scope, final Collection<Shard> shards,
+                                                   final long maxValue, final SearchByEdgeType.Order order ) {
 
 
                 final Id targetId = nodes[0].id;
                 final String edgeType = types[0];
 
-                final SearchByEdgeType search = new SimpleSearchByEdgeType( targetId, edgeType, maxValue, null );
+                final SearchByEdgeType search = new SimpleSearchByEdgeType( targetId, edgeType, maxValue, order, null);
 
                 return serialization.getEdgesToTarget( edgeColumnFamilies, scope, search, shards );
+            }
+
+
+            @Override
+            public MutationBatch writeEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                            final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                            final Shard targetShard, final MarkedEdge edge, final UUID timestamp ) {
+                return shardedEdgeSerialization
+                        .writeEdgeToTarget( edgeColumnFamilies, scope, edge, Collections.singleton( targetShard ),
+                                this, timestamp );
+            }
+
+
+            @Override
+            public MutationBatch deleteEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                             final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                             final Shard sourceShard, final MarkedEdge edge, final UUID timestamp ) {
+                return shardedEdgeSerialization
+                        .deleteEdgeToTarget( edgeColumnFamilies, scope, edge, Collections.singleton( sourceShard ),
+                                this, timestamp );
             }
 
 
@@ -339,11 +440,13 @@ public abstract class DirectedEdgeMeta {
     private static DirectedEdgeMeta fromTargetNodeSourceType( final NodeMeta[] nodes, final String[] types ) {
         return new DirectedEdgeMeta( nodes, types ) {
 
+
             @Override
             public Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                    final EdgeColumnFamilies edgeColumnFamilies,
                                                    final ApplicationScope scope, final Collection<Shard> shards,
-                                                   final long maxValue ) {
+                                                   final long maxValue, final SearchByEdgeType.Order order ) {
+
 
                 final Id targetId = nodes[0].id;
                 final String edgeType = types[0];
@@ -351,9 +454,27 @@ public abstract class DirectedEdgeMeta {
 
 
                 final SearchByIdType search =
-                        new SimpleSearchByIdType( targetId, edgeType, maxValue, sourceType, null );
+                        new SimpleSearchByIdType( targetId, edgeType, maxValue, order, sourceType,  null );
 
-                return serialization.getEdgesToTargetBySourceType( edgeColumnFamilies, scope, search, shards);
+                return serialization.getEdgesToTargetBySourceType( edgeColumnFamilies, scope, search, shards );
+            }
+
+
+            @Override
+            public MutationBatch writeEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                            final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                            final Shard targetShard, final MarkedEdge edge, final UUID timestamp ) {
+                return shardedEdgeSerialization.writeEdgeToTargetWithSourceType( edgeColumnFamilies, scope, edge,
+                        Collections.singleton( targetShard ), this, timestamp );
+            }
+
+
+            @Override
+            public MutationBatch deleteEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                             final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                             final Shard sourceShard, final MarkedEdge edge, final UUID timestamp ) {
+                return shardedEdgeSerialization.deleteEdgeToTargetWithSourceType( edgeColumnFamilies, scope, edge,
+                        Collections.singleton( sourceShard ), this, timestamp );
             }
 
 
@@ -385,18 +506,37 @@ public abstract class DirectedEdgeMeta {
             @Override
             public Iterator<MarkedEdge> loadEdges( final ShardedEdgeSerialization serialization,
                                                    final EdgeColumnFamilies edgeColumnFamilies,
-                                                   final ApplicationScope scope, final Collection<Shard>  shards,
-                                                   final long maxValue ) {
+                                                   final ApplicationScope scope, final Collection<Shard> shards,
+                                                   final long maxValue, final SearchByEdgeType.Order order ) {
 
                 final Id sourceId = nodes[0].id;
                 final Id targetId = nodes[1].id;
                 final String edgeType = types[0];
 
                 final SimpleSearchByEdge search =
-                        new SimpleSearchByEdge( sourceId, edgeType, targetId, maxValue, null );
+                        new SimpleSearchByEdge( sourceId, edgeType, targetId, maxValue, order, null );
 
-                return serialization.getEdgeVersions( edgeColumnFamilies, scope, search, shards);
+                return serialization.getEdgeVersions( edgeColumnFamilies, scope, search, shards );
+            }
 
+
+            @Override
+            public MutationBatch writeEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                            final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                            final Shard targetShard, final MarkedEdge edge, final UUID timestamp ) {
+                return shardedEdgeSerialization
+                        .writeEdgeVersions( edgeColumnFamilies, scope, edge, Collections.singleton( targetShard ),
+                                this, timestamp );
+            }
+
+
+            @Override
+            public MutationBatch deleteEdge( final ShardedEdgeSerialization shardedEdgeSerialization,
+                                             final EdgeColumnFamilies edgeColumnFamilies, final ApplicationScope scope,
+                                             final Shard sourceShard, final MarkedEdge edge, final UUID timestamp ) {
+                return shardedEdgeSerialization
+                        .deleteEdgeVersions( edgeColumnFamilies, scope, edge, Collections.singleton( sourceShard ),
+                                this, timestamp );
             }
 
 
@@ -408,16 +548,15 @@ public abstract class DirectedEdgeMeta {
     }
 
 
-
     /**
      * Create a directed edge from the stored meta data
+     *
      * @param metaType The meta type stored
      * @param nodes The metadata of the nodes
      * @param types The types in the meta data
-     *
-     *
      */
-    public static DirectedEdgeMeta fromStorage( final  MetaType metaType, final NodeMeta[] nodes, final String[] types ) {
+    public static DirectedEdgeMeta fromStorage( final MetaType metaType, final NodeMeta[] nodes,
+                                                final String[] types ) {
         switch ( metaType ) {
             case SOURCE:
                 return fromSourceNode( nodes, types );
@@ -428,7 +567,7 @@ public abstract class DirectedEdgeMeta {
             case TARGETSOURCE:
                 return fromTargetNodeSourceType( nodes, types );
             case VERSIONS:
-                return fromEdge(nodes, types);
+                return fromEdge( nodes, types );
             default:
                 throw new UnsupportedOperationException( "No supported meta type found" );
         }

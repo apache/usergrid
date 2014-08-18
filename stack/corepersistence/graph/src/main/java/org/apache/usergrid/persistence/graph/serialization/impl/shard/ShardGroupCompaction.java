@@ -22,38 +22,32 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
-import rx.Observable;
+import com.google.common.util.concurrent.ListenableFuture;
 
 
 /**
  * Defines tasks for running compaction
- *
- *
  */
 public interface ShardGroupCompaction {
 
-
     /**
-     * Execute the compaction task.  Will return the number of edges that have
-     * @param group The shard entry group to compact
-     * @return The shards that were compacted
+     * Possibly audit the shard entry group.  This is asynchronous and returns the future that will
+     * report the operations performed (if any) upon completion.
+     *
+     * @return A ListenableFuture with the result.  Note that some
      */
-    public Set<Shard> compact(final ApplicationScope scope, final DirectedEdgeMeta edgeMeta, final ShardEntryGroup group);
-
-    /**
-     * Possibly audit the shard entry group.  This is asynchronous and returns immediately
-     * @param group
-     * @return
-     */
-    public AuditResult evaluateShardGroup( final ApplicationScope scope, final DirectedEdgeMeta edgeMeta,
-                                           final ShardEntryGroup group );
+    public ListenableFuture<AuditResult> evaluateShardGroup( final ApplicationScope scope,
+                                                             final DirectedEdgeMeta edgeMeta,
+                                                             final ShardEntryGroup group );
 
 
-    public enum AuditResult{
+    public enum AuditResult {
         /**
          * We didn't check this shard
          */
@@ -68,11 +62,10 @@ public interface ShardGroupCompaction {
          */
         CHECKED_CREATED,
 
-        /**
+        COMPACTED, /**
          * The shard group is already compacting
          */
         COMPACTING
     }
-
 
 }

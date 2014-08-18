@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize;
 
 
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
