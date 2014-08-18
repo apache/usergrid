@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.services.notifiers;
 
+import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.Notifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import org.apache.usergrid.services.notifications.ProviderAdapter;
 
 import java.util.Arrays;
 import java.util.Set;
+import java.util.UUID;
 
 public class NotifiersService extends AbstractCollectionService {
 
@@ -57,13 +59,15 @@ public class NotifiersService extends AbstractCollectionService {
 
         ServiceResults results = super.postCollection(context);
 
-        Notifier notifier = (Notifier) results.getEntity();
-        if (notifier != null) {
+        DynamicEntity entity = (DynamicEntity) results.getEntity();
+        Notifier notifier1 = new Notifier();
+        notifier1.setProperties(entity.getProperties());
+        if (entity != null) {
             try {
-                ns.testConnection(notifier);
+                ns.testConnection(notifier1);
             } catch (Exception e) {
                 logger.info("notifier testConnection() failed", e);
-                em.delete(notifier);
+                em.delete(entity);
                 throw e;
             }
         }

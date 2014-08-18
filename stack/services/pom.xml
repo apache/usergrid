@@ -253,6 +253,7 @@
           <include>**/*.yaml</include>
           <include>**/*.xml</include>
           <include>**/*.properties</include>
+          <include>**/*.p12</include>
         </includes>
       </testResource>
       <testResource>
