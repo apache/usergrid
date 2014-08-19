@@ -2,7 +2,7 @@ package org.apache.usergrid.notifiers;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.notifications.apns.MockSuccessfulProviderAdapter;
-import org.apache.usergrid.persistence.Notifier;
+import org.apache.usergrid.persistence.entities.Notifier;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

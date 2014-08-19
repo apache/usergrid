@@ -16,8 +16,8 @@
  */
 package org.apache.usergrid.services.notifications;
 
-import org.apache.usergrid.persistence.Notification;
-import org.apache.usergrid.persistence.Notifier;
+import org.apache.usergrid.persistence.entities.Notification;
+import org.apache.usergrid.persistence.entities.Notifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

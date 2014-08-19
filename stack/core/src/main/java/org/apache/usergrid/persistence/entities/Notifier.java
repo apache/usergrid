@@ -14,20 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence;
+package org.apache.usergrid.persistence.entities;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
 
-import javax.net.ssl.SSLContext;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.security.KeyStore;
-import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -70,7 +66,7 @@ public class Notifier extends TypedEntity {
 
 
     @Override
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getName() {
         return name;
     }
@@ -79,7 +75,7 @@ public class Notifier extends TypedEntity {
         this.name = name;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getProvider() {
         return provider;
     }
@@ -88,7 +84,7 @@ public class Notifier extends TypedEntity {
         this.provider = provider;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getEnvironment() {
         return environment;
     }

@@ -19,8 +19,8 @@ package org.apache.usergrid.services.notifications;
 import java.util.Date;
 import java.util.Map;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Notification;
-import org.apache.usergrid.persistence.Notifier;
+import org.apache.usergrid.persistence.entities.Notification;
+import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.services.ServicePayload;
 
 /**

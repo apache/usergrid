@@ -1,6 +1,7 @@
 package org.apache.usergrid.notifications.gcm;
 
-import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.Notification;
+import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.services.notifications.ConnectionException;
 import org.apache.usergrid.services.notifications.NotificationsService;
 import org.apache.usergrid.services.notifications.ProviderAdapter;

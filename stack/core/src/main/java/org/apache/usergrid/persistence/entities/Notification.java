@@ -14,11 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence;
+package org.apache.usergrid.persistence.entities;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
@@ -26,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.usergrid.persistence.PathQuery;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityCollection;
@@ -102,7 +101,7 @@ public class Notification extends TypedEntity {
         this.receipts = receipts;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Map<String, Object> getPayloads() {
         return payloads;
     }
@@ -111,7 +110,7 @@ public class Notification extends TypedEntity {
         this.payloads = payloads;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getFinished() {
         return finished;
     }
@@ -120,7 +119,7 @@ public class Notification extends TypedEntity {
         this.finished = finished;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getDeliver() {
         return deliver;
     }
@@ -129,7 +128,7 @@ public class Notification extends TypedEntity {
         this.deliver = deliver;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getExpire() {
         return expire;
     }
@@ -143,7 +142,7 @@ public class Notification extends TypedEntity {
         return expire != null && expire > System.currentTimeMillis();
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Boolean getCanceled() {
         return canceled;
     }
@@ -152,7 +151,7 @@ public class Notification extends TypedEntity {
         this.canceled = canceled;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getStarted() {
         return started;
     }
@@ -161,7 +160,7 @@ public class Notification extends TypedEntity {
         this.started = started;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getErrorMessage() {
         return errorMessage;
     }
@@ -170,7 +169,7 @@ public class Notification extends TypedEntity {
         this.errorMessage = errorMessage;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Map<String, Long> getStatistics() {
         return statistics;
     }
@@ -230,7 +229,7 @@ public class Notification extends TypedEntity {
                 : (int) expirySeconds;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getQueued() {
         return queued;
     }

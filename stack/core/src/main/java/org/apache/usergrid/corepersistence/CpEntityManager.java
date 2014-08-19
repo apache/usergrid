@@ -416,7 +416,7 @@ public class CpEntityManager implements EntityManager {
         }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
-                ecm.load( id ).toBlockingObservable().last();
+                ecm.load( id ).toBlocking().last();
 
         if ( cpEntity == null ) {
             if ( logger.isDebugEnabled() ) {
@@ -2557,7 +2557,7 @@ public class CpEntityManager implements EntityManager {
             logger.debug("About to Write {}:{} version {}", new Object[] { 
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
 
-             cpEntity = ecm .write( cpEntity ).toBlockingObservable().last();
+             cpEntity = ecm .write( cpEntity ).toBlocking().last();
 
             logger.debug("Wrote {}:{} version {}", new Object[] { 
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });

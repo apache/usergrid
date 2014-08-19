@@ -1,6 +1,8 @@
 package org.apache.usergrid.notifications;
 
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.Notification;
+import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.services.notifications.NotificationsService;
 import org.junit.Before;

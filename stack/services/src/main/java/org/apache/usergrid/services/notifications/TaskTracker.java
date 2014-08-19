@@ -17,8 +17,8 @@
 package org.apache.usergrid.services.notifications;
 
 
-import org.apache.usergrid.persistence.Notifier;
-import org.apache.usergrid.persistence.Receipt;
+import org.apache.usergrid.persistence.entities.Notifier;
+import org.apache.usergrid.persistence.entities.Receipt;
 
 import java.util.UUID;
 

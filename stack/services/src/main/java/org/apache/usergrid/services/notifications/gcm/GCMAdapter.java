@@ -17,8 +17,8 @@
 package org.apache.usergrid.services.notifications.gcm;
 
 import com.google.android.gcm.server.*;
-import org.apache.usergrid.persistence.Notification;
-import org.apache.usergrid.persistence.Notifier;
+import org.apache.usergrid.persistence.entities.Notification;
+import org.apache.usergrid.persistence.entities.Notifier;
 import org.mortbay.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

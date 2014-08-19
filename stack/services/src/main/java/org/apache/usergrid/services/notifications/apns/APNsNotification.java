@@ -21,7 +21,7 @@ import com.relayrides.pushy.apns.util.MalformedTokenStringException;
 import com.relayrides.pushy.apns.util.SimpleApnsPushNotification;
 import com.relayrides.pushy.apns.util.TokenUtil;
 
-import org.apache.usergrid.persistence.Notification;
+import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.services.notifications.TaskTracker;
 
 import java.util.Calendar;

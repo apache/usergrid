@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence;
+package org.apache.usergrid.persistence.entities;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.apache.usergrid.persistence.TypedEntity;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.UUID;
@@ -70,7 +70,7 @@ public class Receipt extends TypedEntity {
         this.setDeviceId(deviceId);
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Object getPayload() {
         return payload;
     }
@@ -79,7 +79,7 @@ public class Receipt extends TypedEntity {
         this.payload = payload;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getSent() {
         return sent;
     }
@@ -88,7 +88,7 @@ public class Receipt extends TypedEntity {
         this.sent = sent;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Object getErrorCode() {
         return errorCode;
     }
@@ -97,7 +97,7 @@ public class Receipt extends TypedEntity {
         this.errorCode = errorCode;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getErrorMessage() {
         return errorMessage;
     }
@@ -122,7 +122,7 @@ public class Receipt extends TypedEntity {
         this.notificationUUID = notificationUUID;
     }
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public UUID getDeviceId() {
         return deviceId;
     }

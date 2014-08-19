@@ -1,7 +1,7 @@
 package org.apache.usergrid.notifications.apns;
 
-import org.apache.usergrid.persistence.Notification;
-import org.apache.usergrid.persistence.Notifier;
+import org.apache.usergrid.persistence.entities.Notification;
+import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.services.notifications.apns.APNsNotification;
 import org.apache.usergrid.services.notifications.apns.APNsAdapter;
 import org.apache.usergrid.services.notifications.ConnectionException;

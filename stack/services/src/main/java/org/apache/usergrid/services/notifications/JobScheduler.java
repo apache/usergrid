@@ -18,7 +18,7 @@ package org.apache.usergrid.services.notifications;
 
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Notification;
+import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.services.ServiceManager;
 import org.slf4j.Logger;
