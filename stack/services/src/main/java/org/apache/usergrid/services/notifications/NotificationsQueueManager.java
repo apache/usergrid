@@ -221,9 +221,9 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
         }
         notification.addProperties(properties);
         em.update(notification);
-        long elapsed = notification.getQueued() - startTime;
 
         if (LOG.isInfoEnabled()) {
+            long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
             StringBuilder sb = new StringBuilder();
             sb.append("notification ").append(notification.getUuid());
             sb.append(" done queuing to ").append(deviceCount);

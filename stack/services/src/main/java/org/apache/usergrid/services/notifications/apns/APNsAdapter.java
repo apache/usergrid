@@ -161,7 +161,7 @@ public class APNsAdapter implements ProviderAdapter {
                 pushManager.start();
             }
         }catch(IllegalStateException ise){
-            logger.debug("failed to start",ise);//could have failed because its starteded
+            logger.debug("failed to start",ise);//could have failed because its started
         }
         return pushManager;
     }
