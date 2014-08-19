@@ -1,4 +1,4 @@
-package org.apache.usergrid.notifications.gcm;
+package org.apache.usergrid.services.notifications.gcm;
 
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;

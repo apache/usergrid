@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.usergrid.notifications.apns;
+package org.apache.usergrid.services.notifications.apns;
 
 import com.relayrides.pushy.apns.*;
 import com.relayrides.pushy.apns.util.*;
 import org.apache.commons.io.IOUtils;
-import org.apache.usergrid.notifications.AbstractServiceNotificationTest;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.services.notifications.AbstractServiceNotificationTest;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.services.notifications.*;
-import org.apache.usergrid.services.notifications.apns.APNsAdapter;
-import org.apache.usergrid.services.notifications.apns.APNsNotification;
 import org.junit.After;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,18 +110,18 @@ public class NotificationsServiceTest extends AbstractServiceNotificationTest {
         e = app.testRequest(ServiceAction.POST, 1, "devices").getEntity();
         device2 = app.getEm().get(e.getUuid(), Device.class);
 
-//        // create User
-//        user1 = new User();
-//        user1.setUsername("user1");
-//        user1.setEmail("user1@usergrid.org");
-//        user1 = app.getEm().create(user1);
+        // create User
+        app.put( "username", "edanuff" );
+        app.put( "email", "ed@anuff.com" );
+//        user1 = (User)app.testRequest( ServiceAction.POST, 1, "users" ).getEntity();
 //        app.getEm().createConnection(user1, "devices", device1);
 //        app.getEm().createConnection(user1, "devices", device2);
-//
-//        // create Group
-//        group1 = new Group();
-//        group1.setPath("path");
-//        group1 = app.getEm().create(group1);
+
+        // create Group
+        app.put( "path", "path" );
+        app.put( "title", "group" );
+        group1 = (Group) app.testRequest( ServiceAction.POST, 1, "groups" ).getEntity();
+
 //        app.getEm().createConnection(group1, "users", user1);
 
         ns = getNotificationService();
@@ -161,11 +159,11 @@ public class NotificationsServiceTest extends AbstractServiceNotificationTest {
 
 //        // verify Query for CREATED state
         Query query = new Query();
-//        query.addEqualityFilter("state", Notification.State.STARTED.toString());
+        query.addFilter("state='"+Notification.State.STARTED.toString()+"'");
         Results results = app.getEm().searchCollection(
                 app.getEm().getApplicationRef(), "notifications", query);
         Entity entity = results.getEntitiesMap().get(notification.getUuid());
-//        assertNotNull(entity);
+        assertNotNull(entity);
 
         // perform push //
 

@@ -1,7 +1,7 @@
-package org.apache.usergrid.notifiers;
+package org.apache.usergrid.services;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.usergrid.notifications.apns.MockSuccessfulProviderAdapter;
+import org.apache.usergrid.services.notifications.apns.MockSuccessfulProviderAdapter;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -63,7 +63,7 @@ public class NotifiersServiceTest extends AbstractServiceIT {
         // mock action (based on verified actual behavior) //
         ns.providerAdapters
                 .put("google",
-                        new org.apache.usergrid.notifications.gcm.MockSuccessfulProviderAdapter() {
+                        new org.apache.usergrid.services.notifications.gcm.MockSuccessfulProviderAdapter() {
                             @Override
                             public void testConnection(Notifier notifier)
                                     throws ConnectionException {

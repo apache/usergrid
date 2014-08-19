@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.usergrid.notifications.gcm;
+package org.apache.usergrid.services.notifications.gcm;
 
-import org.apache.usergrid.notifications.AbstractServiceNotificationTest;
+import org.apache.usergrid.services.notifications.AbstractServiceNotificationTest;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.services.notifications.NotificationsService;
-import org.apache.usergrid.services.notifications.gcm.GCMAdapter;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
