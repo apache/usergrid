@@ -65,6 +65,12 @@ public class SliceNode extends QueryNode {
     }
 
 
+    @Override
+    public boolean ignoreHintSize() {
+        return pairs.size() > 1;
+    }
+
+
     /**
      * Set the start value. If the range pair doesn't exist, it's created
      *

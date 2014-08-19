@@ -56,6 +56,12 @@ public class CountdownLatchJob implements Job {
     }
 
 
+    @Override
+    public void dead( final JobExecution execution ) throws Exception {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+
     public void setLatch( int size ) {
         latch = new CountDownLatch( size );
     }

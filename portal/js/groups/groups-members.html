@@ -1,61 +1,82 @@
 <div class="content-page" ng-controller="GroupsMembersCtrl">
-
-
-  <bsmodal id="removeFromGroup"
-           title="Confirmation"
-           close="hideModal"
-           closelabel="Cancel"
-           extrabutton="removeUsersFromGroupDialog"
-           extrabuttonlabel="Delete"
-           ng-cloak>
-    <p>Are you sure you want to remove the users from the seleted group(s)?</p>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+  <bsmodal id="removeFromGroup" title="Confirmation" close="hideModal"
+    closelabel="Cancel" extrabutton="removeUsersFromGroupDialog"
+    extrabuttonlabel="Delete" ng-cloak>
+  <p>Are you sure you want to remove the users from the seleted
+    group(s)?</p>
   </bsmodal>
 
-  <bsmodal id="addGroupToUser"
-           title="Add user to group"
-           close="hideModal"
-           closelabel="Cancel"
-           extrabutton="addGroupToUserDialog"
-           extrabuttonlabel="Add"
-           ng-cloak>
-    <div class="btn-group">
-      <a class="btn dropdown-toggle filter-selector" data-toggle="dropdown">
-        <span class="filter-label">{{$parent.user != '' ? $parent.user.username : 'Select a user...'}}</span>
-        <span class="caret"></span>
-      </a>
-      <ul class="dropdown-menu">
-        <li ng-repeat="user in $parent.usersTypeaheadValues" class="filterItem"><a ng-click="$parent.$parent.user = user">{{user.username}}</a></li>
-      </ul>
-    </div>
+  <bsmodal id="addGroupToUser" title="Add user to group"
+    close="hideModal" closelabel="Cancel"
+    extrabutton="addGroupToUserDialog" extrabuttonlabel="Add" ng-cloak>
+  <div class="btn-group">
+    <a class="btn dropdown-toggle filter-selector"
+      data-toggle="dropdown"> <span class="filter-label">{{$parent.user
+        != '' ? $parent.user.username : 'Select a user...'}}</span> <span
+      class="caret"></span>
+    </a>
+    <ul class="dropdown-menu">
+      <li ng-repeat="user in $parent.usersTypeaheadValues"
+        class="filterItem"><a
+        ng-click="$parent.$parent.user = user">{{user.username}}</a></li>
+    </ul>
+  </div>
   </bsmodal>
 
 
   <div class="button-strip">
-    <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('group add user button')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_groups_users_add_user}}" tooltip-placement="left">(?)</a>
-    <button class="btn btn-primary"  ng-click="showModal('addGroupToUser')">Add User to Group</button>
-    <button class="btn btn-primary" ng-disabled="!hasMembers || !valueSelected(groupsCollection.users._list)" ng-click="showModal('removeFromGroup')">Remove User(s) from Group</button>
+    <a class="help_tooltip"
+      ng-mouseover="help.sendTooltipGA('group add user button')"
+      ng-show="help.helpTooltipsEnabled" href="#"
+      ng-attr-tooltip="{{tooltip_groups_users_add_user}}"
+      tooltip-placement="left">(?)</a>
+    <button class="btn btn-primary"
+      ng-click="showModal('addGroupToUser')">Add User to Group</button>
+    <button class="btn btn-primary"
+      ng-disabled="!hasMembers || !valueSelected(groupsCollection.users._list)"
+      ng-click="showModal('removeFromGroup')">Remove User(s)
+      from Group</button>
   </div>
   <table class="table table-striped">
     <tr class="table-header">
-      <td style="width: 30px;"><input type="checkbox" ng-show="hasMembers" id="selectAllCheckbox" ng-model="groupMembersSelected" ng-click="selectAllEntities(groupsCollection.users._list,this,'groupMembersSelected')"></td>
+      <td style="width: 30px;"><input type="checkbox"
+        ng-show="hasMembers" id="selectAllCheckbox"
+        ng-model="groupMembersSelected"
+        ng-click="selectAllEntities(groupsCollection.users._list,this,'groupMembersSelected')"></td>
       <td style="width: 50px;"></td>
       <td>Username</td>
       <td>Display Name</td>
     </tr>
-    <tr class="zebraRows" ng-repeat="user in groupsCollection.users._list">
-      <td>
-        <input
-          type="checkbox"
-          ng-model="user.checked"
-          >
+    <tr class="zebraRows"
+      ng-repeat="user in groupsCollection.users._list">
+      <td><input type="checkbox" ng-model="user.checked">
       </td>
-      <td><img style="width:30px;height:30px;" ng-src="{{user._portal_image_icon}}"></td>
+      <td><img style="width: 30px; height: 30px;"
+        ng-src="{{user._portal_image_icon}}"></td>
       <td>{{user.get('username')}}</td>
       <td>{{user.get('name')}}</td>
     </tr>
   </table>
   <div style="padding: 10px 5px 10px 5px">
-    <button class="btn btn-primary" ng-click="getPrevious()" style="display:{{previous_display}}">< Previous</button>
-    <button class="btn btn-primary" ng-click="getNext()" style="display:{{next_display}}; float:right;">Next ></button>
+    <button class="btn btn-primary" ng-click="getPrevious()"
+      style="display: {{previous_display">< Previous</button>
+    <button class="btn btn-primary" ng-click="getNext()"
+      style="display: {{next_display">Next ></button>
   </div>
 </div>

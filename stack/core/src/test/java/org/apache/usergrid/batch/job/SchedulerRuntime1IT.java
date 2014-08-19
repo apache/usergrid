@@ -42,6 +42,9 @@ public class SchedulerRuntime1IT extends AbstractSchedulerRuntimeIT {
         // set the counter job latch size
         counterJob.setLatch( getCount() );
 
+
+        getJobListener().setExpected( getCount() );
+
         for ( int i = 0; i < getCount(); i++ ) {
             scheduler.createJob( "countdownLatch", System.currentTimeMillis(), new JobData() );
         }
@@ -61,7 +64,7 @@ public class SchedulerRuntime1IT extends AbstractSchedulerRuntimeIT {
         // now:
         // blockTilDone look into the JobListener hook and blocked until jobs are completed.
         // TODO : need a retry count so it doesn't reblock forever
-        while (!getJobListener().blockTilDone(getCount(), waitTime)) {
+        while (!getJobListener().blockTilDone(waitTime)) {
         	logger.warn("Jobs not yet finished after waited {}, block again" , waitTime);
         }
         assertEquals( "Expected success job: " + getCount()+ ". Actual :" + getJobListener().getSuccessCount() + ". Total count: " + getJobListener().getDoneCount() , getCount() , getJobListener().getSuccessCount() );

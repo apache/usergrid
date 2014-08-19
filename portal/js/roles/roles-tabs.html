@@ -1,10 +1,32 @@
 <div class="content-page">
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
   <section class="row-fluid">
 
     <div class="span12">
       <div class="page-filters">
-        <h1 class="title" class="pull-left"><i class="pictogram title">&#59170;</i> Roles </h1>
-        <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('roles page title')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_page_title}}" tooltip-placement="right">(?)</a>
+        <h1 class="title" class="pull-left">
+          <i class="pictogram title">&#59170;</i> Roles
+        </h1>
+        <a class="help_tooltip"
+          ng-mouseover="help.sendTooltipGA('roles page title')"
+          ng-show="help.helpTooltipsEnabled" href="#"
+          ng-attr-tooltip="{{tooltip_roles_page_title}}"
+          tooltip-placement="right">(?)</a>
       </div>
     </div>
 
@@ -12,17 +34,25 @@
 
   <div id="user-panel" class="panel-buffer">
     <ul id="user-panel-tab-bar" class="nav nav-tabs">
-      <li><a href="javaScript:void(0);" ng-click="gotoPage('roles')">Roles List</a></li>
-      <li ng-class="settingsSelected"><a href="javaScript:void(0);" ng-click="gotoPage('roles/settings')">Settings</a></li>
-      <li ng-class="usersSelected"><a href="javaScript:void(0);" ng-click="gotoPage('roles/users')">Users</a></li>
-      <li ng-class="groupsSelected"><a href="javaScript:void(0);" ng-click="gotoPage('roles/groups')">Groups</a></li>
+      <li><a href="javaScript:void(0);"
+        ng-click="gotoPage('roles')">Roles List</a></li>
+      <li ng-class="settingsSelected"><a href="javaScript:void(0);"
+        ng-click="gotoPage('roles/settings')">Settings</a></li>
+      <li ng-class="usersSelected"><a href="javaScript:void(0);"
+        ng-click="gotoPage('roles/users')">Users</a></li>
+      <li ng-class="groupsSelected"><a href="javaScript:void(0);"
+        ng-click="gotoPage('roles/groups')">Groups</a></li>
     </ul>
   </div>
 
   <div style="float: left; margin-right: 10px;">
     <div style="float: left;">
-      <div class="user-header-title"><strong>Role Name: </strong>{{selectedRole.name}}</div>
-      <div class="user-header-title"><strong>Role Title: </strong>{{selectedRole.title}}</div>
+      <div class="user-header-title">
+        <strong>Role Name: </strong>{{selectedRole.name}}
+      </div>
+      <div class="user-header-title">
+        <strong>Role Title: </strong>{{selectedRole.title}}
+      </div>
     </div>
   </div>
 

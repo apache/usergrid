@@ -14,46 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.query.ir;
+package org.apache.usergrid.persistence;
 
-
-import org.apache.usergrid.persistence.Identifier;
-
+import java.util.Iterator;
 
 /**
- * Class to represent a UUID based Identifier query
- *
- * @author tnine
+ * Iterator to know if we have more records in cursor.
  */
-public class EmailIdentifierNode extends QueryNode {
-
-    private final Identifier identifier;
-
-
-    public EmailIdentifierNode( Identifier identifier ) {
-        this.identifier = identifier;
-    }
-
-
-    @Override
-    public void visit( NodeVisitor visitor ) throws Exception {
-        visitor.visit( this );
-    }
-
-
-    @Override
-    public int getCount() {
-        return 1;
-    }
-
-
-    @Override
-    public boolean ignoreHintSize() {
-        return false;
-    }
-
-
-    public Identifier getIdentifier() {
-        return identifier;
-    }
+public interface ResultsIterator extends Iterator {
+    /**
+     * is there a cursor
+     * @return
+     */
+    boolean hasPages();
 }

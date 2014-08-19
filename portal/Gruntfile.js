@@ -291,7 +291,7 @@ module.exports = function (grunt) {
           // includes files within path
           {expand: true, src: ['*.html','config.js', '*.ico', 'helpJson.json'], dest: distPath, filter: 'isFile'},
           {expand: true, src: ['sdk/**','css/**','img/**','js/charts/*.json'], dest: distPath},
-          {expand: true, src: ['js/*.min.js','js/libs/**','css/**','img/**','bower_components/**'], dest: distPath}
+          {expand: true, src: ['js/generated/**','js/libs/**','css/**','img/**','bower_components/**'], dest: distPath}
 
         ]
       }
