@@ -562,5 +562,12 @@
       <artifactId>gcm-server</artifactId>
       <version>1.0.2</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.clearspring.analytics</groupId>
+      <artifactId>stream</artifactId>
+      <version>2.7.0</version>
+    </dependency>
+
   </dependencies>
 </project>

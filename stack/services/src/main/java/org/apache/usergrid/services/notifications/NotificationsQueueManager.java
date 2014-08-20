@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 package org.apache.usergrid.services.notifications;
-
+import com.clearspring.analytics.hash.MurmurHash;
+import com.clearspring.analytics.stream.frequency.CountMinSketch;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
@@ -45,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Created by ApigeeCorporation on 8/13/14.
+ * manages queues for notifications
  */
 public class NotificationsQueueManager implements NotificationServiceProxy {
     private static final String NOTIFICATION_CONCURRENT_BATCHES = "notification.concurrent.batches";
@@ -76,11 +77,11 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
     static final String MESSAGE_PROPERTY_DEVICE_UUID = "deviceUUID";
 
     public final Map<String, ProviderAdapter> providerAdapters =   new HashMap<String, ProviderAdapter>(3);
-            {
-                providerAdapters.put("apple", APNS_ADAPTER);
-                providerAdapters.put("google", new GCMAdapter());
-                providerAdapters.put("noop", TEST_ADAPTER);
-            };
+    {
+        providerAdapters.put("apple", APNS_ADAPTER);
+        providerAdapters.put("google", new GCMAdapter());
+        providerAdapters.put("noop", TEST_ADAPTER);
+    };
     // these 2 can be static, but GCM can't. future: would be nice to get gcm
     // static as well...
     public static ProviderAdapter APNS_ADAPTER = new APNsAdapter();
@@ -89,22 +90,23 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
     //cache to retrieve push manager, cached per notifier, so many notifications will get same push manager
     private static LoadingCache<EntityManager, HashMap<Object,Notifier>> notifierCacheMap = CacheBuilder
             .newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .expireAfterWrite(90, TimeUnit.SECONDS)
             .build(new CacheLoader<EntityManager, HashMap<Object, Notifier>>() {
                 @Override
                 public HashMap<Object, Notifier> load(EntityManager em) {
                     HashMap<Object, Notifier> notifierHashMap = new HashMap<Object, Notifier>();
                     Query query = new Query();
                     query.setCollection("notifiers");
-                    query.setLimit(50);
+                    query.setLimit(100);
                     PathQuery<Notifier> pathQuery = new PathQuery<Notifier>(em.getApplicationRef(), query);
                     Iterator<Notifier> notifierIterator = pathQuery.iterator(em);
                     while (notifierIterator.hasNext()) {
                         Notifier notifier = notifierIterator.next();
-                        notifierHashMap.put(notifier.getName().toLowerCase(), notifier);
-                        notifierHashMap.put(notifier.getUuid(), notifier);
-                        notifierHashMap.put(notifier.getUuid().toString(), notifier);
-
+                        String name = notifier.getName() != null ? notifier.getName() : "" ;
+                        UUID uuid = notifier.getUuid() != null ? notifier.getUuid() : UUID.randomUUID();
+                        notifierHashMap.put(name.toLowerCase(), notifier);
+                        notifierHashMap.put(uuid, notifier);
+                        notifierHashMap.put(uuid.toString(), notifier);
                     }
                     return notifierHashMap;
                 }
@@ -140,7 +142,6 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
         final AtomicInteger batchCount = new AtomicInteger(); //count devices so you can make a judgement on batching
         final int numCurrentBatchesConfig = getNumConcurrentBatches();
-
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<String>(); //build up list of issues
 
         //get devices in querystring, and make sure you have access
@@ -151,21 +152,30 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
                 jobScheduler.scheduleQueueJob(notification, true);
                 return;
             }
+            final CountMinSketch sketch = new CountMinSketch(0.0001,.99,7364181); //add probablistic counter to find dups
 
-            Observable.create(new IteratorObservable<Entity>(iterator)).parallel(new Func1<Observable<Entity>, Observable<Entity>>() {
+            rx.Observable.create(new IteratorObservable<Entity>(iterator)).parallel(new Func1<rx.Observable<Entity>, rx.Observable<Entity>>() {
                 @Override
-                public Observable<Entity> call(Observable<Entity> deviceObservable) {
+                public rx.Observable<Entity> call(rx.Observable<Entity> deviceObservable) {
                     return deviceObservable.map( new Func1<Entity,Entity>() {
                         @Override
                         public Entity call(Entity entity) {
                             try {
                                 List<EntityRef> devicesRef = getDevices(entity); // resolve group
+                                String queueName = getJobQueueName(notification);
                                 boolean maySchedule = false;
                                 for (EntityRef deviceRef : devicesRef) {
+                                    long hash = MurmurHash.hash(deviceRef.getUuid());
+                                    if(sketch.estimateCount(hash)>0){
+                                        LOG.debug("Maybe Found duplicate device: {}", deviceRef.getUuid());
+                                        continue;
+                                    }else {
+                                        sketch.add(hash,1);
+                                    }
                                     maySchedule |= deviceCount.incrementAndGet() % BATCH_SIZE == 0;
                                     Message message = new Message();
                                     message.setProperty(MESSAGE_PROPERTY_DEVICE_UUID, deviceRef.getUuid());
-                                    qm.postToQueue( getJobQueueName(notification), message);
+                                    qm.postToQueue(queueName, message);
                                     if(notification.getQueued() == null){
                                         // update queued time
                                         notification.setQueued(System.currentTimeMillis());
@@ -175,10 +185,10 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
 
                                 //start working if you are on a large batch,
                                 if (maySchedule && numCurrentBatchesConfig >= batchCount.incrementAndGet()) {
-                                    processBatchAndReschedule(notification, jobExecution);
+                                    processBatchAndReschedule(notification, null);
                                 }
 
-                                if(devicesRef.size() <=0){
+                                if(devicesRef.size() <= 0){
                                     errorMessages.add("Could not find devices for entity: "+entity.getUuid());
                                 }
 
@@ -191,7 +201,6 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
                     });
                 }
             }, Schedulers.io()).toBlocking().lastOrDefault(null);
-
         }
 
         batchCount.set(Math.min(numCurrentBatchesConfig, batchCount.get()));
@@ -231,59 +240,19 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
             LOG.info(sb.toString());
         }
     }
-    public void finishedBatch(Notification notification, long successes, long failures) throws Exception {
-        finishedBatch(notification,successes,failures,false);
-    }
-    public void finishedBatch(Notification notification, long successes, long failures, boolean overrideComplete) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("finishedBatch ").append(notification.getUuid());
-            sb.append(" successes: ").append(successes);
-            sb.append(" failures: ").append(failures);
-            LOG.info(sb.toString());
-        }
 
-        notification = em.get(notification, Notification.class); // refresh data
-        notification.updateStatistics(successes, failures);
-        notification.setModified(System.currentTimeMillis());
-        Map<String, Object> properties = new HashMap<String, Object>(4);
-        properties.put("statistics", notification.getStatistics());
-        properties.put("modified", notification.getModified());
-
-        if (isNotificationDeliveryComplete(notification) || overrideComplete) {
-            notification.setFinished(notification.getModified());
-            properties.put("finished", notification.getModified());
-            properties.put("state", notification.getState());
-            long elapsed = notification.getFinished()
-                    - notification.getStarted();
-            long sent = notification.getStatistics().get("sent");
-            long errors = notification.getStatistics().get("errors");
-
-            if (LOG.isInfoEnabled()) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("notification ").append(notification.getUuid());
-                sb.append(" done sending to ").append(sent + errors);
-                sb.append(" devices in ").append(elapsed).append(" ms");
-                LOG.info(sb.toString());
-            }
-
-        } else {
-            LOG.info("notification finished batch: {}",
-                    notification.getUuid());
-        }
-        em.updateProperties(notification, properties);
-
-        Set<Notifier> notifiers = new HashSet<Notifier>(getNotifierMap().values()); // remove dups
-        asyncCheckForInactiveDevices(notifiers);
-    }
 
     private HashMap<Object,Notifier> getNotifierMap(){
         try{
-            return notifierCacheMap.get(em);
+            HashMap<Object,Notifier> map = notifierCacheMap.get(em);
+            return map;
         }catch (ExecutionException ee){
             LOG.error("failed to get from cache",ee);
             return new HashMap<Object, Notifier>();
         }
+    }
+    private void clearNotifierMap(){
+        notifierCacheMap.invalidate(em);
     }
     /*
         * returns partial list of Device EntityRefs (up to BATCH_SIZE) - empty when
@@ -295,8 +264,7 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
         qq.setLimit(batchSize);
         qq.setTimeout(MESSAGE_TRANSACTION_TIMEOUT);
         QueueResults results = qm.getFromQueue(getJobQueueName(notification), qq);
-        LOG.debug("got batch of {} devices for notification {}",
-                results.size(), notification.getUuid());
+        LOG.debug("got batch of {} devices for notification {}", results.size(), notification.getUuid());
         return results;
     }
     /**
@@ -324,8 +292,7 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
         }else{
             consecutiveEmptyQueues.incrementAndGet();
         }
-
-        if (!isNotificationDeliveryComplete(notification) && consecutiveEmptyQueues.get() <= CONSECUTIVE_EMPTY_QUEUES) {
+        if (qm.hasPendingReads(getJobQueueName(notification), null) && consecutiveEmptyQueues.get() <= CONSECUTIVE_EMPTY_QUEUES) {
             if(jobExecution==null) {
                 jobScheduler.scheduleBatchJob(notification, reschedule_delay);
             }else{
@@ -354,11 +321,11 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
         final Map<String, Object> payloads = notification.getPayloads();
         final Map<String, Object> translatedPayloads = translatePayloads(payloads, notifierMap);
         try {
-            Observable
+            rx.Observable
                     .from(queueResults)
-                    .parallel(new Func1<Observable<Message>, Observable<Message>>() {
+                    .parallel(new Func1<rx.Observable<Message>, rx.Observable<Message>>() {
                         @Override
-                        public Observable<Message> call(Observable<Message> messageObservable) {
+                        public rx.Observable<Message> call(rx.Observable<Message> messageObservable) {
                             return messageObservable.map(new Func1<Message, Message>() {
                                 @Override
                                 public Message call(Message message) {
@@ -449,6 +416,54 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
 
     }
 
+    public void finishedBatch(Notification notification, long successes, long failures) throws Exception {
+        finishedBatch(notification,successes,failures,false);
+    }
+    public void finishedBatch(Notification notification, long successes, long failures, boolean overrideComplete) throws Exception {
+        if (LOG.isDebugEnabled()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("finishedBatch ").append(notification.getUuid());
+            sb.append(" successes: ").append(successes);
+            sb.append(" failures: ").append(failures);
+            LOG.info(sb.toString());
+        }
+
+        notification = em.get(notification, Notification.class); // refresh data
+        notification.updateStatistics(successes, failures);
+        notification.setModified(System.currentTimeMillis());
+        Map<String, Object> properties = new HashMap<String, Object>(4);
+        properties.put("statistics", notification.getStatistics());
+        properties.put("modified", notification.getModified());
+
+        if (isNotificationDeliveryComplete(notification) || overrideComplete) {
+            notification.setFinished(notification.getModified());
+            properties.put("finished", notification.getModified());
+            properties.put("state", notification.getState());
+            long elapsed = notification.getFinished()
+                    - notification.getStarted();
+            long sent = notification.getStatistics().get("sent");
+            long errors = notification.getStatistics().get("errors");
+
+            if (LOG.isInfoEnabled()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("notification ").append(notification.getUuid());
+                sb.append(" done sending to ").append(sent + errors);
+                sb.append(" devices in ").append(elapsed).append(" ms");
+                LOG.info(sb.toString());
+            }
+
+        } else {
+            LOG.info("notification finished batch: {}",
+                    notification.getUuid());
+        }
+        em.updateProperties(notification, properties);
+
+        Set<Notifier> notifiers = new HashSet<Notifier>(getNotifierMap().values()); // remove dups
+        asyncCheckForInactiveDevices(notifiers);
+    }
+    /**
+     * Call the adapter with the notifier
+     */
     private Map<String, Object> translatePayloads(Map<String, Object> payloads, Map<Object, Notifier> notifierMap) throws Exception {
         Map<String, Object> translatedPayloads = new HashMap<String, Object>(
                 payloads.size());
@@ -456,12 +471,15 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
             String payloadKey = entry.getKey();
             Object payloadValue = entry.getValue();
             Notifier notifier = notifierMap.get(payloadKey);
+            if(notifier==null){
+                clearNotifierMap();
+                notifierMap = getNotifierMap();
+                notifier = notifierMap.get(payloadKey);
+            }
             if (notifier != null) {
-                ProviderAdapter providerAdapter = providerAdapters.get(notifier
-                        .getProvider());
+                ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
                 if (providerAdapter != null) {
-                    Object translatedPayload = payloadValue != null ? providerAdapter
-                            .translatePayload(payloadValue) : null;
+                    Object translatedPayload = payloadValue != null ? providerAdapter.translatePayload(payloadValue) : null;
                     if (translatedPayload != null) {
                         translatedPayloads.put(payloadKey, translatedPayload);
                     }
@@ -475,7 +493,7 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
         return Integer.parseInt(props.getProperty(NOTIFICATION_CONCURRENT_BATCHES, "1"));
     }
 
-    private static final class IteratorObservable<T> implements Observable.OnSubscribe<T> {
+    private static final class IteratorObservable<T> implements rx.Observable.OnSubscribe<T> {
         private final Iterator<T> input;
         private IteratorObservable( final Iterator input ) {this.input = input;}
 
@@ -613,10 +631,12 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
         if ("device".equals(ref.getType())) {
             devices = Collections.singletonList(ref);
         } else if ("user".equals(ref.getType())) {
-            devices = em.getCollection(ref, "devices", null, Query.MAX_LIMIT, Query.Level.REFS, false).getRefs();
+            devices = em.getCollection(ref, "devices", null, Query.MAX_LIMIT,
+                    Query.Level.REFS, false).getRefs();
         } else if ("group".equals(ref.getType())) {
             devices = new ArrayList<EntityRef>();
-            for (EntityRef r : em.getCollection(ref, "users", null,  Query.MAX_LIMIT, Query.Level.REFS, false).getRefs()) {
+            for (EntityRef r : em.getCollection(ref, "users", null,
+                    Query.MAX_LIMIT, Query.Level.REFS, false).getRefs()) {
                 devices.addAll(getDevices(r));
             }
         }
