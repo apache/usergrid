@@ -2789,14 +2789,13 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void refreshIndex() {
 
-        // refresh system indexes 
+        // refresh factory indexes
         emf.refreshIndex();
 
         // refresh this Entity Manager's application's index
         IndexScope indexScope = new IndexScopeImpl( 
-                appScope.getApplication(), 
-                appScope.getApplication(), 
-                "dummy" );
+                appScope.getApplication(), appScope.getApplication(), "dummy" );
+
         EntityIndex ei = managerCache.getEntityIndex( indexScope );
         ei.refresh();
     }

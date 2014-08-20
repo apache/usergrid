@@ -277,7 +277,9 @@ public class ManagementResourceIT extends AbstractRestIT {
         int i = 0;
         for ( String user : followers ) {
             createUser( user );
+            refreshIndex("test-organization", "test-app");
             follow( user, leader );
+            refreshIndex("test-organization", "test-app");
         }
         userFeed = getUserFeed( lastUser );
         assertTrue( userFeed.size() == 1 );

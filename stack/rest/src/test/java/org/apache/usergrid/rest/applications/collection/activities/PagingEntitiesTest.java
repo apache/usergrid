@@ -52,7 +52,7 @@ public class PagingEntitiesTest extends AbstractRestIT {
         CustomCollection activities = context.collection( "activities" );
 
         long created = 0;
-        int maxSize = 1500;
+        int maxSize = 100;
         long[] verifyCreated = new long[maxSize];
         Map actor = hashMap( "displayName", "Erin" );
         Map props = new HashMap();

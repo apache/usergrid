@@ -63,6 +63,9 @@ public class RefreshIndexResource extends AbstractContextResource {
                 throw new UnsupportedOperationException();
             }
 
+            // refresh the system apps or app lookup below may fail
+            emf.refreshIndex();
+
             UUID appId;
             if ( orgName != null && appName != null ) {
                 appId = emf.lookupApplication( orgName + "/" + appName );
@@ -75,9 +78,6 @@ public class RefreshIndexResource extends AbstractContextResource {
                 EntityManager em = emf.getEntityManager( appId );
                 em.refreshIndex();
             } 
-
-            // refresh the system app
-            emf.refreshIndex();
 
         } catch (Exception e) {
             logger.error("Error in refresh", e);

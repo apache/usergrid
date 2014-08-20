@@ -36,11 +36,18 @@ class NodeRegistry {
 
 
     NodeRegistry() {
-        // creates domain or no-op if it already exists
-        creds = new BasicAWSCredentials(accessKey, secretKey)
-        sdbClient = new AmazonSimpleDBClient(creds)
+        while ( true ) {
+            try {
+                // creates domain or no-op if it already exists
+                creds = new BasicAWSCredentials(accessKey, secretKey)
+                sdbClient = new AmazonSimpleDBClient(creds)
+                sdbClient.createDomain(new CreateDomainRequest(domain))
 
-        sdbClient.createDomain(new CreateDomainRequest(domain))
+            } catch ( Exception e ) {
+                continue
+            }
+            break
+        }
     }
 
     /**
