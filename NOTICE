@@ -20,8 +20,15 @@ Google, Inc. Released under the MIT license.
 This product bundles Bootstrap v2.3.2 Copyright 2012 Twitter, Inc
 Licensed under the Apache License v2.0
 
-This product bundles with jquery-ui-1.8.9. Licensed under MIT license.
+This product bundles jquery-ui-1.8.9. Licensed under MIT license.
 
-This product bundles with mocha.
-All rights reserved. Licensed under MIT.
+This product bundles jquery-1.9.1 Licensed under MIT license.
+
+This product bundles mocha. All rights reserved. Licensed under MIT.
 Copyright (c) 2011-2014 TJ Holowaychuk <tj@vision-media.ca>
+
+This product bundles NSubstitute v1.6.0.0. Licensed under the BSD 2-Clause License.
+
+This product bundles NUnit v2.6.2.
+Portions Copyright © 2002-2012 Charlie Poole or Copyright © 2002-2004 James W. Newkirk, Michael C. Two, Alexei A. Vorontsov or Copyright © 2000-2002 Philip A. Craig
+
