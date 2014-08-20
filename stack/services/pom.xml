@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>0.0.29-SNAPSHOT</version>
+    <version>0.0.29</version>
   </parent>
 
   <!-- Override these properties in your settings.xml in an active profile -->
