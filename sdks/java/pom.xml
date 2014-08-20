@@ -11,7 +11,7 @@
         <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
         <version>0.0.29-SNAPSHOT</version>
-        <relativePath>../stack</relativePath>
+        <relativePath>../../stack</relativePath>
     </parent>
 	
     <modelVersion>4.0.0</modelVersion>
