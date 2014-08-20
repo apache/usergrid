@@ -195,7 +195,7 @@ public class Notification extends TypedEntity {
         // does nothing - state is derived
     }
 
-    @EntityProperty
+    @EntityProperty(mutable = true, indexed = true)
     public State getState() {
         if (getErrorMessage() != null) {
             return State.FAILED;

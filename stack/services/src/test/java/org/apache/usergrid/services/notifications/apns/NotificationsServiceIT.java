@@ -18,8 +18,7 @@ package org.apache.usergrid.services.notifications.apns;
 import com.relayrides.pushy.apns.*;
 import com.relayrides.pushy.apns.util.*;
 import org.apache.commons.io.IOUtils;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.services.notifications.AbstractServiceNotificationTest;
+import org.apache.usergrid.services.notifications.AbstractServiceNotificationIT;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.index.query.Query;
@@ -53,9 +52,9 @@ import static org.apache.usergrid.services.notifications.NotificationsService.NO
 
 // todo: test reschedule on delivery time change
 // todo: test restart of queuing
-public class NotificationsServiceTest extends AbstractServiceNotificationTest {
+public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NotificationsServiceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NotificationsServiceIT.class);
 
     /**
      * set to true to run tests against actual Apple servers - but they may not
@@ -158,24 +157,14 @@ public class NotificationsServiceTest extends AbstractServiceNotificationTest {
         ns.addDevice(notification, device1);
 
 //        // verify Query for CREATED state
-        Query query = new Query();
-        query.addFilter("state='"+Notification.State.STARTED.toString()+"'");
-        Results results = app.getEm().searchCollection(
-                app.getEm().getApplicationRef(), "notifications", query);
-        Entity entity = results.getEntitiesMap().get(notification.getUuid());
-        assertNotNull(entity);
+        assertEquals(notification.getState(), Notification.State.STARTED);
 
         // perform push //
 
         notification = scheduleNotificationAndWait(notification);
 
         // verify Query for FINISHED state
-        query = new Query();
-        query.addEqualityFilter("state", Notification.State.FINISHED.toString());
-        results = app.getEm().searchCollection(app.getEm().getApplicationRef(),
-                "notifications", query);
-        entity = results.getEntitiesMap().get(notification.getUuid());
-        assertNotNull(entity);
+        assertEquals(notification.getState(), Notification.State.FINISHED);
 
         checkReceipts(notification, 1);
         checkStatistics(notification, 1, 0);

@@ -1,4 +1,4 @@
-package org.apache.usergrid.services;
+package org.apache.usergrid.services.notifications;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.services.notifications.apns.MockSuccessfulProviderAdapter;
@@ -22,7 +22,7 @@ import static org.junit.Assert.assertArrayEquals;
 
 import static org.junit.Assert.fail;
 
-public class NotifiersServiceTest extends AbstractServiceIT {
+public class NotifiersServiceIT extends AbstractServiceIT {
     private NotificationsService ns;
 
     @Before

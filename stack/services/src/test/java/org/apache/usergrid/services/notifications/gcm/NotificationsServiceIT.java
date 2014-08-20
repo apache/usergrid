@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.apache.usergrid.services.notifications.gcm;
 
-import org.apache.usergrid.services.notifications.AbstractServiceNotificationTest;
+import org.apache.usergrid.services.notifications.AbstractServiceNotificationIT;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
@@ -39,10 +39,10 @@ import org.apache.usergrid.services.ServiceAction;
 import static org.junit.Assert.*;
 import static org.apache.usergrid.services.notifications.NotificationsService.NOTIFIER_ID_POSTFIX;
 
-public class NotificationsServiceTest extends AbstractServiceNotificationTest {
+public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     private static final Logger LOG = LoggerFactory
-            .getLogger(NotificationsServiceTest.class);
+            .getLogger(NotificationsServiceIT.class);
 
     /**
      * set to true to run tests against actual GCM servers - but they may not
