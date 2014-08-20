@@ -537,9 +537,24 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     public void refreshIndex() {
+
+        // refresh factory's indexes, will refresh all three index scopes
         managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_APPS_INDEX_SCOPE ).refresh();
-        managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_ORGS_INDEX_SCOPE ).refresh();
-        managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_PROPS_INDEX_SCOPE ).refresh();
+
+        // these are unecessary because of above call
+        //managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_ORGS_INDEX_SCOPE ).refresh();
+        //managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_PROPS_INDEX_SCOPE ).refresh();
+
+        // refresh special indexes without calling EntityManager refresh because stack overflow 
+        IndexScope mscope = new IndexScopeImpl( 
+                new SimpleId( getManagementAppId(), "application"), 
+                new SimpleId( getManagementAppId(), "application"), "dummy");
+        managerCache.getEntityIndex( mscope ).refresh();
+
+        IndexScope dscope = new IndexScopeImpl( 
+                new SimpleId( getDefaultAppId(), "application"), 
+                new SimpleId( getDefaultAppId(), "application"), "dummy");
+        managerCache.getEntityIndex( dscope ).refresh();
     }
 
     @Override

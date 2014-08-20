@@ -112,7 +112,7 @@ public class MUUserResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore // Because JSP is broken in test setup, possibly due to JSTL classloader issue
+    //@Ignore // Because JSP is broken in test setup, possibly due to JSTL classloader issue
     // see also: https://issues.apache.org/jira/browse/USERGRID-209 
     public void testUnconfirmedAdminLogin() throws Exception {
 
@@ -140,8 +140,8 @@ public class MUUserResourceIT extends AbstractRestIT {
             String passwd = "testpassword";
             OrganizationOwnerInfo orgOwner;
 
-            orgOwner = setup.getMgmtSvc()
-                            .createOwnerAndOrganization( orgName, userName, appName, email, passwd, false, false );
+            orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( 
+                    orgName, userName, appName, email, passwd, false, false );
             assertNotNull( orgOwner );
             String returnedUsername = orgOwner.getOwner().getUsername();
             assertEquals( userName, returnedUsername );
@@ -155,8 +155,10 @@ public class MUUserResourceIT extends AbstractRestIT {
             // -------------------------------------------
             JsonNode node;
             try {
-                node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                        .queryParam( "username", userName ).queryParam( "password", passwd )
+                node = mapper.readTree( resource().path( "/management/token" )
+                        .queryParam( "grant_type", "password" )
+                        .queryParam( "username", userName )
+                        .queryParam( "password", passwd )
                         .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
                 fail( "Unconfirmed users should not be authorized to authenticate." );
@@ -185,8 +187,8 @@ public class MUUserResourceIT extends AbstractRestIT {
             String token = getTokenFromMessage( confirmation );
             LOG.info( token );
 
-            ActivationState state =
-                    setup.getMgmtSvc().handleConfirmationTokenForAdminUser( orgOwner.getOwner().getUuid(), token );
+            ActivationState state = setup.getMgmtSvc().handleConfirmationTokenForAdminUser( 
+                    orgOwner.getOwner().getUuid(), token );
             assertEquals( ActivationState.ACTIVATED, state );
 
             Message activation = inbox.get( 1 );
@@ -195,13 +197,15 @@ public class MUUserResourceIT extends AbstractRestIT {
             client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
             client.processMail();
 
-        refreshIndex(context.getOrgName(), context.getAppName());
+            refreshIndex(orgName, appName);
 
             // Attempt to authenticate again but this time should pass
             // -------------------------------------------
 
-            node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                    .queryParam( "username", userName ).queryParam( "password", passwd )
+            node = mapper.readTree( resource().path( "/management/token" )
+                    .queryParam( "grant_type", "password" )
+                    .queryParam( "username", userName )
+                    .queryParam( "password", passwd )
                     .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
             assertNotNull( node );
