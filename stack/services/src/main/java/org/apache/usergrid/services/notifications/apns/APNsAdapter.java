@@ -218,7 +218,7 @@ public class APNsAdapter implements ProviderAdapter {
         } else {
             payload = JSON.toString(objPayload);
         }
-        if (payload.length() > 256) {
+        if (payload.length() > 2048) {
             throw new IllegalArgumentException(
                     "Apple APNs payloads must be 256 characters or less");
         }
