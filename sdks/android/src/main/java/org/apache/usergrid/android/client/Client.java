@@ -73,28 +73,28 @@ public class Client extends org.usergrid.java.client.Client {
 	 * @see apiRequest 
 	 * @see doHttpRequest
 	 */
-	protected static final String HTTP_METHOD_DELETE = "DELETE";
+	protected static final HttpMethod HTTP_METHOD_DELETE = HttpMethod.DELETE;
 
 	/**
 	 * Standard HTTP methods use in generic request methods
 	 * @see apiRequest 
 	 * @see doHttpRequest
 	 */
-	protected static final String HTTP_METHOD_GET    = "GET";
+	protected static final HttpMethod HTTP_METHOD_GET    = HttpMethod.GET;
 
 	/**
 	 * Standard HTTP methods use in generic request methods
 	 * @see apiRequest 
 	 * @see doHttpRequest
 	 */
-	protected static final String HTTP_METHOD_POST   = "POST";
+	protected static final HttpMethod HTTP_METHOD_POST   = HttpMethod.POST;
 
 	/**
 	 * Standard HTTP methods use in generic request methods
 	 * @see apiRequest 
 	 * @see doHttpRequest
 	 */
-	protected static final String HTTP_METHOD_PUT    = "PUT";
+	protected static final HttpMethod HTTP_METHOD_PUT    = HttpMethod.PUT;
 
 	private String organizationId;
   private String applicationId;
