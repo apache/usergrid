@@ -520,61 +520,9 @@ public class CpEntityManager implements EntityManager {
             }
         }
         
-        // update item in collection index
-        IndexScope indexScope = new IndexScopeImpl(
-            appScope.getApplication(), 
-            appScope.getApplication(), 
-            getCollectionScopeNameFromEntityType( entity.getType() ));
-        EntityIndex ei = managerCache.getEntityIndex( indexScope );
-        ei.index( cpEntity );
-
-        // update all items index
-        IndexScope allTypesIndexScope = new IndexScopeImpl( 
-            appScope.getApplication(), 
-            appScope.getApplication(), 
-            ALL_TYPES);
-        EntityIndex aei = managerCache.getEntityIndex( allTypesIndexScope );
-        aei.index( cpEntity );
-
-        // next, update entity in every collection and connection scope in which it is indexed 
-        updateEntityIndexes( entity, cpEntity );
-    }
-
-
-    private void updateEntityIndexes( 
-            Entity entity, org.apache.usergrid.persistence.model.entity.Entity cpEntity )
-            throws Exception {
-
-        RelationManager rm = getRelationManager( entity );
-        Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
-
-        logger.debug( "Updating indexes of all {} collections owning the entity", 
-                owners.keySet().size() );
-
-        for ( String ownerType : owners.keySet() ) {
-            Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
-
-            for ( UUID uuid : collectionsByUuid.keySet() ) {
-                Set<String> collections = collectionsByUuid.get( uuid );
-                for ( String coll : collections ) {
-
-                    if ( coll == null || coll.trim().isEmpty() ) {
-                        logger.warn( "Ignoring empty collection name for owner {}:{}", 
-                                uuid, ownerType );
-                        break;
-                    }
-
-                    IndexScope indexScope = new IndexScopeImpl( 
-                        appScope.getApplication(), 
-                        new SimpleId( uuid, ownerType ),
-                        getCollectionScopeNameFromCollectionName( coll ) );
-
-                    EntityIndex ei = managerCache.getEntityIndex( indexScope );
-
-                    ei.index( cpEntity );
-                }
-            }
-        }
+        // update in all containing collections and connection indexes
+        CpRelationManager rm = (CpRelationManager)getRelationManager( entity );
+        rm.updateContainingCollectionAndCollectionIndexes( entity, cpEntity );
     }
 
 
@@ -1056,8 +1004,9 @@ public class CpEntityManager implements EntityManager {
 
         ei.index( cpEntity );
 
-        // update entity in every collection and connection scope in which it is indexed
-        updateEntityIndexes( get( entityRef ), cpEntity );
+        // update in all containing collections and connection indexes
+        CpRelationManager rm = (CpRelationManager)getRelationManager( entityRef );
+        rm.updateContainingCollectionAndCollectionIndexes( get( entityRef ), cpEntity );
     }
 
 

@@ -271,12 +271,20 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    static boolean isConnectionEdgeType( String type )  {
+    static boolean isCollectionEdgeType( String type )  {
         return type.endsWith( EDGE_COLL_SUFFIX );
     }
-
+    
+    static boolean isConnectionEdgeType( String type )  {
+        return type.endsWith( EDGE_CONN_SUFFIX );
+    }
     
     public String getConnectionName( String edgeType ) {
+        String[] parts = edgeType.split("\\|");
+        return parts[0];
+    }
+
+    public String getCollectionName( String edgeType ) {
         String[] parts = edgeType.split("\\|");
         return parts[0];
     }
@@ -376,11 +384,13 @@ public class CpRelationManager implements RelationManager {
                 EntityRef eref = new SimpleEntityRef( 
                     edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
 
-                String connectionName = null;
+                String name = null;
                 if ( isConnectionEdgeType( edge.getType() )) {
-                    connectionName = getConnectionName( edge.getType() );
+                    name = getConnectionName( edge.getType() );
+                } else {
+                    name = getCollectionName( edge.getType() );
                 }
-                addMapSet( results, eref, connectionName );
+                addMapSet( results, eref, name );
             }
 
             if ( limit > 0 && results.keySet().size() >= limit ) {
@@ -388,16 +398,84 @@ public class CpRelationManager implements RelationManager {
             }
         }
 
-        // should not need to do this
-//        if ( connType == null ) {
-//
-//            EntityRef applicationRef = new SimpleEntityRef( TYPE_APPLICATION, applicationId );
-//            if ( !results.containsKey( applicationRef ) ) {
-//
-//                addMapSet( results, applicationRef, 
-//                    CpEntityManager.getCollectionScopeNameFromEntityType( headEntity.getType() ) );
-//            }
-//        }
+        return results;
+    }
+
+
+    public List<String> updateContainingCollectionAndCollectionIndexes( 
+        Entity entity, org.apache.usergrid.persistence.model.entity.Entity cpEntity ) {
+
+        List<String> results = new ArrayList<String>();
+
+        GraphManager gm = managerCache.getGraphManager(applicationScope);
+
+        Iterator<String> edgeTypesToTarget = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
+            cpHeadEntity.getId(), null, null) ).toBlockingObservable().getIterator();
+
+        logger.debug("updateContainingCollectionsAndCollections(): "
+                + "Searched for edges to target {}:{}\n   in scope {}\n   found: {}", 
+            new Object[] {
+                cpHeadEntity.getId().getType(), 
+                cpHeadEntity.getId().getUuid(), 
+                applicationScope.getApplication(),
+                edgeTypesToTarget.hasNext()
+        });
+
+        // loop through all types of edge to target
+        int count = 0;
+        while ( edgeTypesToTarget.hasNext() ) {
+
+            // get all edges of the type
+            String etype = edgeTypesToTarget.next();
+
+            Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
+                cpHeadEntity.getId(), etype, Long.MAX_VALUE, null ));
+
+            // loop through edges of that type
+            Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
+            while ( iter.hasNext() ) {
+
+                Edge edge = iter.next();
+
+                EntityRef sourceEntity = new SimpleEntityRef( 
+                    edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
+
+                // reindex the entity in the source entity's collection or connection index
+
+                IndexScope indexScope;
+                if ( isCollectionEdgeType( edge.getType() )) {
+
+                    String collName = getCollectionName( edge.getType() ); 
+                    indexScope = new IndexScopeImpl(
+                        applicationScope.getApplication(),
+                        new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
+                        CpEntityManager.getCollectionScopeNameFromCollectionName( collName ));
+
+                } else {
+
+                    String connName = getCollectionName( edge.getType() ); 
+                    indexScope = new IndexScopeImpl(
+                        applicationScope.getApplication(),
+                        new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
+                        CpEntityManager.getConnectionScopeName( cpHeadEntity.getId().getType(), connName ));
+                } 
+           
+                EntityIndex ei = managerCache.getEntityIndex(indexScope);
+                ei.index(cpEntity);
+
+                // reindex the entity in the source entity's all-types index
+                
+                indexScope = new IndexScopeImpl(
+                    applicationScope.getApplication(),
+                    new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
+                    ALL_TYPES);
+                ei = managerCache.getEntityIndex(indexScope);
+                ei.index(cpEntity);
+
+                count++;
+            }
+        }
+        logger.debug("updateContainingCollectionsAndCollections() updated {} indexes", count);
         return results;
     }
 
