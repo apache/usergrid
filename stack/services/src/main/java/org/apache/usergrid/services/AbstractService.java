@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.schema.EntityInfo;
+import org.apache.usergrid.persistence.schema.PropertyInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -472,7 +473,8 @@ public abstract class AbstractService implements Service {
         final EntityInfo entityInfo = schema.getEntityInfo(entityType);
         if (entityInfo != null) {
             for (String propertyName : properties.keySet()) {
-                if (!entityInfo.isPropertyMutable(propertyName)) {
+                PropertyInfo propertyInfo = entityInfo.getProperty(propertyName);
+                if (propertyInfo!=null && !propertyInfo.isMutable()) {
                     throw new IllegalArgumentException("Cannot modify immutable property[" + propertyName + "] of entity " + entityType);
                 }
             }
