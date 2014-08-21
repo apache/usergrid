@@ -54,3 +54,4 @@ portal/js/templates.js
 /portal/js/generated/
 
 /portal/js/generated-templates/
+/release/target/
