@@ -74,7 +74,6 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
     private final InflectionUtils utils;
     private AtomicLong consecutiveEmptyQueues = new AtomicLong();
     private Long pushAutoExpireAfter = null;
-    static final String MESSAGE_PROPERTY_DEVICE_UUID = "deviceUUID";
 
     public final Map<String, ProviderAdapter> providerAdapters =   new HashMap<String, ProviderAdapter>(3);
     {
@@ -173,8 +172,7 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
                                         sketch.add(hash,1);
                                     }
                                     maySchedule |= deviceCount.incrementAndGet() % BATCH_SIZE == 0;
-                                    Message message = new Message();
-                                    message.setProperty(MESSAGE_PROPERTY_DEVICE_UUID, deviceRef.getUuid());
+                                    QueueMessage message = new QueueMessage(deviceRef);
                                     qm.postToQueue(queueName, message);
                                     if(notification.getQueued() == null){
                                         // update queued time
@@ -329,7 +327,7 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
                             return messageObservable.map(new Func1<Message, Message>() {
                                 @Override
                                 public Message call(Message message) {
-                                    UUID deviceUUID = (UUID) message.getObjectProperty(MESSAGE_PROPERTY_DEVICE_UUID);
+                                    UUID deviceUUID =QueueMessage.generate(message).getUuid();
                                     boolean foundNotifier = false;
                                     for (Map.Entry<String, Object> entry : payloads.entrySet()) {
                                         try {
