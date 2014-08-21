@@ -1,8 +1,8 @@
 'use strict';
-var util = require('./util');
+var util = require('./../protractor/util');
 describe('Test User Profile', function () {
 
-  var newUser = 'sfeldman+apijeeps2@apigee.com';
+  var newUser = 'rsimpson+test2@apigee.com';
   beforeEach(function(){
     util.login();
   })
