@@ -21,7 +21,8 @@
     <parent>
         <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>0.0.29</version>
+        <version>0.0.29-SNAPSHOT</version>
+        <relativePath>../</relativePath>
     </parent>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
