@@ -1789,7 +1789,8 @@
                     <exclude>**/*.asc</exclude>
                     <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
-		            <exclude>**/awscluster/**</exclude>
+                  <exclude>**/doc/**</exclude>
+                  <exclude>**/awscluster/**</exclude>
                     <exclude>**/aws.properties</exclude>
                     <exclude>**/launcher-vagrant/**</exclude>
                     <exclude>**/usergrid-custom.properties</exclude>
