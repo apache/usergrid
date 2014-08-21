@@ -344,7 +344,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.clear();
         StringBuilder sb = new StringBuilder();
         sb.append("{\"x\":\"");
-        while (sb.length() < 255) {
+        while (sb.length() < 2047) {
             sb.append("x");
         }
         sb.append("\"}");
@@ -358,7 +358,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
             fail("invalid payload should have been rejected");
         } catch (Exception ex) {
             assertEquals(ex.getMessage(),
-                    "java.lang.IllegalArgumentException: Apple APNs payloads must be 256 characters or less");
+                    "java.lang.IllegalArgumentException: Apple APNs payloads must be 2048 characters or less");
             // ok
         }
     }
