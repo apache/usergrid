@@ -77,6 +77,10 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
     export TOMCAT_RAM=6G
     export TOMCAT_THREADS=1600
 ;;
+'c3.2xlarge' )
+    export TOMCAT_RAM=12G
+    export TOMCAT_THREADS=2000
+;;
 'c3.4xlarge' )
     export TOMCAT_RAM=24G
     export TOMCAT_THREADS=4000
