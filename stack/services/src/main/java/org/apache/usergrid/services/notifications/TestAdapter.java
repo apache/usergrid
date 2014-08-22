@@ -64,23 +64,23 @@ public class TestAdapter implements ProviderAdapter {
         final APNsNotification apnsNotification = APNsNotification.create(
                 "", payload.toString(), notification, tracker);
 
-        if (pool == null) {
+       // if (pool == null) {
             apnsNotification.messageSent();
 
-        } else {
-            pool.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(DELAY);
-                        apnsNotification.messageSent();
-                        log.debug("messageSent() - " + payload.toString());
-                    } catch (Exception e) {
-                        log.error("messageSent() returned error", e);
-                    }
-                }
-            });
-        }
+//        } else {
+//            pool.submit(new Runnable() {
+//                @Override
+//                public void run() {
+//                    try {
+//                        Thread.sleep(DELAY);
+//                        apnsNotification.messageSent();
+//                        log.debug("messageSent() - " + payload.toString());
+//                    } catch (Exception e) {
+//                        log.error("messageSent() returned error", e);
+//                    }
+//                }
+//            });
+//        }
     }
 
     @Override
