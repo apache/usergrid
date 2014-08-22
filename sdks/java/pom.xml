@@ -10,14 +10,14 @@
     <parent>
         <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>0.0.29-SNAPSHOT</version>
+        <version>1.0.0</version>
         <relativePath>../../stack</relativePath>
     </parent>
 	
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid-java-client</artifactId>
-    <version>0.0.9-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
     <description>A Java client for usergrid</description>
     <url>http://usergrid.incubator.apache.org</url>

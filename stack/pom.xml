@@ -27,7 +27,7 @@
 
   <groupId>org.apache.usergrid</groupId>
   <artifactId>usergrid</artifactId>
-  <version>0.0.29</version>
+  <version>1.0.0</version>
   <name>Usergrid Parent</name>
   <description>Parent module for the Apache Usergrid Project</description>
   <packaging>pom</packaging>
