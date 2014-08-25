@@ -85,7 +85,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- you can override these via MAVEN_OPTS -->
-    <ug.heapmax>4096m</ug.heapmax>
+    <ug.heapmax>1024m</ug.heapmax>
     <ug.heapmin>1024m</ug.heapmin>
 
     <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
