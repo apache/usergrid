@@ -357,7 +357,7 @@ public class CassandraResource extends ExternalResource {
         System.setProperty( "cassandra." + NATIVE_TRANSPORT_PORT_KEY, Integer.toString( nativeTransportPort ) );
 
         LOG.info("before() test, setting system properties for ports : "
-                + "[rpc, storage, sslStoage, native] = [{}, {}, {}, {}]", 
+                + "[rpc, storage, sslStorage, native] = [{}, {}, {}, {}]", 
                 new Object[] {rpcPort, storagePort, sslStoragePort, nativeTransportPort});
         if ( !newYamlFile.exists() ) {
             throw new RuntimeException( "Cannot find new Yaml file: " + newYamlFile );
@@ -443,7 +443,7 @@ public class CassandraResource extends ExternalResource {
         System.setProperty( "cassandra." + NATIVE_TRANSPORT_PORT_KEY, Integer.toString( nativeTransportPort ) );
 
         LOG.info("before() test, setting system properties for ports : "
-                + "[rpc, storage, sslStoage, native] = [{}, {}, {}, {}]", 
+                + "[rpc, storage, sslStorage, native] = [{}, {}, {}, {}]", 
                 new Object[] {rpcPort, storagePort, sslStoragePort, nativeTransportPort});
 
         if ( !newYamlFile.exists() ) {

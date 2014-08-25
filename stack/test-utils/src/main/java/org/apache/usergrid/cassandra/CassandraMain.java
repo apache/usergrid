@@ -56,7 +56,7 @@ public class CassandraMain {
         System.setProperty( "cassandra.tempName", tmpDirName );
 
         LOG.info("Starting forked Cassandra: test, setting system properties for ports : "
-                + "[rpc, storage, sslStoage, native] = [{}, {}, {}, {}]", 
+                + "[rpc, storage, sslStorage, native] = [{}, {}, {}, {}]", 
                 new Object[] {rpcPort, storagePort, sslStoragePort, nativeTransportPort});
 
         CassandraDaemon cassandraDaemon = new CassandraDaemon();

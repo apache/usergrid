@@ -26,7 +26,9 @@
 
   <properties>
     <!-- Up to 30x parallelism can be used -->
-    <core.it.forkCount>1</core.it.forkCount>
+    <core.it.forkCount>3</core.it.forkCount>
+    <core.it.reuseForks>false</core.it.reuseForks>
+    <core.it.parallel>suites</core.it.parallel>
     <core.it.suite.concurrency>1</core.it.suite.concurrency>
   </properties>
 
@@ -63,10 +65,10 @@
                 <suite.concurrency>${core.it.suite.concurrency}</suite.concurrency>
               </systemPropertyVariables>
 
-              <parallel>both</parallel>
+              <parallel>${core.it.parallel}</parallel>
               <forkCount>${core.it.forkCount}</forkCount>
-              <reuseForks>false</reuseForks>
-
+              <reuseForks>${core.it.reuseForks}</reuseForks>
+				
               <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
               </argLine>
 
@@ -166,7 +168,9 @@
             <storage-config>${basedir}/src/test/conf</storage-config>
             <target.directory>${project.build.directory}</target.directory>
           </systemPropertyVariables>
-          <forkMode>once</forkMode>
+          <parallel>classes</parallel>
+          <forkCount>${core.it.forkCount}</forkCount>
+          <reuseForks>${core.it.reuseForks}</reuseForks>
           <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
 
           <includes>

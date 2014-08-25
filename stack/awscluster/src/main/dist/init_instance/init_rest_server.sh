@@ -77,10 +77,13 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
     export TOMCAT_RAM=6G
     export TOMCAT_THREADS=1600
 ;;
+'c3.2xlarge' )
+    export TOMCAT_RAM=12G
+    export TOMCAT_THREADS=2000
+;;
 'c3.4xlarge' )
     export TOMCAT_RAM=24G
     export TOMCAT_THREADS=4000
-    export NOFILE=200000
 esac
 
 export TOMCAT_CONNECTIONS=10000
@@ -88,6 +91,7 @@ sudo sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM}/g" /etc/default/to
 sudo sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${TOMCAT_THREADS}\" maxConnections=\"${TOMCAT_CONNECTIONS}\"/g" /var/lib/tomcat7/conf/server.xml
 
 # set file limits
+sudo sed -i.bak "s/# \/etc\/init\.d\/tomcat7 -- startup script for the Tomcat 6 servlet engine/ulimit ${NOFILE}/" /etc/init.d/tomcat7
 sudo sed -i.bak "/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
 echo "$NOFILE" | sudo tee > /proc/sys/fs/nr_open
 echo "$NOFILE" | sudo tee > /proc/sys/fs/file-max

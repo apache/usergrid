@@ -22,15 +22,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
 import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class ServiceInvocationIT extends AbstractServiceIT {
@@ -102,28 +100,25 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", cat.getUuid() );
 
-        // TODO: uncomment this code and fix whatever problem is causing it to fail
-        // see also: https://issues.apache.org/jira/browse/USERGRID-214
+        app.put( "eats", "petfood" );
 
-//        app.put( "eats", "petfood" );
-//
-//        app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", "cats", "dylan" );
-//
-//        app.put( "Todays special", "Coffee" );
-//
-//        app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", "restaurants",
-//                Query.fromQL( "select * where name='Brickhouse'" ) );
-//
-//        app.testRequest( ServiceAction.DELETE, 1, null, "users", user.getUuid(), "connections", "likes",
-//                restaurant.getUuid() );
-//
-//        app.testRequest( ServiceAction.GET, 2, null, "users", "edanuff", "connections" );
-//
-//        app.testRequest( ServiceAction.GET, 1, null, "users", "edanuff", "likes", "restaurants" );
-//
-//        UUID uuid = UUIDGenerator.newTimeUUID();
-//        app.put( "visits", 5 );
-//        app.testRequest( ServiceAction.PUT, 1, "devices", uuid );
+        app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", "cats", "dylan" );
+
+        app.put( "Todays special", "Coffee" );
+
+        app.testRequest( ServiceAction.PUT, 1, "users", "edanuff", "likes", "restaurants",
+                Query.fromQL( "select * where name='Brickhouse'" ) );
+
+        app.testRequest( ServiceAction.DELETE, 1, null, "users", user.getUuid(), "connections", "likes",
+                restaurant.getUuid() );
+
+        app.testRequest( ServiceAction.GET, 2, null, "users", "edanuff", "connections" );
+
+        app.testRequest( ServiceAction.GET, 1, null, "users", "edanuff", "likes", "restaurants" );
+
+        UUID uuid = UUIDGenerator.newTimeUUID();
+        app.put( "visits", 5 );
+        app.testRequest( ServiceAction.PUT, 1, "devices", uuid );
     }
 
 

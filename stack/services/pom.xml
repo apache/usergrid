@@ -26,7 +26,9 @@
 
   <!-- Override these properties in your settings.xml in an active profile -->
   <properties>
-    <services.it.forkCount>2</services.it.forkCount>
+    <services.it.forkCount>3</services.it.forkCount>
+    <services.it.reuseForks>true</services.it.reuseForks>
+    <services.it.parallel>suites</services.it.parallel>
   </properties>
 
   <artifactId>usergrid-services</artifactId>
@@ -63,7 +65,9 @@
                 <storage-config>${basedir}/src/test/conf</storage-config>
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
-              <forkMode>once</forkMode>
+			<parallel>${services.it.parallel}</parallel>
+            <forkCount>${services.it.forkCount}</forkCount>
+            <reuseForks>${services.it.reuseForks}</reuseForks>
               <!-- TODO: make this into a small configuration but based on settings.xml -->
               <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
 
@@ -100,9 +104,9 @@
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
 
-              <parallel>both</parallel>
-              <forkCount>${services.it.forkCount}</forkCount>
-              <reuseForks>false</reuseForks>
+			<parallel>${services.it.parallel}</parallel>
+            <forkCount>${services.it.forkCount}</forkCount>
+            <reuseForks>${services.it.reuseForks}</reuseForks>
 
               <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
@@ -164,7 +168,9 @@
                 <storage-config>${basedir}/src/test/conf</storage-config>
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
-              <forkMode>once</forkMode>
+			<parallel>${services.it.parallel}</parallel>
+            <forkCount>${services.it.forkCount}</forkCount>
+            <reuseForks>${services.it.reuseForks}</reuseForks>
               <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
                <!--  -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar-->
@@ -206,7 +212,9 @@
                 <storage-config>${basedir}/src/test/conf</storage-config>
                 <target.directory>${project.build.directory}</target.directory>
               </systemPropertyVariables>
-              <forkMode>once</forkMode>
+			<parallel>${services.it.parallel}</parallel>
+            <forkCount>${services.it.forkCount}</forkCount>
+            <reuseForks>${services.it.reuseForks}</reuseForks>
               <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
               <argLine>
                 <!-- -javaagent:${settings.localRepository}/org/powermock/powermock-module-javaagent/1.5.1/powermock-module-javaagent-1.5.1.jar -->
@@ -270,9 +278,9 @@
             <target.directory>${project.build.directory}</target.directory>
           </systemPropertyVariables>
 
-          <parallel>both</parallel>
-          <forkCount>${services.it.forkCount}</forkCount>
-          <reuseForks>false</reuseForks>
+			<parallel>${services.it.parallel}</parallel>
+            <forkCount>${services.it.forkCount}</forkCount>
+            <reuseForks>${services.it.reuseForks}</reuseForks>
 
           <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
           <argLine>

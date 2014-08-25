@@ -116,6 +116,10 @@
     <tika.version>1.4</tika.version>
     <elasticsearch.version>1.2.3</elasticsearch.version>
     <metrics.version>3.0.0</metrics.version>
+    <usergrid.it.forkCount>3</usergrid.it.forkCount>
+    <usergrid.it.reuseForks>false</usergrid.it.reuseForks>
+    <usergrid.it.parallel>suites</usergrid.it.parallel>
+
   </properties>
 
   <licenses>
@@ -1669,6 +1673,10 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.15</version>
           <configuration>
+              <parallel>${usergrid.it.parallel}</parallel>
+              <forkCount>${usergrid.it.forkCount}</forkCount>
+              <reuseForks>${usergrid.it.reuseForks}</reuseForks>
+          	
             <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
           </configuration>
         </plugin>
