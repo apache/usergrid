@@ -18,7 +18,6 @@ package org.apache.usergrid.persistence.query;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,9 +27,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.cassandra.QueryProcessor;
+import org.apache.usergrid.persistence.index.query.Query;
 
 import static org.junit.Assert.assertEquals;
 

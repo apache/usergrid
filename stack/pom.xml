@@ -198,11 +198,11 @@
     <module>core</module>
     <module>services</module>
     <module>rest</module>
-<!--    <module>tools</module>
+    <module>tools</module>
     <module>websocket</module>
     <module>launcher</module>
     <module>mongo-emulator</module>
-    <module>query-validator</module>-->
+    <module>query-validator</module>
   </modules>
 
   <dependencyManagement>
@@ -1840,6 +1840,7 @@
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
+                    <exclude>**/dummy.txt</exclude>
                     <exclude>**/cloudbees.xml</exclude>
 
                 </excludes>
@@ -1946,13 +1947,6 @@
     	<tag>HEAD</tag>
     	<developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</developerConnection>
     </scm>
+
 </project>
 
-                    <exclude>**/src/test/resources/**</exclude>
-                    <exclude>**/src/main/dist/lib/**</exclude>
-                    <exclude>**/src/main/dist/webapps/**</exclude>
-
-                    <!-- TODO: need to add headers to many files in corepersistence -->
-                    <exclude>**/launcher-vagrant/**</exclude>
-                    <exclude>**/corepersistence/**</exclude>
-                    <exclude>**/awscluster/**</exclude>

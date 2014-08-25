@@ -17,31 +17,22 @@
 
 package org.apache.usergrid.rest.management;
 
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
-
 import com.fasterxml.jackson.databind.JsonNode;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import javax.ws.rs.core.MediaType;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
+import javax.ws.rs.core.MediaType;
+import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.rest.AbstractRestIT;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import org.junit.Ignore;
+import org.junit.Test;
 
 
-/**
- *
- *
- */
 @Concurrent
 public class ExportResourceIT extends AbstractRestIT {
 

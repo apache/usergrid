@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 
 /**
@@ -44,8 +43,10 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         int failCount = Integer.parseInt( props.getProperty( FAIL_PROP ) );
         long sleepTime = Long.parseLong( props.getProperty( RUNLOOP_PROP ) );
 
-        FailureJobExceuction job = cassandraResource.getBean( 
-                "failureJobExceuction", FailureJobExceuction.class );
+        FailureJobExecution job = cassandraResource.getBean( 
+                "failureJobExceuction", FailureJobExecution.class );
+
+        int totalAttempts = failCount + 1;
 
         job.setLatch( failCount );
 
@@ -53,10 +54,6 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
 
         JobData returned = scheduler.createJob( 
                 "failureJobExceuction", System.currentTimeMillis(), new JobData() );
-
-        scheduler.refreshIndex();
-
-
 
         final long waitTime = ( failCount + 2 ) * sleepTime + 5000L ;
 
@@ -78,8 +75,6 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         assertTrue( failCount + " failures resulted", getJobListener().getFailureCount() == failCount );
         assertTrue( 1 + " success resulted", getJobListener().getSuccessCount() == 1 );
 
-
-        scheduler.refreshIndex();
 
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 

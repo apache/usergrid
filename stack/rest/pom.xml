@@ -208,26 +208,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-install-plugin</artifactId>
-                <version>2.3.1</version>
-                <executions>
-                    <execution>
-                        <id>install jar</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <packaging>jar</packaging>
-                            <artifactId>${project.artifactId}</artifactId>
-                            <groupId>${project.groupId}</groupId>
-                            <version>${project.version}</version>
-                            <file>
-                                ${project.build.directory}/${project.artifactId}-${project.version}.jar
-                            </file>
-                        </configuration>
-                    </execution>
-                </executions>
+                <version>2.5.1</version>
             </plugin>
+
         </plugins>
     </build>
 
@@ -305,7 +288,7 @@
         </dependency>
 
         <dependency>
-            <groupId>net.tanesha.recaptcha4j</groupId>
+            <groupId>com.google.code.maven-play-plugin.net.tanesha.recaptcha4j</groupId>
             <artifactId>recaptcha4j</artifactId>
         </dependency>
 
