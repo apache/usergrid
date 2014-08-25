@@ -91,16 +91,16 @@ sudo sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM}/g" /etc/default/to
 sudo sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${TOMCAT_THREADS}\" maxConnections=\"${TOMCAT_CONNECTIONS}\"/g" /var/lib/tomcat7/conf/server.xml
 
 # set file limits
-sudo sed -i.bak "s/# \/etc\/init\.d\/tomcat7 -- startup script for the Tomcat 6 servlet engine/ulimit ${NOFILE}/" /etc/init.d/tomcat7
-sudo sed -i.bak "/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
+sudo sed -i.bak "s/# \/etc\/init\.d\/tomcat7 -- startup script for the Tomcat 6 servlet engine/ulimit -n ${NOFILE}/" /etc/init.d/tomcat7
+sudo sed -i.bak "s/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
 echo "$NOFILE" | sudo tee > /proc/sys/fs/nr_open
 echo "$NOFILE" | sudo tee > /proc/sys/fs/file-max
 cat >> /etc/pam.d/su << EOF
 session    required   pam_limits.so
 EOF
-ulimit $NOFILE
+ulimit -n $NOFILE
 
-# increase system IP port limits, and ensure change persistence after reboot
+# increase system IP port limits (do we really need this for Tomcat?)
 sysctl -w net.ipv4.ip_local_port_range="1024 65535"
 cat >> /etc/sysctl.conf << EOF
 net.ipv4.ip_local_port_range = 1024 65535
