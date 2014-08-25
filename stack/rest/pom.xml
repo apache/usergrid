@@ -33,7 +33,8 @@
     <properties>
         <!-- If you got the resources, max parallelism = 6 forks -->
         <rest.it.forkCount>1</rest.it.forkCount>
-        <core.it.suite.concurrency>1</core.it.suite.concurrency>
+        <rest.it.reuseForks>false</rest.it.reuseForks>
+        <rest.it.parallel>suites</rest.it.parallel>
     </properties>
 
     <profiles>
@@ -56,10 +57,9 @@
                             </systemPropertyVariables>
 
                             <forkCount>${rest.it.forkCount}</forkCount>
-                            <reuseForks>false</reuseForks>
+                            <reuseForks>${rest.it.reuseForks}</reuseForks>
 
-                            <parallel>false</parallel>
-                            <perCoreThreadCount>false</perCoreThreadCount>
+                            <parallel>${rest.it.parallel}</parallel>
 
                             <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
 
@@ -130,6 +130,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+        			<parallel>${rest.it.parallel}</parallel>
+                    <forkCount>${rest.it.forkCount}</forkCount>
+                    <reuseForks>${rest.it.reuseForks}</reuseForks>
                     <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
                 </configuration>
             </plugin>
