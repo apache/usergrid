@@ -1,13 +1,12 @@
 {
   "name": "usergrid-portal",
-  "version": "2.0.14",
+  "version": "2.0.16",
   "ignore": [
     ".jshintrc",
     "**/*.txt",
     "js/",
     "css/",
     "img/",
-    "archive/",
     "dist/appsvc-ui/archive",
     "bower_components/",
     "scripts/",
@@ -21,14 +20,11 @@
     ".gitignore"
   ],
   "dependencies": {
-    "angularitics": "~0.8.7",
-    "apigee-sdk": "~2.0.8",
     "angular-intro.js": "~1.0.3",
     "sizzle": "1.10.16"
   },
   "devDependencies": {},
   "keywords": [
-    "apigee",
     "usergrid"
   ]
 }

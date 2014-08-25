@@ -38,6 +38,18 @@ public class NameIdentifierNode extends QueryNode {
     }
 
 
+    @Override
+    public int getCount() {
+        return 1;
+    }
+
+
+    @Override
+    public boolean ignoreHintSize() {
+        return false;
+    }
+
+
     public String getName() {
         return name;
     }

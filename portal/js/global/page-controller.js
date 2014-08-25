@@ -19,8 +19,8 @@
 'use strict';
 
 AppServices.Controllers.controller('PageCtrl',
-  ['ug', 'help', 'utility', '$scope',  '$rootScope', '$location', '$routeParams', '$q', '$route', '$log', '$analytics', '$sce',
-   function(ug, help, utility, $scope, $rootScope, $location, $routeParams, $q, $route, $log, $analytics, $sce) {
+  ['ug', 'help', 'utility', '$scope',  '$rootScope', '$location', '$routeParams', '$q', '$route', '$log', '$sce',
+   function(ug, help, utility, $scope, $rootScope, $location, $routeParams, $q, $route, $log, $sce) {
 
     var initScopeVariables = function() {
       var menuItems = Usergrid.options.menuItems;
@@ -51,7 +51,7 @@ AppServices.Controllers.controller('PageCtrl',
       $scope.queryStringApplied = false;
       $rootScope.autoUpdateTimer = Usergrid.config ? Usergrid.config.autoUpdateTimer : 61;
       $rootScope.requiresDeveloperKey = Usergrid.config ? Usergrid.config.client.requiresDeveloperKey : false;
-      $rootScope.loaded = $rootScope.activeUI = false;      
+      $rootScope.loaded = $rootScope.activeUI = false;
       for (var key in Usergrid.regex) {
         $scope[key] = Usergrid.regex[key];
       }
@@ -384,7 +384,6 @@ AppServices.Controllers.controller('PageCtrl',
         lastPage = ""; //remove the double load event
       }, 50);
       var path = window.location.pathname.replace("index-debug.html", "");
-      lastPage === "" && $analytics.pageTrack((path + $location.path()).replace("//", "/"));
       lastPage = $location.path();
     });
     $scope.$on('applications-received', function(event, applications) {
@@ -398,20 +397,20 @@ AppServices.Controllers.controller('PageCtrl',
     //first time user takes the tour
     $rootScope.startFirstTimeUser = function() {
       $rootScope.hideModal('introjs');
-      
+
       //for GA
       $rootScope.help.introjs_StartEvent();
-      
+
       //call introjs start
       $scope.startHelp();
     }
 
-    $scope.$on('helpJsonLoaded', function() {      
+    $scope.$on('helpJsonLoaded', function() {
       if ($rootScope.help.introjs_shouldLaunch == true) {
-        
+
         //for GA
         $rootScope.help.introjs_StartEvent();
-      
+
         //call introjs start
         $scope.startHelp();
         $rootScope.help.introjs_shouldLaunch = false;

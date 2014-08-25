@@ -17,7 +17,7 @@
  *under the License.
  * 
  * 
- * usergrid@0.11.0 2014-04-29 
+ * usergrid@0.11.0 2014-06-24 
  */
 var UsergridEventable = function() {
     throw Error("'UsergridEventable' is not intended to be invoked directly");
@@ -804,9 +804,9 @@ function doCallback(callback, params, context) {
    */
     Usergrid.Client.prototype.createCollection = function(options, callback) {
         options.client = this;
-        var collection = new Usergrid.Collection(options);
-        collection.fetch(function(err, response, collection) {
-            doCallback(callback, [ err, response, collection ], this);
+        return new Usergrid.Collection(options, function(err, data, collection) {
+            console.log("createCollection", arguments);
+            doCallback(callback, [ err, collection, data ]);
         });
     };
     /*
@@ -1485,12 +1485,11 @@ Usergrid.Entity.prototype.save = function(callback) {
  *
  * Updates the user's password
  */
-Usergrid.Entity.prototype.changePassword = function(oldpassword, password, newpassword, callback) {
+Usergrid.Entity.prototype.changePassword = function(oldpassword, newpassword, callback) {
     var self = this;
     if ("function" === typeof oldpassword && callback === undefined) {
         callback = oldpassword;
         oldpassword = self.get("oldpassword");
-        password = self.get("password");
         newpassword = self.get("newpassword");
     }
     self.set({
@@ -1505,7 +1504,6 @@ Usergrid.Entity.prototype.changePassword = function(oldpassword, password, newpa
             body: {
                 uuid: self.get("uuid"),
                 username: self.get("username"),
-                password: password,
                 oldpassword: oldpassword,
                 newpassword: newpassword
             }
@@ -1786,6 +1784,26 @@ Usergrid.Entity.prototype.getFollowers = function(callback) {
     });
 };
 
+Usergrid.Client.prototype.createRole = function(roleName, permissions, callback) {
+    var options = {
+        type: "role",
+        name: roleName
+    };
+    this.createEntity(options, function(err, response, entity) {
+        if (err) {
+            doCallback(callback, [ err, response, self ]);
+        } else {
+            entity.assignPermissions(permissions, function(err, data) {
+                if (err) {
+                    doCallback(callback, [ err, response, self ]);
+                } else {
+                    doCallback(callback, [ err, data, data.data ], self);
+                }
+            });
+        }
+    });
+};
+
 Usergrid.Entity.prototype.getRoles = function(callback) {
     var self = this;
     var endpoint = this.get("type") + "/" + this.get("uuid") + "/roles";
@@ -1799,6 +1817,122 @@ Usergrid.Entity.prototype.getRoles = function(callback) {
         }
         self.roles = data.entities;
         doCallback(callback, [ err, data, data.entities ], self);
+    });
+};
+
+Usergrid.Entity.prototype.assignRole = function(roleName, callback) {
+    var self = this;
+    var type = self.get("type");
+    var collection = type + "s";
+    var entityID;
+    if (type == "user" && this.get("username") != null) {
+        entityID = self.get("username");
+    } else if (type == "group" && this.get("name") != null) {
+        entityID = self.get("name");
+    } else if (this.get("uuid") != null) {
+        entityID = self.get("uuid");
+    }
+    if (type != "users" && type != "groups") {
+        doCallback(callback, [ new UsergridError("entity must be a group or user", "invalid_entity_type"), null, this ], this);
+    }
+    var endpoint = "roles/" + roleName + "/" + collection + "/" + entityID;
+    var options = {
+        method: "POST",
+        endpoint: endpoint
+    };
+    this._client.request(options, function(err, response) {
+        if (err) {
+            console.log("Could not assign role.");
+        }
+        doCallback(callback, [ err, response, self ]);
+    });
+};
+
+Usergrid.Entity.prototype.removeRole = function(roleName, callback) {
+    var self = this;
+    var type = self.get("type");
+    var collection = type + "s";
+    var entityID;
+    if (type == "user" && this.get("username") != null) {
+        entityID = this.get("username");
+    } else if (type == "group" && this.get("name") != null) {
+        entityID = this.get("name");
+    } else if (this.get("uuid") != null) {
+        entityID = this.get("uuid");
+    }
+    if (type != "users" && type != "groups") {
+        doCallback(callback, [ new UsergridError("entity must be a group or user", "invalid_entity_type"), null, this ], this);
+    }
+    var endpoint = "roles/" + roleName + "/" + collection + "/" + entityID;
+    var options = {
+        method: "DELETE",
+        endpoint: endpoint
+    };
+    this._client.request(options, function(err, response) {
+        if (err) {
+            console.log("Could not assign role.");
+        }
+        doCallback(callback, [ err, response, self ]);
+    });
+};
+
+Usergrid.Entity.prototype.assignPermissions = function(permissions, callback) {
+    var self = this;
+    var entityID;
+    var type = this.get("type");
+    if (type != "user" && type != "users" && type != "group" && type != "groups" && type != "role" && type != "roles") {
+        doCallback(callback, [ new UsergridError("entity must be a group, user, or role", "invalid_entity_type"), null, this ], this);
+    }
+    if (type == "user" && this.get("username") != null) {
+        entityID = this.get("username");
+    } else if (type == "group" && this.get("name") != null) {
+        entityID = this.get("name");
+    } else if (this.get("uuid") != null) {
+        entityID = this.get("uuid");
+    }
+    var endpoint = type + "/" + entityID + "/permissions";
+    var options = {
+        method: "POST",
+        endpoint: endpoint,
+        body: {
+            permission: permissions
+        }
+    };
+    this._client.request(options, function(err, data) {
+        if (err && self._client.logging) {
+            console.log("could not assign permissions");
+        }
+        doCallback(callback, [ err, data, data.data ], self);
+    });
+};
+
+Usergrid.Entity.prototype.removePermissions = function(permissions, callback) {
+    var self = this;
+    var entityID;
+    var type = this.get("type");
+    if (type != "user" && type != "users" && type != "group" && type != "groups" && type != "role" && type != "roles") {
+        doCallback(callback, [ new UsergridError("entity must be a group, user, or role", "invalid_entity_type"), null, this ], this);
+    }
+    if (type == "user" && this.get("username") != null) {
+        entityID = this.get("username");
+    } else if (type == "group" && this.get("name") != null) {
+        entityID = this.get("name");
+    } else if (this.get("uuid") != null) {
+        entityID = this.get("uuid");
+    }
+    var endpoint = type + "/" + entityID + "/permissions";
+    var options = {
+        method: "DELETE",
+        endpoint: endpoint,
+        qs: {
+            permission: permissions
+        }
+    };
+    this._client.request(options, function(err, data) {
+        if (err && self._client.logging) {
+            console.log("could not remove permissions");
+        }
+        doCallback(callback, [ err, data, data.params.permission ], self);
     });
 };
 
@@ -2409,7 +2543,7 @@ Usergrid.Group.prototype.remove = function(options, callback) {
     if (options.user) {
         options = {
             method: "DELETE",
-            endpoint: "groups/" + this._path + "/users/" + options.user.get("username")
+            endpoint: "groups/" + this._path + "/users/" + options.user.username
         };
         this._client.request(options, function(error, response) {
             if (error) {
@@ -2907,28 +3041,25 @@ Usergrid.Asset.prototype.addToFolder = function(options, callback) {
     }
 };
 
-/*
- *  Upload Asset data
- *
- *  @method upload
- *  @public
- *  @param {object} data Can be a javascript Blob or File object
- *  @returns {callback} callback(err, asset)
- */
-Usergrid.Asset.prototype.upload = function(data, callback) {
+Usergrid.Entity.prototype.attachAsset = function(file, callback) {
     if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
         doCallback(callback, [ new UsergridError("The File APIs are not fully supported by your browser."), null, this ], this);
         return;
     }
     var self = this;
     var args = arguments;
+    var type = this._data.type;
     var attempts = self.get("attempts");
     if (isNaN(attempts)) {
         attempts = 3;
     }
-    self.set("content-type", data.type);
-    self.set("size", data.size);
-    var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");
+    if (type != "assets" && type != "asset") {
+        var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, type, self.get("uuid") ].join("/");
+    } else {
+        self.set("content-type", file.type);
+        self.set("size", file.size);
+        var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");
+    }
     var xhr = new XMLHttpRequest();
     xhr.open("POST", endpoint, true);
     xhr.onerror = function(err) {
@@ -2938,24 +3069,84 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
         if (xhr.status >= 500 && attempts > 0) {
             self.set("attempts", --attempts);
             setTimeout(function() {
-                self.upload.apply(self, args);
+                self.attachAsset.apply(self, args);
             }, 100);
         } else if (xhr.status >= 300) {
             self.set("attempts");
             doCallback(callback, [ new UsergridError(JSON.parse(xhr.responseText)), xhr, self ], self);
         } else {
             self.set("attempts");
+            self.fetch();
             doCallback(callback, [ null, xhr, self ], self);
         }
     };
     var fr = new FileReader();
     fr.onload = function() {
         var binary = fr.result;
-        xhr.overrideMimeType("application/octet-stream");
-        xhr.setRequestHeader("Content-Type", "application/octet-stream");
+        if (type === "assets" || type === "asset") {
+            xhr.overrideMimeType("application/octet-stream");
+            xhr.setRequestHeader("Content-Type", "application/octet-stream");
+        }
         xhr.sendAsBinary(binary);
     };
-    fr.readAsBinaryString(data);
+    fr.readAsBinaryString(file);
+};
+
+/*
+ *  Upload Asset data
+ *
+ *  @method upload
+ *  @public
+ *  @param {object} data Can be a javascript Blob or File object
+ *  @returns {callback} callback(err, asset)
+ */
+Usergrid.Asset.prototype.upload = function(data, callback) {
+    this.attachAsset(data, function(err, response) {
+        if (!err) {
+            doCallback(callback, [ null, response, self ], self);
+        } else {
+            doCallback(callback, [ new UsergridError(err), response, self ], self);
+        }
+    });
+};
+
+/*
+ *  Download Asset data
+ *
+ *  @method download
+ *  @public
+ *  @returns {callback} callback(err, blob) blob is a javascript Blob object.
+ */
+Usergrid.Entity.prototype.downloadAsset = function(callback) {
+    var self = this;
+    var endpoint;
+    var type = this._data.type;
+    var xhr = new XMLHttpRequest();
+    if (type != "assets" && type != "asset") {
+        endpoint = [ this._client.URI, this._client.orgName, this._client.appName, type, self.get("uuid") ].join("/");
+    } else {
+        endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");
+    }
+    xhr.open("GET", endpoint, true);
+    xhr.responseType = "blob";
+    xhr.onload = function(ev) {
+        var blob = xhr.response;
+        if (type != "assets" && type != "asset") {
+            doCallback(callback, [ null, blob, xhr ], self);
+        } else {
+            doCallback(callback, [ null, xhr, self ], self);
+        }
+    };
+    xhr.onerror = function(err) {
+        callback(true, err);
+        doCallback(callback, [ new UsergridError(err), xhr, self ], self);
+    };
+    if (type != "assets" && type != "asset") {
+        xhr.setRequestHeader("Accept", self._data["file-metadata"]["content-type"]);
+    } else {
+        xhr.overrideMimeType(self.get("content-type"));
+    }
+    xhr.send();
 };
 
 /*
@@ -2966,21 +3157,13 @@ Usergrid.Asset.prototype.upload = function(data, callback) {
  *  @returns {callback} callback(err, blob) blob is a javascript Blob object.
  */
 Usergrid.Asset.prototype.download = function(callback) {
-    var self = this;
-    var endpoint = [ this._client.URI, this._client.orgName, this._client.appName, "assets", self.get("uuid"), "data" ].join("/");
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", endpoint, true);
-    xhr.responseType = "blob";
-    xhr.onload = function(ev) {
-        var blob = xhr.response;
-        doCallback(callback, [ null, xhr, self ], self);
-    };
-    xhr.onerror = function(err) {
-        callback(true, err);
-        doCallback(callback, [ new UsergridError(err), xhr, self ], self);
-    };
-    xhr.overrideMimeType(self.get("content-type"));
-    xhr.send();
+    this.downloadAsset(function(err, response) {
+        if (!err) {
+            doCallback(callback, [ null, response, self ], self);
+        } else {
+            doCallback(callback, [ new UsergridError(err), response, self ], self);
+        }
+    });
 };
 
 /**

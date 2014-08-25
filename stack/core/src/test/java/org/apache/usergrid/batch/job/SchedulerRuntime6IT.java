@@ -62,11 +62,12 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
-        boolean waited = getJobListener().blockTilDone( 1, customRetry * numberOfRuns * 2 + 5000L );
+        boolean waited = getJobListener().blockTilDone( customRetry * numberOfRuns * 2 + 5000L );
 
         assertTrue( "Job ran twice", waited );
 
 
+        getJobListener().setExpected( 2 );
         //reset our latch immediately for further tests
         job.setLatch( numberOfRuns );
 
@@ -88,7 +89,7 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
 
         //now wait again to see if the job fires one more time, it shouldn't
-        waited = getJobListener().blockTilDone( 2, customRetry * numberOfRuns * 2 );
+        waited = getJobListener().blockTilDone( customRetry * numberOfRuns * 2 );
 
         assertFalse( "Job ran twice", waited );
 

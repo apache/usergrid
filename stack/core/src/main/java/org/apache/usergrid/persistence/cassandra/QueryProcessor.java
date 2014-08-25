@@ -25,6 +25,7 @@ import org.apache.usergrid.persistence.query.ir.QuerySlice;
 import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
 
 public interface QueryProcessor {
     int PAGE_SIZE = 1000;
@@ -39,8 +40,6 @@ public interface QueryProcessor {
 
     /**
      * Return the node id from the cursor cache
-     * @param nodeId
-     * @return
      */
     ByteBuffer getCursorCache(int nodeId);
 

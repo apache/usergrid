@@ -1,11 +1,34 @@
 <page-title title=" Account Settings" icon="&#59170"></page-title>
-
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
 <section class="row-fluid">
   <div class="span12 tab-content">
     <div class="menu-toolbar">
       <ul class="inline">
-        <li class="tab" ng-show="!use_sso" ng-class="currentAccountPage.route === '/profile/profile' ? 'selected' : ''"><a class="btn btn-primary toolbar" id="profile-link" ng-click="selectAccountPage('/profile/profile')"><i class="pictogram">&#59170;</i>Profile</a></li>
-        <li class="tab" ng-class="currentAccountPage.route === '/profile/organizations' ? 'selected' : ''"><a class="btn btn-primary toolbar" id="account-link" ng-click="selectAccountPage('/profile/organizations')"><i class="pictogram">&#128101;</i>Organizations</a></li>
+        <li class="tab" ng-show="!use_sso"
+          ng-class="currentAccountPage.route === '/profile/profile' ? 'selected' : ''"><a
+          class="btn btn-primary toolbar" id="profile-link"
+          ng-click="selectAccountPage('/profile/profile')"><i
+            class="pictogram">&#59170;</i>Profile</a></li>
+        <li class="tab"
+          ng-class="currentAccountPage.route === '/profile/organizations' ? 'selected' : ''"><a
+          class="btn btn-primary toolbar" id="account-link"
+          ng-click="selectAccountPage('/profile/organizations')"><i
+            class="pictogram">&#128101;</i>Organizations</a></li>
       </ul>
     </div>
     <span ng-include="currentAccountPage.template"></span>

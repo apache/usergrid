@@ -33,11 +33,11 @@ import me.prettyprint.cassandra.serializers.UUIDSerializer;
  */
 public interface Serializers {
 
-    StringSerializer se = StringSerializer.get();
-    ByteBufferSerializer be = ByteBufferSerializer.get();
-    UUIDSerializer ue = UUIDSerializer.get();
-    BytesArraySerializer bae = BytesArraySerializer.get();
-    DynamicCompositeSerializer dce = DynamicCompositeSerializer.get();
-    LongSerializer le = LongSerializer.get();
-    DoubleSerializer de = DoubleSerializer.get();
+    public static final StringSerializer se = StringSerializer.get();
+    public static final ByteBufferSerializer be = ByteBufferSerializer.get();
+    public static final UUIDSerializer ue = UUIDSerializer.get();
+    public static final BytesArraySerializer bae = BytesArraySerializer.get();
+    public static final DynamicCompositeSerializer dce = DynamicCompositeSerializer.get();
+    public static final LongSerializer le = LongSerializer.get();
+    public static final DoubleSerializer de = DoubleSerializer.get();
 }

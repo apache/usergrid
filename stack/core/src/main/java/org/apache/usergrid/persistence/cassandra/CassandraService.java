@@ -39,9 +39,16 @@ import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 
 import me.prettyprint.cassandra.connection.HConnectionManager;
 import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
+import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.cassandra.serializers.BytesArraySerializer;
+import me.prettyprint.cassandra.serializers.DynamicCompositeSerializer;
+import me.prettyprint.cassandra.serializers.LongSerializer;
+import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.cassandra.serializers.UUIDSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 import me.prettyprint.cassandra.service.ThriftKsDef;
 import me.prettyprint.hector.api.Cluster;
@@ -69,7 +76,7 @@ import me.prettyprint.hector.api.query.SliceQuery;
 import static me.prettyprint.cassandra.service.FailoverPolicy.ON_FAIL_TRY_ALL_AVAILABLE;
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createMultigetSliceQuery;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+
 import static me.prettyprint.hector.api.factory.HFactory.createRangeSlicesQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createSliceQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createVirtualKeyspace;
@@ -83,7 +90,6 @@ import static org.apache.usergrid.utils.ConversionUtils.bytebuffers;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.apache.usergrid.utils.MapUtils.asMap;
 import static org.apache.usergrid.utils.MapUtils.filter;
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class CassandraService {
@@ -126,6 +132,12 @@ public class CassandraService {
 
     private Map<String, String> accessMap;
 
+    public static final StringSerializer se = new StringSerializer();
+    public static final ByteBufferSerializer be = new ByteBufferSerializer();
+    public static final UUIDSerializer ue = new UUIDSerializer();
+    public static final BytesArraySerializer bae = new BytesArraySerializer();
+    public static final DynamicCompositeSerializer dce = new DynamicCompositeSerializer();
+    public static final LongSerializer le = new LongSerializer();
 
     public static final UUID NULL_ID = new UUID( 0, 0 );
 
@@ -152,6 +164,12 @@ public class CassandraService {
         systemKeyspace =
                 HFactory.createKeyspace( SYSTEM_KEYSPACE, cluster, consistencyLevelPolicy, ON_FAIL_TRY_ALL_AVAILABLE,
                         accessMap );
+
+
+        final int flushSize = getIntValue( properties, "cassandra.mutation.flushsize", 2000 );
+        CountingMutator.MAX_SIZE = flushSize;
+
+
     }
 
 
@@ -390,7 +408,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      * @param key the key
      *
@@ -446,7 +464,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param start the start
@@ -568,7 +586,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      * @param keys the keys
      *
@@ -607,7 +625,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param columnNames the column names
@@ -652,7 +670,7 @@ public class CassandraService {
     /**
      * Gets the columns.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      * @param keys the keys
      * @param columnNames the column names
@@ -695,7 +713,7 @@ public class CassandraService {
     /**
      * Gets the column.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param column the column
@@ -803,7 +821,7 @@ public class CassandraService {
         if ( ttl != 0 ) {
             col.setTtl( ttl );
         }
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
         m.insert( bytebuffer( key ), columnFamily.toString(), col );
     }
 
@@ -811,7 +829,7 @@ public class CassandraService {
     /**
      * Sets the columns.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param map the map
@@ -830,7 +848,7 @@ public class CassandraService {
                                                                                                  " ttl=" + ttl : "" ) );
         }
 
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
         long timestamp = createTimestamp();
 
         for ( Object name : map.keySet() ) {
@@ -871,14 +889,14 @@ public class CassandraService {
      * @return a timestamp
      */
     public long createTimestamp() {
-        return CassandraHostConfigurator.getClockResolution().createClock();
+        return chc.getClockResolution().createClock();
     }
 
 
     /**
      * Delete column.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      * @param key the key
      * @param column the column
@@ -891,7 +909,7 @@ public class CassandraService {
             db_logger.debug( "deleteColumn cf=" + columnFamily + " key=" + key + " name=" + column );
         }
 
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
         m.delete( bytebuffer( key ), columnFamily.toString(), bytebuffer( column ), be );
     }
 
@@ -899,7 +917,7 @@ public class CassandraService {
     /**
      * Gets the row keys.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      *
      * @return set of keys
@@ -937,7 +955,7 @@ public class CassandraService {
     /**
      * Gets the row keys as uui ds.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      *
      * @return list of row key UUIDs
@@ -969,7 +987,7 @@ public class CassandraService {
     /**
      * Delete row.
      *
-     * @param ko the keyspace
+     * @param keyspace the keyspace
      * @param columnFamily the column family
      * @param key the key
      *
@@ -981,39 +999,9 @@ public class CassandraService {
             db_logger.debug( "deleteRow cf=" + columnFamily + " key=" + key );
         }
 
-        createMutator( ko, be ).addDeletion( bytebuffer( key ), columnFamily.toString() ).execute();
+        CountingMutator.createFlushingMutator( ko, be ).addDeletion( bytebuffer( key ), columnFamily.toString() ).execute();
     }
 
-
-    public void deleteRow( Keyspace ko, final Object columnFamily, final String key ) throws Exception {
-
-        if ( db_logger.isDebugEnabled() ) {
-            db_logger.debug( "deleteRow cf=" + columnFamily + " key=" + key );
-        }
-
-        createMutator( ko, se ).addDeletion( key, columnFamily.toString() ).execute();
-    }
-
-
-    /**
-     * Delete row.
-     *
-     * @param ko the keyspace
-     * @param columnFamily the column family
-     * @param key the key
-     * @param timestamp the timestamp
-     *
-     * @throws Exception the exception
-     */
-    public void deleteRow( Keyspace ko, final Object columnFamily, final Object key, final long timestamp )
-            throws Exception {
-
-        if ( db_logger.isDebugEnabled() ) {
-            db_logger.debug( "deleteRow cf=" + columnFamily + " key=" + key + " timestamp=" + timestamp );
-        }
-
-        createMutator( ko, be ).addDeletion( bytebuffer( key ), columnFamily.toString(), timestamp ).execute();
-    }
 
 
     /**
@@ -1056,60 +1044,7 @@ public class CassandraService {
     }
 
 
-    public int countColumns( Keyspace ko, Object columnFamily, Object key ) throws Exception {
 
-
-        CountQuery<ByteBuffer, ByteBuffer> cq = HFactory.createCountQuery( ko, be, be );
-        cq.setColumnFamily( columnFamily.toString() );
-        cq.setKey( bytebuffer( key ) );
-        cq.setRange( ByteBuffer.allocate( 0 ), ByteBuffer.allocate( 0 ), 100000000 );
-        QueryResult<Integer> r = cq.execute();
-        if ( r == null ) {
-            return 0;
-        }
-        return r.get();
-    }
-
-
-    /**
-     * Sets the id list.
-     *
-     * @param ko the keyspace
-     * @param targetId the target id
-     * @param keyPrefix the key prefix
-     * @param keySuffix the key suffix
-     * @param keyIds the key ids
-     *
-     * @throws Exception the exception
-     */
-    public void setIdList( Keyspace ko, UUID targetId, String keyPrefix, String keySuffix, List<UUID> keyIds )
-            throws Exception {
-        long timestamp = createTimestamp();
-        Mutator<ByteBuffer> batch = createMutator( ko, be );
-        batch = buildSetIdListMutator( batch, targetId, ENTITY_ID_SETS.toString(), keyPrefix, keySuffix, keyIds,
-                timestamp );
-        batchExecute( batch, CassandraService.RETRY_COUNT );
-    }
-
-
-    boolean clusterUp = false;
-
-
-    public void startClusterHealthCheck() {
-
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleWithFixedDelay( new Runnable() {
-            @Override
-            public void run() {
-                if ( cluster != null ) {
-                    HConnectionManager connectionManager = cluster.getConnectionManager();
-                    if ( connectionManager != null ) {
-                        clusterUp = !connectionManager.getHosts().isEmpty();
-                    }
-                }
-            }
-        }, 1, 5, TimeUnit.SECONDS );
-    }
     
     public void destroy() throws Exception {
     	if (cluster != null) {

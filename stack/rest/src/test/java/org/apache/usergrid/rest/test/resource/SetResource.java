@@ -44,6 +44,18 @@ public abstract class SetResource extends ValueResource {
     }
 
 
+    /**
+     * Get this resource with additional matrix parameters
+     * @param params
+     * @return
+     */
+    public MatrixResource withMatrix(Map<String, String> params){
+        //once we want matrix params, we have to discard this current node in the chain, we need to construct
+        //a special node to handle it
+        return MatrixResource.build(this.getName(), params, this.getParent());
+    }
+
+
     public int countEntities( String query ) {
 
         int totalEntitiesContained = 0;

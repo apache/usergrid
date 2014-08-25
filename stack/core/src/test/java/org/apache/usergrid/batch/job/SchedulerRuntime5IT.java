@@ -50,11 +50,13 @@ public class SchedulerRuntime5IT extends AbstractSchedulerRuntimeIT {
         job.setTimeout( customRetry );
         job.setLatch( heartbeatCount + 1 );
 
+        getJobListener().setExpected( 1 );
+
         JobData returned = scheduler.createJob( "delayHeartbeat", System.currentTimeMillis(), new JobData() );
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
-        boolean waited = getJobListener().blockTilDone( 1, customRetry * ( heartbeatCount * 2 ) + 5000L );
+        boolean waited = getJobListener().blockTilDone( customRetry * ( heartbeatCount * 2 ) + 5000L );
 
         assertTrue( "Job ran to complete", waited );
 

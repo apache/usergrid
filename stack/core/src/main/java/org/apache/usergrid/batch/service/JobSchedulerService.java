@@ -21,18 +21,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.common.util.concurrent.AbstractScheduledService;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.yammer.metrics.annotation.ExceptionMetered;
-import com.yammer.metrics.annotation.Timed;
-import java.util.HashMap;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.batch.Job;
 import org.apache.usergrid.batch.JobExecution;
@@ -42,9 +36,18 @@ import org.apache.usergrid.batch.JobFactory;
 import org.apache.usergrid.batch.JobNotFoundException;
 import org.apache.usergrid.batch.repository.JobAccessor;
 import org.apache.usergrid.batch.repository.JobDescriptor;
+import org.apache.usergrid.metrics.MetricsFactory;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Timer;
+import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.yammer.metrics.annotation.ExceptionMetered;
+import com.yammer.metrics.annotation.Timed;
 
 
 /**
@@ -54,9 +57,6 @@ public class JobSchedulerService extends AbstractScheduledService {
     protected static final long DEFAULT_DELAY = 1000;
 
     private static final Logger LOG = LoggerFactory.getLogger( JobSchedulerService.class );
-
-    // keep track of exceptions thrown in scheduler so we can reduce noise in logs
-    private Map<String, Integer> schedulerRunFailures = new HashMap<String, Integer>();
 
     private long interval = DEFAULT_DELAY;
     private int workerSize = 1;
@@ -70,16 +70,24 @@ public class JobSchedulerService extends AbstractScheduledService {
     private ListeningScheduledExecutorService service;
     private JobListener jobListener;
 
+    private Timer jobTimer;
+    private Counter runCounter;
+    private Counter successCounter;
+    private Counter failCounter;
+
+    //TODO Add meters for throughput of start and stop
+
+
     public JobSchedulerService() { }
 
 
-    @Timed(name = "BulkJobScheduledService_runOneIteration", group = "scheduler", durationUnit = TimeUnit.MILLISECONDS,
-            rateUnit = TimeUnit.MINUTES)
+    @Timed( name = "BulkJobScheduledService_runOneIteration", group = "scheduler", durationUnit = TimeUnit.MILLISECONDS,
+            rateUnit = TimeUnit.MINUTES )
     @Override
     protected void runOneIteration() throws Exception {
 
         try {
-            LOG.info( "running iteration..." );
+            LOG.info( "Running one check iteration ..." );
             List<JobDescriptor> activeJobs;
 
             // run until there are no more active jobs
@@ -116,22 +124,7 @@ public class JobSchedulerService extends AbstractScheduledService {
             }
         }
         catch ( Throwable t ) {
-
-            // errors here happen a lot on shutdown, don't fill the logs with them
-            String error = t.getClass().getCanonicalName();
-            if (schedulerRunFailures.get( error ) == null) {
-                LOG.error( "Scheduler run failed, first instance of this exception", t );
-                schedulerRunFailures.put( error, 1);
-
-            } else {
-                int count = schedulerRunFailures.get(error) + 1; 
-                schedulerRunFailures.put(error, count);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug( error + " caused scheduler run failure, count =  " + count, t );
-                } else {
-                    LOG.error( error + " caused scheduler run failure, count =  " + count );
-                }
-            }
+            LOG.error( "Scheduler run failed, error is", t );
         }
     }
 
@@ -147,121 +140,209 @@ public class JobSchedulerService extends AbstractScheduledService {
     }
 
 
-    /** Use the provided BulkJobFactory to build and submit BulkJob items as ListenableFuture objects */
-    @ExceptionMetered(name = "BulkJobScheduledService_submitWork_exceptions", group = "scheduler")
+    /**
+     * Use the provided BulkJobFactory to build and submit BulkJob items as ListenableFuture objects
+     */
+    @ExceptionMetered( name = "BulkJobScheduledService_submitWork_exceptions", group = "scheduler" )
     private void submitWork( final JobDescriptor jobDescriptor ) {
-        List<Job> jobs;
+        final Job job;
 
         try {
-            jobs = jobFactory.jobsFrom( jobDescriptor );
+            job = jobFactory.jobsFrom( jobDescriptor );
         }
         catch ( JobNotFoundException e ) {
             LOG.error( "Could not create jobs", e );
             return;
         }
 
-        for ( final Job job : jobs ) {
 
-            // job execution needs to be external to both the callback and the task.
-            // This way regardless of any error we can
-            // mark a job as failed if required
-            final JobExecution execution = new JobExecutionImpl( jobDescriptor );
+        // job execution needs to be external to both the callback and the task.
+        // This way regardless of any error we can
+        // mark a job as failed if required
+        final JobExecution execution = new JobExecutionImpl( jobDescriptor );
 
-            // We don't care if this is atomic (not worth using a lock object)
-            // we just need to prevent NPEs from ever occurring
-            final JobListener currentListener = this.jobListener;
+        // We don't care if this is atomic (not worth using a lock object)
+        // we just need to prevent NPEs from ever occurring
+        final JobListener currentListener = this.jobListener;
 
-            ListenableFuture<Void> future = service.submit( new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    capacitySemaphore.acquire();
+        /**
+         * Acquire the semaphore before we schedule.  This way we wont' take things from the Q that end up
+         * stuck in the queue for the scheduler and then time out their distributed heartbeat
+         */
+        try {
+            capacitySemaphore.acquire();
+        }
+        catch ( InterruptedException e ) {
+            LOG.error( "Unable to acquire semaphore capacity before submitting job", e );
+            //just return, they'll get picked up again later
+            return;
+        }
 
-                    execution.start( maxFailCount );
 
-                    jobAccessor.save( execution );
+        final Timer.Context timer = jobTimer.time();
 
-                    //this job is dead, treat it as such
-                    if ( execution.getStatus() == Status.DEAD ) {
-                        return null;
+
+        ListenableFuture<Void> future = service.submit( new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+
+                LOG.debug( "Starting the job with job id {}", execution.getJobId() );
+                runCounter.inc();
+
+                execution.start( maxFailCount );
+
+
+                //this job is dead, treat it as such
+                if ( execution.getStatus() == Status.DEAD ) {
+
+                    try {
+                        job.dead( execution );
+                        jobAccessor.save( execution );
                     }
-
-                    // TODO wrap and throw specifically typed exception for onFailure,
-                    // needs jobId
-                    job.execute( execution );
-
-                    if ( currentListener != null ) {
-                        currentListener.onSubmit( execution );
+                    catch ( Exception t ) {
+                        //we purposefully swallow all exceptions here, we don't want it to effect the outcome
+                        //of finally popping this job from the queue
+                        LOG.error( "Unable to invoke dead event on job", t );
                     }
 
                     return null;
                 }
-            } );
 
-            Futures.addCallback( future, new FutureCallback<Void>() {
-                @Override
-                public void onSuccess( Void param ) {
+                jobAccessor.save( execution );
 
-                    if ( execution.getStatus() == Status.IN_PROGRESS ) {
-                        LOG.info( "Successful completion of bulkJob {}", execution );
-                        execution.completed();
-                    }
+                // TODO wrap and throw specifically typed exception for onFailure,
+                // needs jobId
 
-                    jobAccessor.save( execution );
-                    capacitySemaphore.release();
+                LOG.info( "Starting job {} with execution data {}", job, execution );
 
-                    if ( currentListener != null ) {
-                        currentListener.onSuccess( execution );
-                    }
+                job.execute( execution );
+
+                if ( currentListener != null ) {
+                    currentListener.onSubmit( execution );
                 }
 
+                return null;
+            }
+        } );
 
-                @Override
-                public void onFailure( Throwable throwable ) {
-                    LOG.error( "Failed execution for bulkJob", throwable );
-                    // mark it as failed
-                    if ( execution.getStatus() == Status.IN_PROGRESS ) {
-                        execution.failed();
-                    }
+        Futures.addCallback( future, new FutureCallback<Void>() {
+            @Override
+            public void onSuccess( Void param ) {
 
-                    jobAccessor.save( execution );
-                    capacitySemaphore.release();
+                /**
+                 * Release semaphore first in case there are other problems with communicating with Cassandra
+                 */
 
-                    if ( currentListener != null ) {
-                        currentListener.onFailure( execution );
-                    }
+                LOG.debug( "Job succeeded with the job id {}", execution.getJobId() );
+                capacitySemaphore.release();
+                timer.stop();
+                runCounter.dec();
+                successCounter.inc();
+
+
+                //TODO, refactor into the execution itself for checking if done
+                if ( execution.getStatus() == Status.IN_PROGRESS ) {
+                    LOG.info( "Successful completion of bulkJob {}", execution );
+                    execution.completed();
                 }
-            } );
-        }
+
+                jobAccessor.save( execution );
+
+
+                if ( currentListener != null ) {
+                    currentListener.onSuccess( execution );
+                }
+            }
+
+
+            @Override
+            public void onFailure( Throwable throwable ) {
+
+                /**
+                 * Release semaphore first in case there are other problems with communicating with Cassandra
+                 */
+                LOG.error( "Job failed with the job id {}", execution.getJobId() );
+                capacitySemaphore.release();
+                timer.stop();
+                runCounter.dec();
+                failCounter.inc();
+
+
+                LOG.error( "Failed execution for bulkJob", throwable );
+                // mark it as failed
+                if ( execution.getStatus() == Status.IN_PROGRESS ) {
+                    execution.failed();
+                }
+
+                jobAccessor.save( execution );
+
+
+                if ( currentListener != null ) {
+                    currentListener.onFailure( execution );
+                }
+            }
+        } );
     }
 
 
-    /** @param milliseconds the milliseconds to set to wait if we didn't receive a job to run */
+    /**
+     * @param milliseconds the milliseconds to set to wait if we didn't receive a job to run
+     */
     public void setInterval( long milliseconds ) {
         this.interval = milliseconds;
     }
 
 
-    /** @param listeners the listeners to set */
+    public long getInterval() {
+        return interval;
+    }
+
+
+    /**
+     * @param listeners the listeners to set
+     */
     public void setWorkerSize( int listeners ) {
         this.workerSize = listeners;
     }
 
 
-    /** @param jobAccessor the jobAccessor to set */
+    public int getWorkerSize() {
+        return workerSize;
+    }
+
+
+    /**
+     * @param jobAccessor the jobAccessor to set
+     */
     public void setJobAccessor( JobAccessor jobAccessor ) {
         this.jobAccessor = jobAccessor;
     }
 
 
-    /** @param jobFactory the jobFactory to set */
+    /**
+     * @param jobFactory the jobFactory to set
+     */
     public void setJobFactory( JobFactory jobFactory ) {
         this.jobFactory = jobFactory;
     }
 
 
-    /** @param maxFailCount the maxFailCount to set */
+    /**
+     * @param maxFailCount the maxFailCount to set
+     */
     public void setMaxFailCount( int maxFailCount ) {
         this.maxFailCount = maxFailCount;
+    }
+
+
+    /**
+     * Set the metrics factory
+     */
+    public void setMetricsFactory( MetricsFactory metricsFactory ) {
+        jobTimer = metricsFactory.getTimer( JobSchedulerService.class, "job_execution_timer" );
+        runCounter = metricsFactory.getCounter( JobSchedulerService.class, "running_workers" );
+        successCounter = metricsFactory.getCounter( JobSchedulerService.class, "successful_jobs" );
+        failCounter = metricsFactory.getCounter( JobSchedulerService.class, "failed_jobs" );
     }
 
 
@@ -272,9 +353,15 @@ public class JobSchedulerService extends AbstractScheduledService {
      */
     @Override
     protected void startUp() throws Exception {
-        service = MoreExecutors.listeningDecorator( Executors.newScheduledThreadPool( workerSize ) );
+        service = MoreExecutors
+                .listeningDecorator( Executors.newScheduledThreadPool( workerSize, JobThreadFactory.INSTANCE ) );
         capacitySemaphore = new Semaphore( workerSize );
+
+        LOG.info( "Starting executor pool.  Capacity is {}", workerSize );
+
         super.startUp();
+
+        LOG.info( "Job Scheduler started" );
     }
 
 
@@ -285,7 +372,11 @@ public class JobSchedulerService extends AbstractScheduledService {
      */
     @Override
     protected void shutDown() throws Exception {
+        LOG.info( "Shutting down job scheduler" );
+
         service.shutdown();
+
+        LOG.info( "Job scheduler shut down" );
         super.shutDown();
     }
 
@@ -294,6 +385,7 @@ public class JobSchedulerService extends AbstractScheduledService {
      * Sets the JobListener notified of Job events on this SchedulerService.
      *
      * @param jobListener the listener to receive Job events
+     *
      * @return the previous listener if set, or null if none was set
      */
     public JobListener setJobListener( JobListener jobListener ) {
@@ -310,5 +402,27 @@ public class JobSchedulerService extends AbstractScheduledService {
      */
     public JobListener getJobListener() {
         return jobListener;
+    }
+
+
+    /**
+     * Simple factory for labeling job worker threads for easier debugging
+     */
+    private static final class JobThreadFactory implements ThreadFactory {
+
+        public static final JobThreadFactory INSTANCE = new JobThreadFactory();
+
+        private static final String NAME = "JobWorker-";
+        private final AtomicLong counter = new AtomicLong();
+
+
+        @Override
+        public Thread newThread( final Runnable r ) {
+
+            Thread newThread = new Thread( r, NAME + counter.incrementAndGet() );
+            newThread.setDaemon( true );
+
+            return newThread;
+        }
     }
 }

@@ -1,68 +1,112 @@
 <div class="content-page" ng-controller="UsersProfileCtrl">
-
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
   <div ng:include="'users/users-tabs.html'"></div>
 
   <div class="row-fluid">
 
-  <form ng-submit="saveSelectedUser()" name="profileForm" novalidate>
-    <div class="span6">
-      <h4>User Information <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users profile information')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_profile_information}}" tooltip-placement="top">(?)</a></h4>
-      <label for="ui-form-username" class="ui-dform-label">Username</label>
-      <input type="text" ug-validate required  name="ui-form-username" ng-pattern="usernameRegex" ng-attr-title="{{usernameRegexDescription}}" id="ui-form-username" class="ui-dform-text" ng-model="user.username">
-      <br/>
-      <label for="ui-form-name" class="ui-dform-label">Full Name</label>
-      <input type="text" ug-validate ng-pattern="nameRegex" ng-attr-title="{{nameRegexDescription}}" required name="ui-form-name" id="ui-form-name" class="ui-dform-text" ng-model="user.name">
-      <br/>
-      <label for="ui-form-title" class="ui-dform-label">Title</label>
-      <input type="text" ug-validate name="ui-form-title" id="ui-form-title" class="ui-dform-text" ng-model="user.title">
-      <br/>
-      <label for="ui-form-url" class="ui-dform-label">Home Page</label>
-      <input type="url" ug-validate name="ui-form-url" id="ui-form-url" title="Please enter a valid url." class="ui-dform-text" ng-model="user.url">
-      <br/>
-      <label for="ui-form-email" class="ui-dform-label">Email</label>
-      <input type="email" ug-validate required name="ui-form-email" id="ui-form-email"  ng-pattern="emailRegex" ng-attr-title="{{emailRegexDescription}}" class="ui-dform-text" ng-model="user.email">
-      <br/>
-      <label for="ui-form-tel" class="ui-dform-label">Telephone</label>
-      <input type="tel" ug-validate name="ui-form-tel" id="ui-form-tel" class="ui-dform-text" ng-model="user.tel">
-      <br/>
-      <label for="ui-form-picture" class="ui-dform-label">Picture URL</label>
-      <input type="url" ug-validate name="ui-form-picture" id="ui-form-picture" title="Please enter a valid url." ng class="ui-dform-text" ng-model="user.picture">
-      <br/>
-      <label for="ui-form-bday" class="ui-dform-label">Birthday</label>
-      <input type="date" ug-validate name="ui-form-bday" id="ui-form-bday" class="ui-dform-text" ng-model="user.bday">
-      <br/>
-    </div>
-    <div class="span6">
-      <h4>Address</h4>
-      <label for="ui-form-addr1" class="ui-dform-label">Street 1</label>
-      <input type="text" ug-validate name="ui-form-addr1" id="ui-form-addr1" class="ui-dform-text" ng-model="user.adr.addr1">
-      <br/>
-      <label for="ui-form-addr2" class="ui-dform-label">Street 2</label>
-      <input type="text" ug-validate name="ui-form-addr2" id="ui-form-addr2" class="ui-dform-text" ng-model="user.adr.addr2">
-      <br/>
-      <label for="ui-form-city" class="ui-dform-label">City</label>
-      <input type="text" ug-validate name="ui-form-city" id="ui-form-city" class="ui-dform-text" ng-model="user.adr.city">
-      <br/>
-      <label for="ui-form-state" class="ui-dform-label">State</label>
-      <input type="text" ug-validate name="ui-form-state" id="ui-form-state"  ng-attr-title="{{stateRegexDescription}}" ng-pattern="stateRegex" class="ui-dform-text" ng-model="user.adr.state">
-      <br/>
-      <label for="ui-form-zip" class="ui-dform-label">Zip</label>
-      <input type="text" ug-validate name="ui-form-zip" ng-pattern="zipRegex" ng-attr-title="{{zipRegexDescription}}" id="ui-form-zip" class="ui-dform-text" ng-model="user.adr.zip">
-      <br/>
-      <label for="ui-form-country" class="ui-dform-label">Country</label>
-      <input type="text" ug-validate name="ui-form-country" ng-attr-title="{{countryRegexDescription}}" ng-pattern="countryRegex" id="ui-form-country" class="ui-dform-text" ng-model="user.adr.country">
-      <br/>
-    </div>
+    <form ng-submit="saveSelectedUser()" name="profileForm" novalidate>
+      <div class="span6">
+        <h4>
+          User Information <a class="help_tooltip"
+            ng-mouseover="help.sendTooltipGA('users profile information')"
+            ng-show="help.helpTooltipsEnabled" href="#"
+            ng-attr-tooltip="{{tooltip_profile_information}}"
+            tooltip-placement="top">(?)</a>
+        </h4>
+        <label for="ui-form-username" class="ui-dform-label">Username</label>
+        <input type="text" ug-validate name="ui-form-username"
+          ng-pattern="usernameRegex"
+          ng-attr-title="{{usernameRegexDescription}}"
+          id="ui-form-username" class="ui-dform-text"
+          ng-model="user.username"> <br /> <label
+          for="ui-form-name" class="ui-dform-label">Full Name</label> <input
+          type="text" ug-validate ng-pattern="nameRegex"
+          ng-attr-title="{{nameRegexDescription}}" name="ui-form-name"
+          id="ui-form-name" class="ui-dform-text" ng-model="user.name">
+        <br /> <label for="ui-form-title" class="ui-dform-label">Title</label>
+        <input type="text" ug-validate name="ui-form-title"
+          id="ui-form-title" class="ui-dform-text" ng-model="user.title">
+        <br /> <label for="ui-form-url" class="ui-dform-label">Home
+          Page</label> <input type="url" ug-validate name="ui-form-url"
+          id="ui-form-url" title="Please enter a valid url."
+          class="ui-dform-text" ng-model="user.url"> <br /> <label
+          for="ui-form-email" class="ui-dform-label">Email</label> <input
+          type="email" ug-validate name="ui-form-email"
+          id="ui-form-email" ng-pattern="emailRegex"
+          ng-attr-title="{{emailRegexDescription}}"
+          class="ui-dform-text" ng-model="user.email"> <br /> <label
+          for="ui-form-tel" class="ui-dform-label">Telephone</label> <input
+          type="tel" ug-validate name="ui-form-tel" id="ui-form-tel"
+          class="ui-dform-text" ng-model="user.tel"> <br /> <label
+          for="ui-form-picture" class="ui-dform-label">Picture
+          URL</label> <input type="url" ug-validate name="ui-form-picture"
+          id="ui-form-picture" title="Please enter a valid url." ng
+          class="ui-dform-text" ng-model="user.picture"> <br />
+        <label for="ui-form-bday" class="ui-dform-label">Birthday</label>
+        <input type="date" ug-validate name="ui-form-bday"
+          id="ui-form-bday" class="ui-dform-text" ng-model="user.bday">
+        <br />
+      </div>
+      <div class="span6">
+        <h4>Address</h4>
+        <label for="ui-form-addr1" class="ui-dform-label">Street
+          1</label> <input type="text" ug-validate name="ui-form-addr1"
+          id="ui-form-addr1" class="ui-dform-text"
+          ng-model="user.adr.addr1"> <br /> <label
+          for="ui-form-addr2" class="ui-dform-label">Street 2</label> <input
+          type="text" ug-validate name="ui-form-addr2"
+          id="ui-form-addr2" class="ui-dform-text"
+          ng-model="user.adr.addr2"> <br /> <label
+          for="ui-form-city" class="ui-dform-label">City</label> <input
+          type="text" ug-validate name="ui-form-city" id="ui-form-city"
+          class="ui-dform-text" ng-model="user.adr.city"> <br />
+        <label for="ui-form-state" class="ui-dform-label">State</label>
+        <input type="text" ug-validate name="ui-form-state"
+          id="ui-form-state" ng-attr-title="{{stateRegexDescription}}"
+          ng-pattern="stateRegex" class="ui-dform-text"
+          ng-model="user.adr.state"> <br /> <label
+          for="ui-form-zip" class="ui-dform-label">Zip</label> <input
+          type="text" ug-validate name="ui-form-zip"
+          ng-pattern="zipRegex" ng-attr-title="{{zipRegexDescription}}"
+          id="ui-form-zip" class="ui-dform-text" ng-model="user.adr.zip">
+        <br /> <label for="ui-form-country" class="ui-dform-label">Country</label>
+        <input type="text" ug-validate name="ui-form-country"
+          ng-attr-title="{{countryRegexDescription}}"
+          ng-pattern="countryRegex" id="ui-form-country"
+          class="ui-dform-text" ng-model="user.adr.country"> <br />
+      </div>
 
       <div class="span6">
-        <input type="submit" class="btn btn-primary margin-35" ng-disabled="!profileForm.$valid"  value="Save User"/>
+        <input type="submit" class="btn btn-primary margin-35"
+          ng-disabled="!profileForm.$valid" value="Save User" />
       </div>
 
 
-    <div class="content-container">
-      <legend>JSON User Object <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users profile json')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_profile_json}}" tooltip-placement="top">(?)</a></legend>
-      <pre id="{{help.showJsonId}}">{{user.json}}</pre>
-    </div>
+      <div class="content-container">
+        <legend>
+          JSON User Object <a class="help_tooltip"
+            ng-mouseover="help.sendTooltipGA('users profile json')"
+            ng-show="help.helpTooltipsEnabled" href="#"
+            ng-attr-tooltip="{{tooltip_profile_json}}"
+            tooltip-placement="top">(?)</a>
+        </legend>
+        <pre id="{{help.showJsonId}}">{{user.json}}</pre>
+      </div>
     </form>
   </div>
 

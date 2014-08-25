@@ -52,6 +52,18 @@ public class AllNode extends QueryNode {
 
 
     @Override
+    public int getCount() {
+        return 1;
+    }
+
+
+    @Override
+    public boolean ignoreHintSize() {
+        return false;
+    }
+
+
+    @Override
     public String toString() {
         return "AllNode";
     }

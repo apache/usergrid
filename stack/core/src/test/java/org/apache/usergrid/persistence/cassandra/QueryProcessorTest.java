@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.TokenRewriteStream;
 import org.junit.Test;
+
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.exceptions.PersistenceException;
@@ -32,6 +33,8 @@ import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
 import org.apache.usergrid.persistence.query.ir.AndNode;
 import org.apache.usergrid.persistence.query.ir.NotNode;
 import org.apache.usergrid.persistence.query.ir.OrNode;
+import org.apache.usergrid.persistence.query.ir.OrderByNode;
+import org.apache.usergrid.persistence.query.ir.QueryNode;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 import org.apache.usergrid.persistence.query.ir.SliceNode;
 import org.apache.usergrid.persistence.query.ir.WithinNode;
@@ -42,7 +45,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
-/** @author tnine */
+/**
+ * @author tnine
+ */
 @Concurrent()
 public class QueryProcessorTest {
 
@@ -730,5 +735,87 @@ public class QueryProcessorTest {
         assertTrue( slice.getStart().isInclusive() );
         assertEquals( value, slice.getFinish().getValue() );
         assertTrue( slice.getFinish().isInclusive() );
+    }
+
+
+    @Test
+    public void validateHintSizeForOrder() throws Exception {
+        String queryString = "order by name desc";
+
+        ANTLRStringStream in = new ANTLRStringStream( queryString );
+        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        TokenRewriteStream tokens = new TokenRewriteStream( lexer );
+        QueryFilterParser parser = new QueryFilterParser( tokens );
+
+        /**
+         * Test set limit
+         */
+
+        final int limit = 105;
+
+        Query query = parser.ql().query;
+        query.setLimit( limit );
+
+        QueryProcessor processor = new QueryProcessor( query, null, null, null );
+
+        OrderByNode node = ( OrderByNode ) processor.getFirstNode();
+
+        assertEquals( limit, processor.getPageSizeHint( node ) );
+    }
+
+
+    @Test
+    public void validateHintSizeForEquality() throws Exception {
+        String queryString = "select * where X = 'Foo'";
+
+        ANTLRStringStream in = new ANTLRStringStream( queryString );
+        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        TokenRewriteStream tokens = new TokenRewriteStream( lexer );
+        QueryFilterParser parser = new QueryFilterParser( tokens );
+
+        /**
+         * Test set limit
+         */
+
+        final int limit = 105;
+
+        Query query = parser.ql().query;
+        query.setLimit( limit );
+
+        QueryProcessor processor = new QueryProcessor( query, null, null, null );
+
+        SliceNode node = ( SliceNode ) processor.getFirstNode();
+
+        assertEquals( limit, processor.getPageSizeHint( node ) );
+    }
+
+
+    @Test
+    public void validateHintSizeForComplexQueries() throws Exception {
+        //        String queryString = "select * where y = 'Foo' AND z = 'Bar'";
+
+        String queryString = "select * where y = 'Foo' AND z = 'Bar'";
+
+        ANTLRStringStream in = new ANTLRStringStream( queryString );
+        QueryFilterLexer lexer = new QueryFilterLexer( in );
+        TokenRewriteStream tokens = new TokenRewriteStream( lexer );
+        QueryFilterParser parser = new QueryFilterParser( tokens );
+
+        /**
+         * Test set limit
+         */
+
+        final int limit = 105;
+
+        Query query = parser.ql().query;
+        query.setLimit( limit );
+
+        QueryProcessor processor = new QueryProcessor( query, null, null, null );
+
+        QueryNode slice =  processor.getFirstNode();
+
+        assertEquals( 1000, processor.getPageSizeHint( slice ) );
+
+
     }
 }

@@ -127,7 +127,7 @@ module.exports = {
       element(by.id('new-user-username')).clear();
       element(by.id('new-user-username')).sendKeys(username);
       element(by.id('new-user-fullname')).sendKeys('Test ' + username);
-      element(by.id('new-user-email')).sendKeys('sfeldman+test' + username + '@apigee.com');
+      element(by.id('new-user-email')).sendKeys('rsimpson+test' + username + '@apigee.com');
       element(by.id('new-user-password')).sendKeys('P@ssw0rd1');
       element(by.id('new-user-re-password')).sendKeys('P@ssw0rd1');
       browser.sleep(1000);
@@ -146,7 +146,7 @@ module.exports = {
     browser.wait(function () {
       return element(by.id('user-' + username + '-checkbox')).isPresent();
     });
-    
+
     element(by.id('user-' + username + '-checkbox')).isPresent().then(function () {
       element(by.id('user-' + username + '-checkbox')).click();
       browser.sleep(1000);

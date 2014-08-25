@@ -5,7 +5,7 @@ The admin portal source code is fully open source and forkable. You can easily e
 
 The admin portal source is in the Usergrid repo here:
 
-<https://github.com/usergrid/usergrid>
+<https://github.com/apache/incubator-usergrid/tree/master/portal>
 
 ##About the admin portal
 Use the admin portal for administrative operations, including:
@@ -17,14 +17,26 @@ Use the admin portal for administrative operations, including:
 * View and modify your data, with full support for users, groups, and custom entities and collections.
 * Generate and access credentials for API access.
 
-##Deploying or Developing
+##Running, Deploying, or Developing
+
+For all cases, edit the "config.js" file in the root of the portal so that it points to your Usergrid:
+
+	Usergrid.overrideUrl = 'https://api.usergrid.com/';
+
+Change 'https://api.usergrid.com/' to the url of your Usergrid.
 
 If you are just running the portal:
 
 1. Install Node.js from http://nodejs.org/download/.
 2. From the root directory, run `./build.sh dev`.
 3. This will build and run a lightweight server. Naviate to http://localhost:3000
-4. If that doesn't work, in dist is a built copy and a file called rel-usergrid-portal.zip. Unzip and deploy to your favorite web server.
+
+If you are deploying the portal to a server:
+
+1. Install Node.js from http://nodejs.org/download/.
+2. From the root directory, run `./build.sh`.
+3. Check the /dist/usergrid-portal directory.  This will contain a built copy of the source code.
+4. Deploy the contents to your favorite web server.
 
 If you are developing:
 
@@ -60,7 +72,7 @@ You can also use the Usergrid Command Line (ugc) for terminal access to the User
 ## Contributing
 We welcome your enhancements!
 
-Like [Usergrid](https://github.com/apigee/usergrid-node-module), the admin portal is open source and licensed under the Apache License, Version 2.0.
+Like [Usergrid](http://usergrid.incubator.apache.org/), the admin portal is open source and licensed under the Apache License, Version 2.0.
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)

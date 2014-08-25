@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import org.apache.commons.lang.StringUtils;
@@ -53,7 +54,7 @@ import me.prettyprint.hector.api.query.RangeSlicesQuery;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+
 import static me.prettyprint.hector.api.factory.HFactory.createRangeSlicesQuery;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
@@ -237,7 +238,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         getSetup().setupApplicationKeyspace( applicationId, appName );
 
         Keyspace ko = cass.getSystemKeyspace();
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
 
         long timestamp = cass.createTimestamp();
 

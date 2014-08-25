@@ -1,5 +1,20 @@
 <div class="content-page">
-
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
   <h4>Entity Detail</h4>
   <div class="well">
     <a href="#!/data" class="outside-link"><< Back to collection</a>
@@ -7,22 +22,22 @@
   <fieldset>
     <div class="control-group">
       <strong>Path </strong>
-      <div class="controls">
-        {{entityType}}/{{entityUUID}}
-      </div>
+      <div class="controls">{{entityType}}/{{entityUUID}}</div>
     </div>
 
     <div class="control-group">
-      <label class="control-label" for="query-source"><strong>JSON Body</strong></label>
+      <label class="control-label" for="query-source"><strong>JSON
+          Body</strong></label>
       <div class="controls">
         <textarea ng-model="queryBody" class="span6 pull-left" rows="12">{{queryBody}}</textarea>
-        <br>
-        <a class="btn pull-left" ng-click="validateJson();">Validate JSON</a>
+        <br> <a class="btn pull-left" ng-click="validateJson();">Validate
+          JSON</a>
       </div>
     </div>
     <div style="clear: both; height: 10px;"></div>
     <div class="control-group">
-      <button type="button" class="btn btn-primary" id="button-query" ng-click="saveEntity();">Save</button>
+      <button type="button" class="btn btn-primary" id="button-query"
+        ng-click="saveEntity();">Save</button>
       <!--button type="button" class="btn btn-primary" id="button-query" ng-click="run();">Delete</button-->
     </div>
   </fieldset>

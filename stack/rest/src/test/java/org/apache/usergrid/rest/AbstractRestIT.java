@@ -336,6 +336,17 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
+    /**
+     * Get the property "name" from the entity at the specified index
+     * @param response
+     * @param index
+     * @return
+     */
+    protected String getEntityName(JsonNode response, int index){
+        return getEntity(response, index).get( "name" ).asText();
+    }
+
+
     /** Get the error response */
     protected JsonNode getError( JsonNode response ) {
         return response.get( "error" );
