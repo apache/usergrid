@@ -18,7 +18,7 @@
  */
 'use strict';
 
-AppServices.Services.factory('help', function($rootScope, $http, $location, $analytics) {
+AppServices.Services.factory('help', function($rootScope, $http, $location) {
 
   $rootScope.help = {};
   $rootScope.help.helpButtonStatus = 'Enable Help';
@@ -34,7 +34,8 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
 
   /** get introjs and tooltip json from s3 **/
   var getHelpJson = function(path) {
-    return $http.get('https://s3.amazonaws.com/sdk.apigee.com/portal_help' + path + '/helpJson.json');
+    //return $http.get('https://s3.amazonaws.com/sdk.apigee.com/portal_help' + path + '/helpJson.json');
+    return $http.get('/helpJson.json');
   };
 
   /** check if first-time user experience should launch **/
@@ -54,10 +55,7 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
 
   /** sends GA event on mouseover of tooltip **/
   $rootScope.help.sendTooltipGA = function (tooltipName) {
-    $analytics.eventTrack('tooltip - ' + $rootScope.currentPath, {
-      category: 'App Services',
-      label: tooltipName
-    });
+
   }
 
   /** hides/shows tooltips **/
@@ -169,18 +167,6 @@ AppServices.Services.factory('help', function($rootScope, $http, $location, $ana
   //user exits introjs
   $rootScope.help.introjs_ExitEvent = function() {
     var introjs_time = Math.round((Date.now() - helpStartTime) / 1000);
-
-    //capture time spent in introjs
-    $analytics.eventTrack('introjs timing - ' + $rootScope.currentPath, {
-      category: 'App Services',
-      label: introjs_time + 's'
-    });
-
-    //capture what introjs step user exited on
-    $analytics.eventTrack('introjs exit - ' + $rootScope.currentPath, {
-      category: 'App Services',
-      label: 'step' + introjs_step
-    });
   };
 
   //user completes all steps in introjs for page

@@ -1,66 +1,99 @@
 <div class="content-page" ng-controller="UsersGraphCtrl">
-
+  <!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
   <div ng:include="'users/users-tabs.html'"></div>
 
   <div>
 
-    <bsmodal id="followUser"
-             title="Follow User"
-             close="hideModal"
-             closelabel="Cancel"
-             extrabutton="followUserDialog"
-             extrabuttonlabel="Add"
-             ng-cloak>
-      <div class="btn-group">
-        <a class="btn dropdown-toggle filter-selector" data-toggle="dropdown">
-          <span class="filter-label">{{$parent.user != '' ? $parent.user.username : 'Select a user...'}}</span>
-          <span class="caret"></span>
-        </a>
-        <ul class="dropdown-menu">
-          <li ng-repeat="user in $parent.usersTypeaheadValues" class="filterItem"><a ng-click="$parent.$parent.user = user">{{user.username}}</a></li>
-        </ul>
-      </div>
+    <bsmodal id="followUser" title="Follow User" close="hideModal"
+      closelabel="Cancel" extrabutton="followUserDialog"
+      extrabuttonlabel="Add" ng-cloak>
+    <div class="btn-group">
+      <a class="btn dropdown-toggle filter-selector"
+        data-toggle="dropdown"> <span class="filter-label">{{$parent.user
+          != '' ? $parent.user.username : 'Select a user...'}}</span> <span
+        class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li ng-repeat="user in $parent.usersTypeaheadValues"
+          class="filterItem"><a
+          ng-click="$parent.$parent.user = user">{{user.username}}</a></li>
+      </ul>
+    </div>
     </bsmodal>
 
 
     <div class="button-strip">
-      <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users follow user')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_graph_follow_user}}" tooltip-placement="left">(?)</a> 
-      <button class="btn btn-primary" ng-click="showModal('followUser')">Follow User</button>
+      <a class="help_tooltip"
+        ng-mouseover="help.sendTooltipGA('users follow user')"
+        ng-show="help.helpTooltipsEnabled" href="#"
+        ng-attr-tooltip="{{tooltip_graph_follow_user}}"
+        tooltip-placement="left">(?)</a>
+      <button class="btn btn-primary" ng-click="showModal('followUser')">Follow
+        User</button>
     </div>
     <br>
-      <h4>Following <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users following list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_graph_following}}" tooltip-placement="right">(?)</a></h4>
+    <h4>
+      Following <a class="help_tooltip"
+        ng-mouseover="help.sendTooltipGA('users following list')"
+        ng-show="help.helpTooltipsEnabled" href="#"
+        ng-attr-tooltip="{{tooltip_graph_following}}"
+        tooltip-placement="right">(?)</a>
+    </h4>
     <table class="table table-striped">
       <tbody>
-      <tr class="table-header">
-        <td>Image</td>
-        <td>Username</td>
-        <td>Email</td>
-        <td>UUID</td>
-      </tr>
-      <tr class="zebraRows" ng-repeat="user in selectedUser.following">
-        <td><img style="width:30px;height:30px;" ng-src="{{user._portal_image_icon}}"></td>
-        <td>{{user.username}}</td>
-        <td>{{user.email}}</td>
-        <td>{{user.uuid}}</td>
-      </tr>
+        <tr class="table-header">
+          <td>Image</td>
+          <td>Username</td>
+          <td>Email</td>
+          <td>UUID</td>
+        </tr>
+        <tr class="zebraRows" ng-repeat="user in selectedUser.following">
+          <td><img style="width: 30px; height: 30px;"
+            ng-src="{{user._portal_image_icon}}"></td>
+          <td>{{user.username}}</td>
+          <td>{{user.email}}</td>
+          <td>{{user.uuid}}</td>
+        </tr>
       </tbody>
     </table>
 
-      <h4>Followers <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users followers list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_graph_followers}}" tooltip-placement="right">(?)</a></h4>
+    <h4>
+      Followers <a class="help_tooltip"
+        ng-mouseover="help.sendTooltipGA('users followers list')"
+        ng-show="help.helpTooltipsEnabled" href="#"
+        ng-attr-tooltip="{{tooltip_graph_followers}}"
+        tooltip-placement="right">(?)</a>
+    </h4>
     <table class="table table-striped">
       <tbody>
-      <tr class="table-header">
-        <td>Image</td>
-        <td>Username</td>
-        <td>Email</td>
-        <td>UUID</td>
-      </tr>
-      <tr class="zebraRows" ng-repeat="user in selectedUser.followers">
-        <td><img style="width:30px;height:30px;" ng-src="{{user._portal_image_icon}}"></td>
-        <td>{{user.username}}</td>
-        <td>{{user.email}}</td>
-        <td>{{user.uuid}}</td>
-      </tr>
+        <tr class="table-header">
+          <td>Image</td>
+          <td>Username</td>
+          <td>Email</td>
+          <td>UUID</td>
+        </tr>
+        <tr class="zebraRows" ng-repeat="user in selectedUser.followers">
+          <td><img style="width: 30px; height: 30px;"
+            ng-src="{{user._portal_image_icon}}"></td>
+          <td>{{user.username}}</td>
+          <td>{{user.email}}</td>
+          <td>{{user.uuid}}</td>
+        </tr>
       </tbody>
     </table>
 

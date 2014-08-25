@@ -19,17 +19,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>10</version>
     <relativePath></relativePath>
   </parent>
 
   <groupId>org.apache.usergrid</groupId>
   <artifactId>usergrid</artifactId>
-  <version>0.0.29-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>Usergrid Parent</name>
-  <description>Usergrid Project</description>
+  <description>Parent module for the Apache Usergrid Project</description>
   <packaging>pom</packaging>
 
   <properties>
@@ -113,7 +113,8 @@
     <tomcat-version>7.0.42</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
-
+    <metrics.version>3.0.0</metrics.version>
+    <rx.version>0.19.6</rx.version>
   </properties>
 
   <licenses>
@@ -161,11 +162,6 @@
     </developer>
   </developers>
 
-  <scm>
-    <connection>scm:git:git@github.com:usergrid/usergrid.git</connection>
-    <developerConnection>scm:git:git@github.com:usergrid/usergrid.git</developerConnection>
-    <url>https://github.com/usergrid/usergrid</url>
-  </scm>
 
   <distributionManagement>
     <!-- Versioned (non-snapshot) releases are published to this repository -->
@@ -1793,7 +1789,8 @@
                     <exclude>**/*.asc</exclude>
                     <exclude>**/src/test/resources/**</exclude>
                     <exclude>**/cloudbees.xml</exclude>
-		            <exclude>**/awscluster/**</exclude>
+                  <exclude>**/doc/**</exclude>
+                  <exclude>**/awscluster/**</exclude>
                     <exclude>**/aws.properties</exclude>
                     <exclude>**/launcher-vagrant/**</exclude>
                     <exclude>**/usergrid-custom.properties</exclude>
@@ -1896,4 +1893,10 @@
         </repository>
     </repositories>
 
+    <scm>
+    	<url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>
+    	<connection>scm:git:http://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</connection>
+    	<tag>HEAD</tag>
+    	<developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</developerConnection>
+    </scm>
 </project>

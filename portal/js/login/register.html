@@ -1,6 +1,23 @@
 <div class="signUp-content">
+  <!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
   <div class="signUp-holder">
-    <form name="signUpform" id="signUp-form" ng-submit="register()" class="form-horizontal" ng-show="!signUpSuccess" novalidate>
+    <form name="signUpform" id="signUp-form" ng-submit="register()"
+      class="form-horizontal" ng-show="!signUpSuccess" novalidate>
       <h1 class="title">Register</h1>
 
       <div class="alert" ng-if="loginMessage">{{loginMessage}}</div>
@@ -8,7 +25,10 @@
         <label class="control-label" for="register-orgName">Organization:</label>
 
         <div class="controls">
-          <input type="text" ng-model="registeredUser.orgName" id="register-orgName" ng-pattern="appNameRegex" ng-attr-title="{{appNameRegexDescription}}" ug-validate  required class="" size="20">
+          <input type="text" ng-model="registeredUser.orgName"
+            id="register-orgName" ng-pattern="appNameRegex"
+            ng-attr-title="{{appNameRegexDescription}}" ug-validate
+            required class="" size="20">
         </div>
       </div>
 
@@ -16,7 +36,10 @@
         <label class="control-label" for="register-name">Name:</label>
 
         <div class="controls">
-          <input type="text" ng-model="registeredUser.name" id="register-name" ng-pattern="nameRegex" ng-attr-title="{{nameRegexDescription}}" ug-validate required class="" size="20">
+          <input type="text" ng-model="registeredUser.name"
+            id="register-name" ng-pattern="nameRegex"
+            ng-attr-title="{{nameRegexDescription}}" ug-validate
+            required class="" size="20">
         </div>
       </div>
 
@@ -24,7 +47,10 @@
         <label class="control-label" for="register-userName">Username:</label>
 
         <div class="controls">
-          <input type="text" ng-model="registeredUser.userName" id="register-userName" ng-pattern="usernameRegex" ng-attr-title="{{usernameRegexDescription}}" ug-validate required class="" size="20">
+          <input type="text" ng-model="registeredUser.userName"
+            id="register-userName" ng-pattern="usernameRegex"
+            ng-attr-title="{{usernameRegexDescription}}" ug-validate
+            required class="" size="20">
         </div>
       </div>
 
@@ -32,7 +58,10 @@
         <label class="control-label" for="register-email">Email:</label>
 
         <div class="controls">
-          <input type="email" ng-model="registeredUser.email" id="register-email"  ng-pattern="emailRegex" ng-attr-title="{{emailRegexDescription}}"  required class="" ug-validate size="20">
+          <input type="email" ng-model="registeredUser.email"
+            id="register-email" ng-pattern="emailRegex"
+            ng-attr-title="{{emailRegexDescription}}" required class=""
+            ug-validate size="20">
         </div>
       </div>
 
@@ -41,39 +70,50 @@
         <label class="control-label" for="register-password">Password:</label>
 
         <div class="controls">
-          <input type="password" ng-pattern="passwordRegex" ng-attr-title="{{passwordRegexDescription}}" ug-validate ng-model="registeredUser.password" id="register-password" required class=""
-                 size="20">
+          <input type="password" ng-pattern="passwordRegex"
+            ng-attr-title="{{passwordRegexDescription}}" ug-validate
+            ng-model="registeredUser.password" id="register-password"
+            required class="" size="20">
         </div>
       </div>
       <div class="control-group">
-        <label class="control-label" for="register-confirmPassword">Re-enter Password:</label>
+        <label class="control-label" for="register-confirmPassword">Re-enter
+          Password:</label>
 
         <div class="controls">
-          <input type="password" ng-model="registeredUser.confirmPassword" required id="register-confirmPassword" ug-validate class="" size="20">
+          <input type="password"
+            ng-model="registeredUser.confirmPassword" required
+            id="register-confirmPassword" ug-validate class="" size="20">
         </div>
       </div>
       <div class="form-actions">
         <div class="submit">
-          <input type="submit" name="button-login" ng-disabled="!signUpform.$valid" id="button-login" value="Register"
-                 class="btn btn-primary pull-right">
+          <input type="submit" name="button-login"
+            ng-disabled="!signUpform.$valid" id="button-login"
+            value="Register" class="btn btn-primary pull-right">
         </div>
         <div class="submit">
-          <a ng-click="cancel()" type="submit" name="button-cancel" id="button-cancel"
-             class="btn btn-primary pull-right">Cancel</a>
+          <a ng-click="cancel()" type="submit" name="button-cancel"
+            id="button-cancel" class="btn btn-primary pull-right">Cancel</a>
         </div>
       </div>
     </form>
     <div class="console-section well thingy" ng-show="signUpSuccess">
-      <span class="title">We're holding a seat for you!</span>
-      <br><br>
+      <span class="title">We're holding a seat for you!</span> <br>
+      <br>
 
-      <p>Thanks for signing up for a spot on our private beta. We will send you an email as soon as we're ready for
-        you!</p>
+      <p>Thanks for signing up for a spot on our private beta. We
+        will send you an email as soon as we're ready for you!</p>
 
-      <p>In the mean time, you can stay up to date with App Services on our <a
-          href="https://groups.google.com/forum/?fromgroups#!forum/usergrid">GoogleGroup</a>.</p>
+      <p>
+        In the mean time, you can stay up to date with App Services on
+        our <a
+          href="https://groups.google.com/forum/?fromgroups#!forum/usergrid">GoogleGroup</a>.
+      </p>
 
-      <p> <a href="#!/login">Back to login</a></p>
+      <p>
+        <a href="#!/login">Back to login</a>
+      </p>
     </div>
   </div>
 

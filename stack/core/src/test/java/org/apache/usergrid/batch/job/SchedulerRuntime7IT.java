@@ -24,6 +24,7 @@ import org.apache.usergrid.persistence.entities.JobStat;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
@@ -31,7 +32,7 @@ import static org.junit.Assert.assertTrue;
  * Class to test job runtimes
  */
 @Concurrent
-@org.junit.Ignore( "Todd you need to take a look at this since it's not clear to me what was intended in this test." )
+//@org.junit.Ignore( "Todd you need to take a look at this since it's not clear to me what was intended in this test." )
 public class SchedulerRuntime7IT extends AbstractSchedulerRuntimeIT {
 
     /** Test that we're only running once, even when a job exceeds the heartbeat time */
@@ -52,16 +53,18 @@ public class SchedulerRuntime7IT extends AbstractSchedulerRuntimeIT {
         job.setLatch( numberOfRuns );
         job.setDelay( sleepTime );
 
+        getJobListener().setExpected( 2 );
+
         JobData returned =
                 scheduler.createJob( "onlyOnceUnlockOnFailExceution", System.currentTimeMillis(), new JobData() );
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to make sure we're not racing the test
 
-        boolean waited = getJobListener().blockTilDone( 1, runLoop * numberOfRuns * 2 + 5000L );
+        boolean waited = getJobListener().blockTilDone( runLoop * numberOfRuns * 2 + 5000L );
 
-        assertTrue( "Job threw exception", waited );
+        assertTrue( "Both runs executed" , waited);
         assertTrue( "Job failed", getJobListener().getFailureCount() == 1 );
-        assertTrue( "No Job succeeded", getJobListener().getSuccessCount() == 0 );
+        assertTrue( "No Job succeeded", getJobListener().getSuccessCount() == 1 );
 
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 

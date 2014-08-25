@@ -14,7 +14,7 @@ Icon
 .Trashes
 /portal/performance/
 /portal/node_modules/
-/portal/dist/appsvc-ui.*.zip
+/portal/dist/
 /portal/dist-cov/
 /portal/bower_components
 /portal/.idea
@@ -46,3 +46,12 @@ stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/q
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/QueryFilterParser.java
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/QueryFilterLexer.java
 portal/js/templates.js
+
+/portal/dist/usergrid-portal.zip
+
+/portal/js/usergrid-dev.js
+
+/portal/js/generated/
+
+/portal/js/generated-templates/
+/release/target/

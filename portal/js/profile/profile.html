@@ -1,66 +1,125 @@
-
 <div class="content-page" ng-controller="ProfileCtrl">
-<page-title title=" Profile" icon="&#59170"></page-title>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+  <page-title title=" Profile" icon="&#59170"></page-title>
 
   <div id="account-panels">
     <div class="panel-content">
       <div class="console-section">
         <div class="console-section-contents">
-          <form name="updateAccountForm" id="update-account-form" ng-submit="saveUserInfo()" class="form-horizontal">
+          <form name="updateAccountForm" id="update-account-form"
+            ng-submit="saveUserInfo()" class="form-horizontal">
             <fieldset>
               <div class="control-group">
-                <label id="update-account-id-label" class="control-label" for="update-account-id">UUID</label>
+                <label id="update-account-id-label"
+                  class="control-label" for="update-account-id">UUID</label>
                 <div class="controls">
                   <span id="update-account-id" class="monospace">{{user.uuid}}</span>
                 </div>
               </div>
               <div class="control-group">
-                <label class="control-label" for="update-account-username">Username </label>
+                <label class="control-label"
+                  for="update-account-username">Username </label>
                 <div class="controls">
-                  <input type="text" ug-validate name="update-account-username" required ng-pattern="usernameRegex" id="update-account-username" ng-attr-title="{{usernameRegexDescription}}"  class="span4" ng-model="user.username" size="20"/>
+                  <input type="text" ug-validate
+                    name="update-account-username" required
+                    ng-pattern="usernameRegex"
+                    id="update-account-username"
+                    ng-attr-title="{{usernameRegexDescription}}"
+                    class="span4" ng-model="user.username" size="20" />
                 </div>
               </div>
               <div class="control-group">
-                <label class="control-label" for="update-account-name">Name </label>
+                <label class="control-label" for="update-account-name">Name
+                </label>
                 <div class="controls">
-                  <input type="text" ug-validate name="update-account-name" id="update-account-name" ng-pattern="nameRegex" ng-attr-title="{{nameRegexDescription}}" class="span4" ng-model="user.name" size="20"/>
+                  <input type="text" ug-validate
+                    name="update-account-name" id="update-account-name"
+                    ng-pattern="nameRegex"
+                    ng-attr-title="{{nameRegexDescription}}"
+                    class="span4" ng-model="user.name" size="20" />
                 </div>
               </div>
               <div class="control-group">
-                <label class="control-label" for="update-account-email"> Email</label>
+                <label class="control-label" for="update-account-email">
+                  Email</label>
                 <div class="controls">
-                  <input type="email" ug-validate required name="update-account-email" ng-pattern="emailRegex" ng-attr-title="{{emailRegexDescription}}"  id="update-account-email" class="span4" ng-model="user.email" size="20"/>
+                  <input type="email" ug-validate required
+                    name="update-account-email" ng-pattern="emailRegex"
+                    ng-attr-title="{{emailRegexDescription}}"
+                    id="update-account-email" class="span4"
+                    ng-model="user.email" size="20" />
                 </div>
               </div>
               <div class="control-group">
-                <label class="control-label" for="update-account-picture-img">Picture <br />(from <a href="http://gravatar.com">gravatar.com</a>) </label>
+                <label class="control-label"
+                  for="update-account-picture-img">Picture <br />(from
+                  <a href="http://gravatar.com">gravatar.com</a>)
+                </label>
                 <div class="controls">
-                  <img id="update-account-picture-img" ng-src="{{user.profileImg}}" width="50" />
+                  <img id="update-account-picture-img"
+                    ng-src="{{user.profileImg}}" width="50" />
                 </div>
               </div>
-              <span class="help-block">Leave blank any of the following to keep the current password unchanged</span>
-              <br />
+              <span class="help-block">Leave blank any of the
+                following to keep the current password unchanged</span> <br />
               <div class="control-group">
-                <label class="control-label" for="old-account-password">Old Password</label>
+                <label class="control-label" for="old-account-password">Old
+                  Password</label>
                 <div class="controls">
-                  <input type="password" ug-validate name="old-account-password"  id="old-account-password" class="span4" ng-model="user.oldPassword" size="20"/>
+                  <input type="password" ug-validate
+                    name="old-account-password"
+                    id="old-account-password" class="span4"
+                    ng-model="user.oldPassword" size="20" />
                 </div>
               </div>
               <div class="control-group">
-                <label class="control-label" for="update-account-password">New Password</label>
+                <label class="control-label"
+                  for="update-account-password">New Password</label>
                 <div class="controls">
-                  <input type="password"  ug-validate name="update-account-password" ng-pattern="passwordRegex" ng-attr-title="{{passwordRegexDescription}}" id="update-account-password" class="span4" ng-model="user.newPassword" size="20"/>
+                  <input type="password" ug-validate
+                    name="update-account-password"
+                    ng-pattern="passwordRegex"
+                    ng-attr-title="{{passwordRegexDescription}}"
+                    id="update-account-password" class="span4"
+                    ng-model="user.newPassword" size="20" />
                 </div>
               </div>
-              <div class="control-group" style="display:none">
-                <label class="control-label" for="update-account-password-repeat">Confirm New Password</label>
+              <div class="control-group" style="display: none">
+                <label class="control-label"
+                  for="update-account-password-repeat">Confirm
+                  New Password</label>
                 <div class="controls">
-                  <input type="password" ug-validate name="update-account-password-repeat" ng-pattern="passwordRegex" ng-attr-title="{{passwordRegexDescription}}" id="update-account-password-repeat" class="span4" ng-model="user.newPasswordConfirm" size="20"/>
+                  <input type="password" ug-validate
+                    name="update-account-password-repeat"
+                    ng-pattern="passwordRegex"
+                    ng-attr-title="{{passwordRegexDescription}}"
+                    id="update-account-password-repeat" class="span4"
+                    ng-model="user.newPasswordConfirm" size="20" />
                 </div>
               </div>
             </fieldset>
             <div class="form-actions">
-              <input type="submit"  class="btn btn-primary"  name="button-update-account" ng-disabled="!updateAccountForm.$valid || loading" id="button-update-account" value="{{loading ? loadingText : 'Update'}}"  class="btn btn-usergrid"/>
+              <input type="submit" class="btn btn-primary"
+                name="button-update-account"
+                ng-disabled="!updateAccountForm.$valid || loading"
+                id="button-update-account"
+                value="{{loading ? loadingText : 'Update'}}"
+                class="btn btn-usergrid" />
             </div>
           </form>
         </div>
