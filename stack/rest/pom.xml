@@ -446,10 +446,10 @@
       <artifactId>jersey-client</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>net.tanesha.recaptcha4j</groupId>
-      <artifactId>recaptcha4j</artifactId>
-    </dependency>
+      <dependency>
+        <groupId>com.google.code.maven-play-plugin.net.tanesha.recaptcha4j</groupId>
+        <artifactId>recaptcha4j</artifactId>
+      </dependency>
 
     <dependency>
       <groupId>com.sun.jersey</groupId>

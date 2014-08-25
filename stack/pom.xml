@@ -180,6 +180,7 @@
   </distributionManagement>
 
   <modules>
+    <module>java-sdk-old</module>
     <module>config</module>
     <module>core</module>
     <module>services</module>
@@ -832,9 +833,8 @@
       </dependency>
 
       <dependency>
-        <groupId>net.tanesha.recaptcha4j</groupId>
+        <groupId>com.google.code.maven-play-plugin.net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
-        <!-- included as local dependency -->
         <version>0.0.8</version>
       </dependency>
 
