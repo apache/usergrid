@@ -187,6 +187,8 @@
 
     <bean id="jobFactory" class="org.apache.usergrid.batch.UsergridJobFactory" />
 
+    <bean id="metricsFactory" class="org.apache.usergrid.metrics.MetricsFactory" scope="singleton"/>
+
     <context:component-scan base-package="org.apache.usergrid.batch.job" />
     <context:annotation-config />
 
