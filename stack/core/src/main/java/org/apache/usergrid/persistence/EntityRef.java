@@ -17,8 +17,11 @@
 package org.apache.usergrid.persistence;
 
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import java.util.UUID;
 
+@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
 public interface EntityRef {
 
     /**

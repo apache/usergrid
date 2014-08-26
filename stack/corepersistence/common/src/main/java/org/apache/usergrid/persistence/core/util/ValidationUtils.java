@@ -80,7 +80,7 @@ public class ValidationUtils {
 
         Preconditions.checkNotNull( uuid, "The id uuid is required to be set" );
 
-        Preconditions.checkArgument( uuid.version() == UUID_VERSION, "The uuid must be version 1" );
+        //Preconditions.checkArgument( uuid.version() == UUID_VERSION, "The uuid must be version 1" );
 
         final String type = entityId.getType();
         Preconditions.checkNotNull( type, "The id type is required " );

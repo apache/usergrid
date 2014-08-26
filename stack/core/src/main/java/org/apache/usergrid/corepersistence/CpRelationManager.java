@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.clearspring.analytics.hash.MurmurHash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -685,12 +686,13 @@ public class CpRelationManager implements RelationManager {
                 headEntity.getType(), headEntity.getUuid(), 
                 itemRef.getType(), itemRef.getUuid() });
 
+        long uuidHash = MurmurHash.hash64( memberEntity.getId().getUuid());
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge(
-            cpHeadEntity.getId(), 
-            edgeType, 
-            memberEntity.getId(), 
-            memberEntity.getId().getUuid().timestamp() );
+            cpHeadEntity.getId(),
+            edgeType,
+            memberEntity.getId(),
+           uuidHash);
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
