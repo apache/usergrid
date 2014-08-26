@@ -27,8 +27,9 @@
         <relativePath>../stack/pom.xml</relativePath>
     </parent>
 
-    <artifactId>usergrid-release</artifactId>
+    <artifactId>apache-usergrid-incubating</artifactId>
     <packaging>pom</packaging>
+    <version>1.0.0-rc2</version>
 
     <name>Usergrid Release Assembly</name>
     <description>Assembles Usergrid into a distribution package</description>

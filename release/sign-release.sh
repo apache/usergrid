@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,11 +16,15 @@
 # limitations under the License.
 #
 
+pushd target 
+
 export rcstring="-rc2"
 export vstring="1.0.0"
 
-gpg --armor --detach-sig target/apache-usergrid-incubating-${vstring}${rcstring}-source.zip
-gpg --armor --detach-sig target/apache-usergrid-incubating-${vstring}${rcstring}-source.tar.gz
+gpg --armor --detach-sig apache-usergrid-incubating-${vstring}${rcstring}-source.zip
+gpg --armor --detach-sig apache-usergrid-incubating-${vstring}${rcstring}-source.tar.gz
 
 gpg --print-md MD5 apache-usergrid-incubating-${vstring}${rcstring}-source.zip > apache-usergrid-incubating-${vstring}${rcstring}-source.zip.md5
 gpg --print-md MD5 apache-usergrid-incubating-${vstring}${rcstring}-source.tar.gz > apache-usergrid-incubating-${vstring}${rcstring}-source.tar.gz.md5
+
+popd

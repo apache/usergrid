@@ -26,8 +26,7 @@
 	<includeBaseDirectory>false</includeBaseDirectory>
 	<fileSets>
 		<fileSet>
-			<outputDirectory>usergrid-${pom.version}-source
-			</outputDirectory>
+			<outputDirectory>apache-usergrid-incubating-${pom.version}</outputDirectory>
 			<directory>${project.basedir}/../</directory>
 			<includes>
 				<include>**</include>
