@@ -1812,6 +1812,7 @@
                     <exclude>**/CHANGES.txt</exclude>
                     <exclude>**/*.json</exclude>
                     <exclude>**/*.log</exclude>
+                    <exclude>**/*.md5</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
