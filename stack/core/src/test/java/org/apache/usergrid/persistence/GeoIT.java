@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.utils.MapUtils;
