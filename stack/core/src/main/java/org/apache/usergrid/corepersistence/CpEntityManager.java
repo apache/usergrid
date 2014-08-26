@@ -1595,7 +1595,7 @@ public class CpEntityManager implements EntityManager {
             throws Exception {
 
         UUID timestampUuid = UUIDUtils.newTimeUUID();
-        long timestamp = UUIDUtils.getTimestampInMicros( timestampUuid );
+        long timestamp = UUIDUtils.getUUIDLong(timestampUuid);
 
         Map<String, Object> properties = new TreeMap<>( CASE_INSENSITIVE_ORDER );
         properties.put( PROPERTY_TYPE, Role.ENTITY_TYPE );
@@ -2364,13 +2364,7 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        long timestamp = 0;
-
-        if(UUIDUtils.isTimeBased(timestampUuid)) {
-            timestamp = UUIDUtils.getTimestampInMicros(timestampUuid);
-        }else{
-            timestamp = MurmurHash.hash64(timestampUuid);
-        }
+        long timestamp = UUIDUtils.getUUIDLong(timestampUuid);
 
         UUID itemId = UUIDUtils.newTimeUUID();
 
@@ -2623,7 +2617,7 @@ public class CpEntityManager implements EntityManager {
             boolean removeFromDictionary, UUID timestampUuid )
             throws Exception {
 
-        long timestamp = UUIDUtils.getTimestampInMicros( timestampUuid );
+        long timestamp = UUIDUtils.getUUIDLong(timestampUuid);
 
         // dictionaryName = dictionaryName.toLowerCase();
         if ( elementCoValue == null ) {
