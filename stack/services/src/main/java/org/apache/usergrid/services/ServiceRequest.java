@@ -41,8 +41,6 @@ public class ServiceRequest {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceRequest.class );
 
-    public static final int MAX_INVOCATIONS = 10;
-
     public static long count = 0;
 
     private final long id = count++;
@@ -228,7 +226,7 @@ public class ServiceRequest {
             results = s.invoke( action, this, previousResults, payload );
             if ( ( results != null ) && results.hasMoreRequests() ) {
 
-                results = invokeMultiple( results, payload );
+                results = invokeMultiple( results );
             }
         }
 
@@ -240,14 +238,9 @@ public class ServiceRequest {
     }
 
 
-    private ServiceResults invokeMultiple( ServiceResults previousResults, ServicePayload payload ) throws Exception {
+    private ServiceResults invokeMultiple( ServiceResults previousResults ) throws Exception {
 
         List<ServiceRequest> requests = previousResults.getNextRequests();
-        if ( requests.size() > MAX_INVOCATIONS ) {
-            throw new IllegalArgumentException(
-                    "Maximum sub-collection requests exceeded, limit is " + MAX_INVOCATIONS + ", " + requests.size()
-                            + " attempted" );
-        }
 
         if ( returnsTree ) {
 

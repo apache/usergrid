@@ -23,6 +23,7 @@
       <wagon.plugin.version>1.0-beta-5</wagon.plugin.version>
       <webapp-shaded-jar>${project.artifactId}-${project.version}-shaded.${project.packaging}</webapp-shaded-jar>
       <wagon.webapp.copy.file>${project.build.directory}/${webapp-shaded-jar}</wagon.webapp.copy.file>
+      <wagon.target.dir>${project.basedir}</wagon.target.dir>
       <wagon.temp.directory>/tmp</wagon.temp.directory>
       <chop.home.directory>/opt/chop</chop.home.directory>
       <chop.webapp.directory>${chop.home.directory}/webapp</chop.webapp.directory>
@@ -71,21 +72,26 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>wagon-maven-plugin</artifactId>
         <version>${wagon.plugin.version}</version>
-        <configuration>
-          <serverId>ec2-coordinator-instance</serverId>
-          <fromFile>${wagon.webapp.copy.file}</fromFile>
-          <url>scp://${chop.coordinator.url}${wagon.temp.directory}</url>
-          <commands>
-            <command>sudo mv ${wagon.temp.directory}/${webapp-shaded-jar} ${chop.webapp.directory}</command>
-            <command>sudo service chop-webapp restart</command>
-          </commands>
-        </configuration>
+          <configuration>
+            <serverId>ec2-coordinator-instance</serverId>
+            <fromDir>${wagon.target.dir}</fromDir>
+            <includes>target/${webapp-shaded-jar},jssecacerts,chop-webapp</includes>
+            <url>scp://${chop.coordinator.url}${wagon.temp.directory}</url>
+            <commands>
+              <command>if [ ! -f /etc/init.d/chop-webapp ]; then sudo cp ${wagon.temp.directory}/chop-webapp /etc/init.d/; fi</command>
+              <command>sudo chmod +x /etc/init.d/chop-webapp</command>
+              <command>if [ ! -f ${chop.webapp.java.home}/lib/security/jssecacerts ]; then sudo cp ${wagon.temp.directory}/jssecacerts ${chop.webapp.java.home}/jre/lib/security/; fi</command>
+              <command>if [ ! -d ${chop.webapp.directory} ]; then sudo mkdir -p ${chop.webapp.directory}; fi</command>
+              <command>sudo cp ${wagon.temp.directory}/target/${webapp-shaded-jar} ${chop.webapp.directory}</command>
+              <command>sudo service chop-webapp restart</command>
+            </commands>
+          </configuration>
         <executions>
           <execution>
             <id>upload-webapp-jar</id>
             <phase>deploy</phase>
             <goals>
-              <goal>upload-single</goal>
+              <goal>upload</goal>
               <goal>sshexec</goal>
             </goals>
           </execution>

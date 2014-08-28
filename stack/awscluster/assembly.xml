@@ -43,14 +43,8 @@
             <includes>
                 <include>**</include>
             </includes>
-
-            <!-- Exclude Priam for now -->
-            <excludes>
-                <exclude>**/priam**</exclude>
-                <exclude>**/Priam**</exclude>
-            </excludes>
-
         </fileSet>
+
 
         <fileSet>
             <outputDirectory>./scripts</outputDirectory>
@@ -59,6 +53,14 @@
                 <include>**</include>
             </includes>
         </fileSet>
+
+      <fileSet>
+               <outputDirectory>./cql</outputDirectory>
+               <directory>./src/main/cql</directory>
+               <includes>
+                   <include>**</include>
+               </includes>
+           </fileSet>
 
         <fileSet>
             <outputDirectory>./webapps/portal</outputDirectory>

@@ -35,7 +35,7 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_INDEX_PREFIX = "elasticsearch.index_prefix";
 
-    public static final String ELASTICSEARCH_EMBEDDED = "elasticsearch.embedded";
+    public static final String ELASTICSEARCH_STARTUP = "elasticsearch.startup";
 
     public static final String QUERY_CURSOR_TIMEOUT_MINUTES = "elasticsearch.cursor_timeout.minutes";
 
@@ -63,9 +63,10 @@ public interface IndexFig extends GuicyFig {
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
 
-    @Default( "false" )
-    @Key( ELASTICSEARCH_EMBEDDED )
-    boolean isEmbedded();
+    /** How to start ElasticSearch, may be embedded, forked or remote. */
+    @Default( "remote" )
+    @Key( ELASTICSEARCH_STARTUP )
+    String getStartUp();
 
     @Default( "10" )
     @Key( QUERY_LIMIT_DEFAULT )

@@ -61,7 +61,6 @@ import com.google.inject.Inject;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 
 @RunWith(ITRunner.class)
@@ -172,12 +171,7 @@ public class EntityIndexTest extends BaseIT {
         CandidateResults candidateResults = entityIndex.search( query );
         timer.stop();
 
-        if ( num == 1 ) {
-            assertNotNull( candidateResults.get( 0 ) != null );
-        }
-        else {
-            assertEquals( num, candidateResults.size() );
-        }
+        assertEquals( num, candidateResults.size() );
         log.debug( "Query time {}ms", timer.getTime() );
     }
 

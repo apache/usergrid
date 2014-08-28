@@ -68,6 +68,8 @@ public class UpdateGroupIT extends AbstractRestIT {
 
         assertTitle( groupId, "Old Title" );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         // update that group by giving it a new title and using group path in URL
         try {
             Map<String, Object> group = new HashMap<String, Object>();
@@ -80,6 +82,8 @@ public class UpdateGroupIT extends AbstractRestIT {
         }
 
         assertTitle( groupId, "New Title" );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // update that group by giving it a new title and using UUID in URL
         try {

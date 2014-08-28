@@ -8,6 +8,7 @@
       "type" : "m1.large",
       "keyName" : "TestKeyPair",
       "setupScripts" : [ "file://./test_script.sh" ],
+      "runnerScripts" : [ "file://./runner.sh" ],
       "scriptEnvironment" : {
           "TEST_PARAM" : "Test Param Value"
       }

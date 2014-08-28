@@ -78,7 +78,7 @@ public class ManagementServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource );
+    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
 
 
     @BeforeClass

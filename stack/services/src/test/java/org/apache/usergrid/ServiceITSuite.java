@@ -54,6 +54,10 @@ import org.apache.usergrid.services.UsersServiceIT;
         })
 @Concurrent()
 public class ServiceITSuite {
+
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
+    
+    @ClassRule
+    public static ElasticSearchResource elasticSearchResource = ElasticSearchResource.instance;
 }

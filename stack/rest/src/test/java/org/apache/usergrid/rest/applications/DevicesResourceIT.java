@@ -32,12 +32,14 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 
 
 @Concurrent()
 public class DevicesResourceIT extends AbstractRestIT {
 
     @Test
+    @Ignore // cannot be supported with Core Persistence which requires time based UUIDs
     public void putWithUUIDShouldCreateAfterDelete() throws IOException {
 
         Map<String, String> payload = new HashMap<String, String>();
@@ -45,6 +47,8 @@ public class DevicesResourceIT extends AbstractRestIT {
         payload.put( "name", "foo" );
 
         String path = "devices/" + uuid;
+
+        refreshIndex("test-organization", "test-app");
 
         JsonNode response = mapper.readTree( appPath( path ).put( String.class, payload ));
 
@@ -57,6 +61,8 @@ public class DevicesResourceIT extends AbstractRestIT {
         // delete
         response = mapper.readTree( appPath( path ).delete( String.class ));
         assertNotNull( getEntity( response, 0 ) );
+
+        refreshIndex("test-organization", "test-app");
 
         // check deleted
         try {
@@ -71,6 +77,8 @@ public class DevicesResourceIT extends AbstractRestIT {
         response = mapper.readTree( appPath( path ).put( String.class, payload ));
         entity = getEntity( response, 0 );
         assertNotNull( entity );
+
+        refreshIndex("test-organization", "test-app");
 
         // check existence
         response = mapper.readTree( appPath( path ).get( String.class ));

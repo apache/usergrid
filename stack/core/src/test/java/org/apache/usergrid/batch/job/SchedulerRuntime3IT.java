@@ -17,6 +17,8 @@
 package org.apache.usergrid.batch.job;
 
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.entities.JobStat;
@@ -41,37 +43,46 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         int failCount = Integer.parseInt( props.getProperty( FAIL_PROP ) );
         long sleepTime = Long.parseLong( props.getProperty( RUNLOOP_PROP ) );
 
-        FailureJobExceuction job = cassandraResource.getBean( 
-                "failureJobExceuction", FailureJobExceuction.class );
+        FailureJobExecution job = cassandraResource.getBean( 
+                "failureJobExceuction", FailureJobExecution.class );
 
-        int latchValue = failCount + 1;
+        int totalAttempts = failCount + 1;
 
-        job.setLatch( latchValue );
+        job.setLatch( failCount );
+
+        getJobListener().setExpected( 3 );
 
         JobData returned = scheduler.createJob( 
                 "failureJobExceuction", System.currentTimeMillis(), new JobData() );
 
-        scheduler.refreshIndex();
+        final long waitTime = ( failCount + 2 ) * sleepTime + 5000L ;
+
+        boolean jobInvoked = job.waitForCount( waitTime, TimeUnit.MILLISECONDS);
+
+        assertTrue("Job invoked max times", jobInvoked);
+
+        boolean deadInvoked = job.waitForDead( waitTime, TimeUnit.MILLISECONDS );
+
+        assertTrue( "dead job signaled", deadInvoked );
+
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
-        boolean waited = getJobListener().blockTilDone( 3, ( failCount + 2 ) * sleepTime + 5000L );
+        boolean waited = getJobListener().blockTilDone(waitTime);
 
         //we shouldn't trip the latch.  It should fail failCount times, and not run again
         assertTrue( "Jobs ran", waited );
         assertTrue( failCount + " failures resulted", getJobListener().getFailureCount() == failCount );
         assertTrue( 1 + " success resulted", getJobListener().getSuccessCount() == 1 );
 
-        //we shouldn't have run the last time, we should have counted down to it
-        assertEquals( 1, job.getLatchCount() );
-
-        scheduler.refreshIndex();
 
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 
         // we should have only marked this as run fail+1 times
-        assertEquals( latchValue, stat.getTotalAttempts() );
-        assertEquals( latchValue, stat.getRunCount() );
+        assertEquals( totalAttempts, stat.getTotalAttempts() );
+        assertEquals( totalAttempts, stat.getRunCount() );
         assertEquals( 0, stat.getDelayCount() );
+
+
     }
 }

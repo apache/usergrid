@@ -83,5 +83,11 @@ class CpManagerCache {
         return gm;
     }
 
+    void flush() {
+        gmCache.purge();
+        ecmCache.purge();
+        eiCache.purge();
+    }
+
 
 }

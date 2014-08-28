@@ -42,8 +42,9 @@ import com.sun.jersey.spi.CloseableService;
 import net.tanesha.recaptcha.ReCaptcha;
 import net.tanesha.recaptcha.ReCaptchaFactory;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.removeEnd;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public abstract class AbstractContextResource {
@@ -89,6 +90,8 @@ public abstract class AbstractContextResource {
     @Autowired
     protected TokenService tokens;
 
+    private static final Logger logger = LoggerFactory.getLogger( AbstractContextResource.class );
+
 
     public AbstractContextResource() {
     }
@@ -105,6 +108,7 @@ public abstract class AbstractContextResource {
 
 
     public <T extends AbstractContextResource> T getSubResource( Class<T> t ) {
+        logger.debug("getSubResource: " + t.getCanonicalName());
         T subResource = resourceContext.getResource( t );
         subResource.setParent( this );
         return subResource;
@@ -126,7 +130,8 @@ public abstract class AbstractContextResource {
 
 
     public boolean useReCaptcha() {
-        return isNotBlank( properties.getRecaptchaPublic() ) && isNotBlank( properties.getRecaptchaPrivate() );
+        return StringUtils.isNotBlank( properties.getRecaptchaPublic() ) 
+                && StringUtils.isNotBlank( properties.getRecaptchaPrivate() );
     }
 
 
@@ -134,28 +139,39 @@ public abstract class AbstractContextResource {
         if ( !useReCaptcha() ) {
             return "";
         }
-        ReCaptcha c = ReCaptchaFactory
-                .newSecureReCaptcha( properties.getRecaptchaPublic(), properties.getRecaptchaPrivate(), false );
+        ReCaptcha c = ReCaptchaFactory.newSecureReCaptcha( 
+                properties.getRecaptchaPublic(), properties.getRecaptchaPrivate(), false );
         return c.createRecaptchaHtml( null, null );
     }
 
 
     public void sendRedirect( String location ) {
-        if ( isNotBlank( location ) ) {
+        if ( StringUtils.isNotBlank( location ) ) {
             throw new RedirectionException( location );
         }
     }
 
 
-    public Viewable handleViewable( String template, Object model ) {
-        String template_property = "usergrid.view" + removeEnd( this.getClass().getName().toLowerCase(), "resource" )
-                .substring( AbstractContextResource.class.getPackage().getName().length() ) + "." + template
-                .toLowerCase();
+    public Viewable handleViewable( String template, Object model ) { 
+
+        String className = this.getClass().getName().toLowerCase();
+        String packageName = AbstractContextResource.class.getPackage().getName();
+
+        String template_property = "usergrid.view" + 
+            StringUtils.removeEnd( className.toLowerCase(), "resource" )
+                .substring( packageName.length() ) + "." + template.toLowerCase();
+
         String redirect_url = properties.getProperty( template_property );
-        if ( isNotBlank( redirect_url ) ) {
+        
+        if ( StringUtils.isNotBlank( redirect_url ) ) {
+            logger.debug("Redirecting to URL: ", redirect_url);
             sendRedirect( redirect_url );
         }
-        return new Viewable( template, model, this.getClass() );
+        logger.debug("Dispatching to viewable with template: {}", 
+                template, template_property );
+
+        Viewable viewable = new Viewable( template, model, this.getClass() );
+        return viewable;
     }
 
 

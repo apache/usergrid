@@ -400,7 +400,9 @@ public class ManagementResource extends AbstractContextResource {
                                          @FormParam( "username" ) String username,
                                          @FormParam( "password" ) String password ) {
 
-        try {
+       logger.debug( "ManagementResource /authorize: {}/{}", username, password );
+
+       try {
             responseType = response_type;
             clientId = client_id;
             redirectUri = redirect_uri;
@@ -436,6 +438,7 @@ public class ManagementResource extends AbstractContextResource {
             throw e;
         }
         catch ( Exception e ) {
+            logger.debug("handleAuthorizeForm failed", e);
             return handleViewable( "error", e );
         }
     }

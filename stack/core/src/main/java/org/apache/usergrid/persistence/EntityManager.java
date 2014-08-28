@@ -507,6 +507,8 @@ public interface EntityManager {
 
     public void deleteRole( String roleName ) throws Exception;
 
+    public EntityRef getGroupRoleRef( UUID ownerId, String roleName ) throws Exception;
+
     // Group roles
 
     public Map<String, String> getGroupRoles( UUID groupId ) throws Exception;
@@ -677,11 +679,13 @@ public interface EntityManager {
     /** @return the cass */
     CassandraService getCass();
 
-
-    // things added for Core Persistence
-
-    // testing only
+    /** 
+     * Refresh the applications index -- use sparingly.
+     */
     void refreshIndex();
 
     public void init( EntityManagerFactory emf, UUID applicationId);
+
+    /** For testing purposes */
+    public void flushManagerCaches();
 }

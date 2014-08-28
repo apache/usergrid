@@ -47,7 +47,6 @@ import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
@@ -88,11 +87,13 @@ public class OrganizationResource extends AbstractContextResource {
 
 
     public OrganizationResource() {
+        logger.debug("OrganizationResource created");
     }
 
 
     public OrganizationResource init( OrganizationInfo organization ) {
         this.organization = organization;
+        logger.debug("OrganizationResource initialized for org {}", organization.getName());
         return this;
     }
 
@@ -262,7 +263,7 @@ public class OrganizationResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug( "OrganizationResource.executePut" );
+        logger.debug( "executePut" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "put" );
@@ -284,6 +285,7 @@ public class OrganizationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
+        logger.debug( "executePostJson" );
 
         OAuthResponse response = null;
         UUID jobUUID = null;

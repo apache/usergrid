@@ -26,15 +26,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /** @author tnine */
 public abstract class ValueResource extends NamedResource {
 
+    private static final Logger logger = LoggerFactory.getLogger( ValueResource.class );
+    
     private String name;
     private String query;
     private String cursor;
@@ -50,12 +52,20 @@ public abstract class ValueResource extends NamedResource {
     }
 
 
+    public String getName() {
+        return name;
+    }
+
+
+
+
+
     /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.apache.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuilder)
-     */
+         * (non-Javadoc)
+         *
+         * @see
+         * org.apache.usergrid.rest.resource.NamedResource#addToUrl(java.lang.StringBuilder)
+         */
     @Override
     public void addToUrl( StringBuilder buffer ) {
         parent.addToUrl( buffer );
@@ -202,7 +212,9 @@ public abstract class ValueResource extends NamedResource {
             resource = resource.queryParam( "limit", limit.toString() );
         }
 
-        return mapper.readTree( jsonMedia( resource ).get( String.class ));
+        String json = jsonMedia( resource ).get( String.class );
+        //logger.debug(json);
+        return mapper.readTree( json );
     }
 
 
@@ -234,7 +246,7 @@ public abstract class ValueResource extends NamedResource {
 
         int totalEntitiesContained = 0;
 
-        JsonNode checkedNodes = this.withQuery( checkedQuery ).withLimit( 1000 ).get();
+        JsonNode checkedNodes = this.withQuery( checkedQuery ).withLimit( correctValues.length ).get();
 
         while ( correctValues.length != totalEntitiesContained )//correctNode.get("entities") != null)
         {
@@ -253,9 +265,8 @@ public abstract class ValueResource extends NamedResource {
             }
 
 
-      /*works because this method checks to make sure both queries return the same thing
-      therefore this if shouldn't be needed, but added just in case
-       */
+            // works because this method checks to make sure both queries return the same thing
+            // therefore this if shouldn't be needed, but added just in case
             if ( checkedNodes.get( "cursor" ) != null ) {
                 checkedNodes = this.query( checkedQuery, "cursor", checkedNodes.get( "cursor" ).toString() );
             }

@@ -81,11 +81,15 @@ public class ConnectionResourceTest extends AbstractRestIT {
     /*finish setting up the two users */
 
 
+        refreshIndex("test-organization", "test-app");
+
         ClientResponse toddWant = resource().path( "/test-organization/test-app/users/todd/likes/peeps" )
                 .queryParam( "access_token", access_token ).accept( MediaType.TEXT_HTML )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( ClientResponse.class, objectOfDesire );
 
         assertEquals( 200, toddWant.getStatus() );
+
+        refreshIndex("test-organization", "test-app");
 
         JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/peeps" ).queryParam( "access_token", access_token )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
@@ -116,9 +120,13 @@ public class ConnectionResourceTest extends AbstractRestIT {
         UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
 
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         //create the connection
         things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
 
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         //test we have the "likes" in our connection meta data response
 
@@ -171,9 +179,13 @@ public class ConnectionResourceTest extends AbstractRestIT {
         UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
 
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         //create the connection
         things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
 
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         //test we have the "likes" in our connection meta data response
 
@@ -216,10 +228,14 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         //create the connection
         things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
 
         JsonNode response = things.entity( "thing2" ).delete();
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         JsonNode node = things.entity ( "thing2" ).get();
 
@@ -236,10 +252,14 @@ public class ConnectionResourceTest extends AbstractRestIT {
 
         UUID thing2Id = getEntityId( things.create( hashMap( "name", "thing2" ) ), 0 );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         //create the connection
         things.entity( thing1Id ).connection( "likes" ).entity( thing2Id ).post();
 
         JsonNode response = things.entity( "thing1" ).delete();
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         JsonNode node = things.entity ( "thing1" ).get();
 

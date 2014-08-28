@@ -247,10 +247,11 @@ public class AbstractCollectionService extends AbstractService {
             return getItemsByQuery( context, new Query() );
         }
 
-        int count = 10;
-        Results r =
-                em.getCollection( context.getOwner(), context.getCollectionName(), null, count, Level.ALL_PROPERTIES,
-                        isCollectionReversed( context ) );
+        logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
+        int count = Query.DEFAULT_LIMIT; 
+
+        Results r = em.getCollection( context.getOwner(), context.getCollectionName(), 
+            null, count, Level.ALL_PROPERTIES, isCollectionReversed( context ) );
 
         importEntities( context, r );
 
@@ -271,7 +272,7 @@ public class AbstractCollectionService extends AbstractService {
 
         checkPermissionsForEntity( context, id );
 
-        Entity item = em.get( new SimpleEntityRef( getEntityType(), id) );
+        Entity item = em.get( id );
 
         if ( item != null ) {
             validateEntityType( item, id );
@@ -356,11 +357,11 @@ public class AbstractCollectionService extends AbstractService {
         if ( context.getPayload().isBatch() ) {
             List<Entity> entities = new ArrayList<Entity>();
             List<Map<String, Object>> batch = context.getPayload().getBatchProperties();
-            logger.info( "Attempting to batch create " + batch.size() + " entities in collection " + context
+            logger.debug( "Attempting to batch create " + batch.size() + " entities in collection " + context
                     .getCollectionName() );
             int i = 1;
             for ( Map<String, Object> p : batch ) {
-                logger.info( "Creating entity " + i + " in collection " + context.getCollectionName() );
+                logger.debug( "Creating entity " + i + " in collection " + context.getCollectionName() );
 
                 Entity item = null;
 
@@ -376,7 +377,7 @@ public class AbstractCollectionService extends AbstractService {
                     continue;
                 }
 
-                logger.info(
+                logger.debug(
                         "Entity " + i + " created in collection " + context.getCollectionName() + " with UUID " + item
                                 .getUuid() );
 

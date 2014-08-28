@@ -34,6 +34,7 @@ public class BasicInstanceSpec implements InstanceSpec
     private String type;
     private String keyName;
     private List<URL> setupScripts = new ArrayList<URL>();
+    private List<URL> runnerScripts = new ArrayList<URL>();
     private Properties scriptEnvironment = new Properties();
 
 
@@ -79,9 +80,20 @@ public class BasicInstanceSpec implements InstanceSpec
         return setupScripts;
     }
 
+    @Override
+    public List<URL> getRunnerScripts() {
+        return runnerScripts;
+    }
+
 
     public BasicInstanceSpec setSetupScripts( final List<URL> setupScripts ) {
         this.setupScripts = setupScripts;
+        return this;
+    }
+
+
+    public BasicInstanceSpec setRunnerScripts( final List<URL> runnerScripts ) {
+        this.runnerScripts = runnerScripts;
         return this;
     }
 

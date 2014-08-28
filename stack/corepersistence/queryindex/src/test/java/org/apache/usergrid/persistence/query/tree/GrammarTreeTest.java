@@ -45,6 +45,7 @@ import org.antlr.runtime.TokenRewriteStream;
 import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 import org.junit.Test;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.elasticsearch.index.query.QueryBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -401,9 +402,34 @@ public class GrammarTreeTest {
         WithinOperand operand = ( WithinOperand ) query.getRootOperand();
 
         assertEquals( "a", operand.getProperty().getValue() );
-        assertEquals( 1, operand.getDistance().getFloatValue(), 0 );
+        assertEquals( 1f, operand.getDistance().getFloatValue(), 0 );
         assertEquals( -40.343666f, operand.getLatitude().getFloatValue(), 0 );
         assertEquals( 175.630917f, operand.getLongitude().getFloatValue(), 0 );
+    }
+
+
+    @Test
+    public void selectGeoWithAnd() throws RecognitionException {
+        String queryString = "select * where location within 20000 of 37,-75 "
+                + "and created > 1407776999925 and created < 1407777000266"; 
+
+        ANTLRStringStream in = new ANTLRStringStream( queryString );
+        CpQueryFilterLexer lexer = new CpQueryFilterLexer( in );
+        TokenRewriteStream tokens = new TokenRewriteStream( lexer );
+        CpQueryFilterParser parser = new CpQueryFilterParser( tokens );
+
+        Query query = parser.ql().query;
+
+        AndOperand andOp1 = ( AndOperand ) query.getRootOperand();
+        AndOperand andOp2 = ( AndOperand ) andOp1.getLeft();
+        WithinOperand withinOperand = ( WithinOperand ) andOp2.getLeft();
+
+        assertEquals( "location", withinOperand.getProperty().getValue() );
+        assertEquals( 20000, withinOperand.getDistance().getFloatValue(), 0 );
+        assertEquals( 37f, withinOperand.getLatitude().getFloatValue(), 0 );
+        assertEquals( -75f, withinOperand.getLongitude().getFloatValue(), 0 );
+
+        QueryBuilder qb = query.createQueryBuilder();
     }
 
 
@@ -561,6 +587,17 @@ public class GrammarTreeTest {
         assertEquals( "title", rootNode.getProperty().getValue() );
         assertEquals( UUID.fromString( "c6ee8a1c-3ef4-11e2-8861-02e81adcf3d0" ),
                 ( ( UUIDLiteral ) rootNode.getLiteral() ).getValue() );
+    }
+
+
+    @Test
+    public void orderByGrammar() throws QueryParseException {
+
+        String s = "select * where name = 'bob' order by name asc";
+
+        Query query = Query.fromQL( s );
+
+        assertEquals( 1, query.getSortPredicates().size() );
     }
 
 

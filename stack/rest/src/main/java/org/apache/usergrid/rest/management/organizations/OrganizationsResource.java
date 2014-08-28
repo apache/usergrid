@@ -103,6 +103,9 @@ public class OrganizationsResource extends AbstractContextResource {
     public JSONWithPadding newOrganization( @Context UriInfo ui, Map<String, Object> json,
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
+
+        logger.debug("newOrganization");
+
         ApiResponse response = createApiResponse();
         response.setAction( "new organization" );
 
@@ -133,6 +136,8 @@ public class OrganizationsResource extends AbstractContextResource {
                                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
+        logger.debug( "New organization: {}", organizationNameForm );
+
         String organizationName = organizationNameForm != null ? organizationNameForm : organizationNameQuery;
         String username = usernameForm != null ? usernameForm : usernameQuery;
         String name = nameForm != null ? nameForm : nameQuery;
@@ -147,10 +152,11 @@ public class OrganizationsResource extends AbstractContextResource {
     private JSONWithPadding newOrganization( @Context UriInfo ui, String organizationName, String username, String name,
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> properties, String callback ) throws Exception {
-        Preconditions
-                .checkArgument( StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
 
-        logger.info( "New organization: {}", organizationName );
+        Preconditions.checkArgument( 
+            StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
+
+        logger.debug( "New organization: {}", organizationName );
 
         ApiResponse response = createApiResponse();
         response.setAction( "new organization" );

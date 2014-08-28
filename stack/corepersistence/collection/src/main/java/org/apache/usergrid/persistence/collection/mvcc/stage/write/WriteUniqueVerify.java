@@ -110,7 +110,7 @@ public class WriteUniqueVerify implements
 
                         // use write-first then read strategy
                         UniqueValue written = new UniqueValueImpl( 
-                            ioevent.getEntityCollection(), field, entity.getId(), entity.getVersion() );
+                            ioevent.getEntityCollection(), field, entity.getId(), mvccEntity.getVersion() );
 
                         // use TTL in case something goes wrong before entity is finally committed
                         MutationBatch mb = uniqueValueStrat.write( written, serializationFig.getTimeout() );

@@ -69,6 +69,8 @@ public class GroupResourceIT extends AbstractRestIT {
         catch ( Exception e ) {
             log.error( "Error creating group " + GROUP, e );
         }
+        refreshIndex("test-organization", "test-app");
+
     }
 
 
@@ -77,6 +79,8 @@ public class GroupResourceIT extends AbstractRestIT {
 
         ApiResponse response = client.createGroup( "groupName/withslash" );
         assertNull( response.getError() );
+
+        refreshIndex("test-organization", "test-app");
 
         {
             boolean failed = false;
@@ -106,6 +110,8 @@ public class GroupResourceIT extends AbstractRestIT {
         ApiResponse response = client.createGroup( groupPath, groupTitle, groupName );
 
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
+
+        refreshIndex("test-organization", "test-app");
 
         UUID newId = response.getEntities().get( 0 ).getUuid();
 
@@ -153,6 +159,8 @@ public class GroupResourceIT extends AbstractRestIT {
         ApiResponse response = client.createGroup( groupName );
         assertNull( "Error was: " + response.getErrorDescription(), response.getError() );
 
+        refreshIndex("test-organization", "test-app");
+
         UUID createdId = response.getEntities().get( 0 ).getUuid();
 
         // add Permission
@@ -165,6 +173,8 @@ public class GroupResourceIT extends AbstractRestIT {
         // check it
         assertNull( node.get( "errors" ) );
         assertEquals( node.get( "data" ).get( 0 ).asText(), "delete:/test" );
+
+        refreshIndex("test-organization", "test-app");
 
         node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/permissions" )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
@@ -182,6 +192,8 @@ public class GroupResourceIT extends AbstractRestIT {
         // check it
         assertNull( node.get( "errors" ) );
         assertTrue( node.get( "data" ).size() == 0 );
+
+        refreshIndex("test-organization", "test-app");
 
         node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/permissions" )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
@@ -204,6 +216,8 @@ public class GroupResourceIT extends AbstractRestIT {
 
         UUID createdId = response.getEntities().get( 0 ).getUuid();
 
+        refreshIndex("test-organization", "test-app");
+
         // create Role
 
         String json = "{\"title\":\"" + roleName + "\",\"name\":\"" + roleName + "\"}";
@@ -215,11 +229,15 @@ public class GroupResourceIT extends AbstractRestIT {
         assertNull( node.get( "errors" ) );
 
 
+        refreshIndex("test-organization", "test-app");
+
         // add Role
 
         node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/roles/" + roleName )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class ));
+
+        refreshIndex("test-organization", "test-app");
 
         // check it
         assertNull( node.get( "errors" ) );
@@ -237,12 +255,16 @@ public class GroupResourceIT extends AbstractRestIT {
         assertNull( node.get( "errors" ) );
         assertTrue( node.get( "entities" ).findValuesAsText( "name" ).contains( roleName ) );
 
+        refreshIndex("test-organization", "test-app");
+
         // remove Role
 
         node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/roles/" + roleName )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
         assertNull( node.get( "errors" ) );
+
+        refreshIndex("test-organization", "test-app");
 
         node = mapper.readTree( resource().path( "/test-organization/test-app/groups/" + createdId + "/roles" )
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
@@ -261,6 +283,8 @@ public class GroupResourceIT extends AbstractRestIT {
                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
         assertNull( node.get( "errors" ) );
+
+        refreshIndex("test-organization", "test-app");
 
         // now it should be gone
         node = mapper.readTree( resource().path( "/test-organization/test-app/roles" ).queryParam( "access_token", access_token )

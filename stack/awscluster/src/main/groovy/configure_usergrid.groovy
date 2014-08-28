@@ -40,37 +40,58 @@ def clusterName  = System.getenv().get("CASSANDRA_CLUSTER_NAME")
 def superUserEmail     = System.getenv().get("SUPER_USER_EMAIL")
 def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 
+def cassThreads = System.getenv().get("TOMCAT_THREADS")
+def hystrixThreads = Integer.parseInt(cassThreads) / 100
+
+
+NodeRegistry registry = new NodeRegistry();
+
+def selectResult = registry.searchNode('cassandra')
+
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
-def creds = new BasicAWSCredentials(accessKey, secretKey)
-def sdbClient = new AmazonSimpleDBClient(creds)
-def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}`"))
-def seeds = ""
+def cassandras = ""
 def sep = ""
-for (item in selectResult.getItems()) {
-    def att = item.getAttributes().get(0)
-    if (att.getValue().equals(stackName)) {
-        seeds = "${seeds}${sep}${item.getName()}:9160"
-        sep = ","
-    }
+for (item in selectResult) {
+    cassandras = "${cassandras}${sep}${item}:9160"
+    sep = ","
+}
+
+// TODO T.N Make this the graphite url
+selectResult = registry.searchNode('graphite')
+def graphite = ""
+sep = ""
+for (item in selectResult) {
+    graphite = "${graphite}${sep}${item}"
+    sep = ","
+}
+
+// cassandra nodes are also our elasticsearch nodes
+selectResult = registry.searchNode('cassandra')
+def esnodes = ""
+sep = ""
+for (item in selectResult) {
+    esnodes = "${esnodes}${sep}${item}"
+    sep = ","
 }
 
 def usergridConfig = """
 ######################################################
 # Minimal Usergrid configuration properties for local Tomcat and Cassandra 
-#
 
-cassandra.url=${seeds}
-cassanrda.cluster=${clusterName}
-cassandra.keyspace.strategy.options.replication_factor=${replFactor}
-cassandra.keyspace.strategy.options.us-west=${replFactor}
-cassandra.keyspace.strategy.options.us-west=${replFactor}
+cassandra.url=${cassandras}
+cassandra.cluster=${clusterName}
 cassandra.keyspace.strategy=org.apache.cassandra.locator.SimpleStrategy
+cassandra.keyspace.replication=${replFactor}
 
-# These settings seem to cause problems at startup time
-#cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
-#cassandra.writecl=LOCAL_QUORUM
-#cassandra.readcl=LOCAL_QUORUM
+cassandra.timeout=5000
+cassandra.connections=${cassThreads}
+hystrix.threadpool.graph_user.coreSize=${hystrixThreads}
+hystrix.threadpool.graph_async.coreSize=${hystrixThreads}
 
+elasticsearch.cluster_name=${clusterName}
+elasticsearch.index_prefix=usergrid
+elasticsearch.hosts=${esnodes}
+elasticsearch.port=9300
 
 ######################################################
 # Custom mail transport 
@@ -134,14 +155,18 @@ usergrid.view.management.users.user.activate=${baseUrl}/accounts/welcome
 usergrid.view.management.users.user.confirm=${baseUrl}/accounts/welcome
 
 usergrid.admin.confirmation.url=${baseUrl}/management/users/%s/confirm
-usergrid.user.confirmation.url=${baseUrl}/%s/%s/users/%s/confirm\n\\n\
+usergrid.user.confirmation.url=${baseUrl}/%s/%s/users/%s/confirm
 
-usergrid.organization.activation.url=${baseUrl}/management/organizations/%s/activate\n\
+usergrid.organization.activation.url=${baseUrl}/management/organizations/%s/activate
+
 usergrid.admin.activation.url=${baseUrl}/management/users/%s/activate
 usergrid.user.activation.url=${baseUrl}%s/%s/users/%s/activate
 
 usergrid.admin.resetpw.url=${baseUrl}/management/users/%s/resetpw
 usergrid.user.resetpw.url=${baseUrl}/%s/%s/users/%s/resetpw
+
+
+usergrid.metrics.graphite.host=${graphite}
 """
 
 println usergridConfig 

@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest;
 
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -41,6 +42,9 @@ public class JacksonCustomMapperProvider implements ContextResolver<ObjectMapper
 
     public JacksonCustomMapperProvider() {
         logger.info( "JacksonCustomMapperProvider installed" );
+
+        // Should not be necessary
+        //mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
 

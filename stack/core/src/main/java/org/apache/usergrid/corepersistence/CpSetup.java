@@ -41,6 +41,7 @@ import me.prettyprint.cassandra.service.CassandraHost;
 import me.prettyprint.hector.api.ddl.ComparatorType;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
+import org.apache.commons.lang.StringUtils;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
@@ -96,8 +97,6 @@ public class CpSetup implements Setup {
         try {
             logger.info("Loading Core Persistence properties");
 
-            ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid-default" );
-
             String hostsString = "";
             CassandraHost[] hosts = cass.getCassandraHostConfigurator().buildCassandraHosts();
             if ( hosts.length == 0 ) {
@@ -105,18 +104,47 @@ public class CpSetup implements Setup {
             }
             String sep = "";
             for ( CassandraHost host : hosts ) {
-                hostsString = sep + host.getHost();
+                if (StringUtils.isEmpty(host.getHost())) {
+                    throw new RuntimeException("Fatal error: Cassandra hostname cannot be empty");
+                }
+                hostsString = hostsString + sep + host.getHost();
                 sep = ",";
             }
 
+            logger.info("hostsString: " + hostsString);
+
             Properties cpProps = new Properties();
+
+            // Some Usergrid properties must be mapped to Core Persistence properties
             cpProps.put("cassandra.hosts", hostsString);
             cpProps.put("cassandra.port", hosts[0].getPort());
+            cpProps.put("cassandra.cluster_name", cass.getProperties().get("cassandra.cluster"));
+
+            String cassRemoteString = (String)cass.getProperties().get("cassandra.use_remote"); 
+            if ( cassRemoteString != null && cassRemoteString.equals("false")) {
+                cpProps.put("cassandra.embedded", "true");
+            } else {
+                cpProps.put("cassandra.embedded", "false");
+            }
+
+            cpProps.put("collections.keyspace.strategy.class", 
+                    cass.getProperties().get("cassandra.keyspace.strategy"));
+
+            cpProps.put("collections.keyspace.strategy.options", "replication_factor:" +  
+                    cass.getProperties().get("cassandra.keyspace.replication"));
+
+            cpProps.put("cassandra.keyspace.strategy.options.replication_factor",
+                    cass.getProperties().get("cassandra.keyspace.replication"));
+
+            logger.debug("Set Cassandra properties for Core Persistence: " + cpProps.toString() );
+
+            // Make all Usergrid properties into Core Persistence config
+            cpProps.putAll( cass.getProperties() );
+            //logger.debug("All properties fed to Core Persistence: " + cpProps.toString() );
 
             ConfigurationManager.loadProperties( cpProps );
-            logger.debug("Set Cassandra properties for Core Persistence: " + cpProps.toString() );
         }
-        catch ( IOException e ) {
+        catch ( Exception e ) {
             throw new RuntimeException( "Fatal error loading configuration.", e );
         }
 
@@ -155,9 +183,9 @@ public class CpSetup implements Setup {
 
 
     /** @return statically constructed reference to the default application */
-    public static Application getDefaultApp() {
-        return SystemDefaults.defaultApp;
-    }
+//    public static Application getDefaultApp() {
+//        return SystemDefaults.defaultApp;
+//    }
 
     @Override
     public void setupSystemKeyspace() throws Exception {
@@ -245,12 +273,12 @@ public class CpSetup implements Setup {
         private static final Application managementApp = 
                 new Application( CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID);
 
-        private static final Application defaultApp = 
-                new Application( CpEntityManagerFactory.DEFAULT_APPLICATION_ID );
+//        private static final Application defaultApp = 
+//                new Application( CpEntityManagerFactory.DEFAULT_APPLICATION_ID );
 
         static {
             managementApp.setName( MANAGEMENT_APPLICATION );
-            defaultApp.setName( DEFAULT_APPLICATION );
+//            defaultApp.setName( DEFAULT_APPLICATION );
         }
     }
 }

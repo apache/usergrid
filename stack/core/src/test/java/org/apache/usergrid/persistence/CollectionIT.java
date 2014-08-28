@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.Application;
 import org.apache.usergrid.CoreApplication;
+import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.index.query.Identifier;
@@ -50,7 +51,7 @@ import static org.junit.Assert.fail;
 
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
-//@Concurrent()
+@Concurrent()
 public class CollectionIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
 
@@ -572,7 +573,7 @@ public class CollectionIT extends AbstractCoreIT {
     public void emptyQueryReverse() throws Exception {
         LOG.debug( "emptyQueryReverse" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testEmptyQueryReverse" );
+        UUID applicationId = setup.createApplication( "emptyQueryReverseOrg", "testEmptyQueryReverseApp" );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -831,6 +832,67 @@ public class CollectionIT extends AbstractCoreIT {
         query = Query.fromQL( "select * where keywords contains 'foobar' AND NOT keywords contains 'test'" );
         r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 0, r.size() );
+
+        //search where we don't have a value, should return no results and no cursor
+        query = Query.fromQL( "select * where NOT title = 'FooBar'" );
+        r = em.searchCollection( em.getApplicationRef(), "games", query);
+        assertEquals(2, r.size());
+        assertNull(r.getCursor());
+
+    }
+
+
+    @Test
+    public void notSubObjectQuery() throws Exception {
+        UUID applicationId = setup.createApplication( "testOrganization", "notSubObjectQuery" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+
+        Map<String, Object> subObject = new LinkedHashMap<String, Object>();
+        subObject.put( "subField", "Foo" );
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "subObjectArray", new Map[] { subObject } );
+
+        Entity entity1 = em.create( "game", properties );
+        assertNotNull( entity1 );
+
+
+        Entity entity2 = em.create( "game", properties );
+        assertNotNull( entity2 );
+
+
+        // simple not
+        Query query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Foo'" ).withLimit( 1 );
+        Results r = em.searchCollection( em.getApplicationRef(), "games", query );
+        assertEquals( 0, r.size() );
+        assertNull( r.getCursor() );
+
+
+        // full negation in simple with lower limit
+        query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Bar'" ).withLimit( 1 );
+        r = em.searchCollection( em.getApplicationRef(), "games", query );
+        assertEquals( 1, r.size() );
+        assertNotNull( r.getCursor() );
+        assertEquals( entity1, r.getEntities().get( 0 ) );
+
+
+        query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Bar'" ).withLimit( 1 )
+                     .withCursor( r.getCursor() );
+        r = em.searchCollection( em.getApplicationRef(), "games", query );
+        assertEquals( 1, r.size() );
+        assertNotNull( r.getCursor() );
+        assertEquals( entity2, r.getEntities().get( 0 ) );
+
+        query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Bar'" ).withLimit( 1 )
+                     .withCursor( r.getCursor() );
+        r = em.searchCollection( em.getApplicationRef(), "games", query );
+        assertEquals( 0, r.size() );
+        assertNull( r.getCursor() );
+
     }
 
 

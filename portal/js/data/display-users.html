@@ -1,40 +1,63 @@
-
 <table id="query-response-table" class="table">
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
   <tbody>
-  <tr class="zebraRows users-row">
-    <td class="checkboxo">
-      <input type="checkbox" onclick="Usergrid.console.selectAllEntities(this);"></td>
-    <td class="gravatar50-td">&nbsp;</td>
-    <td class="user-details bold-header">Username</td>
-    <td class="user-details bold-header">Display Name</td>
-    <td class="user-details bold-header">UUID</td>
-    <td class="view-details">&nbsp;</td>
-  </tr>
-  <tr class="zebraRows users-row">
-    <td class="checkboxo">
-      <input class="listItem" type="checkbox" name="/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7" value="bf9a95da-d508-11e2-bf44-236d2eee13a7">
-    </td>
-    <td class="gravatar50-td">
-      <img src="http://www.gravatar.com/avatar/01b37aa66496988ca780b3f515bc768e" class="gravatar50">
-    </td>
-    <td class="details">
-      <a onclick="Usergrid.console.getCollection('GET', '/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/'+'bf9a95da-d508-11e2-bf44-236d2eee13a7'); $('#data-explorer').show(); return false;" class="view-details">10</a>
-    </td>
-    <td class="details">      #"&gt;&lt;img src=x onerror=prompt(1);&gt;   </td>
-    <td class="details">     bf9a95da-d508-11e2-bf44-236d2eee13a7   </td>
-    <td class="view-details">
-      <a href="" onclick="$('#query-row-bf9a95da-d508-11e2-bf44-236d2eee13a7').toggle(); $('#data-explorer').show(); return false;" class="view-details">Details</a>
-    </td>
-  </tr>
-  <tr id="query-row-bf9a95da-d508-11e2-bf44-236d2eee13a7" style="display:none">
-    <td colspan="5">
-      <div>
-        <div style="padding-bottom: 10px;">
-          <button type="button" class="btn btn-small query-button active" id="button-query-show-row-JSON" onclick="Usergrid.console.activateQueryRowJSONButton(); $('#query-row-JSON-bf9a95da-d508-11e2-bf44-236d2eee13a7').show(); $('#query-row-content-bf9a95da-d508-11e2-bf44-236d2eee13a7').hide(); return false;">JSON</button>
-          <button type="button" class="btn btn-small query-button disabled" id="button-query-show-row-content" onclick="Usergrid.console.activateQueryRowContentButton();$('#query-row-content-bf9a95da-d508-11e2-bf44-236d2eee13a7').show(); $('#query-row-JSON-bf9a95da-d508-11e2-bf44-236d2eee13a7').hide(); return false;">Content</button>
-        </div>
-        <div id="query-row-JSON-bf9a95da-d508-11e2-bf44-236d2eee13a7">
-              <pre>{
+    <tr class="zebraRows users-row">
+      <td class="checkboxo"><input type="checkbox"
+        onclick="Usergrid.console.selectAllEntities(this);"></td>
+      <td class="gravatar50-td">&nbsp;</td>
+      <td class="user-details bold-header">Username</td>
+      <td class="user-details bold-header">Display Name</td>
+      <td class="user-details bold-header">UUID</td>
+      <td class="view-details">&nbsp;</td>
+    </tr>
+    <tr class="zebraRows users-row">
+      <td class="checkboxo"><input class="listItem" type="checkbox"
+        name="/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7"
+        value="bf9a95da-d508-11e2-bf44-236d2eee13a7"></td>
+      <td class="gravatar50-td"><img
+        src="http://www.gravatar.com/avatar/01b37aa66496988ca780b3f515bc768e"
+        class="gravatar50"></td>
+      <td class="details"><a
+        onclick="Usergrid.console.getCollection('GET', '/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/'+'bf9a95da-d508-11e2-bf44-236d2eee13a7'); $('#data-explorer').show(); return false;"
+        class="view-details">10</a></td>
+      <td class="details">#"&gt;&lt;img src=x
+        onerror=prompt(1);&gt;</td>
+      <td class="details">bf9a95da-d508-11e2-bf44-236d2eee13a7</td>
+      <td class="view-details"><a href=""
+        onclick="$('#query-row-bf9a95da-d508-11e2-bf44-236d2eee13a7').toggle(); $('#data-explorer').show(); return false;"
+        class="view-details">Details</a></td>
+    </tr>
+    <tr id="query-row-bf9a95da-d508-11e2-bf44-236d2eee13a7"
+      style="display: none">
+      <td colspan="5">
+        <div>
+          <div style="padding-bottom: 10px;">
+            <button type="button"
+              class="btn btn-small query-button active"
+              id="button-query-show-row-JSON"
+              onclick="Usergrid.console.activateQueryRowJSONButton(); $('#query-row-JSON-bf9a95da-d508-11e2-bf44-236d2eee13a7').show(); $('#query-row-content-bf9a95da-d508-11e2-bf44-236d2eee13a7').hide(); return false;">JSON</button>
+            <button type="button"
+              class="btn btn-small query-button disabled"
+              id="button-query-show-row-content"
+              onclick="Usergrid.console.activateQueryRowContentButton();$('#query-row-content-bf9a95da-d508-11e2-bf44-236d2eee13a7').show(); $('#query-row-JSON-bf9a95da-d508-11e2-bf44-236d2eee13a7').hide(); return false;">Content</button>
+          </div>
+          <div id="query-row-JSON-bf9a95da-d508-11e2-bf44-236d2eee13a7">
+            <pre>{
   "picture": "http://www.gravatar.com/avatar/01b37aa66496988ca780b3f515bc768e",
   "uuid": "bf9a95da-d508-11e2-bf44-236d2eee13a7",
   "type": "user",
@@ -70,19 +93,155 @@
   },
   "title": "#"&gt;&lt;img src=x onerror=prompt(1);&gt;"
 }</pre>
+          </div>
+          <div
+            id="query-row-content-bf9a95da-d508-11e2-bf44-236d2eee13a7"
+            style="display: none">
+            <table>
+              <tbody>
+                <tr>
+                  <td>picture</td>
+                  <td>http://www.gravatar.com/avatar/01b37aa66496988ca780b3f515bc768e</td>
+                </tr>
+                <tr>
+                  <td>uuid</td>
+                  <td>bf9a95da-d508-11e2-bf44-236d2eee13a7</td>
+                </tr>
+                <tr>
+                  <td>type</td>
+                  <td>user</td>
+                </tr>
+                <tr>
+                  <td>name</td>
+                  <td>#&amp;quot;&amp;gt;&amp;lt;img src=x
+                    onerror=prompt(1);&amp;gt;</td>
+                </tr>
+                <tr>
+                  <td>created</td>
+                  <td>1371224432557</td>
+                </tr>
+                <tr>
+                  <td>modified</td>
+                  <td>1371851347024</td>
+                </tr>
+                <tr>
+                  <td>username</td>
+                  <td>10</td>
+                </tr>
+                <tr>
+                  <td>email</td>
+                  <td>fdsafdsa@ookfd.com</td>
+                </tr>
+                <tr>
+                  <td>activated</td>
+                  <td>true</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td style="padding: 0"><table>
+                      <tbody>
+                        <tr></tr>
+                        <tr>
+                          <td>addr1</td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>addr2</td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>city</td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>state</td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>zip</td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>country</td>
+                          <td></td>
+                        </tr>
+                      </tbody>
+                    </table></td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td style="padding: 0"><table>
+                      <tbody>
+                        <tr></tr>
+                        <tr>
+                          <td>path</td>
+                          <td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7</td>
+                        </tr>
+                        <tr>
+                          <td></td>
+                          <td style="padding: 0"><table>
+                              <tbody>
+                                <tr></tr>
+                                <tr>
+                                  <td>rolenames</td>
+                                  <td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/rolenames</td>
+                                </tr>
+                                <tr>
+                                  <td>permissions</td>
+                                  <td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/permissions</td>
+                                </tr>
+                              </tbody>
+                            </table></td>
+                        </tr>
+                        <tr>
+                          <td></td>
+                          <td style="padding: 0"><table>
+                              <tbody>
+                                <tr></tr>
+                                <tr>
+                                  <td>activities</td>
+                                  <td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/activities</td>
+                                </tr>
+                                <tr>
+                                  <td>devices</td>
+                                  <td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/devices</td>
+                                </tr>
+                                <tr>
+                                  <td>feed</td>
+                                  <td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/feed</td>
+                                </tr>
+                                <tr>
+                                  <td>groups</td>
+                                  <td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/groups</td>
+                                </tr>
+                                <tr>
+                                  <td>roles</td>
+                                  <td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/roles</td>
+                                </tr>
+                                <tr>
+                                  <td>following</td>
+                                  <td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/following</td>
+                                </tr>
+                                <tr>
+                                  <td>followers</td>
+                                  <td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/followers</td>
+                                </tr>
+                              </tbody>
+                            </table></td>
+                        </tr>
+                      </tbody>
+                    </table></td>
+                </tr>
+                <tr>
+                  <td>title</td>
+                  <td>#&amp;quot;&amp;gt;&amp;lt;img src=x
+                    onerror=prompt(1);&amp;gt;</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div id="query-row-content-bf9a95da-d508-11e2-bf44-236d2eee13a7" style="display:none">
-          <table>
-            <tbody>
-            <tr>
-              <td>picture</td>
-              <td>http://www.gravatar.com/avatar/01b37aa66496988ca780b3f515bc768e</td></tr><tr><td>uuid</td><td>bf9a95da-d508-11e2-bf44-236d2eee13a7</td></tr><tr><td>type</td><td>user</td></tr><tr><td>name</td><td>#&amp;quot;&amp;gt;&amp;lt;img src=x onerror=prompt(1);&amp;gt;</td></tr><tr><td>created</td><td>1371224432557</td></tr><tr><td>modified</td><td>1371851347024</td></tr><tr><td>username</td><td>10</td></tr><tr><td>email</td><td>fdsafdsa@ookfd.com</td></tr><tr><td>activated</td><td>true</td></tr><tr><td></td><td style="padding: 0"><table><tbody><tr></tr><tr><td>addr1</td><td></td></tr><tr><td>addr2</td><td></td></tr><tr><td>city</td><td></td></tr><tr><td>state</td><td></td></tr><tr><td>zip</td><td></td></tr><tr><td>country</td><td></td></tr></tbody></table></td></tr><tr><td></td><td style="padding: 0"><table><tbody><tr></tr><tr><td>path</td><td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7</td></tr><tr><td></td><td style="padding: 0"><table><tbody><tr></tr><tr><td>rolenames</td><td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/rolenames</td></tr><tr><td>permissions</td><td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/permissions</td></tr></tbody></table></td></tr><tr><td></td><td style="padding: 0"><table><tbody><tr></tr><tr><td>activities</td><td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/activities</td></tr><tr><td>devices</td><td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/devices</td></tr><tr><td>feed</td><td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/feed</td></tr><tr><td>groups</td><td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/groups</td></tr><tr><td>roles</td><td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/roles</td></tr><tr><td>following</td><td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/following</td></tr><tr><td>followers</td><td>/users/8bb9a3fa-d508-11e2-875d-a59031a365e8/following/bf9a95da-d508-11e2-bf44-236d2eee13a7/followers</td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td>title</td><td>#&amp;quot;&amp;gt;&amp;lt;img src=x onerror=prompt(1);&amp;gt;</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </td>
-  </tr>
+      </td>
+    </tr>
   </tbody>
 </table>

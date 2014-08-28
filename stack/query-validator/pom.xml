@@ -230,12 +230,6 @@
 
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-logging-juli</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-jasper</artifactId>
             <scope>test</scope>
         </dependency>
@@ -249,12 +243,6 @@
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-jsp-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>juli</artifactId>
             <scope>test</scope>
         </dependency>
 

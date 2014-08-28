@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence;
 
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.context.ApplicationContext;
 
 
 // TODO: Auto-generated Javadoc
@@ -115,4 +116,9 @@ public interface EntityManagerFactory {
     public UUID getDefaultAppId();
 
     public void refreshIndex();
+
+    public void setApplicationContext(ApplicationContext ac);
+
+    /** For testing purposes */
+    public void flushEntityManagerCaches();
 }

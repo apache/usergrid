@@ -1,5 +1,4 @@
 #!/bin/bash
-pushd /tmp
 
 # 
 #  Licensed to the Apache Software Foundation (ASF) under one or more
@@ -19,6 +18,7 @@ pushd /tmp
 #  directory of this distribution.
 #
 
+pushd /tmp
 
 # Build environment for scripts
 . /etc/profile.d/aws-credentials.sh
@@ -27,13 +27,13 @@ pushd /tmp
 echo ${RELEASE_BUCKET}
 
 # Get JDK from the release bucket
-s3cmd --config=/etc/s3cfg get s3://${RELEASE_BUCKET}/jdk-7u45-linux-x64.gz
+s3cmd --config=/etc/s3cfg get s3://${RELEASE_BUCKET}/jdk-7u60-linux-x64.gz
 
 # Install it as they do here: 
 # http://askubuntu.com/questions/56104/how-can-i-install-sun-oracles-proprietary-java-6-7-jre-or-jdk
-tar -xvf jdk-7u45-linux-x64.gz
+tar -xvf jdk-7u60-linux-x64.gz
 mkdir -p /usr/lib/jvm
-mv ./jdk1.7.0_45 /usr/lib/jvm/jdk1.7.0
+mv ./jdk1.7.0_60 /usr/lib/jvm/jdk1.7.0
 
 update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk1.7.0/bin/java" 2000
 update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk1.7.0/bin/javac" 2000
@@ -46,5 +46,10 @@ chown -R root:root /usr/lib/jvm/jdk1.7.0
 
 sudo rm /usr/lib/jvm/default-java
 sudo ln -s /usr/lib/jvm/jdk1.7.0 /usr/lib/jvm/default-java
+
+#Install the JNA for cassandra to use
+
+sudo apt-get install libjna-java
+
 
 popd

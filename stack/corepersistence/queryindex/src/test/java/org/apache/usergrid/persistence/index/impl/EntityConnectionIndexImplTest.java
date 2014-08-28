@@ -89,7 +89,6 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         EntityUtils.setVersion( muffin, UUIDGenerator.newTimeUUID() );
 
 
-
         // create a person who likes muffins
         CollectionScope peopleScope = new CollectionScopeImpl( appId, appId, "people" );
         Entity person = new Entity( new SimpleId( UUIDGenerator.newTimeUUID(), peopleScope.getName() ) );

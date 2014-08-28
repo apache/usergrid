@@ -29,7 +29,6 @@ import org.codehaus.jackson.JsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.exceptions.QueryParseException;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceParameter;
@@ -44,6 +43,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 
 
 public class Cli extends ToolBase {

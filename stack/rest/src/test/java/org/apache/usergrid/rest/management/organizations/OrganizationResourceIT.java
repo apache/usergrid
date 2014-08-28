@@ -62,6 +62,8 @@ public class OrganizationResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         assertNotNull( node );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         OrganizationInfo orgInfo =
                 setup.getMgmtSvc().getOrganizationByName( "organizationresourceit.testorganizationupdate.test-org-1" );
         assertEquals( 5L, orgInfo.getProperties().get( "securityLevel" ) );
@@ -74,6 +76,8 @@ public class OrganizationResourceIT extends AbstractRestIT {
                 .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, payload ));
         logNode( node );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         node = mapper.readTree( resource().path( "/management/organizations/organizationresourceit.testorganizationupdate.test-org-1" )
                 .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )

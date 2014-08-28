@@ -17,17 +17,13 @@
 package org.apache.usergrid.rest.applications.collection;
 
 
-import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Rule;
-import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.java.client.entities.Entity;
 import org.apache.usergrid.java.client.response.ApiResponse;
@@ -35,19 +31,23 @@ import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
 import org.apache.usergrid.rest.test.resource.EntityResource;
-
+import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
-import org.codehaus.jackson.JsonFactory;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /** Simple tests to test querying at the REST tier */
 @Concurrent()
 public class PagingResourceIT extends AbstractRestIT {
 
+    private static final Logger logger = LoggerFactory.getLogger( PagingResourceIT.class );
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
@@ -56,7 +56,7 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void collectionPaging() throws Exception {
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().collection( "test1things" );
 
         int size = 40;
 
@@ -68,6 +68,8 @@ public class PagingResourceIT extends AbstractRestIT {
 
             created.add( entity );
         }
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // now page them all
         ApiResponse response = null;
@@ -80,21 +82,27 @@ public class PagingResourceIT extends AbstractRestIT {
             for ( Entity e : response.getEntities() ) {
                 assertTrue( entityItr.hasNext() );
                 assertEquals( entityItr.next().get( "name" ), e.getProperties().get( "name" ).asText() );
+                logger.debug("Got item value {}", e.getProperties().get( "name" ).asText());
             }
 
+            logger.debug("response cursor: " + response.getCursor() );
+            
             things = things.withCursor( response.getCursor() );
         }
         while ( response != null && response.getCursor() != null );
 
-        // we paged them all
-        assertFalse( entityItr.hasNext() );
+        assertFalse("Should have paged them all", entityItr.hasNext() );
     }
 
 
     @Test
+    @Ignore 
+    // ignored because currently startPaging is only be supported for 
+    // queues and not for  generic collections as this test assumes.
+    // see also: https://issues.apache.org/jira/browse/USERGRID-211 
     public void startPaging() throws Exception {
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().collection( "test2things" );
 
         int size = 40;
 
@@ -107,6 +115,8 @@ public class PagingResourceIT extends AbstractRestIT {
             created.add( entity );
         }
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         // now page them all
         ApiResponse response = null;
 
@@ -118,6 +128,7 @@ public class PagingResourceIT extends AbstractRestIT {
             response = parse( things.get() );
 
             for ( Entity e : response.getEntities() ) {
+                logger.debug("Getting item {} value {}", index, e.getProperties().get( "name" ).asText());
                 assertEquals( created.get( index ).get( "name" ), e.getProperties().get( "name" ).asText() );
                 index++;
             }
@@ -137,9 +148,9 @@ public class PagingResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void colletionBatchDeleting() throws Exception {
+    public void collectionBatchDeleting() throws Exception {
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().collection( "test3things" );
 
         int size = 40;
 
@@ -152,6 +163,7 @@ public class PagingResourceIT extends AbstractRestIT {
             created.add( entity );
         }
 
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         ApiResponse response;
         int deletePageSize = 10;
@@ -160,6 +172,8 @@ public class PagingResourceIT extends AbstractRestIT {
 
         for ( int i = 0; i < size / deletePageSize; i++ ) {
             response = parse( things.delete() );
+
+            refreshIndex(context.getOrgName(), context.getAppName());
 
             assertEquals( "Only 10 entities should have been deleted", 10, response.getEntityCount() );
         }
@@ -179,10 +193,12 @@ public class PagingResourceIT extends AbstractRestIT {
     @Test
     public void emptyQlandLimitIgnored() throws Exception {
 
-        CustomCollection things = context.application().collection( "things" );
+        CustomCollection things = context.application().collection( "test4things" );
 
         Map<String, String> data = hashMap( "name", "thing1" );
         JsonNode response = things.create( data );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         JsonNode entity = getEntity( response, 0 );
 
@@ -204,6 +220,8 @@ public class PagingResourceIT extends AbstractRestIT {
         returnedEntity = getEntity( entityRequest.delete(), 0 );
 
         assertEquals( entity, returnedEntity );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // verify it's gone
         returnedEntity = getEntity( things.entity( uuid ).get(), 0 );

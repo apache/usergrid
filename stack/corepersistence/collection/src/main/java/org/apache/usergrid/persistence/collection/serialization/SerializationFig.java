@@ -18,7 +18,7 @@ public interface SerializationFig extends GuicyFig {
      * @return Timeout in seconds.
      */
     @Key( "collection.stage.transient.timeout" )
-    @Default( "60" )
+    @Default( "5" )
     int getTimeout();
 
     /**

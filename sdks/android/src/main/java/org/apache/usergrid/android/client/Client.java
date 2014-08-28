@@ -1,8 +1,26 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.usergrid.android.client;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+
 import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
 import org.apache.usergrid.android.client.callbacks.ApiResponseCallback;
@@ -19,6 +37,7 @@ import org.apache.usergrid.android.client.utils.DeviceUuidFactory;
 
 import android.content.Context;
 import android.location.Location;
+import android.util.Log;
 
 /**
  * The Client class for accessing the Usergrid API. Start by instantiating this
@@ -27,7 +46,13 @@ import android.location.Location;
  */
 public class Client extends org.usergrid.java.client.Client {
 
-	private static final String TAG = "UsergridClient";
+
+  /**
+   * Default tag applied to all logging messages sent from an instance of Client
+   */
+  public static final String LOGGING_TAG = "UsergridClient";	
+
+  private static final String TAG = "UsergridClient";
 
 	public static boolean FORCE_PUBLIC_API = false;
 
@@ -43,7 +68,39 @@ public class Client extends org.usergrid.java.client.Client {
 	// Local API
 	public static String LOCAL_API_URL = LOCAL_STANDALONE_API_URL;
 
-	
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final HttpMethod HTTP_METHOD_DELETE = HttpMethod.DELETE;
+
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final HttpMethod HTTP_METHOD_GET    = HttpMethod.GET;
+
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final HttpMethod HTTP_METHOD_POST   = HttpMethod.POST;
+
+	/**
+	 * Standard HTTP methods use in generic request methods
+	 * @see apiRequest 
+	 * @see doHttpRequest
+	 */
+	protected static final HttpMethod HTTP_METHOD_PUT    = HttpMethod.PUT;
+
+	private String organizationId;
+  private String applicationId;
+  private String clientId;
+  private String clientSecret;
+
 	static RestTemplate restTemplate = new RestTemplate(true);
 
 	/**
@@ -61,8 +118,87 @@ public class Client extends org.usergrid.java.client.Client {
 	 */
 	public Client(String organizationId, String applicationId) {
 		super(organizationId, applicationId);
+		this.organizationId = organizationId;
+		this.applicationId = applicationId;		
 	}
 
+  /**
+   * Logs a trace-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logTrace(String logMessage) {
+  	if(logMessage != null) {
+  		Log.v(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs a debug-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logDebug(String logMessage) {
+  	if(logMessage != null) {
+  		Log.d(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs an info-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logInfo(String logMessage) {
+  	if(logMessage != null) {
+  		Log.i(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs a warn-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logWarn(String logMessage) {
+  	if(logMessage != null) {
+  		Log.w(LOGGING_TAG,logMessage);
+  	}
+  }
+  
+  /**
+   * Logs an error-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void logError(String logMessage) {
+  	if(logMessage != null) {
+  		Log.e(LOGGING_TAG,logMessage);
+  	}
+  }
+
+  /**
+   * Logs a debug-level logging message with tag 'UsergridClient'
+   *
+   * @param   logMessage  the message to log
+   */
+  public void writeLog(String logMessage) {
+    //TODO: do we support different log levels in this class?
+    Log.d(LOGGING_TAG, logMessage);      
+  }
+
+  public static boolean isEmpty(Object s) {
+		if (s == null) {
+			return true;
+		}
+		if ((s instanceof String) && (((String) s).trim().length() == 0)) {
+			return true;
+		}
+		if (s instanceof Map) {
+			return ((Map<?, ?>) s).isEmpty();
+		}
+		return false;
+	}
 
 	/**
 	 * Log the user in and get a valid access token. Executes asynchronously in
@@ -598,7 +734,7 @@ public class Client extends org.usergrid.java.client.Client {
 	 */
 	public void queryUsersAsync(QueryResultsCallback callback) {
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, null, null,
-				getApplicationId(), "users");
+				organizationId, applicationId, "users");
 	}
 
 	/**
@@ -613,7 +749,7 @@ public class Client extends org.usergrid.java.client.Client {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
-				getApplicationId(), "users");
+				organizationId, applicationId, "users");
 	}
 
 	
@@ -627,7 +763,7 @@ public class Client extends org.usergrid.java.client.Client {
 	public void queryUsersForGroupAsync(String groupId,
 			QueryResultsCallback callback) {
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, null, null,
-				getApplicationId(), "groups", groupId, "users");
+				applicationId, "groups", groupId, "users");
 	}
 
 	/**
@@ -685,6 +821,41 @@ public class Client extends org.usergrid.java.client.Client {
 		}).execute();
 	}
 
+	/**
+     * Connect two entities together.
+     * 
+     * @param connectingEntityType The type of the first entity.
+     * @param connectingEntityId The ID of the first entity.
+     * @param connectionType The type of connection between the entities.
+     * @param connectedEntityId The ID of the second entity.
+     * @return An instance with the server's response.
+     */
+    public ApiResponse connectEntities(String connectingEntityType,
+            String connectingEntityId, String connectionType,
+            String connectedEntityId) {
+        return apiRequest(HTTP_METHOD_POST, null, null,  organizationId, applicationId,
+                connectingEntityType, connectingEntityId, connectionType,
+                connectedEntityId);
+    }
+    
+    /**
+     * Connect two entities together
+     * 
+     * @param connectorType The type of the first entity in the connection.
+     * @param connectorID The first entity's ID.
+     * @param connectionType The type of connection to make.
+     * @param connecteeType The type of the second entity.
+     * @param connecteeID The second entity's ID
+     * @return An instance with the server's response.
+     */
+    public ApiResponse connectEntities(String connectorType,
+    		String connectorID,
+    		String connectionType,
+    		String connecteeType,
+    		String connecteeID) {
+		return apiRequest(HTTP_METHOD_POST, null, null, organizationId, applicationId,
+				connectorType, connectorID, connectionType, connecteeType, connecteeID);
+    }
 	
 	/**
 	 * Connect two entities together. Executes asynchronously in background and
@@ -830,7 +1001,7 @@ public class Client extends org.usergrid.java.client.Client {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("ql", ql);
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
-				getOrganizationId(), getApplicationId(), connectingEntityType, connectingEntityId,
+				organizationId, applicationId, connectingEntityType, connectingEntityId,
 				connectionType);
 	}
 
@@ -856,7 +1027,7 @@ public class Client extends org.usergrid.java.client.Client {
 		params.put("ql", makeLocationQL(distance, location.getLatitude(), location.getLongitude(), ql));
 		params.put("ql", ql);
 		queryEntitiesRequestAsync(callback, HttpMethod.GET, params, null,
-				getOrganizationId(), getApplicationId(), connectingEntityType, connectingEntityId,
+				organizationId, applicationId, connectingEntityType, connectingEntityId,
 				connectionType);
 	}
 

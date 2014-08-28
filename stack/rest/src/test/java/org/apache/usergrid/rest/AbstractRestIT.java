@@ -26,7 +26,6 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
-import com.sun.jersey.test.framework.spi.container.TestContainerException;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import java.io.IOException;
 import java.net.URI;
@@ -50,9 +49,10 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Base class for testing Usergrid Jersey-based REST API. Implementations should model the paths mapped, not the method
- * names. For example, to test the the "password" mapping on applications.users.UserResource for a PUT method, the test
- * method(s) should following the following naming convention: test_[HTTP verb]_[action mapping]_[ok|fail][_[specific
+ * Base class for testing Usergrid Jersey-based REST API. Implementations should model the 
+ * paths mapped, not the method names. For example, to test the the "password" mapping on 
+ * applications.users.UserResource for a PUT method, the test method(s) should following the 
+ * following naming convention: test_[HTTP verb]_[action mapping]_[ok|fail][_[specific
  * failure condition if multiple]
  */
 //@Concurrent()
@@ -74,14 +74,20 @@ public abstract class AbstractRestIT extends JerseyTest {
     @ClassRule
     public static ITSetup setup = new ITSetup( RestITSuite.cassandraResource );
 
-    private static final URI baseURI = setup.getBaseURI();
+    //private static final URI baseURI = setup.getBaseURI();
 
     protected ObjectMapper mapper = new ObjectMapper();
 
 
+    public AbstractRestIT() {
+        super( descriptor );
+    }
+
+
     static {
         clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-        descriptor = new WebAppDescriptor.Builder( "org.apache.usergrid.rest" ).clientConfig( clientConfig ).build();
+        descriptor = new WebAppDescriptor.Builder( "org.apache.usergrid.rest" )
+                .clientConfig( clientConfig ).build();
         dumpClasspath( AbstractRestIT.class.getClassLoader() );
     }
 
@@ -100,7 +106,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         setupUsers();
 
-        reindex("test-organization", "test-app");
+        refreshIndex("test-organization", "test-app");
 
         LOG.info( "acquiring token" );
         access_token = userToken( "ed@anuff.com", "sesame" );
@@ -108,24 +114,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
         loginClient();
 
-        reindex("test-organization", "test-app");
-    }
-
-
-    public void reindex( UUID appId ) {
-        resource().path( "/testreindex" )
-            .queryParam( "app_id", appId.toString() )
-            .accept( MediaType.APPLICATION_JSON )
-            .post();
-    }
-
-
-    public void reindex( String orgName, String appName ) {
-        resource().path( "/testreindex" )
-            .queryParam( "org_name", orgName )
-            .queryParam( "app_name", appName )
-            .accept( MediaType.APPLICATION_JSON )
-            .post();
+        refreshIndex("test-organization", "test-app");
     }
 
 
@@ -146,14 +135,12 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
-    public AbstractRestIT() throws TestContainerException {
-        super( descriptor );
-    }
-
-
     protected void setupUsers() {
 
+        LOG.info("Entering setupUsers");
+
         if ( usersSetup ) {
+            LOG.info("Leaving setupUsers: already setup");
             return;
         }
 
@@ -161,6 +148,7 @@ public abstract class AbstractRestIT extends JerseyTest {
         createUser( "edanuff", "ed@anuff.com", "sesame", "Ed Anuff" ); // client.setApiUrl(apiUrl);
 
         usersSetup = true;
+        LOG.info("Leaving setupUsers success");
     }
 
 
@@ -194,7 +182,7 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     @Override
     protected URI getBaseURI() {
-        return baseURI;
+        return setup.getBaseURI();
     }
 
 
@@ -208,15 +196,23 @@ public abstract class AbstractRestIT extends JerseyTest {
 
     protected String userToken( String name, String password ) throws Exception {
 
-        setUserPassword( "ed@anuff.com", "sesame" );
+        try {
+            setUserPassword( "ed@anuff.com", "sesame" );
 
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", name ).queryParam( "password", password ).accept( MediaType.APPLICATION_JSON )
-                .get( String.class ));
+            JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+                    .queryParam( "grant_type", "password" )
+                    .queryParam( "username", name )
+                    .queryParam( "password", password ).accept( MediaType.APPLICATION_JSON )
+                    .get( String.class ));
 
-        String userToken = node.get( "access_token" ).textValue();
-        LOG.info( "returning user token: {}", userToken );
-        return userToken;
+            String userToken = node.get( "access_token" ).textValue();
+            LOG.info( "returning user token: {}", userToken );
+            return userToken;
+
+        } catch ( Exception e ) {
+            LOG.debug("Error getting user token", e);
+            throw e;
+        }
     }
 
 
@@ -340,6 +336,17 @@ public abstract class AbstractRestIT extends JerseyTest {
     }
 
 
+    /**
+     * Get the property "name" from the entity at the specified index
+     * @param response
+     * @param index
+     * @return
+     */
+    protected String getEntityName(JsonNode response, int index){
+        return getEntity(response, index).get( "name" ).asText();
+    }
+
+
     /** Get the error response */
     protected JsonNode getError( JsonNode response ) {
         return response.get( "error" );
@@ -370,7 +377,7 @@ public abstract class AbstractRestIT extends JerseyTest {
         // set the value locally (in the Usergrid instance here in the JUnit classloader
         setup.getMgmtSvc().getProperties().setProperty( key, value );
 
-        // set the value remotely (in the Usergrid instance running in Jetty classloader)
+        // set the value remotely (in the Usergrid instance running in Tomcat classloader)
         Map<String, String> props = new HashMap<String, String>();
         props.put( key, value );
         resource().path( "/testproperties" ).queryParam( "access_token", access_token )
@@ -387,17 +394,59 @@ public abstract class AbstractRestIT extends JerseyTest {
             setup.getMgmtSvc().getProperties().setProperty( key, props.get( key ) );
         }
 
-        // set the values remotely (in the Usergrid instance running in Jetty classloader)
+        // set the values remotely (in the Usergrid instance running in Tomcat classloader)
         resource().path( "/testproperties" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( props );
     }
 
 
-    /** Get all management service properties from th Jetty instance of the service. */
+    /** Get all management service properties from the Tomcat instance of the service. */
     public Map<String, String> getRemoteTestProperties() {
         return resource().path( "/testproperties" ).queryParam( "access_token", access_token )
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).get( Map.class );
     }
+
+
+    public void refreshIndex( UUID appId ) {
+
+        LOG.debug("Refreshing index for appId {}", appId );
+
+        try {
+
+            resource().path( "/refreshindex" )
+                .queryParam( "app_id", appId.toString() )
+                .accept( MediaType.APPLICATION_JSON )
+                .post();
+            
+        } catch ( Exception e) {
+            LOG.debug("Error refreshing index", e);
+            return;
+        }
+
+        LOG.debug("Refreshed index for appId {}", appId );
+    }
+
+
+    public void refreshIndex( String orgName, String appName ) {
+
+        LOG.debug("Refreshing index for app {}/{}", orgName, appName );
+
+        try {
+
+            resource().path( "/refreshindex" )
+                .queryParam( "org_name", orgName )
+                .queryParam( "app_name", appName )
+                .accept( MediaType.APPLICATION_JSON )
+                .post();
+                    
+        } catch ( Exception e) {
+            LOG.debug("Error refreshing index", e);
+            return;
+        }
+
+        LOG.debug("Refreshed index for app {}/{}", orgName, appName );
+    }
+
 }

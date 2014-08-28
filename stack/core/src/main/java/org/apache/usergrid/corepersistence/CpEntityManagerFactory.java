@@ -87,9 +87,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     // The System Application where we store app and org metadata
     public static final String SYSTEM_APPS_UUID = "b6768a08-b5d5-11e3-a495-10ddb1de66c3";
     
-    public static final  UUID MANAGEMENT_APPLICATION_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
+    public static final  UUID MANAGEMENT_APPLICATION_ID = 
+            UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
 
-    public static final  UUID DEFAULT_APPLICATION_ID = UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
+    public static final  UUID DEFAULT_APPLICATION_ID = 
+            UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
 
 
     // Three types of things we store in System Application
@@ -188,7 +190,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = applicationContext.getBean( "entityManager", EntityManager.class );
+        EntityManager em = new CpEntityManager();
         em.init( this, applicationId );
         return em;
     }
@@ -300,7 +302,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     public ApplicationScope getApplicationScope( UUID applicationId ) {
 
-        //We can always generate a scope, it doesn't matter if  the application exists yet or not.
+        // We can always generate a scope, it doesn't matter if  the application exists yet or not.
 
         final ApplicationScopeImpl scope = new ApplicationScopeImpl( generateApplicationId( applicationId ) );
 
@@ -535,8 +537,32 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     public void refreshIndex() {
+
+        // refresh factory's indexes, will refresh all three index scopes
         managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_APPS_INDEX_SCOPE ).refresh();
+
+        // these are unecessary because of above call
+        //managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_ORGS_INDEX_SCOPE ).refresh();
+        //managerCache.getEntityIndex( CpEntityManagerFactory.SYSTEM_PROPS_INDEX_SCOPE ).refresh();
+
+        // refresh special indexes without calling EntityManager refresh because stack overflow 
+        IndexScope mscope = new IndexScopeImpl( 
+            new SimpleId( getManagementAppId(), "application"), 
+            new SimpleId( getManagementAppId(), "application"), "dummy");
+        managerCache.getEntityIndex( mscope ).refresh();
+
+        IndexScope dscope = new IndexScopeImpl( 
+            new SimpleId( getDefaultAppId(), "application"), 
+            new SimpleId( getDefaultAppId(), "application"), "dummy");
+        managerCache.getEntityIndex( dscope ).refresh();
     }
 
-
+    @Override
+    public void flushEntityManagerCaches() {
+        Map<UUID, EntityManager>  entityManagersMap = entityManagers.asMap();
+        for ( UUID appUuid : entityManagersMap.keySet() ) {
+            EntityManager em = entityManagersMap.get(appUuid);
+            em.flushManagerCaches();
+        }
+    }
 }

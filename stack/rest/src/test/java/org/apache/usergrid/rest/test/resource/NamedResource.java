@@ -53,6 +53,11 @@ public abstract class NamedResource {
     }
 
 
+    public NamedResource getParent() {
+        return parent;
+    }
+
+
     /**
      * Get the url to this resource
      */

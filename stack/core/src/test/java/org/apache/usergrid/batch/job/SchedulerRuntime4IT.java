@@ -47,7 +47,12 @@ public class SchedulerRuntime4IT extends AbstractSchedulerRuntimeIT {
         DelayExecution job = cassandraResource.getBean( "delayExecution", DelayExecution.class );
 
         job.setTimeout( customRetry );
-        job.setLatch( delayCount + 1 );
+
+        int runCount = delayCount +1;
+
+        job.setLatch( runCount );
+
+        getJobListener().setExpected( runCount );
 
         JobData returned = scheduler.createJob( "delayExecution", System.currentTimeMillis(), new JobData() );
 
@@ -55,7 +60,7 @@ public class SchedulerRuntime4IT extends AbstractSchedulerRuntimeIT {
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
-        boolean waited = getJobListener().blockTilDone( 3, 5000L + sleepTime * 2 );
+        boolean waited = getJobListener().blockTilDone( 50000L + sleepTime * 2 );
 
         assertTrue( "Job ran to complete", waited );
 
@@ -66,7 +71,7 @@ public class SchedulerRuntime4IT extends AbstractSchedulerRuntimeIT {
         // we should have only marked this as run once since we delayed furthur execution
         // we should have only marked this as run once
         assertEquals( 1, stat.getTotalAttempts() );
-        assertEquals( delayCount + 1, stat.getRunCount() );
+        assertEquals( runCount, stat.getRunCount() );
         assertEquals( delayCount, stat.getDelayCount() );
     }
 }

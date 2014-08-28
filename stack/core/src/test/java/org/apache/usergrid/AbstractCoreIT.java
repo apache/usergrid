@@ -29,7 +29,7 @@ public abstract class AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractCoreIT.class );
 
     @ClassRule
-    public static CoreITSetup setup = new CoreITSetupImpl( CoreITSuite.cassandraResource );
+    public static CoreITSetup setup = new CoreITSetupImpl( CoreITSuite.cassandraResource, CoreITSuite.elasticSearchResource );
 
     @Rule
     public CoreApplication app = new CoreApplication( setup );

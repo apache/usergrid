@@ -286,11 +286,11 @@
    *  @param {function} callback
    *  @return {callback} callback(err, data)
    */
-  Usergrid.Client.prototype.createCollection = function(options, callback) {
+  Usergrid.Client.prototype.createCollection = function (options, callback) {
     options.client = this;
-    var collection = new Usergrid.Collection(options);
-    collection.fetch(function(err, response, collection) {
-      doCallback(callback, [err, response, collection], this);
+    return new Usergrid.Collection(options, function(err, data, collection) {
+        console.log("createCollection", arguments);
+        doCallback(callback, [err, collection, data]);
     });
   };
 

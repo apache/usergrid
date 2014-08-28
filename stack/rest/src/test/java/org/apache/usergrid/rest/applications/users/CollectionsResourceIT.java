@@ -88,6 +88,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
     public void permissionWithMeInString() throws Exception {
         // user is created get a token
         createUser( "sumeet.agarwal@usergrid.com", "sumeet.agarwal@usergrid.com", "secret", "Sumeet Agarwal" );
+        refreshIndex("test-organization", "test-app");
 
         String token = userToken( "sumeet.agarwal@usergrid.com", "secret" );
 
@@ -114,6 +115,8 @@ public class CollectionsResourceIT extends AbstractRestIT {
         posted = mapper.readTree( resource().path( "/test-organization/test-app/nestprofiles" ).queryParam( "access_token", token )
                 .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
                 .post( String.class, data ));
+
+        refreshIndex("test-organization", "test-app");
 
         JsonNode response = mapper.readTree( resource().path( "/test-organization/test-app/nestprofiles" ).queryParam( "access_token", token )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
@@ -145,6 +148,8 @@ public class CollectionsResourceIT extends AbstractRestIT {
                 .post( String.class, payload ));
 
 
+        refreshIndex("test-organization", "test-app");
+
         //query for the first entity
 
         String query = "summaryOverview = 'My Summary'";
@@ -170,7 +175,6 @@ public class CollectionsResourceIT extends AbstractRestIT {
     @Test
     public void testNoDuplicateFields() throws Exception {
 
-        UUID entityId = null;
         {
             // create an "app_user" object with name fred
             Map<String, String> payload = hashMap( "type", "app_user" ).map( "name", "fred" );
@@ -180,8 +184,11 @@ public class CollectionsResourceIT extends AbstractRestIT {
                     .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
 
             String uuidString = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
-            entityId = UUIDUtils.tryGetUUID( uuidString );
+            UUID entityId = UUIDUtils.tryGetUUID( uuidString );
+            Assert.assertNotNull( entityId );
         }
+
+        refreshIndex("test-organization", "test-app");
 
         {
             // check REST API response for duplicate name property

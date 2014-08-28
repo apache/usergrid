@@ -124,7 +124,7 @@ public class UsersResource extends AbstractContextResource {
                                                            @QueryParam("callback") @DefaultValue("callback")
                                                            String callback ) throws Exception {
 
-        logger.info( "New user for organization: " + username );
+        logger.info( "New user for organization: " + username + " (" + email + ")");
 
         ApiResponse response = createApiResponse();
         response.setAction( "create user" );

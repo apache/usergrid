@@ -273,6 +273,7 @@ public class ApplicationResource extends ServiceResource {
             }
 
             if ( user == null ) {
+                logger.debug("Returning 400 bad request due to: " + errorDescription );
                 OAuthResponse response =
                         OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
                                      .setErrorDescription( errorDescription ).buildJSONMessage();
@@ -320,10 +321,10 @@ public class ApplicationResource extends ServiceResource {
     @POST
     @Path("token")
     @Consumes(APPLICATION_JSON)
-    public Response getAccessTokenPostJson( @Context UriInfo ui, @HeaderParam("Authorization") String authorization,
-                                            Map<String, Object> json,
-                                            @QueryParam("callback") @DefaultValue("") String callback )
-            throws Exception {
+    public Response getAccessTokenPostJson( @Context UriInfo ui, 
+            @HeaderParam("Authorization") String authorization, 
+            Map<String, Object> json, 
+            @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );
@@ -344,8 +345,8 @@ public class ApplicationResource extends ServiceResource {
             }
         }
 
-        return getAccessToken( ui, authorization, grant_type, username, password, pin, client_id, client_secret, code,
-                ttl, redirect_uri, callback );
+        return getAccessToken( ui, authorization, grant_type, username, password, pin, client_id, 
+                client_secret, code, ttl, redirect_uri, callback );
     }
 
 
@@ -376,9 +377,8 @@ public class ApplicationResource extends ServiceResource {
     @Path("credentials")
     @RequireApplicationAccess
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONWithPadding generateKeys( @Context UriInfo ui,
-                                         @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+    public JSONWithPadding generateKeys( @Context UriInfo ui, 
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         logger.debug( "AuthResource.keys" );
 
@@ -386,9 +386,9 @@ public class ApplicationResource extends ServiceResource {
             throw new UnauthorizedException();
         }
 
-        ClientCredentialsInfo kp =
-                new ClientCredentialsInfo( management.getClientIdForApplication( services.getApplicationId() ),
-                        management.newClientSecretForApplication( services.getApplicationId() ) );
+        ClientCredentialsInfo kp = new ClientCredentialsInfo( 
+            management.getClientIdForApplication( services.getApplicationId() ),
+            management.newClientSecretForApplication( services.getApplicationId() ) );
 
         return new JSONWithPadding(
                 createApiResponse().withCredentials( kp ).withAction( "generate application keys" ).withSuccess(),
@@ -398,10 +398,13 @@ public class ApplicationResource extends ServiceResource {
 
     @GET
     @Path("authorize")
-    public Viewable showAuthorizeForm( @Context UriInfo ui, @QueryParam("response_type") String response_type,
-                                       @QueryParam("client_id") String client_id,
-                                       @QueryParam("redirect_uri") String redirect_uri,
-                                       @QueryParam("scope") String scope, @QueryParam("state") String state ) {
+    public Viewable showAuthorizeForm( 
+            @Context UriInfo ui, 
+            @QueryParam("response_type") String response_type,
+            @QueryParam("client_id") String client_id,
+            @QueryParam("redirect_uri") String redirect_uri,
+            @QueryParam("scope") String scope, 
+            @QueryParam("state") String state ) {
 
         try {
             UUID uuid = getUUIDFromClientId( client_id );
@@ -433,12 +436,15 @@ public class ApplicationResource extends ServiceResource {
     @POST
     @Path("authorize")
     @Produces(MediaType.TEXT_HTML)
-    public Viewable handleAuthorizeForm( @Context UriInfo ui, @FormParam("response_type") String response_type,
-                                         @FormParam("client_id") String client_id,
-                                         @FormParam("redirect_uri") String redirect_uri,
-                                         @FormParam("scope") String scope, @FormParam("state") String state,
-                                         @FormParam("username") String username,
-                                         @FormParam("password") String password ) {
+    public Response handleAuthorizeForm( @Context UriInfo ui, 
+            @FormParam("response_type") String response_type,
+            @FormParam("client_id") String client_id,
+            @FormParam("redirect_uri") String redirect_uri,
+            @FormParam("scope") String scope, @FormParam("state") String state,
+            @FormParam("username") String username,
+            @FormParam("password") String password ) {
+
+        LOG.debug( "ApplicationResource /authorize: {}/{}", username, password );
 
         try {
             responseType = response_type;
@@ -476,13 +482,14 @@ public class ApplicationResource extends ServiceResource {
             ApplicationInfo app = management.getApplicationInfo( applicationId );
             applicationName = app.getName();
 
-            return handleViewable( "authorize_form", this );
+            return Response.ok( handleViewable( "authorize_form", this ) ).build() ;
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            LOG.debug("handleAuthorizeForm failed", e);
+            return Response.ok( handleViewable( "error", this ) ).build() ;
         }
     }
 

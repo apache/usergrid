@@ -17,8 +17,9 @@
 package org.apache.usergrid.rest.organizations;
 
 
+import com.google.common.collect.BiMap;
+import com.sun.jersey.api.json.JSONWithPadding;
 import java.util.UUID;
-
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Path;
@@ -28,24 +29,22 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
-
-import org.apache.usergrid.rest.RootResource;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.ApplicationResource;
 import org.apache.usergrid.rest.exceptions.NoOpException;
 import org.apache.usergrid.rest.exceptions.OrganizationApplicationNotFoundException;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.utils.PathingUtils;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-import org.apache.shiro.authz.UnauthorizedException;
-
-import com.google.common.collect.BiMap;
-import com.sun.jersey.api.json.JSONWithPadding;
 
 @Component("org.apache.usergrid.rest.organizations.OrganizationResource")
 @Scope("prototype")
@@ -54,6 +53,8 @@ import com.sun.jersey.api.json.JSONWithPadding;
         "application/ecmascript", "text/jscript"
 })
 public class OrganizationResource extends AbstractContextResource {
+
+    private static final Logger logger = LoggerFactory.getLogger( OrganizationResource.class );
 
     String organizationName;
 
@@ -125,6 +126,8 @@ public class OrganizationResource extends AbstractContextResource {
     @Path("{applicationName}")
     public ApplicationResource getApplicationByName( @PathParam("applicationName") String applicationName )
             throws Exception {
+
+        logger.debug("getApplicationByName: " + applicationName );
 
         if ( "options".equalsIgnoreCase( request.getMethod() ) ) {
             throw new NoOpException();

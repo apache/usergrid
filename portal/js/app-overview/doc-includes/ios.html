@@ -1,81 +1,142 @@
 <h2>1. Integrate ApigeeiOSSDK.framework</h2>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
 <a class="jumplink" name="add_the_sdk_to_an_existing_project"></a>
 <ul class="nav nav-tabs" id="myTab">
-	<li class="active"><a data-toggle="tab" href="#existing_project">Existing project</a></li>
-	<li><a data-toggle="tab" href="#new_project">New project</a></li>
+  <li class="active"><a data-toggle="tab" href="#existing_project">Existing
+      project</a></li>
+  <li><a data-toggle="tab" href="#new_project">New project</a></li>
 </ul>
 <div class="tab-content">
-	<div class="tab-pane active" id="existing_project">
-		<p>If you've already got&nbsp;an Xcode iOS project, add it into your project as you normally would.</p>
-		<div id="collapse"><a class="btn" data-toggle="collapse" href="#framework_collapse">Details</a></div>
-		<div class="collapse" id="framework_collapse">
-			<ol>
-				<li>
-					<p>Locate the SDK framework file so you can add it to your project. For example, you'll find the file at the following path:</p>
-					<pre>
+  <div class="tab-pane active" id="existing_project">
+    <p>If you've already got&nbsp;an Xcode iOS project, add it into
+      your project as you normally would.</p>
+    <div id="collapse">
+      <a class="btn" data-toggle="collapse" href="#framework_collapse">Details</a>
+    </div>
+    <div class="collapse" id="framework_collapse">
+      <ol>
+        <li>
+          <p>Locate the SDK framework file so you can add it to your
+            project. For example, you'll find the file at the following
+            path:</p> <pre>
 &lt;sdk_root&gt;/bin/ApigeeiOSSDK.framework</pre>
-				</li>
-				<li>In the <strong>Project Navigator</strong>, click on your project file, and then the <strong>Build Phases</strong> tab. Expand <strong>Link Binary With Libraries</strong>.</li>
-				<li>Link the Apigee iOS SDK into your project.
-					<ul>
-						<li>Drag ApigeeiOSSDK.framework into the Frameworks group created by Xcode.</li>
-					</ul>
-					<p>OR</p>
-					<ol>
-						<li>At the bottom of the <strong>Link Binary With Libraries</strong> group, click the <strong>+</strong> button. Then click&nbsp;<strong>Add Other</strong>.</li>
-						<li>Navigate to the directory that contains ApigeeiOSSDK.framework, and choose the ApigeeiOSSDK.framework folder.</li>
-					</ol>
-				</li>
-			</ol>
-		</div>
-	</div>
-	<div class="tab-pane" id="new_project"><a class="jumplink" name="create_a_new_project_based_on_the_SDK"></a>
-		<p>If you're starting with a clean slate (you don't have a&nbsp;project yet), you can begin by using the project template included with the SDK. The template includes support for SDK features.</p>
-		<ol>
-			<li>
-				<p>Locate the project template in the expanded SDK. It should be at the following location:</p>
-				<pre>
+        </li>
+        <li>In the <strong>Project Navigator</strong>, click on
+          your project file, and then the <strong>Build Phases</strong>
+          tab. Expand <strong>Link Binary With Libraries</strong>.
+        </li>
+        <li>Link the Apigee iOS SDK into your project.
+          <ul>
+            <li>Drag ApigeeiOSSDK.framework into the Frameworks
+              group created by Xcode.</li>
+          </ul>
+          <p>OR</p>
+          <ol>
+            <li>At the bottom of the <strong>Link Binary
+                With Libraries</strong> group, click the <strong>+</strong>
+              button. Then click&nbsp;<strong>Add Other</strong>.
+            </li>
+            <li>Navigate to the directory that contains
+              ApigeeiOSSDK.framework, and choose the
+              ApigeeiOSSDK.framework folder.</li>
+          </ol>
+        </li>
+      </ol>
+    </div>
+  </div>
+  <div class="tab-pane" id="new_project">
+    <a class="jumplink" name="create_a_new_project_based_on_the_SDK"></a>
+    <p>If you're starting with a clean slate (you don't have
+      a&nbsp;project yet), you can begin by using the project template
+      included with the SDK. The template includes support for SDK
+      features.</p>
+    <ol>
+      <li>
+        <p>Locate the project template in the expanded SDK. It
+          should be at the following location:</p> <pre>
 &lt;sdk_root&gt;/new-project-template</pre>
-			</li>
-			<li>In the project template directory, open the project file:&nbsp;Apigee App Services iOS Template.xcodeproj.</li>
-			<li>Get acquainted with the template by looking at its readme file.</li>
-		</ol>
-	</div>
+      </li>
+      <li>In the project template directory, open the project
+        file:&nbsp;Apigee App Services iOS Template.xcodeproj.</li>
+      <li>Get acquainted with the template by looking at its readme
+        file.</li>
+    </ol>
+  </div>
 </div>
 <h2>2. Add required iOS frameworks</h2>
-<p>Ensure that the following iOS frameworks are part of your project. To add them, under the <strong>Link Binary With Libraries</strong> group, click the <strong>+</strong> button, type the name of the framework you want to add, select the framework found by Xcode, then click <strong>Add</strong>.</p>
+<p>
+  Ensure that the following iOS frameworks are part of your project. To
+  add them, under the <strong>Link Binary With Libraries</strong> group,
+  click the <strong>+</strong> button, type the name of the framework
+  you want to add, select the framework found by Xcode, then click <strong>Add</strong>.
+</p>
 <ul>
-	<li>QuartzCore.framework</li>
-	<li>CoreLocation.framework</li>
-	<li>CoreTelephony.framework&nbsp;</li>
-	<li>Security.framework</li>
-	<li>SystemConfiguration.framework</li>
-	<li>UIKit.framework</li>
+  <li>QuartzCore.framework</li>
+  <li>CoreLocation.framework</li>
+  <li>CoreTelephony.framework&nbsp;</li>
+  <li>Security.framework</li>
+  <li>SystemConfiguration.framework</li>
+  <li>UIKit.framework</li>
 </ul>
 <h2>3. Update 'Other Linker Flags'</h2>
-<p>In the <strong>Build Settings</strong> panel, add the following under <strong>Other Linker Flags</strong>:</p>
+<p>
+  In the <strong>Build Settings</strong> panel, add the following under
+  <strong>Other Linker Flags</strong>:
+</p>
 <pre>
 -ObjC -all_load</pre>
-<p>Confirm that flags are set for both <strong>DEBUG</strong> and <strong>RELEASE</strong>.</p>
+<p>
+  Confirm that flags are set for both <strong>DEBUG</strong> and <strong>RELEASE</strong>.
+</p>
 <h2>4. Initialize the SDK</h2>
-<p>The <em>ApigeeClient</em> class initializes the App Services SDK. To do this you will need your organization name and application name, which are available in the <em>Getting Started</em> tab of the <a href="https://www.apigee.com/usergrid/">App Service admin portal</a>, under <strong>Mobile SDK Keys</strong>.</p>
+<p>
+  The <em>ApigeeClient</em> class initializes the App Services SDK. To
+  do this you will need your organization name and application name,
+  which are available in the <em>Getting Started</em> tab of the <a
+    href="https://www.apigee.com/usergrid/">App Service admin portal</a>,
+  under <strong>Mobile SDK Keys</strong>.
+</p>
 <ol>
-	<li>Import the SDK
-		<p>Add the following to your source code to import the SDK:</p>
-		<pre>
+  <li>Import the SDK
+    <p>Add the following to your source code to import the SDK:</p> <pre>
 #import &lt;ApigeeiOSSDK/Apigee.h&gt;</pre>
-	</li>
-	<li>
-		<p>Declare the following properties in <code>AppDelegate.h</code>:</p>
-		<pre>
+  </li>
+  <li>
+    <p>
+      Declare the following properties in
+      <code>AppDelegate.h</code>
+      :
+    </p> <pre>
 @property (strong, nonatomic) ApigeeClient *apigeeClient; 
 @property (strong, nonatomic) ApigeeMonitoringClient *monitoringClient;
 @property (strong, nonatomic) ApigeeDataClient *dataClient;	
 		</pre>
-	</li>
-	<li>
-		<p>Instantiate the <code>ApigeeClient</code> class inside the <code>didFinishLaunching</code> method of <code>AppDelegate.m</code>:</p>
-		<pre>
+  </li>
+  <li>
+    <p>
+      Instantiate the
+      <code>ApigeeClient</code>
+      class inside the 
+      <code>didFinishLaunching</code>
+      method of
+      <code>AppDelegate.m</code>
+      :
+    </p> <pre>
 //Replace 'AppDelegate' with the name of your app delegate class to instantiate it
 AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
 
@@ -92,82 +153,145 @@ appDelegate.apigeeClient = [[ApigeeClient alloc]
 self.monitoringClient = [appDelegate.apigeeClient monitoringClient]; 
 self.dataClient = [appDelegate.apigeeClient dataClient]; 
 		</pre>
-	</li>
+  </li>
 </ol>
 
 <h2>5. Verify SDK installation</h2>
 
-<p>Once initialized, App Services will also automatically instantiate the <code>ApigeeMonitoringClient</code> class and begin logging usage, crash and error metrics for your app.</p>
+<p>
+  Once initialized, App Services will also automatically instantiate the
+  <code>ApigeeMonitoringClient</code>
+  class and begin logging usage, crash and error metrics for your app.
+</p>
 
-<p>To verify that the SDK has been properly initialized, run your app, then go to <strong>'Monitoring' > 'App Usage'</strong> in the <a href="https://www.apigee.com/usergrid">App Services admin portal</a> to verify that data is being sent.</p>
-<p><img src="img/verify.png" alt="screenshot of data in admin portal"/></p>
-<div class="warning">It may take up to two minutes for data to appear in the admin portal after you run your app.</div>
+<p>
+  To verify that the SDK has been properly initialized, run your app,
+  then go to <strong>'Monitoring' > 'App Usage'</strong> in the <a
+    href="https://www.apigee.com/usergrid">App Services admin portal</a>
+  to verify that data is being sent.
+</p>
+<p>
+  <img src="img/verify.png" alt="screenshot of data in admin portal" />
+</p>
+<div class="warning">It may take up to two minutes for data to
+  appear in the admin portal after you run your app.</div>
 
 <h2>Installation complete! Try these next steps</h2>
-<ul>	
-	<li>
-		<h3><strong>Call additional SDK methods in your code</strong></h3>
-		<p>Create an instance of the AppDelegate class, then use <code>appDelegate.dataClient</code> or <code>appDelegate.monitoringClient</code> to call SDK methods:</p>
-		<div id="collapse"><a class="btn" data-toggle="collapse" href="#client_collapse">Details</a></div>
-		<div class="collapse" id="client_collapse">
-			<ul>
-				<li><code>appDelegate.dataClient</code>: Used to access the data methods of the App Services SDK, including those for push notifications, data store, and geolocation.</li>
-				<li><code>appDelegate.monitoringClient</code>: Used to access the app configuration and monitoring methods of the App Services SDK, including advanced logging, and A/B testing.</li>
-			</ul>
-			<h3>Example</h3>
-			<p>For example, you could create a new entity with the following:</p>
-			<pre>
+<ul>
+  <li>
+    <h3>
+      <strong>Call additional SDK methods in your code</strong>
+    </h3>
+    <p>
+      Create an instance of the AppDelegate class, then use
+      <code>appDelegate.dataClient</code>
+      or
+      <code>appDelegate.monitoringClient</code>
+      to call SDK methods:
+    </p>
+    <div id="collapse">
+      <a class="btn" data-toggle="collapse" href="#client_collapse">Details</a>
+    </div>
+    <div class="collapse" id="client_collapse">
+      <ul>
+        <li><code>appDelegate.dataClient</code>: Used to access the
+          data methods of the App Services SDK, including those for push
+          notifications, data store, and geolocation.</li>
+        <li><code>appDelegate.monitoringClient</code>: Used to
+          access the app configuration and monitoring methods of the App
+          Services SDK, including advanced logging, and A/B testing.</li>
+      </ul>
+      <h3>Example</h3>
+      <p>For example, you could create a new entity with the
+        following:</p>
+      <pre>
 AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
 ApigeeClientResponse *response = [appDelegate.dataClient createEntity:entity];
 			</pre>
-		</div>
+    </div>
 
-	</li>
-	<li>
-		<h3><strong>Add App Services features to your app</strong></h3>
-		<p>With App Services you can quickly add valuable features to your mobile or web app, including push notifications, a custom data store, geolocation and more. Check out these links to get started with a few of our most popular features:</p>
-		<ul>
-			<li><strong><a href="http://apigee.com/docs/node/8410">Push notifications</a></strong>: Send offers, alerts and other messages directly to user devices to dramatically increase engagement. With App Services you can send 10 million push notification per month for free!</li>
-			<li><strong><a href="http://apigee.com/docs/node/410">Geolocation</a></strong>: Target users or return result sets based on user location to keep your app highly-relevant.</li>
-			<li><strong><a href="http://apigee.com/docs/node/10152">Data storage</a></strong>: Store all your application data on our high-availability infrastructure, and never worry about dealing with a database ever again.</li>
-			<li><strong><a href="http://apigee.com/docs/node/376">User management and authentication</a></strong>: Every app needs users. Use App Services to easily implement user registration, as well as OAuth 2.0-compliant login and authentication.</li>
-		</ul>
-	</li>
-	<li>
-		<h3><strong>Check out the sample apps</strong></h3>
-		<p>The SDK includes samples that illustrate Apigee&nbsp;features. To look at them, open the .xcodeproj file for each in Xcode. To get a sample app running, open its project file, then follow the steps described in the section, <a target="_blank" href="http://apigee.com/docs/app-services/content/installing-apigee-sdk-ios">Add the SDK to an existing project</a>.</p>
-		<p>You'll find the samples in the following location in your SDK download:</p>
-		<pre>
+  </li>
+  <li>
+    <h3>
+      <strong>Add App Services features to your app</strong>
+    </h3>
+    <p>With App Services you can quickly add valuable features to
+      your mobile or web app, including push notifications, a custom
+      data store, geolocation and more. Check out these links to get
+      started with a few of our most popular features:</p>
+    <ul>
+      <li><strong><a
+          href="http://apigee.com/docs/node/8410">Push notifications</a></strong>:
+        Send offers, alerts and other messages directly to user devices
+        to dramatically increase engagement. With App Services you can
+        send 10 million push notification per month for free!</li>
+      <li><strong><a
+          href="http://apigee.com/docs/node/410">Geolocation</a></strong>: Target
+        users or return result sets based on user location to keep your
+        app highly-relevant.</li>
+      <li><strong><a
+          href="http://apigee.com/docs/node/10152">Data storage</a></strong>:
+        Store all your application data on our high-availability
+        infrastructure, and never worry about dealing with a database
+        ever again.</li>
+      <li><strong><a
+          href="http://apigee.com/docs/node/376">User management and
+            authentication</a></strong>: Every app needs users. Use App Services to
+        easily implement user registration, as well as OAuth
+        2.0-compliant login and authentication.</li>
+    </ul>
+  </li>
+  <li>
+    <h3>
+      <strong>Check out the sample apps</strong>
+    </h3>
+    <p>
+      The SDK includes samples that illustrate Apigee&nbsp;features. To
+      look at them, open the .xcodeproj file for each in Xcode. To get a
+      sample app running, open its project file, then follow the steps
+      described in the section, <a target="_blank"
+        href="http://apigee.com/docs/app-services/content/installing-apigee-sdk-ios">Add
+        the SDK to an existing project</a>.
+    </p>
+    <p>You'll find the samples in the following location in your SDK
+      download:</p> <pre>
 apigee-ios-sdk-&lt;version&gt;
     ...
     /samples
 		</pre>
-		<div id="collapse"><a class="btn" data-toggle="collapse" href="#samples_collapse">Details</a></div>
-		<div class="collapse" id="samples_collapse">
-			<p>The samples include the following:</p>
-			<table class="table">
-				<thead>
-					<tr>
-						<th scope="col">Sample</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>books</td>
-						<td>An app for storing a list of books that shows Apigee database operations such as reading, creating, and deleting.</td>
-					</tr>
-					<tr>
-						<td>messagee</td>
-						<td>An app for sending and receiving messages that shows Apigee database operations (reading, creating).</td>
-					</tr>
-					<tr>
-						<td>push</td>
-						<td>An app that uses the push feature to send notifications to the devices of users who have subscribed for them.</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<p>&nbsp;</p>
-	</li>
+    <div id="collapse">
+      <a class="btn" data-toggle="collapse" href="#samples_collapse">Details</a>
+    </div>
+    <div class="collapse" id="samples_collapse">
+      <p>The samples include the following:</p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Sample</th>
+            <th scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>books</td>
+            <td>An app for storing a list of books that shows
+              Apigee database operations such as reading, creating, and
+              deleting.</td>
+          </tr>
+          <tr>
+            <td>messagee</td>
+            <td>An app for sending and receiving messages that
+              shows Apigee database operations (reading, creating).</td>
+          </tr>
+          <tr>
+            <td>push</td>
+            <td>An app that uses the push feature to send
+              notifications to the devices of users who have subscribed
+              for them.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>&nbsp;</p>
+  </li>
 </ul>

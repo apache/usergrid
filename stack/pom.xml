@@ -19,9 +19,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>10</version>
     <relativePath></relativePath>
   </parent>
 
@@ -29,7 +29,7 @@
   <artifactId>usergrid</artifactId>
   <version>2.0.0-SNAPSHOT</version>
   <name>Usergrid Parent</name>
-  <description>Usergrid Project</description>
+  <description>Parent module for the Apache Usergrid Project</description>
   <packaging>pom</packaging>
 
   <properties>
@@ -101,9 +101,9 @@
     <hector-version>1.1-4</hector-version>
     <hector-test-version>1.1-4</hector-test-version>
     <jackson-version>1.9.9</jackson-version>
-    <jackson-2-version>2.3.1</jackson-2-version>
+    <jackson-2-version>2.3.3</jackson-2-version>
     <jclouds.version>1.6.2-incubating</jclouds.version>
-    <jersey-version>1.18</jersey-version>
+    <jersey-version>1.18.1</jersey-version>
     <junit-version>4.11</junit-version>
     <log4j-version>1.2.16</log4j-version>
     <metrics-version>2.1.2</metrics-version>
@@ -111,10 +111,17 @@
     <shiro-version>1.2.0</shiro-version>
     <slf4j-version>1.6.1</slf4j-version>
     <snakeyaml-version>1.8</snakeyaml-version>
-    <tomcat-version>7.0.42</tomcat-version>
+    <tomcat-version>7.0.52</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
+    <elasticsearch.version>1.2.3</elasticsearch.version>
 
+    <usergrid.it.forkCount>3</usergrid.it.forkCount>
+    <usergrid.it.reuseForks>false</usergrid.it.reuseForks>
+    <usergrid.it.parallel>suites</usergrid.it.parallel>
+
+    <metrics.version>3.0.0</metrics.version>
+    <rx.version>0.19.6</rx.version>
   </properties>
 
   <licenses>
@@ -160,13 +167,12 @@
       <id>tonuquq</id>
       <name>Alex Karasulu</name>
     </developer>
+    <developer>
+      <id>snoopdave</id>
+      <name>Dave Johnson</name>
+    </developer> 
   </developers>
 
-  <scm>
-    <connection>scm:git:git@github.com:usergrid/usergrid.git</connection>
-    <developerConnection>scm:git:git@github.com:usergrid/usergrid.git</developerConnection>
-    <url>https://github.com/usergrid/usergrid</url>
-  </scm>
 
   <distributionManagement>
     <!-- Versioned (non-snapshot) releases are published to this repository -->
@@ -185,18 +191,18 @@
   </distributionManagement>
 
   <modules>
+    <module>build-tools</module>
+    <module>test-utils</module>
     <module>config</module>
     <module>corepersistence</module>
     <module>core</module>
     <module>services</module>
-    <module>tools</module>
-    <module>mongo-emulator</module>
-    <module>websocket</module>
     <module>rest</module>
+    <module>tools</module>
+    <module>websocket</module>
     <module>launcher</module>
-    <module>test-utils</module>
+    <module>mongo-emulator</module>
     <module>query-validator</module>
-    <module>build-tools</module>
   </modules>
 
   <dependencyManagement>
@@ -496,14 +502,8 @@
 
       <dependency>
         <groupId>org.apache.tomcat</groupId>
-        <artifactId>catalina</artifactId>
-        <version>6.0.29</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.tomcat</groupId>
-        <artifactId>juli</artifactId>
-        <version>6.0.29</version>
+        <artifactId>tomcat-catalina</artifactId>
+        <version>${tomcat-version}</version>
       </dependency>
 
       <dependency>
@@ -873,9 +873,8 @@
       </dependency>
 
       <dependency>
-        <groupId>net.tanesha.recaptcha4j</groupId>
+        <groupId>com.google.code.maven-play-plugin.net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
-        <!-- included as local dependency -->
         <version>0.0.8</version>
       </dependency>
 
@@ -1400,7 +1399,15 @@
         <artifactId>activation</artifactId>
         <version>1.1</version>
       </dependency>
+
+    <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch</artifactId>
+        <version>${elasticsearch.version}</version>
+    </dependency>
+
     </dependencies>
+
   </dependencyManagement>
 
   <dependencies>
@@ -1473,8 +1480,8 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.1</version>
           <configuration>
-            <source>1.6</source>
-            <target>1.6</target>
+            <source>1.7</source>
+            <target>1.7</target>
             <optimize>true</optimize>
             <showDeprecation>true</showDeprecation>
             <debug>true</debug>
@@ -1649,6 +1656,10 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.15</version>
           <configuration>
+              <parallel>${usergrid.it.parallel}</parallel>
+              <forkCount>${usergrid.it.forkCount}</forkCount>
+              <reuseForks>${usergrid.it.reuseForks}</reuseForks>
+          	
             <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
           </configuration>
         </plugin>
@@ -1801,6 +1812,7 @@
                     <exclude>**/CHANGES.txt</exclude>
                     <exclude>**/*.json</exclude>
                     <exclude>**/*.log</exclude>
+                    <exclude>**/*.md5</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
@@ -1822,23 +1834,15 @@
                     <exclude>**/antlr3/**</exclude>
                     <exclude>**/META-INF/**</exclude>
                     <exclude>**/dependency-reduced-pom.xml</exclude>
-                    <exclude>**/QueryFilter.tokens</exclude>
-                    <exclude>**/QueryFilterLexer.java</exclude>
-                    <exclude>**/QueryFilterParser.java</exclude>
+                    <exclude>**/**QueryFilter.tokens</exclude>
+                    <exclude>**/**QueryFilterLexer.java</exclude>
+                    <exclude>**/**QueryFilterParser.java</exclude>
 
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
+                    <exclude>**/dummy.txt</exclude>
                     <exclude>**/cloudbees.xml</exclude>
-
-                    <exclude>**/src/test/resources/**</exclude>
-                    <exclude>**/src/main/dist/lib/**</exclude>
-                    <exclude>**/src/main/dist/webapps/**</exclude>
-
-                    <!-- TODO: need to add headers to many files in corepersistence -->
-                    <exclude>**/launcher-vagrant/**</exclude>
-                    <exclude>**/corepersistence/**</exclude>
-                    <exclude>**/awscluster/**</exclude>
 
                 </excludes>
             </configuration>
@@ -1938,4 +1942,12 @@
         </repository>
     </repositories>
 
+    <scm>
+    	<url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>
+    	<connection>scm:git:http://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</connection>
+    	<tag>HEAD</tag>
+    	<developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</developerConnection>
+    </scm>
+
 </project>
+

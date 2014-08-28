@@ -457,20 +457,20 @@ public class GeoIT extends AbstractCoreIT {
 
         int numEntities = 250;
 
-        float minLattitude = 48.32455f;
-        float maxLattitude = 48.46481f;
+        float minLatitude = 48.32455f;
+        float maxLatitude = 48.46481f;
         float minLongitude = 9.89561f;
         float maxLongitude = 10.0471f;
 
-        float lattitudeDelta = ( maxLattitude - minLattitude ) / numEntities;
+        float latitudeDelta = ( maxLatitude - minLatitude ) / numEntities;
 
         float longitudeDelta = ( maxLongitude - minLongitude ) / numEntities;
 
         for ( int i = 0; i < numEntities; i++ ) {
-            float lattitude = minLattitude + lattitudeDelta * i;
+            float latitude = minLatitude + latitudeDelta * i;
             float longitude = minLongitude + longitudeDelta * i;
 
-            Map<String, Float> location = MapUtils.hashMap( "latitude", lattitude ).map( "longitude", longitude );
+            Map<String, Float> location = MapUtils.hashMap( "latitude", latitude ).map( "longitude", longitude );
 
             Map<String, Object> data = new HashMap<String, Object>( 2 );
             data.put( "name", String.valueOf( i ) );
@@ -484,7 +484,7 @@ public class GeoIT extends AbstractCoreIT {
         //do a direct geo iterator test.  We need to make sure that we short circuit on the correct tile.
 
         float latitude = 48.38626f;
-        float longtitude = 9.94175f;
+        float longitude = 9.94175f;
         int distance = 1000;
         int limit = 8;
 
@@ -509,7 +509,7 @@ public class GeoIT extends AbstractCoreIT {
             //now test at the EM level, there should be 0 results.
             Query query = new Query();
 
-            query.addFilter( "location within 1000 of 48.38626, 9.94175" );
+            query.addFilter( "location within 1000 of 48.38626, 9.94175" ); // lat, lon 
             query.setLimit( limit );
 
             Results results = em.searchCollection( em.getApplicationRef(), "stores", query );

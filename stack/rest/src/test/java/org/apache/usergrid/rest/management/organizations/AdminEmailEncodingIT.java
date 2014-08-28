@@ -79,13 +79,14 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
         String user = email;
         String password = "password";
 
-
         TestAdminUser adminUser = new TestAdminUser( user, password, email );
 
         context.withApp( app ).withOrg( org ).withUser( adminUser );
 
         // create the org and app
         context.createNewOrgAndUser();
+
+        // no need for refresh here as Service module does an index refresh when org/app created
 
         // now log in via a GET
 

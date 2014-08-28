@@ -35,6 +35,7 @@ import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * Provides access to ElasticSearch client and, optionally, embedded ElasticSearch for testing.
  */
@@ -45,6 +46,9 @@ public class EsProvider {
 
     private final IndexFig indexFig;
     private static Client client;
+
+    public static String LOCAL_ES_PORT_PROPNAME = "EMBEDDED_ES_PORT";
+
 
     @Inject
     public EsProvider(IndexFig fig) {
@@ -58,17 +62,23 @@ public class EsProvider {
         return client;
     }
 
+    
+    public void releaseClient() {
+        client = null;
+    }
+
+
     public static synchronized Client getClient(IndexFig fig) {
 
         if (client == null) {
 
             Client newClient = null;
 
-            if (fig.isEmbedded()) {
+            if ("embedded".equals( fig.getStartUp()) ) {
 
                 int port = AvailablePortFinder.getNextAvailable(2000);
 
-                System.setProperty("EMBEDDED_ES_PORT", port+"");
+                System.setProperty( LOCAL_ES_PORT_PROPNAME, port+"" );
 
                 File tempDir;
                 try {
@@ -79,10 +89,17 @@ public class EsProvider {
                 }
 
                 Settings settings = ImmutableSettings.settingsBuilder()
-                    .put("node.http.enabled", true)
+
+                    .put("cluster.name", fig.getClusterName())
+
+                    .put("network.publish_host","127.0.0.1")
                     .put("transport.tcp.port", port)
+                    .put("discovery.zen.ping.multicast.enabled","false")
+                    .put("node.http.enabled", false)
+
                     .put("path.logs", tempDir.toString())
                     .put("path.data", tempDir.toString())
+
                     .put("gateway.type", "none")
                     .put("index.store.type", "memory")
                     .put("index.number_of_shards", 1)
@@ -90,7 +107,7 @@ public class EsProvider {
                     .build();
 
                 log.info("-----------------------------------------------------------------------");
-                log.info("Starting ElasticSearch embedded with settings: \n" + settings.getAsMap() );
+                log.info("Starting ElasticSearch embedded server with settings: \n" + settings.getAsMap() );
                 log.info("-----------------------------------------------------------------------");
 
                 Node node = NodeBuilder.nodeBuilder().settings(settings)
@@ -99,37 +116,50 @@ public class EsProvider {
                 newClient = node.client();
 
 
-            } else { // build client that connects to all configured hosts
-
-                final String hosts = fig.getHosts();
-
+            } else {
+                
                 String allHosts = "";
-                String SEP = "";
-                for (String host : fig.getHosts().split(",")) {
-                    allHosts = SEP + host + ":" + fig.getPort();
-                    SEP = ",";
+
+                if ("remote".equals( fig.getStartUp()) ) { 
+
+                    // we will connect to ES on all configured hosts
+                    String SEP = "";
+                    for (String host : fig.getHosts().split(",")) {
+                        allHosts = allHosts + SEP + host + ":" + fig.getPort();
+                        SEP = ",";
+                    }
+
+                } else {
+
+                    // we will connect to forked ES on localhost
+                    allHosts = "localhost:" + System.getProperty(LOCAL_ES_PORT_PROPNAME);
+
                 }
 
                 Settings settings = ImmutableSettings.settingsBuilder()
-                    .put("client.transport.ping_timeout", 2000) // milliseconds
-                    .put("client.transport.nodes_sampler_interval", 100)
-                    .put("http.enabled", false)
+
+                    .put("cluster.name", fig.getClusterName())
 
                     // this assumes that we're using zen for host discovery.  Putting an 
                     // explicit set of bootstrap hosts ensures we connect to a valid cluster.
                     .put("discovery.zen.ping.unicast.hosts", allHosts)
+                    .put("discovery.zen.ping.multicast.enabled","false")
+                    .put("http.enabled", false) 
+
+                    .put("client.transport.ping_timeout", 2000) // milliseconds
+                    .put("client.transport.nodes_sampler_interval", 100)
+
                     .build();
 
-                log.info("Creating ElasticSearch client with settings: " +  settings.getAsMap());
+                log.debug("Creating ElasticSearch client with settings: " +  settings.getAsMap());
 
                 Node node = NodeBuilder.nodeBuilder().settings(settings)
-                    .clusterName(fig.getClusterName())
                     .client(true).node();
 
                 newClient = node.client();
 
             }
-            client = newClient;
+                client = newClient;
         }
         return client;
     }

@@ -1,31 +1,32 @@
-/**
- Licensed to the Apache Software Foundation (ASF) under one
- or more contributor license agreements.  See the NOTICE file
- distributed with this work for additional information
- regarding copyright ownership.  The ASF licenses this file
- to you under the Apache License, Version 2.0 (the
- "License"); you may not use this file except in compliance
- with the License.  You may obtain a copy of the License at
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
 
- http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
- Unless required by applicable law or agreed to in writing,
- software distributed under the License is distributed on an
- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- KIND, either express or implied.  See the License for the
- specific language governing permissions and limitations
- under the License.
- */
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
 var bower = require('./bower.json');
 
 var distPath = 'dist/'+bower.name,
   coveragePath = 'dist-cov/'+bower.name,
-  libsFile = 'js/libs/usergrid-libs.min.js',
-  devFile = 'js/usergrid-dev.min.js',
+  libsFile = 'js/generated/usergrid-libs.min.js',
+  devFile = 'js/generated/usergrid-dev.js',
+  mainFile = 'js/generated/usergrid.min.js',
+  templateFile = 'js/generated-templates/templates.js',
   coverageDir = 'test/coverage/instrument/',
   coverageFile = 'test/coverage/instrument/js/usergrid-coverage.min.js',
-  mainFile = 'js/usergrid.min.js',
-  templateFile = 'js/templates.js',
+
   distName = bower.name,
   licenseHeader =' /**\n \
  Licensed to the Apache Software Foundation (ASF) under one\n \
@@ -64,7 +65,7 @@ module.exports = function (grunt) {
           beautify: false
         },
         files:{
-          'js/libs/usergrid-libs.min.js':[
+          'js/generated/usergrid-libs.min.js':[
             'js/libs/jquery/jquery-1.9.1.min.js',
             'js/libs/jquery/jquery-migrate-1.1.1.min.js',
             'js/libs/jquery/jquery.sparkline.min.js',
@@ -75,8 +76,6 @@ module.exports = function (grunt) {
             'js/libs/angular-1.2.5/angular-sanitize.min.js',
             'js/libs/usergrid.sdk.js',
             'js/libs/MD5.min.js',
-            'bower_components/angularitics/dist/angulartics.min.js',
-            'bower_components/angularitics/dist/angulartics-google-analytics.min.js',
             'js/libs/ui-bootstrap/ui-bootstrap-custom-tpls-0.3.0.min.js',
             'js/libs/jqueryui/jquery-ui-1.8.18.min.js',
             'js/libs/jqueryui/date.min.js',
@@ -93,13 +92,12 @@ module.exports = function (grunt) {
           wrap: true
         },
         files: {
-          'js/usergrid-dev.min.js': [
+          'js/generated/usergrid-dev.js': [
             'js/app.js',
             'js/**/*.js',
             '!js/config.js',
             '!js/libs/**/*.js',
-            '!'+mainFile,
-            '!'+devFile
+            '!js/generated/*.js'
           ]
         }
       },
@@ -114,10 +112,10 @@ module.exports = function (grunt) {
           'test/coverage/instrument/js/usergrid-coverage.min.js': [
             coverageDir+'js/app.js',
             coverageDir+'js/**/*.js',
-            'js/templates.js',
+            'js/generated-templates/templates.js',
             '!'+coverageDir+'js/config.js',
             '!'+coverageDir+'js/libs/**/*.js',
-            '!'+coverageDir+''+mainFile,
+            '!'+coverageDir+'js/generated/*.js',
             '!'+coverageDir+'js/usergrid-coverage.min.js'
           ]
         }
@@ -141,7 +139,7 @@ module.exports = function (grunt) {
           beautify: false
         },
         files: {
-          'js/usergrid.min.js': [
+          'js/generated/usergrid.min.js': [
             devFile
           ]
         }
@@ -164,7 +162,7 @@ module.exports = function (grunt) {
     cssmin: {
       combine: {
         files: {
-          'css/dash.min.css': ['css/apigeeGlobalNavigation.css', 'css/main.css']
+          'css/main.min.css': ['css/main.css']
         }
       }
     },
@@ -178,12 +176,10 @@ module.exports = function (grunt) {
         'js/**/*.js',
         'js/**/*.html',
         '!tests/',
-        '!archive/',
-        '!css/dash.min.css',
+        '!css/main.min.css',
         '!js/libs/',
-        '!js/*.min.js',
-        '!'+templateFile,
-        '!'+libsFile
+        '!js/generated/*.js',
+        '!js/generated-templates/*.js'
       ],
       tasks: ['build-dev']
     },
@@ -264,30 +260,6 @@ module.exports = function (grunt) {
           }
         }
       },
-      prod: {
-        options: {
-          args: {
-            baseUrl:'http://apigee.com/usergrid/',
-            // Arguments passed to the command
-            browser: 'chrome',
-            params:{
-              useSso:true
-            }
-          }
-        }
-      },
-      mars:{
-        options:{
-          args:{
-            baseUrl:'http://appservices.apigee.com/mars/',
-            browser: 'chrome',
-            params:{
-              useSso:true,
-              orgName:'apijeep'
-            }
-          }
-        }
-      },
       firefox: {
         options: {
           args: {
@@ -302,7 +274,7 @@ module.exports = function (grunt) {
       coverage:{
         files:[
           {
-            src:['js/*.min.js','js/libs/**','sdk/**','archive/**','js/charts/*.json','css/**','img/**','js/libs/**','config.js','bower_components/**'],
+            src:['js/*.min.js','js/libs/**','sdk/**','js/charts/*.json','css/**','img/**','js/libs/**','config.js','bower_components/**'],
             dest:coveragePath,
             expand:true
           },
@@ -317,15 +289,15 @@ module.exports = function (grunt) {
       main:{
         files:[
           // includes files within path
-          {expand: true, src: ['*.html','config.js', '*.ico'], dest: distPath, filter: 'isFile'},
-          {expand: true, src: ['sdk/**','css/**','img/**' ,'archive/**','js/charts/*.json'], dest: distPath},
-          {expand: true, src: ['js/*.min.js','js/libs/**','css/**','img/**','bower_components/**'], dest: distPath}
+          {expand: true, src: ['*.html','config.js', '*.ico', 'helpJson.json'], dest: distPath, filter: 'isFile'},
+          {expand: true, src: ['sdk/**','css/**','img/**','js/charts/*.json'], dest: distPath},
+          {expand: true, src: ['js/generated/**','js/libs/**','css/**','img/**','bower_components/**'], dest: distPath}
 
         ]
       }
     },
     clean: {
-        build: ['dist/','dist-cov/','test/', 'js/*.min.js',templateFile,'index.html','index-debug.html'],
+        build: ['dist/','dist-cov/','test/','js/generated/','js/*.min.js',templateFile,'index.html','index-debug.html'],
         coverage: ['reports/']
     },
     dom_munger: {
@@ -361,33 +333,6 @@ module.exports = function (grunt) {
         }
       }
     },
-    s3: {
-      options: {
-        key: process.env.AWS_KEY || 'noidea',
-        secret: process.env.AWS_SECRET || 'noidea',
-        bucket: 'appservices-deployments',
-        access: 'public-read',
-        headers: {
-          // Two Year cache policy (1000 * 60 * 60 * 24 * 730)
-          "Cache-Control": "max-age=630720000, public",
-          "Expires": new Date(Date.now() + 63072000000).toUTCString()
-        }
-      },
-      dev: {
-        // These options override the defaults
-        options: {
-          encodePaths: false,
-          maxOperations: 20
-        },
-        // Files to be uploaded.
-        upload: [
-          {
-            src: 'dist/'+bower.name+'.'+bower.version+'.zip',
-            dest: '/production-releases/dist/'+bower.name+'.'+bower.version+'.zip'
-          }
-        ]
-      }
-    },
     instrument: {
       files: 'js/**/*.js',
       options: {
@@ -417,7 +362,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-protractor-runner');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-dom-munger');
-  grunt.loadNpmTasks('grunt-s3');
+
   grunt.loadNpmTasks('grunt-istanbul');
 
   // Default task(s).
@@ -426,8 +371,7 @@ module.exports = function (grunt) {
   grunt.registerTask('validate', ['jshint', 'complexity']);
   grunt.registerTask('report', ['build', 'coverage']);
 
-  grunt.registerTask('build-release', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','copy']);
-  grunt.registerTask('build', ['bower:install','ngtemplates', 'uglify','cssmin','dom_munger','karma:unit']);
+  grunt.registerTask('build', ['clean:build','bower:install','ngtemplates', 'uglify','cssmin','dom_munger','karma:unit','copy']);
   grunt.registerTask('build-dev', [ 'build']);
   grunt.registerTask('build-coverage', [ 'ngtemplates','instrument','uglify:usergrid-coverage','uglify:usergrid-coverage-min', 'cssmin','dom_munger', 'copy:coverage']);
 

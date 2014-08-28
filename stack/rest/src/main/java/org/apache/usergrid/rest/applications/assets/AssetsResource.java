@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.applications.assets;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.Map;
@@ -53,7 +54,6 @@ import org.apache.usergrid.services.assets.data.BinaryStore;
 import org.apache.usergrid.utils.StringUtils;
 
 import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
 
@@ -96,11 +96,14 @@ public class AssetsResource extends ServiceResource {
     @PUT
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
+    public JSONWithPadding executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        return super.executePut( ui, json, callback );
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> json = mapper.readValue( body, mapTypeReference );
+
+        return super.executePutWithMap( ui, json, callback );
     }
 
 

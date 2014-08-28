@@ -33,9 +33,9 @@ cd /usr/share/usergrid/init_instance
 ./create_raid0.sh
 
 # Install the easy stuff
-PKGS="ntp unzip groovy tomcat7 curl"
+PKGS="ntp unzip groovy curl"
 apt-get update
-apt-get -y install ${PKGS}
+apt-get -y --force-yes install ${PKGS}
 /etc/init.d/tomcat7 stop
 
 # Install AWS Java SDK and get it into the Groovy classpath
@@ -56,18 +56,17 @@ cd /usr/share/usergrid/init_instance
 cd /usr/share/usergrid/init_instance
 ./install_cassandra.sh
 
+cd /usr/share/usergrid/init_instance
+./install_opscenter_agent.sh
+
 # Install and start ElasticSearch
 cd /usr/share/usergrid/init_instance
 ./install_elasticsearch.sh
-/etc/init.d/elasticsearch start
 
-# Starting Tomcat starts Priam which starts Priam
-#/etc/init.d/tomcat7 restart
+# Use the CQL to crate the keyspaces
+cd /usr/share/usergrid/init_instance
+./create_keyspaces.sh
 
-# Priam consistently craps out on first run
-# making this ugly kludge necessary
-#sleep 90
-#/etc/init.d/tomcat7 restart
-
+# tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts
 groovy tag_instance.groovy

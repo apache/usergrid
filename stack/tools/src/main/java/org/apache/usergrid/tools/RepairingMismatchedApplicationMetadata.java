@@ -16,16 +16,27 @@
  */
 package org.apache.usergrid.tools;
 
+
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+
+import org.apache.usergrid.management.OrganizationInfo;
+
 import com.google.common.collect.BiMap;
+
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.mutation.Mutator;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-
-import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.UUID;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
@@ -35,9 +46,13 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.RETRY_COUNT;
 
+
 public class RepairingMismatchedApplicationMetadata extends ToolBase {
 
     public static final ByteBufferSerializer be = new ByteBufferSerializer();
+
+    private static final Logger logger = LoggerFactory.getLogger( RepairingMismatchedApplicationMetadata.class );
+
 
     @Override
     public Options createOptions() {
@@ -45,29 +60,60 @@ public class RepairingMismatchedApplicationMetadata extends ToolBase {
         return options;
     }
 
+
     @Override
-    public void runTool(CommandLine line) throws Exception {
+    public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
-        BiMap<UUID, String> orgs = managementService.getOrganizations();
-        for(Map.Entry org : orgs.entrySet()) {
-            BiMap<UUID, String> apps = managementService.getApplicationsForOrganization((UUID)org.getKey());
-            for(Map.Entry app : apps.entrySet()) {
-                UUID applicationId = emf.lookupApplication((String)app.getValue());
-                if( applicationId == null ) {
-                    String appName = (String)app.getValue();
-                    Keyspace ko = cass.getSystemKeyspace();
-                    Mutator<ByteBuffer> m = createMutator(ko, be);
-                    long timestamp = cass.createTimestamp();
-                    addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_UUID, (UUID)app.getKey(), timestamp);
-                    addInsertToMutator(m, APPLICATIONS_CF, appName, PROPERTY_NAME, appName, timestamp);
-                    batchExecute(m, RETRY_COUNT);
-                    logger.info("UUID {}, NAME {}", app.getKey(), app.getValue());
+        //sucks, but it's not picking up the configuration
+        LogManager.getLogger( RepairingMismatchedApplicationMetadata.class ).setLevel( Level.INFO );
+
+        UUID orgId = null;
+        List<OrganizationInfo> orgs;
+
+        final int size = 1000;
+
+
+        do {
+            orgs = managementService.getOrganizations( orgId, size );
+
+
+            for ( OrganizationInfo org : orgs ) {
+
+                orgId = org.getUuid();
+
+                logger.info( "Auditing org {}", org.getName() );
+
+                try {
+                    BiMap<UUID, String> apps = managementService.getApplicationsForOrganization( org.getUuid() );
+
+
+                    for ( Map.Entry<UUID, String> app : apps.entrySet() ) {
+
+                        logger.info( "Auditing org {} app {}", org.getName(), app.getValue() );
+
+                        UUID applicationId = emf.lookupApplication( app.getValue() );
+                        if ( applicationId == null ) {
+                            String appName = app.getValue();
+                            Keyspace ko = cass.getSystemKeyspace();
+                            Mutator<ByteBuffer> m = createMutator( ko, be );
+                            long timestamp = cass.createTimestamp();
+                            addInsertToMutator( m, APPLICATIONS_CF, appName, PROPERTY_UUID, app.getKey(), timestamp );
+                            addInsertToMutator( m, APPLICATIONS_CF, appName, PROPERTY_NAME, appName, timestamp );
+                            batchExecute( m, RETRY_COUNT );
+                            logger.info( "Repairing alias with app uuid {}, and name {}", app.getKey(),
+                                    app.getValue() );
+                        }
+                    }
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to process applications for organization {}", org, e );
                 }
             }
         }
+        while ( orgs != null && orgs.size() == size );
 
-        logger.info("Waiting 60 sec...");
-        Thread.sleep(1000 * 60);
+        logger.info( "Completed repairing aliases" );
+        Thread.sleep( 1000 * 60 );
     }
 }

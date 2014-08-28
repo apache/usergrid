@@ -24,36 +24,30 @@
 // Emits Cassandra config file based on environment and Cassandra node 
 // registry in SimpleDB
 //
+
 import com.amazonaws.auth.*
 import com.amazonaws.services.simpledb.*
 import com.amazonaws.services.simpledb.model.*
 
-String accessKey = (String)System.getenv().get("AWS_ACCESS_KEY")
-String secretKey = (String)System.getenv().get("AWS_SECRET_KEY")
-String stackName = (String)System.getenv().get("STACK_NAME")
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
 def clusterName  = (String)System.getenv().get("CASSANDRA_CLUSTER_NAME")
-String domain    = stackName
 
-def creds = new BasicAWSCredentials(accessKey, secretKey)
-def sdbClient = new AmazonSimpleDBClient(creds)
+NodeRegistry registry = new NodeRegistry();
 
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
-def selectResult = sdbClient.select(new SelectRequest((String)"select * from `${domain}`"))
-def seeds = ""
+// works because cassandra nodes are also elasticsearch nodes
+def selectResult = registry.searchNode('cassandra')
+def esnodes = ""
 def sep = ""
-for (item in selectResult.getItems()) {
-    def att = item.getAttributes().get(0)
-    if (att.getValue().equals(stackName)) {
-        seeds = "${seeds}${sep}\"${item.getName()}\""
-        sep = ","
-    }
+for (hostname in selectResult) {
+   esnodes = "${esnodes}${sep}\"${hostname}\""
+   sep = ","
 }
 
 def elasticSearchConfig = """
-cluster.name: usergrid2
+cluster.name: ${clusterName}
 discovery.zen.ping.multicast.enabled: false
-discovery.zen.ping.unicast.hosts: [${seeds}]
+discovery.zen.ping.unicast.hosts: [${esnodes}]
 node:
     name: ${hostName} 
 network:

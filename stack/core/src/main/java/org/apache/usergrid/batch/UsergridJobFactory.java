@@ -37,17 +37,17 @@ public class UsergridJobFactory implements JobFactory {
 
 
     @Override
-    public List<Job> jobsFrom( JobDescriptor descriptor ) throws JobNotFoundException {
+    public Job jobsFrom( JobDescriptor descriptor ) throws JobNotFoundException {
 
         Job job = context.getBean( descriptor.getJobName(), Job.class );
 
         if ( job == null ) {
             String error =
-                    String.format( "Could not find job impelmentation for job name %s", descriptor.getJobName() );
+                    String.format( "Could not find job implementation for job name %s", descriptor.getJobName() );
             logger.error( error );
             throw new JobNotFoundException( error );
         }
 
-        return Collections.singletonList( job );
+        return job;
     }
 }

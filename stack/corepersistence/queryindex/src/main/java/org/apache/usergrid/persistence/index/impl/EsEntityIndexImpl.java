@@ -32,9 +32,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -304,9 +302,9 @@ public class EsEntityIndexImpl implements EntityIndex {
         // entityAsMap.put("created", entity.getId().getUuid().timestamp();
         // entityAsMap.put("updated", entity.getVersion().timestamp());
 
-        log.debug("Indexing entity: " + entityAsMap);
-
         String indexId = EsEntityIndexImpl.this.createIndexDocId(entity);
+
+        log.debug("Indexing entity id {} data {} ", indexId, entityAsMap);
 
         IndexRequestBuilder irb = client
             .prepareIndex( indexName, this.indexType, indexId)
@@ -314,6 +312,10 @@ public class EsEntityIndexImpl implements EntityIndex {
             .setRefresh(refresh);
 
         irb.execute().actionGet();
+
+        if ( refresh) {
+            refresh();
+        }
 
         //log.debug("Indexed Entity with index id " + indexId);
 
@@ -335,13 +337,14 @@ public class EsEntityIndexImpl implements EntityIndex {
     public void deindex( final Id id, final UUID version) {
 
         if ( log.isDebugEnabled() ) {
-            log.debug("De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {}", 
+            log.debug("De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {} type {}", 
                 new Object[] { 
                     id.getType(), 
                     id.getUuid(), 
                     indexScope.getApplication(), 
                     indexScope.getOwner(), 
-                    indexScope.getName() 
+                    indexScope.getName(),
+                    indexType
             });
         }
 
@@ -349,6 +352,10 @@ public class EsEntityIndexImpl implements EntityIndex {
         client.prepareDelete( indexName, indexType, indexId )
             .setRefresh( refresh )
             .execute().actionGet();
+
+        if ( refresh ) {
+            refresh();
+        }
 
         log.debug("Deindexed Entity with index id " + indexId);
     }
@@ -372,11 +379,12 @@ public class EsEntityIndexImpl implements EntityIndex {
         QueryBuilder qb = query.createQueryBuilder();
 
         if ( log.isDebugEnabled() ) {
-            log.debug("Searching index {}\n   type {}\n   query {}", 
+            log.debug("Searching index {}\n   type {}\n   query {} limit {}", 
                 new Object[] { 
                     this.indexName,
                     this.indexType,
-                    qb.toString().replace("\n", " ") 
+                    qb.toString().replace("\n", " "),
+                    query.getLimit()
             });
         }
             
@@ -415,10 +423,17 @@ public class EsEntityIndexImpl implements EntityIndex {
             searchResponse = srb.execute().actionGet();
 
         } else {
-            log.debug("Executing query with cursor: {} ", query.getCursor());
+            String scrollId = query.getCursor();
+            if ( scrollId.startsWith("\"")) {
+                scrollId = scrollId.substring(1);
+            }
+            if ( scrollId.endsWith("\"")) {
+                scrollId = scrollId.substring(0, scrollId.length() - 1 );
+            }
+            log.debug("Executing query with cursor: {} ", scrollId);
 
             SearchScrollRequestBuilder ssrb = client
-                .prepareSearchScroll(query.getCursor())
+                .prepareSearchScroll(scrollId)
                 .setScroll( cursorTimeout + "m" );
             searchResponse = ssrb.execute().actionGet();
         }
@@ -439,38 +454,17 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             Id entityId = new SimpleId(UUID.fromString(id), type);
 
-
-//            String scopeString = hit.getSource().get( COLLECTION_SCOPE_FIELDNAME ).toString();
-            candidates.add(
-                new CandidateResult( 
-                    entityId, UUID.fromString(version) ));
+            candidates.add( new CandidateResult( entityId, UUID.fromString(version) ));
         }
 
         CandidateResults candidateResults = new CandidateResults( query, candidates );
 
-        if ( candidates.size() == query.getLimit() ) {
+        if ( candidates.size() >= query.getLimit() ) {
             candidateResults.setCursor(searchResponse.getScrollId());
             log.debug("   Cursor = " + searchResponse.getScrollId() );
-        }
+        } 
 
         return candidateResults;
-    }
-
-
-    private CollectionScope getCollectionScope( String scope ) {
-        
-        String[] scopeParts = scope.split( DOC_TYPE_SEPARATOR_SPLITTER );
-
-        String scopeName      =                  scopeParts[0];
-        UUID   scopeOwnerUuid = UUID.fromString( scopeParts[1] );
-        String scopeOwnerType =                  scopeParts[2];
-        UUID   scopeOrgUuid   = UUID.fromString( scopeParts[3] );
-        String scopeOrgType   =                  scopeParts[4];
-
-        Id ownerId = new SimpleId( scopeOwnerUuid, scopeOwnerType );
-        Id orgId = new SimpleId( scopeOrgUuid, scopeOrgType );
-
-        return new CollectionScopeImpl( orgId, ownerId, scopeName );
     }
 
 
@@ -487,14 +481,14 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             if (f instanceof ListField)  {
                 List list = (List) field.getValue();
-                    entityMap.put(field.getName(),
+                    entityMap.put(field.getName().toLowerCase(),
                             new ArrayList(processCollectionForMap(list)));
 
                 if ( !list.isEmpty() ) {
                     if ( list.get(0) instanceof String ) {
                         Joiner joiner = Joiner.on(" ").skipNulls();
                         String joined = joiner.join(list);
-                        entityMap.put(field.getName() + ANALYZED_SUFFIX,
+                        entityMap.put(field.getName().toLowerCase() + ANALYZED_SUFFIX,
                             new ArrayList(processCollectionForMap(list)));
                         
                     }
@@ -502,22 +496,23 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             } else if (f instanceof ArrayField) {
                 List list = (List) field.getValue();
-                entityMap.put(field.getName(),
+                entityMap.put(field.getName().toLowerCase(),
                         new ArrayList(processCollectionForMap(list)));
 
             } else if (f instanceof SetField) {
                 Set set = (Set) field.getValue();
-                entityMap.put(field.getName(),
+                entityMap.put(field.getName().toLowerCase(),
                         new ArrayList(processCollectionForMap(set)));
 
             } else if (f instanceof EntityObjectField) {
                 EntityObject eo = (EntityObject)field.getValue();
-                entityMap.put(field.getName(), entityToMap(eo)); // recursion
+                entityMap.put(field.getName().toLowerCase(), entityToMap(eo)); // recursion
 
             } else if (f instanceof StringField) {
+
                 // index in lower case because Usergrid queries are case insensitive
-                entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
-                entityMap.put(field.getName() + ANALYZED_SUFFIX, field.getValue());
+                entityMap.put(field.getName().toLowerCase(), ((String) field.getValue()).toLowerCase());
+                entityMap.put(field.getName().toLowerCase() + ANALYZED_SUFFIX, ((String) field.getValue()).toLowerCase());
 
             } else if (f instanceof LocationField) {
                 LocationField locField = (LocationField) f;
@@ -526,10 +521,10 @@ public class EsEntityIndexImpl implements EntityIndex {
                 // field names lat and lon trigger ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude());
                 locMap.put("lon", locField.getValue().getLongtitude());
-                entityMap.put(field.getName() + GEO_SUFFIX, locMap);
+                entityMap.put(field.getName().toLowerCase() + GEO_SUFFIX, locMap);
 
             } else {
-                entityMap.put(field.getName(), field.getValue());
+                entityMap.put(field.getName().toLowerCase(), field.getValue());
             }
         }
 

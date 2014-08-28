@@ -4,6 +4,8 @@
 QueryFilterLexer.java
 QueryFilterParser.java
 
+target
+
 # Icon must ends with two \r.
 Icon
 
@@ -16,7 +18,7 @@ Icon
 .Trashes
 /portal/performance/
 /portal/node_modules/
-/portal/dist/appsvc-ui.*.zip
+/portal/dist/
 /portal/dist-cov/
 /portal/bower_components
 /portal/.idea
@@ -67,3 +69,12 @@ portal/js/templates.js
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/CpQueryFilterLexer.java
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/CpQueryFilterParser.java
 /stack/corepersistence/queryindex/src/main/java/CpQueryFilter.tokens
+
+/portal/dist/usergrid-portal.zip
+
+/portal/js/usergrid-dev.js
+
+/portal/js/generated/
+
+/portal/js/generated-templates/
+/release/target/

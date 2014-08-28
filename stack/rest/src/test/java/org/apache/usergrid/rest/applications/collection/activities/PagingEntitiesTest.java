@@ -52,7 +52,7 @@ public class PagingEntitiesTest extends AbstractRestIT {
         CustomCollection activities = context.collection( "activities" );
 
         long created = 0;
-        int maxSize = 1500;
+        int maxSize = 100;
         long[] verifyCreated = new long[maxSize];
         Map actor = hashMap( "displayName", "Erin" );
         Map props = new HashMap();
@@ -71,6 +71,9 @@ public class PagingEntitiesTest extends AbstractRestIT {
             }
         }
         ArrayUtils.reverse( verifyCreated );
+        
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         String query = "select * where created >= " + created;
 
 
@@ -119,6 +122,8 @@ public class PagingEntitiesTest extends AbstractRestIT {
                 created = activity.findValue( "created" ).longValue();
             }
         }
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         String query = "select * where created >= " + created + " or verb = 'stop'";
 

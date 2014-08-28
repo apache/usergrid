@@ -47,7 +47,7 @@ public class OrganizationIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource, ServiceITSuite.elasticSearchResource );
 
 
     @Test
@@ -71,6 +71,7 @@ public class OrganizationIT {
         assertNotNull( applicationId );
 
         setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
+        setup.getEmf().getEntityManager( applicationId ).refreshIndex();
 
         Map<UUID, String> applications = setup.getMgmtSvc().getApplicationsForOrganization( organization.getUuid() );
         assertEquals( "wrong number of applications", 1, applications.size() );
