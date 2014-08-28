@@ -48,11 +48,11 @@ import com.netflix.astyanax.util.RangeBuilder;
 
 import rx.Observable;
 import rx.Observer;
-import rx.Subscription;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 
 public class MultiRowColumnIteratorTest {
@@ -207,6 +207,121 @@ public class MultiRowColumnIteratorTest {
 
 
     @Test
+    public void multiIteratorPageBoundary() throws InterruptedException {
+
+        final String rowKey1 = UUIDGenerator.newTimeUUID().toString();
+
+        final String rowKey2 = UUIDGenerator.newTimeUUID().toString();
+
+        final String rowKey3 = UUIDGenerator.newTimeUUID().toString();
+
+
+        final long maxValue = 200;
+
+        final CountDownLatch latch = new CountDownLatch( 3 );
+
+
+        //only write with 1 row key to simulate ending on a page break the last iteration
+        writeData( latch, rowKey1, maxValue, 1 );
+        writeData( latch, rowKey2, maxValue, 2 );
+        writeData( latch, rowKey3, maxValue, 10 );
+
+
+        latch.await();
+
+
+        //create 3 iterators
+
+
+        final ColumnParser<Long, Long> longParser = new ColumnParser<Long, Long>() {
+            @Override
+            public Long parseColumn( final Column<Long> column ) {
+                return column.getName();
+            }
+        };
+
+
+        final ColumnSearch<Long> ascendingSearch = new ColumnSearch<Long>() {
+            @Override
+            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+                rangeBuilder.setStart( value );
+            }
+
+
+            @Override
+            public void buildRange( final RangeBuilder rangeBuilder ) {
+
+            }
+        };
+
+
+        final Comparator<Long> ascendingComparator = new Comparator<Long>() {
+
+            @Override
+            public int compare( final Long o1, final Long o2 ) {
+                return Long.compare( o1, o2 );
+            }
+        };
+
+
+        final Collection<String> rowKeys = Arrays.asList( rowKey1, rowKey2, rowKey3 );
+
+        MultiRowColumnIterator<String, Long, Long> ascendingItr =
+                new MultiRowColumnIterator<>( keyspace, COLUMN_FAMILY, ConsistencyLevel.CL_QUORUM, longParser,
+                        ascendingSearch, ascendingComparator, rowKeys, ( int ) maxValue / 2 );
+
+
+        //ensure we have to make several trips, purposefully set to a nonsensical value to ensure we make all the
+        // trips required
+
+
+        for ( long i = 0; i < maxValue; i++ ) {
+            assertEquals( i, ascendingItr.next().longValue() );
+        }
+
+        //now advance one more time. There should be no values
+
+        assertFalse( "Should not throw exception", ascendingItr.hasNext() );
+
+
+        final ColumnSearch<Long> descendingSearch = new ColumnSearch<Long>() {
+            @Override
+            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+                rangeBuilder.setStart( value );
+                buildRange( rangeBuilder );
+            }
+
+
+            @Override
+            public void buildRange( final RangeBuilder rangeBuilder ) {
+                rangeBuilder.setReversed( true );
+            }
+        };
+
+
+        final Comparator<Long> descendingComparator = new Comparator<Long>() {
+
+            @Override
+            public int compare( final Long o1, final Long o2 ) {
+                return ascendingComparator.compare( o1, o2 ) * -1;
+            }
+        };
+
+
+        MultiRowColumnIterator<String, Long, Long> descendingItr =
+                new MultiRowColumnIterator<>( keyspace, COLUMN_FAMILY, ConsistencyLevel.CL_QUORUM, longParser,
+                        descendingSearch, descendingComparator, rowKeys, 712 );
+
+        for ( long i = maxValue - 1; i > -1; i-- ) {
+            assertEquals( i, descendingItr.next().longValue() );
+        }
+        //now advance one more time. There should be no values
+
+        assertFalse( "Should not throw exception", ascendingItr.hasNext() );
+    }
+
+
+    @Test
     public void singleIterator() {
 
         final String rowKey1 = UUIDGenerator.newTimeUUID().toString();
@@ -334,7 +449,7 @@ public class MultiRowColumnIteratorTest {
     }
 
 
-    private void writeData(final CountDownLatch latch, final String rowKey, final long maxValue, final long mod){
+    private void writeData( final CountDownLatch latch, final String rowKey, final long maxValue, final long mod ) {
 
         Observable.just( rowKey ).doOnNext( new Action1<String>() {
             @Override
@@ -349,13 +464,13 @@ public class MultiRowColumnIteratorTest {
                     }
 
                     if ( i % 1000 == 0 ) {
-                                               try {
-                                                   batch.execute();
-                                               }
-                                               catch ( ConnectionException e ) {
-                                                   throw new RuntimeException( e );
-                                               }
-                                           }
+                        try {
+                            batch.execute();
+                        }
+                        catch ( ConnectionException e ) {
+                            throw new RuntimeException( e );
+                        }
+                    }
                 }
 
                 try {

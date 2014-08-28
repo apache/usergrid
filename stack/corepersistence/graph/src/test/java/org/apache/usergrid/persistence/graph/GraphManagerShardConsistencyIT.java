@@ -122,7 +122,7 @@ public class GraphManagerShardConsistencyIT {
         ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 1000 );
 
 
-        final long cacheTimeout = 5000;
+        final long cacheTimeout = 2000;
         //set our cache timeout to the above value
         ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_CACHE_TIMEOUT, cacheTimeout );
 

@@ -238,7 +238,9 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         //we've parsed everything truncate to the first pageSize, it's all we can ensure is correct without another
         //trip back to cassandra
 
-        startColumn = mergedResults.last();
+        if(!mergedResults.isEmpty()) {
+            startColumn = mergedResults.last();
+        }
 
         moreToFollow = mergedResults.size() == pageSize;
 
