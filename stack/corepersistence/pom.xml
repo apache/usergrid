@@ -94,7 +94,7 @@
                     <systemPropertyVariables>
                         <archaius.deployment.environment>UNIT</archaius.deployment.environment>
                     </systemPropertyVariables>
-                    <argLine>-Xms2G -Xmx4G</argLine>
+                    <argLine>-Xms2G -Xmx4G -Dlog4j.debug=true -Dlog4j.configuration=file://${project.basedir}/src/test/resources/log4j.properties</argLine>
                 </configuration>
             </plugin>
 

@@ -2486,12 +2486,13 @@ public class CpEntityManager implements EntityManager {
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Writing entity {}:{} into scope\n   app {}\n   owner {}\n   name {}", 
+            logger.debug( "Writing entity {}:{} into scope\n   app {}\n   owner {}\n   name {} data {}", 
                 new Object[] {
                     entity.getType(), entity.getUuid(), 
                     collectionScope.getApplication(), 
                     collectionScope.getOwner(),
-                    collectionScope.getName()
+                    collectionScope.getName(),
+                    CpEntityMapUtils.toMap(cpEntity)
             } );
 //
 //            if ( entity.getType().equals("group")) {
@@ -2750,7 +2751,7 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    private org.apache.usergrid.persistence.model.entity.Entity entityToCpEntity( Entity entity, UUID importId ) {
+    public static org.apache.usergrid.persistence.model.entity.Entity entityToCpEntity( Entity entity, UUID importId ) {
 
         UUID uuid = importId != null ? importId : entity.getUuid();
 

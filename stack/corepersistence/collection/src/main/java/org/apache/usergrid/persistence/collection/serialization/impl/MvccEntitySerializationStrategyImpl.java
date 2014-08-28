@@ -366,9 +366,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
             byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
 
-            /**
-             * It's been deleted, remove it
-             */
+            // it's been deleted, remove it
+
             if ( Arrays.equals( STATE_DELETED, state ) ) {
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
             }
@@ -381,7 +380,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             int length = jsonBytes.remaining();
 
             try {
-                storedEntity = mapper.readValue( array,start,length,Entity.class);
+                storedEntity = mapper.readValue( array, start, length, Entity.class );
             }
             catch ( Exception e ) {
                 throw new RuntimeException(e.getMessage());
@@ -393,7 +392,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
             }
 
-            //it's partial by default
+            // it's partial by default
             return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
         }
     }
