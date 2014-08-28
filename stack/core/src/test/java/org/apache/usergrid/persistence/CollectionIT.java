@@ -864,6 +864,8 @@ public class CollectionIT extends AbstractCoreIT {
         Entity entity2 = em.create( "game", properties );
         assertNotNull( entity2 );
 
+        em.refreshIndex();
+
 
         // simple not
         Query query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Foo'" ).withLimit( 1 );

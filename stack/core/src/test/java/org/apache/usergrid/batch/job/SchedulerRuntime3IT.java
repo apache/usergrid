@@ -55,6 +55,8 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         JobData returned = scheduler.createJob( 
                 "failureJobExceuction", System.currentTimeMillis(), new JobData() );
 
+        scheduler.refreshIndex();
+
         final long waitTime = ( failCount + 2 ) * sleepTime + 5000L ;
 
         boolean jobInvoked = job.waitForCount( waitTime, TimeUnit.MILLISECONDS);
@@ -65,6 +67,7 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
 
         assertTrue( "dead job signaled", deadInvoked );
 
+        scheduler.refreshIndex();
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
@@ -74,7 +77,6 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         assertTrue( "Jobs ran", waited );
         assertTrue( failCount + " failures resulted", getJobListener().getFailureCount() == failCount );
         assertTrue( 1 + " success resulted", getJobListener().getSuccessCount() == 1 );
-
 
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 

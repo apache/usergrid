@@ -55,8 +55,10 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
         job.setLatch( numberOfRuns );
         job.setDelay( sleepTime );
 
-        JobData returned = scheduler.createJob( 
-                "onlyOnceExceution", System.currentTimeMillis(), new JobData() );
+
+        getJobListener().setExpected(1);
+
+        JobData returned = scheduler.createJob( "onlyOnceExceution", System.currentTimeMillis(), new JobData() );
 
         scheduler.refreshIndex();
 
@@ -87,11 +89,14 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
         assertTrue( "Job slept", slept );
 
+        scheduler.refreshIndex();
 
         //now wait again to see if the job fires one more time, it shouldn't
         waited = getJobListener().blockTilDone( customRetry * numberOfRuns * 2 );
 
         assertFalse( "Job ran twice", waited );
+
+        scheduler.refreshIndex();
 
         stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 

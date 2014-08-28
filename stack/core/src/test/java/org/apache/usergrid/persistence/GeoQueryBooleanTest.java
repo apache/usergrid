@@ -17,12 +17,8 @@
 package org.apache.usergrid.persistence;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Injector;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,21 +28,11 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.corepersistence.CpEntityMapUtils;
-import org.apache.usergrid.corepersistence.CpSetup;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.field.ListField;
-import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 
 @Concurrent()
@@ -129,7 +115,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
 
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
-        UUID applicationId = setup.createApplication( "testOrganization", "testGeoQueryWithOr" );
+        UUID applicationId = setup.createApplication( "testOrganization", "testGeoQueryWithNot" );
         assertNotNull( applicationId );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
