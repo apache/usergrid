@@ -485,13 +485,8 @@ public class Message {
 
 
     public void setUuid( UUID uuid ) {
-        //if ( isTimeBased( uuid ) ) {
-            properties.put( MESSAGE_ID, uuid );
-            properties.put( MESSAGE_TIMESTAMP, MurmurHash.hash64(uuid));
-//        }
-//        else {
-//            throw new IllegalArgumentException( "Not a time-based UUID" );
-//        }
+        properties.put(MESSAGE_ID, uuid);
+        properties.put(MESSAGE_TIMESTAMP, UUIDUtils.getUUIDLong(uuid));
     }
 
 
