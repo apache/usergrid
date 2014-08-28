@@ -25,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.jukito.UseModules;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,6 +50,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith( ITRunner.class )
 @UseModules( TestGraphModule.class )
+@Ignore("Kills cassandra")
 public class GraphManagerShardingIT {
 
 

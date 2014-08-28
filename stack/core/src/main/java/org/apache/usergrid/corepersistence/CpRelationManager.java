@@ -65,6 +65,7 @@ import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.geo.model.Point;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
@@ -370,7 +371,7 @@ public class CpRelationManager implements RelationManager {
             String etype = edgeTypes.next();
 
             Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
-                cpHeadEntity.getId(), etype, Long.MAX_VALUE, null ));
+                cpHeadEntity.getId(), etype, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null ));
 
             Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
             while ( iter.hasNext() ) {
@@ -429,7 +430,7 @@ public class CpRelationManager implements RelationManager {
             String etype = edgeTypesToTarget.next();
 
             Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
-                cpHeadEntity.getId(), etype, Long.MAX_VALUE, null ));
+                cpHeadEntity.getId(), etype, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,  null ));
 
             // loop through edges of that type
             Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
@@ -499,7 +500,7 @@ public class CpRelationManager implements RelationManager {
                 new SimpleId(headEntity.getUuid(), headEntity.getType()), 
                 edgeType,  
                 entityId, 
-                Long.MAX_VALUE,
+                Long.MAX_VALUE,  SearchByEdgeType.Order.DESCENDING,
                 null));
 
         return edges.toBlockingObservable().firstOrDefault(null) != null;
@@ -527,7 +528,7 @@ public class CpRelationManager implements RelationManager {
                 new SimpleId(headEntity.getUuid(), headEntity.getType()), 
                 edgeType,  
                 entityId, 
-                Long.MAX_VALUE,
+                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
                 null));
 
         return edges.toBlockingObservable().firstOrDefault(null) != null;
@@ -544,7 +545,7 @@ public class CpRelationManager implements RelationManager {
         Observable<Edge> edgesToTarget = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
             targetId,
             CpRelationManager.getEdgeTypeFromConnectionType( connectionType, target.getType() ),
-            System.currentTimeMillis(),
+            System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,
             null)); // last
 
         Iterator<Edge> iterator = edgesToTarget.toBlockingObservable().getIterator();
@@ -568,18 +569,12 @@ public class CpRelationManager implements RelationManager {
         Observable<Edge> edgesFromSource = gm.loadEdgesFromSource(new SimpleSearchByEdgeType(
             sourceId,
             CpRelationManager.getEdgeTypeFromConnectionType( connectionType, null ),
-            System.currentTimeMillis(),
+            System.currentTimeMillis(),SearchByEdgeType.Order.DESCENDING,
             null)); // last
-        
-        Iterator<Edge> iterator = edgesFromSource.toBlockingObservable().getIterator();
-        int count = 0;
-        while ( iterator.hasNext() ) {
-            iterator.next();
-            if ( count++ > 1 ) { 
-                return true;
-            }
-        } 
-        return false;
+
+        int count = edgesFromSource.take( 2 ).count().toBlocking().last();
+
+        return count > 1;
    } 
 
 

@@ -43,6 +43,7 @@ import javax.annotation.Nullable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +82,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
-//@Ignore( "A stress test, not part of functional testing" )
+@Ignore( "Kills cassandra, needs to be part of functional testing" )
 public class GraphManagerShardConsistencyIT {
     private static final Logger log = LoggerFactory.getLogger( GraphManagerShardConsistencyIT.class );
 
@@ -119,7 +120,7 @@ public class GraphManagerShardConsistencyIT {
         originalShardDelta = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_MIN_DELTA );
 
 
-        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 1000 );
+        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 500 );
 
 
         final long cacheTimeout = 2000;
@@ -491,35 +492,36 @@ public class GraphManagerShardConsistencyIT {
                                                         .doOnNext( new Action1<Edge>() {
 
 
+                                                            //                    private Edge last;
 
-//                    private Edge last;
 
+                                                            @Override
+                                                            public void call( final Edge edge ) {
+                                                                readMeter.mark();
 
-                    @Override
-                    public void call( final Edge edge ) {
-                        readMeter.mark();
+                                                                //                        count[0]++;
+                                                                //
+                                                                //                        /**
+                                                                //                         * Added this check as part
+                                                                // of the read
+                                                                //                         */
+                                                                //                        if ( last != null && last
+                                                                // .equals(edge) ) {
+                                                                //                            fail( String.format( "Expected edges to be in order, however last was %s and current is %s",
+                                                                //                                    last, edge ) );
+                                                                //                        }
+                                                                //
+                                                                //                        last = edge;
+                                                                //
+                                                                //                        if( seen.contains( edge ) ){
+                                                                //                            fail( String.format("Returned an edge that was already seen! Edge was %s, last edge was %s", edge, last) );
+                                                                //                            duplicate[0]++;
+                                                                //                        }
+                                                                //
+                                                                //                        seen.add( edge );
 
-//                        count[0]++;
-//
-//                        /**
-//                         * Added this check as part of the read
-//                         */
-//                        if ( last != null && last.equals(edge) ) {
-//                            fail( String.format( "Expected edges to be in order, however last was %s and current is %s",
-//                                    last, edge ) );
-//                        }
-//
-//                        last = edge;
-//
-//                        if( seen.contains( edge ) ){
-//                            fail( String.format("Returned an edge that was already seen! Edge was %s, last edge was %s", edge, last) );
-//                            duplicate[0]++;
-//                        }
-//
-//                        seen.add( edge );
-
-                    }
-                } )
+                                                            }
+                                                        } )
 
                                                         .longCount().toBlocking().last();
 
