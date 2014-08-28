@@ -73,6 +73,8 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         // make sure we're not racing the test
         boolean waited = getJobListener().blockTilDone(waitTime);
 
+        scheduler.refreshIndex();
+
         //we shouldn't trip the latch.  It should fail failCount times, and not run again
         assertTrue( "Jobs ran", waited );
         assertTrue( failCount + " failures resulted", getJobListener().getFailureCount() == failCount );
