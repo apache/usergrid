@@ -48,14 +48,14 @@
         <guava.version>15.0</guava.version>
         <guice.version>3.0</guice.version>
         <guicyfig.version>3.2</guicyfig.version>
-        <hystrix.version>1.3.15</hystrix.version>
+        <hystrix.version>1.3.16</hystrix.version>
         <jackson-2-version>2.3.1</jackson-2-version>
         <jackson-smile.verson>1.9.9</jackson-smile.verson>
         <jukito.version>1.4-UG</jukito.version>
         <junit.version>4.11</junit.version>
         <kryo-serializers.version>0.26</kryo-serializers.version>
         <log4j.version>1.2.17</log4j.version>
-        <rx.version>0.19.0</rx.version>
+        <rx.version>0.19.6</rx.version>
         <slf4j.version>1.7.2</slf4j.version>
         <surefire.version>2.16</surefire.version>
 
@@ -94,7 +94,7 @@
                     <systemPropertyVariables>
                         <archaius.deployment.environment>UNIT</archaius.deployment.environment>
                     </systemPropertyVariables>
-                    <argLine>-Xms2G -Xmx4G -Dlog4j.debug=true -Dlog4j.configuration=file://${project.basedir}/src/test/resources/log4j.properties</argLine>
+                    <argLine>-Xms2G -Xmx4G</argLine>
                 </configuration>
             </plugin>
 

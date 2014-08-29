@@ -1,6 +1,7 @@
 package org.apache.usergrid.persistence.core.astyanax;
 
 
+import org.apache.cassandra.db.marshal.BooleanType;
 import org.apache.cassandra.db.marshal.DynamicCompositeType;
 
 
@@ -18,6 +19,8 @@ public class ColumnTypes {
 
 
     public static final String UUID_TYPE_REVERSED = "UUIDType(reversed=true)";
+
+    public static final String BOOLEAN = "BooleanType";
 
 
 

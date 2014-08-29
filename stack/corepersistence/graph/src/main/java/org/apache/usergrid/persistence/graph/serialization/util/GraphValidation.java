@@ -27,6 +27,9 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 
 import com.google.common.base.Preconditions;
 
@@ -35,7 +38,7 @@ import com.google.common.base.Preconditions;
  *
  *
  */
-public class EdgeUtils {
+public class GraphValidation {
 
     /**
      * Validate an edge input
@@ -126,6 +129,60 @@ public class EdgeUtils {
         validateSearchByEdgeType( search );
 
         ValidationUtils.verifyString(search.getIdType(), "id type");
+
+    }
+
+
+    /**
+     * Validate the directed edge meta data
+     * @param directedEdgeMeta
+     */
+    public static void validateDirectedEdgeMeta(final DirectedEdgeMeta directedEdgeMeta){
+
+        Preconditions.checkNotNull( directedEdgeMeta, "directedEdgeMeta must not be null" );
+
+        final DirectedEdgeMeta.NodeMeta[] nodes = directedEdgeMeta.getNodes();
+
+        Preconditions.checkArgument( nodes.length > 0, "At least one node must be present" );
+
+        for( DirectedEdgeMeta.NodeMeta node : nodes){
+            ValidationUtils.verifyIdentity( node.getId());
+            Preconditions.checkNotNull( node.getNodeType(), "NodeType must not be null" );
+        }
+
+        final String[] types = directedEdgeMeta.getTypes();
+
+        Preconditions.checkArgument( types.length > 0, "At least one type must be present" );
+
+        for(String type: types){
+            Preconditions.checkNotNull( type, "You cannot have a null type" );
+        }
+
+
+    }
+
+
+    /**
+     * Validate the directed edge meta data
+     * @param shardEntryGroup
+     */
+    public static void validateShardEntryGroup(final ShardEntryGroup shardEntryGroup){
+
+        Preconditions.checkNotNull( shardEntryGroup, "shardEntryGroup must not be null" );
+
+        Preconditions.checkArgument( shardEntryGroup.entrySize() > 0, "shardEntryGroups must contain at least 1 shard");
+
+    }
+
+
+    /**
+     * Validate our shard
+     * @param shard
+     */
+    public static void valiateShard(final Shard shard){
+        Preconditions.checkNotNull( shard, "shard must not be null" );
+        Preconditions.checkArgument( shard.getShardIndex() > -1, "shardid must be greater than -1" );
+        Preconditions.checkArgument( shard.getCreatedTime() > -1, "createdTime must be greater than -1" );
 
     }
 

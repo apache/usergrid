@@ -26,19 +26,22 @@ import java.util.Iterator;
 
 import org.apache.cassandra.db.marshal.BytesType;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
-import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
+import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.OrganizationScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
+import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.EdgeShardRowKeySerializer;
+import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -58,14 +61,12 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
     /**
      * Edge shards
      */
-    private static final MultiTennantColumnFamily<ApplicationScope, EdgeRowKey, Long> EDGE_SHARDS =
+    private static final MultiTennantColumnFamily<ApplicationScope, DirectedEdgeMeta, Long> EDGE_SHARDS =
             new MultiTennantColumnFamily<>( "Edge_Shards",
-                    new OrganizationScopedRowKeySerializer<>( new EdgeRowKeySerializer() ), LongSerializer.get() );
+                    new OrganizationScopedRowKeySerializer<>( EdgeShardRowKeySerializer.INSTANCE ), LongSerializer.get() );
 
 
-    private static final byte HOLDER = 0x00;
-
-    private static final LongColumnParser COLUMN_PARSER = new LongColumnParser();
+    private static final ShardColumnParser COLUMN_PARSER = new ShardColumnParser();
 
 
     protected final Keyspace keyspace;
@@ -83,30 +84,39 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
     @Override
-    public MutationBatch writeEdgeMeta( final ApplicationScope scope, final Id nodeId, final long shard,
-                                        final String... types ) {
-
+    public MutationBatch writeShardMeta( final ApplicationScope scope,
+                                         final Shard shard,   final DirectedEdgeMeta metaData) {
 
         ValidationUtils.validateApplicationScope( scope );
-        ValidationUtils.verifyIdentity(nodeId);
-        Preconditions.checkArgument( shard > -1, "shardId must be greater than -1" );
-        Preconditions.checkNotNull( types );
+        GraphValidation.validateDirectedEdgeMeta( metaData );
 
-        final EdgeRowKey key = new EdgeRowKey( nodeId, types );
+        Preconditions.checkNotNull( metaData, "metadata must be present" );
 
-        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, key );
+        Preconditions.checkNotNull( shard );
+        Preconditions.checkArgument( shard.getShardIndex() > -1, "shardid must be greater than -1" );
+        Preconditions.checkArgument( shard.getCreatedTime() > -1, "createdTime must be greater than -1" );
+
+        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, metaData );
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        batch.withRow( EDGE_SHARDS, rowKey ).putColumn( shard, HOLDER );
+        batch.withTimestamp( shard.getCreatedTime() ).withRow( EDGE_SHARDS, rowKey )
+             .putColumn( shard.getShardIndex(), shard.isCompacted() );
 
         return batch;
     }
 
 
     @Override
-    public Iterator<Long> getEdgeMetaData( final ApplicationScope scope, final Id nodeId, final Optional<Long> start,
-                                           final String... types ) {
+    public Iterator<Shard> getShardMetaData( final ApplicationScope scope,
+                                             final Optional<Shard> start,   final DirectedEdgeMeta metaData  ) {
+
+        ValidationUtils.validateApplicationScope( scope );
+        GraphValidation.validateDirectedEdgeMeta( metaData );
+
+
+        Preconditions.checkNotNull( metaData, "metadata must be present" );
+
         /**
          * If the edge is present, we need to being seeking from this
          */
@@ -114,15 +124,16 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
         final RangeBuilder rangeBuilder = new RangeBuilder().setLimit( graphFig.getScanPageSize() );
 
         if ( start.isPresent() ) {
-            rangeBuilder.setStart( start.get() );
+            final Shard shard = start.get();
+            GraphValidation.valiateShard( shard );
+            rangeBuilder.setStart( shard.getShardIndex() );
         }
 
-        final EdgeRowKey key = new EdgeRowKey( nodeId, types );
 
-        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, key );
+        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, metaData );
 
 
-        final RowQuery<ScopedRowKey<ApplicationScope, EdgeRowKey>, Long> query =
+        final RowQuery<ScopedRowKey<ApplicationScope, DirectedEdgeMeta>, Long> query =
                 keyspace.prepareQuery( EDGE_SHARDS ).setConsistencyLevel( cassandraConfig.getReadCL() ).getKey( rowKey )
                         .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 
@@ -132,21 +143,20 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
     @Override
-    public MutationBatch removeEdgeMeta( final ApplicationScope scope, final Id nodeId, final long shard,
-                                         final String... types ) {
+    public MutationBatch removeShardMeta( final ApplicationScope scope,
+                                          final Shard shard,   final DirectedEdgeMeta metaData) {
 
         ValidationUtils.validateApplicationScope( scope );
-              ValidationUtils.verifyIdentity(nodeId);
-              Preconditions.checkArgument( shard > -1, "shard must be greater than -1" );
-              Preconditions.checkNotNull( types );
+        GraphValidation.valiateShard( shard );
+        GraphValidation.validateDirectedEdgeMeta( metaData );
 
-        final EdgeRowKey key = new EdgeRowKey( nodeId, types );
 
-        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, key );
+
+        final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope, metaData );
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        batch.withRow( EDGE_SHARDS, rowKey ).deleteColumn( shard );
+        batch.withRow( EDGE_SHARDS, rowKey ).deleteColumn( shard.getShardIndex() );
 
         return batch;
     }
@@ -163,11 +173,15 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
     }
 
 
-    private static class LongColumnParser implements ColumnParser<Long, Long> {
+
+
+
+
+    private static class ShardColumnParser implements ColumnParser<Long, Shard> {
 
         @Override
-        public Long parseColumn( final Column<Long> column ) {
-            return column.getName();
+        public Shard parseColumn( final Column<Long> column ) {
+            return new Shard( column.getName(), column.getTimestamp(), column.getBooleanValue() );
         }
     }
 }

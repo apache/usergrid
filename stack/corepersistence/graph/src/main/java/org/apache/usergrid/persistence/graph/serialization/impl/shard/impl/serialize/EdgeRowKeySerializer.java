@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
+package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize;
 
 
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeRowKey;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.model.CompositeBuilder;
@@ -30,6 +31,7 @@ import com.netflix.astyanax.model.CompositeParser;
 /**
  * Class to perform serialization for row keys from edges
  */
+
 public class EdgeRowKeySerializer implements CompositeFieldSerializer<EdgeRowKey> {
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
@@ -39,10 +41,10 @@ public class EdgeRowKeySerializer implements CompositeFieldSerializer<EdgeRowKey
     public void toComposite( final CompositeBuilder builder, final EdgeRowKey key ) {
 
         //add the row id to the composite
+        ID_SER.toComposite( builder, key.sourceId );
+        builder.addString( key.edgeType );
         ID_SER.toComposite( builder, key.targetId );
-
-        builder.addLong( key.edgeTypesHash[0] );
-        builder.addLong( key.edgeTypesHash[1] );
+        builder.addLong( key.shardId );
     }
 
 
@@ -50,9 +52,12 @@ public class EdgeRowKeySerializer implements CompositeFieldSerializer<EdgeRowKey
     public EdgeRowKey fromComposite( final CompositeParser composite ) {
 
         final Id sourceId = ID_SER.fromComposite( composite );
+        final String edgeType = composite.readString();
+        final Id targetId = ID_SER.fromComposite( composite );
+        final long shard = composite.readLong();
 
-        final long[] hash = { composite.readLong(), composite.readLong() };
-
-        return new EdgeRowKey( sourceId, hash );
+        return new EdgeRowKey( sourceId, edgeType, targetId, shard );
     }
+
+
 }

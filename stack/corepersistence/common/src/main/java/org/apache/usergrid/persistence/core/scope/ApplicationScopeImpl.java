@@ -33,7 +33,8 @@ public class ApplicationScopeImpl implements ApplicationScope {
 
 
     public ApplicationScopeImpl( final Id application ) {
-        this.application = application;}
+        this.application = application;
+    }
 
 
     @Override

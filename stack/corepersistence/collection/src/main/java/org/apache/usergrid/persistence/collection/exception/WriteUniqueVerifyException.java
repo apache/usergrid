@@ -38,24 +38,6 @@ public class WriteUniqueVerifyException extends CollectionRuntimeException {
         this.violations = violations;
     }
 
-
-    public WriteUniqueVerifyException( MvccEntity entity, CollectionScope scope,
-            final String message, final Throwable cause ) {
-        super( entity, scope, message, cause );
-    }
-
-
-    public WriteUniqueVerifyException( MvccEntity entity, CollectionScope scope, final Throwable cause ) {
-        super( entity, scope, cause );
-    }
-
-
-    public WriteUniqueVerifyException( MvccEntity entity, CollectionScope scope,
-            final String message, final Throwable cause, final boolean enableSuppression,
-            final boolean writableStackTrace ) {
-        super( entity, scope, message, cause, enableSuppression, writableStackTrace );
-    }
-
     /**
      * Get map of Fields in violation, keyed by field name.
      */

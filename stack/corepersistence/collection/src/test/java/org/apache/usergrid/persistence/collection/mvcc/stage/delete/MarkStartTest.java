@@ -92,6 +92,9 @@ public class MarkStartTest extends AbstractIdStageTest {
 
         UUIDService uuidService = mock( UUIDService.class );
 
+        //generate the random uuid, not a time uuid, should fail tests
+        when(uuidService.newTimeUUID()).thenReturn( UUID.randomUUID() );
+
         new MarkStart( logStrategy, uuidService ).call( event );
     }
 }

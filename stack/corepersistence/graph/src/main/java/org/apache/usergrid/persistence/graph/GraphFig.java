@@ -35,17 +35,59 @@ public interface GraphFig extends GuicyFig {
 
     public static final String REPAIR_CONCURRENT_SIZE = "usergrid.graph.repair.concurrent.size";
 
+    /**
+     * The size of the shards.  This is approximate, and should be set lower than what you would like your max to be
+     */
     public static final String SHARD_SIZE = "usergrid.graph.shard.size";
 
+
+    /**
+     * Number of shards we can cache.
+     */
     public static final String SHARD_CACHE_SIZE = "usergrid.graph.shard.cache.size";
 
+
+    /**
+     * Get the cache timeout.  The local cache will exist for this amount of time max (in millis).
+     */
     public static final String SHARD_CACHE_TIMEOUT = "usergrid.graph.shard.cache.timeout";
 
-    public static final String COUNTER_WRITE_FLUSH_COUNT = "usergrid.graph.shard.counter.flush.count";
+    /**
+     * Number of worker threads to refresh the cache
+     */
+    public static final String SHARD_CACHE_REFRESH_WORKERS = "usergrid.graph.shard.refresh.worker.count";
 
-    public static final String COUNTER_WRITE_FLUSH_INTERVAL = "usergrid.graph.shard.counter.flush.interval";
+
+    /**
+     * The size of the worker count for shard auditing
+     */
+    public static final String SHARD_AUDIT_QUEUE_SIZE = "usergrid.graph.shard.audit.worker.queue.size";
 
 
+    /**
+     * The size of the worker count for shard auditing
+     */
+    public static final String SHARD_AUDIT_WORKERS = "usergrid.graph.shard.audit.worker.count";
+
+
+    public static final String SHARD_REPAIR_CHANCE = "usergrid.graph.shard.repair.chance";
+
+
+    /**
+     * The minimum amount of time than can occur (in millis) between shard allocation and compaction.  Must be at least 2x the cache
+     * timeout. Set to 2.5x the cache timeout to be safe
+     *
+     * Note that you should also pad this for node clock drift.  A good value for this would be 2x the shard cache
+     * timeout + 30 seconds, assuming you have NTP and allow a max drift of 30 seconds
+     */
+    public static final String SHARD_MIN_DELTA = "usergrid.graph.shard.min.delta";
+
+
+    public static final String COUNTER_WRITE_FLUSH_COUNT = "usergrid.graph.shard.counter.beginFlush.count";
+
+    public static final String COUNTER_WRITE_FLUSH_INTERVAL = "usergrid.graph.shard.counter.beginFlush.interval";
+
+    public static final String COUNTER_WRITE_FLUSH_QUEUE_SIZE = "usergrid.graph.shard.counter.queue.size";
 
 
     @Default("1000")
@@ -53,15 +95,18 @@ public interface GraphFig extends GuicyFig {
     int getScanPageSize();
 
 
-
     @Default("5")
     @Key(REPAIR_CONCURRENT_SIZE)
     int getRepairConcurrentSize();
 
 
+    @Default( ".10" )
+    @Key( SHARD_REPAIR_CHANCE )
+    double getShardRepairChance();
 
-    @Default("500000")
-    @Key(SHARD_SIZE)
+
+    @Default( "500000" )
+    @Key( SHARD_SIZE )
     long getShardSize();
 
 
@@ -69,18 +114,41 @@ public interface GraphFig extends GuicyFig {
     @Key(SHARD_CACHE_TIMEOUT)
     long getShardCacheTimeout();
 
-    @Default( "250000" )
-    @Key( SHARD_CACHE_SIZE )
+    @Default("60000")
+    @Key(SHARD_MIN_DELTA)
+    long getShardMinDelta();
+
+
+    @Default("250000")
+    @Key(SHARD_CACHE_SIZE)
     long getShardCacheSize();
 
 
-    @Default( "10000" )
-    @Key( COUNTER_WRITE_FLUSH_COUNT )
+    @Default("2")
+    @Key(SHARD_CACHE_REFRESH_WORKERS)
+    int getShardCacheRefreshWorkerCount();
+
+
+    @Default( "10" )
+    @Key( SHARD_AUDIT_WORKERS )
+    int getShardAuditWorkerCount();
+
+    @Default( "1000" )
+    @Key( SHARD_AUDIT_QUEUE_SIZE )
+    int getShardAuditWorkerQueueSize();
+
+
+    @Default("10000")
+    @Key(COUNTER_WRITE_FLUSH_COUNT)
     long getCounterFlushCount();
 
 
-    @Default( "30000" )
-    @Key( COUNTER_WRITE_FLUSH_INTERVAL )
+    @Default("30000")
+    @Key(COUNTER_WRITE_FLUSH_INTERVAL)
     long getCounterFlushInterval();
+
+    @Default("1000")
+    @Key(COUNTER_WRITE_FLUSH_QUEUE_SIZE)
+    int getCounterFlushQueueSize();
 }
 

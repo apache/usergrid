@@ -27,7 +27,7 @@ import com.netflix.astyanax.MutationBatch;
 /**
  * Serialization for flushing and reading counters
  */
-public interface NodeShardCounterSerialization  extends Migration {
+public interface NodeShardCounterSerialization extends Migration {
 
 
     /**

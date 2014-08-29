@@ -20,16 +20,20 @@
 package org.apache.usergrid.persistence.core.rx;
 
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NavigableSet;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.TreeMultimap;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -40,9 +44,9 @@ import rx.subscriptions.CompositeSubscription;
 
 /**
  * Produces a single Observable from multiple ordered source observables.  The same as the "merge" step in a merge sort.
- * Ensure that your comparator matches the ordering of your inputs, or you may get strange results.
- * The current implementation requires each Observable to be running in it's own thread.  Once backpressure in RX is
- * implemented, this requirement can be removed.
+ * Ensure that your comparator matches the ordering of your inputs, or you may get strange results. The current
+ * implementation requires each Observable to be running in it's own thread.  Once backpressure in RX is implemented,
+ * this requirement can be removed.
  */
 public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
@@ -74,7 +78,7 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
 
         //when a subscription is received, we need to subscribe on each observable
-        SubscriberCoordinator coordinator = new SubscriberCoordinator( comparator, outerOperation );
+        SubscriberCoordinator coordinator = new SubscriberCoordinator( comparator, outerOperation, observables.length );
 
         InnerObserver<T>[] innerObservers = new InnerObserver[observables.length];
 
@@ -84,7 +88,7 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
         for ( int i = 0; i < observables.length; i++ ) {
             //subscribe to each one and add it to the composite
             //create a new inner and subscribe
-            final InnerObserver<T> inner = new InnerObserver<T>( coordinator, maxBufferSize );
+            final InnerObserver<T> inner = new InnerObserver<T>( coordinator, maxBufferSize, i );
 
             coordinator.add( inner );
 
@@ -117,16 +121,19 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
         private volatile boolean readyToProduce = false;
 
 
-        private final Comparator<T> comparator;
         private final Subscriber<? super T> subscriber;
+        private final TreeMultimap<T, InnerObserver<T>> nextValues;
         private final List<InnerObserver<T>> innerSubscribers;
+        private final ArrayDeque<InnerObserver<T>> toProduce;
 
 
-        private SubscriberCoordinator( final Comparator<T> comparator, final Subscriber<? super T> subscriber ) {
+        private SubscriberCoordinator( final Comparator<T> comparator, final Subscriber<? super T> subscriber,
+                                       final int innerSize ) {
             //we only want to emit events serially
             this.subscriber = new SerializedSubscriber( subscriber );
-            this.innerSubscribers = new ArrayList<InnerObserver<T>>();
-            this.comparator = comparator;
+            this.innerSubscribers = new ArrayList<>( innerSize );
+            this.nextValues = TreeMultimap.create( comparator, InnerObserverComparator.INSTANCE );
+            this.toProduce = new ArrayDeque<>( innerSize );
         }
 
 
@@ -146,7 +153,7 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
                 log.trace( "Completing Observable.  Draining elements from the subscribers", innerSubscribers.size() );
 
                 //Drain the queues
-                while ( !subscriber.isUnsubscribed() && !drained() ) {
+                while ( !subscriber.isUnsubscribed() && (!nextValues.isEmpty() || !toProduce.isEmpty()) ) {
                     next();
                 }
 
@@ -158,6 +165,7 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
         public void add( InnerObserver<T> inner ) {
             this.innerSubscribers.add( inner );
+            this.toProduce.add( inner );
         }
 
 
@@ -168,97 +176,108 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
         public void next() {
 
-            //nothing to do, we haven't started emitting values yet
-            if ( !readyToProduce() ) {
-                return;
-            }
-
             //we want to emit items in order, so we synchronize our next
             synchronized ( this ) {
+                /**
+                 * Init before our loop
+                 */
+                while ( !toProduce.isEmpty() ) {
 
-                //take as many elements as we can until we hit the completed case
-                while ( true ) {
-                    InnerObserver<T> maxObserver = null;
-                    T max = null;
+                    InnerObserver<T> inner = toProduce.pop();
 
-                    for ( InnerObserver<T> inner : innerSubscribers ) {
-
-                        //nothing to do, this inner
-
-                        //we're done skip it
-                        if ( inner.drained ) {
-                            continue;
-                        }
-
-
-                        final T current = inner.peek();
-
-                        /**
-                         * Our current is null but we're not drained (I.E we haven't finished and completed consuming)
-                         * This means the producer is slow, and we don't have a complete set to compare,
-                         * we can't produce.  Bail and try again on the next event.
-                         */
-                        if ( current == null ) {
-                            return;
-                        }
-
-
-                        if ( max == null || ( current != null
-                                && comparator.compare( current, max ) > 0 ) ) {
-                            maxObserver = inner;
-                            max = current;
-                        }
+                    //This has nothing left to produce, skip it
+                    if ( inner.drained ) {
+                        continue;
                     }
 
-                    //No max observer was ever assigned, meaning all our inners are drained, break from loop
-                    if ( maxObserver == null ) {
+                    final T nextKey = inner.peek();
+
+                    //we can't produce, not everything has an element to inspect, leave it in the set to produce next
+                    // time
+                    if ( nextKey == null ) {
+                        toProduce.push( inner );
                         return;
                     }
 
-                    log.trace( "Max element is item {}", max );
+                    //add it to our fast access set
+                    nextValues.put( nextKey, inner );
+                }
 
-                    subscriber.onNext( maxObserver.pop() );
+
+                //take as many elements as we can until we hit a case where we can't take anymore
+                while ( !nextValues.isEmpty() ) {
+
+
+                    /**
+                     * Get our lowest key and begin producing until we can't produce any longer
+                     */
+                    final T lowestKey = nextValues.keySet().first();
+
+
+                    //we need to create a copy, otherwise we receive errors. We use ArrayDque
+
+                    NavigableSet<InnerObserver<T>> nextObservers = nextValues.get( lowestKey );
+
+                    while ( !nextObservers.isEmpty() ) {
+
+                        final InnerObserver<T> inner = nextObservers.pollFirst();
+
+                        nextValues.remove( lowestKey, inner );
+
+                        final T value = inner.pop();
+
+                        log.trace( "Emitting value {}", value );
+
+                        subscriber.onNext( value );
+
+                        final T nextKey = inner.peek();
+
+                        //nothing to peek, it's either drained or slow
+                        if ( nextKey == null ) {
+
+                            //it's drained, nothing left to do
+                            if ( inner.drained ) {
+                                continue;
+                            }
+
+                            //it's slow, we can't process because we don't know if this is another min value without
+                            // inspecting it. Stop emitting and try again next pass through
+                            toProduce.push( inner );
+                            return;
+                        }
+
+                        //we have a next value, insert it and keep running
+                        nextValues.put( nextKey, inner );
+                    }
                 }
             }
         }
 
 
-        /**
-         * Return true if we're ready to produce
-         */
-        private boolean readyToProduce() {
-            if ( readyToProduce ) {
-                return true;
-            }
+//        /**
+//         * Return true if every inner observer has been drained
+//         */
+//        private boolean drained() {
+//            //perform an audit
+//            for ( InnerObserver<T> inner : innerSubscribers ) {
+//                if ( !inner.drained ) {
+//                    return false;
+//                }
+//            }
+//
+//            return true;
+//        }
+    }
 
 
-            //perform an audit
-            for ( InnerObserver<T> inner : innerSubscribers ) {
-                if ( !inner.started ) {
-                    readyToProduce = false;
-                    return false;
-                }
-            }
+    private static final class InnerObserverComparator implements Comparator<InnerObserver> {
 
-            readyToProduce = true;
-
-            //we'll try again next time
-            return false;
-        }
+        private static final InnerObserverComparator INSTANCE = new InnerObserverComparator();
 
 
-        /**
-         * Return true if every inner observer has been drained
-         */
-        private boolean drained() {
-            //perform an audit
-            for ( InnerObserver<T> inner : innerSubscribers ) {
-                if ( !inner.drained ) {
-                    return false;
-                }
-            }
-
-            return true;
+        @Override
+        public int compare( final InnerObserver o1, final InnerObserver o2 ) {
+            return Integer.compare( o1.id, o2.id );
         }
     }
 
@@ -266,12 +285,17 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
     private static final class InnerObserver<T> extends Subscriber<T> {
 
         private final SubscriberCoordinator<T> coordinator;
-        private final Deque<T> items = new LinkedList<T>();
+        private final Deque<T> items = new LinkedList<>();
         private final int maxQueueSize;
         /**
          * TODO: T.N. Once backpressure makes it into RX Java, this needs to be remove and should use backpressure
          */
         private final Semaphore semaphore;
+
+        /**
+         * Our id so we have something unique to compare in the multimap
+         */
+        public final int id;
 
 
         /**
@@ -282,9 +306,11 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
         private volatile boolean drained = false;
 
 
-        public InnerObserver( final SubscriberCoordinator<T> coordinator, final int maxQueueSize ) {
+        public InnerObserver( final SubscriberCoordinator<T> coordinator, final int maxQueueSize, final int id ) {
             this.coordinator = coordinator;
             this.maxQueueSize = maxQueueSize;
+            this.id = id;
+
             this.semaphore = new Semaphore( maxQueueSize );
         }
 
@@ -299,8 +325,7 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
              * release this semaphore and invoke next.  Both these calls can be removed when backpressure is added.
              * We need the next to force removal of other inner consumers
              */
-             coordinator.onCompleted();
-
+            coordinator.onCompleted();
         }
 
 
@@ -313,20 +338,13 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
         @Override
         public void onNext( T a ) {
 
-            log.trace( "Received {}", a );
-
             try {
                 this.semaphore.acquire();
             }
             catch ( InterruptedException e ) {
-                onError(e);
-            }
-
-            if ( items.size() == maxQueueSize ) {
-                RuntimeException e =
-                        new RuntimeException( "The maximum queue size of " + maxQueueSize + " has been reached" );
                 onError( e );
             }
+
 
             items.add( a );
 

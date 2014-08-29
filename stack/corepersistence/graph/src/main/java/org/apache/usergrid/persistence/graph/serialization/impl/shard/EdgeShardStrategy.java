@@ -21,10 +21,8 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.Iterator;
-import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 
 public interface EdgeShardStrategy {
@@ -32,62 +30,31 @@ public interface EdgeShardStrategy {
     /**
      * Get the shard key used for writing this shard.  CUD operations should use this
      *
-     * @param scope The application's scope
-     * @param rowKeyId The id being used in the row key
+     * @param scope The application's scope]
      * @param timestamp The timestamp on the edge
-     * @param types The types in the edge
      */
-    public long getWriteShard(final ApplicationScope scope, final Id rowKeyId, final  long timestamp, final String... types );
+    public ShardEntryGroup getWriteShards( final ApplicationScope scope, final long timestamp, final DirectedEdgeMeta directedEdgeMeta );
 
 
     /**
      * Get the iterator of all shards for this entity
      *
      * @param scope The application scope
-     * @param rowKeyId The id used in the row key
      * @param maxTimestamp The max timestamp to use
-     * @param types the types in the edge
      */
-    public Iterator<Long> getReadShards(final ApplicationScope scope,final  Id rowKeyId, final long maxTimestamp,final  String... types );
+    public Iterator<ShardEntryGroup> getReadShards(final ApplicationScope scope, final long maxTimestamp, final DirectedEdgeMeta directedEdgeMeta );
 
     /**
      * Increment our count meta data by the passed value.  Can be a positive or a negative number.
      * @param scope The scope in the application
-     * @param rowKeyId The row key id
-     * @param shardId The shard id to use
+     * @param shard The shard to use
      * @param count The amount to increment or decrement
-     * @param types The types
+     * @param directedEdgeMeta The edge meta data to use
      * @return
      */
-    public void increment(final ApplicationScope scope,final  Id rowKeyId, long shardId, long count ,final  String... types );
+    public void increment(final ApplicationScope scope, Shard shard, long count, final DirectedEdgeMeta directedEdgeMeta );
 
 
-    /**
-     * Get the name of the column family for getting source nodes
-     */
-    public String getSourceNodeCfName();
-
-    /**
-     * Get the name of the column family for getting target nodes
-     */
-    public String getTargetNodeCfName();
-
-
-    /**
-     * Get the name of the column family for getting source nodes  with a target type
-     */
-    public String getSourceNodeTargetTypeCfName();
-
-    /**
-     * Get the name of the column family for getting target nodes with a source type
-     */
-    public String getTargetNodeSourceTypeCfName();
-
-    /**
-     * Get the Graph edge versions cf
-     * @return
-     */
-    public String getGraphEdgeVersions();
 
 
 }

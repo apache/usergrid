@@ -20,12 +20,10 @@
 package org.apache.usergrid.persistence.graph.serialization;
 
 
-import org.jukito.JukitoRunner;
 import org.jukito.UseModules;
 import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 
 import com.google.inject.Inject;
@@ -36,7 +34,6 @@ import com.google.inject.Inject;
 public class PermanentSerializationTest extends EdgeSerializationTest {
 
     @Inject
-    @StorageEdgeSerialization
     protected EdgeSerialization edgeSerialization;
 
     @Override

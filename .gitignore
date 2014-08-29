@@ -1,8 +1,8 @@
 .DS_Store
 .AppleDouble
 .LSOverride
-QueryFilterLexer.java
-QueryFilterParser.java
+stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
+stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
 
 target
 

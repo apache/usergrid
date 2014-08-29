@@ -20,8 +20,6 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -66,5 +64,11 @@ public interface SearchByEdge {
      * @return
      */
     Optional<Edge> last();
+
+    /**
+     * Get the sort order
+     * @return
+     */
+    SearchByEdgeType.Order getOrder();
 
 }

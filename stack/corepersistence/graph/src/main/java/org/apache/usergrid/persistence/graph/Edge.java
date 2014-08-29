@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.graph;
 
 
 import java.io.Serializable;
-import java.util.UUID;
 
 import org.apache.usergrid.persistence.model.entity.Id;
 

@@ -28,6 +28,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -40,13 +41,12 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
-import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteListener;
 import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListener;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
+import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -82,7 +82,6 @@ public class GraphManagerImpl implements GraphManager {
     private final EdgeDeleteListener edgeDeleteListener;
     private final NodeDeleteListener nodeDeleteListener;
 
-    private Observer<Integer> edgeWriteSubcriber;
     private Observer<Integer> edgeDeleteSubcriber;
     private Observer<Integer> nodeDelete;
 
@@ -92,7 +91,7 @@ public class GraphManagerImpl implements GraphManager {
 
     @Inject
     public GraphManagerImpl( final EdgeMetadataSerialization edgeMetadataSerialization,
-                             @StorageEdgeSerialization final EdgeSerialization storageEdgeSerialization,
+                             final EdgeSerialization storageEdgeSerialization,
                              final NodeSerialization nodeSerialization, final GraphFig graphFig,
                              @Assisted final ApplicationScope scope, final EdgeDeleteListener edgeDeleteListener,
                              final NodeDeleteListener nodeDeleteListener ) {
@@ -113,7 +112,6 @@ public class GraphManagerImpl implements GraphManager {
         this.edgeDeleteListener = edgeDeleteListener;
         this.nodeDeleteListener = nodeDeleteListener;
 
-        this.edgeWriteSubcriber = MetricSubscriber.INSTANCE;
         this.edgeDeleteSubcriber = MetricSubscriber.INSTANCE;
         this.nodeDelete = MetricSubscriber.INSTANCE;
     }
@@ -121,7 +119,7 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<Edge> writeEdge( final Edge edge ) {
-        EdgeUtils.validateEdge( edge );
+        GraphValidation.validateEdge( edge );
 
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
 
@@ -138,14 +136,7 @@ public class GraphManagerImpl implements GraphManager {
 
                 mutation.mergeShallow( edgeMutation );
 
-
-                try {
-                    LOG.debug( "Writing edge {} to metadata and commit log", edge );
-                    mutation.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to connect to cassandra", e );
-                }
+                HystrixCassandra.user( mutation );
 
                 return edge;
             }
@@ -155,7 +146,7 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<Edge> deleteEdge( final Edge edge ) {
-        EdgeUtils.validateEdge( edge );
+        GraphValidation.validateEdge( edge );
 
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
 
@@ -170,13 +161,8 @@ public class GraphManagerImpl implements GraphManager {
                 final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge( scope, edge, timestamp );
 
 
-                try {
-                    LOG.debug( "Marking edge {} as deleted to commit log", edge );
-                    edgeMutation.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to connect to cassandra", e );
-                }
+                LOG.debug( "Marking edge {} as deleted to commit log", edge );
+                HystrixCassandra.user( edgeMutation );
 
 
                 //HystrixCassandra.async( edgeDeleteListener.receive( scope, markedEdge,
@@ -205,13 +191,9 @@ public class GraphManagerImpl implements GraphManager {
                 final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
 
 
-                try {
-                    LOG.debug( "Marking node {} as deleted to node mark", node );
-                    nodeMutation.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to connect to cassandra", e );
-                }
+                LOG.debug( "Marking node {} as deleted to node mark", node );
+                HystrixCassandra.user( nodeMutation );
+
 
                 //HystrixCassandra.async(nodeDeleteListener.receive(scope, id, eventTimestamp  )).subscribeOn(
                 // Schedulers.io() ).subscribe( nodeDelete );
@@ -349,7 +331,7 @@ public class GraphManagerImpl implements GraphManager {
          * used in conjunction with the max version filter to filter any edges that should not be returned
          *
          * @return An observable that emits only edges that can be consumed.  There could be multiple versions of the
-         *         same edge so those need de-duped.
+         * same edge so those need de-duped.
          */
         @Override
         public Observable<MarkedEdge> call( final List<MarkedEdge> markedEdges ) {
@@ -407,18 +389,6 @@ public class GraphManagerImpl implements GraphManager {
 
             return true;
         }
-    }
-
-    /**
-     * Used for testing and callback hooks.  TODO: Refactor
-     */
-
-    /**
-     * Set the subcription for the edge write
-     */
-    public void setEdgeWriteSubcriber( final Observer<Integer> edgeWriteSubcriber ) {
-        Preconditions.checkNotNull( edgeWriteSubcriber, "Subscriber cannot be null" );
-        this.edgeWriteSubcriber = edgeWriteSubcriber;
     }
 
 
