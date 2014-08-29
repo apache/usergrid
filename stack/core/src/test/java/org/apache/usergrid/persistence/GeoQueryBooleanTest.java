@@ -123,6 +123,8 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
+        // define two users at a location 
+
         Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
             put( "username", "bart" );
             put( "email", "bart@example.com" );
@@ -132,6 +134,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
                 add( new LinkedHashMap<String, Object>() {{ put("name", "mina"); }});
             }});            
             put( "blockedBy", new ArrayList<Object>() {{
+                add( new LinkedHashMap<String, Object>() {{ put("name", "gertrude"); }});
                 add( new LinkedHashMap<String, Object>() {{ put("name", "isabell"); }});
             }});
             put( "location", new LinkedHashMap<String, Object>() {{
@@ -142,25 +145,46 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
 
         Entity userBart = em.create( "user", properties );
         assertNotNull( userBart );
-//
-//        properties = new LinkedHashMap<String, Object>() {{
-//            put( "username", "fred" );
-//            put( "email", "fred@example.com" );
-//            put( "block", new ArrayList<Object>() {{
-//                add( new LinkedHashMap<String, Object>() {{ put("name", "steve"); }});
-//                add( new LinkedHashMap<String, Object>() {{ put("name", "mina"); }});
-//            }});
-//            put( "blockedBy", new ArrayList<Object>() {{
-//                add( new LinkedHashMap<String, Object>() {{ put("name", "bart"); }});
-//            }});
-//            put( "location", new LinkedHashMap<String, Object>() {{
-//                put("latitude", 37.776753 );
-//                put("longitude", -122.407846 );
-//            }} ); 
-//        }};
-//
-//        Entity userFred = em.create( "user", properties );
-//        assertNotNull( userFred );
-    }
+
+        properties = new LinkedHashMap<String, Object>() {{
+            put( "username", "fred" );
+            put( "email", "fred@example.com" );
+            put( "block", new ArrayList<Object>() {{
+                add( new LinkedHashMap<String, Object>() {{ put("name", "steve"); }});
+                add( new LinkedHashMap<String, Object>() {{ put("name", "mina"); }});
+            }});
+            put( "blockedBy", new ArrayList<Object>() {{
+                add( new LinkedHashMap<String, Object>() {{ put("name", "bart"); }});
+                add( new LinkedHashMap<String, Object>() {{ put("name", "beth"); }});
+            }});
+            put( "location", new LinkedHashMap<String, Object>() {{
+                put("latitude", 37.776753 );
+                put("longitude", -122.407846 );
+            }} ); 
+        }};
+
+        Entity userFred = em.create( "user", properties );
+        assertNotNull( userFred );
+
+        em.refreshIndex();
+
+        // define center point about 300m from that location
+        Point center = new Point( 37.774277, -122.404744 );
+
+        // one user within 400 meters IS NOT blocked by bart
+        Query query = Query.fromQL( 
+            "select * where NOT blockedBy.name='bart' and location within 400 of " 
+               + center.getLat() + "," + center.getLon());
+        Results listResults = em.searchCollection( em.getApplicationRef(), "users", query );
+        assertEquals( 2, listResults.size() );
+
+        // one user within 400 meters IS blocked by bart
+        query = Query.fromQL( 
+            "select * where blockedBy.name='bart' and location within 400 of " 
+               + center.getLat() + "," + center.getLon());
+        listResults = em.searchCollection( em.getApplicationRef(), "users", query );
+        assertEquals( 2, listResults.size() );
+
+     }
 
 }
