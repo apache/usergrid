@@ -111,6 +111,8 @@ cd /usr/share/usergrid/scripts
 groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
 groovy wait_for_instances.groovy graphite ${GRAPHITE_NUM_SERVERS}
 
+chmod 660 /usr/share/usergrid/webapps/ROOT.war
+
 rm -rf /var/lib/tomcat7/webapps/*
 ln -s /usr/share/usergrid/webapps/ROOT.war /var/lib/tomcat7/webapps/ROOT.war
 ln -s /usr/share/usergrid/webapps/portal /var/lib/tomcat7/webapps/portal
@@ -118,6 +120,8 @@ ln -s /usr/share/usergrid/webapps/portal /var/lib/tomcat7/webapps/portal
 # configure usergrid
 mkdir -p /usr/share/tomcat7/lib 
 groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-custom.properties 
+# create a copy for 1.0 too
+cp /usr/share/tomcat7/lib/usergrid-custom.properties /usr/share/tomcat7/lib/usergrid-deployment.properties  
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
 
 # Go
