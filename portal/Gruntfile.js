@@ -382,10 +382,6 @@ module.exports = function (grunt) {
   grunt.registerTask('e2e-coverage', ['clean:coverage', 'connect:e2e-coverage','protractor:coverage']);
   grunt.registerTask('e2e-coverage-chrome', ['clean:coverage', 'connect:e2e-coverage-chrome','protractor:chrome', 'makeReport']);
   grunt.registerTask('e2e-firefox', ['connect:e2e-firefox','protractor:firefox']);
-  grunt.registerTask('e2e-prod', ['protractor:prod']);
-  grunt.registerTask('e2e-mars', ['protractor:mars']);
-
-
   grunt.registerTask('no-monitoring', ['build','clean:perf','karma:unit']);
 
 };
