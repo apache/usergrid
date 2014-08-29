@@ -32,7 +32,7 @@
     <!-- Override these properties in an active profile within your settings.xml -->
     <properties>
         <!-- If you got the resources, max parallelism = 6 forks -->
-        <rest.it.forkCount>1</rest.it.forkCount>
+        <rest.it.forkCount>2</rest.it.forkCount>
         <rest.it.reuseForks>false</rest.it.reuseForks>
         <rest.it.parallel>suites</rest.it.parallel>
     </properties>
