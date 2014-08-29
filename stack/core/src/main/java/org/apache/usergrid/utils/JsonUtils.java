@@ -63,8 +63,8 @@ public class JsonUtils {
 
 
     static {
-        //indentObjectMapper.getSerializationConfig().set( Feature.INDENT_OUTPUT, true );
-        indentObjectMapper.getSerializationConfig().with( SerializationFeature.INDENT_OUTPUT );
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
     }
 
 
