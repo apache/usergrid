@@ -114,7 +114,7 @@
     <tomcat-version>7.0.52</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
-    <elasticsearch.version>1.2.3</elasticsearch.version>
+    <elasticsearch.version>1.2.4</elasticsearch.version>
 
     <usergrid.it.forkCount>3</usergrid.it.forkCount>
     <usergrid.it.reuseForks>false</usergrid.it.reuseForks>
@@ -202,7 +202,11 @@
     <module>websocket</module>
     <module>launcher</module>
     <module>mongo-emulator</module>
+    <!--  
+    Re-enable when query-validator updated to work with Core Persistence.
+    https://issues.apache.org/jira/browse/USERGRID-221
     <module>query-validator</module>
+    -->
   </modules>
 
   <dependencyManagement>

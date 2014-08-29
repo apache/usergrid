@@ -92,7 +92,7 @@ public class PathQueryIT extends AbstractCoreIT {
         deviceQuery.addFilter( "index >= 2" );
         int expectedDeviceQuerySize = 3;
 
-        PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>( em.getApplicationRef(), userQuery );
+        PathQuery<EntityRef> usersPQ = new PathQuery<EntityRef>( new SimpleEntityRef( em.getApplicationRef()), userQuery );
         PathQuery<Entity> devicesPQ = usersPQ.chain( deviceQuery );
         HashSet set = new HashSet( expectedUserQuerySize * expectedDeviceQuerySize );
         Iterator<Entity> i = devicesPQ.iterator( em );
@@ -174,7 +174,7 @@ public class PathQueryIT extends AbstractCoreIT {
         deviceQuery.addFilter( "index >= 4" );
         int expectedDeviceQuerySize = 3;
 
-        PathQuery groupsPQ = new PathQuery( em.getApplicationRef(), groupQuery );
+        PathQuery groupsPQ = new PathQuery(new SimpleEntityRef( em.getApplicationRef() ), groupQuery );
         PathQuery usersPQ = groupsPQ.chain( userQuery );
         PathQuery<Entity> devicesPQ = usersPQ.chain( deviceQuery );
 

@@ -91,12 +91,10 @@ public class CountingMutatorIT extends AbstractCoreIT {
 
 
             Entity connectedEntity = em.create( "user", connectedProps );
+            em.refreshIndex();
 
-            /*Connect from our new entity to our root one so it's updated when paging
-            /
-             */
-
-                 em.createConnection( connectedEntity, "following", returned );
+            // Connect from our new entity to our root one so it's updated when paging
+            em.createConnection( connectedEntity, "following", returned );
         }
 
         //now verify our connections were created properly

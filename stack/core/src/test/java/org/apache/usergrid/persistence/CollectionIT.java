@@ -850,22 +850,27 @@ public class CollectionIT extends AbstractCoreIT {
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         assertNotNull( em );
 
+        // create two game entities, each with an array of entities that have subField = 'Foo'
 
-        Map<String, Object> subObject = new LinkedHashMap<String, Object>();
-        subObject.put( "subField", "Foo" );
-
-        Map<String, Object> properties = new LinkedHashMap<String, Object>();
-        properties.put( "subObjectArray", new Map[] { subObject } );
+        Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
+            put( "subObjectArray", new ArrayList<Map<String, Object>>() {{
+                add( new LinkedHashMap<String, Object>() {{
+                    put("subField", "Foo");
+                }});
+            }});
+        }};
 
         Entity entity1 = em.create( "game", properties );
         assertNotNull( entity1 );
 
-
         Entity entity2 = em.create( "game", properties );
         assertNotNull( entity2 );
 
+        em.refreshIndex();
 
-        // simple not
+
+        // search for games without sub-field Foo should returned zero entities
+
         Query query = Query.fromQL( "select * where NOT subObjectArray.subField = 'Foo'" ).withLimit( 1 );
         Results r = em.searchCollection( em.getApplicationRef(), "games", query );
         assertEquals( 0, r.size() );

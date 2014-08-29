@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -645,24 +646,12 @@ public class CpRelationManager implements RelationManager {
             return null;
         }
 
-
         // load the new member entity to be added to the collection from its default scope
         CollectionScope memberScope = new CollectionScopeImpl( 
             applicationScope.getApplication(), 
             applicationScope.getApplication(), 
             CpEntityManager.getCollectionScopeNameFromEntityType( itemRef.getType()));
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug("Loading member entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
-                new Object[] { 
-                    itemRef.getType(), 
-                    itemRef.getUuid(), 
-                    memberScope.getApplication(), 
-                    memberScope.getOwner(), 
-                    memberScope.getName() 
-            });
-        }
 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
             new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlockingObservable().last();
@@ -672,24 +661,37 @@ public class CpRelationManager implements RelationManager {
                 + itemRef.getUuid() + " type=" + itemRef.getType());
         }
 
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Loaded member entity {}:{} from scope\n   app {}\n   owner {}\n   name {} data {}", 
+                new Object[] { 
+                    itemRef.getType(), 
+                    itemRef.getUuid(), 
+                    memberScope.getApplication(), 
+                    memberScope.getOwner(), 
+                    memberScope.getName(),
+                    CpEntityMapUtils.toMap(memberEntity)
+            });
+        }
+
         String edgeType = getEdgeTypeFromCollectionName( collName, memberEntity.getId().getType() );
 
-        logger.debug("createCollection(): Creating edge type {} from {}:{} to {}:{}", 
+        logger.debug("addToCollection(): Creating edge type {} from {}:{} to {}:{}", 
             new Object[] { 
                 edgeType, 
                 headEntity.getType(), headEntity.getUuid(), 
                 itemRef.getType(), itemRef.getUuid() });
 
+        long uuidHash =   UUIDUtils.getUUIDLong( memberEntity.getId().getUuid());
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge(
-            cpHeadEntity.getId(), 
-            edgeType, 
-            memberEntity.getId(), 
-            memberEntity.getId().getUuid().timestamp() );
+            cpHeadEntity.getId(),
+            edgeType,
+            memberEntity.getId(),
+           uuidHash);
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
-        // index member into entity connection | type scope
+        // index member into entity collection | type scope
         IndexScope collectionIndexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 

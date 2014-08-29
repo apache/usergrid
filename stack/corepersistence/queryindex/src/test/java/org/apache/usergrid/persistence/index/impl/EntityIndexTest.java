@@ -178,6 +178,7 @@ public class EntityIndexTest extends BaseIT {
 
     private void testQueries( EntityIndex entityIndex ) {
 
+
         testQuery( entityIndex, "name = 'Morgan Pierce'", 1 );
 
         testQuery( entityIndex, "name = 'morgan pierce'", 1 );
@@ -203,6 +204,24 @@ public class EntityIndexTest extends BaseIT {
         testQuery( entityIndex, "name = 'Morgan* '", 1 );
         
         testQuery( entityIndex, "name = 'Morgan*'", 1 );
+
+        
+        // test a couple of array sub-property queries
+
+        int totalUsers = 102;
+
+        // nobody has a friend named Jack the Ripper
+        testQuery( entityIndex, "friends.name = 'Jack the Ripper'", 0 );
+
+        // everybody doesn't have a friend named Jack the Ripper
+        testQuery( entityIndex, "not (friends.name = 'Jack the Ripper')", totalUsers );
+
+        // one person has a friend named Shari Hahn
+        testQuery( entityIndex, "friends.name = 'Wendy Moody'", 1 );
+
+        // everybody but 1 doesn't have a friend named Shari Hahh
+        testQuery( entityIndex, "not (friends.name = 'Shari Hahn')", totalUsers - 1);
+
     }
 
 

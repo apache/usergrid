@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.CommonTokenStream;
@@ -1081,7 +1083,7 @@ public class Query {
         private final Query.SortDirection direction;
 
 
-        public SortPredicate( String propertyName, Query.SortDirection direction ) {
+        public SortPredicate(@JsonProperty("propertyName")  String propertyName, @JsonProperty("direction")  Query.SortDirection direction ) {
             if ( propertyName == null ) {
                 throw new NullPointerException( "Property name was null" );
             }

@@ -45,6 +45,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -64,6 +65,8 @@ import com.netflix.astyanax.serializers.AbstractSerializer;
 import com.netflix.astyanax.serializers.ByteBufferSerializer;
 import com.netflix.astyanax.serializers.BytesArraySerializer;
 import com.netflix.astyanax.serializers.UUIDSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author tnine
@@ -71,6 +74,7 @@ import com.netflix.astyanax.serializers.UUIDSerializer;
 @Singleton
 public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy, Migration {
 
+    private static final Logger log =  LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
 
     private static final EntitySerializer SER = new EntitySerializer();
 
@@ -305,7 +309,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         public static final SmileFactory f = new SmileFactory(  );
 
-        public static ObjectMapper mapper = new ObjectMapper( f );
+        public static ObjectMapper mapper;
 
         private static byte[] STATE_COMPLETE = new byte[] { 0 };
         private static byte[] STATE_DELETED = new byte[] { 1 };
@@ -316,6 +320,16 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
         //the marker for when we're passed a "null" value
         private static final byte[] EMPTY = new byte[] { 0x0 };
+
+        public EntitySerializer() {
+            try {
+                mapper = new ObjectMapper( f );
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class"); 
+            } catch ( Exception e ) {
+                throw new RuntimeException("Error setting up mapper", e);
+            }
+        }
 
         @Override
         public ByteBuffer toByteBuffer( final EntityWrapper wrapper ) {
@@ -366,9 +380,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
 
             byte[] state = parser.read( BYTES_ARRAY_SERIALIZER );
 
-            /**
-             * It's been deleted, remove it
-             */
+            // it's been deleted, remove it
+
             if ( Arrays.equals( STATE_DELETED, state ) ) {
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, Optional.<Entity>absent() );
             }
@@ -381,7 +394,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             int length = jsonBytes.remaining();
 
             try {
-                storedEntity = mapper.readValue( array,start,length,Entity.class);
+                storedEntity = mapper.readValue( array, start, length, Entity.class );
             }
             catch ( Exception e ) {
                 throw new RuntimeException(e.getMessage());
@@ -393,7 +406,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 return new EntityWrapper( MvccEntity.Status.COMPLETE, entity );
             }
 
-            //it's partial by default
+            // it's partial by default
             return new EntityWrapper( MvccEntity.Status.PARTIAL, entity );
         }
     }

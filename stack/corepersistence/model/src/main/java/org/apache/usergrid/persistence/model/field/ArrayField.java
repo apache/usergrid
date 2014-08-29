@@ -36,6 +36,10 @@ public class ArrayField<T> extends ListField<T> {
         super( name, list );
     }
 
+    public ArrayField() {
+        super();
+    }
+
     /**
      * Add the value to the list
      */

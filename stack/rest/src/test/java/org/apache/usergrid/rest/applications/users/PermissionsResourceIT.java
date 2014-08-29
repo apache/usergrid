@@ -265,6 +265,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_JSON_TYPE ).delete( String.class ));
 
         assertNull( getError( node ) );
+        refreshIndex(orgname, applicationName);
 
         // grant the perms to reviewer
         addPermission( orgname, applicationName, adminToken, "reviewer", "get,put,post:/reviews/**" );

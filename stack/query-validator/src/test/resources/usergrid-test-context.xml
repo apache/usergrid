@@ -46,7 +46,8 @@
 
     <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore"/>
 
-    <bean id="setup" class="org.apache.usergrid.persistence.cassandra.Setup">
+    <bean id="setup" class="org.apache.usergrid.corepersistence.HybridSetup">
+        <constructor-arg ref="properties"/>
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="cassandraService"/>
     </bean>

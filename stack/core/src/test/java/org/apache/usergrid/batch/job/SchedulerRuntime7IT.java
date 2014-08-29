@@ -24,7 +24,6 @@ import org.apache.usergrid.persistence.entities.JobStat;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
@@ -58,9 +57,13 @@ public class SchedulerRuntime7IT extends AbstractSchedulerRuntimeIT {
         JobData returned =
                 scheduler.createJob( "onlyOnceUnlockOnFailExceution", System.currentTimeMillis(), new JobData() );
 
+        scheduler.refreshIndex();
+
         // sleep until the job should have failed. We sleep 1 extra cycle just to make sure we're not racing the test
 
         boolean waited = getJobListener().blockTilDone( runLoop * numberOfRuns * 2 + 5000L );
+
+        scheduler.refreshIndex();
 
         assertTrue( "Both runs executed" , waited);
         assertTrue( "Job failed", getJobListener().getFailureCount() == 1 );
