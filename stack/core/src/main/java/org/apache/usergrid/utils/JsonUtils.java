@@ -42,12 +42,6 @@ import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import static org.apache.commons.lang.StringUtils.substringAfter;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
 
-//import org.codehaus.jackson.JsonNode;
-//import org.codehaus.jackson.io.JsonStringEncoder;
-//import org.codehaus.jackson.map.ObjectMapper;
-//import org.codehaus.jackson.map.SerializationConfig.Feature;
-//import org.codehaus.jackson.smile.SmileFactory;
-
 
 public class JsonUtils {
 
@@ -63,8 +57,8 @@ public class JsonUtils {
 
 
     static {
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
+        //indentObjectMapper.getSerializationConfig().set( Feature.INDENT_OUTPUT, true );
+        indentObjectMapper.getSerializationConfig().with( SerializationFeature.INDENT_OUTPUT );
     }
 
 
@@ -83,7 +77,7 @@ public class JsonUtils {
     /** Converts object to JSON string, throws runtime exception JsonWriteException on failure. */
     public static String mapToFormattedJsonString( Object obj ) {
         try {
-            return indentObjectMapper.writeValueAsString( obj );
+            return mapper.writeValueAsString( obj );
         }
         catch ( Throwable t ) {
             LOG.debug( "Error generating JSON", t );
