@@ -1299,7 +1299,7 @@
         <groupId>com.apple</groupId>
         <artifactId>AppleJavaExtensions</artifactId>
         <!-- from local-depedendencies -->
-        <version>1.5.4</version>
+        <version>1.4</version>
       </dependency>
 
       <dependency>
