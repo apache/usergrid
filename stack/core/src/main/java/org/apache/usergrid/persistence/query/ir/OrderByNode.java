@@ -19,7 +19,7 @@ package org.apache.usergrid.persistence.query.ir;
 
 import java.util.List;
 
-import org.apache.usergrid.persistence.Query.SortPredicate;
+import org.apache.usergrid.persistence.index.query.Query.SortPredicate;
 
 
 /**

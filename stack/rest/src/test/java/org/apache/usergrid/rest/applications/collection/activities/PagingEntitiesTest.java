@@ -20,7 +20,8 @@ package org.apache.usergrid.rest.applications.collection.activities;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -46,12 +47,12 @@ public class PagingEntitiesTest extends AbstractRestIT {
 
 
     @Test //USERGRID-266
-    public void pageThroughConnectedEntities() {
+    public void pageThroughConnectedEntities() throws IOException {
 
         CustomCollection activities = context.collection( "activities" );
 
         long created = 0;
-        int maxSize = 1500;
+        int maxSize = 100;
         long[] verifyCreated = new long[maxSize];
         Map actor = hashMap( "displayName", "Erin" );
         Map props = new HashMap();
@@ -64,12 +65,15 @@ public class PagingEntitiesTest extends AbstractRestIT {
 
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
-            verifyCreated[i] = activity.findValue( "created" ).getLongValue();
+            verifyCreated[i] = activity.findValue( "created" ).longValue();
             if ( i == 0 ) {
-                created = activity.findValue( "created" ).getLongValue();
+                created = activity.findValue( "created" ).longValue();
             }
         }
         ArrayUtils.reverse( verifyCreated );
+        
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         String query = "select * where created >= " + created;
 
 
@@ -113,11 +117,13 @@ public class PagingEntitiesTest extends AbstractRestIT {
             }
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
-            verifyCreated[i] = activity.findValue( "created" ).getLongValue();
+            verifyCreated[i] = activity.findValue( "created" ).longValue();
             if ( i == 18 ) {
-                created = activity.findValue( "created" ).getLongValue();
+                created = activity.findValue( "created" ).longValue();
             }
         }
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         String query = "select * where created >= " + created + " or verb = 'stop'";
 
@@ -125,7 +131,7 @@ public class PagingEntitiesTest extends AbstractRestIT {
 
         for ( int index = 0; index < 5; index++ ) {
             assertEquals( verifyCreated[maxSize - 1 - index],
-                    node.get( "entities" ).get( index ).get( "created" ).getLongValue() );
+                    node.get( "entities" ).get( index ).get( "created" ).longValue() );
         }
 
         int totalEntitiesContained = activities.countEntities( query );

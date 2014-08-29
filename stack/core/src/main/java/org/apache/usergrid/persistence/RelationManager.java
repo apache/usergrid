@@ -17,12 +17,15 @@
 package org.apache.usergrid.persistence;
 
 
+import java.nio.ByteBuffer;
+import org.apache.usergrid.persistence.index.query.Query;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
-import org.apache.usergrid.persistence.Results.Level;
+import me.prettyprint.hector.api.mutation.Mutator;
 
 
 public interface RelationManager {
@@ -44,10 +47,10 @@ public interface RelationManager {
 
     public Set<String> getCollections() throws Exception;
 
-    public Results getCollection( String collectionName, UUID startResult, int count, Results.Level resultsLevel,
+    public Results getCollection( String collectionName, UUID startResult, int count, Level resultsLevel,
                                   boolean reversed ) throws Exception;
 
-    public Results getCollection( String collectionName, Query query, Results.Level resultsLevel ) throws Exception;
+    public Results getCollection( String collectionName, Query query, Level resultsLevel ) throws Exception;
 
     public Entity addToCollection( String collectionName, EntityRef itemRef ) throws Exception;
 
@@ -93,11 +96,11 @@ public interface RelationManager {
      * @param connectionType The type/name of the connection
      * @param connectedEntityType The type of
      */
-    public Results getConnectedEntities( String connectionType, String connectedEntityType, Results.Level resultsLevel )
+    public Results getConnectedEntities( String connectionType, String connectedEntityType, Level resultsLevel )
             throws Exception;
 
     public Results getConnectingEntities( String connectionType, String connectedEntityType,
-                                          Results.Level resultsLevel ) throws Exception;
+                                          Level resultsLevel ) throws Exception;
 
     // public Results searchConnectedEntitiesForProperty(String connectionType,
     // String connectedEntityType, String propertyName,
@@ -105,10 +108,14 @@ public interface RelationManager {
     // UUID startResult, int count, boolean reversed, Level resultsLevel)
     // throws Exception;
 
-    public Results getConnectingEntities(String connectionType, String entityType, Level level, int count) throws Exception;
+    public Results getConnectingEntities(
+            String connectionType, String entityType, Level level, int count) throws Exception;
 
 	public Results searchConnectedEntities( Query query ) throws Exception;
 
 
     public Set<String> getConnectionIndexes( String connectionType ) throws Exception;
+
+    public void batchUpdateSetIndexes( Mutator<ByteBuffer> batch, String setName, Object elementValue,
+                                       boolean removeFromSet, UUID timestampUuid ) throws Exception;
 }

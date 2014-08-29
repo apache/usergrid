@@ -20,7 +20,8 @@ package org.apache.usergrid.rest.applications.collection;
 import java.util.Map;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
@@ -62,13 +63,15 @@ public class BrowserCompatibilityTest extends AbstractRestIT {
     }
 
 
-    private void testBrowserAccept( String acceptHeader ) {
+    private void testBrowserAccept( String acceptHeader ) throws IOException {
 
 
         CustomCollection things = context.application().collection( "things" );
 
         Map<String, String> entity = hashMap( "name", "thing1" );
         JsonNode response = things.create( entity );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         UUID entityId = getEntityId( response, 0 );
 

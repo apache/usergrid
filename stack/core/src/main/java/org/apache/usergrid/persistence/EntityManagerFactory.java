@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence;
 
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.context.ApplicationContext;
 
 
 // TODO: Auto-generated Javadoc
@@ -46,7 +47,7 @@ public interface EntityManagerFactory {
      *
      * @param applicationId the application id
      *
-     * @return EntityDao for the specfied parameters
+     * @return EntityDao for the specified parameters
      */
     public abstract EntityManager getEntityManager( UUID applicationId );
 
@@ -106,4 +107,18 @@ public interface EntityManagerFactory {
     public abstract boolean setServiceProperty( String name, String value );
 
     public abstract boolean deleteServiceProperty( String name );
+
+    public UUID initializeApplication( 
+        String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
+            
+    public UUID getManagementAppId();
+
+    public UUID getDefaultAppId();
+
+    public void refreshIndex();
+
+    public void setApplicationContext(ApplicationContext ac);
+
+    /** For testing purposes */
+    public void flushEntityManagerCaches();
 }

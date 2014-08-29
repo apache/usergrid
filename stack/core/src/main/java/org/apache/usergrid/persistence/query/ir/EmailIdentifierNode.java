@@ -16,8 +16,7 @@
  */
 package org.apache.usergrid.persistence.query.ir;
 
-
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 
 
 /**

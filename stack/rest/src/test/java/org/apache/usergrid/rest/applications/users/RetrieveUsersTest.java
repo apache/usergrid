@@ -20,7 +20,8 @@ package org.apache.usergrid.rest.applications.users;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,7 +48,7 @@ public class RetrieveUsersTest extends AbstractRestIT {
 
 
     @Test // USERGRID-1222
-    public void queryForUsername() {
+    public void queryForUsername() throws IOException {
         CustomCollection users = context.collection( "users" );
 
         Map props = new HashMap();
@@ -58,6 +59,8 @@ public class RetrieveUsersTest extends AbstractRestIT {
         props.put( "username", "Bob" );
         users.create( props );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         String query = "select *";
         String incorrectQuery = "select * where username = 'Alica'";
 
@@ -66,13 +69,15 @@ public class RetrieveUsersTest extends AbstractRestIT {
 
 
     @Test // USERGRID-1727
-    public void userEntityDictionaryHasRoles() {
+    public void userEntityDictionaryHasRoles() throws IOException {
         CustomCollection users = context.collection( "users" );
 
         Map props = new HashMap();
         props.put( "username", "Nina" );
 
         JsonNode response = users.create( props );
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         JsonNode entity = response.get( "entities" ).get( 0 );
         JsonNode metadata = entity.get( "metadata" );
         JsonNode sets = metadata.get( "sets" );

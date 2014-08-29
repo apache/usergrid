@@ -17,16 +17,22 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import me.prettyprint.hector.api.mutation.Mutator;
 
-import org.apache.usergrid.persistence.Results.Level;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Role;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 /**
@@ -82,7 +88,8 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public Entity create( UUID importId, String entityType, Map<String, Object> properties ) throws Exception;
+    public Entity create( UUID importId, String entityType, Map<String, Object> properties ) 
+            throws Exception;
 
     public void createApplicationCollection( String entityType ) throws Exception;
 
@@ -95,7 +102,8 @@ public interface EntityManager {
      * @param collectionName The name of the collection
      * @param aliasValue The value of the alias
      */
-    public EntityRef getAlias( UUID ownerId, String collectionName, String aliasValue ) throws Exception;
+    public EntityRef getAlias( EntityRef ownerRef, String collectionName, String aliasValue ) 
+            throws Exception;
 
     public Map<String, EntityRef> getAlias( String aliasType, List<String> aliases ) throws Exception;
 
@@ -106,22 +114,16 @@ public interface EntityManager {
      * @param collectionName The name of the collection
      * @param aliases The alias property
      */
-    public Map<String, EntityRef> getAlias( UUID ownerId, String collectionName, List<String> aliases )
-            throws Exception;
+    public Map<String, EntityRef> getAlias( EntityRef ownerRef, String collectionName, 
+            List<String> aliases ) throws Exception;
 
     /**
-     * Validates that the entity exists in the datastore meaning that it exists and the type has been loaded if not
-     * already provided.
+     * Validates that the entity exists in the datastore meaning that it exists and the type has 
+     * been loaded if not already provided.
      *
      * @return an validated EntityRef or null.
      */
     public EntityRef validate( EntityRef entityRef ) throws Exception;
-
-    public String getType( UUID entityId ) throws Exception;
-
-    public EntityRef getRef( UUID entityId ) throws Exception;
-
-    public Entity get( UUID entityId ) throws Exception;
 
     /**
      * Retrieves the entity for the specified entity reference.
@@ -135,47 +137,22 @@ public interface EntityManager {
     public <A extends Entity> A get( UUID entityId, Class<A> entityClass ) throws Exception;
 
     /**
-     * Retrieves a set of Entities. Will return an Entity object containing all of the entity's name/value properties
-     * and properties. For large numbers of entities, retrieving the properties can have additional overhead, passing
-     * false for includeProperties can result in better performance.
-     * <p/>
-     * This method will be deprecated in future releases in favor of a version that supports paging.
-     *
-     * @param entityIds a list of entity UUIDs.
-     * @param resultsLevel whether to retrieve properties for the specified entities.
-     *
-     * @return a list of entity objects.
-     */
-    public Results get( Collection<UUID> entityIds, Results.Level resultsLevel ) throws Exception;
-
-    /**
-     * Retrieves a set of Entities. Will return an Entity object containing all of the entity's name/value properties
-     * and properties. For large numbers of entities, retrieving the properties can have additional overhead, passing
-     * false for includeProperties can result in better performance.
-     * <p/>
-     * This method will be deprecated in future releases in favor of a version that supports paging.
-     *
-     * @param entityIds a list of entity UUIDs.
-     *
-     * @return a list of entity objects.
-     */
-    public Results get( Collection<UUID> entityIds ) throws Exception;
-
-    /**
      * Retrieves a set of Entitues cast to the specified class type.
      *
      * @return a list of entity objects.
      */
-    public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, Results.Level resultsLevel )
-            throws Exception;
+    public Results get( Collection<UUID> entityIds, Class<? extends Entity> entityClass, 
+            Level resultsLevel ) throws Exception;
 
     /**
      * Retrieves a set of Entities cast to the specified class type.
      *
      * @return a list of entity objects.
      */
-    public Results get( Collection<UUID> entityIds, String entityType, Class<? extends Entity> entityClass,
-                        Results.Level resultsLevel ) throws Exception;
+    public Results get( Collection<UUID> entityIds, String entityType, 
+        Class<? extends Entity> entityClass, Level resultsLevel ) throws Exception;
+
+    public Results getEntities(List<UUID> ids, String type);
 
     /**
      * Updates the entity with the properties and values in the Entity Object.
@@ -244,13 +221,14 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public void updateProperties( EntityRef entityRef, Map<String, Object> properties ) throws Exception;
+    public void updateProperties( EntityRef entityRef, Map<String, Object> properties ) 
+            throws Exception;
 
     public void deleteProperty( EntityRef entityRef, String propertyName ) throws Exception;
 
     /**
-     * Gets the values from an entity list property. Lists are a special type of entity property that can contain an
-     * unordered set of non-duplicate values.
+     * Gets the values from an entity list property. Lists are a special type of entity property 
+     * that can contain an unordered set of non-duplicate values.
      *
      * @param entityRef an entity reference
      * @param dictionaryName the property list name to retrieve.
@@ -259,11 +237,12 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public Set<Object> getDictionaryAsSet( EntityRef entityRef, String dictionaryName ) throws Exception;
+    public Set<Object> getDictionaryAsSet( EntityRef entityRef, String dictionaryName ) 
+            throws Exception;
 
     /**
-     * Adds the specified value to the named entity list property. Lists are a special type of entity property that can
-     * contain an unordered set of non-duplicate values.
+     * Adds the specified value to the named entity list property. Lists are a special type of 
+     * entity property that can contain an unordered set of non-duplicate values.
      *
      * @param entityRef an entity reference
      * @param dictionaryName the property to set.
@@ -271,24 +250,27 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementValue ) throws Exception;
-
-    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementName, Object elementValue )
+    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementValue ) 
             throws Exception;
 
-    public void addSetToDictionary( EntityRef entityRef, String dictionaryName, Set<?> elementValues ) throws Exception;
+    public void addToDictionary( EntityRef entityRef, String dictionaryName, Object elementName, 
+            Object elementValue ) throws Exception;
 
-    public void addMapToDictionary( EntityRef entityRef, String dictionaryName, Map<?, ?> elementValues )
+    public void addSetToDictionary( EntityRef entityRef, String dictionaryName, 
+            Set<?> elementValues ) throws Exception;
+
+    public void addMapToDictionary( EntityRef entityRef, String dictionaryName, 
+            Map<?, ?> elementValues ) throws Exception;
+
+    public Map<Object, Object> getDictionaryAsMap( EntityRef entityRef, String dictionaryName ) 
             throws Exception;
 
-    public Map<Object, Object> getDictionaryAsMap( EntityRef entityRef, String dictionaryName ) throws Exception;
-
-    public Object getDictionaryElementValue( EntityRef entityRef, String dictionaryName, String elementName )
-            throws Exception;
+    public Object getDictionaryElementValue( EntityRef entityRef, String dictionaryName, 
+            String elementName ) throws Exception;
 
     /**
-     * Removes the specified value to the named entity list property. Lists are a special type of entity property that
-     * can contain an unordered set of non-duplicate values.
+     * Removes the specified value to the named entity list property. Lists are a special type of 
+     * entity property that can contain an unordered set of non-duplicate values.
      *
      * @param entityRef an entity reference
      * @param dictionaryName the property to set.
@@ -315,8 +297,8 @@ public interface EntityManager {
      *
      * @param entityRef an entity reference
      *
-     * @return a map of entity references to set of collection names for the entities and collections that this entity
-     *         is a member of.
+     * @return a map of entity references to set of collection names for the entities and 
+     * collections that this entity is a member of.
      *
      * @throws Exception the exception
      */
@@ -329,7 +311,8 @@ public interface EntityManager {
      * @param collectionName The collection name
      * @param entity The entity in the collection
      */
-    public boolean isCollectionMember( EntityRef owner, String collectionName, EntityRef entity ) throws Exception;
+    public boolean isCollectionMember( EntityRef owner, String collectionName, EntityRef entity ) 
+            throws Exception;
 
     /**
      * Return true if the owner entity ref is an owner of the entity;
@@ -338,12 +321,13 @@ public interface EntityManager {
      * @param connectionName The collection name
      * @param entity The entity in the collection
      */
-    public boolean isConnectionMember( EntityRef owner, String connectionName, EntityRef entity ) throws Exception;
+    public boolean isConnectionMember( EntityRef owner, String connectionName, EntityRef entity ) 
+            throws Exception;
 
 
     /**
-     * Gets the collections for the specified entity. Collection for a given type are encoded in the schema, this method
-     * loads the entity type and returns the collections from the schema.
+     * Gets the collections for the specified entity. Collection for a given type are encoded 
+     * in the schema, this method loads the entity type and returns the collections from the schema.
      *
      * @param entityRef an entity reference
      *
@@ -366,10 +350,10 @@ public interface EntityManager {
      * @throws Exception the exception
      */
     public Results getCollection( EntityRef entityRef, String collectionName, UUID startResult, int count,
-                                  Results.Level resultsLevel, boolean reversed ) throws Exception;
+                                  Level resultsLevel, boolean reversed ) throws Exception;
 
 
-    public Results getCollection( UUID entityId, String collectionName, Query query, Results.Level resultsLevel )
+    public Results getCollection( UUID entityId, String collectionName, Query query, Level resultsLevel )
             throws Exception;
 
     /**
@@ -406,18 +390,21 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public void removeFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception;
+    public void removeFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef) 
+            throws Exception;
 
-    public Results searchCollection( EntityRef entityRef, String collectionName, Query query ) throws Exception;
+    public Results searchCollection( EntityRef entityRef, String collectionName, Query query ) 
+            throws Exception;
 
-    public Set<String> getCollectionIndexes( EntityRef entity, String collectionName ) throws Exception;
+    public Set<String> getCollectionIndexes( EntityRef entity, String collectionName ) 
+            throws Exception;
 
-    public void copyRelationships( EntityRef srcEntityRef, String srcRelationName, EntityRef dstEntityRef,
-                                   String dstRelationName ) throws Exception;
+    public void copyRelationships( EntityRef srcEntityRef, String srcRelationName, 
+            EntityRef dstEntityRef, String dstRelationName ) throws Exception;
 
     /**
-     * Connect the specified entity to another entity with the specified connection type. Connections are directional
-     * relationships that can be traversed in either direction.
+     * Connect the specified entity to another entity with the specified connection type. 
+     * Connections are directional relationships that can be traversed in either direction.
      *
      * @throws Exception the exception
      */
@@ -427,24 +414,25 @@ public interface EntityManager {
                                            EntityRef connectedEntityRef ) throws Exception;
 
     public ConnectionRef createConnection( EntityRef connectingEntity, String pairedConnectionType,
-                                           EntityRef pairedEntity, String connectionType, EntityRef connectedEntityRef )
-            throws Exception;
+                                           EntityRef pairedEntity, String connectionType, 
+                                           EntityRef connectedEntityRef ) throws Exception;
 
-    public ConnectionRef createConnection( EntityRef connectingEntity, ConnectedEntityRef... connections )
+    public ConnectionRef createConnection( 
+            EntityRef connectingEntity, ConnectedEntityRef... connections )
             throws Exception;
 
     public ConnectionRef connectionRef( EntityRef connectingEntity, String connectionType,
                                         EntityRef connectedEntityRef ) throws Exception;
 
-    public ConnectionRef connectionRef( EntityRef connectingEntity, String pairedConnectionType, EntityRef pairedEntity,
-                                        String connectionType, EntityRef connectedEntityRef ) throws Exception;
+    public ConnectionRef connectionRef( EntityRef connectingEntity, String pairedConnectionType, 
+            EntityRef pairedEntity, String connectionType, EntityRef connectedEntityRef ) 
+            throws Exception;
 
     public ConnectionRef connectionRef( EntityRef connectingEntity, ConnectedEntityRef... connections );
 
     /**
-     * Disconnects two connected entities with the specified connection type. Connections are directional relationships
-     * that can be traversed in either direction.
-     *
+     * Disconnects two connected entities with the specified connection type. Connections are 
+     * directional relationships that can be traversed in either direction.
      *
      * @throws Exception the exception
      */
@@ -455,8 +443,8 @@ public interface EntityManager {
 
 
     /**
-     * Gets the entities of the specified type connected to the specified entity, optionally matching the specified
-     * connection types and/or entity types. Returns a list of entity ids.
+     * Gets the entities of the specified type connected to the specified entity, optionally 
+     * matching the specified connection types and/or entity types. Returns a list of entity ids.
      *
      * @param entityId an entity reference
      * @param connectionType type of connection or null.
@@ -466,11 +454,12 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public Results getConnectedEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                         Results.Level resultsLevel ) throws Exception;
+    public Results getConnectedEntities( EntityRef entityRef, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception;
 
     /**
-     * Gets the entities connecting to this entity, optionally with the specified connection type and/or entity type.
+     * Gets the entities connecting to this entity, optionally with the specified connection 
+     * type and/or entity type.
      * <p/>
      * e.g. "get users who have favorited this place"
      *
@@ -482,11 +471,10 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public Results getConnectingEntities( UUID entityId, String connectionType, String connectedEntityType,
-                                          Results.Level resultsLevel ) throws Exception;
+    public Results getConnectingEntities( EntityRef entityRef, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception;
 
-
-    public Results getConnectingEntities(UUID uuid, String connectionType,
+    public Results getConnectingEntities( EntityRef entityRef, String connectionType,
     		String entityType, Level level, int count) throws Exception;
 
 	public Results searchConnectedEntities( EntityRef connectingEntity, Query query ) throws Exception;
@@ -518,6 +506,8 @@ public interface EntityManager {
     public Set<String> getRolePermissions( String roleName ) throws Exception;
 
     public void deleteRole( String roleName ) throws Exception;
+
+    public EntityRef getGroupRoleRef( UUID ownerId, String roleName ) throws Exception;
 
     // Group roles
 
@@ -558,16 +548,16 @@ public interface EntityManager {
 
     public void removeUserFromGroupRole( UUID userId, UUID groupId, String roleName ) throws Exception;
 
-    public Results getUsersInGroupRole( UUID groupId, String roleName, Results.Level level ) throws Exception;
+    public Results getUsersInGroupRole( UUID groupId, String roleName, Level level ) throws Exception;
 
-    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, String counterName,
-                                            long value );
+    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, 
+            String counterName, long value );
 
-    public Results getAggregateCounters( UUID userId, UUID groupId, String category, String counterName,
-                                         CounterResolution resolution, long start, long finish, boolean pad );
+    public Results getAggregateCounters( UUID userId, UUID groupId, String category, 
+            String counterName, CounterResolution resolution, long start, long finish, boolean pad );
 
-    public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category, String counterName,
-                                         CounterResolution resolution, long start, long finish, boolean pad );
+    public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category, 
+            String counterName, CounterResolution resolution, long start, long finish, boolean pad );
 
     public Results getAggregateCounters( Query query ) throws Exception;
 
@@ -581,10 +571,14 @@ public interface EntityManager {
 
     public Map<String, Long> getApplicationCounters() throws Exception;
 
-    public void incrementAggregateCounters( UUID userId, UUID groupId, String category, Map<String, Long> counters );
+    public void incrementAggregateCounters( 
+            UUID userId, UUID groupId, String category, Map<String, Long> counters );
 
-    public boolean isPropertyValueUniqueForEntity( String entityType, String propertyName, Object propertyValue )
-            throws Exception;
+    public boolean isPropertyValueUniqueForEntity( 
+            String entityType, String propertyName, Object propertyValue ) throws Exception;
+
+    @Deprecated
+    public Entity get( UUID id ) throws Exception;
 
     public <A extends Entity> A get( EntityRef entityRef, Class<A> entityClass ) throws Exception;
 
@@ -610,4 +604,88 @@ public interface EntityManager {
     public void grantGroupPermission( UUID groupId, String permission ) throws Exception;
 
     public void revokeGroupPermission( UUID groupId, String permission ) throws Exception;
+
+
+    <A extends Entity> A batchCreate(Mutator<ByteBuffer> m, String entityType, 
+            Class<A> entityClass, Map<String, Object> properties, 
+            UUID importId, UUID timestampUuid) throws Exception;
+    /**
+     * Batch dictionary property.
+     *
+     * @param batch The batch to set the property into
+     * @param entity The entity that owns the property
+     * @param propertyName the property name
+     * @param propertyValue the property value
+     * @param timestampUuid The update timestamp as a uuid
+     *
+     * @return batch
+     *
+     * @throws Exception the exception
+     */
+    Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch, EntityRef entity, 
+            String propertyName, Object propertyValue, UUID timestampUuid) throws Exception;
+
+    Mutator<ByteBuffer> batchSetProperty(Mutator<ByteBuffer> batch, EntityRef entity, 
+            String propertyName, Object propertyValue, boolean force, boolean noRead, 
+            UUID timestampUuid) throws Exception;
+
+    Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch, EntityRef entity, 
+            String dictionaryName, Object elementValue, Object elementCoValue, 
+            boolean removeFromDictionary, UUID timestampUuid) throws Exception;
+
+    /**
+     * Batch update set.
+     *
+     * @param batch the batch
+     * @param entity The owning entity
+     * @param dictionaryName the dictionary name
+     * @param elementValue the dictionary value
+     * @param removeFromDictionary True to delete from the dictionary
+     * @param timestampUuid the timestamp
+     *
+     * @return batch
+     *
+     * @throws Exception the exception
+     */
+    Mutator<ByteBuffer> batchUpdateDictionary(Mutator<ByteBuffer> batch, EntityRef entity, 
+            String dictionaryName, Object elementValue, 
+            boolean removeFromDictionary, UUID timestampUuid) throws Exception;
+
+    /**
+     * Batch update properties.
+     *
+     * @param batch the batch
+     * @param entity The owning entity reference
+     * @param properties the properties to set
+     * @param timestampUuid the timestamp of the update operation as a time uuid
+     *
+     * @return batch
+     *
+     * @throws Exception the exception
+     */
+    Mutator<ByteBuffer> batchUpdateProperties(Mutator<ByteBuffer> batch, 
+            EntityRef entity, Map<String, Object> properties, UUID timestampUuid) throws Exception;
+
+    Set<String> getDictionaryNames(EntityRef entity) throws Exception;
+
+    void insertEntity( EntityRef ref ) throws Exception;
+
+    /** @return the applicationId */
+    UUID getApplicationId();
+
+    /** @return the indexBucketLocator */
+    IndexBucketLocator getIndexBucketLocator();
+
+    /** @return the cass */
+    CassandraService getCass();
+
+    /** 
+     * Refresh the applications index -- use sparingly.
+     */
+    void refreshIndex();
+
+    public void init( EntityManagerFactory emf, UUID applicationId);
+
+    /** For testing purposes */
+    public void flushManagerCaches();
 }

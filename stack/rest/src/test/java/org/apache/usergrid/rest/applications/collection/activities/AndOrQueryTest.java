@@ -20,7 +20,9 @@ package org.apache.usergrid.rest.applications.collection.activities;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,7 +47,7 @@ public class AndOrQueryTest extends AbstractRestIT {
 
 
     @Test //USERGRID-900
-    public void queriesWithAndPastLimit() {
+    public void queriesWithAndPastLimit() throws IOException {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -69,9 +71,11 @@ public class AndOrQueryTest extends AbstractRestIT {
             props.put( "ordinal", i );
             JsonNode activity = activities.create( props );
             if ( i == 0 ) {
-                created = activity.findValue( "created" ).getLongValue();
+                created = activity.findValue( "created" ).longValue();
             }
         }
+
+        this.refreshIndex( context.getAppUuid() );
 
         String errorQuery = "select * where created >= " + created + "AND madeup = true";
         JsonNode incorrectNode = activities.withQuery( errorQuery ).get();
@@ -81,7 +85,7 @@ public class AndOrQueryTest extends AbstractRestIT {
 
 
     @Test //USERGRID-1475
-    public void displayFullQueriesInLimit() {
+    public void displayFullQueriesInLimit() throws IOException {
 
         CustomCollection activities = context.collection( "activities" );
 
@@ -103,14 +107,16 @@ public class AndOrQueryTest extends AbstractRestIT {
             JsonNode activity = activities.create( props );
         }
 
+        this.refreshIndex( context.getAppUuid() );
+
         String query = "select * where not verb = 'go'";
         JsonNode incorrectNode = activities.query( query, "limit", Integer.toString( 10 ) );
 
         assertEquals( 10, incorrectNode.get( "entities" ).size() );
 
         for ( int i = 0; i < 10; i++ ) {
-            assertEquals( 19 - i, incorrectNode.get( "entities" ).get( i ).get( "ordinal" ).getIntValue() );
-            assertEquals( "stop", incorrectNode.get( "entities" ).get( i ).get( "verb" ).getTextValue() );
+            assertEquals( 19 - i, incorrectNode.get( "entities" ).get( i ).get( "ordinal" ).intValue() );
+            assertEquals( "stop", incorrectNode.get( "entities" ).get( i ).get( "verb" ).textValue() );
         }
     }
 
@@ -132,6 +138,8 @@ public class AndOrQueryTest extends AbstractRestIT {
 
         JsonNode[] correctValues = activities.createEntitiesWithOrdinal( props, numValuesTested );
 
+        this.refreshIndex( context.getAppUuid() );
+
         String inCorrectQuery = "select * where verb = 'go' and ordinal >= 10 ";
 
         activities.verificationOfQueryResults( correctValues, true, inCorrectQuery );
@@ -141,18 +149,20 @@ public class AndOrQueryTest extends AbstractRestIT {
     @Test //Check to make sure that asc works
     public void queryCheckAsc() throws Exception {
 
-        CustomCollection madeupStuff = context.collection( "imagination" );
+        CustomCollection madeupStuff = context.collection( "imagination" + RandomStringUtils.randomAlphabetic(5));
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 
         JsonNode[] correctValues;
-        correctValues = madeupStuff.createEntitiesWithOrdinal( character, 1000 );
+        correctValues = madeupStuff.createEntitiesWithOrdinal( character, 10 );
 
-        String inquisitiveQuery =
-                "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff' ORDER BY " + "Ordinal asc";
+        this.refreshIndex( context.getAppUuid() );
+
+        String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 10 "
+                + "or WhoHelpedYou eq 'Ruff' ORDER BY Ordinal asc";
 
         int totalEntitiesContained = madeupStuff.verificationOfQueryResults( correctValues, false, inquisitiveQuery );
 
-        assertEquals( 1000, totalEntitiesContained );
+        assertEquals( 10, totalEntitiesContained );
     }
 
 
@@ -165,6 +175,8 @@ public class AndOrQueryTest extends AbstractRestIT {
 
         JsonNode[] correctValues = madeupStuff.createEntitiesWithOrdinal( character, numOfEntities );
 
+        this.refreshIndex( context.getAppUuid() );
+
         String inquisitiveQuery = "select * where Ordinal >= 0 and Ordinal <= 2000 or WhoHelpedYou = 'Ruff'";
 
         int totalEntitiesContained = madeupStuff.verificationOfQueryResults( correctValues, true, inquisitiveQuery );
@@ -174,11 +186,13 @@ public class AndOrQueryTest extends AbstractRestIT {
 
 
     @Ignore
-    public void queryReturnCheckWithShortHand() {
+    public void queryReturnCheckWithShortHand() throws IOException {
         CustomCollection madeupStuff = context.collection( "imagination" );
         Map character = hashMap( "WhoHelpedYou", "Ruff" );
 
         madeupStuff.createEntitiesWithOrdinal( character, 1000 );
+
+        this.refreshIndex( context.getAppUuid() );
 
         String inquisitiveQuery = "select * where Ordinal gte 0 and Ordinal lte 2000 or WhoHelpedYou eq 'Ruff'";
 

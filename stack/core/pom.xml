@@ -21,14 +21,15 @@
   <parent>
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>1.0.0</version>
-    <relativePath>../</relativePath>
+    <version>2.0.0-SNAPSHOT</version>
   </parent>
 
   <properties>
     <!-- Up to 30x parallelism can be used -->
-    <core.it.forkCount>2</core.it.forkCount>
-    <core.it.suite.concurrency>5</core.it.suite.concurrency>
+    <core.it.forkCount>3</core.it.forkCount>
+    <core.it.reuseForks>false</core.it.reuseForks>
+    <core.it.parallel>suites</core.it.parallel>
+    <core.it.suite.concurrency>1</core.it.suite.concurrency>
   </properties>
 
   <artifactId>usergrid-core</artifactId>
@@ -64,10 +65,10 @@
                 <suite.concurrency>${core.it.suite.concurrency}</suite.concurrency>
               </systemPropertyVariables>
 
-              <parallel>both</parallel>
+              <parallel>${core.it.parallel}</parallel>
               <forkCount>${core.it.forkCount}</forkCount>
-              <reuseForks>false</reuseForks>
-
+              <reuseForks>${core.it.reuseForks}</reuseForks>
+				
               <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
               </argLine>
 
@@ -78,6 +79,7 @@
                 <include>**/*IT.java</include>
                 <include>**/*Test.java</include>
               </includes>
+              
               <excludes>
                 <exclude>**/Core*Suite.java</exclude>
                 <exclude>**/ConcurrentSchedulerITSuite.java</exclude>
@@ -127,123 +129,36 @@
       </build>
     </profile>
 
-    <profile>
-      <id>scott</id>
-      <activation>
-        <property>
-          <name>scott</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-
-            <configuration>
-              <systemPropertyVariables>
-                <storage-config>${basedir}/src/test/conf</storage-config>
-                <target.directory>${project.build.directory}</target.directory>
-                <suite.concurrency>${core.it.suite.concurrency}</suite.concurrency>
-              </systemPropertyVariables>
-
-              <parallel>both</parallel>
-              <forkCount>${core.it.forkCount}</forkCount>
-              <reuseForks>false</reuseForks>
-
-              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
-              </argLine>
-
-              <includes>
-                <include>**/ConcurrentCore*Suite.java</include>
-                <include>**/*IT.java</include>
-                <include>**/*Test.java</include>
-              </includes>
-              <excludes>
-                <exclude>**/ConcurrentCoreIteratorITSuite.java</exclude>
-                <exclude>**/Core*Suite.java</exclude>
-
-                <!-- Need to exclude Suite tests to prevent double execution -->
-
-                <exclude>**/HectorLockManagerIT.java</exclude>
-                <exclude>**/UsergridSystemMonitorIT.java</exclude>
-                <exclude>**/CollectionIT.java</exclude>
-                <exclude>**/CounterIT.java</exclude>
-                <exclude>**/EntityConnectionsIT.java</exclude>
-                <exclude>**/EntityDictionaryIT.java</exclude>
-                <exclude>**/EntityManagerIT.java</exclude>
-                <exclude>**/GeoIT.java</exclude>
-                <exclude>**/IndexIT.java</exclude>
-                <exclude>**/MessagesIT.java</exclude>
-                <exclude>**/PermissionsIT.java</exclude>
-                <exclude>**/PathQueryIT.java</exclude>
-                <exclude>**/EntityManagerFactoryImplIT.java</exclude>
-
-                <exclude>**/ZookeeperLockManagerTest.java</exclude>
-                <exclude>**/QueuePathsTest.java</exclude>
-                <exclude>**/QueryProcessorTest.java</exclude>
-                <exclude>**/SimpleIndexBucketLocatorImplTest.java</exclude>
-                <exclude>**/EntityTest.java</exclude>
-                <exclude>**/QueryTest.java</exclude>
-                <exclude>**/QueryUtilsTest.java</exclude>
-                <exclude>**/SchemaTest.java</exclude>
-                <exclude>**/UtilsTest.java</exclude>
-                <exclude>**/IntersectionIteratorTest.java</exclude>
-                <exclude>**/SubtractionIteratorTest.java</exclude>
-                <exclude>**/UnionIteratorTest.java</exclude>
-                <exclude>**/GrammarTreeTest.java</exclude>
-                <exclude>**/LongLiteralTest.java</exclude>
-                <exclude>**/StringLiteralTest.java</exclude>
-
-                <!-- excludes all the iterator query integration tests -->
-                <exclude>**/org/apache/usergrid/persistence/query/*IT.java</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
   </profiles>
 
   <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*.xml</include>
-        </includes>
-      </resource>
-    </resources>
 
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*.yaml</include>
-          <include>**/*.xml</include>
-          <include>**/*.properties</include>
-        </includes>
-      </testResource>
-    </testResources>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.sh</include>
+                    <include>**/stack.json</include>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include> 
+                </includes>
+            </resource>
+        </resources>
+
+        <testResources> 
+            <testResource> 
+                <directory>src/test/resources</directory> 
+                <filtering>true</filtering> 
+                <includes>
+                    <include>**/*.yaml</include>
+                    <include>**/*.properties</include> 
+                    <include>**/*.xml</include> 
+                </includes> 
+            </testResource> 
+        </testResources>
 
     <plugins>
-      <plugin>
-        <groupId>org.antlr</groupId>
-        <artifactId>antlr3-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <configuration>
-              <outputDirectory>src/main/java</outputDirectory>
-            </configuration>
-            <goals>
-              <goal>antlr</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -253,7 +168,9 @@
             <storage-config>${basedir}/src/test/conf</storage-config>
             <target.directory>${project.build.directory}</target.directory>
           </systemPropertyVariables>
-          <forkMode>once</forkMode>
+          <parallel>classes</parallel>
+          <forkCount>${core.it.forkCount}</forkCount>
+          <reuseForks>${core.it.reuseForks}</reuseForks>
           <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
 
           <includes>
@@ -291,6 +208,42 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+
+<!--            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.usergrid.chop</groupId>
+                <artifactId>chop-maven-plugin</artifactId>
+                <version>2.0.0-SNAPSHOT</version>
+                <configuration>
+                    <username>${chop.coordinator.username}</username>
+                    <password>${chop.coordinator.password}</password>
+                    <endpoint>https://${chop.coordinator.url}:8443</endpoint>
+                    <testPackageBase>ctest</testPackageBase>
+                    <runnerCount>1</runnerCount>
+                </configuration>
+            </plugin>-->
+
     </plugins>
   </build>
 
@@ -306,6 +259,10 @@
         <exclusion>
           <artifactId>snappy-java</artifactId>
           <groupId>org.xerial.snappy</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>antlr</artifactId>
+          <groupId>org.antlr</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -360,11 +317,6 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
     </dependency>
 
     <!-- SUN, Javax Package, and Other Commercial Dependencies -->
@@ -427,21 +379,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-jaxrs</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-xc</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-smile</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
     </dependency>
@@ -479,11 +416,6 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.antlr</groupId>
-      <artifactId>antlr-runtime</artifactId>
     </dependency>
 
     <dependency>
@@ -561,27 +493,89 @@
       <scope>test</scope>
     </dependency>
 
+
+    <!-- Core Persistence deps -->
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>${metrics.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-graphite</artifactId>
-      <version>${metrics.version}</version>
+	    <groupId>org.apache.usergrid</groupId>
+	    <artifactId>collection</artifactId>
+	    <version>2.0.0-SNAPSHOT</version>
+	    <type>jar</type>
+      <exclusions>
+        <exclusion>
+          <artifactId>antlr</artifactId>
+          <groupId>org.antlr</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>antlr</artifactId>
+          <groupId>antlr</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-core</artifactId>
-      <version>${rx.version}</version>
+	    <groupId>org.apache.usergrid</groupId>
+	    <artifactId>queryindex</artifactId>
+	    <version>2.0.0-SNAPSHOT</version>
+	    <type>jar</type>
     </dependency>
+
     <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-math</artifactId>
-      <version>${rx.version}</version>
+	    <groupId>org.apache.usergrid</groupId>
+	    <artifactId>graph</artifactId>
+	    <version>2.0.0-SNAPSHOT</version>
+	    <type>jar</type>
     </dependency>
-  </dependencies>
+
+    <!--<dependency>-->
+      <!--<artifactId>lucene-core</artifactId>-->
+      <!--<groupId>org.apache.lucene</groupId>-->
+      <!--<type>jar</type>-->
+      <!--<version>4.7.2</version>-->
+    <!--</dependency>-->
+
+    <dependency>
+        <groupId>org.jukito</groupId>
+        <artifactId>jukito</artifactId>
+        <version>1.4-UG</version>
+        <scope>test</scope>
+    </dependency>
+
+<!--    <dependency>
+        <groupId>org.apache.usergrid.chop</groupId>
+        <artifactId>chop-api</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </dependency>
+
+        <dependency>
+            <groupId>org.apache.usergrid.chop</groupId>
+            <artifactId>chop-stack</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
+        </dependency>-->
+
+        <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>${metrics.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-graphite</artifactId>
+            <version>${metrics.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.netflix.rxjava</groupId>
+            <artifactId>rxjava-core</artifactId>
+            <version>${rx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.netflix.rxjava</groupId>
+            <artifactId>rxjava-math</artifactId>
+            <version>${rx.version}</version>
+        </dependency>
+
+    </dependencies>
 
 </project>

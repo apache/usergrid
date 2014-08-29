@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.Role;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -146,9 +147,11 @@ public class PermissionsIT extends AbstractCoreIT {
         assertEquals( "proper number of group roles not set", 1, roles.size() );
         dump( "group roles", roles );
 
+        em.refreshIndex();
         em.addUserToGroupRole( user.getUuid(), group.getUuid(), "admin" );
 
-        Results r = em.getUsersInGroupRole( group.getUuid(), "admin", Results.Level.ALL_PROPERTIES );
+        em.refreshIndex();
+        Results r = em.getUsersInGroupRole( group.getUuid(), "admin", Level.ALL_PROPERTIES );
         assertEquals( "proper number of users in group role not set", 1, r.size() );
         dump( "entities", r.getEntities() );
 

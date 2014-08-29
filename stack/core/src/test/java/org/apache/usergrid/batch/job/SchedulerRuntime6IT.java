@@ -36,9 +36,10 @@ import static org.junit.Assert.assertTrue;
  */
 @Concurrent
 public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
+
     /**
-     * Test the scheduler ramps up correctly when there are more jobs to be read after a pause when the job specifies
-     * the retry time
+     * Test the scheduler ramps up correctly when there are more jobs to be read after a 
+     * pause when the job specifies the retry time
      */
     @Test
     public void onlyOnceTest() throws Exception {
@@ -54,10 +55,10 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
         job.setLatch( numberOfRuns );
         job.setDelay( sleepTime );
 
+        JobData returned = scheduler.createJob( 
+                "onlyOnceExceution", System.currentTimeMillis(), new JobData() );
 
-        getJobListener().setExpected(1);
-
-        JobData returned = scheduler.createJob( "onlyOnceExceution", System.currentTimeMillis(), new JobData() );
+        scheduler.refreshIndex();
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
@@ -69,6 +70,8 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
         getJobListener().setExpected( 2 );
         //reset our latch immediately for further tests
         job.setLatch( numberOfRuns );
+
+        scheduler.refreshIndex();
 
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 

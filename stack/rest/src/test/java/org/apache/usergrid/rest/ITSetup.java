@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest;
 
 
+import org.apache.usergrid.ElasticSearchResource;
 import java.net.URI;
 import java.util.Properties;
 
@@ -29,17 +30,19 @@ import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import static org.apache.usergrid.persistence.index.impl.EsProvider.LOCAL_ES_PORT_PROPNAME;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
 public class ITSetup extends ExternalResource {
 
-
-
     private static final Logger LOG = LoggerFactory.getLogger( ITSetup.class );
+    private final ElasticSearchResource elasticSearchResource;
     private final CassandraResource cassandraResource;
     private final TomcatResource tomcatResource;
 
@@ -51,22 +54,38 @@ public class ITSetup extends ExternalResource {
     private SignInProviderFactory providerFactory;
     private Properties properties;
 
-
-    public ITSetup( CassandraResource cassandraResource ) {
-        this.cassandraResource = cassandraResource;
-        tomcatResource = TomcatResource.instance;
-        tomcatResource.setWebAppsPath("src/main/webapp");
-    }
-
-    public ITSetup( CassandraResource cassandraResource, String webAppsPath ) {
-        this.cassandraResource = cassandraResource;
-        tomcatResource = TomcatResource.instance;
-        tomcatResource.setWebAppsPath(webAppsPath);
-    }
-
     private boolean setupCalled = false;
     private boolean ready = false;
     private URI uri;
+
+
+    public ITSetup( CassandraResource cassandraResource) {
+        
+        try {
+            String[] locations = { "usergrid-properties-context.xml" };
+            ConfigurableApplicationContext appContext = 
+                    new ClassPathXmlApplicationContext( locations );
+            
+            properties = (Properties)appContext.getBean("properties");
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Error getting properties", ex);
+        }
+
+        this.cassandraResource = cassandraResource;
+
+        tomcatResource = TomcatResource.instance;
+        tomcatResource.setWebAppsPath( "src/main/webapp" );
+
+        elasticSearchResource = ElasticSearchResource.instance;
+
+    }
+
+
+    public ITSetup( CassandraResource cassandraResource, String webAppsPath ) {
+        this( cassandraResource );
+        tomcatResource.setWebAppsPath(webAppsPath);
+    }
 
 
     @Override
@@ -74,24 +93,35 @@ public class ITSetup extends ExternalResource {
         synchronized ( cassandraResource ) {
             super.before();
 
-            managementService = cassandraResource.getBean( ManagementService.class );
+            elasticSearchResource.before();
+
+            emf =                cassandraResource.getBean( EntityManagerFactory.class );
+            smf =                cassandraResource.getBean( ServiceManagerFactory.class );
+            tokenService =       cassandraResource.getBean( TokenService.class );
+            providerFactory =    cassandraResource.getBean( SignInProviderFactory.class );
+            applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
+            managementService =  cassandraResource.getBean( ManagementService.class );
 
             if ( !setupCalled ) {
                 managementService.setup();
                 setupCalled = true;
             }
 
-            applicationCreator = cassandraResource.getBean( ApplicationCreator.class );
-            emf = cassandraResource.getBean( EntityManagerFactory.class );
-            tokenService = cassandraResource.getBean( TokenService.class );
-            providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
-            properties = cassandraResource.getBean( "properties", Properties.class );
-            smf = cassandraResource.getBean( ServiceManagerFactory.class );
+            String esStartup = properties.getProperty("elasticsearch.startup");
+            if ( "embedded".equals(esStartup)) {
+                tomcatResource.setCassandraPort( cassandraResource.getRpcPort() );
+                tomcatResource.setElasticSearchPort( 
+                    Integer.parseInt( System.getProperty(LOCAL_ES_PORT_PROPNAME)) );
+                
+            } else {
+                tomcatResource.setCassandraPort( cassandraResource.getRpcPort() );
+                tomcatResource.setElasticSearchPort(elasticSearchResource.getPort());
+            }
 
             tomcatResource.before();
 
             // Initialize Jersey Client
-            uri = UriBuilder.fromUri( "http://localhost/" ).port( tomcatResource.getPort() ).build();
+            uri = UriBuilder.fromUri("http://localhost/").port( tomcatResource.getPort() ).build();
 
             ready = true;
             LOG.info( "Test setup complete..." );
@@ -99,7 +129,12 @@ public class ITSetup extends ExternalResource {
     }
 
 
-
+    @Override
+    protected void after() {
+        emf.flushEntityManagerCaches();
+        tomcatResource.after();
+        elasticSearchResource.after();
+    }
 
 
     public void protect() {

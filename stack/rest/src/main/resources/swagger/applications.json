@@ -25,7 +25,7 @@
         "description" : "Grant type",
         "defaultValue" : "password",
         "allowableValues" : {
-          "values" : [ "password", "client_credentials", "refresh_token", "authorization_code" ],
+          "values" : [ "password", "client_credentials", "refresh_token"],
           "valueType" : "LIST"
         },
         "required" : true,
@@ -87,7 +87,7 @@
         "description" : "Grant type",
         "defaultValue" : "password",
         "allowableValues" : {
-          "values" : [ "password", "client_credentials", "refresh_token", "authorization_code" ],
+          "values" : [ "password", "client_credentials", "refresh_token"],
           "valueType" : "LIST"
         },
         "required" : true,

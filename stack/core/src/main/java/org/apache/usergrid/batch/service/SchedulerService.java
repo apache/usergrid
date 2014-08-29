@@ -19,7 +19,7 @@ package org.apache.usergrid.batch.service;
 
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.apache.usergrid.persistence.entities.JobStat;
@@ -51,4 +51,7 @@ public interface SchedulerService {
 
     /** Get the stats for a job */
     JobStat getStatsForJob( String jobName, UUID jobId ) throws Exception;
+
+    /** Should only be needed for testing */
+    void refreshIndex();
 }

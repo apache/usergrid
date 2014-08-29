@@ -42,10 +42,9 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.PagingResultsIterator;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.SimpleCollectionRef;
@@ -93,8 +92,8 @@ import me.prettyprint.hector.api.mutation.Mutator;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
-
-
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import org.apache.usergrid.persistence.EntityManager;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
@@ -140,13 +139,16 @@ import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 public class RelationManagerImpl implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( RelationManagerImpl.class );
 
-    private EntityManagerImpl em;
+    private EntityManager em;
     private CassandraService cass;
     private UUID applicationId;
     private EntityRef headEntity;
@@ -157,7 +159,7 @@ public class RelationManagerImpl implements RelationManager {
     }
 
 
-    public RelationManagerImpl init( EntityManagerImpl em, CassandraService cass, UUID applicationId,
+    public RelationManagerImpl init( EntityManager em, CassandraService cass, UUID applicationId,
                                      EntityRef headEntity, IndexBucketLocator indexBucketLocator ) {
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -566,7 +568,9 @@ public class RelationManagerImpl implements RelationManager {
 
         if ( !headEntity.getType().equalsIgnoreCase( TYPE_APPLICATION ) && !Schema
                 .isAssociatedEntityType( entity.getType() ) ) {
-            em.deleteEntity( new SimpleCollectionRef( headEntity, collectionName, entity ).getUuid() );
+
+            CollectionRef cref = new SimpleCollectionRef( headEntity, collectionName, entity ); 
+            em.delete( new SimpleEntityRef( cref.getType(), cref.getUuid() ) );
         }
 
         return batch;
@@ -868,13 +872,13 @@ public class RelationManagerImpl implements RelationManager {
 
     @SuppressWarnings("unchecked")
     @Metered(group = "core", name = "RelationManager_batchUpdateEntityConnection")
-    public Mutator<ByteBuffer> batchUpdateEntityConnection( Mutator<ByteBuffer> batch, boolean disconnect,
-                                                            ConnectionRefImpl connection, UUID timestampUuid )
-            throws Exception {
+    public Mutator<ByteBuffer> batchUpdateEntityConnection( Mutator<ByteBuffer> batch, 
+        boolean disconnect, ConnectionRefImpl connection, UUID timestampUuid ) throws Exception {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
-        Entity connectedEntity = em.get( connection.getConnectedEntityId() );
+        Entity connectedEntity = em.get( new SimpleEntityRef( 
+                connection.getConnectedEntityType(), connection.getConnectedEntityId()) );
 
         if ( connectedEntity == null ) {
             return batch;
@@ -1070,7 +1074,8 @@ public class RelationManagerImpl implements RelationManager {
 
         ConnectionRefImpl loopback = connection.getConnectionToConnectionEntity();
         if ( !disconnect ) {
-            em.insertEntity( CONNECTION_ENTITY_CONNECTION_TYPE, loopback.getConnectedEntityId() );
+            em.insertEntity( new SimpleEntityRef( 
+                    CONNECTION_ENTITY_CONNECTION_TYPE, loopback.getConnectedEntityId() ) );
         }
 
         batchUpdateEntityConnection( batch, disconnect, loopback, timestampUuid );
@@ -1503,7 +1508,7 @@ public class RelationManagerImpl implements RelationManager {
 
     @Override
     @Metered(group = "core", name = "RelationManager_getCollection_start_result")
-    public Results getCollection( String collectionName, UUID startResult, int count, Results.Level resultsLevel,
+    public Results getCollection( String collectionName, UUID startResult, int count, Level resultsLevel,
                                   boolean reversed ) throws Exception {
         // changed intentionally to delegate to search so that behavior is
         // consistent across all index access.
@@ -1522,7 +1527,7 @@ public class RelationManagerImpl implements RelationManager {
 
     @Override
     @Metered(group = "core", name = "RelationManager_getCollecitonForQuery")
-    public Results getCollection( String collectionName, Query query, Results.Level resultsLevel ) throws Exception {
+    public Results getCollection( String collectionName, Query query, Level resultsLevel ) throws Exception {
 
         // changed intentionally to delegate to search so that behavior is
         // consistent across all index access.
@@ -1734,7 +1739,7 @@ public class RelationManagerImpl implements RelationManager {
                 results = em.getCollection( headEntity, srcRelationName, null, 5000, Level.REFS, false );
             }
             else {
-                results = em.getConnectedEntities( headEntity.getUuid(), srcRelationName, null, Level.REFS );
+                results = em.getConnectedEntities( headEntity, srcRelationName, null, Level.REFS );
             }
 
             if ( ( results != null ) && ( results.size() > 0 ) ) {
@@ -1771,7 +1776,7 @@ public class RelationManagerImpl implements RelationManager {
 
         // we have something to search with, visit our tree and evaluate the
         // results
-        QueryProcessor qp = new QueryProcessor( query, collection, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, collection, em, factory );
         SearchCollectionVisitor visitor = new SearchCollectionVisitor( qp );
 
         return qp.getResults( visitor );
@@ -1935,7 +1940,7 @@ public class RelationManagerImpl implements RelationManager {
 
     @Override
     @Metered(group = "core", name = "RelationManager_getConnectedEntities")
-    public Results getConnectedEntities( String connectionType, String connectedEntityType, Results.Level resultsLevel )
+    public Results getConnectedEntities( String connectionType, String connectedEntityType, Level resultsLevel )
             throws Exception {
 
 
@@ -1965,7 +1970,7 @@ public class RelationManagerImpl implements RelationManager {
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
         SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, true );
 
         return qp.getResults( visitor );
@@ -1975,7 +1980,7 @@ public class RelationManagerImpl implements RelationManager {
     @Override
     @Metered(group = "core", name = "RelationManager_getConnectingEntities")
     public Results getConnectingEntities( String connectionType, String connectedEntityType,
-                                          Results.Level resultsLevel ) throws Exception {
+                                          Level resultsLevel ) throws Exception {
 
         return getConnectingEntities(connectionType, connectedEntityType, resultsLevel, 0 );
     }
@@ -2007,7 +2012,7 @@ public class RelationManagerImpl implements RelationManager {
                 new ConnectionRefImpl( new SimpleEntityRef( connectedEntityType, null ), connectionType, targetEntity );
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
         SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, false );
 
         return qp.getResults( visitor );
@@ -2046,7 +2051,7 @@ public class RelationManagerImpl implements RelationManager {
 
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
-        QueryProcessor qp = new QueryProcessor( query, null, em, factory );
+        QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
         SearchConnectionVisitor visitor = new SearchConnectionVisitor( qp, connectionRef, true );
 
         return qp.getResults( visitor );
@@ -2075,7 +2080,7 @@ public class RelationManagerImpl implements RelationManager {
         /**
          * @param queryProcessor
          */
-        public SearchCollectionVisitor( QueryProcessor queryProcessor ) {
+        public SearchCollectionVisitor( QueryProcessorImpl queryProcessor ) {
             super( queryProcessor );
             this.collection = queryProcessor.getCollectionInfo();
         }
@@ -2160,7 +2165,8 @@ public class RelationManagerImpl implements RelationManager {
 
         @Override
         public void visit( NameIdentifierNode nameIdentifierNode ) throws Exception {
-            EntityRef ref = em.getAlias( headEntity.getUuid(), collection.getType(), nameIdentifierNode.getName() );
+            EntityRef ref = em.getAlias( 
+                    headEntity, collection.getType(), nameIdentifierNode.getName() );
 
             if ( ref == null ) {
                 this.results.push( new EmptyIterator() );
@@ -2191,7 +2197,7 @@ public class RelationManagerImpl implements RelationManager {
          * @param outgoing The direction to search.  True if we should search from source->target edges.  False if we
          * should search from target<-source edges
          */
-        public SearchConnectionVisitor( QueryProcessor queryProcessor, ConnectionRefImpl connection,
+        public SearchConnectionVisitor( QueryProcessorImpl queryProcessor, ConnectionRefImpl connection,
                                         boolean outgoing ) {
             super( queryProcessor );
             this.connection = connection;
@@ -2318,8 +2324,8 @@ public class RelationManagerImpl implements RelationManager {
         @Override
         public void visit( NameIdentifierNode nameIdentifierNode ) throws Exception {
             //TODO T.N. USERGRID-1919 actually validate this is connected
-            EntityRef ref =
-                    em.getAlias( applicationId, connection.getConnectedEntityType(), nameIdentifierNode.getName() );
+            EntityRef ref = em.getAlias( new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), 
+                    connection.getConnectedEntityType(), nameIdentifierNode.getName() );
 
             if ( ref == null ) {
                 this.results.push( new EmptyIterator() );

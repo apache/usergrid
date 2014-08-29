@@ -17,7 +17,8 @@
 package org.apache.usergrid.rest.applications.users;
 
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
@@ -49,17 +50,26 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
     @Test
     public void meVerify() throws Exception {
+
         context.clearUser();
-        TestUser user1 =
-                new TestAppUser( "testuser1@usergrid.org", "password", "testuser1@usergrid.org" ).create( context )
-                                                                                                 .login( context )
-                                                                                                 .makeActive( context );
+
+        String email = "testuser1@usergrid.org";
+        TestUser user1 = new TestAppUser( email, "password", email ).create( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
+        user1.login( context ).makeActive( context );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         String token = user1.getToken();
         JsonNode userNode = context.application().users().user( "me" ).get();
         assertNotNull( userNode );
-        String uuid = userNode.get( "entities" ).get( 0 ).get( "uuid" ).getTextValue();
+
+        String uuid = userNode.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
         assertNotNull( uuid );
+
         setup.getMgmtSvc().revokeAccessTokenForAppUser( token );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         try {
             context.application().users().user( "me" ).get();
@@ -73,15 +83,19 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void contextualPathOwnership() {
+    public void contextualPathOwnership() throws IOException {
 
         // anonymous user
         context.clearUser();
 
-        TestUser user1 =
-                new TestAppUser( "testuser1@usergrid.org", "password", "testuser1@usergrid.org" ).create( context )
-                                                                                                 .login( context )
-                                                                                                 .makeActive( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
+
+        TestUser user1 = new TestAppUser( "testuser1@usergrid.org", "password", "testuser1@usergrid.org" ).create( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
+        user1.login( context );
+        user1.makeActive( context );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // create device 1 on user1 devices
         context.application().users().user( "me" ).devices()
@@ -89,15 +103,20 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         // anonymous user
         context.clearUser();
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // create device 2 on user 2
-        TestUser user2 =
-                new TestAppUser( "testuser2@usergrid.org", "password", "testuser2@usergrid.org" ).create( context )
-                                                                                                 .login( context )
-                                                                                                 .makeActive( context );
+        TestUser user2 = new TestAppUser( "testuser2@usergrid.org", "password", "testuser2@usergrid.org" ).create( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
+        user2.login( context );
+        user2.makeActive( context );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         context.application().users().user( "me" ).devices()
                .create( MapUtils.hashMap( "name", "device2" ).map( "number", "5552223333" ) );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // now query on user 1.
 
@@ -163,40 +182,50 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void contextualConnectionOwnership() {
+    public void contextualConnectionOwnership() throws IOException {
 
         // anonymous user
         context.clearUser();
 
-        TestUser user1 =
-                new TestAppUser( "testuser1@usergrid.org", "password", "testuser1@usergrid.org" ).create( context )
-                                                                                                 .login( context )
-                                                                                                 .makeActive( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
+
+        String email = "testuser1@usergrid.org";
+        TestUser user1 = new TestAppUser( email, "password", email ).create( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
+        user1.login( context ).makeActive( context );
 
         // create a 4peaks restaurant
-        JsonNode data =
-                context.application().collection( "restaurants" ).create( MapUtils.hashMap( "name", "4peaks" ) );
+        JsonNode data = context.application()
+                .collection( "restaurants" ).create( MapUtils.hashMap( "name", "4peaks" ) );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // create our connection
-        data = context.application().users().user( "me" ).connection( "likes" ).collection( "restaurants" )
-                      .entity( "4peaks" ).post();
+        data = context.application().users().user( "me" )
+                .connection( "likes" ).collection( "restaurants" ).entity( "4peaks" ).post();
 
-        String peaksId = getEntity( data, 0 ).get( "uuid" ).asText();
+        refreshIndex(context.getOrgName(), context.getAppName());
+
+       String peaksId = getEntity( data, 0 ).get( "uuid" ).asText();
 
         // anonymous user
         context.clearUser();
 
         // create a restaurant and link it to user 2
-        TestUser user2 =
-                new TestAppUser( "testuser2@usergrid.org", "password", "testuser2@usergrid.org" ).create( context )
-                                                                                                 .login( context )
-                                                                                                 .makeActive( context );
+        email = "testuser2@usergrid.org";
+        TestUser user2 = new TestAppUser( email, "password", email ).create( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
+
+        user2.login( context ).makeActive( context );
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         data = context.application().collection( "restaurants" )
                       .create( MapUtils.hashMap( "name", "arrogantbutcher" ) );
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         data = context.application().users().user( "me" ).connection( "likes" ).collection( "restaurants" )
                       .entity( "arrogantbutcher" ).post();
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         String arrogantButcherId = getEntity( data, 0 ).get( "uuid" ).asText();
 
@@ -205,6 +234,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
         CustomCollection likeRestaurants =
                 context.withUser( user1 ).application().users().user( "me" ).connection( "likes" )
                        .collection( "restaurants" );
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // check we can get it via id
         data = likeRestaurants.entity( peaksId ).get();
@@ -284,7 +314,7 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void contextualConnectionOwnershipGuestAccess() {
+    public void contextualConnectionOwnershipGuestAccess() throws IOException {
 
         //set up full GET,PUT,POST,DELETE access for guests
         context.application().collection( "roles" ).entity( "guest" ).collection( "permissions" )
@@ -296,6 +326,8 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
 
         JsonNode city = context.application().collection( "cities" ).create( MapUtils.hashMap( "name", "tempe" ) );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         String cityId = getEntity( city, 0 ).get( "uuid" ).asText();
 
@@ -314,6 +346,8 @@ public class OwnershipResourceIT extends AbstractRestIT {
 
         Connection likeRestaurants =
                 context.application().collection( "cities" ).entity( "tempe" ).connection( "likes" );
+
+        refreshIndex(context.getOrgName(), context.getAppName());
 
         // check we can get it via id with no collection name
         data = likeRestaurants.entity( peaksId ).get();

@@ -23,7 +23,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -59,8 +59,8 @@ public class UpdateGroupIT extends AbstractRestIT {
             groupMap.put( "title", "Old Title" );
             groupMap.put( "path", groupPath );
             String path = context.getOrgName() + "/" + context.getAppName() + "/groups";
-            JsonNode groupJson = webResourceBuilder( path ).post( JsonNode.class, groupMap );
-            groupId = groupJson.get( "entities" ).get( 0 ).get( "uuid" ).getTextValue();
+            JsonNode groupJson = mapper.readTree( webResourceBuilder( path ).post( String.class, groupMap ));
+            groupId = groupJson.get( "entities" ).get( 0 ).get( "uuid" ).textValue();
         }
         catch ( UniformInterfaceException e ) {
             fail( "Error creating group: " + IOUtils.toString( e.getResponse().getEntityInputStream() ) );
@@ -68,12 +68,14 @@ public class UpdateGroupIT extends AbstractRestIT {
 
         assertTitle( groupId, "Old Title" );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         // update that group by giving it a new title and using group path in URL
         try {
             Map<String, Object> group = new HashMap<String, Object>();
             group.put( "title", "New Title" );
             String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupPath;
-            webResourceBuilder( path ).put( JsonNode.class, group );
+            webResourceBuilder( path ).put( String.class, group );
         }
         catch ( UniformInterfaceException e ) {
             fail( "Error updating group: " + IOUtils.toString( e.getResponse().getEntityInputStream() ) );
@@ -81,12 +83,14 @@ public class UpdateGroupIT extends AbstractRestIT {
 
         assertTitle( groupId, "New Title" );
 
+        refreshIndex(context.getOrgName(), context.getAppName());
+
         // update that group by giving it a new title and using UUID in URL
         try {
             Map<String, Object> group = new HashMap<String, Object>();
             group.put( "title", "Even Newer Title" );
             String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupId;
-            webResourceBuilder( path ).put( JsonNode.class, group );
+            webResourceBuilder( path ).put( String.class, group );
         }
         catch ( UniformInterfaceException e ) {
             fail( "Error updating group: " + IOUtils.toString( e.getResponse().getEntityInputStream() ) );
@@ -102,9 +106,9 @@ public class UpdateGroupIT extends AbstractRestIT {
     }
 
 
-    private void assertTitle( String groupId, String title ) {
+    private void assertTitle( String groupId, String title ) throws IOException {
         String path = context.getOrgName() + "/" + context.getAppName() + "/groups/" + groupId;
-        JsonNode groupJson = webResourceBuilder( path ).get( JsonNode.class );
-        Assert.assertEquals( title, groupJson.get( "entities" ).get( 0 ).get( "title" ).getTextValue() );
+        JsonNode groupJson = mapper.readTree( webResourceBuilder( path ).get( String.class ));
+        Assert.assertEquals( title, groupJson.get( "entities" ).get( 0 ).get( "title" ).textValue() );
     }
 }

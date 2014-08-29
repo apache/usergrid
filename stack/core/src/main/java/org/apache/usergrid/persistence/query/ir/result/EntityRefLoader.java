@@ -39,7 +39,7 @@ public class EntityRefLoader implements ResultsLoader {
      * @see org.apache.usergrid.persistence.query.ir.result.ResultsLoader#getResults(java.util.List)
      */
     @Override
-    public Results getResults( List<ScanColumn> entityIds ) throws Exception {
+    public Results getResults( List<ScanColumn> entityIds, String type ) throws Exception {
         Results r = new Results();
         List<EntityRef> refs = new ArrayList<EntityRef>( entityIds.size() );
         for ( ScanColumn id : entityIds ) {

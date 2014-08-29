@@ -1,4 +1,5 @@
 .idea
+jssecacerts
 .sonar-ide.properties
 .clover
 atlassian-ide-plugin.xml

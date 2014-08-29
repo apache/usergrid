@@ -46,11 +46,16 @@ import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.management.cassandra.ManagementServiceImpl;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import org.apache.usergrid.ServiceITSuite;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_ACTIVATED;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_EMAIL_ADMIN_CONFIRMATION;
@@ -96,7 +101,7 @@ public class EmailFlowIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
 
     @Rule
     public TestName name = new TestName();
@@ -205,7 +210,7 @@ public class EmailFlowIT {
                                                  "name-skipallemailtest", "nate+skipallemailtest@apigee.com",
                                                  "password" );
 
-        EntityManager em = setup.getEmf().getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
         User user = em.get( ooi.getOwner().getUuid(), User.class );
         assertTrue( user.activated() );
         assertFalse( user.disabled() );
@@ -249,6 +254,8 @@ public class EmailFlowIT {
         String subject = "Request For User Account Activation testAppUserMailUrl@test.com";
         String activation_url = String.format( setup.get( PROPERTIES_USER_ACTIVATION_URL ), orgName, appName,
                 user.getUuid().toString() );
+
+        setup.getEmf().refreshIndex();
 
         // Activation
         setup.getMgmtSvc().startAppUserActivationFlow( app.getId(), user );
@@ -318,6 +325,8 @@ public class EmailFlowIT {
 
         orgOwner = createOwnerAndOrganization( orgName, appName, userName, email, passwd, false, false );
         assertNotNull( orgOwner );
+
+        setup.getEmf().refreshIndex();
 
         ApplicationInfo app = setup.getMgmtSvc().createApplication( orgOwner.getOrganization().getUuid(), appName );
         assertNotNull( app );
@@ -421,6 +430,9 @@ public class EmailFlowIT {
         userProps.put( "email", email );
         userProps.put( "activated", activated );
 
-        return em.create( User.ENTITY_TYPE, User.class, userProps );
+        User user = em.create( User.ENTITY_TYPE, User.class, userProps );
+        em.refreshIndex();
+
+        return user;
     }
 }

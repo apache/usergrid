@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.services.AbstractService;
 import org.apache.usergrid.services.ServiceContext;
@@ -49,7 +49,7 @@ public class ApplicationsService extends AbstractService {
 
     public ApplicationsService() {
         super();
-        logger.info( "/applications" );
+        logger.debug( "/applications" );
         declareEntityDictionary( "counters" );
         declareEntityCommand( "hello" );
         declareEntityCommand( "resetroles" );
@@ -146,7 +146,7 @@ public class ApplicationsService extends AbstractService {
                     }
 
                     em.createApplicationCollection( collection );
-                    logger.info( "Created collection " + collection + " for application " + sm.getApplicationId() );
+                    logger.debug( "Created collection " + collection + " for application " + sm.getApplicationId() );
                 }
             }
         }

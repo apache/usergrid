@@ -59,6 +59,7 @@ import org.apache.usergrid.management.export.S3Export;
 import org.apache.usergrid.management.export.S3ExportImpl;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.JobData;
 
 import com.google.common.collect.ImmutableSet;
@@ -67,6 +68,7 @@ import com.google.inject.Module;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -91,7 +93,7 @@ public class ExportServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource );
+    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
 
 
     @BeforeClass
@@ -100,6 +102,8 @@ public class ExportServiceIT {
         adminUser = setup.getMgmtSvc().createAdminUser( "grey", "George Reyes", "george@reyes.com", "test", false, false );
         organization = setup.getMgmtSvc().createOrganization( "george-organization", adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "george-application" ).getId();
+
+        setup.getEmf().refreshIndex();
     }
 
 
@@ -142,8 +146,12 @@ public class ExportServiceIT {
             entity[i] = em.create( "users", userProperties );
         }
         //creates connections
-        em.createConnection( em.getRef( entity[0].getUuid() ), "Vibrations", em.getRef( entity[1].getUuid() ) );
-        em.createConnection( em.getRef( entity[1].getUuid() ), "Vibrations", em.getRef( entity[0].getUuid() ) );
+        em.createConnection( 
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ), "Vibrations", 
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ) );
+        em.createConnection( 
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid()) ), "Vibrations", 
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid()) ) );
 
         UUID exportUUID = exportService.schedule( payload );
 
@@ -216,9 +224,14 @@ public class ExportServiceIT {
 
             entity[i] = em.create( "users", userProperties );
         }
+        em.refreshIndex();
         //creates connections
-        em.createConnection( em.getRef( entity[0].getUuid() ), "Vibrations", em.getRef( entity[1].getUuid() ) );
-        em.createConnection( em.getRef( entity[1].getUuid() ), "Vibrations", em.getRef( entity[0].getUuid() ) );
+        em.createConnection( 
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid())), "Vibrations", 
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid())) );
+        em.createConnection( 
+                em.get( new SimpleEntityRef( "user", entity[1].getUuid())), "Vibrations", 
+                em.get( new SimpleEntityRef( "user", entity[0].getUuid())) );
 
         UUID exportUUID = exportService.schedule( payload );
 
@@ -243,10 +256,9 @@ public class ExportServiceIT {
                 break;
             }
         }
-        if ( indexApp >= a.size() ) {
-            //what? How does this condition even get reached due to the above forloop
-            assert ( false );
-        }
+
+       assertTrue( "Uuid was not found in exported files. ", indexApp < a.size() );
+
 
         org.json.simple.JSONObject objEnt = ( org.json.simple.JSONObject ) a.get( indexApp );
         org.json.simple.JSONObject objConnections = ( org.json.simple.JSONObject ) objEnt.get( "connections" );
@@ -419,12 +431,13 @@ public class ExportServiceIT {
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
 
+       em.refreshIndex();
+
         exportService.doExport( jobExecution );
 
         JSONParser parser = new JSONParser();
 
         org.json.simple.JSONArray a = ( org.json.simple.JSONArray ) parser.parse( new FileReader( f ) );
-
         assertEquals( 1, a.size() );
         for ( int i = 0; i < a.size(); i++ ) {
             org.json.simple.JSONObject data = ( org.json.simple.JSONObject ) a.get( i );
@@ -452,7 +465,7 @@ public class ExportServiceIT {
         f.deleteOnExit();
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        em.createApplicationCollection( "qt" );
+       // em.createApplicationCollection( "qtsMagics" );
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
@@ -462,7 +475,7 @@ public class ExportServiceIT {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "billybob" + i );
             userProperties.put( "email", "test" + i + "@anuff.com" );//String.format( "test%i@anuff.com", i ) );
-            entity[i] = em.create( "qts", userProperties );
+            entity[i] = em.create( "qtsMagics", userProperties );
         }
 
         S3Export s3Export = new MockS3ExportImpl("exportOneCollection.json" );
@@ -471,7 +484,7 @@ public class ExportServiceIT {
 
         payload.put( "organizationId", organization.getUuid() );
         payload.put( "applicationId", applicationId );
-        payload.put( "collectionName", "qts" );
+        payload.put( "collectionName", "qtsMagics" );
 
         UUID exportUUID = exportService.schedule( payload );
 
@@ -479,6 +492,8 @@ public class ExportServiceIT {
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        em.refreshIndex();
 
         exportService.doExport( jobExecution );
 
@@ -506,10 +521,13 @@ public class ExportServiceIT {
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
         em.createApplicationCollection( "baconators" );
+        em.refreshIndex();
+
         //intialize user object to be posted
         Map<String, Object> userProperties = null;
         Entity[] entity;
         entity = new Entity[entitiesToCreate];
+
         //creates entities
         for ( int i = 0; i < entitiesToCreate; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
@@ -520,19 +538,21 @@ public class ExportServiceIT {
 
         S3Export s3Export = new MockS3ExportImpl("exportOneCollectionWQuery.json");
         ExportService exportService = setup.getExportService();
+
         HashMap<String, Object> payload = payloadBuilder();
         payload.put( "query", "select * where username contains 'billybob0'" );
-
         payload.put( "organizationId", organization.getUuid() );
         payload.put( "applicationId", applicationId );
         payload.put( "collectionName", "baconators" );
 
         UUID exportUUID = exportService.schedule( payload );
 
-        JobData jobData = jobDataCreator(payload,exportUUID,s3Export);
+        JobData jobData = jobDataCreator( payload, exportUUID, s3Export );
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        em.refreshIndex();
 
         exportService.doExport( jobExecution );
 
@@ -549,8 +569,7 @@ public class ExportServiceIT {
     @Test
     public void testExportOneOrganization() throws Exception {
 
-        //File f = new File( "exportOneOrganization.json" );
-        int entitiesToCreate = 123;
+        int entitiesToCreate = 20;
         File f = null;
 
 
@@ -583,7 +602,7 @@ public class ExportServiceIT {
         //creates 100s of organizations with some entities in each one to make sure we don't actually apply it
         OrganizationInfo orgMade = null;
         ApplicationInfo appMade = null;
-        for ( int i = 0; i < 100; i++ ) {
+        for ( int i = 0; i < 10; i++ ) {
             orgMade = setup.getMgmtSvc().createOrganization( "superboss" + i, adminUser, true );
             appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), "superapp" + i );
 
@@ -610,6 +629,8 @@ public class ExportServiceIT {
 
         JobExecution jobExecution = mock( JobExecution.class );
         when( jobExecution.getJobData() ).thenReturn( jobData );
+
+        Thread.sleep(1000);
 
         exportService.doExport( jobExecution );
 

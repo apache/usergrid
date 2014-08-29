@@ -39,11 +39,13 @@ public class CoreITSetupImpl implements CoreITSetup {
     protected IndexBucketLocator indexBucketLocator;
     protected CassandraService cassandraService;
     protected CassandraResource cassandraResource;
+    protected ElasticSearchResource elasticSearchResource;
     protected boolean enabled = false;
 
 
-    public CoreITSetupImpl( CassandraResource cassandraResource ) {
+    public CoreITSetupImpl( CassandraResource cassandraResource, ElasticSearchResource elasticSearchResource ) {
         this.cassandraResource = cassandraResource;
+        this.elasticSearchResource = elasticSearchResource;
     }
 
 
@@ -77,16 +79,17 @@ public class CoreITSetupImpl implements CoreITSetup {
      */
     protected void before( Description description ) throws Throwable {
         LOG.info( "Setting up for {}", description.getDisplayName() );
+        elasticSearchResource.before();
         initialize();
     }
 
 
     private void initialize() {
         if ( !enabled ) {
+            cassandraService = cassandraResource.getBean( CassandraService.class );
             emf = cassandraResource.getBean( EntityManagerFactory.class );
             qmf = cassandraResource.getBean( QueueManagerFactory.class );
             indexBucketLocator = cassandraResource.getBean( IndexBucketLocator.class );
-            cassandraService = cassandraResource.getBean( CassandraService.class );
             enabled = true;
         }
     }
@@ -95,6 +98,7 @@ public class CoreITSetupImpl implements CoreITSetup {
     /** Override to tear down your specific external resource. */
     protected void after( Description description ) {
         LOG.info( "Tearing down for {}", description.getDisplayName() );
+        elasticSearchResource.after();
     }
 
 
@@ -140,12 +144,12 @@ public class CoreITSetupImpl implements CoreITSetup {
 
     @Override
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
-        if ( USE_DEFAULT_APPLICATION ) {
-            return CassandraService.DEFAULT_APPLICATION_ID;
-        }
-
         if ( emf == null ) {
             emf = cassandraResource.getBean( EntityManagerFactory.class );
+        }
+
+        if ( USE_DEFAULT_APPLICATION ) {
+            return emf.getDefaultAppId();
         }
 
         return emf.createApplication( organizationName, applicationName );

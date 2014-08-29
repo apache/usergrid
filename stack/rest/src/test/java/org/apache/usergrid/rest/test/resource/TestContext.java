@@ -26,9 +26,15 @@ import org.apache.usergrid.rest.test.resource.mgmt.Management;
 import org.apache.usergrid.rest.test.security.TestUser;
 
 import com.sun.jersey.test.framework.JerseyTest;
+import java.io.IOException;
+import javax.ws.rs.core.MediaType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class TestContext {
+
+    private static final Logger logger = LoggerFactory.getLogger( TestContext.class );
 
     private JerseyTest test;
     private TestUser activeUser;
@@ -91,17 +97,17 @@ public class TestContext {
 
 
     /** Creates the org specified */
-    public TestContext createNewOrgAndUser() {
+    public TestContext createNewOrgAndUser() throws IOException {
         orgUuid = management().orgs().create( orgName, activeUser );
-
+        refreshIndex( orgName, appName );
         return this;
     }
 
 
     /** Creates the org specified */
-    public TestContext createAppForOrg() {
+    public TestContext createAppForOrg() throws IOException {
         appUuid = management().orgs().organization( orgName ).apps().create( appName );
-
+        refreshIndex( orgName, appName );
         return this;
     }
 
@@ -166,7 +172,27 @@ public class TestContext {
 
 
     /** Calls createNewOrgAndUser, logs in the user, then creates the app. All in 1 call. */
-    public TestContext initAll() {
+    public TestContext initAll() throws IOException {
         return createNewOrgAndUser().loginUser().createAppForOrg();
+    }
+
+    private void refreshIndex(String orgName, String appName) {
+
+        logger.debug("Refreshing index for app {}/{}", orgName, appName );
+
+        try {
+
+            root().resource().path( "/refreshindex" )
+                .queryParam( "org_name", orgName )
+                .queryParam( "app_name", appName )
+                .accept( MediaType.APPLICATION_JSON )
+                .post();
+                    
+        } catch ( Exception e) {
+            logger.debug("Error refreshing index", e);
+            return;
+        }
+
+        logger.debug("Refreshed index for app {}/{}", orgName, appName );
     }
 }

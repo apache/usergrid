@@ -32,13 +32,12 @@ import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.rest.AbstractRestIT;
 
 import org.apache.commons.lang.StringUtils;
@@ -77,12 +76,15 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false" );
             setTestProperty( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
 
-            JsonNode node =
-                    postCreateOrgAndAdmin( "test-org-1", "test-user-1", "Test User", "test-user-1@mockserver.com",
-                            "testpassword" );
+            JsonNode node = postCreateOrgAndAdmin( "test-org-1", "test-user-1", "Test User", 
+                    "test-user-1@mockserver.com", "testpassword" );
+
+            if (true ) return;
+            
+            refreshIndex("test-organization", "test-app");
 
             UUID owner_uuid =
-                    UUID.fromString( node.findPath( "data" ).findPath( "owner" ).findPath( "uuid" ).getTextValue() );
+                    UUID.fromString( node.findPath( "data" ).findPath( "owner" ).findPath( "uuid" ).textValue() );
 
             List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get( "test-user-1@mockserver.com" );
 
@@ -96,31 +98,34 @@ public class RegistrationIT extends AbstractRestIT {
             logger.info( token );
 
             setup.getMgmtSvc().disableAdminUser( owner_uuid );
+
+            refreshIndex("test-organization", "test-app");
+
             try {
                 resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( JsonNode.class );
+                        .get( String.class );
                 fail( "request for disabled user should fail" );
             }
             catch ( UniformInterfaceException uie ) {
                 ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
-                JsonNode body = uie.getResponse().getEntity( JsonNode.class );
-                assertEquals( "user disabled", body.findPath( "error_description" ).getTextValue() );
+                JsonNode body = mapper.readTree( uie.getResponse().getEntity( String.class ));
+                assertEquals( "user disabled", body.findPath( "error_description" ).textValue() );
             }
 
-            setup.getMgmtSvc().deactivateUser( CassandraService.MANAGEMENT_APPLICATION_ID, owner_uuid );
+            setup.getMgmtSvc().deactivateUser( setup.getEmf().getManagementAppId(), owner_uuid );
             try {
                 resource().path( "/management/token" ).queryParam( "grant_type", "password" )
                         .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .get( JsonNode.class );
+                        .get( String.class );
                 fail( "request for deactivated user should fail" );
             }
             catch ( UniformInterfaceException uie ) {
                 ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
-                JsonNode body = uie.getResponse().getEntity( JsonNode.class );
-                assertEquals( "user not activated", body.findPath( "error_description" ).getTextValue() );
+                JsonNode body = mapper.readTree( uie.getResponse().getEntity( String.class ));
+                assertEquals( "user not activated", body.findPath( "error_description" ).textValue() );
             }
 
             // assertEquals(ActivationState.ACTIVATED,
@@ -151,15 +156,19 @@ public class RegistrationIT extends AbstractRestIT {
     }
 
 
-    public JsonNode postCreateOrgAndAdmin( String organizationName, String username, String name, String email,
-                                           String password ) {
-        JsonNode node = null;
-        Map<String, String> payload =
-                hashMap( "email", email ).map( "username", username ).map( "name", name ).map( "password", password )
-                        .map( "organization", organizationName );
+    public JsonNode postCreateOrgAndAdmin( String organizationName, String username, String name, 
+            String email, String password ) throws IOException {
 
-        node = resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        JsonNode node = null;
+        Map<String, String> payload = hashMap( "email", email )
+                .map( "username", username )
+                .map( "name", name ).map( "password", password )
+                .map( "organization", organizationName );
+
+        node = mapper.readTree( resource().path( "/management/organizations" )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE )
+                .post( String.class, payload ));
 
         assertNotNull( node );
         logNode( node );
@@ -168,16 +177,16 @@ public class RegistrationIT extends AbstractRestIT {
 
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public JsonNode postAddAdminToOrg( String organizationName, String email, String password, String token ) {
+    public JsonNode postAddAdminToOrg( String organizationName, String email, String password, String token ) throws IOException {
         JsonNode node = null;
 
         MultivaluedMap formData = new MultivaluedMapImpl();
         formData.add( "email", email );
         formData.add( "password", password );
 
-        node = resource().path( "/management/organizations/" + organizationName + "/users" )
+        node = mapper.readTree( resource().path( "/management/organizations/" + organizationName + "/users" )
                 .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_FORM_URLENCODED ).post( JsonNode.class, formData );
+                .type( MediaType.APPLICATION_FORM_URLENCODED ).post( String.class, formData ));
 
         assertNotNull( node );
         logNode( node );
@@ -202,7 +211,7 @@ public class RegistrationIT extends AbstractRestIT {
             try {
                 resource().path( "/management/organizations/test-organization/users/test-admin-null@mockserver.com" )
                         .queryParam( "access_token", t ).accept( MediaType.APPLICATION_JSON )
-                        .type( MediaType.APPLICATION_FORM_URLENCODED ).put( JsonNode.class, formData );
+                        .type( MediaType.APPLICATION_FORM_URLENCODED ).put( String.class, formData );
             }
             catch ( UniformInterfaceException e ) {
                 assertEquals( "Should receive a 400 Not Found", 400, e.getResponse().getStatus() );
@@ -250,8 +259,10 @@ public class RegistrationIT extends AbstractRestIT {
             ///in usergrid) and "User Invited To Organization" email
             String adminToken = adminToken();
             JsonNode node = postAddAdminToOrg( "test-organization", "test-admin-nopwd@mockserver.com", "", adminToken );
-            String uuid = node.get( "data" ).get( "user" ).get( "uuid" ).getTextValue();
+            String uuid = node.get( "data" ).get( "user" ).get( "uuid" ).textValue();
             UUID userId = UUID.fromString( uuid );
+
+            refreshIndex("test-organization", "test-app");
 
             String subject = "Password Reset";
             String reset_url = String.format( setup.getProps().getProperty( PROPERTIES_ADMIN_RESETPW_URL ), uuid );
@@ -294,36 +305,40 @@ public class RegistrationIT extends AbstractRestIT {
             setTestProperty( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
 
             // svcSetup an admin user
+            String adminUserName = "AdminUserFromOtherOrg";
             String adminUserEmail = "AdminUserFromOtherOrg@otherorg.com";
-            UserInfo adminUser = setup.getMgmtSvc()
-                                      .createAdminUser( adminUserEmail, adminUserEmail, adminUserEmail, "password1",
-                                              true, false );
+
+            UserInfo adminUser = setup.getMgmtSvc().createAdminUser( 
+                    adminUserEmail, adminUserEmail, adminUserEmail, "password1", true, false );
+
+            refreshIndex("test-organization", "test-app");
+
             assertNotNull( adminUser );
-            Message[] msgs = getMessages( "otherorg.com", "AdminUserFromOtherOrg", "password1" );
+            Message[] msgs = getMessages( "otherorg.com", adminUserName, "password1" );
             assertEquals( 1, msgs.length );
 
             // add existing admin user to org
-            // this should NOT send resetpwd  link in email to newly added org admin user(that
-            // already exists in usergrid)
-            // only "User Invited To Organization" email
+
+            // this should NOT send resetpwd link in email to newly added org admin user(that
+            // already exists in usergrid) only "User Invited To Organization" email
             String adminToken = adminToken();
-            JsonNode node = postAddAdminToOrg( "test-organization", "AdminUserFromOtherOrg@otherorg.com", "password1",
-                    adminToken );
-            String uuid = node.get( "data" ).get( "user" ).get( "uuid" ).getTextValue();
+            JsonNode node = postAddAdminToOrg( "test-organization", 
+                    adminUserEmail, "password1", adminToken );
+            String uuid = node.get( "data" ).get( "user" ).get( "uuid" ).textValue();
             UUID userId = UUID.fromString( uuid );
 
             assertEquals( adminUser.getUuid(), userId );
 
-            String resetpwd = "Password Reset";
-            String invited = "User Invited To Organization";
-
-            msgs = getMessages( "otherorg.com", "AdminUserFromOtherOrg", "password1" );
+            msgs = getMessages( "otherorg.com", adminUserName, "password1" );
 
             // only 1 invited msg
             assertEquals( 2, msgs.length );
 
-            //email subject
+            // check email subject
+            String resetpwd = "Password Reset";
             assertNotSame( resetpwd, msgs[1].getSubject() );
+
+            String invited = "User Invited To Organization";
             assertEquals( invited, msgs[1].getSubject() );
         }
         finally {

@@ -17,6 +17,8 @@
 package org.apache.usergrid.rest;
 
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -36,9 +38,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.usergrid.persistence.Identifier;
-import org.codehaus.jackson.node.JsonNodeFactory;
-import org.codehaus.jackson.node.ObjectNode;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,8 +70,6 @@ import com.yammer.metrics.core.Sampling;
 import com.yammer.metrics.core.Summarizable;
 import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.stats.Snapshot;
-
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 /** @author ed@anuff.com */
@@ -231,7 +229,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
 
     private ApplicationResource appResourceFor( UUID applicationId ) throws Exception {
-        if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
+        if ( applicationId.equals( emf.getManagementAppId() ) ) {
             throw new UnauthorizedException();
         }
 
@@ -309,6 +307,7 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @Path("orgs/{organizationName}")
     public OrganizationResource getOrganizationByName3( @PathParam("organizationName") String organizationName )
             throws Exception {
+        logger.debug("getOrganizationByName3");
         return getOrganizationByName( organizationName );
     }
 

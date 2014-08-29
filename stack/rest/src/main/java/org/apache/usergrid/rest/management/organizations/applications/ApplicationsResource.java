@@ -112,6 +112,10 @@ public class ApplicationsResource extends AbstractContextResource {
                                                                   @FormParam( "name" ) String applicationName )
             throws Exception {
 
+        logger.debug("newApplicationForOrganizationFromForm");
+
+        try {
+
         Preconditions.checkArgument( !isEmpty( applicationName ),
                 "The 'name' parameter is required and cannot be empty: " + applicationName );
 
@@ -125,6 +129,11 @@ public class ApplicationsResource extends AbstractContextResource {
         response.setData( applications );
         response.setResults( management.getApplicationMetadata( applicationInfo.getId() ) );
         return new JSONWithPadding( response, callback );
+
+        } catch (Exception e) {
+            logger.debug("Error in newApplicationForOrganizationFromForm", e);
+            return null;
+        }
     }
 
 

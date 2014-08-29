@@ -31,7 +31,6 @@ import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.AggregateCounter;
-import org.apache.usergrid.persistence.CounterResolution;
 import org.apache.usergrid.tools.bean.MetricLine;
 import org.apache.usergrid.tools.bean.MetricQuery;
 import org.apache.usergrid.tools.bean.MetricSort;
@@ -47,6 +46,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Ordering;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
 
 
 /**

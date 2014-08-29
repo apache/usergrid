@@ -1,0 +1,30 @@
+{
+  "name" : "ExampleStack",
+  "id" : "adb51dfa-ed4f-4a36-9cbf-6b5a7b6da31e",
+  "clusters" : [ {
+    "name" : "TestCluster",
+    "instanceSpec" : {
+      "imageId" : "ami-56a0463e",
+      "type" : "m1.large",
+      "keyName" : "TestKeyPair",
+      "setupScripts" : [ "file://./test_script.sh" ],
+      "runnerScripts" : [ "file://./runner.sh" ],
+      "scriptEnvironment" : {
+          "TEST_PARAM" : "Test Param Value"
+      }
+    },
+    "size" : 2
+  } ],
+  "dataCenter" : "us-east-1a",
+  "ipRuleSet" : {
+    "name" : "ChopTestSecurityGroup",
+    "id" : "40a543f3-9cfc-44bc-b896-77574cae1772",
+    "inboundRules" : [ {
+      "ipProtocol" : "tcp",
+      "toPort" : 65535,
+      "fromPort" : 1,
+      "ipRanges" : [ "0.0.0.0/0" ]
+    } ],
+    "outboundRules" : [ ]
+  }
+}

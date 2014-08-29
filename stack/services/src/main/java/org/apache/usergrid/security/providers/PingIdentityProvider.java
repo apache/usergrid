@@ -23,14 +23,15 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 
 /**
@@ -132,10 +133,10 @@ public class PingIdentityProvider extends AbstractProvider {
         // "client_id":"dev.app.appservices","access_token":{"subject":"svccastiron@burberry.com",
         // "client_id":"dev.app.appservices"}}
 
-        String rawEmail = node.get( "access_token" ).get( "subject" ).getTextValue();
+        String rawEmail = node.get( "access_token" ).get( "subject" ).asText();
 
         Map<String, Object> userMap = new HashMap<String, Object>();
-        userMap.put( "expiration", node.get( "expires_in" ).getLongValue() );
+        userMap.put( "expiration", node.get( "expires_in" ).asLong() );
         userMap.put( "username", pingUsernameFrom( rawEmail ) );
         userMap.put( "name", "pinguser" );
         userMap.put( "email", rawEmail );

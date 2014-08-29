@@ -143,9 +143,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-        //EntityManagerImpl em = new EntityManagerImpl();
-        EntityManager em = applicationContext.getBean( "entityManager", EntityManager.class );
-        //em.init(this,cass,counterUtils,applicationId, skipAggregateCounters);
+        EntityManagerImpl em = new EntityManagerImpl();
+        em.init( this, cass, counterUtils, applicationId, skipAggregateCounters );
         em.setApplicationId( applicationId );
         return em;
     }
@@ -161,17 +160,15 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
      *
      * @return Setup helper
      */
-    public Setup getSetup() {
-        return new Setup( this, cass );
+    public SetupImpl getSetup() {
+        return new SetupImpl( this, cass );
     }
 
 
     @Override
     public void setup() throws Exception {
         Setup setup = getSetup();
-
-        setup.setup();
-
+        setup.init();
 
         if ( cass.getPropertiesMap() != null ) {
             updateServiceProperties( cass.getPropertiesMap() );
@@ -239,7 +236,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         properties.put( PROPERTY_NAME, appName );
 
         getSetup().setupApplicationKeyspace( applicationId, appName );
-
 
         Keyspace ko = cass.getSystemKeyspace();
         Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
@@ -396,4 +392,29 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     public void setCounterUtils( CounterUtils counterUtils ) {
         this.counterUtils = counterUtils;
     }
+
+
+    static final UUID MANAGEMENT_APPLICATION_ID = new UUID( 0, 1 );
+    static final UUID DEFAULT_APPLICATION_ID = new UUID( 0, 16 );
+
+    @Override
+    public UUID getManagementAppId() {
+        return MANAGEMENT_APPLICATION_ID;
+    }
+
+    @Override
+    public UUID getDefaultAppId() {
+        return DEFAULT_APPLICATION_ID; 
+    }
+
+    @Override
+    public void refreshIndex() {
+        // no op
+    }
+
+    @Override
+    public void flushEntityManagerCaches() {
+        // no-op
+    }
+
 }

@@ -21,23 +21,26 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.rest.AbstractRestIT;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 
 
 @Concurrent()
 public class DevicesResourceIT extends AbstractRestIT {
 
     @Test
-    public void putWithUUIDShouldCreateAfterDelete() {
+    @Ignore // cannot be supported with Core Persistence which requires time based UUIDs
+    public void putWithUUIDShouldCreateAfterDelete() throws IOException {
 
         Map<String, String> payload = new HashMap<String, String>();
         UUID uuid = UUID.randomUUID();
@@ -45,21 +48,25 @@ public class DevicesResourceIT extends AbstractRestIT {
 
         String path = "devices/" + uuid;
 
-        JsonNode response = appPath( path ).put( JsonNode.class, payload );
+        refreshIndex("test-organization", "test-app");
+
+        JsonNode response = mapper.readTree( appPath( path ).put( String.class, payload ));
 
         // create
         JsonNode entity = getEntity( response, 0 );
         assertNotNull( entity );
-        String newUuid = entity.get( "uuid" ).getTextValue();
+        String newUuid = entity.get( "uuid" ).textValue();
         assertEquals( uuid.toString(), newUuid );
 
         // delete
-        response = appPath( path ).delete( JsonNode.class );
+        response = mapper.readTree( appPath( path ).delete( String.class ));
         assertNotNull( getEntity( response, 0 ) );
+
+        refreshIndex("test-organization", "test-app");
 
         // check deleted
         try {
-            response = appPath( path ).get( JsonNode.class );
+            response = mapper.readTree( appPath( path ).get( String.class ));
             fail( "should get 404 error" );
         }
         catch ( UniformInterfaceException e ) {
@@ -67,12 +74,14 @@ public class DevicesResourceIT extends AbstractRestIT {
         }
 
         // create again
-        response = appPath( path ).put( JsonNode.class, payload );
+        response = mapper.readTree( appPath( path ).put( String.class, payload ));
         entity = getEntity( response, 0 );
         assertNotNull( entity );
 
+        refreshIndex("test-organization", "test-app");
+
         // check existence
-        response = appPath( path ).get( JsonNode.class );
+        response = mapper.readTree( appPath( path ).get( String.class ));
         assertNotNull( getEntity( response, 0 ) );
     }
 }

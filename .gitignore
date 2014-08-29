@@ -1,6 +1,8 @@
 .DS_Store
 .AppleDouble
 .LSOverride
+stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
+stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
 
 target
 
@@ -27,6 +29,11 @@ Icon
 /portal/test/coverage/instrument/js/usergrid-coverage.min.js
 /portal/test/coverage/instrument/js/usergrid.min.js
 /stack/corepersistence/priamcluster/aws.properties
+# Eclipse IDE files
+.project
+.classpath
+.settings/
+.metadata/
 #Webstorm artifacts
 .idea/
 stack/corepersistence/collection/nbactions.xml
@@ -36,11 +43,22 @@ stack/corepersistence/nbactions.xml
 stack/corepersistence/queryindex/nbactions.xml
 stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
 stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
+/stack/corepersistence/perftest2/src/main/resources/finefoods.txt
+/stack/corepersistence/perftest1/src/main/resources/finefoods.txt
+/stack/corepersistence/perftest2/nbactions.xml
+/stack/corepersistence/perftest1/nbactions.xml
+/stack/corepersistence/perftest1/src/main/resources/usergrid.properties
+/stack/corepersistence/perftest2/src/main/resources/usergrid.properties
+portal/nbproject/private/private.properties
+portal/nbproject/private/private.xml
+portal/nbproject/project.properties
+portal/nbproject/project.xml
+aws.properties
+usergrid-UNIT.properties
 /portal/nbproject/private/
 /portal/js/templates.js
 /portal/index.html
 /portal/index-debug.html
-
 /portal/dist/usergrid-portal/
 /portal/dist/appsvc-ui/
 /portal/nbproject/project.properties
@@ -48,6 +66,9 @@ stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/q
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/QueryFilterParser.java
 /stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/QueryFilterLexer.java
 portal/js/templates.js
+/stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/CpQueryFilterLexer.java
+/stack/corepersistence/queryindex/src/main/java/org/apache/usergrid/persistence/index/query/tree/CpQueryFilterParser.java
+/stack/corepersistence/queryindex/src/main/java/CpQueryFilter.tokens
 
 /portal/dist/usergrid-portal.zip
 

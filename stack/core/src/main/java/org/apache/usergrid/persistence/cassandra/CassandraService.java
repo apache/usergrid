@@ -116,9 +116,6 @@ public class CassandraService {
     public static final String DEFAULT_ORGANIZATION = "usergrid";
     public static final String MANAGEMENT_APPLICATION = "management";
 
-    public static final UUID MANAGEMENT_APPLICATION_ID = new UUID( 0, 1 );
-    public static final UUID DEFAULT_APPLICATION_ID = new UUID( 0, 16 );
-
     private static final Logger logger = LoggerFactory.getLogger( CassandraService.class );
 
     private static final Logger db_logger =

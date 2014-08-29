@@ -19,7 +19,7 @@ package org.apache.usergrid.rest.test.security;
 
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.usergrid.rest.test.resource.TestContext;
 
 

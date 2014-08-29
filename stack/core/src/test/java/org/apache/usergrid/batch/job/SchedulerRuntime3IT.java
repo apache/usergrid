@@ -43,7 +43,8 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         int failCount = Integer.parseInt( props.getProperty( FAIL_PROP ) );
         long sleepTime = Long.parseLong( props.getProperty( RUNLOOP_PROP ) );
 
-        FailureJobExecution job = cassandraResource.getBean( "failureJobExceuction", FailureJobExecution.class );
+        FailureJobExecution job = cassandraResource.getBean( 
+                "failureJobExceuction", FailureJobExecution.class );
 
         int totalAttempts = failCount + 1;
 
@@ -51,9 +52,8 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
 
         getJobListener().setExpected( 3 );
 
-        JobData returned = scheduler.createJob( "failureJobExceuction", System.currentTimeMillis(), new JobData() );
-
-
+        JobData returned = scheduler.createJob( 
+                "failureJobExceuction", System.currentTimeMillis(), new JobData() );
 
         final long waitTime = ( failCount + 2 ) * sleepTime + 5000L ;
 

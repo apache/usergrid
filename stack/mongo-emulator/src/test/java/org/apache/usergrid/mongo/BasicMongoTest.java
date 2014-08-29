@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.apache.usergrid.mongo.protocol.OpDelete;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 
@@ -113,7 +113,7 @@ public class BasicMongoTest extends AbstractMongoTest {
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
 
-        Entity entity = em.get( id );
+        Entity entity = em.get( new SimpleEntityRef( (String)returnedObject.get("type"), id ));
 
         assertNotNull( entity );
         assertEquals( "nico", entity.getProperty( "name" ) );
@@ -231,7 +231,7 @@ public class BasicMongoTest extends AbstractMongoTest {
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
 
-        Entity entity = em.get( id );
+        Entity entity = em.get( new SimpleEntityRef( (String)returnedObject.get("type"), id ) );
 
         assertNotNull( entity );
         assertEquals( "nico", entity.getProperty( "name" ) );
@@ -293,7 +293,7 @@ public class BasicMongoTest extends AbstractMongoTest {
         UUID appId = emf.lookupApplication( "test-organization/test-app" );
         EntityManager em = emf.getEntityManager( appId );
 
-        Entity entity = em.get( id );
+        Entity entity = em.get( new SimpleEntityRef( (String)returnedObject.get("type"), id ) );
 
         assertNull( entity );
     }

@@ -30,12 +30,15 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.apache.usergrid.persistence.cassandra.QueryProcessor;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.persistence.query.ir.SearchVisitor;
 import org.apache.usergrid.utils.MapUtils;
 import org.apache.usergrid.utils.StringUtils;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
@@ -45,11 +48,6 @@ import static org.apache.usergrid.utils.ConversionUtils.bytes;
 
 @XmlRootElement
 public class Results implements Iterable<Entity> {
-
-
-    public enum Level {
-        IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
-    }
 
 
     Level level = Level.IDS;
@@ -270,7 +268,7 @@ public class Results implements Iterable<Entity> {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Query getQuery() {
         return query;
     }
@@ -570,9 +568,9 @@ public class Results implements Iterable<Entity> {
         if ( entitiesMap != null ) {
             return entitiesMap;
         }
-        if ( entities != null ) {
+        if ( getEntities() != null ) {
             entitiesMap = new LinkedHashMap<UUID, Entity>();
-            for ( Entity entity : entities ) {
+            for ( Entity entity : getEntities() ) {
                 entitiesMap.put( entity.getUuid(), entity );
             }
         }
@@ -1072,6 +1070,9 @@ public class Results implements Iterable<Entity> {
         }
         if ( entity != null ) {
             return 1;
+        }
+        if ( connections != null ) {
+            return connections.size();
         }
         if ( ref != null ) {
             return 1;

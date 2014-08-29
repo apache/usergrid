@@ -45,6 +45,7 @@ import org.apache.shiro.subject.Subject;
 
 import com.sun.jersey.api.container.MappableContainerException;
 import com.sun.jersey.spi.container.ContainerRequest;
+import org.apache.commons.lang.StringUtils;
 
 import static org.apache.usergrid.rest.exceptions.AuthErrorInfo.BAD_ACCESS_TOKEN_ERROR;
 import static org.apache.usergrid.rest.exceptions.AuthErrorInfo.EXPIRED_ACCESS_TOKEN_ERROR;
@@ -77,7 +78,9 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
             try {
 
                 String accessToken = request.getQueryParameters().getFirst( "access_token" );
-                if ( accessToken == null ) {
+
+                if ( StringUtils.isEmpty(accessToken) ) {
+
                     // Make the OAuth Request out of this request
                     OAuthAccessResourceRequest oauthRequest =
                             new OAuthAccessResourceRequest( httpServletRequest, ParameterStyle.HEADER );
@@ -86,7 +89,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
                     accessToken = oauthRequest.getAccessToken();
                 }
 
-                if ( accessToken == null ) {
+                if ( StringUtils.isEmpty(accessToken) ) {
                     return request;
                 }
 
@@ -105,7 +108,11 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
                     throw mappableSecurityException( INVALID_AUTH_ERROR );
                 }
                 catch ( Exception e ) {
-                    LOG.error( "unable to verify oauth token", e );
+                    if ( LOG.isDebugEnabled() ) {
+                        LOG.debug( "Unable to verify OAuth token: " + accessToken, e );
+                    } else {
+                        LOG.warn( "Unable to verify OAuth token" );
+                    }
                     throw mappableSecurityException( UNVERIFIED_OAUTH_ERROR );
                 }
 
@@ -131,7 +138,8 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter {
                         throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                     }
 
-                    token = PrincipalCredentialsToken.getFromAdminUserInfoAndAccessToken( user, accessToken );
+                    token = PrincipalCredentialsToken.getFromAdminUserInfoAndAccessToken( 
+                            user, accessToken, emf.getManagementAppId() );
                 }
                 else if ( AuthPrincipalType.APPLICATION_USER.equals( principal.getType() ) ) {
 

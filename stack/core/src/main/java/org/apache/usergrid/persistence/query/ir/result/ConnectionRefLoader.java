@@ -50,7 +50,7 @@ public class ConnectionRefLoader implements ResultsLoader {
 
 
     @Override
-    public Results getResults( List<ScanColumn> entityIds ) throws Exception {
+    public Results getResults( List<ScanColumn> entityIds, String type ) throws Exception {
 
 
         final EntityRef sourceRef = new SimpleEntityRef( sourceType, sourceEntityId );

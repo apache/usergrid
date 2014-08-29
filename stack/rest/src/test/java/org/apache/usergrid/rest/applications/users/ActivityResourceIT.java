@@ -22,10 +22,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.usergrid.java.client.Client.Query;
-import org.usergrid.java.client.entities.Entity;
-import org.usergrid.java.client.entities.User;
-import org.usergrid.java.client.response.ApiResponse;
+import org.apache.usergrid.java.client.Client.Query;
+import org.apache.usergrid.java.client.entities.Entity;
+import org.apache.usergrid.java.client.entities.User;
+import org.apache.usergrid.java.client.response.ApiResponse;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -58,6 +58,8 @@ public class ActivityResourceIT extends AbstractRestIT {
 
         client.createGroup( GROUP );
 
+        refreshIndex("test-organization", "test-app");
+
         groupCreated = true;
     }
 
@@ -81,14 +83,15 @@ public class ActivityResourceIT extends AbstractRestIT {
     @Test
     public void postGroupActivity() {
 
-        // don't populate the user, it will use the currently authenticated
-        // user.
+        // don't populate the user, it will use the currently authenticated user.
 
         String activityTitle = "testTitle" + UUIDUtils.newTimeUUID();
         String activityDesc = "testActivity" + UUIDUtils.newTimeUUID();
 
-        client.postGroupActivity( GROUP, "POST", activityTitle, activityDesc, "testCategory", null, null, null, null,
-                null );
+        client.postGroupActivity( GROUP, "POST", 
+            activityTitle, activityDesc, "testCategory", null, null, null, null, null );
+
+        refreshIndex("test-organization", "test-app");
 
         Query results = client.queryActivityFeedForGroup( GROUP );
 
@@ -127,6 +130,8 @@ public class ActivityResourceIT extends AbstractRestIT {
 
         client.postUserActivity( "POST", activityTitle, activityDesc, "testCategory", current, null, null, null, null );
 
+        refreshIndex("test-organization", "test-app");
+
         Query results = client.queryActivityFeedForUser( USER );
 
         ApiResponse response = results.getResponse();
@@ -164,6 +169,8 @@ public class ActivityResourceIT extends AbstractRestIT {
         String activityDesc = "testActivity" + UUIDUtils.newTimeUUID();
 
         client.postActivity( "POST", activityTitle, activityDesc, "testCategory", current, null, null, null, null );
+
+        refreshIndex("test-organization", "test-app");
 
         Query results = client.queryActivity();
 

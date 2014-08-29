@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -31,17 +32,17 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
+import static org.apache.usergrid.AbstractCoreIT.setup;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 @Concurrent()
@@ -73,10 +74,14 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         user = em.get( user );
         assertNotNull( user );
-        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username" ) );
-        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
+        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
+        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ));
 
-        EntityRef userRef = em.getAlias( applicationId, "user", "edanuff" );
+        em.refreshIndex();
+
+        EntityRef userRef = em.getAlias( 
+            new SimpleEntityRef("application", applicationId), "users", "edanuff" );
+
         assertNotNull( userRef );
         assertEquals( "userRef.id not expected value", user.getUuid(), userRef.getUuid() );
         assertEquals( "userRef.type not expected value", "user", userRef.getType() );
@@ -90,8 +95,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( 1, results.size() );
         user = results.getEntity();
         assertNotNull( user );
-        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username" ) );
-        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
+        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
+        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email"));
 
         LOG.info( "user.username: " + user.getProperty( "username" ) );
         LOG.info( "user.email: " + user.getProperty( "email" ) );
@@ -102,8 +107,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( 1, results.size() );
         user = results.getEntity();
         assertNotNull( user );
-        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username" ) );
-        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
+        assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username"));
+        assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email"));
 
         LOG.info( "user.username: " + user.getProperty( "username" ) );
         LOG.info( "user.email: " + user.getProperty( "email" ) );
@@ -136,7 +141,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         i = 0;
         for ( Entity entity : things ) {
 
-            Entity thing = em.get( entity.getUuid() );
+            Entity thing = em.get( new SimpleEntityRef( "thing", entity.getUuid()));
             assertNotNull( "thing should not be null", thing );
             assertFalse( "thing id not valid", thing.getUuid().equals( new UUID( 0, 0 ) ) );
             assertEquals( "name not expected value", "thing" + i, thing.getProperty( "name" ) );
@@ -148,7 +153,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         for ( Entity entity : things ) {
             ids.add( entity.getUuid() );
 
-            Entity en = em.get( entity.getUuid() );
+            Entity en = em.get( new SimpleEntityRef( "thing", entity.getUuid()));
             String type = en.getType();
             assertEquals( "type not expected value", "thing", type );
 
@@ -161,7 +166,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         }
 
         i = 0;
-        Results results = em.get( ids, Results.Level.CORE_PROPERTIES );
+        Results results = em.getEntities( ids, "thing" );
         for ( Entity thing : results ) {
             assertNotNull( "thing should not be null", thing );
 
@@ -235,11 +240,11 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "name", "testprop" );
         Entity thing = em.create( "thing", properties );
 
-        Entity entity = em.get( thing.getUuid() );
+        Entity entity = em.get( new SimpleEntityRef( "thing", thing.getUuid()));
         assertNotNull( "entity should not be null", entity );
-        em.setProperty( entity, "alpha", 1 );
-        em.setProperty( entity, "beta", 2 );
-        em.setProperty( entity, "gamma", 3 );
+        em.setProperty( entity, "alpha", 1L );
+        em.setProperty( entity, "beta", 2L );
+        em.setProperty( entity, "gamma", 3L );
 
         Map<String, Object> props = em.getProperties( entity );
         assertNotNull( "properties should not be null", props );
@@ -283,6 +288,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         em.delete( thing );
         LOG.info( "Entity deleted" );
 
+        em.refreshIndex();
+
         // now search by username, no results should be returned
 
         Results r =
@@ -310,14 +317,18 @@ public class EntityManagerIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         LOG.info( "Entity created" );
 
+        em.refreshIndex();
+
         LOG.info( "Starting entity delete" );
         em.delete( user );
         LOG.info( "Entity deleted" );
 
+        em.refreshIndex();
+
         // now search by username, no results should be returned
 
         Results r = em.searchCollection( em.getApplicationRef(), "users",
-                new Query().addEqualityFilter( "username", name ) );
+            new Query().addEqualityFilter( "username", name ) );
 
         assertEquals( 0, r.size() );
 
@@ -330,6 +341,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         LOG.info( "Starting entity create" );
         user = em.create( "user", properties );
         LOG.info( "Entity created" );
+
+        em.refreshIndex();
 
         r = em.searchCollection( em.getApplicationRef(), "users", new Query().addEqualityFilter( "username", name ) );
 
@@ -352,7 +365,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "name", "testprop" );
         Entity thing = em.create( "thing", properties );
 
-        Entity entity = em.get( thing.getUuid() );
+        Entity entity = em.get( new SimpleEntityRef( "thing", thing.getUuid()));
         assertNotNull( "entity should not be null", entity );
 
         Map<String, Object> json = new LinkedHashMap<String, Object>();
@@ -378,7 +391,7 @@ public class EntityManagerIT extends AbstractCoreIT {
     @Ignore("There is a concurrency issue due to counters not being thread safe: see USERGRID-1753")
     public void testEntityCounters() throws Exception {
         LOG.info( "EntityManagerIT#testEntityCounters" );
-        EntityManager em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         Group organizationEntity = new Group();
         organizationEntity.setPath( "testCounterOrg" );
@@ -400,8 +413,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "email", "ed@anuff.com" );
         Entity user = em.create( "user", properties );
 
-        em = setup.getEmf().getEntityManager( MANAGEMENT_APPLICATION_ID );
-        Map<String, Long> counts = em.getEntityCounters( MANAGEMENT_APPLICATION_ID );
+        em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
+        Map<String, Long> counts = em.getEntityCounters( setup.getEmf().getManagementAppId() );
         LOG.info( "Entity counters: {}", counts );
         assertNotNull( counts );
         assertEquals( 4, counts.size() );
@@ -447,7 +460,9 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         // now search by username, no results should be returned
 
-        EntityRef appRef = em.getRef( applicationId );
+        EntityRef appRef = em.get( new SimpleEntityRef("application", applicationId ) );
+
+        em.refreshIndex();
 
         Results r = em.getCollection( appRef, "things", null, 10, Level.ALL_PROPERTIES, false );
 
@@ -471,11 +486,10 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "email", "test@foo.bar" );
         Entity created = em.create( "user", properties );
 
-        Entity returned = em.get( created.getUuid() );
+        Entity returned = em.get( new SimpleEntityRef( "user", created.getUuid()));
 
         assertNotNull( created );
         assertNotNull( returned );
-
 
         assertTrue( created instanceof User );
         assertTrue( returned instanceof User );
@@ -496,13 +510,13 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "name", "one" );
         Entity saved = em.create( "thing", properties );
 
-        Entity thingOne = em.get( saved.getUuid() );
+        Entity thingOne = em.get( new SimpleEntityRef("thing", saved.getUuid()));
         assertNotNull( "entity should not be null", thingOne );
         assertEquals( "one", thingOne.getProperty( "name" ).toString() );
 
         em.setProperty( thingOne, "name", "two", true );
 
-        Entity thingTwo = em.get( saved.getUuid() );
+        Entity thingTwo = em.get( new SimpleEntityRef("thing",saved.getUuid()));
 
         assertEquals( "two", thingTwo.getProperty( "name" ) );
     }
@@ -522,7 +536,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         userProps.put( "email", "test@foo.bar" );
         Entity createdUser = em.create( "user", userProps );
 
-        Entity returnedUser = em.get( createdUser.getUuid() );
+        Entity returnedUser = em.get( new SimpleEntityRef("user",createdUser.getUuid()));
 
         assertNotNull( createdUser );
         assertNotNull( returnedUser );
@@ -534,7 +548,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         userProps2.put( "email", "test2@foo.bar" );
         Entity createdUser2 = em.create( "user", userProps2 );
 
-        Entity returnedUser2 = em.get( createdUser2.getUuid() );
+        Entity returnedUser2 = em.get( new SimpleEntityRef("user",createdUser2.getUuid()));
 
         assertNotNull( createdUser2 );
         assertNotNull( returnedUser2 );
@@ -546,7 +560,9 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         Entity createdDevice = em.createItemInCollection( createdUser, "devices", "device", device );
 
-        Entity returnedDevice = em.get( createdDevice.getUuid() );
+        em.refreshIndex();
+
+        Entity returnedDevice = em.get( new SimpleEntityRef("device", createdDevice.getUuid()));
 
         assertNotNull( createdDevice );
         assertNotNull( returnedDevice );
@@ -560,5 +576,28 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         //Not an owner
         assertFalse( em.isCollectionMember( createdUser2, "devices", createdDevice ) );
+    }
+
+
+    @Test
+    public void testDeprecatedGet() throws Exception {
+        LOG.info( "EntityManagerIT.testDeprecatedGet" );
+
+        UUID applicationId = setup.createApplication( "testOrganization", "testDeprecatedGet" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "name", "XR-51B" );
+        properties.put( "fuel", "Nutrinox" );
+
+        Entity user = em.create( "robot", properties );
+        assertNotNull( user );
+
+        em.refreshIndex();
+
+        assertNotNull( em.get( user.getUuid() ));
     }
 }

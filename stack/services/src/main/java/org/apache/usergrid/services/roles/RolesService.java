@@ -24,8 +24,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.SimpleRoleRef;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.services.AbstractCollectionService;
 import org.apache.usergrid.services.ServiceContext;
@@ -43,7 +42,7 @@ public class RolesService extends AbstractCollectionService {
 
     public RolesService() {
         super();
-        logger.info( "/roles" );
+        logger.debug( "/roles" );
 
         declareEntityDictionary( "permissions" );
     }
@@ -52,8 +51,7 @@ public class RolesService extends AbstractCollectionService {
     @Override
     public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
         if ( ( context.getOwner() != null ) && Group.ENTITY_TYPE.equals( context.getOwner().getType() ) ) {
-            return getItemById( context,
-                    SimpleRoleRef.getIdForGroupIdAndRoleName( context.getOwner().getUuid(), name ) );
+            return getItemById( context, em.getGroupRoleRef( context.getOwner().getUuid(), name ).getUuid() );
         }
         return super.getItemByName( context, name );
     }
