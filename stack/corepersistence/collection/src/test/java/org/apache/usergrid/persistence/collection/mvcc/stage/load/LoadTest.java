@@ -347,6 +347,13 @@ public class LoadTest  extends AbstractIdStageTest {
     @Override
     protected void validateStage( final CollectionIoEvent<Id> event ) {
         final UUIDService uuidService = mock(UUIDService.class);
+
+        /**
+         * Mock up wrong UUID type
+         */
+        when(uuidService.newTimeUUID()).thenReturn( UUID.randomUUID() );
+
+
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
 
         new Load(uuidService, serializationStrategy).call( event );

@@ -110,25 +110,11 @@ public class InvalidIdGenerator {
         public List<PotentialAssignment> getValueSources( final ParameterSignature sig ) {
 
             final List<PotentialAssignment> result = new ArrayList<PotentialAssignment>();
-            result.add( PotentialAssignment.forValue( "wrongEntityUuidType", wrongEntityUuidType() ) );
             result.add( PotentialAssignment.forValue( "wrongEntityTypeLength", wrongEntityTypeLength() ) );
 
             return result;
         }
 
-        /**
-         * Incorrect fields
-         */
-        private static Id wrongEntityUuidType() {
-
-            final Id entityId = mock( Id.class );
-
-            //set this to a non time uuid
-            when( entityId.getUuid() ).thenReturn( UUID.randomUUID() );
-            when( entityId.getType() ).thenReturn( "test" );
-
-            return entityId;
-        }
 
         private static Id wrongEntityTypeLength() {
 
