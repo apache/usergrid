@@ -57,3 +57,5 @@ portal/js/templates.js
 
 /portal/js/generated-templates/
 /release/target/
+
+/portal/seleniumLog.txt
