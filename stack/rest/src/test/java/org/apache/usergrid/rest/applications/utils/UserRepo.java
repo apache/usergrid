@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ws.rs.core.MediaType;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -42,9 +44,16 @@ public enum UserRepo {
             return;
         }
 
+        // pause between creation to insure entities are created in order
+
         createUser( "user1", "user1@apigee.com", "user1", "Jane Smith 1", resource, accessToken );
+        try { Thread.sleep(200); } catch (InterruptedException ex) { }
+
         createUser( "user2", "user2@apigee.com", "user2", "John Smith 2", resource, accessToken );
+        try { Thread.sleep(200); } catch (InterruptedException ex) { }
+
         createUser( "user3", "user3@apigee.com", "user3", "John Smith 3", resource, accessToken );
+        try { Thread.sleep(200); } catch (InterruptedException ex) { }
     }
 
 
