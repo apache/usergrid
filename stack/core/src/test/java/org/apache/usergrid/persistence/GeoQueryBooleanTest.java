@@ -112,7 +112,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
 
 
     @Test
-    @Ignore // work in progress
+    //@Ignore // work in progress
     public void testGeoQueryWithNot() throws Exception {
 
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
@@ -176,14 +176,14 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
             "select * where NOT blockedBy.name='bart' and location within 400 of " 
                + center.getLat() + "," + center.getLon());
         Results listResults = em.searchCollection( em.getApplicationRef(), "users", query );
-        assertEquals( 2, listResults.size() );
+        assertEquals( 1, listResults.size() );
 
         // one user within 400 meters IS blocked by bart
         query = Query.fromQL( 
             "select * where blockedBy.name='bart' and location within 400 of " 
                + center.getLat() + "," + center.getLon());
         listResults = em.searchCollection( em.getApplicationRef(), "users", query );
-        assertEquals( 2, listResults.size() );
+        assertEquals( 1, listResults.size() );
 
      }
 
