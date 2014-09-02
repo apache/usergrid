@@ -75,10 +75,9 @@ public class CountingMutatorIT extends AbstractCoreIT {
         properties.put( "username", "testuser" );
         properties.put( "email", "test@foo.bar" );
         Entity created = em.create( "user", properties );
+        em.refreshIndex();
 
         Entity returned = em.get( created.getUuid() );
-
-
 
         int writeSize = ( int ) ( CountingMutator.MAX_SIZE*2.5);
 
