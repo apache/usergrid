@@ -47,6 +47,8 @@
 				<exclude>**/dist_cov/**</exclude>
 				<exclude>**/portal/index.html</exclude>
 				<exclude>**/portal/index-debug.html</exclude>
+				<exclude>**/*.nupkg</exclude>
+				<exclude>**/*.dll</exclude>
 			</excludes>
 		</fileSet>
 	</fileSets>
