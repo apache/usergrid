@@ -22,10 +22,9 @@ package org.apache.usergrid.persistence.graph.serialization;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.model.entity.Id;
 

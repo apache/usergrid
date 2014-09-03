@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.graph;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import org.jukito.UseModules;
@@ -35,9 +34,9 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang3.time.StopWatch;
 
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -119,7 +118,7 @@ public class GraphManagerStressTest {
                             for ( Id sourceId : sourceIds ) {
 
                                 final Iterable<Edge> edges = manager.loadEdgesFromSource(
-                                        new SimpleSearchByEdgeType( sourceId, "test", timestamp, null ) )
+                                        new SimpleSearchByEdgeType( sourceId, "test", timestamp, SearchByEdgeType.Order.DESCENDING, null ) )
                                                                     .toBlocking().toIterable();
 
                                 for ( Edge edge : edges ) {
@@ -193,7 +192,7 @@ public class GraphManagerStressTest {
 
             @Override
             public Observable<Edge> doSearch( final GraphManager manager ) {
-                return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", System.currentTimeMillis(), null ) );
+                return manager.loadEdgesFromSource( new SimpleSearchByEdgeType( sourceId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null ) );
             }
         };
 
@@ -221,7 +220,7 @@ public class GraphManagerStressTest {
             @Override
             public Observable<Edge> doSearch( final GraphManager manager ) {
 
-                return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", System.currentTimeMillis(), null ) );
+                return manager.loadEdgesToTarget( new SimpleSearchByEdgeType( targetId, "test", System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null ) );
             }
         };
 

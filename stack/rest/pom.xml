@@ -32,7 +32,7 @@
     <!-- Override these properties in an active profile within your settings.xml -->
     <properties>
         <!-- If you got the resources, max parallelism = 6 forks -->
-        <rest.it.forkCount>1</rest.it.forkCount>
+        <rest.it.forkCount>2</rest.it.forkCount>
         <rest.it.reuseForks>false</rest.it.reuseForks>
         <rest.it.parallel>suites</rest.it.parallel>
     </properties>
@@ -61,7 +61,7 @@
 
                             <parallel>${rest.it.parallel}</parallel>
 
-                            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
+                            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=src/test/resources/logging.properties ${ug.argline}</argLine>
 
                             <additionalClasspathElements>
                                 <additionalClasspathElement>./target/classes/jsp/WEB_002dINF/jsp</additionalClasspathElement>
@@ -133,7 +133,7 @@
         			<parallel>${rest.it.parallel}</parallel>
                     <forkCount>${rest.it.forkCount}</forkCount>
                     <reuseForks>${rest.it.reuseForks}</reuseForks>
-                    <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+                    <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
                 </configuration>
             </plugin>
 
@@ -208,26 +208,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-install-plugin</artifactId>
-                <version>2.3.1</version>
-                <executions>
-                    <execution>
-                        <id>install jar</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <packaging>jar</packaging>
-                            <artifactId>${project.artifactId}</artifactId>
-                            <groupId>${project.groupId}</groupId>
-                            <version>${project.version}</version>
-                            <file>
-                                ${project.build.directory}/${project.artifactId}-${project.version}.jar
-                            </file>
-                        </configuration>
-                    </execution>
-                </executions>
+                <version>2.5.1</version>
             </plugin>
+
         </plugins>
     </build>
 
@@ -305,7 +288,7 @@
         </dependency>
 
         <dependency>
-            <groupId>net.tanesha.recaptcha4j</groupId>
+            <groupId>com.google.code.maven-play-plugin.net.tanesha.recaptcha4j</groupId>
             <artifactId>recaptcha4j</artifactId>
         </dependency>
 

@@ -85,6 +85,8 @@ public class OrganizationIT {
 
         setup.getMgmtSvc().activateOrganization( organization2 );
 
+        setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() ).refreshIndex();
+
         UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( user.getUuid().toString(), "test" );
         assertNotNull( u );
 

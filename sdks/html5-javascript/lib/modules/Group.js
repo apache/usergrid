@@ -157,7 +157,7 @@ Usergrid.Group.prototype.remove = function(options, callback) {
   if (options.user) {
     options = {
       method: "DELETE",
-      endpoint: "groups/" + this._path + "/users/" + options.user.get('username')
+      endpoint: "groups/" + this._path + "/users/" + options.user.username
     };
     this._client.request(options, function(error, response) {
       if (error) {

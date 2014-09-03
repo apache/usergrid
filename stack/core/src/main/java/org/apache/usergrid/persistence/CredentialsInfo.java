@@ -17,23 +17,16 @@
 package org.apache.usergrid.persistence;
 
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
-
 import javax.xml.bind.annotation.XmlRootElement;
-
-//import org.codehaus.jackson.annotate.JsonAnyGetter;
-//import org.codehaus.jackson.annotate.JsonAnySetter;
-//import org.codehaus.jackson.annotate.JsonTypeInfo;
-//import org.codehaus.jackson.map.annotate.JsonSerialize;
-//import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 
 @XmlRootElement
-@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
 public class CredentialsInfo implements Comparable<CredentialsInfo>,Serializable {
 
     boolean recoverable;

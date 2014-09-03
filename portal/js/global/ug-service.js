@@ -18,20 +18,14 @@
  */
 'use strict';
 
-AppServices.Services.factory('ug', function (configuration, $rootScope,utility, $q, $http, $resource, $log, $analytics,$location) {
+AppServices.Services.factory('ug', function (configuration, $rootScope,utility, $q, $http, $resource, $log,$location) {
 
   var requestTimes = [],
     running = false,
     currentRequests = {};
 
   function reportError(data,config){
-    try {
-      $analytics.eventTrack('error', {
-        category: 'App Services', label: data + ':' + config.url + ':' + (sessionStorage['apigee_uuid'] || 'na')
-      });
-    } catch (e) {
-      console.log(e)
-    }
+      console.error(data)
   };
   var getAccessToken = function(){
     return sessionStorage.getItem('accessToken');
@@ -51,28 +45,6 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       var DATA_URL = '';
       var use_sso = false;
       switch (true) {
-        case host === 'appservices.apigee.com' && location.pathname.indexOf('/dit') >= 0 :
-          //DIT
-          BASE_URL = 'https://accounts.jupiter.apigee.net';
-          DATA_URL = 'https://apigee-internal-prod.jupiter.apigee.net';
-          use_sso = true;
-          break;
-        case host === 'appservices.apigee.com' && location.pathname.indexOf('/mars') >= 0  :
-          //staging
-          BASE_URL = 'https://accounts.mars.apigee.net';
-          DATA_URL = 'https://apigee-internal-prod.mars.apigee.net';
-          use_sso = true;
-          break;
-        case host === 'appservices.apigee.com' :
-          //enterprise portals
-          DATA_URL = Usergrid.overrideUrl;
-          break;
-        case host === 'apigee.com' :
-          //prod
-          BASE_URL = 'https://accounts.apigee.com';
-          DATA_URL = 'https://api.usergrid.com';
-          use_sso = true;
-          break;
         case host === 'usergrid.dev':
           //development
           DATA_URL = 'https://api.usergrid.com';
@@ -847,14 +819,15 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
     },
 
     resetUserPassword: function (user) {
-      var pwdata = {};
-      pwdata.oldpassword = user.oldPassword;
-      pwdata.newpassword = user.newPassword;
-      pwdata.username = user.username;
+      var body = {};
+      body.oldpassword = user.oldPassword;
+      body.newpassword = user.newPassword;
+      body.username = user.username;
       var options = {
         method:'PUT',
-        endpoint:'users/' + pwdata.uuid + '/',
-        body:pwdata
+        endpoint:'management/users/' + user.uuid + '/',
+        body:body,
+        mQuery:true
       }
       this.client().request(options, function (err, data) {
         if (err) {

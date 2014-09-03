@@ -35,25 +35,17 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 public class ColumnNameIterator<C, T> implements Iterable<T>, Iterator<T> {
 
 
-    private static final HystrixCommandGroupKey GROUP_KEY = HystrixCommandGroupKey.Factory.asKey( "CassRead" );
-
-
     private final RowQuery<?, C> rowQuery;
     private final ColumnParser<C, T> parser;
+    private final boolean skipFirst;
 
     private Iterator<Column<C>> sourceIterator;
 
 
-    public ColumnNameIterator( RowQuery<?, C> rowQuery, final ColumnParser<C, T> parser, final boolean skipFirst) {
+    public ColumnNameIterator( RowQuery<?, C> rowQuery, final ColumnParser<C, T> parser, final boolean skipFirst ) {
         this.rowQuery = rowQuery.autoPaginate( true );
         this.parser = parser;
-
-        advanceIterator();
-
-        //if we are to skip the first element, we need to advance the iterator
-        if ( skipFirst && sourceIterator.hasNext() ) {
-            sourceIterator.next();
-        }
+        this.skipFirst = skipFirst;
     }
 
 
@@ -65,6 +57,19 @@ public class ColumnNameIterator<C, T> implements Iterable<T>, Iterator<T> {
 
     @Override
     public boolean hasNext() {
+
+        if ( sourceIterator == null ) {
+            advanceIterator();
+
+
+            //if we are to skip the first element, we need to advance the iterator
+            if ( skipFirst && sourceIterator.hasNext() ) {
+                sourceIterator.next();
+            }
+
+            return sourceIterator.hasNext();
+        }
+
         //if we've exhausted this iterator, try to advance to the next set
         if ( sourceIterator.hasNext() ) {
             return true;

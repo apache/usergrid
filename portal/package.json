@@ -1,6 +1,6 @@
 {
   "name": "usergrid",
-  "version": "2.0.14", 
+  "version": "2.0.16",
   "packageName": "appsvc-ui",
   "description": "full usergrid portal",
   "main": "./scripts/web-server.js",
@@ -8,8 +8,8 @@
     "type": "git",
     "url": "https://github.com/usergrid/usergrid.git"
   },
-  "dependencies": {},
   "devDependencies": {
+    "chromedriver": "~2.10.0-1",
     "grunt": "~0.4.4",
     "grunt-cli": "~0.1.11",
     "grunt-contrib-cssmin": "~0.7.0",
@@ -36,8 +36,7 @@
     "grunt-contrib-clean": "~0.4.0",
     "grunt-dom-munger": "~3.1.0",
     "bower": "~1.2.8",
-    "grunt-bower-task": "~0.3.4",
-    "grunt-s3": "~0.2.0-alpha.3",
+    "grunt-bower-task": "~0.4.0",
     "grunt-istanbul": "~0.2.5"
   },
   "engines": {

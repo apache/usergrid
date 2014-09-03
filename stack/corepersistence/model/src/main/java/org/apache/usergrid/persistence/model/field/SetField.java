@@ -38,6 +38,7 @@ public class SetField<T> extends AbstractField<Set<T>> {
     }
 
     public SetField() {
+        super();
     }
 
     /**

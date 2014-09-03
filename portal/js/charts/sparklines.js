@@ -1,2 +1,0 @@
-$('.sessions-bar').sparkline([ 3, 5, 6, 3, 4, 5, 6, 7, 8, 4, 3, 5, 6, 3, 4, 5, 6, 7, 8, 4, 3, 5, 6, 3, 4, 5, 6, 7, 8, 4, 3, 5, 6, 3, 4, 5, 6, 7, 8, 4, 3, 5, 6, 3, 4, 5, 6, 7, 8, 4, 3, 5, 6, 3, 4, 5, 6, 7, 8, 1 ], {type: 'bar', barColor: '#c5c5c5', width: '800px', height: 100, barWidth: 12, barSpacing: '1px'});
-// $('.sessions-bar canvas').width('100%')

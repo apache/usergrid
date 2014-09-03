@@ -35,6 +35,8 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -96,11 +98,11 @@ public class NodeShardCounterSerializationTest {
 
         final Id id = createId( "test" );
 
-        ShardKey key1 = new ShardKey( scope, id, 0, "type1" );
+        ShardKey key1 = new ShardKey( scope, new Shard(0, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type1"  ) );
 
-        ShardKey key2 = new ShardKey( scope, id, 0, "type2" );
+        ShardKey key2 = new ShardKey( scope, new Shard(0, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type2"  ) );
 
-        ShardKey key3 = new ShardKey( scope, id, 1, "type1" );
+        ShardKey key3 = new ShardKey( scope, new Shard(1, 0, false), DirectedEdgeMeta.fromSourceNode( id, "type1"  ) );
 
 
         Counter counter = new Counter();

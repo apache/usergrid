@@ -86,7 +86,7 @@ public class StorageGraphManagerIT extends GraphManagerIT {
                 };
 
         gmi.setEdgeDeleteSubcriber(subscriber );
-        gmi.setEdgeWriteSubcriber( subscriber );
+//        gmi.setEdgeWriteSubcriber( subscriber );
         gmi.setNodeDelete( subscriber );
 
         return helper;

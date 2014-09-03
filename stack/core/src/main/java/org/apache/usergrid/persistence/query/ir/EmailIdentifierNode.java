@@ -40,6 +40,18 @@ public class EmailIdentifierNode extends QueryNode {
     }
 
 
+    @Override
+    public int getCount() {
+        return 1;
+    }
+
+
+    @Override
+    public boolean ignoreHintSize() {
+        return false;
+    }
+
+
     public Identifier getIdentifier() {
         return identifier;
     }

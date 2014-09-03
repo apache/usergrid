@@ -34,7 +34,7 @@ import com.google.common.base.Preconditions;
  * Equality is based both on id an on version.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
+@JsonTypeInfo( use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class" )
 public class Entity extends EntityObject {
 
     /**

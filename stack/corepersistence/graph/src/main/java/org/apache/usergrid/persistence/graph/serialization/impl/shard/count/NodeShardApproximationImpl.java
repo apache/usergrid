@@ -20,16 +20,22 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.hystrix.HystrixCommand;
@@ -40,9 +46,11 @@ import rx.schedulers.Schedulers;
 
 /**
  * Implementation for doing edge approximation based on counters.  Uses a guava loading cache to load values from
- * cassandra, and flush them on cache eviction.
+ * cassandra, and beginFlush them on cache eviction.
  */
 public class NodeShardApproximationImpl implements NodeShardApproximation {
+
+    private static final Logger LOG = LoggerFactory.getLogger(NodeShardApproximationImpl.class);
 
     /**
      * Read write locks to ensure we atomically swap correctly
@@ -63,7 +71,9 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
     /**
      * The counter that is currently in process of flushing to Cassandra.  Can be null
      */
-    private volatile Counter flushPending;
+    private final BlockingQueue<Counter> flushQueue;
+
+    private final FlushWorker worker;
 
 
     /**
@@ -77,15 +87,22 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
         this.nodeShardCounterSerialization = nodeShardCounterSerialization;
         this.timeService = timeService;
         this.currentCounter = new Counter();
+        this.flushQueue = new LinkedBlockingQueue<>( graphFig.getCounterFlushQueueSize() );
+
+        this.worker = new FlushWorker( this.flushQueue, nodeShardCounterSerialization );
+
+        Schedulers.newThread().createWorker().schedule( worker );
+
     }
 
 
     @Override
-    public void increment( final ApplicationScope scope, final Id nodeId, final long shardId, final long count,
-                           final String... edgeType ) {
+    public void increment(
+            final ApplicationScope scope, final Shard shard,
+            final long count, final DirectedEdgeMeta directedEdgeMeta  ) {
 
 
-        final ShardKey key = new ShardKey( scope, nodeId, shardId, edgeType );
+        final ShardKey key = new ShardKey( scope, shard, directedEdgeMeta );
 
         readLock.lock();
 
@@ -102,10 +119,9 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
 
     @Override
-    public long getCount( final ApplicationScope scope, final Id nodeId, final long shardId,
-                          final String... edgeType ) {
+    public long getCount( final ApplicationScope scope, final Shard shard, final DirectedEdgeMeta directedEdgeMeta ) {
 
-        final ShardKey key = new ShardKey( scope, nodeId, shardId, edgeType );
+        final ShardKey key = new ShardKey( scope, shard, directedEdgeMeta );
 
 
         readLock.lock();
@@ -115,9 +131,6 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
         try {
             count = currentCounter.get( key );
 
-            if ( flushPending != null ) {
-                count += flushPending.get( key );
-            }
         }
         finally {
             readLock.unlock();
@@ -130,52 +143,20 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
 
 
     @Override
-    public void flush() {
-
-        writeLockLock.lock();
-
-        final MutationBatch batch;
-
-        try {
-            flushPending = currentCounter;
-            currentCounter = new Counter();
-
-            //copy to the batch outside of the command for performance
-            batch = nodeShardCounterSerialization.flush( flushPending );
-        }
-        finally {
-            writeLockLock.unlock();
-        }
-
-        /**
-         * Execute the command in hystrix to avoid slamming cassandra
-         */
-        new HystrixCommand( HystrixCassandra.ASYNC_GROUP ) {
-
-            @Override
-            protected Void run() throws Exception {
-                /**
-                 * Execute the batch asynchronously
-                 */
-                batch.execute();
-
-                return null;
-            }
-
-
-            @Override
-            protected Object getFallback() {
-                //we've failed to mutate.  Merge this count back into the current one
-                currentCounter.merge( flushPending );
-
-                return null;
-            }
-        }.execute();
+    public void beginFlush() {
 
         writeLockLock.lock();
 
         try {
-            flushPending = null;
+
+            final boolean queued = flushQueue.offer( currentCounter );
+
+            /**
+             * We were able to q the beginFlush, swap it
+             */
+            if ( queued ) {
+                currentCounter = new Counter();
+            }
         }
         finally {
             writeLockLock.unlock();
@@ -183,26 +164,100 @@ public class NodeShardApproximationImpl implements NodeShardApproximation {
     }
 
 
+    @Override
+    public boolean flushPending() {
+        return flushQueue.size() > 0 || worker.isFlushing();
+    }
+
+
     /**
-     * Check if we need to flush.  If we do, perform the flush
+     * Check if we need to beginFlush.  If we do, perform the beginFlush
      */
     private void checkFlush() {
 
-        //there's no flush pending and we're past the timeout or count
-        if ( flushPending == null && (
-                currentCounter.getCreateTimestamp() + graphFig.getCounterFlushInterval() > timeService.getCurrentTime()
-                        || currentCounter.getInvokeCount() >= graphFig.getCounterFlushCount() ) ) {
+        //there's no beginFlush pending and we're past the timeout or count
+        if ( currentCounter.getCreateTimestamp() + graphFig.getCounterFlushInterval() > timeService.getCurrentTime()
+                || currentCounter.getInvokeCount() >= graphFig.getCounterFlushCount() ) {
+            beginFlush();
+        }
+    }
 
 
-            /**
-             * Fire the flush action asynchronously
-             */
-            Schedulers.immediate().createWorker().schedule( new Action0() {
-                @Override
-                public void call() {
-                    flush();
+    /**
+     * Worker that will take from the queue
+     */
+    private static class FlushWorker implements Action0 {
+
+        private final BlockingQueue<Counter> counterQueue;
+        private final NodeShardCounterSerialization nodeShardCounterSerialization;
+
+        private volatile Counter rollUp;
+
+
+        private FlushWorker( final BlockingQueue<Counter> counterQueue,
+                             final NodeShardCounterSerialization nodeShardCounterSerialization ) {
+            this.counterQueue = counterQueue;
+            this.nodeShardCounterSerialization = nodeShardCounterSerialization;
+        }
+
+
+        @Override
+        public void call() {
+
+
+            while ( true ) {
+                /**
+                 * Block taking the first element.  Once we take this, batch drain and roll up the rest
+                 */
+
+                try {
+                    rollUp = null;
+                    rollUp = counterQueue.take();
                 }
-            } );
+                catch ( InterruptedException e ) {
+                    LOG.error( "Unable to read from counter queue", e );
+                    throw new RuntimeException( "Unable to read from counter queue", e );
+
+                }
+
+
+
+
+                //copy to the batch outside of the command for performance
+                final MutationBatch batch = nodeShardCounterSerialization.flush( rollUp );
+
+                /**
+                 * Execute the command in hystrix to avoid slamming cassandra
+                 */
+                new HystrixCommand( HystrixCassandra.ASYNC_GROUP ) {
+
+                    @Override
+                    protected Void run() throws Exception {
+                        batch.execute();
+
+                        return null;
+                    }
+
+
+                    @Override
+                    protected Object getFallback() {
+                        //we've failed to mutate.  Merge this count back into the current one
+                        counterQueue.offer( rollUp );
+
+                        return null;
+                    }
+                }.execute();
+            }
+
+        }
+
+
+        /**
+         * Return true if we're in the process of flushing
+         * @return
+         */
+        public boolean isFlushing(){
+            return rollUp != null;
         }
     }
 }

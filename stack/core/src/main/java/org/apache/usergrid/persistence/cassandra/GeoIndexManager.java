@@ -29,7 +29,9 @@ import org.apache.usergrid.persistence.IndexBucketLocator.IndexType;
 import org.apache.usergrid.persistence.geo.EntityLocationRef;
 import org.apache.usergrid.persistence.geo.GeocellManager;
 import org.apache.usergrid.persistence.geo.model.Point;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 
+import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -46,7 +48,6 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.logBatchOperation;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class GeoIndexManager {
@@ -87,8 +88,8 @@ public class GeoIndexManager {
         logBatchOperation( "Insert", ENTITY_INDEX, key, columnName, columnValue, ts );
 
         HColumn<ByteBuffer, ByteBuffer> column =
-                createColumn( columnName.serialize(), columnValue.serialize(), ts, be,
-                        be );
+                createColumn( columnName.serialize(), columnValue.serialize(), ts, ByteBufferSerializer.get(),
+                        ByteBufferSerializer.get() );
         m.addInsertion( bytebuffer( key ), ENTITY_INDEX.toString(), column );
 
         return m;
@@ -173,7 +174,7 @@ public class GeoIndexManager {
 
         logBatchOperation( "Delete", ENTITY_INDEX, key, columnName, null, ts );
 
-        m.addDeletion( bytebuffer( key ), ENTITY_INDEX.toString(), columnName.serialize(), be,
+        m.addDeletion( bytebuffer( key ), ENTITY_INDEX.toString(), columnName.serialize(), ByteBufferSerializer.get(),
                 ts + 1 );
 
         return m;
@@ -212,19 +213,19 @@ public class GeoIndexManager {
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         m.addDeletion( bytebuffer( property_index_key ), ENTITY_INDEX.toString(), columnName,
-                be, timestamp );
+                ByteBufferSerializer.get(), timestamp );
 
         // composite(property_value,connected_entity_id,connection_type,entry_timestamp)
         m.addDeletion( bytebuffer( entity_type_prop_index_key ), ENTITY_INDEX.toString(), columnName,
-                be, timestamp );
+                ByteBufferSerializer.get(), timestamp );
 
         // composite(property_value,connected_entity_id,entity_type,entry_timestamp)
         m.addDeletion( bytebuffer( connection_type_prop_index_key ), ENTITY_INDEX.toString(), columnName,
-                be, timestamp );
+                ByteBufferSerializer.get(), timestamp );
 
         // composite(property_value,connected_entity_id,entry_timestamp)
         m.addDeletion( bytebuffer( connection_type_and_entity_type_prop_index_key ), ENTITY_INDEX.toString(),
-                columnName, be, timestamp );
+                columnName, ByteBufferSerializer.get(), timestamp );
 
         return m;
     }
@@ -281,7 +282,7 @@ public class GeoIndexManager {
                                                 String propertyName, EntityLocationRef location ) {
 
         Keyspace ko = cass.getApplicationKeyspace( em.getApplicationId() );
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, ByteBufferSerializer.get() );
 
         batchStoreLocationInCollectionIndex( m, em.getIndexBucketLocator(), em.getApplicationId(),
                 key( owner.getUuid(), collectionName, propertyName ), owner.getUuid(), location );
@@ -319,7 +320,7 @@ public class GeoIndexManager {
                                                    EntityLocationRef location ) {
 
         Keyspace ko = cass.getApplicationKeyspace( em.getApplicationId() );
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, ByteBufferSerializer.get() );
 
         batchRemoveLocationFromCollectionIndex( m, em.getIndexBucketLocator(), em.getApplicationId(),
                 key( owner.getUuid(), collectionName, propertyName ), location );

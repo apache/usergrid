@@ -20,8 +20,6 @@
 package org.apache.usergrid.persistence.graph.impl.stage;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 

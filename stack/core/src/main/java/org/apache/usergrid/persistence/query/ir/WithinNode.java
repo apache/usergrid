@@ -90,6 +90,18 @@ public class WithinNode extends QueryNode {
 
 
     @Override
+    public int getCount() {
+        return 1;
+    }
+
+
+    @Override
+    public boolean ignoreHintSize() {
+        return false;
+    }
+
+
+    @Override
     public String toString() {
         return "WithinNode [propertyName=" + propertyName + ", distance=" + distance + ", lattitude=" + lattitude
                 + ", longitude=" + longitude + "]";

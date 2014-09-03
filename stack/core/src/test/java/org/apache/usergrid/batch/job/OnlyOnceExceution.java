@@ -113,4 +113,10 @@ public class OnlyOnceExceution extends OnlyOnceJob {
     public void setTimeout( long timeout ) {
         this.timeout = timeout;
     }
+
+
+    @Override
+    public void dead( final JobExecution execution ) throws Exception {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

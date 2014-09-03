@@ -329,15 +329,8 @@ public class CassandraPersistenceUtils {
 
 
     public static MutationResult batchExecute( Mutator<?> m, int retries ) {
-        for ( int i = 0; i < retries; i++ ) {
-            try {
-                return m.execute();
-            }
-            catch ( Exception e ) {
-                logger.error( "Unable to execute mutation, retrying...", e );
-            }
-        }
         return m.execute();
+
     }
 
 

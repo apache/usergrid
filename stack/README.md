@@ -1,14 +1,13 @@
 # Usergrid
 A highly-scalable data platform for mobile applications.
 
-* **Documentation**: http://apigee.com/docs/usergrid/
-* **Homepage**: http://apigee.com/about/products/usergrid
-* **Google Group**: http://groups.google.com/group/usergrid
+* **Documentation**: http://usergrid.incubator.apache.org/docs/
+* **Homepage**: http://http://usergrid.incubator.apache.org/
 
 ## Requirements
 
-* JDK 1.7 (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
-* 3.0.0 <= Maven < 3.1.0 (http://maven.apache.org/)
+* JDK 1.6 (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+* 3.0.0 <= Maven (http://maven.apache.org/)
 
 ## Building
 
@@ -38,8 +37,7 @@ If you built and used a previous version of Usergrid, that may be using a differ
 
 ## Getting Started with the Admin Portal
 
-By default, the [Usergrid admin portal](https://github.com/apigee/usergrid-portal) points to our production servers at `api.usergrid.com`. However, by specifying an api_url argument in the query string, you can have it point to
-your local instance instead. For example, you could reuse the version of the admin portal we host on github and have that point to your local cluster by opening the following URL in your browser:
+By default, the [Usergrid admin portal](https://github.com/apigee/usergrid-portal) points to production servers at `api.usergrid.com`. However, by specifying an api_url argument in the query string, you can have it point to your local instance instead. For example, you could reuse the version of the admin portal we host on github and have that point to your local cluster by opening the following URL in your browser:
 [http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080](http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080)
 
 The same trick would work if you used a local copy of the portal code served from your own machine or servers.
@@ -89,5 +87,3 @@ We welcome all contributions, including via pull requests on GitHub! If you want
 ## Licenses
 
 Usergrid is licensed under the Apache License, Version 2.
-
-

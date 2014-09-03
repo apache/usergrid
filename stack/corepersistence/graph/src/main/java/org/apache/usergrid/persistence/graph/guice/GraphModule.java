@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.graph.guice;
 
 import org.safehaus.guicyfig.GuicyFigModule;
 
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
 import org.apache.usergrid.persistence.core.migration.Migration;
@@ -43,27 +42,29 @@ import org.apache.usergrid.persistence.graph.serialization.NodeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeMetadataSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.EdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.NodeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardApproximationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeShardSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardGroupCompactionImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardedEdgeSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeShardStrategy;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Key;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
-import com.netflix.astyanax.Keyspace;
 
 
 public class GraphModule extends AbstractModule {
@@ -101,7 +102,6 @@ public class GraphModule extends AbstractModule {
         bind( EdgeShardSerialization.class ).to( EdgeShardSerializationImpl.class );
 
 
-
         //Repair/cleanup classes.
         bind( EdgeMetaRepair.class ).to( EdgeMetaRepairImpl.class );
         bind( EdgeDeleteRepair.class ).to( EdgeDeleteRepairImpl.class );
@@ -111,7 +111,17 @@ public class GraphModule extends AbstractModule {
          * Add our listeners
          */
         bind( NodeDeleteListener.class ).to( NodeDeleteListenerImpl.class );
-        bind( EdgeDeleteListener.class).to( EdgeDeleteListenerImpl.class );
+        bind( EdgeDeleteListener.class ).to( EdgeDeleteListenerImpl.class );
+
+        bind( EdgeSerialization.class ).to( EdgeSerializationImpl.class );
+
+        bind( EdgeShardStrategy.class ).to( SizebasedEdgeShardStrategy.class );
+
+        bind( ShardedEdgeSerialization.class ).to( ShardedEdgeSerializationImpl.class );
+
+        bind( EdgeColumnFamilies.class ).to( SizebasedEdgeColumnFamilies.class );
+
+        bind( ShardGroupCompaction.class).to( ShardGroupCompactionImpl.class);
 
 
         /**
@@ -129,36 +139,11 @@ public class GraphModule extends AbstractModule {
         migrationBinding.addBinding().to( Key.get( EdgeMetadataSerialization.class ) );
 
         //bind each singleton to the multi set.  Otherwise we won't migrate properly
-        migrationBinding.addBinding().to( Key.get( EdgeSerialization.class, StorageEdgeSerialization.class ) );
+        migrationBinding.addBinding().to( Key.get( EdgeColumnFamilies.class ) );
 
         migrationBinding.addBinding().to( Key.get( EdgeShardSerialization.class ) );
         migrationBinding.addBinding().to( Key.get( NodeShardCounterSerialization.class ) );
     }
-
-
-    /**
-     * Our permanent serialization strategy
-     */
-    @Provides
-    @Singleton
-    @Inject
-    @StorageEdgeSerialization
-    public EdgeSerialization permanentStorageSerialization( final NodeShardCache cache, final Keyspace keyspace,
-                                                            final CassandraConfig cassandraConfig,
-                                                            final GraphFig graphFig,
-                                                            final NodeShardApproximation shardApproximation) {
-
-        final EdgeShardStrategy sizeBasedStrategy = new SizebasedEdgeShardStrategy( cache, shardApproximation );
-
-        final EdgeSerializationImpl edgeSerialization =
-                new EdgeSerializationImpl( keyspace, cassandraConfig, graphFig, sizeBasedStrategy );
-
-
-        return edgeSerialization;
-    }
-
-
-
 }
 
 

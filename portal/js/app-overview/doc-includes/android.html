@@ -1,59 +1,122 @@
 <h2>1. Integrate the SDK into your project</h2>
-<p>You can integrate Apigee features into your app by including the SDK in your project.&nbsp;&nbsp;You can do one of the following:</p>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<p>You can integrate Apigee features into your app by including the
+  SDK in your project.&nbsp;&nbsp;You can do one of the following:</p>
 
 <ul class="nav nav-tabs" id="myTab">
-	<li class="active"><a data-toggle="tab" href="#existing_project">Existing project</a></li>
-	<li><a data-toggle="tab" href="#new_project">New project</a></li>
+  <li class="active"><a data-toggle="tab" href="#existing_project">Existing
+      project</a></li>
+  <li><a data-toggle="tab" href="#new_project">New project</a></li>
 </ul>
 
 <div class="tab-content">
-	<div class="tab-pane active" id="existing_project">
-		<a class="jumplink" name="add_the_sdk_to_an_existing_project"></a>
-		<p>If you've already got&nbsp;an Android&nbsp;project, you can integrate the&nbsp;Apigee&nbsp;SDK into your project as you normally would:</p>
-		<div id="collapse">
-			<a href="#jar_collapse" class="btn" data-toggle="collapse"><i class="icon-white icon-chevron-down"></i> Details</a>			
-		</div>
-		<div id="jar_collapse" class="collapse">
-			<p>Add <code>apigee-android-&lt;version&gt;.jar</code> to your class path by doing the following:</p>
-	
-			<h3>Android 4.0 (or later) projects</h3>
-			<p>Copy the jar file into the <code>/libs</code> folder in your project.</p>
-			
-			<h3>Android 3.0 (or earlier) projects</h3>
-			<ol>
-				<li>In the&nbsp;Eclipse <strong>Package Explorer</strong>, select your application's project folder.</li>
-				<li>Click the&nbsp;<strong>File &gt; Properties</strong>&nbsp;menu.</li>
-				<li>In the <strong>Java Build Path</strong> section, click the <strong>Libraries</strong> tab, click <strong>Add External JARs</strong>.</li>
-				<li>Browse to <code>apigee-android-&lt;version&gt;.jar</code>, then click&nbsp;<strong>Open</strong>.</li>
-				<li>Order the <code>apigee-android-&lt;version&gt;.jar</code> at the top of the class path:
-					<ol>
-						<li>In the Eclipse <strong>Package Explorer</strong>, select your application's project folder.</li>
-						<li>Click the&nbsp;<strong>File &gt; Properties</strong> menu.</li>
-						<li>In the properties dialog, in the&nbsp;<strong>Java Build Path</strong> section,&nbsp;click&nbsp;the <strong>Order and Export</strong>&nbsp;tab.</li>
-						<li>
-							<p><strong>IMPORTANT:</strong> Select the checkbox for <code>apigee-android-&lt;version&gt;.jar</code>, then click the <strong>Top</strong>&nbsp;button.</p>
-						</li>
-					</ol>
-				</li>
-			</ol>
-			<div class="warning">
-				<h3>Applications using Ant</h3>
-				<p>If you are using Ant to build your application, you must also copy <code>apigee-android-&lt;version&gt;.jar</code> to the <code>/libs</code> folder in your application.</p>
-			</div>
-		</div>
-	</div>
-	<div class="tab-pane" id="new_project">
-		<a class="jumplink" name="create_a_new_project_based_on_the_SDK"></a>
-		<p>If you don't have a&nbsp;project yet, you can begin by using the project template included with the SDK. The template includes support for SDK features.</p>
-		<ul>
-			<li>Locate the project template in the expanded SDK. It should be at the following location:
-				<pre>&lt;sdk_root&gt;/new-project-template</pre>
-			</li>
-		</ul>
-	</div>
+  <div class="tab-pane active" id="existing_project">
+    <a class="jumplink" name="add_the_sdk_to_an_existing_project"></a>
+    <p>If you've already got&nbsp;an Android&nbsp;project, you can
+      integrate the&nbsp;Apigee&nbsp;SDK into your project as you
+      normally would:</p>
+    <div id="collapse">
+      <a href="#jar_collapse" class="btn" data-toggle="collapse"><i
+        class="icon-white icon-chevron-down"></i> Details</a>
+    </div>
+    <div id="jar_collapse" class="collapse">
+      <p>
+        Add
+        <code>apigee-android-&lt;version&gt;.jar</code>
+        to your class path by doing the following:
+      </p>
+
+      <h3>Android 4.0 (or later) projects</h3>
+      <p>
+        Copy the jar file into the
+        <code>/libs</code>
+        folder in your project.
+      </p>
+
+      <h3>Android 3.0 (or earlier) projects</h3>
+      <ol>
+        <li>In the&nbsp;Eclipse <strong>Package Explorer</strong>,
+          select your application's project folder.
+        </li>
+        <li>Click the&nbsp;<strong>File &gt; Properties</strong>&nbsp;menu.
+        </li>
+        <li>In the <strong>Java Build Path</strong> section, click
+          the <strong>Libraries</strong> tab, click <strong>Add
+            External JARs</strong>.
+        </li>
+        <li>Browse to <code>apigee-android-&lt;version&gt;.jar</code>,
+          then click&nbsp;<strong>Open</strong>.
+        </li>
+        <li>Order the <code>apigee-android-&lt;version&gt;.jar</code>
+          at the top of the class path:
+          <ol>
+            <li>In the Eclipse <strong>Package Explorer</strong>,
+              select your application's project folder.
+            </li>
+            <li>Click the&nbsp;<strong>File &gt;
+                Properties</strong> menu.
+            </li>
+            <li>In the properties dialog, in the&nbsp;<strong>Java
+                Build Path</strong> section,&nbsp;click&nbsp;the <strong>Order
+                and Export</strong>&nbsp;tab.
+            </li>
+            <li>
+              <p>
+                <strong>IMPORTANT:</strong> Select the checkbox for
+                <code>apigee-android-&lt;version&gt;.jar</code>
+                , then click the <strong>Top</strong>&nbsp;button.
+              </p>
+            </li>
+          </ol>
+        </li>
+      </ol>
+      <div class="warning">
+        <h3>Applications using Ant</h3>
+        <p>
+          If you are using Ant to build your application, you must also
+          copy
+          <code>apigee-android-&lt;version&gt;.jar</code>
+          to the
+          <code>/libs</code>
+          folder in your application.
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="tab-pane" id="new_project">
+    <a class="jumplink" name="create_a_new_project_based_on_the_SDK"></a>
+    <p>If you don't have a&nbsp;project yet, you can begin by using
+      the project template included with the SDK. The template includes
+      support for SDK features.</p>
+    <ul>
+      <li>Locate the project template in the expanded SDK. It
+        should be at the following location: <pre>&lt;sdk_root&gt;/new-project-template</pre>
+      </li>
+    </ul>
+  </div>
 </div>
 <h2>2. Update permissions in AndroidManifest.xml</h2>
-<p>Add the following Internet permissions to your application's <code>AndroidManifest.xml</code> file if they have not already been added. Note that with the exception of INTERNET, enabling all other permissions are optional.</p>
+<p>
+  Add the following Internet permissions to your application's
+  <code>AndroidManifest.xml</code>
+  file if they have not already been added. Note that with the exception
+  of INTERNET, enabling all other permissions are optional.
+</p>
 <pre>
 &lt;uses-permission android:name="android.permission.INTERNET" /&gt;
 &lt;uses-permission android:name="android.permission.READ_PHONE_STATE" /&gt;
@@ -62,10 +125,16 @@
 &lt;uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /&gt;
 </pre>
 <h2>3. Initialize the SDK</h2>
-<p>To initialize the App Services SDK, you must instantiate the <code>ApigeeClient</code> class. There are multiple ways to handle this step, but we recommend that you do the following:</p>
+<p>
+  To initialize the App Services SDK, you must instantiate the
+  <code>ApigeeClient</code>
+  class. There are multiple ways to handle this step, but we recommend
+  that you do the following:
+</p>
 <ol>
-	<li>Subclass the <code>Application</code> class, and add an instance variable for the <code>ApigeeClient</code> to it, along with getter and setter methods.
-		<pre>
+  <li>Subclass the <code>Application</code> class, and add an
+    instance variable for the <code>ApigeeClient</code> to it, along
+    with getter and setter methods. <pre>
 public class YourApplication extends Application
 {
         
@@ -87,9 +156,9 @@ public class YourApplication extends Application
         }
 }			
 		</pre>
-	</li>
-	<li>Declare the <code>Application</code> subclass in your <code>AndroidManifest.xml</code>. For example:
-		<pre>
+  </li>
+  <li>Declare the <code>Application</code> subclass in your <code>AndroidManifest.xml</code>.
+    For example: <pre>
 &lt;application&gt;
     android:allowBackup="true"
     android:icon="@drawable/ic_launcher"
@@ -98,9 +167,9 @@ public class YourApplication extends Application
 	…
 &lt;/application&gt;			
 		</pre>
-	</li>
-	<li>Instantiate the <code>ApigeeClient</code> class in the <code>onCreate</code> method of your first <code>Activity</code> class:
-		<pre>
+  </li>
+  <li>Instantiate the <code>ApigeeClient</code> class in the <code>onCreate</code>
+    method of your first <code>Activity</code> class: <pre>
 import com.apigee.sdk.ApigeeClient;
 
 @Override
@@ -117,8 +186,14 @@ protected void onCreate(Bundle savedInstanceState) {
 	yourApp.setApigeeClient(apigeeClient);			
 }
 		</pre>
-		<p>This will make the instance of <code>ApigeeClient</code> available to your <code>Application</code> class.</p>
-	</li>
+    <p>
+      This will make the instance of
+      <code>ApigeeClient</code>
+      available to your
+      <code>Application</code>
+      class.
+    </p>
+  </li>
 </ol>
 <h2>4. Import additional SDK classes</h2>
 <p>The following classes will enable you to call common SDK methods:</p>
@@ -128,82 +203,152 @@ import com.apigee.sdk.apm.android.MonitoringClient; //App Monitoring methods
 import com.apigee.sdk.data.client.callbacks.ApiResponseCallback; //API response handling
 import com.apigee.sdk.data.client.response.ApiResponse; //API response object
 </pre>
-		
+
 <h2>5. Verify SDK installation</h2>
 
-<p>Once initialized, App Services will also automatically instantiate the <code>MonitoringClient</code> class and begin logging usage, crash and error metrics for your app.</p>
-<p><img src="img/verify.png" alt="screenshot of data in admin portal"/></p>
-<p>To verify that the SDK has been properly initialized, run your app, then go to 'Monitoring' > 'App Usage' in the <a href="https://www.apigee.com/usergrid">App Services admin portal</a> to verify that data is being sent.</p>
-<div class="warning">It may take up to two minutes for data to appear in the admin portal after you run your app.</div>
+<p>
+  Once initialized, App Services will also automatically instantiate the
+  <code>MonitoringClient</code>
+  class and begin logging usage, crash and error metrics for your app.
+</p>
+<p>
+  <img src="img/verify.png" alt="screenshot of data in admin portal" />
+</p>
+<p>
+  To verify that the SDK has been properly initialized, run your app,
+  then go to 'Monitoring' > 'App Usage' in the <a
+    href="https://www.apigee.com/usergrid">App Services admin portal</a>
+  to verify that data is being sent.
+</p>
+<div class="warning">It may take up to two minutes for data to
+  appear in the admin portal after you run your app.</div>
 
 <h2>Installation complete! Try these next steps</h2>
 <ul>
-	<li>
-		<h3><strong>Call additional SDK methods in your code</strong></h3>
-		<p>The <code>DataClient</code> and <code>MonitoringClient</code> classes are also automatically instantiated for you, and accessible with the following accessors:</p>
-		<ul>
-			<li>
-				<pre>DataClient dataClient = apigeeClient.getDataClient();</pre>
-				<p>Use this object to access the data methods of the App Services SDK, including those for push notifications, data store, and geolocation.</p>
-			</li>
-			<li>
-				<pre>MonitoringClient monitoringClient = apigeeClient.getMonitoringClient();</pre>
-				<p>Use this object to access the app configuration and monitoring methods of the App Services SDK, including advanced logging, and A/B testing.</p>
-			</li>
-		</ul>
-	</li>	
-	<li>	
-		<h3><strong>Add App Services features to your app</strong></h3>
-		<p>With App Services you can quickly add valuable features to your mobile or web app, including push notifications, a custom data store, geolocation and more. Check out these links to get started with a few of our most popular features:</p>
-		<ul>
-			<li><strong><a href="http://apigee.com/docs/node/8410">Push notifications</a></strong>: Send offers, alerts and other messages directly to user devices to dramatically increase engagement. With App Services you can send 10 million push notification per month for free!</li>
-			<li><strong>App Monitoring</strong>: When you initialize the App Services SDK, a suite of valuable, <a href="http://apigee.com/docs/node/13190">customizable</a> application monitoring features are automatically enabled that deliver the data you need to fine tune performance, analyze issues, and improve user experience.
-				<ul>
-					<li><strong><a href="http://apigee.com/docs/node/13176">App Usage Monitoring</a></strong>: Visit the <a href="https://apigee.com/usergrid">App Services admin portal</a> to view usage data for your app, including data on device models, platforms and OS versions running your app.</li>				
-					<li><strong><a href="http://apigee.com/docs/node/12861">API Performance Monitoring</a></strong>: Network performance is key to a solid user experience. In the <a href="https://apigee.com/usergrid">App Services admin portal</a> you can view key metrics, including response time, number of requests and raw API request logs.</li>	
-					<li><strong><a href="http://apigee.com/docs/node/13177">Error &amp; Crash Monitoring</a></strong>: Get alerted to any errors or crashes, then view them in the <a href="https://apigee.com/usergrid">App Services admin portal</a>, where you can also analyze raw error and crash logs.</li>
-				</ul>		
-			</li>
-			<li><strong><a href="http://apigee.com/docs/node/410">Geolocation</a></strong>: Target users or return result sets based on user location to keep your app highly-relevant.</li>
-			<li><strong><a href="http://apigee.com/docs/node/10152">Data storage</a></strong>: Store all your application data on our high-availability infrastructure, and never worry about dealing with a database ever again.</li>
-			<li><strong><a href="http://apigee.com/docs/node/376">User management and authentication</a></strong>: Every app needs users. Use App Services to easily implement user registration, as well as OAuth 2.0-compliant login and authentication.</li>
-		</ul>
-	</li>
-	<li>	
-		<h3><strong>Check out the sample apps</strong></h3>
-		<p>The SDK includes samples that illustrate Apigee&nbsp;features. You'll find the samples in the following location in your SDK download:</p>
-		<pre>
+  <li>
+    <h3>
+      <strong>Call additional SDK methods in your code</strong>
+    </h3>
+    <p>
+      The
+      <code>DataClient</code>
+      and
+      <code>MonitoringClient</code>
+      classes are also automatically instantiated for you, and
+      accessible with the following accessors:
+    </p>
+    <ul>
+      <li><pre>DataClient dataClient = apigeeClient.getDataClient();</pre>
+        <p>Use this object to access the data methods of the App
+          Services SDK, including those for push notifications, data
+          store, and geolocation.</p></li>
+      <li><pre>MonitoringClient monitoringClient = apigeeClient.getMonitoringClient();</pre>
+        <p>Use this object to access the app configuration and
+          monitoring methods of the App Services SDK, including advanced
+          logging, and A/B testing.</p></li>
+    </ul>
+  </li>
+  <li>
+    <h3>
+      <strong>Add App Services features to your app</strong>
+    </h3>
+    <p>With App Services you can quickly add valuable features to
+      your mobile or web app, including push notifications, a custom
+      data store, geolocation and more. Check out these links to get
+      started with a few of our most popular features:</p>
+    <ul>
+      <li><strong><a
+          href="http://apigee.com/docs/node/8410">Push notifications</a></strong>:
+        Send offers, alerts and other messages directly to user devices
+        to dramatically increase engagement. With App Services you can
+        send 10 million push notification per month for free!</li>
+      <li><strong>App Monitoring</strong>: When you initialize the
+        App Services SDK, a suite of valuable, <a
+        href="http://apigee.com/docs/node/13190">customizable</a>
+        application monitoring features are automatically enabled that
+        deliver the data you need to fine tune performance, analyze
+        issues, and improve user experience.
+        <ul>
+          <li><strong><a
+              href="http://apigee.com/docs/node/13176">App Usage
+                Monitoring</a></strong>: Visit the <a
+            href="https://apigee.com/usergrid">App Services admin
+              portal</a> to view usage data for your app, including data on
+            device models, platforms and OS versions running your app.</li>
+          <li><strong><a
+              href="http://apigee.com/docs/node/12861">API
+                Performance Monitoring</a></strong>: Network performance is key to a
+            solid user experience. In the <a
+            href="https://apigee.com/usergrid">App Services admin
+              portal</a> you can view key metrics, including response time,
+            number of requests and raw API request logs.</li>
+          <li><strong><a
+              href="http://apigee.com/docs/node/13177">Error &amp;
+                Crash Monitoring</a></strong>: Get alerted to any errors or crashes,
+            then view them in the <a href="https://apigee.com/usergrid">App
+              Services admin portal</a>, where you can also analyze raw
+            error and crash logs.</li>
+        </ul></li>
+      <li><strong><a
+          href="http://apigee.com/docs/node/410">Geolocation</a></strong>: Target
+        users or return result sets based on user location to keep your
+        app highly-relevant.</li>
+      <li><strong><a
+          href="http://apigee.com/docs/node/10152">Data storage</a></strong>:
+        Store all your application data on our high-availability
+        infrastructure, and never worry about dealing with a database
+        ever again.</li>
+      <li><strong><a
+          href="http://apigee.com/docs/node/376">User management and
+            authentication</a></strong>: Every app needs users. Use App Services to
+        easily implement user registration, as well as OAuth
+        2.0-compliant login and authentication.</li>
+    </ul>
+  </li>
+  <li>
+    <h3>
+      <strong>Check out the sample apps</strong>
+    </h3>
+    <p>The SDK includes samples that illustrate
+      Apigee&nbsp;features. You'll find the samples in the following
+      location in your SDK download:</p> <pre>
 apigee-android-sdk-&lt;version&gt;
 	...
 	/samples
 		</pre>
-		<div id="collapse">
-			<a href="#samples_collapse" class="btn" data-toggle="collapse"><i class="icon-white icon-chevron-down"></i> Details</a>
-		</div>
-		<div id="samples_collapse" class="collapse">
-			<p>The samples include the following:</p>
-			<table class="table">
-				<thead>
-					<tr>
-						<th scope="col">Sample</th>
-						<th scope="col">Description</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>books</td>
-						<td>An app for storing a list of books that shows Apigee database operations such as reading, creating, and deleting.</td>
-					</tr>
-					<tr>
-						<td>messagee</td>
-						<td>An app for sending and receiving messages that shows Apigee database operations (reading, creating).</td>
-					</tr>
-					<tr>
-						<td>push</td>
-						<td>An app that uses the push feature to send notifications to the devices of users who have subscribed for them.</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</li>
+    <div id="collapse">
+      <a href="#samples_collapse" class="btn" data-toggle="collapse"><i
+        class="icon-white icon-chevron-down"></i> Details</a>
+    </div>
+    <div id="samples_collapse" class="collapse">
+      <p>The samples include the following:</p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Sample</th>
+            <th scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>books</td>
+            <td>An app for storing a list of books that shows
+              Apigee database operations such as reading, creating, and
+              deleting.</td>
+          </tr>
+          <tr>
+            <td>messagee</td>
+            <td>An app for sending and receiving messages that
+              shows Apigee database operations (reading, creating).</td>
+          </tr>
+          <tr>
+            <td>push</td>
+            <td>An app that uses the push feature to send
+              notifications to the devices of users who have subscribed
+              for them.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </li>
 </ul>

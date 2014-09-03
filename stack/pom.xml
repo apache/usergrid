@@ -19,9 +19,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>10</version>
     <relativePath></relativePath>
   </parent>
 
@@ -29,7 +29,7 @@
   <artifactId>usergrid</artifactId>
   <version>2.0.0-SNAPSHOT</version>
   <name>Usergrid Parent</name>
-  <description>Usergrid Project</description>
+  <description>Parent module for the Apache Usergrid Project</description>
   <packaging>pom</packaging>
 
   <properties>
@@ -85,8 +85,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- you can override these via MAVEN_OPTS -->
-    <ug.heapmax>1024m</ug.heapmax>
-    <ug.heapmin>1024m</ug.heapmin>
+    <ug.heapmax>2048m</ug.heapmax>
+    <ug.heapmin>2048m</ug.heapmin>
+	<ug.argline>-Djava.awt.headless=true</ug.argline>
 
     <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
     <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
@@ -114,12 +115,14 @@
     <tomcat-version>7.0.52</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
-    <elasticsearch.version>1.2.3</elasticsearch.version>
-    <metrics.version>3.0.0</metrics.version>
+    <elasticsearch.version>1.2.4</elasticsearch.version>
+
     <usergrid.it.forkCount>3</usergrid.it.forkCount>
     <usergrid.it.reuseForks>false</usergrid.it.reuseForks>
     <usergrid.it.parallel>suites</usergrid.it.parallel>
 
+    <metrics.version>3.0.0</metrics.version>
+    <rx.version>0.19.6</rx.version>
   </properties>
 
   <licenses>
@@ -171,11 +174,6 @@
     </developer> 
   </developers>
 
-  <scm>
-    <connection>scm:git:git@github.com:usergrid/usergrid.git</connection>
-    <developerConnection>scm:git:git@github.com:usergrid/usergrid.git</developerConnection>
-    <url>https://github.com/usergrid/usergrid</url>
-  </scm>
 
   <distributionManagement>
     <!-- Versioned (non-snapshot) releases are published to this repository -->
@@ -201,11 +199,19 @@
     <module>core</module>
     <module>services</module>
     <module>rest</module>
-<!--    <module>tools</module>
+    <module>tools</module>
     <module>websocket</module>
+    <!--
+    Re-enable when we have a fix for the AppleJavaExtensions jar issue
+    https://issues.apache.org/jira/browse/USERGRID-224
     <module>launcher</module>
+    -->
     <module>mongo-emulator</module>
-    <module>query-validator</module>-->
+    <!--  
+    Re-enable when query-validator updated to work with Core Persistence.
+    https://issues.apache.org/jira/browse/USERGRID-221
+    <module>query-validator</module>
+    -->
   </modules>
 
   <dependencyManagement>
@@ -876,9 +882,8 @@
       </dependency>
 
       <dependency>
-        <groupId>net.tanesha.recaptcha4j</groupId>
+        <groupId>com.google.code.maven-play-plugin.net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
-        <!-- included as local dependency -->
         <version>0.0.8</version>
       </dependency>
 
@@ -1343,7 +1348,7 @@
         <groupId>com.apple</groupId>
         <artifactId>AppleJavaExtensions</artifactId>
         <!-- from local-depedendencies -->
-        <version>1.5.4</version>
+        <version>1.4</version>
       </dependency>
 
       <dependency>
@@ -1676,8 +1681,7 @@
               <parallel>${usergrid.it.parallel}</parallel>
               <forkCount>${usergrid.it.forkCount}</forkCount>
               <reuseForks>${usergrid.it.reuseForks}</reuseForks>
-          	
-            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
           </configuration>
         </plugin>
 
@@ -1829,6 +1833,7 @@
                     <exclude>**/CHANGES.txt</exclude>
                     <exclude>**/*.json</exclude>
                     <exclude>**/*.log</exclude>
+                    <exclude>**/*.md5</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
@@ -1850,23 +1855,15 @@
                     <exclude>**/antlr3/**</exclude>
                     <exclude>**/META-INF/**</exclude>
                     <exclude>**/dependency-reduced-pom.xml</exclude>
-                    <exclude>**/QueryFilter.tokens</exclude>
-                    <exclude>**/QueryFilterLexer.java</exclude>
-                    <exclude>**/QueryFilterParser.java</exclude>
+                    <exclude>**/**QueryFilter.tokens</exclude>
+                    <exclude>**/**QueryFilterLexer.java</exclude>
+                    <exclude>**/**QueryFilterParser.java</exclude>
 
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
+                    <exclude>**/dummy.txt</exclude>
                     <exclude>**/cloudbees.xml</exclude>
-
-                    <exclude>**/src/test/resources/**</exclude>
-                    <exclude>**/src/main/dist/lib/**</exclude>
-                    <exclude>**/src/main/dist/webapps/**</exclude>
-
-                    <!-- TODO: need to add headers to many files in corepersistence -->
-                    <exclude>**/launcher-vagrant/**</exclude>
-                    <exclude>**/corepersistence/**</exclude>
-                    <exclude>**/awscluster/**</exclude>
 
                 </excludes>
             </configuration>
@@ -1966,4 +1963,12 @@
         </repository>
     </repositories>
 
+    <scm>
+    	<url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>
+    	<connection>scm:git:http://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</connection>
+    	<tag>HEAD</tag>
+    	<developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</developerConnection>
+    </scm>
+
 </project>
+

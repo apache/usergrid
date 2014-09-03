@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
@@ -34,24 +33,34 @@ public interface NodeShardApproximation {
      * Increment the shard Id the specified amount
      *
      * @param scope The scope
-     * @param nodeId The node id
-     * @param shardId The shard id
-     * @param count
-     * @param edgeType The edge type
+     * @param shard The shard to use
+     * @param count The count to increment
+     * @param directedEdgeMeta The directed edge meta data to use
      */
-    public void increment( final ApplicationScope scope, final Id nodeId, final long shardId,  final long count,
-                           final String... edgeType );
+    public void increment( final ApplicationScope scope, final Shard shard,
+                           final long count, final DirectedEdgeMeta directedEdgeMeta );
 
 
     /**
      * Get the approximation of the number of unique items
+     *
+     * @param scope The scope
+     * @param directedEdgeMeta The directed edge meta data to use
      */
-    public long getCount( final ApplicationScope scope, final Id nodeId, final long shardId,
-                          final String... edgeType );
+    public long getCount( final ApplicationScope scope, final Shard shard,  final DirectedEdgeMeta directedEdgeMeta );
 
 
     /**
-     * Flush the current counters in the Approximation
+     * Flush the current counters in the Approximation.  Will return immediately after the flush. You can then use flushPending
+     * to check the state.
      */
-    public void flush();
+    public void beginFlush();
+
+    /**
+     * Return true if there is data to be flushed
+     * @return
+     */
+    public boolean flushPending();
+
+
 }

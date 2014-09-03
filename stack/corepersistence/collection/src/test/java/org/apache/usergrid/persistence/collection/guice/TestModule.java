@@ -37,7 +37,9 @@ public abstract class TestModule extends AbstractModule {
 
         try {
             //load up the properties
+            ConfigurationManager.getDeploymentContext().setDeploymentEnvironment( "UNIT" );
             ConfigurationManager.loadCascadedPropertiesFromResources( "usergrid" );
+
         }
         catch ( IOException e ) {
             throw new RuntimeException( "Cannot do much without properly loading our configuration.", e );

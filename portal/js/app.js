@@ -70,24 +70,19 @@ AppServices.Services = angular.module('appservices.services', []);
 AppServices.Controllers = angular.module('appservices.controllers', []);
 AppServices.Filters = angular.module('appservices.filters', []);
 AppServices.Directives = angular.module('appservices.directives', []);
-AppServices.Performance = angular.module('appservices.performance', []);
-AppServices.MAX = angular.module('appservices.max', []);
 
 angular.module('appservices', ['ngRoute',
   'ngResource',
   'ngSanitize',
   'ui.bootstrap',
-  'angulartics',
-  'angulartics.google.analytics',
   'appservices.filters',
   'appservices.services',
   'appservices.directives',
   'appservices.constants',
   'appservices.controllers',
-  'appservices.max',
   'angular-intro',
-]).config(['$routeProvider', '$locationProvider', '$sceDelegateProvider', '$analyticsProvider', '$httpProvider',
-  function($routeProvider, $locationProvider, $sceDelegateProvider, $analyticsProvider, $httpProvider) {
+]).config(['$routeProvider', '$locationProvider', '$sceDelegateProvider', '$httpProvider',
+  function($routeProvider, $locationProvider, $sceDelegateProvider, $httpProvider) {
     $routeProvider
       .when('/org-overview', {
         templateUrl: 'org-overview/org-overview.html',
@@ -104,10 +99,6 @@ angular.module('appservices', ['ngRoute',
       .when('/app-overview/summary', {
         templateUrl: 'app-overview/app-overview.html',
         controller: 'AppOverviewCtrl'
-      })
-      .when('/getting-started/setup', {
-        templateUrl: 'app-overview/getting-started.html',
-        controller: 'GettingStartedCtrl'
       })
       .when('/forgot-password', {
         templateUrl: 'login/forgot-password.html',
@@ -225,16 +216,10 @@ angular.module('appservices', ['ngRoute',
       // Allow same origin resource loads.
       'self',
       // Allow loading from our assets domain.  Notice the difference between * and **.
-      'http://apigee-internal-prod.jupiter.apigee.net/**',
-      'http://apigee-internal-prod.mars.apigee.net/**',
-      'https://appservices.apigee.com/**',
       'https://api.usergrid.com/**'
     ]);
 
-    $analyticsProvider.virtualPageviews(false);
-    $analyticsProvider.firstPageview(false);
-
-    $httpProvider.defaults.useXDomain = true;    
+    $httpProvider.defaults.useXDomain = true;
 
   }
 ]);

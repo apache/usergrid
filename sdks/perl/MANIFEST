@@ -1,0 +1,23 @@
+.travis.yml
+Build.PL
+examples/books.pl
+lib/Usergrid/Client.pm
+lib/Usergrid/Collection.pm
+lib/Usergrid/Entity.pm
+lib/Usergrid/Request.pm
+LICENSE
+Makefile.PL
+MANIFEST			This list of files
+META.json
+META.yml
+README.md
+t/01_init.t
+t/02_login.t
+t/03_update.t
+t/04_collection.t
+t/05_query.t
+t/06_batch_update.t
+t/07_batch_delete.t
+t/08_connections.t
+t/09_paging.t
+t/10_auto_paging.t

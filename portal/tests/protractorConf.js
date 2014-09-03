@@ -1,3 +1,21 @@
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
 // A reference configuration file.
 exports.config = {
   // ----- How to setup Selenium -----
@@ -25,7 +43,7 @@ exports.config = {
   // find chromedriver. This will be passed to the selenium jar as
   // the system property webdriver.chrome.driver. If null, selenium will
   // attempt to find chromedriver using PATH.
-  chromeDriver: './selenium/chromedriver',
+  chromeDriver: '../node_modules/chromedriver/bin/chromedriver',
   // If true, only chromedriver will be started, not a standalone selenium.
   // Tests for browsers other than chrome will not run.
   chromeOnly: false,
@@ -67,10 +85,10 @@ exports.config = {
   },
   params: {
     login: {
-      user: 'sfeldman+apijeep@apigee.com',
+      user: 'rsimpson+test@apigee.com',
       password: 'P@ssw0rd1'
     },
-    orgName:'sfeldmanapijeep',
+    orgName:'rodprotractortests',
     appName1:'website',
     appName2:'mobile',
     useSso:false

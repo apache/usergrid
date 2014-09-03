@@ -20,15 +20,14 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
+import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 
 /**
@@ -41,6 +40,7 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
     private final String type;
     private final long maxTimestamp;
     private final Optional<Edge> last;
+    private final Order order;
 
 
     /**
@@ -48,17 +48,23 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
      * @param node The node to search from
      * @param type The edge type
      * @param maxTimestamp The maximum timestamp to return
+     * @param order The order order.  Descending is most efficient
      * @param last The value to start seeking from.  Must be >= this value
+     * @param order
      */
-    public SimpleSearchByEdgeType( final Id node, final String type, final long maxTimestamp, final Edge last ) {
+    public SimpleSearchByEdgeType( final Id node, final String type, final long maxTimestamp, final Order order, final Edge last
+                                   ) {
+
+        Preconditions.checkNotNull( order, "order is required");
         ValidationUtils.verifyIdentity(node);
         ValidationUtils.verifyString( type, "type" );
-        EdgeUtils.validateTimestamp(maxTimestamp, "maxTimestamp");
+        GraphValidation.validateTimestamp( maxTimestamp, "maxTimestamp" );
 
 
         this.node = node;
         this.type = type;
         this.maxTimestamp = maxTimestamp;
+        this.order = order;
         this.last = Optional.fromNullable(last);
     }
 
@@ -84,6 +90,12 @@ public class SimpleSearchByEdgeType implements SearchByEdgeType{
     @Override
     public Optional<Edge> last() {
         return last;
+    }
+
+
+    @Override
+    public Order getOrder() {
+        return order;
     }
 
 

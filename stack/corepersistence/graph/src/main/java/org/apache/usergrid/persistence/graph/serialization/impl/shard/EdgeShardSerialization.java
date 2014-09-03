@@ -22,9 +22,8 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 import java.util.Iterator;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.migration.Migration;
-import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.google.common.base.Optional;
 import com.netflix.astyanax.MutationBatch;
@@ -38,31 +37,28 @@ public interface EdgeShardSerialization extends Migration{
     /**
      * Write a new time shard for the meta data
      * @param scope The scope to write
-     * @param nodeId The id in the edge
-     * @param shard The next time to write
-     * @param types The types to write to.  Can be edge type, or edgeType+id type
+     * @param shard The shard to write
+     * @param directedEdgeMeta The edge meta data to use
      */
-    public MutationBatch writeEdgeMeta(ApplicationScope scope, Id nodeId, long shard,  String... types);
+    public MutationBatch writeShardMeta( ApplicationScope scope, Shard shard, DirectedEdgeMeta directedEdgeMeta );
 
     /**
      * Get an iterator of all meta data and types.  Returns a range from High to low
      * @param scope The organization scope
-     * @param nodeId The id of the node
      * @param start The shard time to start seeking from.  Values <= this value will be returned.
-     * @param types The types to use
+     * @param directedEdgeMeta The edge meta data to use
      * @return
      */
-    public Iterator<Long> getEdgeMetaData(ApplicationScope scope, Id nodeId, Optional<Long> start,  String... types);
+    public Iterator<Shard> getShardMetaData( ApplicationScope scope, Optional<Shard> start,  DirectedEdgeMeta directedEdgeMeta);
 
     /**
      * Remove the shard from the edge meta data from the types.
 
-     * @param scope
-     * @param nodeId
-     * @param shard
-     * @param types
+     * @param scope The scope of the application
+     * @param shard The shard to remove
+     * @param directedEdgeMeta The edge meta data to use
      * @return
      */
-    public MutationBatch removeEdgeMeta(ApplicationScope scope, Id nodeId, long shard, String... types);
+    public MutationBatch removeShardMeta( ApplicationScope scope, Shard shard,  DirectedEdgeMeta directedEdgeMeta );
 
 }
