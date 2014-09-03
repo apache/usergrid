@@ -18,7 +18,7 @@ package org.apache.usergrid.launcher;
 
 
 import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
+//import javax.swing.JOptionPane;
 
 
 public class AppleUtils {
@@ -27,13 +27,16 @@ public class AppleUtils {
         com.apple.eawt.Application macApp = com.apple.eawt.Application.getApplication();
         macApp.setDockIconImage( new ImageIcon( App.class.getResource( "dock_icon.png" ) ).getImage() );
 
-        macApp.setAboutHandler( new com.apple.eawt.AboutHandler() {
-            @Override
-            public void handleAbout( com.apple.eawt.AppEvent.AboutEvent evt ) {
-                JOptionPane.showMessageDialog( null,
-                        "Apache Usergrid Standalone Server Launcher\nApache Software Foundation",
-                        "About Apache Usergrid Launcher", JOptionPane.INFORMATION_MESSAGE );
-            }
-        } );
+        // commented out to allow launcher to compile with the old AppleJavaExcentions 1.4
+        // (because that is the newest version available via Maven)
+
+//        macApp.setAboutHandler( new com.apple.eawt.AboutHandler() {
+//            @Override
+//            public void handleAbout( com.apple.eawt.AppEvent.AboutEvent evt ) {
+//                JOptionPane.showMessageDialog( null,
+//                        "Apache Usergrid Standalone Server Launcher\nApache Software Foundation",
+//                        "About Apache Usergrid Launcher", JOptionPane.INFORMATION_MESSAGE );
+//            }
+//        } );
     }
 }

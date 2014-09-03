@@ -80,4 +80,6 @@ portal/js/templates.js
 /release/target/
 
 /portal/seleniumLog.txt
+/stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterLexer.java
+/stack/core/src/main/java/org/apache/usergrid/persistence/query/tree/QueryFilterParser.java
 !/stack/corepersistence/common/src/test/resources/usergrid-UNIT.properties
