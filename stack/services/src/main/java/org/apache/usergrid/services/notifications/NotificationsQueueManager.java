@@ -98,7 +98,7 @@ public class NotificationsQueueManager implements NotificationServiceProxy {
                     Query query = new Query();
                     query.setCollection("notifiers");
                     query.setLimit(100);
-                    PathQuery<Notifier> pathQuery = new PathQuery<Notifier>(em.getApplicationRef(), query);
+                    PathQuery<Notifier> pathQuery = new PathQuery<Notifier>((SimpleEntityRef)em.getApplicationRef(), query);
                     Iterator<Notifier> notifierIterator = pathQuery.iterator(em);
                     while (notifierIterator.hasNext()) {
                         Notifier notifier = notifierIterator.next();

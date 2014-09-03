@@ -157,7 +157,7 @@ public class NotificationsService extends AbstractCollectionService {
             query.setCollection(collection);
 
             if (pathQuery == null) {
-                pathQuery = new PathQuery(em.getApplicationRef(), query);
+                pathQuery = new PathQuery((SimpleEntityRef)em.getApplicationRef(), query);
             } else {
                 pathQuery = pathQuery.chain(query);
             }

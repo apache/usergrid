@@ -122,4 +122,9 @@ public class NotificationBatchJob implements Job {
         logger.info( "execute NotificationBatch completed normally" );
     }
 
+
+    @Override
+    public void dead( final JobExecution execution ) throws Exception {
+
+    }
 }
