@@ -41,6 +41,12 @@
 				<exclude>**/.classpath</exclude>
 				<exclude>**/.project</exclude>
 				<exclude>**/.settings/**</exclude>
+				<exclude>**/bower_compoments/**</exclude>
+				<exclude>**/node_modules/**</exclude>
+				<exclude>**/dist/**</exclude>
+				<exclude>**/dist_cov/**</exclude>
+				<exclude>**/portal/index.html</exclude>
+				<exclude>**/portal/index-debug.html</exclude>
 			</excludes>
 		</fileSet>
 	</fileSets>

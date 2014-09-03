@@ -29,7 +29,7 @@
 
     <artifactId>apache-usergrid-incubating</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0-rc3</version>
+    <version>1.0.0</version>
 
     <name>Usergrid Release Assembly</name>
     <description>Assembles Usergrid into a distribution package</description>
