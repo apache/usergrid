@@ -29,6 +29,7 @@
     <core.it.forkCount>3</core.it.forkCount>
     <core.it.reuseForks>false</core.it.reuseForks>
     <core.it.parallel>suites</core.it.parallel>
+    <core.it.threadCount>2</core.it.threadCount>
     <core.it.suite.concurrency>1</core.it.suite.concurrency>
   </properties>
 
@@ -67,6 +68,7 @@
 
               <parallel>${core.it.parallel}</parallel>
               <forkCount>${core.it.forkCount}</forkCount>
+              <threadCount>${core.it.forkCount}</threadCount>
               <reuseForks>${core.it.reuseForks}</reuseForks>
               <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}
               </argLine>

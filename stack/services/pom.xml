@@ -29,6 +29,7 @@
     <services.it.forkCount>3</services.it.forkCount>
     <services.it.reuseForks>true</services.it.reuseForks>
     <services.it.parallel>suites</services.it.parallel>
+    <services.it.threadCount>2</services.it.threadCount>
   </properties>
 
   <artifactId>usergrid-services</artifactId>
@@ -105,6 +106,7 @@
               </systemPropertyVariables>
 
 			<parallel>${services.it.parallel}</parallel>
+            <threadCount>${services.it.threadCount}</threadCount>
             <forkCount>${services.it.forkCount}</forkCount>
             <reuseForks>${services.it.reuseForks}</reuseForks>
 
