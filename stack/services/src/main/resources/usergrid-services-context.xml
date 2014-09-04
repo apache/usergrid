@@ -89,4 +89,7 @@
 
   <bean id="exportJob" class="org.apache.usergrid.management.export.ExportJob" />
 
+  <bean id="notificationsQueueListener" class="org.apache.usergrid.services.notifications.QueueListener" scope="singleton"/>
+
+
 </beans>

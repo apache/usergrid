@@ -17,6 +17,7 @@
 package org.apache.usergrid.services.notifications;
 
 
+import java.util.Properties;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -58,6 +59,9 @@ public class NotificationBatchJob implements Job {
 
     @Autowired
     private EntityManagerFactory emf;
+
+    @Autowired
+    private Properties properties;
 
 
     public NotificationBatchJob() {
@@ -102,7 +106,14 @@ public class NotificationBatchJob implements Job {
 
 
             try {
-                notificationsService.getQueueManager().processBatchAndReschedule( notification, jobExecution );
+                NotificationsQueueManager queueManager = new NotificationsQueueManager(
+                        new JobScheduler(sm,em),
+                        em,
+                        properties,
+                        sm.getQueueManager(),
+                        metricsService
+                );
+                queueManager.processBatchAndReschedule(notification, jobExecution);
             }
             catch ( Exception e ) {
                 logger.error( "execute NotificationBatchJob failed", e );

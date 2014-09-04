@@ -20,6 +20,7 @@ import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.services.ServiceManagerFactory;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -30,14 +31,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.usergrid.services.AbstractServiceIT;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+
 public class AbstractServiceNotificationIT extends AbstractServiceIT {
     private NotificationsService ns;
+    @Autowired
+    private ServiceManagerFactory smf;
 
+    @Autowired
+    private EntityManagerFactory emf;
     @Rule
     public TestName name = new TestName();
 
@@ -57,7 +64,6 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
 
     protected Notification scheduleNotificationAndWait(Notification notification)
             throws Exception {
-        getNotificationService().getQueueManager().processBatchAndReschedule(notification,null);
         long timeout = System.currentTimeMillis() + 60000;
         while (System.currentTimeMillis() < timeout) {
             Thread.sleep(200);
@@ -79,7 +85,7 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
         List<EntityRef> list =new ArrayList<EntityRef>();//get all
         PagingResultsIterator it = new PagingResultsIterator(r);
         while(it.hasNext()){
-           list.add((EntityRef)it.next());
+            list.add((EntityRef)it.next());
         }
         return list;
     }
@@ -92,7 +98,7 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
             Thread.sleep(200);
             receipts =getNotificationReceipts(notification);
             if (receipts.size()==expected) {
-                 break;
+                break;
             }
         }
         assertEquals(expected, receipts.size());

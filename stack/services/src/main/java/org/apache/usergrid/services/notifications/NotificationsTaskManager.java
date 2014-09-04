@@ -16,36 +16,18 @@
  */
 package org.apache.usergrid.services.notifications;
 
-
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
 
 import java.util.UUID;
 
+public interface NotificationsTaskManager {
 
-public class TaskTracker {
+    void completed(Notifier notifier, Receipt receipt, UUID deviceUUID,
+                   String newProviderId) throws Exception;
 
-    private Notifier notifier;
-    private NotificationsTaskManager taskManager;
-    private Receipt receipt;
-    private UUID deviceId;
+    void failed(Notifier notifier, Receipt receipt, UUID deviceUUID, Object code,
+                String message) throws Exception;
 
-    public TaskTracker(Notifier notifier, NotificationsTaskManager taskManager, Receipt receipt, UUID deviceId) {
-        this.notifier = notifier;
-        this.taskManager = taskManager;
-        this.receipt = receipt;
-        this.deviceId = deviceId;
-    }
 
-    public void completed() throws Exception {
-        taskManager.completed(notifier, receipt, deviceId, null);
-    }
-
-    public void failed(Object code, String message) throws Exception {
-        taskManager.failed(notifier, receipt, deviceId, code, message);
-    }
-
-    public void completed(String newToken) throws Exception {
-        taskManager.completed(notifier, receipt, deviceId, newToken);
-    }
 }

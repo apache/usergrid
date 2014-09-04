@@ -16,26 +16,27 @@
  */
 package org.apache.usergrid.services.notifications.gcm;
 
-import org.apache.usergrid.services.notifications.AbstractServiceNotificationIT;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.services.AbstractServiceIT;
+import org.apache.usergrid.services.ServiceManagerFactory;
+import org.apache.usergrid.services.ServiceParameter;
+import org.apache.usergrid.services.notifications.*;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
-import org.apache.usergrid.services.notifications.NotificationsService;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.services.notifications.ConnectionException;
-import org.apache.usergrid.services.notifications.TaskTracker;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityRef;
+
 import org.apache.usergrid.persistence.entities.Device;
 import org.apache.usergrid.services.ServiceAction;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.Assert.*;
 import static org.apache.usergrid.services.notifications.NotificationsService.NOTIFIER_ID_POSTFIX;
@@ -59,6 +60,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     private Notifier notifier;
     private Device device1, device2;
     private NotificationsService ns;
+    private QueueListener listener;
 
     @Override
     @Before
@@ -94,6 +96,23 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         e = app.testRequest(ServiceAction.POST, 1, "devices").getEntity();
         device2 = app.getEm().get(e.getUuid(), Device.class);
         ns = getNotificationService();
+        Query query = new Query();
+        //query.addIdentifier(sp.getIdentifier());
+        query.setLimit(100);
+        query.setCollection("devices");
+        query.setResultsLevel(Query.Level.ALL_PROPERTIES);
+        PathQuery pathQuery =  new PathQuery(new SimpleEntityRef(  app.getEm().getApplicationRef()), query);
+
+        ns.getQueueManager().TEST_PATH_QUERY = pathQuery;
+        ApplicationQueueManager.QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString();
+        listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
+        listener.run();
+    }
+
+    @After
+    public void after(){
+        listener.stop();
+        listener = null;
     }
 
     @Test
@@ -121,7 +140,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         Notification notification = app.getEm().get(e.getUuid(),
                 Notification.class);
-        ns.addDevice(notification, device1);
 
         // perform push //
         notification = scheduleNotificationAndWait(notification);
@@ -130,6 +148,13 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     @Test
     public void singlePushNotification() throws Exception {
+
+        Query pQuery = new Query();
+        pQuery.setLimit(100);
+        pQuery.setCollection("devices");
+        pQuery.setResultsLevel(Query.Level.ALL_PROPERTIES);
+        pQuery.addIdentifier(new ServiceParameter.NameParameter(device1.getUuid().toString()).getIdentifier());
+        ns.getQueueManager().TEST_PATH_QUERY =  new PathQuery(new SimpleEntityRef( app.getEm().getApplicationRef()), pQuery);
 
         app.clear();
         String payload = "Hello, World!";
@@ -148,8 +173,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 notification.getPayloads().get(notifier.getUuid().toString()),
                 payload);
 
-        ns.addDevice(notification, device1);
-
         // perform push //
         notification = scheduleNotificationAndWait(notification);
         checkReceipts(notification, 1);
@@ -157,6 +180,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     @Test
     public void singlePushNotificationViaUser() throws Exception {
+
 
         app.clear();
 
@@ -168,6 +192,14 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Entity device = app.testRequest(ServiceAction.POST, 1, "users",
                 user.getUuid(), "devices", device1.getUuid()).getEntity();
         assertEquals(device.getUuid(), device1.getUuid());
+
+
+        Query pQuery = new Query();
+        pQuery.setLimit(100);
+        pQuery.setCollection("devices");
+        pQuery.setResultsLevel(Query.Level.ALL_PROPERTIES);
+        pQuery.addIdentifier(new ServiceParameter.NameParameter(user.getUuid().toString()).getIdentifier());
+        ns.getQueueManager().TEST_PATH_QUERY =  new PathQuery(new SimpleEntityRef(  app.getEm().getApplicationRef()), pQuery);
 
         String payload = "Hello, World!";
         Map<String, String> payloads = new HashMap<String, String>(1);
@@ -181,7 +213,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         Notification notification = app.getEm().get(e.getUuid(),
                 Notification.class);
-        ns.addDevice(notification, device1);
 
         // perform push //
         notification = scheduleNotificationAndWait(notification);
@@ -207,9 +238,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertEquals(
                 notification.getPayloads().get(notifier.getUuid().toString()),
                 payload);
-
-        ns.addDevice(notification, device2);
-        ns.addDevice(notification, device1);
 
         // reduce Batch size to 1
         Field field = GCMAdapter.class.getDeclaredField("BATCH_SIZE");
@@ -237,8 +265,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         ns.providerAdapters.put("google", new MockSuccessfulProviderAdapter() {
             @Override
             public void sendNotification(String providerId, Notifier notifier,
-                    Object payload, Notification notification,
-                    TaskTracker tracker) throws Exception {
+                                         Object payload, Notification notification,
+                                         TaskTracker tracker) throws Exception {
                 tracker.completed(newProviderId);
             }
         });
@@ -345,8 +373,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                     new MockSuccessfulProviderAdapter() {
                         @Override
                         public void sendNotification(String providerId,
-                                Notifier notifier, Object payload,
-                                Notification notification, TaskTracker tracker)
+                                                     Notifier notifier, Object payload,
+                                                     Notification notification, TaskTracker tracker)
                                 throws Exception {
                             tracker.failed("InvalidRegistration",
                                     "InvalidRegistration");
@@ -402,8 +430,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                     new MockSuccessfulProviderAdapter() {
                         @Override
                         public void sendNotification(String providerId,
-                                Notifier notifier, Object payload,
-                                Notification notification, TaskTracker tracker)
+                                                     Notifier notifier, Object payload,
+                                                     Notification notification, TaskTracker tracker)
                                 throws Exception {
                             Exception e = new IOException();
                             throw new ConnectionException(e.getMessage(), e);
@@ -437,12 +465,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // perform push //
 
-        try {
-            ns.getQueueManager().processBatchAndReschedule(notification, null);
-            fail("Should have received a ConnectionException");
-        } catch (ConnectionException ex) {
-            // good
-        }
+        // ns.getQueueManager().processBatchAndReschedule(notification, null);
+        fail("Should have received a ConnectionException");
     }
 
     @Ignore("Run only if you need to.")

@@ -46,19 +46,6 @@ public class NotificationJob extends OnlyOnceJob {
 
     private static final Logger logger = LoggerFactory.getLogger( NotificationJob.class );
 
-    @Autowired
-    private MetricsFactory metricsService;
-
-    @Autowired
-    private ServiceManagerFactory smf;
-
-    @Autowired
-    private EntityManagerFactory emf;
-    private Meter requests;
-    private Timer execution;
-    private Histogram end;
-
-
     public NotificationJob() {
 
     }
@@ -66,56 +53,13 @@ public class NotificationJob extends OnlyOnceJob {
 
     @PostConstruct
     void init() {
-        requests = metricsService.getMeter( NotificationJob.class, "requests" );
-        execution = metricsService.getTimer( NotificationJob.class, "execution" );
-        end = metricsService.getHistogram( QueueJob.class, "end" );
     }
 
 
     @Override
     public void doJob( JobExecution jobExecution ) throws Exception {
 
-        Timer.Context timer = execution.time();
-        requests.mark();
-
-        logger.info( "execute NotificationJob {}", jobExecution );
-
-        JobData jobData = jobExecution.getJobData();
-        UUID applicationId = ( UUID ) jobData.getProperty( "applicationId" );
-        ServiceManager sm = smf.getServiceManager( applicationId );
-        NotificationsService notificationsService = ( NotificationsService ) sm.getService( "notifications" );
-
-        EntityManager em = emf.getEntityManager( applicationId );
-        try {
-            if ( em == null ) {
-                logger.info( "no EntityManager for applicationId  {}", applicationId );
-                return;
-            }
-            UUID notificationId = ( UUID ) jobData.getProperty( "notificationId" );
-            Notification notification = em.get( notificationId, Notification.class );
-            if ( notification == null ) {
-                logger.info( "notificationId {} no longer exists", notificationId );
-                return;
-            }
-
-            try {
-                notificationsService.getQueueManager().processBatchAndReschedule( notification, jobExecution );
-            }
-            catch ( Exception e ) {
-                logger.error( "execute NotificationJob failed", e );
-                em.setProperty( notification, "errorMessage", e.getMessage() );
-                throw e;
-            }
-            finally {
-                long diff = System.currentTimeMillis() - notification.getCreated();
-                end.update( diff );
-            }
-        }
-        finally {
-            timer.stop();
-        }
-
-        logger.info( "execute NotificationJob completed normally" );
+        logger.info( "execute NotificationJob is deprecated " );
     }
 
 

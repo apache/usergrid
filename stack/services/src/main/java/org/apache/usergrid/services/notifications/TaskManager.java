@@ -37,7 +37,7 @@ import org.apache.usergrid.persistence.entities.Device;
  * mean that all work is done, however, as delivery errors may come in after a
  * notification is "sent."
  */
-public class TaskManager {
+public class TaskManager implements NotificationsTaskManager {
 
     // period to poll for batch completion (keep well under Job scheduler
     // heartbeat value!)

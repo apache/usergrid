@@ -39,6 +39,7 @@ import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
 import org.apache.usergrid.services.notifications.apns.APNsAdapter;
 import org.apache.usergrid.services.notifications.gcm.GCMAdapter;
+import org.springframework.beans.factory.annotation.Autowired;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -79,8 +80,12 @@ public class NotificationsService extends AbstractCollectionService {
         providerAdapters.put("noop", TEST_ADAPTER);
     }
 
-    private NotificationsQueueManager notificationQueueManager;
+    private ApplicationQueueManager notificationQueueManager;
     private long gracePeriod;
+    @Autowired
+    private ServiceManagerFactory smf;
+    @Autowired
+    private EntityManagerFactory emf;
 
     public NotificationsService() {
         LOG.info("/notifications");
@@ -89,6 +94,9 @@ public class NotificationsService extends AbstractCollectionService {
     @Override
     public void init( ServiceInfo info ) {
         super.init(info);
+        smf = getApplicationContext().getBean(ServiceManagerFactory.class);
+        emf = getApplicationContext().getBean(EntityManagerFactory.class);
+
         metricsService = getApplicationContext().getBean(MetricsFactory.class);
         sendMeter = metricsService.getMeter(NotificationsService.class, "send");
         postMeter = metricsService.getMeter(NotificationsService.class, "requests");
@@ -96,13 +104,14 @@ public class NotificationsService extends AbstractCollectionService {
         queueSize = metricsService.getHistogram(NotificationsService.class, "queue_size");
         outstandingQueue = metricsService.getCounter(NotificationsService.class,"current_queue");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
-        notificationQueueManager = new NotificationsQueueManager(jobScheduler,em,sm.getProperties(),sm.getQueueManager(),metricsService);
+        notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,smf.getServiceManager(smf.getManagementAppId()).getQueueManager(),metricsService);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;
     }
 
-    public NotificationsQueueManager getQueueManager(){
+    public ApplicationQueueManager getQueueManager(){
         return notificationQueueManager;
     }
+
 
     @Override
     public ServiceContext getContext(ServiceAction action,
@@ -206,7 +215,7 @@ public class NotificationsService extends AbstractCollectionService {
         Long deliver = (Long) payload.getProperty("deliver");
         if (deliver != null) {
             if (!deliver.equals(notification.getDeliver())) {
-                notificationQueueManager.processBatchAndReschedule((Notification) response, null);
+                notificationQueueManager.queueNotification((Notification) response, null);
             }
         }
         return response;
@@ -326,5 +335,18 @@ public class NotificationsService extends AbstractCollectionService {
         if (providerAdapter != null) {
             providerAdapter.testConnection(notifier);
         }
+    }
+
+
+    public ServiceManagerFactory getServiceManagerFactory(){
+        return this.smf;
+    }
+    public EntityManagerFactory getEntityManagerFactory(){
+        return this.emf;
+    }
+
+
+    public MetricsFactory getMetricsFactory() {
+        return metricsService;
     }
 }
