@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.core.hystrix;
 
 
+import com.netflix.astyanax.Execution;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.OperationResult;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -27,6 +28,7 @@ import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.query.RowQuery;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixThreadPoolProperties;
 
 
 /**
@@ -36,29 +38,32 @@ public class HystrixCassandra {
 
 
 
+
     /**
      * Command group used for realtime user commands
      */
-    public static final HystrixCommandGroupKey USER_GROUP = HystrixCommandGroupKey.Factory.asKey( "user" );
+    public static final HystrixCommand.Setter
+            USER_GROUP = HystrixCommand.Setter.withGroupKey(   HystrixCommandGroupKey.Factory.asKey( "user" ) ).andThreadPoolPropertiesDefaults(
+            HystrixThreadPoolProperties.Setter().withCoreSize( 100 ) );
 
     /**
      * Command group for asynchronous operations
      */
-    public static final HystrixCommandGroupKey ASYNC_GROUP = HystrixCommandGroupKey.Factory.asKey( "async" );
+    public static final HystrixCommand.Setter
+            ASYNC_GROUP = HystrixCommand.Setter.withGroupKey( HystrixCommandGroupKey.Factory.asKey( "async" ) ).andThreadPoolPropertiesDefaults(
+            HystrixThreadPoolProperties.Setter().withCoreSize( 50 ) );
 
 
     /**
-     * Execute an user mutation
+     * Execute an user operation
      */
-    public static OperationResult<Void> userMutation( final MutationBatch batch ) {
-
-
-        return new HystrixCommand<OperationResult<Void>>( USER_GROUP ) {
+    public static <R> OperationResult<R> user( final Execution<R> execution) {
+        return new HystrixCommand<OperationResult<R>>( USER_GROUP ) {
 
             @Override
-            protected OperationResult<Void> run() {
+            protected OperationResult<R> run() {
                 try {
-                    return batch.execute();
+                    return  execution.execute();
                 }
                 catch ( ConnectionException e ) {
                     throw new RuntimeException( e );
@@ -69,17 +74,17 @@ public class HystrixCassandra {
 
 
     /**
-     * Execute an user mutation
+     * Execute an an async operation
      */
-    public static <K, C> OperationResult<ColumnList<C>> userQuery( final RowQuery<K, C> query ) {
+    public static <R> OperationResult<R> async( final Execution<R> execution) {
 
 
-        return new HystrixCommand<OperationResult<ColumnList<C>>>( USER_GROUP ) {
+        return new HystrixCommand<OperationResult<R>>( ASYNC_GROUP ) {
 
             @Override
-            protected OperationResult<ColumnList<C>> run() {
+            protected OperationResult<R> run() {
                 try {
-                    return query.execute();
+                    return  execution.execute();
                 }
                 catch ( ConnectionException e ) {
                     throw new RuntimeException( e );
@@ -89,44 +94,4 @@ public class HystrixCassandra {
     }
 
 
-    /**
-     * Execute an asynchronous mutation
-     */
-    public static OperationResult<Void> asyncMutation( final MutationBatch batch ) {
-
-
-        return new HystrixCommand<OperationResult<Void>>( ASYNC_GROUP ) {
-
-            @Override
-            protected OperationResult<Void> run() {
-                try {
-                    return batch.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( e );
-                }
-            }
-        }.execute();
-    }
-
-
-    /**
-     * Execute an asynchronous query
-     */
-    public static <K, C> OperationResult<ColumnList<C>> asyncQuery( final RowQuery<K, C> query ) {
-
-
-        return new HystrixCommand<OperationResult<ColumnList<C>>>( ASYNC_GROUP ) {
-
-            @Override
-            protected OperationResult<ColumnList<C>> run() {
-                try {
-                    return query.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( e );
-                }
-            }
-        }.execute();
-    }
 }

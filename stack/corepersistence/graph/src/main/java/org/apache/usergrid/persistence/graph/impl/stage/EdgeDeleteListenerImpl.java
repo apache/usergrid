@@ -23,8 +23,6 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeDeleteRepair;
-import org.apache.usergrid.persistence.graph.impl.stage.EdgeMetaRepair;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -48,7 +46,6 @@ public class EdgeDeleteListenerImpl implements EdgeDeleteListener {
     @Inject
     public EdgeDeleteListenerImpl(
                                final EdgeDeleteRepair edgeDeleteRepair, final EdgeMetaRepair edgeMetaRepair ) {
-
         this.edgeDeleteRepair = edgeDeleteRepair;
         this.edgeMetaRepair = edgeMetaRepair;
 

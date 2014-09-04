@@ -42,6 +42,18 @@ public class UuidIdentifierNode extends QueryNode {
     }
 
 
+    @Override
+    public int getCount() {
+        return 1;
+    }
+
+
+    @Override
+    public boolean ignoreHintSize() {
+        return false;
+    }
+
+
     public UUID getUuid() {
         return uuid;
     }

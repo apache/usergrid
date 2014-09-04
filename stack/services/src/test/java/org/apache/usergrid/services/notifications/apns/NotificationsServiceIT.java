@@ -225,26 +225,31 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         ns.addDevice(notification, device);
 
         // verify Query for CREATED state
-        Query query = new Query();
-        query.addEqualityFilter("state", Notification.State.STARTED.toString());
+        Query query = Query.fromQL("select * where type = 'notification'");
+//        Query query = new Query();
+//        query.addEqualityFilter("state", Notification.State.STARTED.toString());
         Results results = app.getEm().searchCollection(
                 app.getEm().getApplicationRef(), "notifications", query);
-        Entity entity = results.getEntitiesMap().get(notification.getUuid());
-        assertNotNull(entity);
+        Notification note = (Notification) results.getEntitiesMap().get(notification.getUuid());
+        assertEquals(Notification.State.STARTED,note.getState());
 
         // perform push //
 
         ns.getQueueManager().processBatchAndReschedule(notification, null);
 
+        //app.getEm().refreshIndex();
         // verify Query for FINISHED state
-        query = new Query();
-        query.addEqualityFilter("state", Notification.State.FINISHED.toString());
+        query = Query.fromQL("select * where type = 'notification'");
+
+//        query = new Query();
+//        query.addEqualityFilter("state", Notification.State.FINISHED.toString());
         results = app.getEm().searchCollection(app.getEm().getApplicationRef(),
                 "notifications", query);
-        entity = results.getEntitiesMap().get(notification.getUuid());
-        assertNotNull(entity);
 
-        notification = (Notification) entity.toTypedEntity();
+        note = (Notification) results.getEntitiesMap().get(notification.getUuid());
+        assertEquals(Notification.State.FINISHED,note.getState());
+
+        notification = note;
         checkReceipts(notification, 0);
         checkStatistics(notification, 0, 0);
     }
@@ -277,13 +282,14 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Thread.sleep(500);
 
         // verify Query for SCHEDULED state
-        Query query = new Query();
-        query.addEqualityFilter("state",
-                Notification.State.SCHEDULED.toString());
+        Query query = Query.fromQL("select * where type = 'notification'");
+//        Query query = new Query();
+//        query.addEqualityFilter("state",
+//                Notification.State.SCHEDULED.toString());
         Results results = app.getEm().searchCollection(
                 app.getEm().getApplicationRef(), "notifications", query);
-        Entity entity = results.getEntitiesMap().get(notification.getUuid());
-        assertNotNull(entity);
+        Notification note = (Notification)results.getEntitiesMap().get(notification.getUuid());
+        assertNotNull(note);
 
         try {
             e = app.testRequest(ServiceAction.DELETE, 1, "notifications",

@@ -107,7 +107,7 @@ public class OrderedMergeTest {
 
 
         Observable<Integer> ordered =
-                OrderedMerge.orderedMerge( new IntegerComparator(), 10, expected1, expected2, expected3 );
+                OrderedMerge.orderedMerge( new ReverseIntegerComparator(), 10, expected1, expected2, expected3 );
 
         final CountDownLatch latch = new CountDownLatch( 1 );
         final List<Integer> results = new ArrayList();
@@ -165,7 +165,7 @@ public class OrderedMergeTest {
         //set our buffer size to 2.  We should easily exceed this since every observable has more than 2 elements
 
         Observable<Integer> ordered =
-                OrderedMerge.orderedMerge( new IntegerComparator(), 2, expected1, expected2, expected3 );
+                OrderedMerge.orderedMerge( new ReverseIntegerComparator(), 2, expected1, expected2, expected3 );
 
         final CountDownLatch latch = new CountDownLatch( 1 );
         final List<Integer> results = new ArrayList();
@@ -228,7 +228,7 @@ public class OrderedMergeTest {
 
 
         Observable<Integer> ordered =
-                OrderedMerge.orderedMerge( new IntegerComparator(), 10, expected1, expected2, expected3 );
+                OrderedMerge.orderedMerge( new ReverseIntegerComparator(), 10, expected1, expected2, expected3 );
 
         final CountDownLatch latch = new CountDownLatch( 1 );
         final List<Integer> results = new ArrayList();
@@ -359,7 +359,7 @@ public class OrderedMergeTest {
          * proceed
          */
         Observable<Integer> ordered =
-                OrderedMerge.orderedMerge( new IntegerComparator(), 2, expected1, expected2, expected3 );
+                OrderedMerge.orderedMerge( new ReverseIntegerComparator(), 2, expected1, expected2, expected3 );
 
 
         final CountDownLatch latch = new CountDownLatch( 1 );
@@ -397,6 +397,144 @@ public class OrderedMergeTest {
             assertEquals( "Same element expected", expected.get( i ), results.get( i ) );
         }
     }
+
+
+    /**
+       * Tests that with a buffer size much smaller than our inputs, we successfully block observables from
+       * producing values when our pressure gets too high.  Eventually, one of these events should begin production, eventually
+       * draining all values
+       *
+       * @throws InterruptedException
+       */
+      @Test
+      public void testDuplicateOrderingCorrect() throws InterruptedException {
+
+          List<Integer> expected1List = Arrays.asList( 10, 5, 4,  3, 2, 1 );
+
+          Observable<Integer> expected1 = Observable.from( expected1List ).subscribeOn( Schedulers.io() );
+
+          List<Integer> expected2List = Arrays.asList( 9, 8, 7, 6, 5 );
+
+          Observable<Integer> expected2 = Observable.from( expected2List ).subscribeOn( Schedulers.io() );
+
+
+          List<Integer> expected3List = Arrays.asList( 9, 6, 5, 3, 2, 1, 0 );
+
+          Observable<Integer> expected3 = Observable.from( expected3List ).subscribeOn( Schedulers.io() );
+
+
+          /**
+           * Fails because our first observable will have to buffer the last 4 elements while waiting for the others to
+           * proceed
+           */
+          Observable<Integer> ordered =
+                  OrderedMerge.orderedMerge( new ReverseIntegerComparator(), 2, expected1, expected2, expected3 );
+
+
+          final CountDownLatch latch = new CountDownLatch( 1 );
+          final List<Integer> results = new ArrayList();
+
+          ordered.subscribe( new Subscriber<Integer>() {
+              @Override
+              public void onCompleted() {
+                  latch.countDown();
+              }
+
+
+              @Override
+              public void onError( final Throwable e ) {
+                  e.printStackTrace();
+                  fail( "An error was thrown " );
+              }
+
+
+              @Override
+              public void onNext( final Integer integer ) {
+                  log.info( "onNext invoked with {}", integer );
+                  results.add( integer );
+              }
+          } );
+
+          latch.await();
+
+          List<Integer> expected = Arrays.asList( 10, 9, 9,  8, 7, 6,  6, 5, 5, 5, 4, 3, 3, 2, 2, 1, 1, 0);
+
+          assertEquals( expected.size(), results.size() );
+
+
+          for ( int i = 0; i < expected.size(); i++ ) {
+              assertEquals( "Same element expected", expected.get( i ), results.get( i ) );
+          }
+      }
+
+
+    /**
+       * Tests that with a buffer size much smaller than our inputs, we successfully block observables from
+       * producing values when our pressure gets too high.  Eventually, one of these events should begin production, eventually
+       * draining all values
+       *
+       * @throws InterruptedException
+       */
+      @Test
+      public void testDuplicateOrderingCorrectComparator() throws InterruptedException {
+
+          List<Integer> expected1List = Arrays.asList( 1, 2, 3, 4, 5, 10 );
+
+          Observable<Integer> expected1 = Observable.from( expected1List ).subscribeOn( Schedulers.io() );
+
+          List<Integer> expected2List = Arrays.asList( 5, 6, 7, 8, 9 );
+
+          Observable<Integer> expected2 = Observable.from( expected2List ).subscribeOn( Schedulers.io() );
+
+
+          List<Integer> expected3List = Arrays.asList( 0, 1, 2, 3, 5, 6, 9 );
+
+          Observable<Integer> expected3 = Observable.from( expected3List ).subscribeOn( Schedulers.io() );
+
+
+          /**
+           * Fails because our first observable will have to buffer the last 4 elements while waiting for the others to
+           * proceed
+           */
+          Observable<Integer> ordered =
+                  OrderedMerge.orderedMerge( new IntegerComparator(), 2, expected1, expected2, expected3 );
+
+
+          final CountDownLatch latch = new CountDownLatch( 1 );
+          final List<Integer> results = new ArrayList();
+
+          ordered.subscribe( new Subscriber<Integer>() {
+              @Override
+              public void onCompleted() {
+                  latch.countDown();
+              }
+
+
+              @Override
+              public void onError( final Throwable e ) {
+                  e.printStackTrace();
+                  fail( "An error was thrown " );
+              }
+
+
+              @Override
+              public void onNext( final Integer integer ) {
+                  log.info( "onNext invoked with {}", integer );
+                  results.add( integer );
+              }
+          } );
+
+          latch.await();
+
+          List<Integer> expected = Arrays.asList(  0, 1, 1,2, 2, 3, 3,4,  5, 5, 5,  6,  6, 7,8,  9, 9,10 );
+
+          assertEquals( expected.size(), results.size() );
+
+
+          for ( int i = 0; i < expected.size(); i++ ) {
+              assertEquals( "Same element expected", expected.get( i ), results.get( i ) );
+          }
+      }
 
 
     private static class IntegerComparator implements Comparator<Integer> {

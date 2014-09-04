@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * Utilities for converting entities to/from maps suitable for Core Persistence.
  * Aware of unique properties via Schema.
  */
-class CpEntityMapUtils {
+public class CpEntityMapUtils {
     private static final Logger logger = LoggerFactory.getLogger( CpEntityMapUtils.class );
 
     public static ObjectMapper objectMapper = new ObjectMapper(  );

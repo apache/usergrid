@@ -79,12 +79,16 @@ public class SubtractionIterator extends MergeIterator {
 
         Set<ScanColumn> results = new LinkedHashSet<ScanColumn>( pageSize );
 
-        while ( keepIterator.hasNext() && results.size() < pageSize ) {
+        /**
+         * The order here is important.  We don't want to check the advance unless we're less than our result size
+         * Otherwise we have issues with side effects of cursor construction.
+         */
+        while (results.size() < pageSize && keepIterator.hasNext() ) {
 
             Set<ScanColumn> keepPage = keepIterator.next();
 
             while ( subtractIterator.hasNext() && keepPage.size() > 0 ) {
-                keepPage = Sets.difference( keepPage, subtractIterator.next() );
+                keepPage.removeAll( subtractIterator.next() );
             }
 
             subtractIterator.reset();

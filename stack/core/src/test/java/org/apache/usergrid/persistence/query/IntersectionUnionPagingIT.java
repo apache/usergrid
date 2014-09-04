@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 
 
 /**
- * @author tnine
+ *
  */
 public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
 
@@ -59,7 +59,7 @@ public class IntersectionUnionPagingIT extends AbstractIteratingQueryIT {
         Set<String> created = performSetup( collectionIoHelper );
 
 
-//        testUnionPaging( collectionIoHelper, unionScan, created );
+        testUnionPaging( collectionIoHelper, unionScan, created );
         testUnionPaging( collectionIoHelper, scanUnion, created );
     }
 

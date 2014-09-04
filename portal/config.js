@@ -1,3 +1,23 @@
+
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
+
 var Usergrid = Usergrid || {};
 
 Usergrid.showNotifcations = true;
@@ -15,29 +35,12 @@ Usergrid.options = {
   autoUpdateTimer:61, //seconds
   menuItems:[
     {path:'#!/org-overview', active:true,pic:'&#128362;',title:'Org Administration'},
-    {path:'#!/getting-started/setup',pic:'&#128640;',title:'Getting Started'},
-    {path:'#!/app-overview/summary',pic:'&#59214;',title:'App Overview',
-      items:[
-        {path:'#!/app-overview/summary',pic:'&#128241;',title:'Summary'}
-      ]
-    },
-    {
-      path:'#!/users',pic:'&#128100;',title:'Users',
-      items:[
-        {path:'#!/users',pic:'&#128100;',title:'Users'},
-        {path:'#!/groups',pic:'&#128101;',title:'Groups'},
-        {path:'#!/roles',pic:'&#59170;',title:'Roles'}
-      ]
-    },
-    {
-      path:'#!/data',pic:'&#128248;',title:'Data',
-      items:[
-        {path:'#!/data',pic:'&#128254;',title:'Collections'}
-      ]
-    },
-    {
-      path:'#!/activities',pic:'&#59194;',title:'Activities'
-    },
+    {path:'#!/app-overview/summary',pic:'&#59214;',title:'App Overview'},
+    {path:'#!/users',pic:'&#128100;',title:'Users'},
+    {path:'#!/groups',pic:'&#128101;',title:'Groups'},
+    {path:'#!/roles',pic:'&#59170;',title:'Roles'},
+    {path:'#!/data',pic:'&#128248;',title:'Data'},
+    {path:'#!/activities',pic:'&#59194;',title:'Activities'},
     {path:'#!/shell',pic:'&#9000;',title:'Shell'}
   ]
 };

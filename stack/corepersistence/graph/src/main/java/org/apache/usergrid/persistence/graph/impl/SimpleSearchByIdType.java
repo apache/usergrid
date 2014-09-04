@@ -20,8 +20,6 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByIdType;
@@ -46,8 +44,8 @@ public class SimpleSearchByIdType extends SimpleSearchByEdgeType implements Sear
      * @param last The value to start seeking from.  Must be >= this value
 
      */
-    public SimpleSearchByIdType( final Id node, final String type, final long maxTimestamp, final String idType, final Edge last  ) {
-        super( node, type, maxTimestamp, last );
+    public SimpleSearchByIdType( final Id node, final String type, final long maxTimestamp, final Order order, final String idType, final Edge last  ) {
+        super( node, type, maxTimestamp, order, last );
 
         ValidationUtils.verifyString( idType, "idType" );
         this.idType = idType;

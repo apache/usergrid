@@ -20,11 +20,8 @@
 package org.apache.usergrid.persistence.graph.impl;
 
 
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
+import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
@@ -46,7 +43,7 @@ public class SimpleEdge implements Edge {
         this.targetNode = targetNode;
         this.timestamp = timestamp;
 
-        EdgeUtils.validateEdge( this );
+        GraphValidation.validateEdge( this );
     }
 
 

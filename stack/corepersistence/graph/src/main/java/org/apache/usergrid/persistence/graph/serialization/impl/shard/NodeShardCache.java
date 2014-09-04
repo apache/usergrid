@@ -20,10 +20,8 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.Iterator;
-import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
@@ -35,21 +33,22 @@ public interface NodeShardCache {
 
 
     /**
-     * Get the time meta data for the given node
-     * @param nodeId
+     * Get the shard for the given timestamp
+     * @param scope The scope for the application
      * @param timestamp The time to select the slice for.
-     * @param edgeType
+     * @param directedEdgeMeta The directed edge meta data
      */
-    public long getSlice(final ApplicationScope scope, final Id nodeId, final long timestamp, final String... edgeType);
+    public ShardEntryGroup getWriteShardGroup( final ApplicationScope scope,
+                                               final long timestamp, final DirectedEdgeMeta directedEdgeMeta );
 
     /**
-     * Get an iterator of all versions <= the version
-     * @param scope
-     * @param nodeId
+     * Get an iterator of all versions <= the version for iterating shard entry sets.  The iterator of groups will be ordered
+     * highest to lowest.  I.E range scanning from Long.MAX_VALUE to 0
+     * @param scope The scope for the application
      * @param maxTimestamp The highest timestamp
-     * @param edgeType
+     * @param directedEdgeMeta The directed edge meta data
      * @return
      */
-    public Iterator<Long> getVersions(final ApplicationScope scope, final Id nodeId, final long  maxTimestamp, final String... edgeType);
+    public Iterator<ShardEntryGroup> getReadShardGroup( final ApplicationScope scope, final long maxTimestamp, final DirectedEdgeMeta directedEdgeMeta  );
 
 }

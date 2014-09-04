@@ -41,7 +41,7 @@ public class EntityObject implements Serializable {
     /**
      * Fields the users can set
      */
-    @JsonTypeInfo( use= JsonTypeInfo.Id.CLASS,include= JsonTypeInfo.As.WRAPPER_OBJECT,property="@class" )
+    @JsonTypeInfo( use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class" )
     private final Map<String, Field> fields = new HashMap<String, Field>();
 
     /**
@@ -66,12 +66,14 @@ public class EntityObject implements Serializable {
 
     //@JsonAnySetter
     public void setFields(ArrayList al) {
-        if(al.size() == 0)
+
+        if ( al.isEmpty()) {
             return;
+        }
 
         for(int i = 0; i < al.size(); i++) {
             String str = al.get( i ).toString();
-            if(str.contains( "version" )){
+            if ( str.contains( "version" )) {
                 continue;
             }
             Field fd = ( Field ) al.get( i );
@@ -79,10 +81,6 @@ public class EntityObject implements Serializable {
         }
     }
 
-
-    public void getFields( String name) {
-        fields.get( name );
-    }
     /**
      * Get all fields in the entity
      */

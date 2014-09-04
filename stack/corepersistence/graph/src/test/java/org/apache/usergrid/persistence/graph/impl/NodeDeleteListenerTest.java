@@ -39,7 +39,6 @@ import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.guice.StorageEdgeSerialization;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.stage.NodeDeleteListener;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
@@ -83,7 +82,6 @@ public class NodeDeleteListenerTest {
     protected NodeDeleteListener deleteListener;
 
     @Inject
-    @StorageEdgeSerialization
     protected EdgeSerialization edgeSerialization;
 
     @Inject

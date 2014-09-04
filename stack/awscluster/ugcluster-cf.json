@@ -40,6 +40,7 @@
                 "m1.xlarge",
                 "m3.xlarge",
                 "m3.large",
+                "c3.2xlarge",
                 "c3.4xlarge"
             ],
             "ConstraintDescription": "must be valid instance type."
@@ -63,7 +64,7 @@
         "CassInstanceType": {
             "Description": "Instance type for Cass servers",
             "Type": "String",
-            "Default": "c3.4xlarge",
+            "Default": "c3.2xlarge",
             "AllowedValues": [
                 "m1.small",
                 "m1.medium",
@@ -71,6 +72,7 @@
                 "m1.xlarge",
                 "m3.xlarge",
                 "m3.2xlarge",
+                "c3.2xlarge",
                 "c3.4xlarge"
             ],
             "ConstraintDescription": "must be valid instance type."
@@ -146,6 +148,9 @@
                 "Arch": "64"
             },
             "m3.xlarge": {
+                "Arch": "64"
+            },
+            "c3.2xlarge": {
                 "Arch": "64"
             },
             "c3.2xlarge": {
@@ -857,7 +862,8 @@
                     "UnhealthyThreshold": "8",
                     "Interval": "30",
                     "Timeout": "5"
-                }
+                },
+                "CrossZone": "true"
             }
         },
         "NotificationTopic": {

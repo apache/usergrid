@@ -23,7 +23,6 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 import java.util.Iterator;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 
@@ -36,27 +35,31 @@ public interface NodeShardAllocation {
 
 
     /**
-     * Get all shards for the given info.  If none exist, a default shard should be allocated
+     * Get all shards for the given info.  If none exist, a default shard should be allocated.  The nodeId is the source node
      *
      * @param scope The application scope
-     * @param nodeId
      * @param maxShardId The max value to start seeking from.  Values <= this will be returned if specified
-     * @param edgeTypes
+     * @param directedEdgeMeta The directed edge metadata to use
      * @return A list of all shards <= the current shard.  This will always return 0l if no shards are allocated
      */
-    public Iterator<Long> getShards( final ApplicationScope scope, final Id nodeId, Optional<Long> maxShardId,
-                                     final String... edgeTypes );
+    public Iterator<ShardEntryGroup> getShards( final ApplicationScope scope, Optional<Shard> maxShardId, final DirectedEdgeMeta directedEdgeMeta );
 
 
     /**
      * Audit our highest shard for it's maximum capacity.  If it has reached the max capacity <=, it will allocate a new shard
      *
      * @param scope The app scope
-     * @param nodeId The node id
-     * @param edgeType The edge types
+     * @param shardEntryGroup The shard operator to use
+     * @param directedEdgeMeta The directed edge metadata to use
      * @return True if a new shard was allocated
      */
-    public boolean auditMaxShard(final ApplicationScope scope, final Id nodeId, final String... edgeType);
+    public boolean auditShard(final ApplicationScope scope, final ShardEntryGroup shardEntryGroup, final DirectedEdgeMeta directedEdgeMeta);
+
+    /**
+     * Get the minimum time that a created shard should be considered "new", and be used for both new writes and reads
+     * @return
+     */
+    public long getMinTime();
 
 
 }

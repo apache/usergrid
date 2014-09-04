@@ -125,5 +125,8 @@ public class NotificationJob extends OnlyOnceJob {
     }
 
 
+    @Override
+    public void dead( final JobExecution execution ) throws Exception {
 
+    }
 }

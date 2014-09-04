@@ -20,8 +20,6 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import java.util.UUID;
-
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
@@ -60,5 +58,21 @@ public interface SearchByEdgeType {
      * @return
      */
     Optional<Edge> last();
+
+    /**
+     * Get the direction we're seeking
+     * @return
+     */
+    Order getOrder();
+
+
+    /**
+     * Options for ordering.  By default, we want to perform descending for common use cases and read speed.  This is our our data
+     * is optimized in cassandra
+     */
+    public enum Order {
+        DESCENDING,
+        ASCENDING
+    }
 
 }

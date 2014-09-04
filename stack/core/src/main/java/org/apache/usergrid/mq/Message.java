@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.clearspring.analytics.hash.MurmurHash;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -484,13 +485,8 @@ public class Message {
 
 
     public void setUuid( UUID uuid ) {
-        if ( isTimeBased( uuid ) ) {
-            properties.put( MESSAGE_ID, uuid );
-            properties.put( MESSAGE_TIMESTAMP, getTimestampInMillis( uuid ) );
-        }
-        else {
-            throw new IllegalArgumentException( "Not a time-based UUID" );
-        }
+        properties.put(MESSAGE_ID, uuid);
+        properties.put(MESSAGE_TIMESTAMP, UUIDUtils.getUUIDLong(uuid));
     }
 
 

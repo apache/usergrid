@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.graph.test.util;
 
 
-import java.io.IOException;
 import java.util.Random;
 import java.util.UUID;
 
@@ -39,11 +38,6 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import com.fasterxml.uuid.EthernetAddress;
-import com.fasterxml.uuid.TimestampSynchronizer;
-import com.fasterxml.uuid.UUIDTimer;
-import com.fasterxml.uuid.impl.UUIDUtil;
 
 
 /**
@@ -174,7 +168,7 @@ public class EdgeTestUtils {
      */
     public static SearchByEdgeType createSearchByEdge( final Id sourceId, final String type, final long maxVersion,
                                                        final Edge last ) {
-        return new SimpleSearchByEdgeType( sourceId, type, maxVersion, last );
+        return new SimpleSearchByEdgeType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, last );
     }
 
 
@@ -189,7 +183,7 @@ public class EdgeTestUtils {
      */
     public static SearchByIdType createSearchByEdgeAndId( final Id sourceId, final String type, final long maxVersion,
                                                           final String idType, final Edge last ) {
-        return new SimpleSearchByIdType( sourceId, type, maxVersion, idType, last );
+        return new SimpleSearchByIdType( sourceId, type, maxVersion, SearchByEdgeType.Order.DESCENDING, idType, last );
     }
 
 
@@ -217,7 +211,7 @@ public class EdgeTestUtils {
      */
     public static SearchByEdge createGetByEdge( final Id sourceId, final String type, final Id targetId,
                                                 final long maxVersion, final Edge last ) {
-        return new SimpleSearchByEdge( sourceId, type, targetId, maxVersion, last );
+        return new SimpleSearchByEdge( sourceId, type, targetId, maxVersion, SearchByEdgeType.Order.DESCENDING, last );
     }
 
 //

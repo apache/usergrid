@@ -29,10 +29,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
+import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -49,8 +49,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-@RunWith( ITRunner.class )
-@UseModules( { TestGraphModule.class } )
+@RunWith(ITRunner.class)
+@UseModules({ TestGraphModule.class })
 public class EdgeShardSerializationTest {
 
     @ClassRule
@@ -86,39 +86,54 @@ public class EdgeShardSerializationTest {
 
         final Id now = createId( "test" );
 
-        final long slice1 = 1000l;
+        final long timestamp = 10000l;
 
-        final long slice2 = slice1 * 2;
+        final Shard shard1 = new Shard( 1000l, timestamp, false );
 
-        final long slice3 = slice2 * 2;
+        final Shard shard2 = new Shard( shard1.getShardIndex() * 2, timestamp, true );
 
-        String[] types = { "edgeType", "subType" };
+        final Shard shard3 = new Shard( shard2.getShardIndex() * 2, timestamp, false );
 
-        MutationBatch batch = edgeShardSerialization.writeEdgeMeta( scope, now, slice1, types );
+        final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType(now,  "edgeType", "subType"  );
 
-        batch.mergeShallow( edgeShardSerialization.writeEdgeMeta( scope, now, slice2, types ) );
+        MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, shard1, sourceEdgeMeta  );
 
-        batch.mergeShallow( edgeShardSerialization.writeEdgeMeta( scope, now, slice3, types ) );
+        batch.mergeShallow( edgeShardSerialization.writeShardMeta( scope, shard2, sourceEdgeMeta ) );
+
+        batch.mergeShallow( edgeShardSerialization.writeShardMeta( scope, shard3, sourceEdgeMeta ) );
 
         batch.execute();
 
 
-        Iterator<Long> results = edgeShardSerialization.getEdgeMetaData( scope, now, Optional.<Long>absent(), types );
+        Iterator<Shard> results =
+                edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
 
-        assertEquals( slice3, results.next().longValue() );
 
-        assertEquals( slice2, results.next().longValue() );
+        assertEquals( shard3, results.next() );
 
-        assertEquals( slice1, results.next().longValue() );
+        assertEquals( shard2, results.next() );
+
+        assertEquals( shard1, results.next() );
+
 
         assertFalse( results.hasNext() );
 
+        final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( now,  "edgeType", "subType"  );
+
+        //test we get nothing with the other node type
+        results =
+                edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), targetEdgeMeta );
+
+        assertFalse( results.hasNext() );
+
+
         //test paging and size
-        results = edgeShardSerialization.getEdgeMetaData( scope, now, Optional.of( slice2 ), types );
+        results = edgeShardSerialization.getShardMetaData( scope, Optional.of( shard2 ), sourceEdgeMeta );
 
-        assertEquals( slice2, results.next().longValue() );
+        assertEquals( shard2, results.next() );
 
-        assertEquals( slice1, results.next().longValue() );
+
+        assertEquals( shard1, results.next() );
 
 
         assertFalse( results.hasNext() );
@@ -130,50 +145,71 @@ public class EdgeShardSerializationTest {
 
         final Id now = createId( "test" );
 
-        final long slice1 = 1000l;
 
-        final long slice2 = slice1 * 2;
+        final long timestamp = 10000l;
 
-        final long slice3 = slice2 * 2;
+        final Shard shard1 = new Shard( 1000l, timestamp, false );
 
-        String[] types = { "edgeType", "subType" };
+        final Shard shard2 = new Shard( shard1.getShardIndex() * 2, timestamp, true );
 
-        MutationBatch batch = edgeShardSerialization.writeEdgeMeta( scope, now, slice1, types );
+        final Shard shard3 = new Shard( shard2.getShardIndex() * 2, timestamp, false );
 
-        batch.mergeShallow( edgeShardSerialization.writeEdgeMeta( scope, now, slice2, types ) );
 
-        batch.mergeShallow( edgeShardSerialization.writeEdgeMeta( scope, now, slice3, types ) );
+        final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType(now,  "edgeType", "subType"  );
+
+
+        MutationBatch batch =
+                edgeShardSerialization.writeShardMeta( scope, shard1, sourceEdgeMeta );
+
+        batch.mergeShallow(
+                edgeShardSerialization.writeShardMeta( scope, shard2, sourceEdgeMeta ) );
+
+        batch.mergeShallow(
+                edgeShardSerialization.writeShardMeta( scope, shard3, sourceEdgeMeta ) );
 
         batch.execute();
 
 
-        Iterator<Long> results = edgeShardSerialization.getEdgeMetaData( scope, now, Optional.<Long>absent(), types );
+        Iterator<Shard> results =
+                edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
 
-        assertEquals( slice3, results.next().longValue() );
+        assertEquals( shard3, results.next() );
 
-        assertEquals( slice2, results.next().longValue() );
+        assertEquals( shard2, results.next() );
 
-        assertEquals( slice1, results.next().longValue() );
+        assertEquals( shard1, results.next() );
 
         assertFalse( results.hasNext() );
+
+        //test nothing with other type
+
+        final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromTargetNodeSourceType( now,  "edgeType", "subType"  );
+
+        results =
+                edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), targetEdgeMeta );
+
+        assertFalse( results.hasNext() );
+
 
         //test paging and size
-        edgeShardSerialization.removeEdgeMeta( scope, now, slice1, types ).execute();
+        edgeShardSerialization.removeShardMeta( scope, shard1, sourceEdgeMeta ).execute();
 
-        results = edgeShardSerialization.getEdgeMetaData( scope, now,Optional.<Long>absent(), types );
+        results =
+                edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
 
-        assertEquals( slice3, results.next().longValue() );
+        assertEquals( shard3, results.next() );
 
-        assertEquals( slice2, results.next().longValue() );
+        assertEquals( shard2, results.next() );
 
         assertFalse( results.hasNext() );
 
 
-        edgeShardSerialization.removeEdgeMeta( scope, now, slice2, types ).execute();
+        edgeShardSerialization.removeShardMeta( scope, shard2, sourceEdgeMeta ).execute();
 
-        edgeShardSerialization.removeEdgeMeta( scope, now, slice3, types ).execute();
+        edgeShardSerialization.removeShardMeta( scope, shard3, sourceEdgeMeta ).execute();
 
-        results = edgeShardSerialization.getEdgeMetaData( scope, now, Optional.<Long>absent(), types );
+        results =
+                edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
 
 
         assertFalse( results.hasNext() );

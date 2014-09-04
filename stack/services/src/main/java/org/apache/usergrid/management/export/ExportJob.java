@@ -79,4 +79,10 @@ public class ExportJob extends OnlyOnceJob {
     public void setExportService( final ExportService exportService ) {
         this.exportService = exportService;
     }
+
+
+    @Override
+    public void dead( final JobExecution execution ) throws Exception {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

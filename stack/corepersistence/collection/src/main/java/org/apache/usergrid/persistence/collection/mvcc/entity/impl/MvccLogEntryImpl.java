@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
@@ -43,7 +44,7 @@ public class MvccLogEntryImpl implements MvccLogEntry {
 
     public MvccLogEntryImpl( final Id entityId, final UUID version, final Stage stage, final State state ) {
         Preconditions.checkNotNull( entityId, "entity id is required" );
-        Preconditions.checkNotNull( version, "version id is required" );
+        ValidationUtils.verifyTimeUuid( version, "version" );
         Preconditions.checkNotNull( stage, "entity  is required" );
         Preconditions.checkNotNull( state, "state  is required" );
 

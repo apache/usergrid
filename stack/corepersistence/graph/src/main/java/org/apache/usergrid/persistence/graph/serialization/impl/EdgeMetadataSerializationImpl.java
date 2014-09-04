@@ -44,7 +44,7 @@ import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
 import org.apache.usergrid.persistence.graph.SearchIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerialization;
-import org.apache.usergrid.persistence.graph.serialization.util.EdgeUtils;
+import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
@@ -131,7 +131,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     public MutationBatch writeEdge( final ApplicationScope scope, final Edge edge ) {
 
         ValidationUtils.validateApplicationScope( scope );
-        EdgeUtils.validateEdge( edge );
+        GraphValidation.validateEdge( edge );
 
 
         final Id source = edge.getSourceNode();
@@ -315,7 +315,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     private Iterator<String> getEdgeTypes( final ApplicationScope scope, final SearchEdgeType search,
                                            final MultiTennantColumnFamily<ApplicationScope, Id, String> cf ) {
         ValidationUtils.validateApplicationScope( scope );
-        EdgeUtils.validateSearchEdgeType( search );
+        GraphValidation.validateSearchEdgeType( search );
 
 
         final ScopedRowKey<ApplicationScope, Id> sourceKey = new ScopedRowKey<>( scope, search.getNode() );
@@ -350,7 +350,7 @@ public class EdgeMetadataSerializationImpl implements EdgeMetadataSerialization,
     public Iterator<String> getIdTypes( final ApplicationScope scope, final SearchIdType search,
                                         final MultiTennantColumnFamily<ApplicationScope, EdgeIdTypeKey, String> cf ) {
         ValidationUtils.validateApplicationScope( scope );
-        EdgeUtils.validateSearchEdgeIdType( search );
+        GraphValidation.validateSearchEdgeIdType( search );
 
 
         final ScopedRowKey<ApplicationScope, EdgeIdTypeKey> sourceTypeKey =

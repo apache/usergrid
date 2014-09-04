@@ -67,6 +67,7 @@ import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
+import org.apache.usergrid.persistence.model.field.ArrayField;
 import static org.mockito.Mockito.mock;
 
 
@@ -142,13 +143,17 @@ public class MvccEntitySerializationStrategyImplTest {
         StringField stringField = new StringField( "name", "test" );
         UUIDField uuidField = new UUIDField( "uuid", UUIDGenerator.newTimeUUID() );
 
+        ArrayField arrayField = new ArrayField("array");
+        arrayField.add("item1");
+        arrayField.add("item2");
+
         entity.setField( boolField );
         entity.setField( doubleField );
         entity.setField( intField );
         entity.setField( longField );
         entity.setField( stringField );
         entity.setField( uuidField );
-
+        entity.setField( arrayField );
 
         MvccEntity saved = new MvccEntityImpl( id, version, MvccEntity.Status.COMPLETE, Optional.of( entity ) );
 
@@ -190,6 +195,10 @@ public class MvccEntitySerializationStrategyImplTest {
 
         assertEquals( uuidField, uuidFieldReturned );
 
+        Field<ArrayField> arrayFieldReturned = returned.getEntity().get().getField( arrayField.getName() );
+
+        assertEquals( arrayField, arrayFieldReturned );
+
 
         Set<Field> results = new HashSet<Field>();
         results.addAll( returned.getEntity().get().getFields());
@@ -202,7 +211,7 @@ public class MvccEntitySerializationStrategyImplTest {
         assertTrue( results.contains( stringField ) );
         assertTrue( results.contains( uuidField ) );
 
-        assertEquals( 6, results.size() );
+        assertEquals( 7, results.size() );
 
 
         assertEquals( id, entity.getId() );

@@ -72,6 +72,13 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+        <groupId>com.codahale.metrics</groupId>
+        <artifactId>metrics-core</artifactId>
+        <version>3.0.2</version>
+        <scope>test</scope>
+    </dependency>
+
 
 
   </dependencies>

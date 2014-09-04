@@ -9,9 +9,10 @@
     </properties>
 	
     <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>7</version>
+        <groupId>org.apache.usergrid</groupId>
+        <artifactId>usergrid</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../../stack</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -98,9 +99,13 @@
             <url>http://maven.springframework.org/milestone</url>
         </repository>
     </repositories>
-    <scm>
-        <connection>scm:git:git@github.com:apigee/usergrid-java-sdk.git</connection>
-        <developerConnection>scm:git:git@github.com:apigee/usergrid-java-sdk.git</developerConnection>
-        <url>git@github.com:apigee/usergrid-java-sdk.git</url>
-    </scm>
+    <name>Apache Usergrid Java SDK</name>
+    <organization>
+    	<name>The Apache Software Foundation</name>
+    	<url>http://apache.org</url>
+    </organization>
+    <issueManagement>
+    	<system>JIRA</system>
+    	<url>https://issues.apache.org/jira/browse/USERGRID</url>
+    </issueManagement>
 </project>

@@ -17,32 +17,22 @@
 
 package org.apache.usergrid.rest.management;
 
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.ws.rs.core.MediaType;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.rest.AbstractRestIT;
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import org.junit.Ignore;
+import org.junit.Test;
 
 
-/**
- *
- *
- */
 @Concurrent
 public class ExportResourceIT extends AbstractRestIT {
 
@@ -276,16 +266,6 @@ public class ExportResourceIT extends AbstractRestIT {
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
         HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "bucket_location", "insert bucket name here" );
-
-
-        properties.put( "storage_provider", "s3" );
-        properties.put( "storage_info", storage_info );
-
 
         try {
             node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export" )
@@ -305,16 +285,6 @@ public class ExportResourceIT extends AbstractRestIT {
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
         HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "bucket_location", "insert bucket name here" );
-
-
-        properties.put( "storage_provider", "s3" );
-        properties.put( "storage_info", storage_info );
-
 
         try {
             node = mapper.readTree( resource().path( "/management/orgs/test-organization/export" )
@@ -335,16 +305,6 @@ public class ExportResourceIT extends AbstractRestIT {
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
 
         HashMap<String, Object> payload = new HashMap<String, Object>();
-        Map<String, Object> properties = new HashMap<String, Object>();
-        Map<String, Object> storage_info = new HashMap<String, Object>();
-        //TODO: always put dummy values here and ignore this test.
-        //TODO: add a ret for when s3 values are invalid.
-        storage_info.put( "bucket_location", "insert bucket name here" );
-
-
-        properties.put( "storage_provider", "s3" );
-        properties.put( "storage_info", storage_info );
-
 
         try {
             node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
@@ -358,8 +318,6 @@ public class ExportResourceIT extends AbstractRestIT {
     }
 
 
-    //
-    //
     @Test
     public void exportGetCollectionUnauthorized() throws Exception {
         JsonNode node = null;
@@ -377,7 +335,6 @@ public class ExportResourceIT extends AbstractRestIT {
     }
 
 
-    //
     @Test
     public void exportGetApplicationUnauthorized() throws Exception {
         JsonNode node = null;
@@ -433,7 +390,6 @@ public class ExportResourceIT extends AbstractRestIT {
         assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
-
     @Test
     public void exportPostApplicationNullPointerStorageInfo() throws Exception {
         JsonNode node = null;
@@ -454,7 +410,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
         assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
-
 
     @Test
     public void exportPostCollectionNullPointerStorageInfo() throws Exception {
@@ -477,6 +432,27 @@ public class ExportResourceIT extends AbstractRestIT {
         assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
+    @Test
+    public void exportPostOrganizationNullPointerStorageProvider() throws Exception {
+        JsonNode node = null;
+        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
+
+        HashMap<String, Object> payload = payloadBuilder();
+        HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
+        //remove storage_info field
+        properties.remove( "storage_provider" );
+
+
+        try {
+            node = resource().path( "/management/orgs/test-organization/export" )
+                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
+    }
 
     @Test
     public void exportPostApplicationNullPointerStorageProvider() throws Exception {
@@ -500,7 +476,6 @@ public class ExportResourceIT extends AbstractRestIT {
         assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
-
     @Test
     public void exportPostCollectionNullPointerStorageProvider() throws Exception {
         JsonNode node = null;
@@ -523,6 +498,59 @@ public class ExportResourceIT extends AbstractRestIT {
         assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
 
+    @Test
+    public void exportPostOrganizationNullPointerStorageVerification() throws Exception {
+        JsonNode node = null;
+        ClientResponse.Status responseStatus = ClientResponse.Status.OK;
+
+        HashMap<String, Object> payload = payloadBuilder();
+        HashMap<String, Object> properties = ( HashMap<String, Object> ) payload.get( "properties" );
+        HashMap<String, Object> storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
+        //remove storage_key field
+        storage_info.remove( "s3_key" );
+
+        try {
+            node = resource().path( "/management/orgs/test-organization/export" )
+                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
+
+        payload = payloadBuilder();
+        properties = ( HashMap<String, Object> ) payload.get( "properties" );
+        storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
+        //remove storage_key field
+        storage_info.remove( "s3_access_id" );
+
+        try {
+            node = resource().path( "/management/orgs/test-organization/export" )
+                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
+
+        payload = payloadBuilder();
+        properties = ( HashMap<String, Object> ) payload.get( "properties" );
+        storage_info = ( HashMap<String, Object> ) properties.get( "storage_info" );
+        //remove storage_key field
+        storage_info.remove( "bucket_location" );
+
+        try {
+            node = resource().path( "/management/orgs/test-organization/export" )
+                    .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
+    }
 
     @Test
     public void exportPostApplicationNullPointerStorageVerification() throws Exception {
@@ -577,7 +605,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
         assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
     }
-
 
     @Test
     public void exportPostCollectionNullPointerStorageVerification() throws Exception {

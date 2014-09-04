@@ -28,6 +28,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.CommonTokenStream;
@@ -53,7 +57,6 @@ import org.apache.usergrid.persistence.index.query.tree.Operand;
 import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.utils.ClassUtils;
 import org.apache.usergrid.persistence.index.utils.ConversionUtils;
-import org.apache.usergrid.persistence.index.utils.JsonUtils;
 import org.apache.usergrid.persistence.index.utils.ListUtils;
 import org.apache.usergrid.persistence.index.utils.MapUtils;
 import org.elasticsearch.index.query.FilterBuilder;
@@ -99,6 +102,9 @@ public class Query {
     private List<CounterFilterPredicate> counterFilters;
     private String collection;
     private String ql;
+
+    private static ObjectMapper mapper = new ObjectMapper();
+
 
     List<Operand> filterClauses = new ArrayList<Operand>();
 
@@ -230,7 +236,14 @@ public class Query {
 
 
     public static Query fromJsonString( String json ) throws QueryParseException {
-        Object o = JsonUtils.parse( json );
+
+        Object o;
+        try {
+            o = mapper.readValue( json, Object.class );
+        } catch (IOException ex) {
+            throw new QueryParseException("Error parsing JSON query string " + json, ex);
+        }
+
         if ( o instanceof Map ) {
             @SuppressWarnings({ "unchecked", "rawtypes" }) Map<String, List<String>> params =
                     ClassUtils.cast( MapUtils.toMapList( ( Map ) o ) );
@@ -1081,7 +1094,7 @@ public class Query {
         private final Query.SortDirection direction;
 
 
-        public SortPredicate( String propertyName, Query.SortDirection direction ) {
+        public SortPredicate(@JsonProperty("propertyName")  String propertyName, @JsonProperty("direction")  Query.SortDirection direction ) {
             if ( propertyName == null ) {
                 throw new NullPointerException( "Property name was null" );
             }

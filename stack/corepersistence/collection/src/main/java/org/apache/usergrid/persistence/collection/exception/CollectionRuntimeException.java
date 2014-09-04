@@ -19,7 +19,6 @@ package org.apache.usergrid.persistence.collection.exception;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.model.entity.Entity;
 
 
 public class CollectionRuntimeException extends RuntimeException {

@@ -119,9 +119,7 @@ public class WriteUniqueVerify implements
                             mb.execute();
                         }
                         catch ( ConnectionException ex ) {
-                            throw new WriteUniqueVerifyException( 
-                                    mvccEntity, ioevent.getEntityCollection(),
-                                    "Error writing unique value " + field.toString(), ex );
+                            throw new RuntimeException("Unable to write to cassandra", ex );
                         }
 
                         // does the database value match what we wrote?
@@ -130,8 +128,7 @@ public class WriteUniqueVerify implements
                             loaded = uniqueValueStrat.load( ioevent.getEntityCollection(), field );
                         }
                         catch ( ConnectionException ex ) {
-                            throw new WriteUniqueVerifyException( mvccEntity, ioevent.getEntityCollection(),
-                                    "Error verifying write", ex );
+                            throw new RuntimeException("Unable to read from cassandra", ex );
                         }
 
                         return new FieldUniquenessResult( 

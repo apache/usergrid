@@ -16,7 +16,6 @@
  */
 package org.apache.usergrid.persistence;
 
-
 import java.util.UUID;
 
 public interface EntityRef {
