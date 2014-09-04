@@ -35,6 +35,7 @@
         <rest.it.forkCount>2</rest.it.forkCount>
         <rest.it.reuseForks>false</rest.it.reuseForks>
         <rest.it.parallel>suites</rest.it.parallel>
+        <rest.it.threadCount>2</rest.it.threadCount>
     </properties>
 
     <profiles>
@@ -60,6 +61,7 @@
                             <reuseForks>${rest.it.reuseForks}</reuseForks>
 
                             <parallel>${rest.it.parallel}</parallel>
+                            <threadCount>${rest.it.threadCount}</threadCount>
 
                             <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=src/test/resources/logging.properties ${ug.argline}</argLine>
 

@@ -29,7 +29,6 @@
         <file>
             <outputDirectory>webapps</outputDirectory> 
             <source>../rest/target/ROOT.war</source>
-            <!-- <source>/Users/ApigeeCorporation/src/usergrid-rest-apigee-production/target/ROOT.war</source> -->
             <destName>ROOT.war</destName> 
         </file>
 
@@ -64,8 +63,7 @@
 
         <fileSet>
             <outputDirectory>./webapps/portal</outputDirectory>
-            <directory>../../portal/dist/appsvc-ui</directory>
-            <!-- <directory>/Users/ApigeeCorporation/src/usergrid-portal-internal/dist/appsvc-ui</directory> -->
+            <directory>../../portal/dist/usergrid-portal</directory>
             <includes>
                 <include>**</include>
             </includes>
