@@ -112,7 +112,7 @@ public class QueueListener  {
     }
 
     private void execute(){
-        svcMgr = smf.getServiceManager(new UUID( 0, 1 ));
+        svcMgr = smf.getServiceManager(smf.getManagementAppId());
         queueManager = svcMgr.getQueueManager();
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
         // run until there are no more active jobs
