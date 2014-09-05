@@ -16,15 +16,21 @@
  */
 package org.apache.usergrid.services.notifications;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import org.apache.usergrid.mq.Message;
 
 import java.util.UUID;
+import org.elasticsearch.common.primitives.Longs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by ApigeeCorporation on 9/4/14.
  */
 public class ApplicationQueueMessage extends Message {
 
+    private static final Logger log = LoggerFactory.getLogger(ApplicationQueueMessage.class);
 
     static final String MESSAGE_PROPERTY_DEVICE_UUID = "deviceUUID";
     static final String MESSAGE_PROPERTY_APPLICATION_UUID = "applicationUUID";
@@ -44,9 +50,29 @@ public class ApplicationQueueMessage extends Message {
         setNotifierId(notifierId);
     }
 
+    public static UUID bytesToUuid( byte[] sixteenBytes ) {
+        byte[] msBytes = Arrays.copyOfRange( sixteenBytes, 0, 8 );
+        byte[] lsBytes = Arrays.copyOfRange( sixteenBytes, 8, 16 );
+        long msb = Longs.fromByteArray( msBytes ); 
+        long lsb = Longs.fromByteArray( lsBytes ); 
+        return new UUID( msb, lsb );
+    }
 
     public static ApplicationQueueMessage generate(Message message) {
-        return new ApplicationQueueMessage(UUID.fromString(message.getStringProperty(MESSAGE_PROPERTY_APPLICATION_UUID)), UUID.fromString(message.getStringProperty(MESSAGE_PROPERTY_NOTIFICATION_ID)), UUID.fromString(message.getStringProperty(MESSAGE_PROPERTY_DEVICE_UUID)), message.getStringProperty(MESSAGE_PROPERTY_NOTIFIER_NAME), message.getStringProperty(MESSAGE_PROPERTY_NOTIFIER_ID));
+
+        // this crazyness may indicate that Core Persistence is not storing UUIDs correctly
+        byte[] mpaBytes = (byte[])message.getObjectProperty(MESSAGE_PROPERTY_APPLICATION_UUID);
+        UUID mpaUuid = bytesToUuid(mpaBytes);
+        byte[] mpnBytes = (byte[])message.getObjectProperty(MESSAGE_PROPERTY_NOTIFICATION_ID);
+        UUID mpnUuid = bytesToUuid(mpnBytes);
+        // end of crazyness
+
+        UUID mpdUuid = (UUID)message.getObjectProperty(MESSAGE_PROPERTY_DEVICE_UUID);
+
+        return new ApplicationQueueMessage(
+                mpaUuid, mpnUuid, mpdUuid,
+                message.getStringProperty(MESSAGE_PROPERTY_NOTIFIER_NAME), 
+                message.getStringProperty(MESSAGE_PROPERTY_NOTIFIER_ID));
     }
 
     public UUID getApplicationId() {

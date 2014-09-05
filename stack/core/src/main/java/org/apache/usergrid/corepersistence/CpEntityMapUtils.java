@@ -109,6 +109,9 @@ public class CpEntityMapUtils {
 
             } else if ( value instanceof Map ) {
                 processMapValue( value, fieldName, entity, entityType);
+
+            } else if ( value instanceof Enum ) {
+                entity.setField( new StringField( fieldName, value.toString(), unique && topLevel ));
 	
 			} else if ( value != null ) {
                 byte[] valueSerialized;

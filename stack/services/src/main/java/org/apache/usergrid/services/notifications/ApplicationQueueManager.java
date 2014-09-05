@@ -289,7 +289,9 @@ public class ApplicationQueueManager implements QueueManager {
                             @Override
                             public ApplicationQueueMessage call(ApplicationQueueMessage message) {
                                 try {
-                                    UUID deviceUUID = message.getUuid();
+
+                                    UUID deviceUUID = message.getDeviceId();
+
                                     Notification notification = notificationMap.get(message.getNotificationId());
                                     if (notification == null) {
                                         notification = em.get(message.getNotificationId(), Notification.class);

@@ -31,8 +31,6 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.net.SocketException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.usergrid.services.ServiceAction;
 
@@ -147,6 +145,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // create push notification //
 
+        app.getEm().refreshIndex();
+
+        // give queue manager a query for loading 100 devices from an application (why?)
         app.clear();
         Query pQuery = new Query();
         pQuery.setLimit(100);
@@ -155,23 +156,24 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         pQuery.addIdentifier(new ServiceParameter.NameParameter(device1.getUuid().toString()).getIdentifier());
         ns.getQueueManager().TEST_PATH_QUERY =  new PathQuery( new SimpleEntityRef(app.getEm().getApplicationRef()), pQuery);
 
-
+        // create a "hellow world" notification
         String payload = getPayload();
         Map<String, String> payloads = new HashMap<String, String>(1);
         payloads.put(notifier.getName().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
-                .getEntity();
+        // post notification to service manager
+        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
+
+        // ensure notification it was created
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
-        Notification notification = app.getEm().get(e.getUuid(),
-                Notification.class);
+        // ensure notification has expected name
+        Notification notification = app.getEm().get(e.getUuid(), Notification.class);
         assertEquals(
                 notification.getPayloads().get(notifier.getName().toString()),
                 payload);
-
 
         // verify Query for CREATED state
         Query query = new Query();
@@ -184,6 +186,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // perform push //
 
         notification = scheduleNotificationAndWait(notification);
+
+        app.getEm().refreshIndex();
 
         // verify Query for FINISHED state
         query = new Query();
