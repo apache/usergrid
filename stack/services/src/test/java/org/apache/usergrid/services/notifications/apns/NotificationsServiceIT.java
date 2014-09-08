@@ -71,7 +71,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     public void before() throws Exception {
         super.before();
         // create apns notifier //
-        NotificationsQueueManager.IS_TEST = true;
         app.clear();
         app.put("name", "apNs");
         app.put("provider",PROVIDER);
