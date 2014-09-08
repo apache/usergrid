@@ -136,8 +136,10 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     @After
     public void after() throws Exception {
-        listener.stop();
-        listener = null;
+        if(listener != null) {
+            listener.stop();
+            listener = null;
+        }
     }
 
     @Test
