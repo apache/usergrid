@@ -27,7 +27,7 @@
   <!-- Override these properties in your settings.xml in an active profile -->
   <properties>
     <services.it.forkCount>3</services.it.forkCount>
-    <services.it.reuseForks>true</services.it.reuseForks>
+    <services.it.reuseForks>false</services.it.reuseForks>
     <services.it.parallel>suites</services.it.parallel>
     <services.it.threadCount>2</services.it.threadCount>
   </properties>

@@ -535,6 +535,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // perform push //
         notification = scheduleNotificationAndWait(notification);
 
+        app.getEm().refreshIndex();
+
         checkReceipts(notification, 2); //the second notifier isn't associated correctly so its 3 instead of 4
     }
 
@@ -591,6 +593,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // perform push //
         notification = scheduleNotificationAndWait(notification);
+
+        app.getEm().refreshIndex();
 
         checkReceipts(notification, 2);
     }
