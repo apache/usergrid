@@ -300,6 +300,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
+        app.getEm().refreshIndex();
+
         Notification notification = app.getEm().get(e.getUuid(),
                 Notification.class);
         assertEquals(
@@ -318,6 +320,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 app.getEm().getApplicationRef(), "notifications", query);
         Entity entity = results.getEntitiesMap().get(notification.getUuid());
         assertNotNull(entity);
+
+        app.getEm().refreshIndex();
 
         try {
             e = app.testRequest(ServiceAction.DELETE, 1, "notifications",
@@ -378,7 +382,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.clear();
         StringBuilder sb = new StringBuilder();
         sb.append("{\"x\":\"");
-        while (sb.length() < 255) {
+        while (sb.length() < 2048) {
             sb.append("x");
         }
         sb.append("\"}");
@@ -392,7 +396,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
             fail("invalid payload should have been rejected");
         } catch (Exception ex) {
             assertEquals(ex.getMessage(),
-                    "java.lang.IllegalArgumentException: Apple APNs payloads must be 256 characters or less");
+                    "java.lang.IllegalArgumentException: Apple APNs payloads must be 2048 characters or less");
             // ok
         }
     }
@@ -501,6 +505,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifiers")
                 .getEntity();
+        app.getEm().refreshIndex();
+
         app.testRequest(ServiceAction.GET, 1, "notifiers", "apNs2");
 
         Notifier notifier2 = app.getEm().get(e.getUuid(), Notifier.class);
@@ -514,6 +520,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         device2.setProperty(key2, null);
         app.getEm().update(device2);
 
+        app.getEm().refreshIndex();
+
         // create push notification //
 
         app.clear();
@@ -526,6 +534,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+        app.getEm().refreshIndex();
 
         Notification notification = app.getEm().get(e.getUuid(),
                 Notification.class);
@@ -562,6 +572,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifiers", nameValue);
 
+        app.getEm().refreshIndex();
+
         Notifier notifier2 = app.getEm().get(e.getUuid(), Notifier.class);
         assertEquals(notifier2.getName(), nameValue);
         assertEquals(notifier2.getProvider(), PROVIDER);
@@ -570,6 +582,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         String key2 = notifier2.getName() + NOTIFIER_ID_POSTFIX;
         device1.setProperty(key2, PUSH_TOKEN);
         app.getEm().update(device1);
+
+        app.getEm().refreshIndex();
 
         // create push notification //
 
@@ -584,6 +598,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
+        app.getEm().refreshIndex();
+
         Notification notification = app.getEm().get(e.getUuid(),
                 Notification.class);
         assertEquals(
@@ -591,6 +607,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 payload);
 
         ns.addDevice(notification, device1);
+
+        app.getEm().refreshIndex();
 
         // perform push //
         notification = scheduleNotificationAndWait(notification);
@@ -748,6 +766,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Entity entity = app.testRequest(ServiceAction.POST, 1, "notifiers").getEntity();
         Notifier notifier = app.getEm().get(entity.getUuid(), Notifier.class);
         final String notifierKey = notifier.getName() + NOTIFIER_ID_POSTFIX;
+        app.getEm().refreshIndex();
 
         // create a bunch of devices and add them to the notification
 
@@ -756,6 +775,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
             app.put(notifierKey, PUSH_TOKEN);
             app.put("name", "device"+i*10);
             app.testRequest(ServiceAction.POST, 1, "devices").getEntity();
+            app.getEm().refreshIndex();
+
         }
 
         app.clear();
@@ -768,6 +789,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // create a notification
         entity = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", entity.getUuid());
+        app.getEm().refreshIndex();
+
         final Notification notification = (Notification) entity.toTypedEntity();
 
         try {
