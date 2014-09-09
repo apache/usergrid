@@ -28,7 +28,7 @@
 
         <file>
             <outputDirectory>webapps</outputDirectory> 
-            <source>../rest/target/ROOT.war</source>
+            <source>${stack.war}</source>
             <destName>ROOT.war</destName> 
         </file>
 
@@ -63,7 +63,7 @@
 
         <fileSet>
             <outputDirectory>./webapps/portal</outputDirectory>
-            <directory>../../portal/dist/usergrid-portal</directory>
+            <directory>${portal.dir}</directory>
             <includes>
                 <include>**</include>
             </includes>

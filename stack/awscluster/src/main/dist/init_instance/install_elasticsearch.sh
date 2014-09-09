@@ -42,7 +42,37 @@ cd /usr/share/usergrid/scripts
 #groovy registry_register.groovy elasticsearch
 #groovy wait_for_instances.groovy elasticsearch ${CASSANDRA_NUM_SERVERS}
 
+# use about one quarter of RAM for heap
+case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
+'m1.small' )
+    export ES_HEAP_SIZE=512M
+;;
+'m1.medium' )
+    export ES_HEAP_SIZE=1G
+;;
+'m1.large' )
+    export ES_HEAP_SIZE=2G
+;;
+'m1.xlarge' )
+    export ES_HEAP_SIZE=5G
+;;
+'m3.xlarge' )
+    export ES_HEAP_SIZE=5G
+;;
+'m3.large' )
+    export ES_HEAP_SIZE=2G
+;;
+'c3.2xlarge' )
+    export ES_HEAP_SIZE=4G
+;;
+'c3.4xlarge' )
+    export ES_HEAP_SIZE=12G
+esac
+
 cat >> /etc/default/elasticsearch << EOF
+ES_HEAP_SIZE=${ES_HEAP_SIZE}
+MAX_OPEN_FILES=65535
+MAX_LOCKED_MEMORY=unlimited
 JAVA_HOME=/usr/lib/jvm/jdk1.7.0
 EOF
 
