@@ -56,7 +56,7 @@ public class ApplicationQueueManager implements QueueManager {
     public static int BATCH_SIZE = 1000;
 
     public static final long MESSAGE_TRANSACTION_TIMEOUT =  5 * 60 * 1000;
-    private static final Logger LOG = LoggerFactory.getLogger(NotificationsQueueManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
 
     //need a mocking framework, this is to substitute for no mocking
     public static PathQuery<Device> TEST_PATH_QUERY = null;

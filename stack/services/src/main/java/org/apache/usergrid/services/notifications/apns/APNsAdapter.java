@@ -102,10 +102,6 @@ public class APNsAdapter implements ProviderAdapter {
     public void sendNotification(String providerId, Notifier notifier,
             Object payload, Notification notification, TaskTracker tracker)
             throws Exception {
-        if(isMock(notifier)){
-            tracker.completed("Mocked!");
-            return;
-        }
         APNsNotification apnsNotification = APNsNotification.create(providerId, payload.toString(), notification, tracker);
         PushManager<SimpleApnsPushNotification> pushManager = getPushManager(notifier);
         try {
@@ -168,27 +164,35 @@ public class APNsAdapter implements ProviderAdapter {
 
     //cache to retrieve push manager, cached per notifier, so many notifications will get same push manager
     private static LoadingCache<Notifier, PushManager<SimpleApnsPushNotification>> apnsServiceMap = CacheBuilder
-            .newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
+            .newBuilder()
+            .expireAfterAccess(10, TimeUnit.MINUTES)
             .removalListener(new RemovalListener<Notifier, PushManager<SimpleApnsPushNotification>>() {
                 @Override
                 public void onRemoval(
                         RemovalNotification<Notifier, PushManager<SimpleApnsPushNotification>> notification) {
                     try {
                         PushManager<SimpleApnsPushNotification> manager = notification.getValue();
-                        if(!manager.isShutDown()){
-                            notification.getValue().shutdown();
+                        if (!manager.isShutDown()) {
+                            List<SimpleApnsPushNotification> notifications = manager.shutdown(3000);
+                            for (SimpleApnsPushNotification notification1 : notifications) {
+                                try {
+                                    ((APNsNotification) notification1).messageSendFailed(new Exception("Cache Expired: Shutting down sender"));
+                                }catch (Exception e){
+                                    logger.error("Failed to mark notification",e);
+                                }
+                            }
                         }
                     } catch (Exception ie) {
-                        logger.error("Failed to shutdown from cache",ie);
+                        logger.error("Failed to shutdown from cache", ie);
                     }
                 }
             }).build(new CacheLoader<Notifier, PushManager<SimpleApnsPushNotification>>() {
                 @Override
                 public PushManager<SimpleApnsPushNotification> load(Notifier notifier) {
-                    try{
+                    try {
                         return createApnsService(notifier);
-                    }catch (KeyStoreException ke){
-                        logger.error("Could not instantiate pushmanager",ke);
+                    } catch (KeyStoreException ke) {
+                        logger.error("Could not instantiate pushmanager", ke);
                         return null;
                     }
                 }

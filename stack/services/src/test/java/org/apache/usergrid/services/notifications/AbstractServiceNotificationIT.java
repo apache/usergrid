@@ -67,6 +67,7 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
         long timeout = System.currentTimeMillis() + 60000;
         while (System.currentTimeMillis() < timeout) {
             Thread.sleep(200);
+            app.getEm().refreshIndex();
             notification = app.getEm().get(notification.getUuid(),
                     Notification.class);
             if (notification.getFinished() != null) {
