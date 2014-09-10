@@ -19,7 +19,6 @@ package org.apache.usergrid.services;
 
 import java.util.UUID;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,13 +34,6 @@ import static org.junit.Assert.assertNotNull;
 public class ServiceFactoryIT extends AbstractServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger( ServiceFactoryIT.class );
-
-
-    @Ignore
-    @Test
-    public void testServiceFactory() throws Exception {
-        logger.info( "test service factory" );
-    }
 
 
     @Test

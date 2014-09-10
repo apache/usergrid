@@ -47,7 +47,7 @@ public abstract class AbstractEntityStageTest {
 
 
     /** Test every Entity with */
-    @Ignore
+    @Ignore("Why is this ignored?")
     @Test( expected = IllegalArgumentException.class )
     @Theory
     public void testWrongEntityType(@InvalidEntityGenerator.IllegalFields final Entity entity, @InvalidIdGenerator.IllegalFields final Id id) throws Exception {

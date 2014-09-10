@@ -108,7 +108,7 @@ public class ExportServiceIT {
 
 
     //Tests to make sure we can call the job with mock data and it runs.
-    @Ignore //Connections won't save when run with maven, but on local builds it will.
+    @Ignore("Connections won't save when run with maven, but on local builds it will.")
     public void testConnectionsOnCollectionExport() throws Exception {
 
         File f = null;
@@ -719,8 +719,8 @@ public class ExportServiceIT {
     }
 
 
-    @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
-   // @Test
+    @Ignore("For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.")
+    @Test
     public void testIntegration100EntitiesOn() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -808,8 +808,8 @@ public class ExportServiceIT {
         blobStore.deleteContainer( bucketName );
     }
 
-    @Ignore
-   // @Test
+    @Ignore("Why is this ignored?")
+    @Test
     public void testIntegration100EntitiesForAllApps() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -895,8 +895,8 @@ public class ExportServiceIT {
     }
 
 
-    @Ignore
-   // @Test
+    @Ignore("Why is this ignored")
+    @Test
     public void testIntegration100EntitiesOnOneOrg() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();

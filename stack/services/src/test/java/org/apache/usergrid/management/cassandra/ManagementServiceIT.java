@@ -437,7 +437,7 @@ public class ManagementServiceIT {
     }
 
 
-    @Ignore
+    @Ignore("Why is this ignored?")
     public void superUserGetOrganizationsPage() throws Exception {
         int beforeSize = setup.getMgmtSvc().getOrganizations().size() - 1;
         // create 15 orgs

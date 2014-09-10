@@ -135,7 +135,7 @@ public class NodeShardApproximationTest {
     }
 
 
-    @Ignore // outdated and no longer relevant test 
+    @Ignore("outdated and no longer relevant test")
     @Test
     public void testSingleShardMultipleThreads() throws ExecutionException, InterruptedException {
 
@@ -202,7 +202,7 @@ public class NodeShardApproximationTest {
 
 
 
-    @Ignore // outdated and no longer relevant test 
+    @Ignore("outdated and no longer relevant test")
     @Test
     public void testMultipleShardMultipleThreads() throws ExecutionException, InterruptedException {
 

@@ -261,8 +261,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         }
     }
 
-    @Ignore
-    // todo: how can I mock this?
+    @Ignore("todo: how can I mock this?")
     @Test
     public void providerIdUpdate() throws Exception {
 
@@ -368,8 +367,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         }
     }
 
-    @Ignore
-    // todo: how can I mock this?
+    @Ignore("todo: how can I mock this?")
     @Test
     public void badToken() throws Exception {
 
@@ -425,8 +423,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertEquals("InvalidRegistration", receipt.getErrorCode());
     }
 
-    @Ignore
-    // todo: how can I mock this?
+    @Ignore("todo: how can I mock this?")
     @Test
     public void badAPIKey() throws Exception {
 

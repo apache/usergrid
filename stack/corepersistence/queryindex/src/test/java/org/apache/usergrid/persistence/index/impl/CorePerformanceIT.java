@@ -79,7 +79,7 @@ public class CorePerformanceIT extends BaseIT {
     static EntityIndexFactory ecif ;
 
 
-    @Ignore
+    @Ignore("Relies on finefoods.txt which must be downloaded separately")
     @Test
     public void loadAndReadData() throws IOException, InterruptedException {
 

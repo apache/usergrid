@@ -39,7 +39,7 @@ import org.junit.Ignore;
 public class DevicesResourceIT extends AbstractRestIT {
 
     @Test
-    @Ignore // cannot be supported with Core Persistence which requires time based UUIDs
+    @Ignore("cannot be supported with Core Persistence which requires time based UUIDs")
     public void putWithUUIDShouldCreateAfterDelete() throws IOException {
 
         Map<String, String> payload = new HashMap<String, String>();

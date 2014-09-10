@@ -56,7 +56,7 @@ public class SerializationComparison {
 
 
     @Test
-    @Ignore
+    @Ignore("Too heavy for normal build process?")
     public void smileSerialization() throws IOException {
         SmileFactory smile = new SmileFactory();
 

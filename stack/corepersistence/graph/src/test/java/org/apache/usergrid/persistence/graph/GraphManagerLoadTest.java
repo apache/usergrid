@@ -121,7 +121,7 @@ public class GraphManagerLoadTest {
 
 
     @Test
-    @Ignore
+    @Ignore("Too heavy for normal build process")
     public void writeThousandsSingleTarget() throws InterruptedException, ExecutionException {
         EdgeGenerator generator = new EdgeGenerator() {
 

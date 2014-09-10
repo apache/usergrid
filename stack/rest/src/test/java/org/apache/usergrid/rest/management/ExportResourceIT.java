@@ -61,8 +61,7 @@ public class ExportResourceIT extends AbstractRestIT {
     }
 
 
-    //is this test still valid knowing that the sch. won't run in intelliJ?
-    @Ignore
+    @Ignore("is this test still valid knowing that the sch. won't run in intelliJ?")
     public void exportCallCreationEntities100() throws Exception {
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
         JsonNode node = null;

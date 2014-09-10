@@ -141,7 +141,7 @@ public class UserResourceIT extends AbstractRestIT {
     /**
      * Tests that when a full text index is run on a field that isn't full text indexed an error is thrown
      */
-    @Ignore // all text fields are full text indexed with Core Persistence
+    @Ignore("No longer relevant because all text fields are full-text indexed with Core Persistence")
     @Test(expected = UniformInterfaceException.class)
     public void fullTextQueryNotFullTextIndexed() throws IOException {
 

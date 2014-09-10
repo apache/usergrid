@@ -17,29 +17,33 @@
 package org.apache.usergrid.rest.applications.collection.activities;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
-import org.junit.Rule;
-import org.junit.Test;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import javax.ws.rs.core.MediaType;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
+import static org.apache.usergrid.utils.MapUtils.hashMap;
 
 import static org.junit.Assert.assertEquals;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+import org.junit.Rule;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
- * // TODO: Document this
- *
- * @author ApigeeCorporation
- * @since 4.0
+ * Test update and partial update.
  */
 public class PutTest extends AbstractRestIT {
-
+    private static final Logger log= LoggerFactory.getLogger( PutTest.class );
+    
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
@@ -79,5 +83,47 @@ public class PutTest extends AbstractRestIT {
 
         node = activities.withQuery( query ).get();
         assertEquals( 6, node.get( "entities" ).size() );
+    }
+
+    @Test 
+    public void testPartialUpdate() throws IOException {
+
+        // create user bart
+
+        Map<String, Object> userProperties = new LinkedHashMap<String, Object>() {{
+            put( "username", "bart" );
+            put( "employer", "Brawndo" );
+            put( "email", "bart@personal-email.example.com" );
+        }};
+
+        JsonNode userNode = mapper.readTree( 
+            resource().path( "/test-organization/test-app/users" )
+                .queryParam( "access_token", adminAccessToken )
+                .accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON )
+                .post( String.class, userProperties ));
+
+        assertNotNull( userNode );
+        String uuid = userNode.withArray("entities").get(0).get("uuid").asText();
+        assertNotNull( uuid );
+
+        // update user bart passing only an update to his employer
+
+        Map<String, Object> updateProperties = new LinkedHashMap<String, Object>() {{
+            put( "employer", "Initech" );
+        }};
+
+        try {
+            JsonNode updatedNode = mapper.readTree( 
+                resource().path( "/test-organization/test-app/user/" + uuid )
+                    .queryParam( "access_token", adminAccessToken )
+                    .accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON )
+                    .put( String.class, updateProperties ));
+
+        } catch ( UniformInterfaceException uie ) {
+            fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
+        }
+
     }
 }

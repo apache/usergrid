@@ -66,7 +66,7 @@ public class FacebookProviderIT {
 
 
     @Test
-    @Ignore
+    @Ignore("Requires Facebook credentials")
     public void verifyGetOrCreateOk() throws Exception {
         Application application = setup.getEmf().getEntityManager( applicationId ).getApplication();
         Map fb_user = MapUtils.hashMap( "id", "12345678" ).map( "name", "Facebook User" ).map( "username", "fb.user" );

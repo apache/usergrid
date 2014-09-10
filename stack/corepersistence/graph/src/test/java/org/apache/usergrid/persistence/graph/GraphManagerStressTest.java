@@ -86,7 +86,7 @@ public class GraphManagerStressTest {
 
 
     @Test
-    @Ignore
+    @Ignore("Too heavy for normal build process")
     public void writeThousands() throws InterruptedException {
         EdgeGenerator generator = new EdgeGenerator() {
 
@@ -173,7 +173,7 @@ public class GraphManagerStressTest {
     }
 
 
-    @Ignore
+    @Ignore("Too heavy for normal build process")
     @Test
     public void writeThousandsSingleSource() throws InterruptedException {
         EdgeGenerator generator = new EdgeGenerator() {
@@ -201,7 +201,7 @@ public class GraphManagerStressTest {
 
 
     @Test
-    @Ignore
+    @Ignore("Too heavy for normal build process")
     public void writeThousandsSingleTarget() throws InterruptedException {
         EdgeGenerator generator = new EdgeGenerator() {
 

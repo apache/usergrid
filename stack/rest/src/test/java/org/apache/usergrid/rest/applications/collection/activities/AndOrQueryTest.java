@@ -166,7 +166,7 @@ public class AndOrQueryTest extends AbstractRestIT {
     }
 
 
-    @Ignore//Test to make sure all 1000 exist with a regular query
+    @Ignore("Test to make sure all 1000 exist with a regular query")
     public void queryReturnCheck() throws Exception {
         CustomCollection madeupStuff = context.collection( "imagination" );
         Map character = hashMap( "WhoHelpedYou", "Ruff" );

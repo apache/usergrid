@@ -40,7 +40,7 @@ import static junit.framework.Assert.assertNotNull;
 
 
 /** @author zznate */
-@Ignore
+@Ignore("Experimental Ping Indentiyy test")
 @Concurrent()
 public class PingIdentityProviderIT {
     private static UserInfo adminUser;

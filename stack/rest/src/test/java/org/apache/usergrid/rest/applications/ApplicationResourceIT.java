@@ -373,8 +373,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore // Because JSP is broken in test setup, possibly due to JSTL classloader issue
-    // see also: https://issues.apache.org/jira/browse/USERGRID-209 
+    @Ignore("Because JSP is broken in test setup, possibly due to JSTL classloader issue. "
+            + "see also: https://issues.apache.org/jira/browse/USERGRID-209")
     public void authorizationCodeWithWrongCredentials() throws Exception {
         ApplicationInfo appInfo = setup.getMgmtSvc().getApplicationInfo( "test-organization/test-app" );
         String clientId = setup.getMgmtSvc().getClientIdForApplication( appInfo.getId() );

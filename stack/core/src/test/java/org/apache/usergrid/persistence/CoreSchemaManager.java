@@ -28,7 +28,7 @@ import org.apache.usergrid.persistence.cassandra.Setup;
 
 
 /** @author zznate */
-@Ignore
+@Ignore("Not a test")
 public class CoreSchemaManager implements SchemaManager {
     private static final Logger LOG = LoggerFactory.getLogger( CoreSchemaManager.class );
 

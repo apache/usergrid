@@ -38,7 +38,7 @@ import com.hazelcast.core.Member;
 import com.hazelcast.core.MessageListener;
 
 
-@Ignore
+@Ignore("Experimental test")
 public class HazelcastTest implements InstanceListener, MessageListener<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger( HazelcastTest.class );

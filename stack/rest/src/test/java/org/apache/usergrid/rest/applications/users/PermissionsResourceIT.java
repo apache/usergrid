@@ -610,7 +610,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
      * examplepatient add himself to exampledoctor following list
      */
     @Test
-    @Ignore
+    @Ignore("Why is this ignored?")
     public void wildcardFollowingPermission() throws Exception {
         UUID id = UUIDUtils.newTimeUUID();
 

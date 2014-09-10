@@ -96,10 +96,9 @@ public class PagingResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore 
-    // ignored because currently startPaging is only be supported for 
-    // queues and not for  generic collections as this test assumes.
-    // see also: https://issues.apache.org/jira/browse/USERGRID-211 
+    @Ignore("ignored because currently startPaging is only be supported for queues and not for  "
+            + "generic collections as this test assumes. "
+            + "see also: https://issues.apache.org/jira/browse/USERGRID-211 ")
     public void startPaging() throws Exception {
 
         CustomCollection things = context.application().collection( "test2things" );

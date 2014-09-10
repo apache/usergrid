@@ -401,8 +401,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         }
     }
 
-    @Ignore
-    // todo: how can I mock this?
+    @Ignore("todo: how can I mock this?")
     @Test
     public void badToken() throws Exception {
 
@@ -618,8 +617,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         checkReceipts(notification, 2);
     }
 
-    @Ignore
-    // todo: how can I mock this?
+    @Ignore("todo: how can I mock this?")
     @Test
     public void badCertificate() throws Exception {
 
@@ -692,8 +690,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertNotNull(entity);
     }
 
-    @Ignore
-    // todo: how can I mock this?
+    @Ignore("todo: how can I mock this?")
     @Test
     public void inactiveDeviceUpdate() throws Exception {
 
