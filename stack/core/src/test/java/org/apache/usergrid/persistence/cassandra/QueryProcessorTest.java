@@ -742,7 +742,7 @@ public class QueryProcessorTest {
 
 
     @Test
-    @Ignore"no longer relevant for two-dot-o")
+    @Ignore("no longer relevant for two-dot-o")
     public void validateHintSizeForOrder() throws Exception {
         String queryString = "order by name desc";
 
