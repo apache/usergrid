@@ -19,6 +19,8 @@ package org.apache.usergrid.persistence;
 
 import org.apache.usergrid.persistence.index.query.Query;
 import java.util.Iterator;
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
@@ -26,7 +28,8 @@ public class PathQuery<E> {
 
     private PathQuery source;
     private Query query;
-    private EntityRef head;
+    private UUID uuid;
+    private String type;
 
 
     public PathQuery() {
@@ -39,7 +42,8 @@ public class PathQuery<E> {
      * @param head the top-level entity
      */
     public PathQuery( EntityRef head ) {
-        this.head = head;
+        this.uuid = head.getUuid();
+        this.type = head.getType();
         this.query = null;
     }
 
@@ -54,7 +58,8 @@ public class PathQuery<E> {
         if ( query.getCollection() == null && query.getConnectionType() == null ) {
             throw new IllegalArgumentException( "Query must have a collection or connectionType value" );
         }
-        this.head = head;
+        this.uuid = head.getUuid();
+        this.type = head.getType();
         this.query = query;
     }
 
@@ -81,7 +86,7 @@ public class PathQuery<E> {
 
     public Iterator<E> iterator( EntityManager em ) {
         try {
-            if ( head != null ) {
+            if ( uuid != null && type != null ) {
                 return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel() );
             }
             else {
@@ -95,7 +100,7 @@ public class PathQuery<E> {
 
 
     protected Results getHeadResults( EntityManager em ) throws Exception {
-        EntityRef ref = new SimpleEntityRef( head );
+        EntityRef ref = new SimpleEntityRef(type,uuid);
         return ( query.getCollection() != null ) ? 
                em.searchCollection( ref, query.getCollection(), query ) :
                em.searchConnectedEntities( ref, query );
@@ -103,7 +108,7 @@ public class PathQuery<E> {
 
 
     protected Iterator refIterator( EntityManager em ) throws Exception {
-        if ( head != null ) {
+        if ( type != null  && uuid != null) {
             return new PagingResultsIterator( getHeadResults( em ), Level.REFS );
         }
         else {
@@ -122,10 +127,9 @@ public class PathQuery<E> {
     }
 
 
-    public EntityRef getHead() {
-        return head;
-    }
+    public String getType(){return type;}
 
+    public UUID getUuid(){return uuid;}
 
     public Query getQuery() {
         return query;
