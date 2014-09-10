@@ -51,7 +51,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
             : "noop";
 
     private static final String API_KEY = "AIzaSyCIH_7WC0mOqBGMOXyQnFgrBpOePgHvQJM";
-    private static final String PUSH_TOKEN = "APA91bGxRGnMK8tKgVPzSlxtCFvwSVqx0xEPjA06sBmiK0kQsiwUt6ipSYF0iPRHyUgpXle0P8OlRWJADkQrcN7yxG4pLMg1CVmrqDu8tfSe63mZ-MRU2IW0cOhmosqzC9trl33moS3OvT7qjDjkP4Qq8LYdwwYC5A";
+    private static final String PUSH_TOKEN = "APA91bGxRGnMK8tKgVPzSlxtCFvwSVqx0xEPjA06sBmiK0k"
+            + "QsiwUt6ipSYF0iPRHyUgpXle0P8OlRWJADkQrcN7yxG4pLMg1CVmrqDu8tfSe63mZ-MRU2IW0cOhmo"
+            + "sqzC9trl33moS3OvT7qjDjkP4Qq8LYdwwYC5A";
 
     private Notifier notifier;
     private Device device1, device2;
@@ -101,7 +103,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         ns.getQueueManager().TEST_PATH_QUERY = pathQuery;
         ApplicationQueueManager.QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString();
-        listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
+        listener = new QueueListener(ns.getServiceManagerFactory(),
+                ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
         listener.run();
     }
 
@@ -179,38 +182,40 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Test
     public void singlePushNotificationViaUser() throws Exception {
 
-
         app.clear();
 
+        // create user asdf
         app.put("username", "asdf");
         app.put("email", "asdf@adsf.com");
-        Entity user = app.testRequest(ServiceAction.POST, 1, "users")
-                .getEntity();
+        Entity user = app.testRequest(ServiceAction.POST, 1, "users").getEntity();
         assertNotNull(user);
+
+        // post an existing device to user's devices collection
         Entity device = app.testRequest(ServiceAction.POST, 1, "users",
                 user.getUuid(), "devices", device1.getUuid()).getEntity();
         assertEquals(device.getUuid(), device1.getUuid());
 
-
+        // create query that searches for that device by uuid
         Query pQuery = new Query();
         pQuery.setLimit(100);
         pQuery.setCollection("devices");
         pQuery.setResultsLevel(Query.Level.ALL_PROPERTIES);
-        pQuery.addIdentifier(new ServiceParameter.NameParameter(user.getUuid().toString()).getIdentifier());
-        ns.getQueueManager().TEST_PATH_QUERY =  new PathQuery(new SimpleEntityRef(  app.getEm().getApplicationRef()), pQuery);
+        pQuery.addIdentifier(new ServiceParameter.NameParameter(
+            device.getUuid().toString()).getIdentifier()); 
+        ns.getQueueManager().TEST_PATH_QUERY =  
+            new PathQuery(new SimpleEntityRef(  app.getEm().getApplicationRef()), pQuery);
 
+        // create a push notification 
         String payload = "Hello, World!";
         Map<String, String> payloads = new HashMap<String, String>(1);
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
-                .getEntity();
+        // post that notification 
+        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
-
-        Notification notification = app.getEm().get(e.getUuid(),
-                Notification.class);
+        Notification notification = app.getEm().get(e.getUuid(), Notification.class);
 
         // perform push //
         notification = scheduleNotificationAndWait(notification);
