@@ -275,7 +275,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         for ( DirectedEdgeMeta.NodeMeta node : directedEdgeMeta.getNodes() ) {
 
             //short circuit
-            if(!isNew || node.getId().getUuid().version() == 4){
+            if(!isNew || node.getId().getUuid().version() > 2){
                 return false;
             }
 
