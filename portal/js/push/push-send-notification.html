@@ -1,0 +1,154 @@
+<div class="content-page">
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+    <page-title icon="&#128319;" title="Send Notification"></page-title>
+
+
+  <a style="float: right" target="_blank" href="http://apigee.com/docs/usergrid/content/push-notifications" class="notifications-links">Learn more in our docs</a>
+
+  <form id="query-inputs" class="notifcations-form" ng-submit="scheduleNotification()" novalidate name="send">
+    <h4>Notifier and Recipients</h4>
+    Choose the Notifier (a configured notification service) to connect with for this push notification. Only users
+    with devices registered with this notifier will receive the push notification. If a group is selected, only the users
+    in the selected goup, with devices registered with this notifier, will receive the push notification.
+
+    <br/><br/>
+    <label for="send-notification-notifier">Notifier:</label>
+    <select name="notifierName" ng-required="true" id="send-notification-notifier" ng-model="send.selectedNotifier" ng-options="n._data.name for n in notifiersCollection">
+      <option value="">Choose Notifier</option>
+    </select>
+    <span ng-show="send.notifierName.$dirty && send.notifierName.$error.required">
+      You must choose a notifier
+    </span>
+
+    <div class="control-group">
+      <input type="radio" name="notification-user-group" id="notification-user-group-all"  ng-required="true"  ng-model="send.controlGroup" value="all" checked> All Devices
+      <input type="radio" name="notification-user-group" id="notification-user-group-devices" ng-required="true"  ng-model="send.controlGroup" value="devices"> Devices
+      <input type="radio" name="notification-user-group" id="notification-user-group-users" ng-required="true"  ng-model="send.controlGroup" value="users"> Users
+      <input type="radio" name="notification-user-group" id="notification-user-group-group" ng-required="true"  ng-model="send.controlGroup" value="groups"> Groups
+    </div>
+
+    <div class="control-group">
+      <div id="notificaitons-devices-select-container" ng-show="send.controlGroup === 'devices'">
+        Enter the device uuids:<br>
+        <textarea id="devices-list" placeholder="device-UUID-1,device-UUID-2,device-UUID-3,etc..."   ng-model="send.devices" ng-list class="span6 pull-left" rows="5" ng-required="send.controlGroup === 'devices'"></textarea>
+      </div>
+
+      <div id="notificaitons-users-select-container" ng-show="send.controlGroup === 'users'">
+      Enter the usernames:<br>
+      <textarea id="user-list" placeholder="username1,username2,username3,etc..."   ng-model="send.users" ng-list class="span6 pull-left" rows="5" ng-required="send.controlGroup === 'users'"></textarea>
+      <!--br>
+      <div class="thingy">
+      Or, use a form to look them up:<br>
+      <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-add-user-to-notification"> Add User</a>
+      </div-->
+    </div>
+      <div id="notificaitons-group-select-container" ng-show="send.controlGroup === 'groups'">
+        Enter the group paths:<br>
+        <textarea id="group-list" placeholder="group-path-1,group-path-2,group-path-3,etc..."   ng-model="send.groups" ng-list class="span6 pull-left" rows="5" ng-required="send.controlGroup === 'groups'"></textarea>
+        <!--br>
+        <div class="thingy">
+        <a style="margin-right: 15px;" class="btn btn-primary" data-toggle="modal" href="#dialog-form-add-group-to-notification"> Add Group</a>
+        </div-->
+      </div>
+    </div>
+
+    <hr>
+    <h4>Notifier Message</h4>
+    Edit the "alert" message in the JSON payload.
+    <div class="controls">
+      <div>
+        <textarea id="notification-json" class="span6 pull-left" rows="3" ng-model="send.notifierMessage" required ug-validate>Your text here</textarea>
+        <br>
+        <a target="_blank" href="http://apigee.com/docs/usergrid/content/push-notifications" class="notifications-links">Learn more about messages in our docs</a>
+      </div>
+    </div>
+    <div style="display: none;">
+      <a class="btn" id="reset-notifications-payload" >Reset Payload</a>
+      <a class="btn" id="validate-notifications-json" >Validate JSON</a>
+      <span id="notifications-json-status" class="alert" style="width: 400px;">Validate your JSON!</span>
+    </div>
+    <hr>
+    <h4>Delivery</h4>
+    Select whether to schedule this push notification for immediate delivery or at a future date and time.
+
+    <div class="control-group">
+      <input type="radio" name="notification-schedule-time" id="notification-schedule-time-now"  ng-required="true" ng-model="send.deliveryPeriod" value="now" checked> Now
+      <input type="radio" name="notification-schedule-time" id="notification-schedule-time-later"  ng-required="true" ng-model="send.deliveryPeriod" value="later"> Schedule for later
+    </div>
+    <div id="notification-schedule-time-controls" ng-show="send.deliveryPeriod === 'later'">
+      <div id="notifications-start-time-span" class="control-group">
+        <label class="control-label" for="notification-schedule-time-date">Start Date/Time:</label>
+        <div class="controls">
+          <input type="text" id="notification-schedule-time-date" name="schedule-date" class="input-small"/>
+          <input type="text" id="notification-schedule-time-time" name="schedule-time" value="12:00 AM" class="input-small"/> (<span id="gmt_display"></span>)
+        </div>
+      </div>
+    </div>
+    <br/>
+    <p ng-show="send.$invalid">Please complete all required information before submitting.</p>
+    <input type="submit" ng-disabled="!send.$valid" name="submit" class="btn btn-primary" />
+  </form>
+</div>
+
+
+<form id="dialog-form-add-user-to-notification" class="modal hide fade">
+  <div class="modal-header">
+    <a class="close" data-dismiss="modal">&times</a>
+    <h4>Add a user to this Notification</h4>
+  </div>
+  <div class="modal-body">
+    <p class="validateTips">Search for the user you want to add to this notification.</p>
+    <fieldset>
+      <div class="control-group">
+        <label for="search-notification-user-name-input">User</label>
+        <div class="controls">
+          <input type="text" name="search-notification-user-name-input" id="search-notification-user-name-input" class="input-xlarge"/>
+          <p class="help-block hide"></p>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+  <div class="modal-footer">
+    <input type="submit" class="btn btn-usergrid" value="Add"/>
+    <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+  </div>
+</form>
+
+<form id="dialog-form-add-group-to-notification" class="modal hide fade">
+  <div class="modal-header">
+    <a class="close" data-dismiss="modal">&times</a>
+    <h4>Add a group to this Notification</h4>
+  </div>
+  <div class="modal-body">
+    <p class="validateTips">Search for the group you want to add to this notification.</p>
+    <fieldset>
+      <div class="control-group">
+        <label for="search-notification-group-name-input">Group</label>
+        <div class="controls">
+          <input type="text" name="search-notification-group-name-input" id="search-notification-group-name-input" class="input-xlarge"/>
+          <p class="help-block hide"></p>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+  <div class="modal-footer">
+    <input type="submit" class="btn btn-usergrid" value="Add"/>
+    <input type="reset" class="btn" value="Cancel" data-dismiss="modal"/>
+  </div>
+</form>

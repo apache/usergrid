@@ -41,6 +41,14 @@ Usergrid.options = {
     {path:'#!/roles',pic:'&#59170;',title:'Roles'},
     {path:'#!/data',pic:'&#128248;',title:'Data'},
     {path:'#!/activities',pic:'&#59194;',title:'Activities'},
+    {path:'#!/push/getStarted',pic:'&#59200;',title:'Push', items:[
+      {path:'#!/push/getStarted',pic:'&#59176;',title:'Get Started'},
+      {path:'#!/push/configuration',pic:'&#9874;',title:'Configure'},
+      {path:'#!/push/history',pic:'&#9991;',title:'History'},
+      {path:'#!/push/sendNotification',pic:'&#59200;',title:'Send'}
+    ]},
+    
+
     {path:'#!/shell',pic:'&#9000;',title:'Shell'}
   ]
 };
