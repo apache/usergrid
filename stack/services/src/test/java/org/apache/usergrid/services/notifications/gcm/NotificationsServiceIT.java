@@ -203,7 +203,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         pQuery.addIdentifier(new ServiceParameter.NameParameter(
             user.getUuid().toString()).getIdentifier()); 
-        ns.getQueueManager().TEST_PATH_QUERY =  new PathQuery(user), pQuery);
+        ns.getQueueManager().TEST_PATH_QUERY =  new PathQuery( user, pQuery );
 
         // create a push notification 
         String payload = "Hello, World!";

@@ -26,7 +26,7 @@ public class PathQuery<E> {
 
     private PathQuery source;
     private Query query;
-    private SimpleEntityRef head;
+    private EntityRef head;
 
 
     public PathQuery() {
@@ -38,7 +38,7 @@ public class PathQuery<E> {
      *
      * @param head the top-level entity
      */
-    public PathQuery( SimpleEntityRef head ) {
+    public PathQuery( EntityRef head ) {
         this.head = head;
         this.query = null;
     }
@@ -50,7 +50,7 @@ public class PathQuery<E> {
      * @param head the top-level entity
      * @param query the query - must have a collection or connectType value set
      */
-    public PathQuery( SimpleEntityRef head, Query query ) {
+    public PathQuery( EntityRef head, Query query ) {
         if ( query.getCollection() == null && query.getConnectionType() == null ) {
             throw new IllegalArgumentException( "Query must have a collection or connectionType value" );
         }
@@ -122,7 +122,7 @@ public class PathQuery<E> {
     }
 
 
-    public SimpleEntityRef getHead() {
+    public EntityRef getHead() {
         return head;
     }
 
