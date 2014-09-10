@@ -680,8 +680,8 @@ public class CpRelationManager implements RelationManager {
                 edgeType, 
                 headEntity.getType(), headEntity.getUuid(), 
                 itemRef.getType(), itemRef.getUuid() });
-
-        long uuidHash =   UUIDUtils.getUUIDLong( memberEntity.getId().getUuid());
+        UUID timeStampUuid =   memberEntity.getId().getUuid() != null &&  UUIDUtils.isTimeBased( memberEntity.getId().getUuid()) ?  memberEntity.getId().getUuid() : UUIDUtils.newTimeUUID();
+        long uuidHash =    UUIDUtils.getUUIDLong(timeStampUuid);
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge(
             cpHeadEntity.getId(),
