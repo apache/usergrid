@@ -39,7 +39,7 @@ import static org.apache.usergrid.services.notifications.NotificationsService.NO
 
 public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
-    private static final Logger LOG = LoggerFactory
+    private static final Logger logger = LoggerFactory
             .getLogger(NotificationsServiceIT.class);
 
     /**
@@ -164,12 +164,10 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
-                .getEntity();
+        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
-        Notification notification = app.getEm().get(e.getUuid(),
-                Notification.class);
+        Notification notification = app.getEm().get(e.getUuid(), Notification.class);
         assertEquals(
                 notification.getPayloads().get(notifier.getUuid().toString()),
                 payload);
@@ -195,15 +193,13 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 user.getUuid(), "devices", device1.getUuid()).getEntity();
         assertEquals(device.getUuid(), device1.getUuid());
 
-        // create query that searches for that device by providing UUID of the user
         Query pQuery = new Query();
         pQuery.setLimit(100);
         pQuery.setCollection("devices");
         pQuery.setResultsLevel(Query.Level.ALL_PROPERTIES);
-
         pQuery.addIdentifier(new ServiceParameter.NameParameter(
-            user.getUuid().toString()).getIdentifier()); 
-        ns.getQueueManager().TEST_PATH_QUERY =  new PathQuery( user, pQuery );
+            device.getUuid().toString()).getIdentifier()); 
+        ns.getQueueManager().TEST_PATH_QUERY =  new PathQuery(user, pQuery);
 
         // create a push notification 
         String payload = "Hello, World!";
@@ -506,11 +502,11 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         }
 
         long time = System.currentTimeMillis();
-        LOG.error("START DELIVERY OF {} NOTIFICATIONS", NUM_DEVICES);
+        logger.error("START DELIVERY OF {} NOTIFICATIONS", NUM_DEVICES);
 
         // perform push //
         notification = scheduleNotificationAndWait(notification);
-        LOG.error("END DELIVERY OF {} NOTIFICATIONS ({})", NUM_DEVICES,
+        logger.error("END DELIVERY OF {} NOTIFICATIONS ({})", NUM_DEVICES,
                 System.currentTimeMillis() - time);
 
         // check receipts //
