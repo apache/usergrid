@@ -103,6 +103,15 @@
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
             <version>${elasticsearch.version}</version>
+            <exclusions>
+
+                <!-- because embedded ES 1.3.2 search wants ALTLR 3.5 but embedded C* needs 3.4 -->
+                <exclusion>
+                    <artifactId>antlr-runtime</artifactId>
+                    <groupId>org.antlr</groupId>
+                </exclusion>
+
+            </exclusions>
         </dependency>
 
         <!-- Test dependencies  -->
@@ -163,7 +172,7 @@
           <version>${project.version}</version>
           <classifier>tests</classifier>
           <scope>test</scope>
-        </dependency>
+      </dependency>
 
     </dependencies>
 

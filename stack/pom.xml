@@ -97,7 +97,7 @@
     <!-- =================================================================== -->
 
     <amber-version>0.22-incubating</amber-version>
-    <cassandra-version>1.2.12</cassandra-version>
+    <cassandra-version>1.2.18</cassandra-version>
     <hector-om-version>3.0-03</hector-om-version>
     <hector-version>1.1-4</hector-version>
     <hector-test-version>1.1-4</hector-test-version>
