@@ -23,7 +23,7 @@ pushd /etc/apt/sources.list.d
 
 # Install and stop ElasticSearch
 cat >> elasticsearch.sources.list << EOF
-deb http://packages.elasticsearch.org/elasticsearch/1.2/debian stable main
+deb http://packages.elasticsearch.org/elasticsearch/1.3/debian stable main
 EOF
 apt-get update
 apt-get --force-yes -y install elasticsearch
