@@ -56,7 +56,8 @@ public class NotificationsService extends AbstractCollectionService {
 
     private static final int PAGE = 100;
     private static final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
-
+    //need a mocking framework, this is to substitute for no mocking
+    public static PathQuery<Device> TEST_PATH_QUERY = null;
 
     public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
 
@@ -133,7 +134,7 @@ public class NotificationsService extends AbstractCollectionService {
         postMeter.mark();
         try {
             validate(null, context.getPayload());
-            PathQuery<Device> pathQuery = getPathQuery(context.getRequest().getOriginalParameters());
+            PathQuery<Device> pathQuery = TEST_PATH_QUERY != null ? TEST_PATH_QUERY : getPathQuery(context.getRequest().getOriginalParameters());
             context.getProperties().put("state", Notification.State.CREATED);
             context.getProperties().put("pathQuery", pathQuery);
             context.setOwner(sm.getApplication());

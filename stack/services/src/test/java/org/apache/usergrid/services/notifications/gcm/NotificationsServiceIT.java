@@ -101,7 +101,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         query.setResultsLevel(Query.Level.ALL_PROPERTIES);
         PathQuery pathQuery =  new PathQuery(new SimpleEntityRef(  app.getEm().getApplicationRef()), query);
 
-        ns.getQueueManager().TEST_PATH_QUERY = pathQuery;
+        ns.TEST_PATH_QUERY = pathQuery;
         ApplicationQueueManager.QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString();
         listener = new QueueListener(ns.getServiceManagerFactory(),
                 ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
@@ -155,7 +155,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         pQuery.setCollection("devices");
         pQuery.setResultsLevel(Query.Level.ALL_PROPERTIES);
         pQuery.addIdentifier(new ServiceParameter.NameParameter(device1.getUuid().toString()).getIdentifier());
-        ns.getQueueManager().TEST_PATH_QUERY =  new PathQuery(new SimpleEntityRef( app.getEm().getApplicationRef()), pQuery);
+        ns.TEST_PATH_QUERY =  new PathQuery(new SimpleEntityRef( app.getEm().getApplicationRef()), pQuery);
 
         app.clear();
         String payload = "Hello, World!";
@@ -193,13 +193,14 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 user.getUuid(), "devices", device1.getUuid()).getEntity();
         assertEquals(device.getUuid(), device1.getUuid());
 
+        // create path query to search in user's device collection for device by UUID
         Query pQuery = new Query();
         pQuery.setLimit(100);
-        pQuery.setCollection("devices");
+        pQuery.setCollection("users");
         pQuery.setResultsLevel(Query.Level.ALL_PROPERTIES);
         pQuery.addIdentifier(new ServiceParameter.NameParameter(
             device.getUuid().toString()).getIdentifier()); 
-        ns.getQueueManager().TEST_PATH_QUERY =  new PathQuery(user, pQuery);
+        ns.TEST_PATH_QUERY =  new PathQuery( user, pQuery );
 
         // create a push notification 
         String payload = "Hello, World!";

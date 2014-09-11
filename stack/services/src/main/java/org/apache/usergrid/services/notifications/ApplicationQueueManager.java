@@ -58,8 +58,7 @@ public class ApplicationQueueManager implements QueueManager {
     public static final long MESSAGE_TRANSACTION_TIMEOUT =  5 * 60 * 1000;
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
 
-    //need a mocking framework, this is to substitute for no mocking
-    public static PathQuery<Device> TEST_PATH_QUERY = null;
+
 
     //this is for tests, will not mark initial post complete, set to false for tests
     private final Meter sendMeter;
@@ -139,7 +138,7 @@ public class ApplicationQueueManager implements QueueManager {
 
         long startTime = System.currentTimeMillis();
         LOG.info("notification {} start queuing", notification.getUuid());
-        final PathQuery<Device> pathQuery = TEST_PATH_QUERY == null ? notification.getPathQuery() : TEST_PATH_QUERY; //devices query
+        final PathQuery<Device> pathQuery = notification.getPathQuery() ; //devices query
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<String>(); //build up list of issues
         final HashMap<Object,Notifier> notifierMap =  getNotifierMap();
