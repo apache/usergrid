@@ -236,7 +236,7 @@ public class ApplicationQueueManager implements QueueManager {
      * @return
      */
     public HashMap<Object,Notifier> getNotifierMap(){
-        if(notifierHashMap != null) {
+        if(notifierHashMap == null) {
             notifierHashMap = new HashMap<Object, Notifier>();
             Query query = new Query();
             query.setCollection("notifiers");
