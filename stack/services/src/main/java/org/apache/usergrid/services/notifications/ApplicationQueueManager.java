@@ -69,6 +69,8 @@ public class ApplicationQueueManager implements QueueManager {
     private final EntityManager em;
     private final org.apache.usergrid.mq.QueueManager qm;
     private final JobScheduler jobScheduler;
+    HashMap<Object, Notifier> notifierHashMap; // only retrieve notifiers once
+
 
     public final Map<String, ProviderAdapter> providerAdapters =   new HashMap<String, ProviderAdapter>(3);
     {
@@ -81,30 +83,6 @@ public class ApplicationQueueManager implements QueueManager {
     public static ProviderAdapter APNS_ADAPTER = new APNsAdapter();
     public static ProviderAdapter TEST_ADAPTER = new TestAdapter();
 
-    //cache to retrieve push manager, cached per notifier, so many notifications will get same push manager
-    private static LoadingCache<EntityManager, HashMap<Object,Notifier>> notifierCacheMap = CacheBuilder
-            .newBuilder()
-            .expireAfterWrite(90, TimeUnit.SECONDS)
-            .build(new CacheLoader<EntityManager, HashMap<Object, Notifier>>() {
-                @Override
-                public HashMap<Object, Notifier> load(EntityManager em) {
-                    HashMap<Object, Notifier> notifierHashMap = new HashMap<Object, Notifier>();
-                    Query query = new Query();
-                    query.setCollection("notifiers");
-                    query.setLimit(100);
-                    PathQuery<Notifier> pathQuery = new PathQuery<Notifier>(new SimpleEntityRef( em.getApplicationRef() ), query);
-                    Iterator<Notifier> notifierIterator = pathQuery.iterator(em);
-                    while (notifierIterator.hasNext()) {
-                        Notifier notifier = notifierIterator.next();
-                        String name = notifier.getName() != null ? notifier.getName() : "" ;
-                        UUID uuid = notifier.getUuid() != null ? notifier.getUuid() : UUID.randomUUID();
-                        notifierHashMap.put(name.toLowerCase(), notifier);
-                        notifierHashMap.put(uuid, notifier);
-                        notifierHashMap.put(uuid.toString(), notifier);
-                    }
-                    return notifierHashMap;
-                }
-            });;
 
     public ApplicationQueueManager(JobScheduler jobScheduler, EntityManager entityManager, org.apache.usergrid.mq.QueueManager queueManager, MetricsFactory metricsFactory){
         this.em = entityManager;
@@ -253,20 +231,29 @@ public class ApplicationQueueManager implements QueueManager {
 
     }
 
-
+    /**
+     * only need to get notifiers once. will reset on next batch
+     * @return
+     */
     public HashMap<Object,Notifier> getNotifierMap(){
-        try{
-            HashMap<Object,Notifier> map = notifierCacheMap.get(em);
-            return map;
-        }catch (ExecutionException ee){
-            LOG.error("failed to get from cache",ee);
-            return new HashMap<Object, Notifier>();
+        if(notifierHashMap == null) {
+            notifierHashMap = new HashMap<Object, Notifier>();
+            Query query = new Query();
+            query.setCollection("notifiers");
+            query.setLimit(100);
+            PathQuery<Notifier> pathQuery = new PathQuery<Notifier>(new SimpleEntityRef(em.getApplicationRef()), query);
+            Iterator<Notifier> notifierIterator = pathQuery.iterator(em);
+            while (notifierIterator.hasNext()) {
+                Notifier notifier = notifierIterator.next();
+                String name = notifier.getName() != null ? notifier.getName() : "";
+                UUID uuid = notifier.getUuid() != null ? notifier.getUuid() : UUID.randomUUID();
+                notifierHashMap.put(name.toLowerCase(), notifier);
+                notifierHashMap.put(uuid, notifier);
+                notifierHashMap.put(uuid.toString(), notifier);
+            }
         }
+        return notifierHashMap;
     }
-    private void clearNotifierMap(){
-        notifierCacheMap.invalidate(em);
-    }
-
 
     /**
      * send batches of notifications to provider
@@ -394,11 +381,6 @@ public class ApplicationQueueManager implements QueueManager {
             String payloadKey = entry.getKey().toLowerCase();
             Object payloadValue = entry.getValue();
             Notifier notifier = notifierMap.get(payloadKey);
-            if(notifier==null){
-                clearNotifierMap();
-                notifierMap = getNotifierMap();
-                notifier = notifierMap.get(payloadKey);
-            }
             if (notifier != null) {
                 ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
                 if (providerAdapter != null) {
