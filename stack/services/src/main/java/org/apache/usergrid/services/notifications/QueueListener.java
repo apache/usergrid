@@ -127,7 +127,7 @@ public class QueueListener  {
         while ( true ) {
             try {
                 QueueResults results = ApplicationQueueManager.getDeliveryBatch(queueManager);
-                LOG.info("QueueListener: retreived batch of {} messages",results.size());
+                LOG.info("QueueListener: retrieved batch of {} messages",results.size());
 
                 List<Message> messages = results.getMessages();
                 if(messages.size()>0) {
@@ -163,6 +163,7 @@ public class QueueListener  {
                                             .flatMap(new Func1<List<ApplicationQueueMessage>, Observable<?>>() {
                                                 @Override
                                                 public Observable<?> call(List<ApplicationQueueMessage> queueMessages) {
+                                                    LOG.info("QueueListener: send batch {} messages", queueMessages.size());
                                                     return manager.sendBatchToProviders(queueMessages);
                                                 }
                                             });
@@ -176,10 +177,11 @@ public class QueueListener  {
                             })
                             .toBlocking()
                             .last();
-                    LOG.info("Messages sent in batch");
+                    LOG.info("QueueListener: Messages sent in batch");
 
                 }
                 else{
+                    LOG.info("QueueListener: no messages...sleep...",results.size());
                     Thread.sleep(sleepPeriod);
                 }
                 //send to the providers
@@ -195,6 +197,8 @@ public class QueueListener  {
     }
 
     public void stop(){
+        LOG.info("QueueListener: stop processes");
+
         for(Future future : futures){
             future.cancel(true);
         }
