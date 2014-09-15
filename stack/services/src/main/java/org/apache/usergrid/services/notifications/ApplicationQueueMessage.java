@@ -61,13 +61,23 @@ public class ApplicationQueueMessage extends Message {
     public static ApplicationQueueMessage generate(Message message) {
 
         // this crazyness may indicate that Core Persistence is not storing UUIDs correctly
+
         byte[] mpaBytes = (byte[])message.getObjectProperty(MESSAGE_PROPERTY_APPLICATION_UUID);
         UUID mpaUuid = bytesToUuid(mpaBytes);
+
         byte[] mpnBytes = (byte[])message.getObjectProperty(MESSAGE_PROPERTY_NOTIFICATION_ID);
         UUID mpnUuid = bytesToUuid(mpnBytes);
-        // end of crazyness
 
-        UUID mpdUuid = (UUID)message.getObjectProperty(MESSAGE_PROPERTY_DEVICE_UUID);
+        final UUID mpdUuid;
+        Object o = message.getObjectProperty(MESSAGE_PROPERTY_DEVICE_UUID);
+        if ( o instanceof UUID ) {
+            mpdUuid = (UUID)message.getObjectProperty(MESSAGE_PROPERTY_DEVICE_UUID);
+        } else {
+            byte[] mpdBytes = (byte[])o;
+            mpdUuid =  bytesToUuid(mpdBytes);
+        }
+
+        // end of crazyness
 
         return new ApplicationQueueMessage(
                 mpaUuid, mpnUuid, mpdUuid,
