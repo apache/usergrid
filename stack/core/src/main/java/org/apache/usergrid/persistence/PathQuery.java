@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.usergrid.persistence.index.query.Query;
 import java.util.Iterator;
 import java.util.UUID;
@@ -27,7 +26,6 @@ import org.apache.usergrid.persistence.index.query.Query.Level;
 
 public class PathQuery<E> {
 
-    private  EntityRef head;
     private PathQuery source;
     private Query query;
     private UUID uuid;
@@ -46,7 +44,6 @@ public class PathQuery<E> {
     public PathQuery( EntityRef head ) {
         this.uuid = head.getUuid();
         this.type = head.getType();
-        this.head = head;
         this.query = null;
     }
 
@@ -63,7 +60,6 @@ public class PathQuery<E> {
         }
         this.uuid = head.getUuid();
         this.type = head.getType();
-        this.head = head;
         this.query = query;
     }
 
@@ -104,7 +100,7 @@ public class PathQuery<E> {
 
 
     protected Results getHeadResults( EntityManager em ) throws Exception {
-        EntityRef ref = head != null ? head : new SimpleEntityRef(type,uuid);
+        EntityRef ref = new SimpleEntityRef(type,uuid);
         return ( query.getCollection() != null ) ? 
                em.searchCollection( ref, query.getCollection(), query ) :
                em.searchConnectedEntities( ref, query );
@@ -129,8 +125,6 @@ public class PathQuery<E> {
     public PathQuery getSource() {
         return source;
     }
-
-
 
 
     public String getType(){return type;}

@@ -940,6 +940,11 @@ public class CpRelationManager implements RelationManager {
         CollectionInfo collection = 
             getDefaultSchema().getCollection( headEntity.getType(), collName );
 
+        if ( collection == null ) {
+            throw new RuntimeException("Cannot find collection-info for '"+collName
+                +"' of "+ headEntity.getType() +":"+headEntity.getUuid() );
+        }
+
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 

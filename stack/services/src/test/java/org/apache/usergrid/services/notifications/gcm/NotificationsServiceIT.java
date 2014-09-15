@@ -196,25 +196,25 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // create path query to search in user's device collection for device by UUID
         Query pQuery = new Query();
         pQuery.setLimit(100);
-        pQuery.setCollection("users");
+        pQuery.setCollection("devices");
         pQuery.setResultsLevel(Query.Level.ALL_PROPERTIES);
         pQuery.addIdentifier(new ServiceParameter.NameParameter(
             device.getUuid().toString()).getIdentifier()); 
         ns.TEST_PATH_QUERY =  new PathQuery( user, pQuery );
 
-        // create a push notification 
+        // create and post notification 
         String payload = "Hello, World!";
         Map<String, String> payloads = new HashMap<String, String>(1);
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
-
-        // post that notification 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
-        Notification notification = app.getEm().get(e.getUuid(), Notification.class);
+
+        app.getEm().refreshIndex();
 
         // perform push //
+        Notification notification = app.getEm().get(e.getUuid(), Notification.class);
         notification = scheduleNotificationAndWait(notification);
 
         app.getEm().refreshIndex();

@@ -144,20 +144,8 @@ public class APNsAdapter implements ProviderAdapter {
     private PushManager<SimpleApnsPushNotification> getPushManager(Notifier notifier) throws ExecutionException {
         PushManager<SimpleApnsPushNotification> pushManager = apnsServiceMap.get(notifier);
         if(pushManager != null &&  !pushManager.isStarted() && pushManager.isShutDown()){
-            try{
-                pushManager = createApnsService(notifier);
-            }catch(Exception e){
-                logger.error("could not instantiate push manager.");
-                throw new ExecutionException(e);
-            }
-            apnsServiceMap.put(notifier,pushManager);
-        }
-        try {
-            if (!pushManager.isStarted()) { //ensure manager is started
-                pushManager.start();
-            }
-        }catch(IllegalStateException ise){
-            logger.debug("failed to start",ise);//could have failed because its started
+            apnsServiceMap.invalidate(notifier);
+            pushManager = apnsServiceMap.get(notifier);
         }
         return pushManager;
     }
@@ -190,26 +178,30 @@ public class APNsAdapter implements ProviderAdapter {
                 @Override
                 public PushManager<SimpleApnsPushNotification> load(Notifier notifier) {
                     try {
-                        return createApnsService(notifier);
-                    } catch (KeyStoreException ke) {
-                        logger.error("Could not instantiate pushmanager", ke);
+                        LinkedBlockingQueue<SimpleApnsPushNotification> queue = new LinkedBlockingQueue<SimpleApnsPushNotification>();
+                        PushManagerConfiguration config = new PushManagerConfiguration();
+                        config.setConcurrentConnectionCount(Runtime.getRuntime().availableProcessors() * 2);
+                        PushManager<SimpleApnsPushNotification> pushManager =  new PushManager<SimpleApnsPushNotification>(getApnsEnvironment(notifier), getSSLContext(notifier), null, null, queue, config);
+                        //only tested when a message is sent
+                        pushManager.registerRejectedNotificationListener(new RejectedAPNsListener());
+                        //this will get tested when start is called
+                        pushManager.registerFailedConnectionListener(new FailedConnectionListener());
+                        try {
+                            if (!pushManager.isStarted()) { //ensure manager is started
+                                pushManager.start();
+                            }
+                        }catch(IllegalStateException ise){
+                            logger.debug("failed to start",ise);//could have failed because its started
+                        }
+                        return pushManager;
+                    } catch (Exception e) {
+                        logger.error("Could not instantiate pushmanager", e);
                         return null;
                     }
                 }
             });
 
 
-    protected static PushManager<SimpleApnsPushNotification> createApnsService(Notifier notifier) throws KeyStoreException{
-        LinkedBlockingQueue<SimpleApnsPushNotification> queue = new LinkedBlockingQueue<SimpleApnsPushNotification>();
-        PushManagerConfiguration config = new PushManagerConfiguration();
-        config.setConcurrentConnectionCount(Runtime.getRuntime().availableProcessors() * 2);
-        PushManager<SimpleApnsPushNotification> pushManager =  new PushManager<SimpleApnsPushNotification>(getApnsEnvironment(notifier), getSSLContext(notifier), null, null, queue, config);
-        //only tested when a message is sent
-        pushManager.registerRejectedNotificationListener(new RejectedAPNsListener());
-        //this will get tested when start is called
-        pushManager.registerFailedConnectionListener(new FailedConnectionListener());
-        return pushManager;
-    }
 
     @Override
     public Object translatePayload(Object objPayload) throws Exception {
