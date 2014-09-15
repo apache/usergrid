@@ -119,8 +119,8 @@ public class ApplicationQueueManager implements QueueManager {
         final PathQuery<Device> pathQuery = notification.getPathQuery() ; //devices query
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<String>(); //build up list of issues
+
         final HashMap<Object,Notifier> notifierMap =  getNotifierMap();
-        final Map<String,Object> payloads = notification.getPayloads();
 
         //get devices in querystring, and make sure you have access
         if (pathQuery != null) {
@@ -133,6 +133,7 @@ public class ApplicationQueueManager implements QueueManager {
             }
             final CountMinSketch sketch = new CountMinSketch(0.0001,.99,7364181); //add probablistic counter to find dups
             final UUID appId = em.getApplication().getUuid();
+            final Map<String,Object> payloads = notification.getPayloads();
 
             LOG.info("ApplicationsQueueMessage: notification {} start threading", notification.getUuid());
             rx.Observable.create(new IteratorObservable<Entity>(iterator)).parallel(new Func1<Observable<Entity>, Observable<Entity>>() {
@@ -187,13 +188,10 @@ public class ApplicationQueueManager implements QueueManager {
                                         LOG.info("ApplicationsQueueMessage: notification {} post-queue to device {} ", notification.getUuid(), deviceRef.getUuid());
                                     }
                                     if (notification.getQueued() == null) {
-                                        synchronized (notification) {
-                                            // update queued time
-                                            notification.setQueued(System.currentTimeMillis());
-                                            em.update(notification);
-                                            LOG.info("ApplicationsQueueMessage: notification {} queue time set.", notification.getUuid(), deviceRef.getUuid());
-                                        }
-
+                                        // update queued time
+                                        notification.setQueued(System.currentTimeMillis());
+                                        em.update(notification);
+                                        LOG.info("ApplicationsQueueMessage: notification {} queue time set.", notification.getUuid(), deviceRef.getUuid());
                                     }
                                     deviceCount.incrementAndGet();
                                 }
@@ -259,8 +257,12 @@ public class ApplicationQueueManager implements QueueManager {
             Query query = new Query();
             query.setCollection("notifiers");
             query.setLimit(100);
-            PathQuery<Notifier> pathQuery = new PathQuery<Notifier>(new SimpleEntityRef(em.getApplicationRef()), query);
+            PathQuery<Notifier> pathQuery = new PathQuery<Notifier>(
+                    new SimpleEntityRef(em.getApplicationRef()),
+                    query
+            );
             Iterator<Notifier> notifierIterator = pathQuery.iterator(em);
+            int count = 0;
             while (notifierIterator.hasNext()) {
                 Notifier notifier = notifierIterator.next();
                 String name = notifier.getName() != null ? notifier.getName() : "";
@@ -268,7 +270,12 @@ public class ApplicationQueueManager implements QueueManager {
                 notifierHashMap.put(name.toLowerCase(), notifier);
                 notifierHashMap.put(uuid, notifier);
                 notifierHashMap.put(uuid.toString(), notifier);
+                if(count++ >= 100){
+                    LOG.error("ApplicationQueueManager: too many notifiers...breaking out ", notifierHashMap.size());
+                    break;
+                }
             }
+            LOG.info("ApplicationQueueManager: fetching notifiers finished size={}", notifierHashMap.size());
         }
         return notifierHashMap;
     }
