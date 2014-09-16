@@ -33,14 +33,13 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Test update and partial update.
+ * Activity update test.
  */
 public class PutTest extends AbstractRestIT {
     private static final Logger log= LoggerFactory.getLogger( PutTest.class );
     
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
-
 
     @Test //USERGRID-545
     public void putMassUpdateTest() throws IOException {
