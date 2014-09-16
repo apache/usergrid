@@ -61,14 +61,14 @@ public class ApplicationQueueManager implements QueueManager {
 
 
     //this is for tests, will not mark initial post complete, set to false for tests
-    private final Meter sendMeter;
-    private final Histogram queueSize;
+
     private static ExecutorService INACTIVE_DEVICE_CHECK_POOL = Executors.newFixedThreadPool(5);
     public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
 
     private final EntityManager em;
     private final org.apache.usergrid.mq.QueueManager qm;
     private final JobScheduler jobScheduler;
+    private final MetricsFactory metricsFactory;
     HashMap<Object, Notifier> notifierHashMap; // only retrieve notifiers once
 
 
@@ -88,8 +88,7 @@ public class ApplicationQueueManager implements QueueManager {
         this.em = entityManager;
         this.qm = queueManager;
         this.jobScheduler = jobScheduler;
-        this.sendMeter = metricsFactory.getMeter(NotificationsService.class, "send");
-        this.queueSize = metricsFactory.getHistogram(NotificationsService.class, "queue_size");
+        this.metricsFactory = metricsFactory;
     }
 
     public static QueueResults getDeliveryBatch(org.apache.usergrid.mq.QueueManager queueManager) throws Exception {
@@ -287,6 +286,7 @@ public class ApplicationQueueManager implements QueueManager {
      */
     public Observable sendBatchToProviders( final List<ApplicationQueueMessage> messages) {
         LOG.info("sending batch of {} notifications.", messages.size());
+        final Meter sendMeter = metricsFactory.getMeter(NotificationsService.class, "send");
 
         final Map<Object, Notifier> notifierMap = getNotifierMap();
         final QueueManager proxy = this;
