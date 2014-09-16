@@ -107,6 +107,8 @@ public class PutTest extends AbstractRestIT {
         String uuid = userNode.withArray("entities").get(0).get("uuid").asText();
         assertNotNull( uuid );
 
+        refreshIndex( "test-organization", "test-app" );
+
         // update user bart passing only an update to his employer
 
         Map<String, Object> updateProperties = new LinkedHashMap<String, Object>() {{

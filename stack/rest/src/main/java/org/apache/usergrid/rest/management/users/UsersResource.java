@@ -17,10 +17,11 @@
 package org.apache.usergrid.rest.management.users;
 
 
+import com.sun.jersey.api.json.JSONWithPadding;
+import com.sun.jersey.api.view.Viewable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
@@ -33,28 +34,21 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
-
+import net.tanesha.recaptcha.ReCaptchaImpl;
+import net.tanesha.recaptcha.ReCaptchaResponse;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
+import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
+import org.apache.usergrid.rest.exceptions.RedirectionException;
+import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.rest.AbstractContextResource;
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
-import org.apache.usergrid.rest.exceptions.RedirectionException;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
-
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.api.view.Viewable;
-
-import net.tanesha.recaptcha.ReCaptchaImpl;
-import net.tanesha.recaptcha.ReCaptchaResponse;
-
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 
 
 @Component( "org.apache.usergrid.rest.management.users.UsersResource" )
