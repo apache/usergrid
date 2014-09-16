@@ -87,12 +87,15 @@ public class QueueListener  {
     }
 
     public void run(){
+        LOG.info("QueueListener: starting.");
+
         int threadCount = 0;
         try {
             sleepPeriod = new Long(properties.getProperty("usergrid.notifications.listener.sleep", "5000")).longValue();
             int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
             futures = new ArrayList<Future>(maxThreads);
             while (threadCount++ < maxThreads) {
+                LOG.info("QueueListener: Starting thread {}.", threadCount);
                 futures.add(
                         pool.submit(new Runnable() {
                             @Override
@@ -107,18 +110,25 @@ public class QueueListener  {
                 );
             }
         }catch (Exception e){
-            LOG.error("QueueListener failed to start:", e);
+            LOG.error("QueueListener: failed to start:", e);
         }
+        LOG.info("QueueListener: done starting.");
+
     }
 
     private void execute(){
+
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
         queueManager = svcMgr.getQueueManager();
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
+        LOG.info("QueueListener: Starting execute process.");
+
         // run until there are no more active jobs
         while ( true ) {
             try {
                 QueueResults results = ApplicationQueueManager.getDeliveryBatch(queueManager);
+                LOG.info("QueueListener: retrieved batch of {} messages",results.size());
+
                 List<Message> messages = results.getMessages();
                 if(messages.size()>0) {
                     Observable.from(messages) //observe all messages
@@ -153,6 +163,7 @@ public class QueueListener  {
                                             .flatMap(new Func1<List<ApplicationQueueMessage>, Observable<?>>() {
                                                 @Override
                                                 public Observable<?> call(List<ApplicationQueueMessage> queueMessages) {
+                                                    LOG.info("QueueListener: send batch {} messages", queueMessages.size());
                                                     return manager.sendBatchToProviders(queueMessages);
                                                 }
                                             });
@@ -166,10 +177,11 @@ public class QueueListener  {
                             })
                             .toBlocking()
                             .last();
-                    LOG.info("Messages sent in batch");
+                    LOG.info("QueueListener: Messages sent in batch");
 
                 }
                 else{
+                    LOG.info("QueueListener: no messages...sleep...",results.size());
                     Thread.sleep(sleepPeriod);
                 }
                 //send to the providers
@@ -185,6 +197,8 @@ public class QueueListener  {
     }
 
     public void stop(){
+        LOG.info("QueueListener: stop processes");
+
         for(Future future : futures){
             future.cancel(true);
         }
