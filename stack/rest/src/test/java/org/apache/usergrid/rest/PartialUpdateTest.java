@@ -14,18 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest.applications.collection.activities;
+package org.apache.usergrid.rest;
 
 
+import org.apache.usergrid.rest.applications.collection.activities.*;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import javax.ws.rs.core.MediaType;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -35,8 +42,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Test update and partial update.
  */
-public class PutTest extends AbstractRestIT {
-    private static final Logger log= LoggerFactory.getLogger( PutTest.class );
+public class PartialUpdateTest extends AbstractRestIT {
+    private static final Logger log= LoggerFactory.getLogger(PartialUpdateTest.class );
     
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
