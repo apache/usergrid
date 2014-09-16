@@ -130,6 +130,7 @@ public class NotificationsService extends AbstractCollectionService {
 
     @Override
     public ServiceResults postCollection(ServiceContext context) throws Exception {
+        LOG.info("NotificationService: start request.");
         Timer.Context timer = postTimer.time();
         postMeter.mark();
         try {
@@ -140,10 +141,12 @@ public class NotificationsService extends AbstractCollectionService {
             context.setOwner(sm.getApplication());
             ServiceResults results = super.postCollection(context);
             Notification notification = (Notification) results.getEntity();
+            LOG.info("NotificationService: notification {} pre queue ", notification.getUuid());
             if(!notificationQueueManager.scheduleQueueJob(notification)){
                 notificationQueueManager.queueNotification(notification, null);
             }
             outstandingQueue.inc();
+            LOG.info("NotificationService: notification {} post queue ", notification.getUuid());
             // future: somehow return 202?
             return results;
         }finally {
