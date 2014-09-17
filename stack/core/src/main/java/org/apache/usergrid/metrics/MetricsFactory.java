@@ -51,18 +51,18 @@ public class MetricsFactory {
         registry = new MetricRegistry();
         String badHost = "badhost";
         String metricsHost = properties.getProperty("usergrid.metrics.graphite.host", badHost);
-        Graphite graphite = new Graphite(new InetSocketAddress(metricsHost, 2003));
-        graphiteReporter = GraphiteReporter.forRegistry(registry)
-                .prefixedWith("notifications")
-                .convertRatesTo(TimeUnit.SECONDS)
-                .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .filter(MetricFilter.ALL)
-                .build(graphite);
+
         if(metricsHost!=badHost) {
+            Graphite graphite = new Graphite(new InetSocketAddress(metricsHost, 2003));
+            graphiteReporter = GraphiteReporter.forRegistry(registry)
+                    .prefixedWith("notifications")
+                    .convertRatesTo(TimeUnit.SECONDS)
+                    .convertDurationsTo(TimeUnit.MILLISECONDS)
+                    .filter(MetricFilter.ALL)
+                    .build(graphite);
             graphiteReporter.start(30, TimeUnit.SECONDS);
         }else {
             LOG.warn("MetricsService:Logger not started.");
-            graphiteReporter.stop();
         }
         hashMap = new ConcurrentHashMap<String, Metric>();
 
