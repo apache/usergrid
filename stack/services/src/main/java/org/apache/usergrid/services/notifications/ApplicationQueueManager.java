@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ApplicationQueueManager implements QueueManager {
     public static String QUEUE_NAME = "notifications/queuelistenerv1";
-    public static int BATCH_SIZE = 1000;
+    public static int BATCH_SIZE = 100;
 
     public static final long MESSAGE_TRANSACTION_TIMEOUT =  5 * 60 * 1000;
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
@@ -303,73 +303,76 @@ public class ApplicationQueueManager implements QueueManager {
         final ConcurrentHashMap<UUID,SingleQueueTaskManager> taskMap = new ConcurrentHashMap<UUID, SingleQueueTaskManager>(messages.size());
         final ConcurrentHashMap<UUID,Notification> notificationMap = new ConcurrentHashMap<UUID, Notification>(messages.size());
 
-        return rx.Observable
-                .from(messages)
-                .parallel(new Func1<rx.Observable<ApplicationQueueMessage>, rx.Observable<ApplicationQueueMessage>>() {
-                    @Override
-                    public rx.Observable<ApplicationQueueMessage> call(rx.Observable<ApplicationQueueMessage> messageObservable) {
-                        return messageObservable.map(new Func1<ApplicationQueueMessage, ApplicationQueueMessage>() {
-                            @Override
-                            public ApplicationQueueMessage call(ApplicationQueueMessage message) {
-                                try {
+        final Func1<ApplicationQueueMessage, ApplicationQueueMessage> func = new Func1<ApplicationQueueMessage, ApplicationQueueMessage>() {
+            @Override
+            public ApplicationQueueMessage call(ApplicationQueueMessage message) {
+                try {
 
-                                    UUID deviceUUID = message.getDeviceId();
+                    UUID deviceUUID = message.getDeviceId();
 
-                                    Notification notification = notificationMap.get(message.getNotificationId());
-                                    if (notification == null) {
-                                        notification = em.get(message.getNotificationId(), Notification.class);
-                                        notificationMap.put(message.getNotificationId(), notification);
-                                    }
-                                    SingleQueueTaskManager taskManager;
-                                    synchronized (taskMap) {
-                                        taskManager = taskMap.get(message.getNotificationId());
-                                        if (taskManager == null) {
-                                            taskManager = new SingleQueueTaskManager(em, qm, proxy, notification);
-                                            taskMap.put(message.getNotificationId(), taskManager);
-                                        }
-                                    }
-
-                                    final Map<String, Object> payloads = notification.getPayloads();
-                                    final Map<String, Object> translatedPayloads = translatePayloads(payloads, notifierMap);
-                                    LOG.info("sending notification for device {} for Notification: {}", deviceUUID, notification.getUuid());
-                                    if(!isOkToSend(notification)){
-                                        return message;
-                                    }
-                                    taskManager.addMessage(deviceUUID,message);
-                                    try {
-                                        String notifierName = message.getNotifierKey().toLowerCase();
-                                        Notifier notifier = notifierMap.get(notifierName.toLowerCase());
-                                        Object payload = translatedPayloads.get(notifierName);
-                                        Receipt receipt = new Receipt(notification.getUuid(), message.getNotifierId(), payload, deviceUUID);
-                                        TaskTracker tracker = new TaskTracker(notifier, taskManager, receipt, deviceUUID);
-
-                                        if (payload == null) {
-                                            LOG.debug("selected device {} for notification {} doesn't have a valid payload. skipping.", deviceUUID, notification.getUuid());
-                                            tracker.failed(0, "failed to match payload to " + message.getNotifierId() + " notifier");
-
-                                        }else{
-                                            try {
-                                                ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
-                                                providerAdapter.sendNotification(message.getNotifierId(), notifier, payload, notification, tracker);
-                                            } catch (Exception e) {
-                                                tracker.failed(0, e.getMessage());
-                                            }
-                                        }
-
-                                    } finally {
-                                        sendMeter.mark();
-                                    }
-
-                                } catch (Exception e) {
-                                    LOG.error("Failure unknown",e);
-                                }
-                                return message;
-                            }
-                        });
+                    Notification notification = notificationMap.get(message.getNotificationId());
+                    if (notification == null) {
+                        notification = em.get(message.getNotificationId(), Notification.class);
+                        notificationMap.put(message.getNotificationId(), notification);
                     }
-                }, Schedulers.io())
-                .buffer(BATCH_SIZE)
-                .map(new Func1<List<ApplicationQueueMessage>, HashMap<UUID, ApplicationQueueMessage>>() {
+                    SingleQueueTaskManager taskManager;
+                    synchronized (taskMap) {
+                        taskManager = taskMap.get(message.getNotificationId());
+                        if (taskManager == null) {
+                            taskManager = new SingleQueueTaskManager(em, qm, proxy, notification);
+                            taskMap.put(message.getNotificationId(), taskManager);
+                        }
+                    }
+
+                    final Map<String, Object> payloads = notification.getPayloads();
+                    final Map<String, Object> translatedPayloads = translatePayloads(payloads, notifierMap);
+                    LOG.info("sending notification for device {} for Notification: {}", deviceUUID, notification.getUuid());
+                    if(!isOkToSend(notification)){
+                        return message;
+                    }
+                    taskManager.addMessage(deviceUUID,message);
+                    try {
+                        String notifierName = message.getNotifierKey().toLowerCase();
+                        Notifier notifier = notifierMap.get(notifierName.toLowerCase());
+                        Object payload = translatedPayloads.get(notifierName);
+                        Receipt receipt = new Receipt(notification.getUuid(), message.getNotifierId(), payload, deviceUUID);
+                        TaskTracker tracker = new TaskTracker(notifier, taskManager, receipt, deviceUUID);
+
+                        if (payload == null) {
+                            LOG.debug("selected device {} for notification {} doesn't have a valid payload. skipping.", deviceUUID, notification.getUuid());
+                            tracker.failed(0, "failed to match payload to " + message.getNotifierId() + " notifier");
+
+                        }else{
+                            try {
+                                ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
+                                providerAdapter.sendNotification(message.getNotifierId(), notifier, payload, notification, tracker);
+                            } catch (Exception e) {
+                                tracker.failed(0, e.getMessage());
+                            }
+                        }
+
+                    } finally {
+                        sendMeter.mark();
+                    }
+
+                } catch (Exception e) {
+                    LOG.error("Failure unknown",e);
+                }
+                return message;
+            }
+        };
+        Observable o =
+
+//        rx.Observable.from(messages).parallel(new Func1<rx.Observable<ApplicationQueueMessage>, rx.Observable<ApplicationQueueMessage>>() {
+//                    @Override
+//                    public rx.Observable<ApplicationQueueMessage> call(rx.Observable<ApplicationQueueMessage> messageObservable) {
+//                        return messageObservable.map(func);
+//                    }
+//                }, Schedulers.io());
+
+                rx.Observable.from(messages).subscribeOn(Schedulers.io()).map(func)
+                        .buffer(BATCH_SIZE)
+                        .map(new Func1<List<ApplicationQueueMessage>, HashMap<UUID, ApplicationQueueMessage>>() {
                     @Override
                     public HashMap<UUID, ApplicationQueueMessage> call(List<ApplicationQueueMessage> queueMessages) {
                         //for gcm this will actually send notification
@@ -403,8 +406,7 @@ public class ApplicationQueueManager implements QueueManager {
                         LOG.error("Failed while sending",throwable);
                     }
                 });
-
-
+        return o;
     }
 
 
