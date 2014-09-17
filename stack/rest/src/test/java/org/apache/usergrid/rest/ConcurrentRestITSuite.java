@@ -39,9 +39,6 @@ import org.apache.usergrid.rest.filters.ContentTypeResourceIT;
 import org.apache.usergrid.rest.management.ManagementResourceIT;
 import org.apache.usergrid.rest.management.RegistrationIT;
 import org.apache.usergrid.rest.management.organizations.AdminEmailEncodingIT;
-import org.apache.usergrid.rest.management.organizations.OrganizationResourceIT;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResourceIT;
-import org.apache.usergrid.rest.management.users.MUUserResourceIT;
 import org.apache.usergrid.rest.management.users.organizations.UsersOrganizationsResourceIT;
 
 

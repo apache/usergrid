@@ -35,8 +35,6 @@ import org.apache.usergrid.rest.applications.users.PermissionsResourceIT;
 import org.apache.usergrid.rest.applications.users.UserResourceIT;
 import org.apache.usergrid.rest.filters.ContentTypeResourceIT;
 import org.apache.usergrid.rest.management.organizations.AdminEmailEncodingIT;
-import org.apache.usergrid.rest.management.organizations.OrganizationResourceIT;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResourceIT;
 import org.apache.usergrid.rest.management.users.organizations.UsersOrganizationsResourceIT;
 
 @RunWith(Suite.class)
