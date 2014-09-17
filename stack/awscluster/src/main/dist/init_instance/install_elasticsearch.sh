@@ -57,16 +57,16 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
     export ES_HEAP_SIZE=5G
 ;;
 'm3.xlarge' )
-    export ES_HEAP_SIZE=5G
+    export ES_HEAP_SIZE=10G
 ;;
 'm3.large' )
-    export ES_HEAP_SIZE=2G
+    export ES_HEAP_SIZE=5G
 ;;
 'c3.2xlarge' )
-    export ES_HEAP_SIZE=4G
+    export ES_HEAP_SIZE=10G
 ;;
 'c3.4xlarge' )
-    export ES_HEAP_SIZE=12G
+    export ES_HEAP_SIZE=15G
 esac
 
 cat >> /etc/default/elasticsearch << EOF
