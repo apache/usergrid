@@ -19,122 +19,88 @@ package org.apache.usergrid.rest.management;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.apache.commons.lang.StringUtils;
-
-import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.rest.AbstractRestIT;
-import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
+import org.apache.usergrid.rest.TestContextSetup;
 
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.representation.Form;
-import java.io.IOException;
-
-import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import org.junit.Ignore;
 
 
 /**
- * @author tnine
+ *
+ *
  */
-@Concurrent()
-public class ManagementResourceIT extends AbstractRestIT {
+public class ApplicationsIT extends AbstractRestIT {
 
-    public ManagementResourceIT() throws Exception {
-
-    }
+    @Rule
+    public TestContextSetup context = new TestContextSetup( this );
 
 
-
-
-    /**
-     * Test that admins can't view organizations they're not authorized to view.
-     */
     @Test
-    public void crossOrgsNotViewable() throws Exception {
+    @Ignore("ignored because this test fails because it does not account for the default app "
+            + "created by the TestContext and the sandbox app. "
+            + "see also: https://issues.apache.org/jira/browse/USERGRID-210 ")
+    public void test10AppLimit() throws IOException {
 
-        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization( "crossOrgsNotViewable",
-                "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password" );
+        int size = 11;
 
-        refreshIndex("test-organization", "test-app");
+        Set<String> appNames = new HashSet<String>( size );
 
-        // check that the test admin cannot access the new org info
+        for ( int i = 0; i < size; i++ ) {
+            final String name = i + "";
 
-        Status status = null;
+            appNames.add( name );
 
-        try {
-            resource().path( String.format( "/management/orgs/%s", orgInfo.getOrganization().getName() ) )
-                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+            context.withApp( name ).createAppForOrg();
+            refreshIndex(context.getOrgName(), name);
         }
 
-        assertNotNull( status );
-        assertEquals( Status.UNAUTHORIZED, status );
 
-        status = null;
+        //now go through and ensure each entry is present
 
-        try {
-            resource().path( String.format( "/management/orgs/%s", orgInfo.getOrganization().getUuid() ) )
-                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
-        }
+        final JsonNode apps = context.management().orgs().organization( context.getOrgName() ).apps().get();
 
-        assertNotNull( status );
-        assertEquals( Status.UNAUTHORIZED, status );
+        final JsonNode data = apps.get( "data" );
 
-        // this admin should have access to test org
-        status = null;
-        try {
-            resource().path( "/management/orgs/test-organization" ).queryParam( "access_token", adminAccessToken )
-                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                      .get( String.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
+        final String orgName = context.getOrgName();
+
+
+        final Set<String> copy = new HashSet<String> (appNames);
+
+        for(String appName: copy){
+
+            final String mapEntryName = String.format( "%s/%s", orgName.toLowerCase(),  appName.toLowerCase());
+
+            JsonNode orgApp = data.get( mapEntryName);
+
+            if(orgApp != null){
+                appNames.remove( appName );
+            }
+
         }
 
-        assertNull( status );
+        assertEquals("All elements removed", 0, appNames.size());
 
-        OrganizationInfo org = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
-
-        status = null;
-        try {
-            resource().path( String.format( "/management/orgs/%s", org.getUuid() ) )
-                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                      .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
-        }
-        catch ( UniformInterfaceException uie ) {
-            status = uie.getResponse().getClientResponseStatus();
-        }
-
-        assertNull( status );
     }
-
-
-
-
-
     /**
      * Test that we can support over 10 items in feed.
      */
@@ -170,7 +136,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         addActivity( leader, leader + " " + leader + "son", preFollowContent );
         refreshIndex("test-organization", "test-app");
-        
+
         String lastUser = followers.get( followers.size() - 1 );
         int i = 0;
         for ( String user : followers ) {
@@ -211,8 +177,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
     private JsonNode getUserFeed( String username ) throws IOException {
         JsonNode userFeed = mapper.readTree( resource().path( "/test-organization/test-app/users/" + username + "/feed" )
-                                      .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
-                                      .get( String.class ));
+                                                       .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                                                       .get( String.class ));
         return userFeed.get( "entities" );
     }
 
@@ -248,8 +214,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // POST /applications
         JsonNode appdata = mapper.readTree( resource().path( "/management/orgs/" + orgInfo.getUuid() + "/applications" )
-                                     .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
-                                     .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
+                                                      .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
+                                                      .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
         logNode( appdata );
         appdata = getEntity( appdata, 0 );
 
@@ -267,8 +233,8 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // GET /applications/mgmt-org-app
         appdata = mapper.readTree( resource().path( "/management/orgs/" + orgInfo.getUuid() + "/applications/mgmt-org-app" )
-                            .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
-                            .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+                                             .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
+                                             .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         logNode( appdata );
 
         assertEquals( "test-organization", appdata.get( "organization" ).asText() );
@@ -280,5 +246,6 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertEquals( "Roles", appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "title" ).asText() );
         assertEquals( 3, appdata.get( "metadata" ).get( "collections" ).get( "roles" ).get( "count" ).asInt() );
     }
-
 }
+
+

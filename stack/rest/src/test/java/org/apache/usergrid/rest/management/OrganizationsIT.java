@@ -3,9 +3,14 @@ package org.apache.usergrid.rest.management;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 
 import org.junit.Rule;
@@ -13,8 +18,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.commons.lang.StringUtils;
+
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.User;
@@ -36,7 +44,9 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYS
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -359,4 +369,185 @@ public class OrganizationsIT extends AbstractRestIT {
                     .asInt() );
     }
 
+
+    /**
+     * Test that admins can't view organizations they're not authorized to view.
+     */
+    @Test
+    public void crossOrgsNotViewable() throws Exception {
+
+        OrganizationOwnerInfo orgInfo = setup.getMgmtSvc().createOwnerAndOrganization( "crossOrgsNotViewable",
+                "crossOrgsNotViewable", "TestName", "crossOrgsNotViewable@usergrid.org", "password" );
+
+        refreshIndex("test-organization", "test-app");
+
+        // check that the test admin cannot access the new org info
+
+        ClientResponse.Status status = null;
+
+        try {
+            resource().path( String.format( "/management/orgs/%s", orgInfo.getOrganization().getName() ) )
+                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
+                      .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertNotNull( status );
+        assertEquals( ClientResponse.Status.UNAUTHORIZED, status );
+
+        status = null;
+
+        try {
+            resource().path( String.format( "/management/orgs/%s", orgInfo.getOrganization().getUuid() ) )
+                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
+                      .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertNotNull( status );
+        assertEquals( ClientResponse.Status.UNAUTHORIZED, status );
+
+        // this admin should have access to test org
+        status = null;
+        try {
+            resource().path( "/management/orgs/test-organization" ).queryParam( "access_token", adminAccessToken )
+                      .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                      .get( String.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertNull( status );
+
+        OrganizationInfo org = setup.getMgmtSvc().getOrganizationByName( "test-organization" );
+
+        status = null;
+        try {
+            resource().path( String.format( "/management/orgs/%s", org.getUuid() ) )
+                      .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
+                      .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class );
+        }
+        catch ( UniformInterfaceException uie ) {
+            status = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertNull( status );
+    }
+
+    @Test
+    public void postCreateOrgAndAdmin() throws Exception {
+
+        Map<String, String> originalProperties = getRemoteTestProperties();
+
+        try {
+            setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
+            setTestProperty( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
+            setTestProperty( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "false" );
+            setTestProperty( PROPERTIES_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
+
+            JsonNode node = postCreateOrgAndAdmin( "test-org-1", "test-user-1", "Test User",
+                    "test-user-1@mockserver.com", "testpassword" );
+
+            if (true ) return;
+
+            refreshIndex("test-organization", "test-app");
+
+            UUID owner_uuid =
+                    UUID.fromString( node.findPath( "data" ).findPath( "owner" ).findPath( "uuid" ).textValue() );
+
+            List<Message> inbox = org.jvnet.mock_javamail.Mailbox.get( "test-user-1@mockserver.com" );
+
+            assertFalse( inbox.isEmpty() );
+
+            Message account_confirmation_message = inbox.get( 0 );
+            assertEquals( "User Account Confirmation: test-user-1@mockserver.com",
+                    account_confirmation_message.getSubject() );
+
+            String token = getTokenFromMessage( account_confirmation_message );
+            LOG.info( token );
+
+            setup.getMgmtSvc().disableAdminUser( owner_uuid );
+
+            refreshIndex("test-organization", "test-app");
+
+            try {
+                resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+                          .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
+                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                          .get( String.class );
+                org.junit.Assert.fail( "request for disabled user should fail" );
+            }
+            catch ( UniformInterfaceException uie ) {
+                ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
+                JsonNode body = mapper.readTree( uie.getResponse().getEntity( String.class ));
+                assertEquals( "user disabled", body.findPath( "error_description" ).textValue() );
+            }
+
+            setup.getMgmtSvc().deactivateUser( setup.getEmf().getManagementAppId(), owner_uuid );
+            try {
+                resource().path( "/management/token" ).queryParam( "grant_type", "password" )
+                          .queryParam( "username", "test-user-1" ).queryParam( "password", "testpassword" )
+                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                          .get( String.class );
+                org.junit.Assert.fail( "request for deactivated user should fail" );
+            }
+            catch ( UniformInterfaceException uie ) {
+                ClientResponse.Status status = uie.getResponse().getClientResponseStatus();
+                JsonNode body = mapper.readTree( uie.getResponse().getEntity( String.class ));
+                assertEquals( "user not activated", body.findPath( "error_description" ).textValue() );
+            }
+
+            // assertEquals(ActivationState.ACTIVATED,
+            // svcSetup.getMgmtSvc().handleConfirmationTokenForAdminUser(
+            // owner_uuid, token));
+
+            // need to enable JSP usage in the test version of Jetty to make this test run
+            //      String response = resource()
+            //        .path("/management/users/" + owner_uuid + "/confirm").get(String.class);
+            //      logger.info(response);
+            //      Message account_activation_message = inbox.get(1);
+            //      assertEquals("User Account Activated", account_activation_message.getSubject());
+
+        }
+        finally {
+            setTestProperties( originalProperties );
+        }
+    }
+
+
+    public String getTokenFromMessage( Message msg ) throws IOException, MessagingException {
+        String body = ( ( MimeMultipart ) msg.getContent() ).getBodyPart( 0 ).getContent().toString();
+        String token = StringUtils.substringAfterLast( body, "token=" );
+        // TODO better token extraction
+        // this is going to get the wrong string if the first part is not
+        // text/plain and the url isn't the last character in the email
+        return token;
+    }
+
+
+    public JsonNode postCreateOrgAndAdmin( String organizationName, String username, String name,
+                                           String email, String password ) throws IOException {
+
+        JsonNode node = null;
+        Map<String, String> payload = hashMap( "email", email )
+                .map( "username", username )
+                .map( "name", name ).map( "password", password )
+                .map( "organization", organizationName );
+
+        node = mapper.readTree( resource().path( "/management/organizations" )
+                                          .accept( MediaType.APPLICATION_JSON )
+                                          .type( MediaType.APPLICATION_JSON_TYPE )
+                                          .post( String.class, payload ));
+
+        assertNotNull( node );
+        logNode( node );
+        return node;
+    }
+
+    //
 }
