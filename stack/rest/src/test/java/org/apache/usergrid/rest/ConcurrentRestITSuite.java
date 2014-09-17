@@ -36,22 +36,16 @@ import org.apache.usergrid.rest.applications.users.OwnershipResourceIT;
 import org.apache.usergrid.rest.applications.users.PermissionsResourceIT;
 import org.apache.usergrid.rest.applications.users.UserResourceIT;
 import org.apache.usergrid.rest.filters.ContentTypeResourceIT;
-import org.apache.usergrid.rest.management.ManagementResourceIT;
-import org.apache.usergrid.rest.management.RegistrationIT;
-import org.apache.usergrid.rest.management.organizations.AdminEmailEncodingIT;
-import org.apache.usergrid.rest.management.users.organizations.UsersOrganizationsResourceIT;
 
 
 @RunWith(ConcurrentSuite.class)
 @Suite.SuiteClasses(
         {
-                ActivityResourceIT.class, AdminEmailEncodingIT.class, ApplicationRequestCounterIT.class,
+                ActivityResourceIT.class, ApplicationRequestCounterIT.class,
                 ApplicationResourceIT.class, AssetResourceIT.class, BasicIT.class, CollectionsResourceIT.class,
                 ContentTypeResourceIT.class, DevicesResourceIT.class, EventsResourceIT.class, GroupResourceIT.class,
-                MUUserResourceIT.class, ManagementResourceIT.class, OrganizationResourceIT.class,
-                OrganizationsResourceIT.class, OwnershipResourceIT.class, PagingResourceIT.class,
-                PermissionsResourceIT.class, RegistrationIT.class, UserResourceIT.class,
-                UsersOrganizationsResourceIT.class
+                OwnershipResourceIT.class, PagingResourceIT.class,
+                PermissionsResourceIT.class, UserResourceIT.class
         })
 @Concurrent()
 public class ConcurrentRestITSuite {
