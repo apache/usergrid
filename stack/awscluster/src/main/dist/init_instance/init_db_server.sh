@@ -67,9 +67,6 @@ cd /usr/share/usergrid/init_instance
 cd /usr/share/usergrid/init_instance
 ./create_keyspaces.sh
 
-#Increase file descriptors for Elasticsearch
-sed -i.bak "s/#@student        -       maxlogins       4/*\t\t\-\tnofile\t\t${NOFILE}\nroot\t\t\-\tnofile\t\t10000"/ /etc/security/limits.conf
-
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts
 groovy tag_instance.groovy

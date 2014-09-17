@@ -51,8 +51,7 @@ cd /usr/share/usergrid/init_instance
 ./install_yourkit.sh
 
 # set Tomcat memory and threads based on instance type
-export NOFILE=50000
-export TOMCAT_CONNECTIONS=10000
+export NOFILE=100000
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'm1.small' )
     export TOMCAT_RAM=1250M
@@ -70,29 +69,30 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
     export TOMCAT_RAM=12G
     export TOMCAT_THREADS=2000
 ;;
-'m3.large' )
-    export TOMCAT_RAM=6G
-    export TOMCAT_THREADS=6000
-;;
 'm3.xlarge' )
     export TOMCAT_RAM=12G
-    export TOMCAT_THREADS=8000
+    export TOMCAT_THREADS=3300
+;;
+'m3.large' )
+    export TOMCAT_RAM=6G
+    export TOMCAT_THREADS=1600
 ;;
 'c3.2xlarge' )
     export TOMCAT_RAM=12G
-    export TOMCAT_THREADS=10000
+    export TOMCAT_THREADS=2000
 ;;
 'c3.4xlarge' )
     export TOMCAT_RAM=24G
-    export TOMCAT_THREADS=12000
+    export TOMCAT_THREADS=4000
 esac
 
+export TOMCAT_CONNECTIONS=10000
 sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM} -Dlog4j\.configuration=file:\/usr\/share\/usergrid\/lib\/log4j\.properties/g" /etc/default/tomcat7
 sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${TOMCAT_THREADS}\" maxConnections=\"${TOMCAT_CONNECTIONS}\"/g" /var/lib/tomcat7/conf/server.xml
 
 # set file limits
 sed -i.bak "s/# \/etc\/init\.d\/tomcat7 -- startup script for the Tomcat 6 servlet engine/ulimit -n ${NOFILE}/" /etc/init.d/tomcat7
-sed -i.bak "s/#@student        -       maxlogins       4/*\t\t\-\tnofile\t\t${NOFILE}\nroot\t\t\-\tnofile\t\t${NOFILE}"/ /etc/security/limits.conf
+sed -i.bak "s/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
 echo "$NOFILE" | sudo tee > /proc/sys/fs/nr_open
 echo "$NOFILE" | sudo tee > /proc/sys/fs/file-max
 cat >> /etc/pam.d/su << EOF
