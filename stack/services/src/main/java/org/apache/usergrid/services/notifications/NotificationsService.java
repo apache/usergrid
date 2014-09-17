@@ -141,10 +141,24 @@ public class NotificationsService extends AbstractCollectionService {
             context.setOwner(sm.getApplication());
             ServiceResults results = super.postCollection(context);
             Notification notification = (Notification) results.getEntity();
+
+            // update Notification properties
+            if (notification.getStarted() == null || notification.getStarted() == 0) {
+                LOG.info("ApplicationQueueMessage: notification {} properties updating", notification.getUuid());
+                notification.setStarted(System.currentTimeMillis());
+                Map<String, Object> properties = new HashMap<String, Object>(2);
+                properties.put("started", notification.getStarted());
+                properties.put("state", notification.getState());
+                em.updateProperties(notification, properties);
+                LOG.info("ApplicationQueueMessage: notification {} properties updated", notification.getUuid());
+            }
+
             LOG.info("NotificationService: notification {} pre queue ", notification.getUuid());
+
             if(!notificationQueueManager.scheduleQueueJob(notification)){
                 notificationQueueManager.queueNotification(notification, null);
             }
+
             outstandingQueue.inc();
             LOG.info("NotificationService: notification {} post queue ", notification.getUuid());
             // future: somehow return 202?

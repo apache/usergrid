@@ -106,6 +106,7 @@ public class ApplicationQueueManager implements QueueManager {
 
     public void queueNotification(final Notification notification, final JobExecution jobExecution) throws Exception {
         final Meter queueMeter = metricsFactory.getMeter(ApplicationQueueManager.class,"queue");
+        long startTime = System.currentTimeMillis();
 
         if (notification.getCanceled() == Boolean.TRUE) {
             LOG.info("ApplicationQueueMessage: notification " + notification.getUuid() + " canceled");
@@ -115,8 +116,8 @@ public class ApplicationQueueManager implements QueueManager {
             return;
         }
 
-        long startTime = System.currentTimeMillis();
         LOG.info("ApplicationQueueMessage: notification {} start queuing", notification.getUuid());
+
         final PathQuery<Device> pathQuery = notification.getPathQuery() ; //devices query
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<String>(); //build up list of issues
@@ -259,6 +260,8 @@ public class ApplicationQueueManager implements QueueManager {
      */
     public HashMap<Object,Notifier> getNotifierMap(){
         if(notifierHashMap == null) {
+            LOG.info("ApplicationQueueManager: fetching notifiers start");
+
             notifierHashMap = new HashMap<Object, Notifier>();
             Query query = new Query();
             query.setCollection("notifiers");
