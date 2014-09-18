@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ApplicationQueueManager implements QueueManager {
     public static String QUEUE_NAME = "notifications/queuelistenerv1";
-    public static int BATCH_SIZE = 100;
+    public static int BATCH_SIZE = 1000;
 
     public static final long MESSAGE_TRANSACTION_TIMEOUT =  5 * 60 * 1000;
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
@@ -197,7 +197,7 @@ public class ApplicationQueueManager implements QueueManager {
                     return entity;
                 }
             };
-            if(jobExecution != null) {
+//            if(jobExecution != null) {
                 LOG.info("ApplicationQueueMessage: notification {} start threading", notification.getUuid());
 
                 o = rx.Observable.create(new IteratorObservable<Entity>(iterator)).parallel(new Func1<Observable<Entity>, Observable<Entity>>() {
@@ -212,12 +212,12 @@ public class ApplicationQueueManager implements QueueManager {
                                 LOG.error("Failed while writing", throwable);
                             }
                         });
-            }else{
-                LOG.info("ApplicationQueueMessage: notification {} start single threaded", notification.getUuid());
-                o = rx.Observable.create(new IteratorObservable(iterator))
-                        .subscribeOn(Schedulers.io())
-                        .map(entityListFunct);
-            }
+//            }else{
+//                LOG.info("ApplicationQueueMessage: notification {} start single threaded", notification.getUuid());
+//                o = rx.Observable.create(new IteratorObservable(iterator))
+//                        .subscribeOn(Schedulers.io())
+//                        .map(entityListFunct);
+//            }
              o.toBlocking().lastOrDefault(null);
 
         }
@@ -363,14 +363,14 @@ public class ApplicationQueueManager implements QueueManager {
         };
         Observable o =
 
-//        rx.Observable.from(messages).parallel(new Func1<rx.Observable<ApplicationQueueMessage>, rx.Observable<ApplicationQueueMessage>>() {
-//                    @Override
-//                    public rx.Observable<ApplicationQueueMessage> call(rx.Observable<ApplicationQueueMessage> messageObservable) {
-//                        return messageObservable.map(func);
-//                    }
-//                }, Schedulers.io());
+        rx.Observable.from(messages).parallel(new Func1<rx.Observable<ApplicationQueueMessage>, rx.Observable<ApplicationQueueMessage>>() {
+                    @Override
+                    public rx.Observable<ApplicationQueueMessage> call(rx.Observable<ApplicationQueueMessage> messageObservable) {
+                        return messageObservable.map(func);
+                    }
+                }, Schedulers.io())
 
-                rx.Observable.from(messages).subscribeOn(Schedulers.io()).map(func)
+//                rx.Observable.from(messages).subscribeOn(Schedulers.io()).map(func)
                         .buffer(BATCH_SIZE)
                         .map(new Func1<List<ApplicationQueueMessage>, HashMap<UUID, ApplicationQueueMessage>>() {
                     @Override
