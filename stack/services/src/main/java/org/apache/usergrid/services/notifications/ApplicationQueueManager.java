@@ -179,7 +179,6 @@ public class ApplicationQueueManager implements QueueManager {
 
                             ApplicationQueueMessage message = new ApplicationQueueMessage(appId, notification.getUuid(), deviceRef.getUuid(), notifierKey, notifierId);
                             LOG.info("ApplicationQueueMessage: notification {} pre-queue to device {} ", notification.getUuid(), deviceRef.getUuid());
-                            qm.postToQueue(QUEUE_NAME, message);
                             LOG.info("ApplicationQueueMessage: notification {} post-queue to device {} ", notification.getUuid(), deviceRef.getUuid());
                             if (notification.getQueued() == null) {
                                 // update queued time
@@ -187,6 +186,7 @@ public class ApplicationQueueManager implements QueueManager {
                                 em.update(notification);
                                 LOG.info("ApplicationQueueMessage: notification {} queue time set.", notification.getUuid(), deviceRef.getUuid());
                             }
+                            qm.postToQueue(QUEUE_NAME, message);
                             deviceCount.incrementAndGet();
                             queueMeter.mark();
                         }
