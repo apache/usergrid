@@ -68,7 +68,7 @@ public class QueueListener  {
     ExecutorService pool;
     List<Future> futures;
 
-    public static final String MAX_THREADS = "4";
+    public static final String MAX_THREADS = "1";
 
     public QueueListener() {
         pool = Executors.newFixedThreadPool(1);
