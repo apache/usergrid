@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.ws.rs.core.MediaType;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import org.junit.Rule;
@@ -61,18 +62,18 @@ public class PartialUpdateTest extends AbstractRestIT {
         assertNotNull( userNode );
         String uuid = userNode.withArray("entities").get(0).get("uuid").asText();
         assertNotNull( uuid );
-
         refreshIndex( "test-organization", "test-app" );
 
-        // update user bart passing only an update to his employer
+        // Update bart's employer without specifying any required fields 
+        // (with uuid specified in URL)
 
         Map<String, Object> updateProperties = new LinkedHashMap<String, Object>() {{
             put( "employer", "Initech" );
         }};
 
         try {
-            JsonNode updatedNode = mapper.readTree( 
-                resource().path( "/test-organization/test-app/user/" + uuid )
+            mapper.readTree( 
+                resource().path( "/test-organization/test-app/user/" + uuid ) 
                     .queryParam( "access_token", adminAccessToken )
                     .accept( MediaType.APPLICATION_JSON )
                     .type( MediaType.APPLICATION_JSON )
@@ -81,5 +82,43 @@ public class PartialUpdateTest extends AbstractRestIT {
         } catch ( UniformInterfaceException uie ) {
             fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
         }
+        refreshIndex( "test-organization", "test-app" );
+
+        userNode = mapper.readTree( 
+            resource().path( "/test-organization/test-app/users/" + uuid )
+                .queryParam( "access_token", adminAccessToken )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( String.class ));
+        assertNotNull( userNode );
+        assertEquals( "Initech", userNode.withArray("entities").get(0).get("employer").asText());
+
+
+        // Update bart's employer without specifying any required fields 
+        // (this time with username specified in URL)
+
+        updateProperties = new LinkedHashMap<String, Object>() {{
+            put( "employer", "ACME Corporation" );
+        }};
+
+        try {
+            mapper.readTree( 
+                resource().path( "/test-organization/test-app/users/bart")
+                    .queryParam( "access_token", adminAccessToken )
+                    .accept( MediaType.APPLICATION_JSON )
+                    .type( MediaType.APPLICATION_JSON )
+                    .put( String.class, updateProperties ));
+
+        } catch ( UniformInterfaceException uie ) {
+            fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
+        }
+        refreshIndex( "test-organization", "test-app" );
+
+        userNode = mapper.readTree( 
+            resource().path( "/test-organization/test-app/users/bart" )
+                .queryParam( "access_token", adminAccessToken )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( String.class ));
+        assertNotNull( userNode );
+        assertEquals( "ACME Corporation", userNode.withArray("entities").get(0).get("employer").asText());
     }
 }
