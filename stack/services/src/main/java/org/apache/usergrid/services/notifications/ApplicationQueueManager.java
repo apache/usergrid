@@ -52,10 +52,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by ApigeeCorporation on 8/27/14.
  */
 public class ApplicationQueueManager implements QueueManager {
-    public static String QUEUE_NAME = "notifications/queuelistenerv1";
+    public static String QUEUE_NAME = "notifications/queuelistenerv1_1";
     public static int BATCH_SIZE = 1000;
 
-    public static final long MESSAGE_TRANSACTION_TIMEOUT =  5 * 60 * 1000;
+    public static final long MESSAGE_TRANSACTION_TIMEOUT =  5 * 1000;
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
 
 
@@ -137,17 +137,17 @@ public class ApplicationQueueManager implements QueueManager {
             final UUID appId = em.getApplication().getUuid();
             final Map<String,Object> payloads = notification.getPayloads();
 
-            Observable o;
+
             final Func1<Entity,Entity> entityListFunct = new Func1<Entity, Entity>() {
                 @Override
                 public Entity call(Entity entity) {
+
                     try {
 
-                        LOG.info("ApplicationQueueMessage: notification {} queue entity {}", notification.getUuid(), entity.getUuid());
-
+                        long now = System.currentTimeMillis();
                         List<EntityRef> devicesRef = getDevices(entity); // resolve group
 
-                        LOG.info("ApplicationQueueMessage: notification {} queue  {} devices", notification.getUuid(), devicesRef.size());
+                        LOG.info("ApplicationQueueMessage: notification {} queue  {} devices, duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), devicesRef.size());
 
                         for (EntityRef deviceRef : devicesRef) {
                             LOG.info("ApplicationQueueMessage: notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
@@ -164,12 +164,14 @@ public class ApplicationQueueManager implements QueueManager {
                             //find the device notifier info, match it to the payload
                             for (Map.Entry<String, Object> entry : payloads.entrySet()) {
                                 Notifier notifier = notifierMap.get(entry.getKey().toLowerCase());
+                                now = System.currentTimeMillis();
                                 String providerId = getProviderId(deviceRef, notifier);
                                 if (providerId != null) {
                                     notifierId = providerId;
                                     notifierKey = entry.getKey().toLowerCase();
                                     break;
                                 }
+                                LOG.info("ApplicationQueueMessage: Provider query for notification {} device {} took "+(System.currentTimeMillis()-now)+" ms",notification.getUuid(),deviceRef.getUuid());
                             }
 
                             if (notifierId == null) {
@@ -178,15 +180,16 @@ public class ApplicationQueueManager implements QueueManager {
                             }
 
                             ApplicationQueueMessage message = new ApplicationQueueMessage(appId, notification.getUuid(), deviceRef.getUuid(), notifierKey, notifierId);
-                            LOG.info("ApplicationQueueMessage: notification {} pre-queue to device {} ", notification.getUuid(), deviceRef.getUuid());
                             if (notification.getQueued() == null) {
                                 // update queued time
+                                now = System.currentTimeMillis();
                                 notification.setQueued(System.currentTimeMillis());
                                 em.update(notification);
-                                LOG.info("ApplicationQueueMessage: notification {} queue time set.", notification.getUuid(), deviceRef.getUuid());
+                                LOG.info("ApplicationQueueMessage: notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
                             }
+                            now = System.currentTimeMillis();
                             qm.postToQueue(QUEUE_NAME, message);
-                            LOG.info("ApplicationQueueMessage: notification {} post-queue to device {} ", notification.getUuid(), deviceRef.getUuid());
+                            LOG.info("ApplicationQueueMessage: notification {} post-queue to device {} duration " + (System.currentTimeMillis() - now) + " ms", notification.getUuid(), deviceRef.getUuid());
                             deviceCount.incrementAndGet();
                             queueMeter.mark();
                         }
@@ -197,28 +200,20 @@ public class ApplicationQueueManager implements QueueManager {
                     return entity;
                 }
             };
-//            if(jobExecution != null) {
-                LOG.info("ApplicationQueueMessage: notification {} start threading", notification.getUuid());
 
-                o = rx.Observable.create(new IteratorObservable<Entity>(iterator)).parallel(new Func1<Observable<Entity>, Observable<Entity>>() {
-                    @Override
-                    public rx.Observable<Entity> call(rx.Observable<Entity> deviceObservable) {
-                        return deviceObservable.map(entityListFunct);
-                    }
-                }, Schedulers.io())
-                        .doOnError(new Action1<Throwable>() {
-                            @Override
-                            public void call(Throwable throwable) {
-                                LOG.error("Failed while writing", throwable);
-                            }
-                        });
-//            }else{
-//                LOG.info("ApplicationQueueMessage: notification {} start single threaded", notification.getUuid());
-//                o = rx.Observable.create(new IteratorObservable(iterator))
-//                        .subscribeOn(Schedulers.io())
-//                        .map(entityListFunct);
-//            }
-             o.toBlocking().lastOrDefault(null);
+            long now = System.currentTimeMillis();
+            Observable o = rx.Observable.create(new IteratorObservable(iterator))
+                        .subscribeOn(Schedulers.io())
+                        .map(entityListFunct)
+                    .doOnError(new Action1<Throwable>() {
+                        @Override
+                        public void call(Throwable throwable) {
+                            LOG.error("Failed while writing", throwable);
+                        }
+                    });
+            o.toBlocking().lastOrDefault(null);
+            LOG.info("ApplicationQueueMessage: notification {} done queueing duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
+
 
         }
 
@@ -236,7 +231,11 @@ public class ApplicationQueueManager implements QueueManager {
 
         notification.setExpectedCount(deviceCount.get());
         notification.addProperties(properties);
+        long now = System.currentTimeMillis();
+
         em.update(notification);
+
+        LOG.info("ApplicationQueueMessage: notification {} updated notification duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
 
         //do i have devices, and have i already started batching.
         if (deviceCount.get() <= 0) {
@@ -260,8 +259,7 @@ public class ApplicationQueueManager implements QueueManager {
      */
     public HashMap<Object,Notifier> getNotifierMap(){
         if(notifierHashMap == null) {
-            LOG.info("ApplicationQueueManager: fetching notifiers start");
-
+            long now = System.currentTimeMillis();
             notifierHashMap = new HashMap<Object, Notifier>();
             Query query = new Query();
             query.setCollection("notifiers");
@@ -284,7 +282,7 @@ public class ApplicationQueueManager implements QueueManager {
                     break;
                 }
             }
-            LOG.info("ApplicationQueueManager: fetching notifiers finished size={}", notifierHashMap.size());
+            LOG.info("ApplicationQueueManager: fetching notifiers finished size={}, duration {} ms", notifierHashMap.size(),System.currentTimeMillis() - now);
         }
         return notifierHashMap;
     }
@@ -307,6 +305,7 @@ public class ApplicationQueueManager implements QueueManager {
             @Override
             public ApplicationQueueMessage call(ApplicationQueueMessage message) {
                 try {
+                    LOG.info("start sending notification for device {} for Notification: {} on thread "+Thread.currentThread().getId(), message.getDeviceId(), message.getNotificationId());
 
                     UUID deviceUUID = message.getDeviceId();
 
@@ -361,18 +360,9 @@ public class ApplicationQueueManager implements QueueManager {
                 return message;
             }
         };
-        Observable o =
-
-        rx.Observable.from(messages).parallel(new Func1<rx.Observable<ApplicationQueueMessage>, rx.Observable<ApplicationQueueMessage>>() {
-                    @Override
-                    public rx.Observable<ApplicationQueueMessage> call(rx.Observable<ApplicationQueueMessage> messageObservable) {
-                        return messageObservable.map(func);
-                    }
-                }, Schedulers.io())
-
-//                rx.Observable.from(messages).subscribeOn(Schedulers.io()).map(func)
-                        .buffer(BATCH_SIZE)
-                        .map(new Func1<List<ApplicationQueueMessage>, HashMap<UUID, ApplicationQueueMessage>>() {
+        Observable o = rx.Observable.from(messages).subscribeOn(Schedulers.io()).map(func)
+                .buffer(BATCH_SIZE)
+                .map(new Func1<List<ApplicationQueueMessage>, HashMap<UUID, ApplicationQueueMessage>>() {
                     @Override
                     public HashMap<UUID, ApplicationQueueMessage> call(List<ApplicationQueueMessage> queueMessages) {
                         //for gcm this will actually send notification

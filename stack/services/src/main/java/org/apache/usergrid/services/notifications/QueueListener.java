@@ -87,32 +87,37 @@ public class QueueListener  {
     }
 
     public void run(){
-        LOG.info("QueueListener: starting.");
+        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "true"));
 
-        int threadCount = 0;
-        try {
-            sleepPeriod = new Long(properties.getProperty("usergrid.notifications.listener.sleep", "5000")).longValue();
-            int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
-            futures = new ArrayList<Future>(maxThreads);
-            while (threadCount++ < maxThreads) {
-                LOG.info("QueueListener: Starting thread {}.", threadCount);
-                futures.add(
-                        pool.submit(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    execute();
-                                } catch (Exception e) {
-                                    LOG.error("failed to start push", e);
+        if(shouldRun) {
+            LOG.info("QueueListener: starting.");
+            int threadCount = 0;
+            try {
+                sleepPeriod = new Long(properties.getProperty("usergrid.notifications.listener.sleep", "5000")).longValue();
+                int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
+                futures = new ArrayList<Future>(maxThreads);
+                while (threadCount++ < maxThreads) {
+                    LOG.info("QueueListener: Starting thread {}.", threadCount);
+                    futures.add(
+                            pool.submit(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        execute();
+                                    } catch (Exception e) {
+                                        LOG.error("failed to start push", e);
+                                    }
                                 }
-                            }
-                        })
-                );
+                            })
+                    );
+                }
+            } catch (Exception e) {
+                LOG.error("QueueListener: failed to start:", e);
             }
-        }catch (Exception e){
-            LOG.error("QueueListener: failed to start:", e);
+            LOG.info("QueueListener: done starting.");
+        }else{
+            LOG.info("QueueListener: never started due to config value usergrid.notifications.listener.run.");
         }
-        LOG.info("QueueListener: done starting.");
 
     }
 

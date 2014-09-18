@@ -48,11 +48,8 @@ public class NotificationsService extends AbstractCollectionService {
 
 
     private MetricsFactory metricsService;
-    private Meter sendMeter;
     private Meter postMeter;
     private Timer postTimer;
-    private Histogram queueSize;
-    private Counter outstandingQueue;
 
     private static final int PAGE = 100;
     private static final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
@@ -99,11 +96,8 @@ public class NotificationsService extends AbstractCollectionService {
         emf = getApplicationContext().getBean(EntityManagerFactory.class);
 
         metricsService = getApplicationContext().getBean(MetricsFactory.class);
-        sendMeter = metricsService.getMeter(NotificationsService.class, "send");
         postMeter = metricsService.getMeter(NotificationsService.class, "requests");
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
-        queueSize = metricsService.getHistogram(NotificationsService.class, "queue_size");
-        outstandingQueue = metricsService.getCounter(NotificationsService.class,"current_queue");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
         notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,smf.getServiceManager(smf.getManagementAppId()).getQueueManager(),metricsService);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;
@@ -144,23 +138,21 @@ public class NotificationsService extends AbstractCollectionService {
 
             // update Notification properties
             if (notification.getStarted() == null || notification.getStarted() == 0) {
-                LOG.info("ApplicationQueueMessage: notification {} properties updating", notification.getUuid());
+                long now = System.currentTimeMillis();
                 notification.setStarted(System.currentTimeMillis());
                 Map<String, Object> properties = new HashMap<String, Object>(2);
                 properties.put("started", notification.getStarted());
                 properties.put("state", notification.getState());
                 em.updateProperties(notification, properties);
-                LOG.info("ApplicationQueueMessage: notification {} properties updated", notification.getUuid());
+                LOG.info("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
             }
 
-            LOG.info("NotificationService: notification {} pre queue ", notification.getUuid());
-
+            long now = System.currentTimeMillis();
             if(!notificationQueueManager.scheduleQueueJob(notification)){
                 notificationQueueManager.queueNotification(notification, null);
             }
 
-            outstandingQueue.inc();
-            LOG.info("NotificationService: notification {} post queue ", notification.getUuid());
+            LOG.info("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(),System.currentTimeMillis() - now);
             // future: somehow return 202?
             return results;
         }finally {
