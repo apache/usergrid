@@ -65,14 +65,6 @@ public class JobScheduler{
             scheduleInFuture = false;
         }
 
-        // update Notification properties
-        if (notification.getStarted() == null || notification.getStarted() == 0) {
-            notification.setStarted(System.currentTimeMillis());
-            Map<String, Object> properties = new HashMap<String, Object>(2);
-            properties.put("started", notification.getStarted());
-            properties.put("state", notification.getState());
-            em.updateProperties(notification, properties);
-        }
         boolean scheduled = scheduleInFuture || forceSchedule;
         if(scheduled) {
             JobData jobData = new JobData();
@@ -81,8 +73,6 @@ public class JobScheduler{
             jobData.setProperty("deliver", notification.getDeliver());
             SchedulerService scheduler = getSchedulerService();
             scheduler.createJob("queueJob", scheduleAt, jobData);
-        }
-        if(scheduled){
             LOG.info("notification {} scheduled for queuing", notification.getUuid());
         }
         return scheduled;

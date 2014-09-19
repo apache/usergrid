@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class SingleQueueTaskManager implements NotificationsTaskManager {
 
     private static final Logger LOG = LoggerFactory
-            .getLogger(TaskManager.class);
+            .getLogger(SingleQueueTaskManager.class);
     private final String path;
     private final QueueManager proxy;
 
@@ -187,25 +187,14 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
             stats.put("errors", errors);
             notification.setStatistics(stats);
 
-            if (LOG.isInfoEnabled()) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("notification ").append(notification.getUuid());
-                sb.append(" sending to ").append(sent + errors);
-                LOG.info(sb.toString());
-            }
+            LOG.info("notification {} sending to {}", notification.getUuid(), sent + errors);
 
             //none of this is known and should you ever do this
             if (notification.getExpectedCount() <= (errors + sent)) {
                 notification.setFinished(notification.getModified());
                 properties.put("finished", notification.getModified());
                 properties.put("state", notification.getState());
-
-                if (LOG.isInfoEnabled()) {
-                    long elapsed = notification.getFinished() - notification.getStarted();
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("done sending to devices in ").append(elapsed).append(" ms");
-                    LOG.info(sb.toString());
-                }
+                LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
             }
 
             LOG.info("notification finished batch: {}", notification.getUuid());
