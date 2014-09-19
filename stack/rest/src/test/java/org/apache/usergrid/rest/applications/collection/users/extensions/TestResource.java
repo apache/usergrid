@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest.applications.users.extensions;
+package org.apache.usergrid.rest.applications.collection.users.extensions;
 
 
 import javax.ws.rs.GET;
@@ -30,7 +30,7 @@ import org.apache.usergrid.rest.applications.users.AbstractUserExtensionResource
 
 
 @Ignore("Not a test")
-@Component("org.apache.usergrid.rest.applications.users.extensions.TestResource")
+@Component("TestResource")
 @Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)
 public class TestResource extends AbstractUserExtensionResource {
