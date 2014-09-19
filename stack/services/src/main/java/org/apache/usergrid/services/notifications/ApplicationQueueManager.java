@@ -52,8 +52,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by ApigeeCorporation on 8/27/14.
  */
 public class ApplicationQueueManager implements QueueManager {
-    public static String QUEUE_NAME = "notifications/queuelistenerv1_10";
-    public static int BATCH_SIZE = 1000;
+    public static String QUEUE_NAME = "notifications/queuelistenerv1_11";
+    public static int BATCH_SIZE = 100;
 
     public static final long MESSAGE_TRANSACTION_TIMEOUT =  5 * 1000;
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
@@ -67,8 +67,8 @@ public class ApplicationQueueManager implements QueueManager {
     private final org.apache.usergrid.mq.QueueManager qm;
     private final JobScheduler jobScheduler;
     private final MetricsFactory metricsFactory;
+    private final Properties properties;
     HashMap<Object, Notifier> notifierHashMap; // only retrieve notifiers once
-
 
     public final Map<String, ProviderAdapter> providerAdapters =   new HashMap<String, ProviderAdapter>(3);
     {
@@ -82,11 +82,12 @@ public class ApplicationQueueManager implements QueueManager {
     public static ProviderAdapter TEST_ADAPTER = new TestAdapter();
 
 
-    public ApplicationQueueManager(JobScheduler jobScheduler, EntityManager entityManager, org.apache.usergrid.mq.QueueManager queueManager, MetricsFactory metricsFactory){
+    public ApplicationQueueManager(JobScheduler jobScheduler, EntityManager entityManager, org.apache.usergrid.mq.QueueManager queueManager, MetricsFactory metricsFactory,Properties properties){
         this.em = entityManager;
         this.qm = queueManager;
         this.jobScheduler = jobScheduler;
         this.metricsFactory = metricsFactory;
+        this.properties = properties;
     }
 
     public static QueueResults getDeliveryBatch(org.apache.usergrid.mq.QueueManager queueManager) throws Exception {

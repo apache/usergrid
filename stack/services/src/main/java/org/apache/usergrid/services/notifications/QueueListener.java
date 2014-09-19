@@ -63,7 +63,9 @@ public class QueueListener  {
 
     private ServiceManager svcMgr;
 
-    private long sleepPeriod = 5000;
+    private long sleepWhenNoneFound = 5000;
+
+    private long sleepBetweenRuns = 5000;
 
     ExecutorService pool;
     List<Future> futures;
@@ -92,8 +94,10 @@ public class QueueListener  {
         if(shouldRun) {
             LOG.info("QueueListener: starting.");
             int threadCount = 0;
+
             try {
-                sleepPeriod = new Long(properties.getProperty("usergrid.notifications.listener.sleep", "5000")).longValue();
+                sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", "5000")).longValue();
+                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", "5000")).longValue();
                 int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
                 futures = new ArrayList<Future>(maxThreads);
                 while (threadCount++ < maxThreads) {
@@ -160,7 +164,8 @@ public class QueueListener  {
                                             new JobScheduler(serviceManager, entityManager),
                                             entityManager,
                                             queueManager,
-                                            metricsService
+                                            metricsService,
+                                            properties
                                     );
 
                                     return groupedObservable //buffer all of your notifications into a sender and send.
@@ -183,11 +188,11 @@ public class QueueListener  {
                             .toBlocking()
                             .last();
                     LOG.info("QueueListener: Messages sent in batch");
-
+                    Thread.sleep(sleepBetweenRuns);
                 }
                 else{
                     LOG.info("QueueListener: no messages...sleep...",results.size());
-                    Thread.sleep(sleepPeriod);
+                    Thread.sleep(sleepWhenNoneFound);
                 }
                 //send to the providers
                 consecutiveExceptions.set(0);

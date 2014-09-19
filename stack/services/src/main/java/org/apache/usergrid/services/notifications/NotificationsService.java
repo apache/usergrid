@@ -94,12 +94,12 @@ public class NotificationsService extends AbstractCollectionService {
         super.init(info);
         smf = getApplicationContext().getBean(ServiceManagerFactory.class);
         emf = getApplicationContext().getBean(EntityManagerFactory.class);
-
+        Properties props = (Properties)getApplicationContext().getBean("properties");
         metricsService = getApplicationContext().getBean(MetricsFactory.class);
         postMeter = metricsService.getMeter(NotificationsService.class, "requests");
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
-        notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,smf.getServiceManager(smf.getManagementAppId()).getQueueManager(),metricsService);
+        notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,smf.getServiceManager(smf.getManagementAppId()).getQueueManager(),metricsService,props);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;
     }
 
