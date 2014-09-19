@@ -52,13 +52,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by ApigeeCorporation on 8/27/14.
  */
 public class ApplicationQueueManager implements QueueManager {
-    public static String QUEUE_NAME = "notifications/queuelistenerv1_1";
+    public static String QUEUE_NAME = "notifications/queuelistenerv1_10";
     public static int BATCH_SIZE = 1000;
 
     public static final long MESSAGE_TRANSACTION_TIMEOUT =  5 * 1000;
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
-
-
 
     //this is for tests, will not mark initial post complete, set to false for tests
 
@@ -202,9 +200,13 @@ public class ApplicationQueueManager implements QueueManager {
             };
 
             long now = System.currentTimeMillis();
-            Observable o = rx.Observable.create(new IteratorObservable(iterator))
-                        .subscribeOn(Schedulers.io())
-                        .map(entityListFunct)
+            Observable o = rx.Observable.create(new IteratorObservable<Entity>(iterator))
+                    .parallel(new Func1<Observable<Entity>, Observable<Entity>>() {
+                        @Override
+                        public rx.Observable<Entity> call(rx.Observable<Entity> deviceObservable) {
+                            return deviceObservable.map(entityListFunct);
+                        }
+                    }, Schedulers.io())
                     .doOnError(new Action1<Throwable>() {
                         @Override
                         public void call(Throwable throwable) {
@@ -336,20 +338,21 @@ public class ApplicationQueueManager implements QueueManager {
                         Object payload = translatedPayloads.get(notifierName);
                         Receipt receipt = new Receipt(notification.getUuid(), message.getNotifierId(), payload, deviceUUID);
                         TaskTracker tracker = new TaskTracker(notifier, taskManager, receipt, deviceUUID);
-
                         if (payload == null) {
                             LOG.debug("selected device {} for notification {} doesn't have a valid payload. skipping.", deviceUUID, notification.getUuid());
                             tracker.failed(0, "failed to match payload to " + message.getNotifierId() + " notifier");
 
                         }else{
+                            long now = System.currentTimeMillis();
                             try {
                                 ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
                                 providerAdapter.sendNotification(message.getNotifierId(), notifier, payload, notification, tracker);
                             } catch (Exception e) {
                                 tracker.failed(0, e.getMessage());
+                            }finally{
+                                LOG.info("sending to device {} for Notification: {} duration "+(System.currentTimeMillis() - now)+" ms", deviceUUID, notification.getUuid());
                             }
                         }
-
                     } finally {
                         sendMeter.mark();
                     }
@@ -360,7 +363,13 @@ public class ApplicationQueueManager implements QueueManager {
                 return message;
             }
         };
-        Observable o = rx.Observable.from(messages).subscribeOn(Schedulers.io()).map(func)
+        Observable o = rx.Observable.from(messages)
+                .parallel(new Func1<rx.Observable<ApplicationQueueMessage>, rx.Observable<ApplicationQueueMessage>>() {
+                    @Override
+                    public rx.Observable<ApplicationQueueMessage> call(rx.Observable<ApplicationQueueMessage> messageObservable) {
+                        return messageObservable.map(func);
+                    }
+                }, Schedulers.io())
                 .buffer(BATCH_SIZE)
                 .map(new Func1<List<ApplicationQueueMessage>, HashMap<UUID, ApplicationQueueMessage>>() {
                     @Override
