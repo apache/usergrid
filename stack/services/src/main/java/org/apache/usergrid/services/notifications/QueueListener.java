@@ -63,7 +63,7 @@ public class QueueListener  {
 
     private ServiceManager svcMgr;
 
-    private long sleepWhenNoneFound = 5000;
+    private long sleepWhenNoneFound = 0;
 
     private long sleepBetweenRuns = 5000;
 
@@ -96,7 +96,7 @@ public class QueueListener  {
             int threadCount = 0;
 
             try {
-                sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", "5000")).longValue();
+                sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", "0")).longValue();
                 sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", "5000")).longValue();
                 int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
                 futures = new ArrayList<Future>(maxThreads);
@@ -188,10 +188,12 @@ public class QueueListener  {
                             .toBlocking()
                             .last();
                     LOG.info("QueueListener: Messages sent in batch");
-                    Thread.sleep(sleepBetweenRuns);
+                    if(sleepBetweenRuns > 0) {
+                        Thread.sleep(sleepBetweenRuns);
+                    }
                 }
                 else{
-                    LOG.info("QueueListener: no messages...sleep...",results.size());
+                    LOG.info("QueueListener: no messages...sleep...", results.size());
                     Thread.sleep(sleepWhenNoneFound);
                 }
                 //send to the providers
