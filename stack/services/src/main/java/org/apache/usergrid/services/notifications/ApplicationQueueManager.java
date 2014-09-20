@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ApplicationQueueManager implements QueueManager {
     public static String QUEUE_NAME = "notifications/queuelistenerv1_11";
-    public static int BATCH_SIZE = 100;
+    public static int BATCH_SIZE = 1000;
 
     public static final long MESSAGE_TRANSACTION_TIMEOUT =  5 * 1000;
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
@@ -329,9 +329,7 @@ public class ApplicationQueueManager implements QueueManager {
                     final Map<String, Object> payloads = notification.getPayloads();
                     final Map<String, Object> translatedPayloads = translatePayloads(payloads, notifierMap);
                     LOG.info("sending notification for device {} for Notification: {}", deviceUUID, notification.getUuid());
-                    if(!isOkToSend(notification)){
-                        return message;
-                    }
+
                     taskManager.addMessage(deviceUUID,message);
                     try {
                         String notifierName = message.getNotifierKey().toLowerCase();
@@ -339,19 +337,23 @@ public class ApplicationQueueManager implements QueueManager {
                         Object payload = translatedPayloads.get(notifierName);
                         Receipt receipt = new Receipt(notification.getUuid(), message.getNotifierId(), payload, deviceUUID);
                         TaskTracker tracker = new TaskTracker(notifier, taskManager, receipt, deviceUUID);
-                        if (payload == null) {
-                            LOG.debug("selected device {} for notification {} doesn't have a valid payload. skipping.", deviceUUID, notification.getUuid());
-                            tracker.failed(0, "failed to match payload to " + message.getNotifierId() + " notifier");
+                        if(!isOkToSend(notification)){
+                             tracker.failed(0, "Notification is duplicate/expired/cancelled.");
+                        }else {
+                            if (payload == null) {
+                                LOG.debug("selected device {} for notification {} doesn't have a valid payload. skipping.", deviceUUID, notification.getUuid());
+                                tracker.failed(0, "failed to match payload to " + message.getNotifierId() + " notifier");
 
-                        }else{
-                            long now = System.currentTimeMillis();
-                            try {
-                                ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
-                                providerAdapter.sendNotification(message.getNotifierId(), notifier, payload, notification, tracker);
-                            } catch (Exception e) {
-                                tracker.failed(0, e.getMessage());
-                            }finally{
-                                LOG.info("sending to device {} for Notification: {} duration "+(System.currentTimeMillis() - now)+" ms", deviceUUID, notification.getUuid());
+                            } else {
+                                long now = System.currentTimeMillis();
+                                try {
+                                    ProviderAdapter providerAdapter = providerAdapters.get(notifier.getProvider());
+                                    providerAdapter.sendNotification(message.getNotifierId(), notifier, payload, notification, tracker);
+                                } catch (Exception e) {
+                                    tracker.failed(0, e.getMessage());
+                                } finally {
+                                    LOG.info("sending to device {} for Notification: {} duration " + (System.currentTimeMillis() - now) + " ms", deviceUUID, notification.getUuid());
+                                }
                             }
                         }
                     } finally {
