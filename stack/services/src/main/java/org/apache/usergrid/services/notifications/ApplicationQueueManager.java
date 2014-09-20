@@ -311,12 +311,11 @@ public class ApplicationQueueManager implements QueueManager {
                         notificationMap.put(message.getNotificationId(), notification);
                     }
                     SingleQueueTaskManager taskManager;
-                    synchronized (taskMap) {
+                    taskManager = taskMap.get(message.getNotificationId());
+                    if (taskManager == null) {
+                        taskManager = new SingleQueueTaskManager(em, qm, proxy, notification);
+                        taskMap.putIfAbsent(message.getNotificationId(), taskManager);
                         taskManager = taskMap.get(message.getNotificationId());
-                        if (taskManager == null) {
-                            taskManager = new SingleQueueTaskManager(em, qm, proxy, notification);
-                            taskMap.put(message.getNotificationId(), taskManager);
-                        }
                     }
 
                     final Map<String, Object> payloads = notification.getPayloads();
