@@ -40,6 +40,7 @@
                 "m1.xlarge",
                 "m3.xlarge",
                 "m3.large",
+                "c3.xlarge",
                 "c3.2xlarge",
                 "c3.4xlarge"
             ],
@@ -150,7 +151,7 @@
             "m3.xlarge": {
                 "Arch": "64"
             },
-            "c3.2xlarge": {
+            "c3.xlarge": {
                 "Arch": "64"
             },
             "c3.2xlarge": {
