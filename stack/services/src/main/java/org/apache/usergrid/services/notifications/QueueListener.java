@@ -32,10 +32,7 @@ import rx.observables.GroupedObservable;
 import rx.schedulers.Schedulers;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -140,54 +137,37 @@ public class QueueListener  {
 
                 List<Message> messages = results.getMessages();
                 if(messages.size()>0) {
-                    Observable.from(messages) //observe all messages
-                            .subscribeOn(Schedulers.io())
-                            .map(new Func1<Message, ApplicationQueueMessage>() { //map a message to a typed message
-                                @Override
-                                public ApplicationQueueMessage call(Message message) {
-                                    return ApplicationQueueMessage.generate(message);
-                                }
-                            })
-                            .groupBy(new Func1<ApplicationQueueMessage, UUID>() { //group all of the messages together by app id
-                                @Override
-                                public UUID call(ApplicationQueueMessage message) {
-                                    return message.getApplicationId();
-                                }
-                            })
-                            .flatMap(new Func1<GroupedObservable<UUID, ApplicationQueueMessage>, Observable<?>>() { //take the observable and buffer in
-                                @Override
-                                public Observable<?> call(GroupedObservable<UUID, ApplicationQueueMessage> groupedObservable) {
-                                    UUID appId = groupedObservable.getKey();
-                                    EntityManager entityManager = emf.getEntityManager(appId);
-                                    ServiceManager serviceManager = smf.getServiceManager(appId);
-                                    final ApplicationQueueManager manager = new ApplicationQueueManager(
-                                            new JobScheduler(serviceManager, entityManager),
-                                            entityManager,
-                                            queueManager,
-                                            metricsService,
-                                            properties
-                                    );
+                    HashMap<UUID,List<ApplicationQueueMessage>> messageMap = new HashMap<>(messages.size());
+                    //group messages into hash map by app id
+                    for(Message message : messages){
+                        ApplicationQueueMessage queueMessage = ApplicationQueueMessage.generate(message);
+                        UUID applicationId = queueMessage.getApplicationId();
+                        if(!messageMap.containsKey(applicationId)){
+                            List<ApplicationQueueMessage> applicationQueueMessages = new ArrayList<ApplicationQueueMessage>();
+                            applicationQueueMessages.add(queueMessage);
+                            messageMap.put(applicationId,applicationQueueMessages);
+                        }else{
+                            messageMap.get(applicationId).add(queueMessage);
+                        }
+                    }
+                    //send each set of app ids together
+                    for(Map.Entry<UUID,List<ApplicationQueueMessage>> entry : messageMap.entrySet()){
+                        UUID applicationId = entry.getKey();
+                        EntityManager entityManager = emf.getEntityManager(applicationId);
+                        ServiceManager serviceManager = smf.getServiceManager(applicationId);
+                        final ApplicationQueueManager manager = new ApplicationQueueManager(
+                                new JobScheduler(serviceManager, entityManager),
+                                entityManager,
+                                queueManager,
+                                metricsService,
+                                properties
+                        );
+                        long now = System.currentTimeMillis();
+                        LOG.info("QueueListener: send batch {} messages", entry.getValue().size());
+                        manager.sendBatchToProviders(entry.getValue()).toBlocking().lastOrDefault(null);
+                        LOG.info("QueueListener: sent batch {} messages duration {} ms", entry.getValue().size(),System.currentTimeMillis() - now);
+                    }
 
-                                    return groupedObservable //buffer all of your notifications into a sender and send.
-                                            .buffer(ApplicationQueueManager.BATCH_SIZE)
-                                            .flatMap(new Func1<List<ApplicationQueueMessage>, Observable<?>>() {
-                                                @Override
-                                                public Observable<?> call(List<ApplicationQueueMessage> queueMessages) {
-                                                    LOG.info("QueueListener: send batch {} messages", queueMessages.size());
-                                                    return manager.sendBatchToProviders(queueMessages);
-                                                }
-                                            });
-                                }
-                            })
-                            .doOnError(new Action1<Throwable>() {
-                                @Override
-                                public void call(Throwable throwable) {
-                                    LOG.error("Failed while listening",throwable);
-                                }
-                            })
-                            .toBlocking()
-                            .last();
-                    LOG.info("QueueListener: Messages sent in batch");
                     if(sleepBetweenRuns > 0) {
                         Thread.sleep(sleepBetweenRuns);
                     }
