@@ -29,11 +29,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -54,9 +54,6 @@ import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -91,7 +88,10 @@ public class EsEntityIndexImpl implements EntityIndex {
     private final IndexScope indexScope;
 
     private final Client client;
-    private final SerializationFig serializationFig;
+
+    // Keep track of what types we have already initialized to avoid cost 
+    // of attempting to init them again. Used in the initType() method.
+    private Set<String> knownTypes = new TreeSet<String>();
 
     protected EntityCollectionManagerFactory ecmFactory;
 
@@ -122,8 +122,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             @Assisted final IndexScope indexScope,
             IndexFig config,
             EsProvider provider,
-            EntityCollectionManagerFactory factory,
-            SerializationFig serializationFig
+            EntityCollectionManagerFactory factory
     ) {
 
         IndexValidationUtils.validateIndexScope( indexScope );
@@ -137,8 +136,6 @@ public class EsEntityIndexImpl implements EntityIndex {
             this.indexName = createIndexName( config.getIndexPrefix(), indexScope);
             this.indexType = createCollectionScopeTypeName( indexScope );
 
-            this.serializationFig = serializationFig;
-
             this.refresh = config.isForcedRefresh();
             this.cursorTimeout = config.getQueryCursorTimeout();
 
@@ -147,10 +144,6 @@ public class EsEntityIndexImpl implements EntityIndex {
             throw e;
         }
 
-        //log.debug("Creating new EsEntityIndexImpl for: " + indexName);
-
-        // TODO, this will get used heavily, can we lazy repair instead of checking every 
-        // time we instantiate this?
         AdminClient admin = client.admin();
         try {
             CreateIndexResponse r = admin.indices().prepareCreate(indexName).execute().actionGet();
@@ -164,46 +157,45 @@ public class EsEntityIndexImpl implements EntityIndex {
             } catch (InterruptedException ex) {}
 
         } catch (IndexAlreadyExistsException ignored) {
-            //log.debug("Keyspace already exists", ignored);
+            if ( log.isDebugEnabled() ) {
+                log.debug("Keyspace already exists: " + indexName, ignored);
+            }
         }
-
     }
 
-    
+  
+    /**
+     * Create ElasticSearch mapping for each type of Entity.
+     */
     private void initType( String typeName ) {
 
+        // no need for synchronization here, it's OK if we init attempt to init type multiple times
+        if ( knownTypes.contains( typeName )) {
+            return;
+        }
+
         AdminClient admin = client.admin();
+        try {
+            XContentBuilder mxcb = EsEntityIndexImpl
+                .createDoubleStringIndexMapping(jsonBuilder(), typeName);
 
-        // if new type then create mapping
-        if (!admin.indices().typesExists(new TypesExistsRequest(
-                new String[]{indexName}, typeName )).actionGet().isExists()) {
+            admin.indices().preparePutMapping(indexName)
+                .setType(typeName).setSource(mxcb).execute().actionGet();
 
-            try {
-                XContentBuilder mxcb = EsEntityIndexImpl
-                    .createDoubleStringIndexMapping(jsonBuilder(), typeName);
+            admin.indices().prepareGetMappings(indexName)
+                .addTypes(typeName).execute().actionGet();
 
-                PutMappingResponse pmr = admin.indices().preparePutMapping( indexName )
-                    .setType( typeName ).setSource(mxcb).execute().actionGet();
+            log.debug("Created new type mapping");
+            log.debug("   Scope application: " + indexScope.getApplication());
+            log.debug("   Scope owner: " + indexScope.getOwner());
+            log.debug("   Type name: " + typeName);
 
-                if (!admin.indices().typesExists(new TypesExistsRequest(
-                    new String[] { indexName }, typeName )).actionGet().isExists()) {
-                    throw new RuntimeException("Type does not exist in index: " + typeName);
-                }
+            knownTypes.add( typeName );
 
-                GetMappingsResponse gmr = admin.indices().prepareGetMappings( indexName )
-                    .addTypes( typeName ).execute().actionGet();
-                if ( gmr.getMappings().isEmpty() ) {
-                    throw new RuntimeException("Zero mappings exist for type: " + typeName);
-                }
-
-                log.debug("Created new type mapping");
-                log.debug("   Scope applciation: " + indexScope.getApplication());
-                log.debug("   Scope owner: " + indexScope.getOwner());
-                log.debug("   Type name: " + typeName );
-
-            } catch (IOException ex) {
-                throw new RuntimeException(
-                    "Error adding mapping for type " + typeName, ex);
+        } catch (Exception ex) {
+            // probably means type or mapping already exists, which is no problem
+            if ( log.isDebugEnabled() ) {
+                log.debug("Problem creating mapping for type: " + typeName, ex);
             }
         }
     }
