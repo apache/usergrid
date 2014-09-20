@@ -48,7 +48,7 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
     public SingleQueueTaskManager(EntityManager em, org.apache.usergrid.mq.QueueManager qm, QueueManager proxy, Notification notification) {
         this.em = em;
         this.qm = qm;
-        this.path = ApplicationQueueManager.QUEUE_NAME;
+        this.path = proxy.getQueuePath();
         this.notification = notification;
         this.proxy = proxy;
         this.messageMap = new ConcurrentHashMap<UUID, ApplicationQueueMessage>();
