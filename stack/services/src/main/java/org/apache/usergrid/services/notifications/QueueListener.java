@@ -192,6 +192,11 @@ public class QueueListener  {
                 consecutiveExceptions.set(0);
             }catch (Exception ex){
                 LOG.error("failed to dequeue",ex);
+                try {
+                    Thread.sleep(sleepWhenNoneFound);
+                }catch (InterruptedException ie){
+                    LOG.info("sleep interupted");
+                }
                 if(consecutiveExceptions.getAndIncrement() > MAX_CONSECUTIVE_FAILS){
                     LOG.error("killing message listener; too many failures");
                     break;
