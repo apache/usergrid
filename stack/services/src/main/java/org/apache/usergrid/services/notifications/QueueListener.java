@@ -150,6 +150,8 @@ public class QueueListener  {
                             messageMap.get(applicationId).add(queueMessage);
                         }
                     }
+                    long now = System.currentTimeMillis();
+                    Observable merge = null;
                     //send each set of app ids together
                     for(Map.Entry<UUID,List<ApplicationQueueMessage>> entry : messageMap.entrySet()){
                         UUID applicationId = entry.getKey();
@@ -162,11 +164,17 @@ public class QueueListener  {
                                 metricsService,
                                 properties
                         );
-                        long now = System.currentTimeMillis();
-                        LOG.info("QueueListener: send batch {} messages", entry.getValue().size());
-                        manager.sendBatchToProviders(entry.getValue()).toBlocking().lastOrDefault(null);
-                        LOG.info("QueueListener: sent batch {} messages duration {} ms", entry.getValue().size(),System.currentTimeMillis() - now);
+
+                        LOG.info("QueueListener: send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
+                        Observable current = manager.sendBatchToProviders(entry.getValue());
+                        if(merge == null)
+                            merge = current;
+                        else {
+                            merge = Observable.merge(merge,current);
+                        }
                     }
+                    merge.toBlocking().lastOrDefault(null);
+                    LOG.info("QueueListener: sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
                     if(sleepBetweenRuns > 0) {
                         Thread.sleep(sleepBetweenRuns);
