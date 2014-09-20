@@ -173,7 +173,9 @@ public class QueueListener  {
                             merge = Observable.merge(merge,current);
                         }
                     }
-                    merge.toBlocking().lastOrDefault(null);
+                    if(merge!=null) {
+                        merge.toBlocking().lastOrDefault(null);
+                    }
                     LOG.info("QueueListener: sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
                     if(sleepBetweenRuns > 0) {
