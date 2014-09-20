@@ -30,4 +30,6 @@ public interface QueueManager {
 
     public void asyncCheckForInactiveDevices(Set<Notifier> notifiers) throws Exception ;
 
+    public String getQueuePath();
+
 }
