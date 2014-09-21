@@ -24,13 +24,13 @@ And then you will find the following directory structure (Where X.Y.Z is the ver
       README.md
       usergrid-tools.jar
       usergrid-export.sh
-      usergrid-custom.properties
+      usergrid-deployment.properties
 
 These are the important files:
 
 * __usergrid-tools.jar__: this is the Usergrid Tools executable
 * __usergrid-export.sh__: this is a shell script design to be run as a cron scheduled task
-* __usergrid-custom.properties__: this is the configuration file, refer to the documentation for the tool you are running to learn what properties are required.
+* __usergrid-deployment.properties__: this is the configuration file, refer to the documentation for the tool you are running to learn what properties are required.
 
 
 How to run the Usergrid Tools
