@@ -134,9 +134,7 @@ chown -R tomcat7 /var/lib/tomcat7/webapps
 
 # configure usergrid
 mkdir -p /usr/share/tomcat7/lib 
-groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-custom.properties 
-# create a copy for 1.0 too
-cp /usr/share/tomcat7/lib/usergrid-custom.properties /usr/share/tomcat7/lib/usergrid-deployment.properties  
+groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
 
 # Go
