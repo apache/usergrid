@@ -7,13 +7,7 @@
         <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
         <jackson-version>2.3.1</jackson-version>
     </properties>
-	
-    <parent>
-        <groupId>org.apache.usergrid</groupId>
-        <artifactId>usergrid</artifactId>
-        <version>1.0.0</version>
-        <relativePath>../../stack</relativePath>
-    </parent>
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.apache.usergrid</groupId>
