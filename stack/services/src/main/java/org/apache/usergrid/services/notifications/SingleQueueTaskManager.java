@@ -145,7 +145,7 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
     }
 
     public void finishedBatch() throws Exception {
-        synchronized (this) { //avoid issues with counting
+        //synchronized (this) { //avoid issues with counting
             long successes = this.successes.getAndSet(0); //reset counters
             long failures = this.failures.getAndSet(0); //reset counters
             this.hasFinished = true;
@@ -200,10 +200,10 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
             LOG.info("notification finished batch: {}", notification.getUuid());
             em.updateProperties(notification, properties);
             em.update(notification);
-        }
+       // }
 
-        Set<Notifier> notifiers = new HashSet<Notifier>(proxy.getNotifierMap().values()); // remove dups
-        proxy.asyncCheckForInactiveDevices(notifiers);
+        //Set<Notifier> notifiers = new HashSet<Notifier>(proxy.getNotifierMap().values()); // remove dups
+       // proxy.asyncCheckForInactiveDevices(notifiers);
     }
 
 

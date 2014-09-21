@@ -101,18 +101,17 @@ public class QueueListener  {
                 futures = new ArrayList<Future>(maxThreads);
                 while (threadCount++ < maxThreads) {
                     LOG.info("QueueListener: Starting thread {}.", threadCount);
-                    futures.add(
-                            pool.submit(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        execute();
-                                    } catch (Exception e) {
-                                        LOG.error("failed to start push", e);
-                                    }
-                                }
-                            })
-                    );
+                    Runnable task = new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                execute();
+                            } catch (Exception e) {
+                                LOG.error("failed to start push", e);
+                            }
+                        }
+                    };
+                    futures.add( pool.submit(task));
                 }
             } catch (Exception e) {
                 LOG.error("QueueListener: failed to start:", e);
@@ -125,7 +124,7 @@ public class QueueListener  {
     }
 
     private void execute(){
-
+        Thread.currentThread().setName("Notifications_Processor"+UUID.randomUUID());
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
         queueManager = svcMgr.getQueueManager();
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
@@ -192,6 +191,11 @@ public class QueueListener  {
                 consecutiveExceptions.set(0);
             }catch (Exception ex){
                 LOG.error("failed to dequeue",ex);
+                try {
+                    Thread.sleep(sleepWhenNoneFound);
+                }catch (InterruptedException ie){
+                    LOG.info("sleep interupted");
+                }
                 if(consecutiveExceptions.getAndIncrement() > MAX_CONSECUTIVE_FAILS){
                     LOG.error("killing message listener; too many failures");
                     break;

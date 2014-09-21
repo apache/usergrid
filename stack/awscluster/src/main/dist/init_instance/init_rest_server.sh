@@ -87,7 +87,7 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'c3.xlarge' )
     # total of 7.5g
     export TOMCAT_RAM=5250m
-    export TOMCAT_THREADS=2000
+    export TOMCAT_THREADS=1000
 ;;
 'c3.2xlarge' )
     # total of 15g
