@@ -30,18 +30,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 
 
-@Path("/system")
+@Path( "/system" )
 @Component
-@Scope("singleton")
-@Produces({
+@Scope( "singleton" )
+@Produces( {
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
-})
+} )
 public class SystemResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( SystemResource.class );
@@ -54,9 +55,9 @@ public class SystemResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @GET
-    @Path("database/setup")
+    @Path( "database/setup" )
     public JSONWithPadding getSetup( @Context UriInfo ui,
-                                     @QueryParam("callback") @DefaultValue("callback") String callback )
+                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -65,19 +66,10 @@ public class SystemResource extends AbstractContextResource {
         logger.info( "Setting up Cassandra" );
 
 
-        try {
-            emf.setup();
-        }
-        catch ( Exception e ) {
-            logger.error( "Unable to complete core database setup, possibly due to it being setup already", e );
-        }
+        emf.setup();
 
-        try {
-            management.setup();
-        }
-        catch ( Exception e ) {
-            logger.error( "Unable to complete management database setup, possibly due to it being setup already", e );
-        }
+
+        management.setup();
 
         response.setSuccess();
 
@@ -87,9 +79,9 @@ public class SystemResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @GET
-    @Path("superuser/setup")
+    @Path( "superuser/setup" )
     public JSONWithPadding getSetupSuperuser( @Context UriInfo ui,
-                                              @QueryParam("callback") @DefaultValue("callback") String callback )
+                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
