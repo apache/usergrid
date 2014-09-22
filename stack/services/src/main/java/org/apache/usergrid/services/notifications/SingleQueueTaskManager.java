@@ -201,8 +201,8 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
         LOG.info("notification finished batch: {}", notification.getUuid());
         em.update(notification);
 
-        Set<Notifier> notifiers = new HashSet<Notifier>(proxy.getNotifierMap().values()); // remove dups
-        proxy.asyncCheckForInactiveDevices(notifiers);
+       // Set<Notifier> notifiers = new HashSet<Notifier>(proxy.getNotifierMap().values()); // remove dups
+        //proxy.asyncCheckForInactiveDevices(notifiers);
     }
 
 
