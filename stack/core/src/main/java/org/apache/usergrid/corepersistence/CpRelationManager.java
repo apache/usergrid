@@ -635,7 +635,13 @@ public class CpRelationManager implements RelationManager {
 
     public Entity addToCollection(String collName, EntityRef itemRef, boolean connectBack ) throws Exception {
 
-        Entity itemEntity = em.get( itemRef );
+        // don't fetch entity if we've already got one
+        final Entity itemEntity;
+        if ( itemRef instanceof Entity ) {
+            itemEntity = (Entity)itemRef;
+        } else {
+            itemEntity = em.get( itemRef );
+        }
 
         if ( itemEntity == null ) {
             return null;
@@ -682,6 +688,7 @@ public class CpRelationManager implements RelationManager {
                 itemRef.getType(), itemRef.getUuid() });
         UUID timeStampUuid =   memberEntity.getId().getUuid() != null &&  UUIDUtils.isTimeBased( memberEntity.getId().getUuid()) ?  memberEntity.getId().getUuid() : UUIDUtils.newTimeUUID();
         long uuidHash =    UUIDUtils.getUUIDLong(timeStampUuid);
+
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge(
             cpHeadEntity.getId(),
