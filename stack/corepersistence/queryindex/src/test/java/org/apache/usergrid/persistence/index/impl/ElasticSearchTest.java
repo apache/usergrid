@@ -77,7 +77,8 @@ public class ElasticSearchTest extends BaseIT {
         Map<String, Object> json = new HashMap<String, Object>();
         json.put( "user", "edward" );
         json.put( "postDate", new Date() );
-        json.put( "message", "who knows if the moon’s a baloon" );
+        json.put( "message", "who knows if the moon's a baloon" );
+
 
         // create
         IndexResponse indexResponse = client.prepareIndex(indexName, collectionName, id)
