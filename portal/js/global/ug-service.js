@@ -480,7 +480,7 @@ AppServices.Services.factory('ug', function (configuration, $rootScope,utility, 
       });
     },
     getNotificationReceipts: function (uuid) {
-      this.getCollection('receipts', 'notifications/'+uuid+'/receipts');
+      this.getCollection('receipts', 'receipts','created desc','notificationUUID='+uuid);
       var self = this;
       $rootScope.$on('receipts-received', function(event, receipts) {
         self.receiptsCollection = receipts;
