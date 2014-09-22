@@ -123,7 +123,7 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
             receipt.setUuid(savedReceipt.getUuid());
 
             List<EntityRef> entities = Arrays.asList(notification, device);
-            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
+//            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
         } else {
             em.update(receipt);
         }
