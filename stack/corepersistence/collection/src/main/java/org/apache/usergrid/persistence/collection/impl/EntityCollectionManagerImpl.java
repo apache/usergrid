@@ -161,7 +161,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
-        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( Schedulers.io() )
+        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
                          .map( markStart ).map( markCommit );
     }
 
@@ -173,7 +173,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage" );
 
-        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).subscribeOn( Schedulers.io() )
+        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
                          .map( load );
     }
 
@@ -204,7 +204,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                //we an update, signal the fix
 
-                //HystrixCassandra.async( Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ) ).subscribe();
+                //TODO T.N Change this to use request collapsing
                 Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
 
 
@@ -215,7 +215,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     // fire the stages
     public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData,WriteStart writeState ) {
 
-        return Observable.from( writeData ).subscribeOn( Schedulers.io() ).map( writeState ).flatMap(
+        return Observable.from( writeData ).map( writeState ).flatMap(
                 new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
 
                     @Override
