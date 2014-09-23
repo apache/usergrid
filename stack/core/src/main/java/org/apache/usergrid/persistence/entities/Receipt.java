@@ -20,8 +20,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.usergrid.persistence.TypedEntity;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.HashMap;
 import java.util.UUID;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
+import org.mortbay.util.ajax.JSON;
 
 @XmlRootElement
 public class Receipt extends TypedEntity {
@@ -66,7 +68,23 @@ public class Receipt extends TypedEntity {
     public Receipt(UUID notificationUUID, String notifierId, Object payload,UUID deviceId) {
         this.notificationUUID = notificationUUID;
         this.notifierId = notifierId;
-        this.payload = payload;
+        HashMap receiptPayload;
+        if(! (payload instanceof HashMap) ){
+            if(payload instanceof String){
+                try {
+                    receiptPayload = (HashMap) JSON.parse((String) payload);
+                }catch (Exception e){
+                    receiptPayload = new HashMap<>();
+                    receiptPayload.put("payload", payload);
+                }
+            }else {
+                receiptPayload = new HashMap<>();
+                receiptPayload.put("payload", payload);
+            }
+        }else{
+            receiptPayload = (HashMap)payload;
+        }
+        this.payload = receiptPayload;
         this.setDeviceId(deviceId);
     }
 
