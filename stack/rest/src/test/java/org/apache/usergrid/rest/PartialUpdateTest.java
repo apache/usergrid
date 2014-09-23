@@ -50,6 +50,10 @@ public class PartialUpdateTest extends AbstractRestIT {
             put( "username", "bart" );
             put( "employer", "Brawndo" );
             put( "email", "bart@personal-email.example.com" );
+            put( "location", new LinkedHashMap<String, Object>() {{
+                put("latitude", "37.3638875323994");
+                put("longitude", "-122.12334411518498");
+            }} );
         }};
 
         JsonNode userNode = mapper.readTree( 
