@@ -230,7 +230,7 @@ public class CpRelationManager implements RelationManager {
         }
         
         this.cpHeadEntity = ecm.load( new SimpleId( 
-            headEntity.getUuid(), headEntity.getType() )).toBlockingObservable().last();
+            headEntity.getUuid(), headEntity.getType() )).toBlocking().lastOrDefault(null);
 
         // commented out because it is possible that CP entity has not been created yet
         Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
