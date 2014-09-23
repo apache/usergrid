@@ -20,22 +20,15 @@ import org.apache.usergrid.metrics.MetricsFactory;
 import org.apache.usergrid.mq.*;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+
 import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.observables.GroupedObservable;
-import rx.schedulers.Schedulers;
-
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -44,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class QueueListener  {
     public static int MAX_CONSECUTIVE_FAILS = 10;
 
+    public static final long MESSAGE_TRANSACTION_TIMEOUT = 60 * 5 * 1000;
 
     private static final Logger LOG = LoggerFactory.getLogger(QueueListener.class);
 
@@ -63,12 +57,16 @@ public class QueueListener  {
 
     private ServiceManager svcMgr;
 
-    private long sleepPeriod = 5000;
+    private long sleepWhenNoneFound = 0;
+
+    private long sleepBetweenRuns = 5000;
 
     ExecutorService pool;
     List<Future> futures;
 
     public static final String MAX_THREADS = "1";
+    private Integer batchSize = 1000;
+    private String queueName;
 
     public QueueListener() {
         pool = Executors.newFixedThreadPool(1);
@@ -87,37 +85,46 @@ public class QueueListener  {
     }
 
     public void run(){
-        LOG.info("QueueListener: starting.");
+        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "true"));
 
-        int threadCount = 0;
-        try {
-            sleepPeriod = new Long(properties.getProperty("usergrid.notifications.listener.sleep", "5000")).longValue();
-            int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
-            futures = new ArrayList<Future>(maxThreads);
-            while (threadCount++ < maxThreads) {
-                LOG.info("QueueListener: Starting thread {}.", threadCount);
-                futures.add(
-                        pool.submit(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    execute();
-                                } catch (Exception e) {
-                                    LOG.error("failed to start push", e);
-                                }
+        if(shouldRun) {
+            LOG.info("QueueListener: starting.");
+            int threadCount = 0;
+
+            try {
+                sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", "0")).longValue();
+                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", "5000")).longValue();
+                batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
+                queueName = properties.getProperty(ApplicationQueueManager.DEFAULT_QUEUE_PROPERTY,ApplicationQueueManager.DEFAULT_QUEUE_NAME);
+
+                int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
+                futures = new ArrayList<Future>(maxThreads);
+                while (threadCount++ < maxThreads) {
+                    LOG.info("QueueListener: Starting thread {}.", threadCount);
+                    Runnable task = new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                execute();
+                            } catch (Exception e) {
+                                LOG.error("failed to start push", e);
                             }
-                        })
-                );
+                        }
+                    };
+                    futures.add( pool.submit(task));
+                }
+            } catch (Exception e) {
+                LOG.error("QueueListener: failed to start:", e);
             }
-        }catch (Exception e){
-            LOG.error("QueueListener: failed to start:", e);
+            LOG.info("QueueListener: done starting.");
+        }else{
+            LOG.info("QueueListener: never started due to config value usergrid.notifications.listener.run.");
         }
-        LOG.info("QueueListener: done starting.");
 
     }
 
     private void execute(){
-
+        Thread.currentThread().setName("Notifications_Processor"+UUID.randomUUID());
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
         queueManager = svcMgr.getQueueManager();
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
@@ -126,68 +133,69 @@ public class QueueListener  {
         // run until there are no more active jobs
         while ( true ) {
             try {
-                QueueResults results = ApplicationQueueManager.getDeliveryBatch(queueManager);
-                LOG.info("QueueListener: retrieved batch of {} messages",results.size());
+                QueueResults results = getDeliveryBatch(queueManager);
+                LOG.info("QueueListener: retrieved batch of {} messages", results.size());
 
                 List<Message> messages = results.getMessages();
-                if(messages.size()>0) {
-                    Observable.from(messages) //observe all messages
-                            .subscribeOn(Schedulers.io())
-                            .map(new Func1<Message, ApplicationQueueMessage>() { //map a message to a typed message
-                                @Override
-                                public ApplicationQueueMessage call(Message message) {
-                                    return ApplicationQueueMessage.generate(message);
-                                }
-                            })
-                            .groupBy(new Func1<ApplicationQueueMessage, UUID>() { //group all of the messages together by app id
-                                @Override
-                                public UUID call(ApplicationQueueMessage message) {
-                                    return message.getApplicationId();
-                                }
-                            })
-                            .flatMap(new Func1<GroupedObservable<UUID, ApplicationQueueMessage>, Observable<?>>() { //take the observable and buffer in
-                                @Override
-                                public Observable<?> call(GroupedObservable<UUID, ApplicationQueueMessage> groupedObservable) {
-                                    UUID appId = groupedObservable.getKey();
-                                    EntityManager entityManager = emf.getEntityManager(appId);
-                                    ServiceManager serviceManager = smf.getServiceManager(appId);
-                                    final ApplicationQueueManager manager = new ApplicationQueueManager(
-                                            new JobScheduler(serviceManager, entityManager),
-                                            entityManager,
-                                            queueManager,
-                                            metricsService
-                                    );
+                if (messages.size() > 0) {
+                    HashMap<UUID, List<ApplicationQueueMessage>> messageMap = new HashMap<>(messages.size());
+                    //group messages into hash map by app id
+                    for (Message message : messages) {
+                        ApplicationQueueMessage queueMessage = ApplicationQueueMessage.generate(message);
+                        UUID applicationId = queueMessage.getApplicationId();
+                        if (!messageMap.containsKey(applicationId)) {
+                            List<ApplicationQueueMessage> applicationQueueMessages = new ArrayList<ApplicationQueueMessage>();
+                            applicationQueueMessages.add(queueMessage);
+                            messageMap.put(applicationId, applicationQueueMessages);
+                        } else {
+                            messageMap.get(applicationId).add(queueMessage);
+                        }
+                    }
+                    long now = System.currentTimeMillis();
+                    Observable merge = null;
+                    //send each set of app ids together
+                    for (Map.Entry<UUID, List<ApplicationQueueMessage>> entry : messageMap.entrySet()) {
+                        UUID applicationId = entry.getKey();
+                        EntityManager entityManager = emf.getEntityManager(applicationId);
+                        ServiceManager serviceManager = smf.getServiceManager(applicationId);
+                        final ApplicationQueueManager manager = new ApplicationQueueManager(
+                                new JobScheduler(serviceManager, entityManager),
+                                entityManager,
+                                queueManager,
+                                metricsService,
+                                properties
+                        );
 
-                                    return groupedObservable //buffer all of your notifications into a sender and send.
-                                            .buffer(ApplicationQueueManager.BATCH_SIZE)
-                                            .flatMap(new Func1<List<ApplicationQueueMessage>, Observable<?>>() {
-                                                @Override
-                                                public Observable<?> call(List<ApplicationQueueMessage> queueMessages) {
-                                                    LOG.info("QueueListener: send batch {} messages", queueMessages.size());
-                                                    return manager.sendBatchToProviders(queueMessages);
-                                                }
-                                            });
-                                }
-                            })
-                            .doOnError(new Action1<Throwable>() {
-                                @Override
-                                public void call(Throwable throwable) {
-                                    LOG.error("Failed while listening",throwable);
-                                }
-                            })
-                            .toBlocking()
-                            .last();
-                    LOG.info("QueueListener: Messages sent in batch");
+                        LOG.info("QueueListener: send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
+                        Observable current = manager.sendBatchToProviders(entry.getValue());
+                        if(merge == null)
+                            merge = current;
+                        else {
+                            merge = Observable.merge(merge,current);
+                        }
+                    }
+                    if(merge!=null) {
+                        merge.toBlocking().lastOrDefault(null);
+                    }
+                    LOG.info("QueueListener: sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
+                    if(sleepBetweenRuns > 0) {
+                        Thread.sleep(sleepBetweenRuns);
+                    }
                 }
                 else{
-                    LOG.info("QueueListener: no messages...sleep...",results.size());
-                    Thread.sleep(sleepPeriod);
+                    LOG.info("QueueListener: no messages...sleep...", results.size());
+                    Thread.sleep(sleepWhenNoneFound);
                 }
                 //send to the providers
                 consecutiveExceptions.set(0);
             }catch (Exception ex){
                 LOG.error("failed to dequeue",ex);
+                try {
+                    Thread.sleep(sleepWhenNoneFound);
+                }catch (InterruptedException ie){
+                    LOG.info("sleep interupted");
+                }
                 if(consecutiveExceptions.getAndIncrement() > MAX_CONSECUTIVE_FAILS){
                     LOG.error("killing message listener; too many failures");
                     break;
@@ -204,6 +212,18 @@ public class QueueListener  {
         }
     }
 
+    private  QueueResults getDeliveryBatch(org.apache.usergrid.mq.QueueManager queueManager) throws Exception {
+        QueueQuery qq = new QueueQuery();
+        qq.setLimit(this.getBatchSize());
+        qq.setTimeout(MESSAGE_TRANSACTION_TIMEOUT);
+        QueueResults results = queueManager.getFromQueue(queueName, qq);
+        LOG.debug("got batch of {} devices", results.size());
+        return results;
+    }
 
+    public void setBatchSize(int batchSize){
+        this.batchSize = batchSize;
+    }
+    public int getBatchSize(){return batchSize;}
 
 }

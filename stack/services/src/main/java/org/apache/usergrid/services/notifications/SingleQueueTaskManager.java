@@ -48,7 +48,7 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
     public SingleQueueTaskManager(EntityManager em, org.apache.usergrid.mq.QueueManager qm, QueueManager proxy, Notification notification) {
         this.em = em;
         this.qm = qm;
-        this.path = ApplicationQueueManager.QUEUE_NAME;
+        this.path = proxy.getQueuePath();
         this.notification = notification;
         this.proxy = proxy;
         this.messageMap = new ConcurrentHashMap<UUID, ApplicationQueueMessage>();
@@ -123,7 +123,7 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
             receipt.setUuid(savedReceipt.getUuid());
 
             List<EntityRef> entities = Arrays.asList(notification, device);
-            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
+//            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
         } else {
             em.update(receipt);
         }
@@ -145,65 +145,64 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
     }
 
     public void finishedBatch() throws Exception {
-        synchronized (this) { //avoid issues with counting
-            long successes = this.successes.getAndSet(0); //reset counters
-            long failures = this.failures.getAndSet(0); //reset counters
-            this.hasFinished = true;
+        long successes = this.successes.getAndSet(0); //reset counters
+        long failures = this.failures.getAndSet(0); //reset counters
+        this.hasFinished = true;
 
-            // refresh notification
-            Notification notification = em.get(this.notification.getUuid(), Notification.class);
-            notification.setModified(System.currentTimeMillis());
+        // refresh notification
+        Notification notification = em.get(this.notification.getUuid(), Notification.class);
+        notification.setModified(System.currentTimeMillis());
 
-            Map<String, Object> properties;
-            Map<String, Long> stats;
-            String statsKey = "statistics_batch";
-
-            //write out current results to a set so no overlap in multiple writes will occur
-            if (successes + failures > 0) {
-                properties = new HashMap<String, Object>(4);
-                stats = new HashMap<String, Long>(2);
-                stats.put("sent", successes);
-                stats.put("errors", failures);
-                properties.put(statsKey + "_" + System.currentTimeMillis(), stats);
-                properties.put("modified", notification.getModified());
-                em.updateProperties(notification, properties);
-            }
-
-            //resum the stats
-            properties = em.getProperties(notification); // re-read
-            long sent = 0;
-            long errors = 0;
-            for (String key : properties.keySet()) {
-                if (key.contains(statsKey)) {
-                    stats = (Map<String, Long>) properties.get(key);
-                    sent += stats.get("sent");
-                    errors += stats.get("errors");
-                }
-            }
-
-            //and write them out again, this will produce the most accurate count
+        Map<String, Long> stats;
+        String statsKey = "statistics_batch";
+        Map<String, Object> properties;
+        //write out current results to a set so no overlap in multiple writes will occur
+        if (successes + failures > 0) {
+            properties = new HashMap<String, Object>(4);
             stats = new HashMap<String, Long>(2);
-            stats.put("sent", sent);
-            stats.put("errors", errors);
-            notification.setStatistics(stats);
-
-            LOG.info("notification {} sending to {}", notification.getUuid(), sent + errors);
-
-            //none of this is known and should you ever do this
-            if (notification.getExpectedCount() <= (errors + sent)) {
-                notification.setFinished(notification.getModified());
-                properties.put("finished", notification.getModified());
-                properties.put("state", notification.getState());
-                LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
-            }
-
-            LOG.info("notification finished batch: {}", notification.getUuid());
-            em.updateProperties(notification, properties);
+            stats.put("sent", successes);
+            stats.put("errors", failures);
+            properties.put(statsKey + "_" + System.currentTimeMillis(), stats);
+            properties.put("modified", notification.getModified());
+            notification.addProperties(properties);
             em.update(notification);
         }
 
-        Set<Notifier> notifiers = new HashSet<Notifier>(proxy.getNotifierMap().values()); // remove dups
-        proxy.asyncCheckForInactiveDevices(notifiers);
+        //resum the stats
+        notification = em.get(this.notification.getUuid(), Notification.class); // re-read
+        properties = notification.getProperties();
+        long sent = 0;
+        long errors = 0;
+        for (String key : properties.keySet()) {
+            if (key.contains(statsKey)) {
+                stats = (Map<String, Long>) properties.get(key);
+                sent += stats.get("sent");
+                errors += stats.get("errors");
+            }
+        }
+
+        //and write them out again, this will produce the most accurate count
+        stats = new HashMap<String, Long>(2);
+        stats.put("sent", sent);
+        stats.put("errors", errors);
+        notification.setStatistics(stats);
+
+        LOG.info("notification {} sending to {}", notification.getUuid(), sent + errors);
+
+        //none of this is known and should you ever do this
+        if (notification.getExpectedCount() <= (errors + sent)) {
+            notification.setFinished(notification.getModified());
+            properties.put("finished", notification.getModified());
+            properties.put("state", notification.getState());
+            LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
+            notification.addProperties(properties);
+        }
+
+        LOG.info("notification finished batch: {}", notification.getUuid());
+        em.update(notification);
+
+       // Set<Notifier> notifiers = new HashSet<Notifier>(proxy.getNotifierMap().values()); // remove dups
+        //proxy.asyncCheckForInactiveDevices(notifiers);
     }
 
 

@@ -70,16 +70,19 @@
     <bean id="loadBalancingPolicy" class="me.prettyprint.cassandra.connection.DynamicLoadBalancingPolicy"/>
 
 	<!--  locking for a single node -->	
-	<bean name="lockManager" class="org.apache.usergrid.locking.singlenode.SingleNodeLockManagerImpl" />
+<!--	<bean name="lockManager" 
+        class="org.apache.usergrid.locking.singlenode.SingleNodeLockManagerImpl" />-->
 	
 	<!--  hector based locks -->
-	<!-- Note that if this is deployed in a production cluster, the RF on the keyspace MUST be updated to use an odd number for it's replication Factor.
-		  Even numbers can potentially case the locks to fail, via "split brain" when read at QUORUM on lock verification-->
+	<!-- Note that if this is deployed in a production cluster, the RF on the keyspace 
+    MUST be updated to use an odd number for it's replication Factor.  Even numbers can 
+    potentially case the locks to fail, via "split brain" when read at QUORUM on lock verification-->
 	
-	<!--  <bean name="lockManager" class="org.apache.usergrid.locking.cassandra.HectorLockManagerImpl" >
+	<bean name="lockManager" class="org.apache.usergrid.locking.cassandra.HectorLockManagerImpl" >
 		<property name="cluster" ref="cassandraCluster"/>
 		<property name="keyspaceName" value="${cassandra.lock.keyspace}"/>
-	</bean>-->
+		<property name="consistencyLevelPolicy" ref="consistencyLevelPolicy"/>
+	</bean>
 	
 	<!--  zookeeper locks -->
 	<!--

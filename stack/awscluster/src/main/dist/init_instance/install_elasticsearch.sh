@@ -68,6 +68,10 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
     # total of 15g 
     export ES_HEAP_SIZE=7500m
 ;;
+'c3.xlarge' )
+    # total of 7.5g
+    export ES_HEAP_SIZE=3500m
+;;
 'c3.2xlarge' )
     # total of 15g
     export ES_HEAP_SIZE=7500m

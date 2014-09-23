@@ -102,7 +102,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         PathQuery pathQuery =  new PathQuery(new SimpleEntityRef(  app.getEm().getApplicationRef()), query);
 
         ns.TEST_PATH_QUERY = pathQuery;
-        ApplicationQueueManager.QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString();
+        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString();
         listener = new QueueListener(ns.getServiceManagerFactory(),
                 ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
         listener.run();

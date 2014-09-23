@@ -291,7 +291,7 @@ public class TomcatResource extends ExternalResource {
     private void createPropertyFilesForForkedTomcat( String propDirPath ) throws IOException {
 
         PrintWriter pw = new PrintWriter( 
-            new FileWriter( propDirPath + File.separator + "usergrid-custom.properties"));
+            new FileWriter( propDirPath + File.separator + "usergrid-deployment.properties"));
         
         pw.println("cassandra.url=localhost:" + cassPort);
         pw.println("cassandra.version=1.2");
@@ -365,7 +365,7 @@ public class TomcatResource extends ExternalResource {
 //        allProperties.put("elasticsearch.port", ""+esPort );
 //
 //        PrintWriter pw = new PrintWriter( 
-//            new FileWriter( propDirPath + File.separator + "usergrid-custom.properties"));
+//            new FileWriter( propDirPath + File.separator + "usergrid-deployment.properties"));
 //        for ( String name : allProperties.keySet() ) {
 //            pw.println(name + "=" + allProperties.get( name ));
 //        } 

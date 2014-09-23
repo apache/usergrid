@@ -37,7 +37,7 @@ public class NotificationsIT extends AbstractRestIT {
     public void testBasicOperation() throws Exception {
 
         int numDevices = 10;
-        int numNotifications = 50; // to send to each device
+        int numNotifications = 100; // to send to each device
 
         String token = userToken( "ed@anuff.com", "sesame" );
         String org = "test-organization";
@@ -92,6 +92,9 @@ public class NotificationsIT extends AbstractRestIT {
 
         refreshIndex( org, app );
 
+        StopWatch allSw = new StopWatch();
+        allSw.start();
+
         // send notifications 
         sw.reset();
         sw.start();
@@ -119,7 +122,8 @@ public class NotificationsIT extends AbstractRestIT {
         }
         sw.stop();
         logger.info("Created {} notifications in {}ms", notificationCount, sw.getTime());
-        logger.info("Post Notification throughput = {} TPS", ((float)notificationCount) / (sw.getTime()/1000));
+        logger.info("Post Notification throughput = {} TPS", 
+                ((float)notificationCount) / (sw.getTime()/1000));
 
         refreshIndex( org, app );
 
@@ -149,7 +153,12 @@ public class NotificationsIT extends AbstractRestIT {
                         .accept(MediaType.APPLICATION_JSON)
                         .get(String.class));
 
-                    finished += moreNode.get("count").asInt();
+                    int returnCount = moreNode.get("count").asInt(); 
+
+                    // if there is a cursor then we should have gotten the limit, i.e. 10
+                    //assertEquals( 10, returnCount );
+        
+                    finished += returnCount;
 
                     if ( moreNode.get("cursor") != null ) {
                         cursor = moreNode.get("cursor").asText();
@@ -164,7 +173,9 @@ public class NotificationsIT extends AbstractRestIT {
             }
         }
         notificationCount = numDevices * numNotifications; 
-        logger.info("Finished {} notifications in {}ms", notificationCount, sw.getTime());
-        logger.info("Finished Notification throughput = {} TPS", ((float)notificationCount) / (sw.getTime()/1000));
+        allSw.stop();
+        logger.info("Finished {} notifications in {}ms", notificationCount, allSw.getTime());
+        logger.info("Finished Notification throughput = {} TPS", 
+            ((float)notificationCount) / (allSw.getTime()/1000));
     }
 }

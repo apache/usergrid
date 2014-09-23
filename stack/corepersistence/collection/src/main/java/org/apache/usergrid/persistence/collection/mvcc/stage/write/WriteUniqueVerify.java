@@ -142,7 +142,7 @@ public class WriteUniqueVerify implements
 
         //short circuit.  If we zip up nothing, we block forever.
         if(fields.size() == 0){
-            return Observable.from(ioevent ).subscribeOn( Schedulers.io() );
+            return Observable.from(ioevent );
         }
 
         //

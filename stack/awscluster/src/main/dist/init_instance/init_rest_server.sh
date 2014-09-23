@@ -84,6 +84,11 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
     export TOMCAT_RAM=10500m
     export TOMCAT_THREADS=3300
 ;;
+'c3.xlarge' )
+    # total of 7.5g
+    export TOMCAT_RAM=5250m
+    export TOMCAT_THREADS=1000
+;;
 'c3.2xlarge' )
     # total of 15g
     export TOMCAT_RAM=10500m
@@ -129,9 +134,7 @@ chown -R tomcat7 /var/lib/tomcat7/webapps
 
 # configure usergrid
 mkdir -p /usr/share/tomcat7/lib 
-groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-custom.properties 
-# create a copy for 1.0 too
-cp /usr/share/tomcat7/lib/usergrid-custom.properties /usr/share/tomcat7/lib/usergrid-deployment.properties  
+groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
 
 # Go

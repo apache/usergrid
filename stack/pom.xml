@@ -89,7 +89,7 @@
     <ug.heapmin>2048m</ug.heapmin>
 	<ug.argline>-Djava.awt.headless=true</ug.argline>
 
-    <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
+    <usergrid-custom-spring-properties>classpath:/usergrid-deployment.properties</usergrid-custom-spring-properties>
     <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
 
     <!-- =================================================================== -->

@@ -86,7 +86,6 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
     private final NodeShardAllocation nodeShardAllocation;
     private final GraphFig graphFig;
-    private final TimeService timeservice;
 
 
 
@@ -97,19 +96,15 @@ public class NodeShardCacheImpl implements NodeShardCache {
     /**
      *  @param nodeShardAllocation
      * @param graphFig
-     * @param timeservice
      */
     @Inject
-    public NodeShardCacheImpl( final NodeShardAllocation nodeShardAllocation, final GraphFig graphFig,
-                               final TimeService timeservice ) {
+    public NodeShardCacheImpl( final NodeShardAllocation nodeShardAllocation, final GraphFig graphFig) {
 
         Preconditions.checkNotNull( nodeShardAllocation, "nodeShardAllocation is required" );
         Preconditions.checkNotNull( graphFig, "consistencyFig is required" );
-        Preconditions.checkNotNull( timeservice, "timeservice is required" );
 
         this.nodeShardAllocation = nodeShardAllocation;
         this.graphFig = graphFig;
-        this.timeservice = timeservice;
 
 
         /**

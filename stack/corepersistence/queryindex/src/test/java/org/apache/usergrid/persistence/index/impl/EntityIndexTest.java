@@ -328,8 +328,6 @@ public class EntityIndexTest extends BaseIT {
 
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
-
-
         ei.deindex( user.getId(), user.getVersion() );
         ei.refresh();
 
