@@ -35,7 +35,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class QueueListener  {
-    public static int MAX_CONSECUTIVE_FAILS = 10;
+    public static int MAX_CONSECUTIVE_FAILS = 10000;
 
     public static final long MESSAGE_TRANSACTION_TIMEOUT = 60 * 5 * 1000;
 
@@ -180,11 +180,12 @@ public class QueueListener  {
                     LOG.info("QueueListener: sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
                     if(sleepBetweenRuns > 0) {
+                        LOG.info("QueueListener: sleep between rounds...sleep...{}", sleepBetweenRuns);
                         Thread.sleep(sleepBetweenRuns);
                     }
                 }
                 else{
-                    LOG.info("QueueListener: no messages...sleep...", results.size());
+                    LOG.info("QueueListener: no messages...sleep...{}", sleepWhenNoneFound);
                     Thread.sleep(sleepWhenNoneFound);
                 }
                 //send to the providers
@@ -192,13 +193,11 @@ public class QueueListener  {
             }catch (Exception ex){
                 LOG.error("failed to dequeue",ex);
                 try {
-                    Thread.sleep(sleepWhenNoneFound);
+                    long sleeptime = sleepWhenNoneFound*(consecutiveExceptions.get()+1);
+                    LOG.info("sleeping due to failures {} ms", sleeptime);
+                    Thread.sleep(sleeptime);
                 }catch (InterruptedException ie){
-                    LOG.info("sleep interupted");
-                }
-                if(consecutiveExceptions.getAndIncrement() > MAX_CONSECUTIVE_FAILS){
-                    LOG.error("killing message listener; too many failures");
-                    break;
+                    LOG.info("sleep interrupted");
                 }
             }
         }
