@@ -193,7 +193,7 @@ public class QueueListener  {
             }catch (Exception ex){
                 LOG.error("failed to dequeue",ex);
                 try {
-                    long sleeptime = sleepWhenNoneFound*(consecutiveExceptions.get()+1);
+                    long sleeptime = sleepWhenNoneFound*(consecutiveExceptions.incrementAndGet());
                     LOG.info("sleeping due to failures {} ms", sleeptime);
                     Thread.sleep(sleeptime);
                 }catch (InterruptedException ie){
