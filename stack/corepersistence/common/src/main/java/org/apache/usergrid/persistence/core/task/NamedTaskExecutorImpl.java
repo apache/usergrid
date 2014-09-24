@@ -53,7 +53,7 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
 
 
     @Override
-    public <V, I> void submit( final Task<V, I> task ) {
+    public <V, I> ListenableFuture<V> submit( final Task<V, I> task ) {
 
         final ListenableFuture<V> future;
 
@@ -67,8 +67,10 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
         }
         catch ( RejectedExecutionException ree ) {
             task.rejected();
-            return;
+            return Futures.immediateCancelledFuture();
         }
+
+        return future;
     }
 
 
@@ -147,16 +149,10 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
 
         @Override
         public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-
-            //            ListenableFutureTask<Task<?, ?>> future = ( ListenableFutureTask<Task<?, ?>> ) r;
-            //
-            //            future.
-            //            final Task<?, ?> task = ( Task<?, ?> ) r;
             LOG.warn( "Audit queue full, rejecting audit task {}", r );
 
             throw new RejectedExecutionException( "Unable to run task, queue full" );
-            //            LOG.warn( "Audit queue full, rejecting audit task {}", task );
-            //            task.rejected();
         }
+
     }
 }

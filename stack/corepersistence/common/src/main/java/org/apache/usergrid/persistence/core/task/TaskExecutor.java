@@ -10,5 +10,5 @@ public interface TaskExecutor {
      * Submit the task asynchronously
      * @param task
      */
-    public <V, I> void submit(Task<V, I> task);
+    public <V, I> com.google.common.util.concurrent.ListenableFuture<V> submit( Task<V, I> task );
 }
