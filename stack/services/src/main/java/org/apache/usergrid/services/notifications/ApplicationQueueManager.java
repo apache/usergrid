@@ -353,7 +353,7 @@ public class ApplicationQueueManager implements QueueManager {
                     }
 
                 } catch (Exception e) {
-                    LOG.error("Failure unknown",e);
+                    LOG.error("Failure while sending",e);
                 }
                 return message;
             }
