@@ -28,9 +28,8 @@ object Settings {
   val geosearchRadius:Int = 8000 // search area in meters
 
   // Push Notification settings
-  val numDevicesPerApp = Integer.getInteger("numDevices", 20).toInt
-  val numNotificationsPerDevice = Integer.getInteger("numPushes", 20).toInt
-  val pushNotifier = Utils.generateUniqueName("notifier")
+  val pushNotifier = System.getProperty("notifier")
+  val pushProvider = System.getProperty("provider")
 
   def createRandomPushNotifier:String = {
     return Utils.generateUniqueName("notifier")

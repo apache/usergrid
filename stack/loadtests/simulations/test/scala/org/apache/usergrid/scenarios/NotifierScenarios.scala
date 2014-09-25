@@ -21,23 +21,23 @@ import scala.concurrent.duration._
  *
  */
 object NotifierScenarios {
-  /**
-   * Read the pkcs12 cert from our classpath, then get the absolute file path for uploading
-   */
-  /*val pkcs12Cert = Files.readAllBytes(Paths.get(getClass.getResource("/notifier.p12").getPath() ))*/
+  
+  val notifier = Settings.notifier
+  val notifier = Settings.provider
 
   /**
    * Create a notifier
    */
   val createNotifier = exec(
       session => {
-        session.set("notifier", Utils.generateUniqueName("notifier"))
+        session.set("notifier", notifier)
+        session.set("provider", provider)
       }
     )
 
     .exec(http("Create Notifier")
     .post("/notifiers")
-    .body(StringBody("{\"name\":\"${notifier}\",\"provider\":\"noop\"}"))
+    .body(StringBody("{\"name\":\"${notifier}\",\"provider\":\"${provider}\"}"))
     //remnants of trying to upload an apple certificate
 //    .param("name", "${notifierName}")
 //    .param("provider", "apple")
