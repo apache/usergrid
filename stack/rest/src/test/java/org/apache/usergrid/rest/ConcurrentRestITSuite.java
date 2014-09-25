@@ -16,7 +16,6 @@
  */
 package org.apache.usergrid.rest;
 
-
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -39,22 +38,30 @@ import org.apache.usergrid.rest.filters.ContentTypeResourceIT;
 import org.apache.usergrid.rest.management.ManagementResourceIT;
 import org.apache.usergrid.rest.management.RegistrationIT;
 import org.apache.usergrid.rest.management.organizations.AdminEmailEncodingIT;
-import org.apache.usergrid.rest.management.users.organizations.UsersOrganizationsResourceIT;
-
 
 @RunWith(ConcurrentSuite.class)
-@Suite.SuiteClasses(
-        {
-                ActivityResourceIT.class, AdminEmailEncodingIT.class, ApplicationRequestCounterIT.class,
-                ApplicationResourceIT.class, AssetResourceIT.class, BasicIT.class, CollectionsResourceIT.class,
-                ContentTypeResourceIT.class, DevicesResourceIT.class, EventsResourceIT.class, GroupResourceIT.class,
-                MUUserResourceIT.class, ManagementResourceIT.class, OrganizationResourceIT.class,
-                OrganizationsResourceIT.class, OwnershipResourceIT.class, PagingResourceIT.class,
-                PermissionsResourceIT.class, RegistrationIT.class, UserResourceIT.class,
-                UsersOrganizationsResourceIT.class
-        })
+@Suite.SuiteClasses({
+    ActivityResourceIT.class,
+    AdminEmailEncodingIT.class,
+    ApplicationRequestCounterIT.class,
+    ApplicationResourceIT.class,
+    AssetResourceIT.class,
+    BasicIT.class,
+    CollectionsResourceIT.class,
+    ContentTypeResourceIT.class,
+    DevicesResourceIT.class,
+    EventsResourceIT.class,
+    GroupResourceIT.class,
+    ManagementResourceIT.class,
+    OwnershipResourceIT.class,
+    PagingResourceIT.class,
+    PermissionsResourceIT.class,
+    RegistrationIT.class,
+    UserResourceIT.class
+})
 @Concurrent()
 public class ConcurrentRestITSuite {
+
     @ClassRule
     public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 }
