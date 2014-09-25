@@ -18,7 +18,6 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -45,12 +44,18 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.ArrayField;
+import org.apache.usergrid.persistence.model.field.BooleanField;
+import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.FloatField;
+import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.ListField;
 import org.apache.usergrid.persistence.model.field.LocationField;
+import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
@@ -98,8 +103,11 @@ public class EsEntityIndexImpl implements EntityIndex {
     private final AtomicLong indexedCount = new AtomicLong(0L);
     private final AtomicDouble averageIndexTime = new AtomicDouble(0);
 
-    public static final String ANALYZED_SUFFIX = "_ug_analyzed";
-    public static final String GEO_SUFFIX = "_ug_geo";
+    public static final String STRING_PREFIX = "su_";
+    public static final String ANALYZED_STRING_PREFIX = "sa_";
+    public static final String GEO_PREFIX = "go_";
+    public static final String NUMBER_PREFIX = "nu_";
+    public static final String BOOLEAN_PREFIX = "bu_";
 
     public static final String ENTITYID_FIELDNAME = "zzz_entityid_zzz";
 
@@ -281,7 +289,10 @@ public class EsEntityIndexImpl implements EntityIndex {
         }
 
         Map<String, Object> entityAsMap = EsEntityIndexImpl.entityToMap(entity);
-        entityAsMap.put(ENTITYID_FIELDNAME,entity.getId().getUuid().toString());
+
+        // need prefix here becuase we index UUIDs as strings
+        entityAsMap.put( STRING_PREFIX + ENTITYID_FIELDNAME, 
+            entity.getId().getUuid().toString().toLowerCase());
 
         // let caller add these fields if needed
         // entityAsMap.put("created", entity.getId().getUuid().timestamp();
@@ -454,8 +465,13 @@ public class EsEntityIndexImpl implements EntityIndex {
 
 
     /**
-     * Convert Entity to Map, adding version_ug_field and a {name}_ug_analyzed field for each
-     * StringField.
+     * Convert Entity to Map. Adding prefixes for types:
+     * 
+     *    su_ - String unanalyzed field
+     *    sa_ - String analyzed field
+     *    go_ - Location field
+     *    nu_ - Number field
+     *    bu_ - Boolean field
      */
     private static Map entityToMap(EntityObject entity) {
 
@@ -466,18 +482,8 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             if (f instanceof ListField)  {
                 List list = (List) field.getValue();
-                    entityMap.put(field.getName().toLowerCase(),
-                            new ArrayList(processCollectionForMap(list)));
-
-                if ( !list.isEmpty() ) {
-                    if ( list.get(0) instanceof String ) {
-                        Joiner joiner = Joiner.on(" ").skipNulls();
-                        String joined = joiner.join(list);
-                        entityMap.put(field.getName().toLowerCase() + ANALYZED_SUFFIX,
-                            new ArrayList(processCollectionForMap(list)));
-                        
-                    }
-                }
+                entityMap.put(field.getName().toLowerCase(),
+                        new ArrayList(processCollectionForMap(list)));
 
             } else if (f instanceof ArrayField) {
                 List list = (List) field.getValue();
@@ -496,9 +502,10 @@ public class EsEntityIndexImpl implements EntityIndex {
             } else if (f instanceof StringField) {
 
                 // index in lower case because Usergrid queries are case insensitive
-                entityMap.put(field.getName().toLowerCase(), ((String) field.getValue()).toLowerCase());
-                entityMap.put(field.getName().toLowerCase() 
-                        + ANALYZED_SUFFIX, ((String) field.getValue()).toLowerCase());
+                entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(), 
+                        ((String) field.getValue()).toLowerCase());
+                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(),
+                        ((String) field.getValue()).toLowerCase());
 
             } else if (f instanceof LocationField) {
                 LocationField locField = (LocationField) f;
@@ -507,7 +514,27 @@ public class EsEntityIndexImpl implements EntityIndex {
                 // field names lat and lon trigger ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude());
                 locMap.put("lon", locField.getValue().getLongtitude());
-                entityMap.put(field.getName().toLowerCase() + GEO_SUFFIX, locMap);
+                entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap);
+
+            } else if ( f instanceof BooleanField  ) {
+
+                entityMap.put( NUMBER_PREFIX + field.getName().toLowerCase(), field.getValue());
+
+            } else if ( f instanceof DoubleField
+                     || f instanceof FloatField
+                     || f instanceof IntegerField
+                     || f instanceof LongField ) {
+
+                entityMap.put( NUMBER_PREFIX + field.getName().toLowerCase(), field.getValue());
+
+            } else if ( f instanceof BooleanField ) {
+
+                entityMap.put( BOOLEAN_PREFIX + field.getName().toLowerCase(), field.getValue());
+
+            } else if ( f instanceof UUIDField ) {
+
+                entityMap.put( STRING_PREFIX + field.getName().toLowerCase(),
+                    field.getValue().toString() );
 
             } else {
                 entityMap.put(field.getName().toLowerCase(), field.getValue());
@@ -570,10 +597,10 @@ public class EsEntityIndexImpl implements EntityIndex {
                 .startObject(type)
                     .startArray("dynamic_templates")
 
-                        // any string with field name that ends with _ug_analyzed gets analyzed
+                        // any string with field name that starts with sa_ gets analyzed
                         .startObject()
                             .startObject("template_1")
-                                .field("match", "*" + ANALYZED_SUFFIX)
+                                .field("match", ANALYZED_STRING_PREFIX + "*")
                                 .field("match_mapping_type", "string")
                                 .startObject("mapping")
                                     .field("type", "string")
@@ -594,10 +621,10 @@ public class EsEntityIndexImpl implements EntityIndex {
                             .endObject()
                         .endObject()
                 
-                        // fields location_ug_geo get geo-indexed
+                        // fields names starting with go_ get geo-indexed
                         .startObject()
                             .startObject("template_3")
-                                .field("match", "location" + GEO_SUFFIX)
+                                .field("match", GEO_PREFIX + "location")
                                 .startObject("mapping")
                                     .field("type", "geo_point")
                                 .endObject()
