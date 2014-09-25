@@ -33,7 +33,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.IndexFig;
@@ -75,7 +74,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Implements index using ElasticSearch Java API and Core Persistence Collections.
+ * Implements index using ElasticSearch Java API.
  */
 public class EsEntityIndexImpl implements EntityIndex {
 
@@ -93,8 +92,6 @@ public class EsEntityIndexImpl implements EntityIndex {
     // of attempting to init them again. Used in the initType() method.
     private Set<String> knownTypes = new TreeSet<String>();
 
-    protected EntityCollectionManagerFactory ecmFactory;
-
     private final boolean refresh;
     private final int cursorTimeout;
 
@@ -104,7 +101,6 @@ public class EsEntityIndexImpl implements EntityIndex {
     public static final String ANALYZED_SUFFIX = "_ug_analyzed";
     public static final String GEO_SUFFIX = "_ug_geo";
 
-//    public static final String COLLECTION_SCOPE_FIELDNAME = "zzz__collectionscope__zzz";
     public static final String ENTITYID_FIELDNAME = "zzz_entityid_zzz";
 
     public static final String DOC_ID_SEPARATOR = "|";
@@ -121,8 +117,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     public EsEntityIndexImpl(
             @Assisted final IndexScope indexScope,
             IndexFig config,
-            EsProvider provider,
-            EntityCollectionManagerFactory factory
+            EsProvider provider
     ) {
 
         IndexValidationUtils.validateIndexScope( indexScope );
@@ -131,7 +126,6 @@ public class EsEntityIndexImpl implements EntityIndex {
             this.indexScope = indexScope;
 
             this.client = provider.getClient();
-            this.ecmFactory = factory;
 
             this.indexName = createIndexName( config.getIndexPrefix(), indexScope);
             this.indexType = createCollectionScopeTypeName( indexScope );
@@ -157,9 +151,7 @@ public class EsEntityIndexImpl implements EntityIndex {
             } catch (InterruptedException ex) {}
 
         } catch (IndexAlreadyExistsException ignored) {
-            if ( log.isDebugEnabled() ) {
-                log.debug("Keyspace already exists: " + indexName, ignored);
-            }
+            // expected
         }
     }
 
@@ -185,18 +177,19 @@ public class EsEntityIndexImpl implements EntityIndex {
             admin.indices().prepareGetMappings(indexName)
                 .addTypes(typeName).execute().actionGet();
 
-            log.debug("Created new type mapping");
-            log.debug("   Scope application: " + indexScope.getApplication());
-            log.debug("   Scope owner: " + indexScope.getOwner());
-            log.debug("   Type name: " + typeName);
+//            log.debug("Created new type mapping");
+//            log.debug("   Scope application: " + indexScope.getApplication());
+//            log.debug("   Scope owner: " + indexScope.getOwner());
+//            log.debug("   Type name: " + typeName);
 
             knownTypes.add( typeName );
 
-        } catch (Exception ex) {
-            // probably means type or mapping already exists, which is no problem
-            if ( log.isDebugEnabled() ) {
-                log.debug("Problem creating mapping for type: " + typeName, ex);
-            }
+        } catch (IndexAlreadyExistsException ignored) {
+            // expected
+        } 
+        catch (IOException ex) {
+            throw new RuntimeException("Exception initing type " + typeName 
+                + " in app " + indexScope.getApplication().toString());
         }
     }
 
@@ -504,7 +497,8 @@ public class EsEntityIndexImpl implements EntityIndex {
 
                 // index in lower case because Usergrid queries are case insensitive
                 entityMap.put(field.getName().toLowerCase(), ((String) field.getValue()).toLowerCase());
-                entityMap.put(field.getName().toLowerCase() + ANALYZED_SUFFIX, ((String) field.getValue()).toLowerCase());
+                entityMap.put(field.getName().toLowerCase() 
+                        + ANALYZED_SUFFIX, ((String) field.getValue()).toLowerCase());
 
             } else if (f instanceof LocationField) {
                 LocationField locField = (LocationField) f;
