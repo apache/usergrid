@@ -970,6 +970,50 @@ public class CpRelationManager implements RelationManager {
         CandidateResults crs = ei.search( query );
 
         return buildResults( query, crs, collName );
+
+//        // Because of possible stale entities, which are filtered out by buildResults(), 
+//        // we loop until the we've got enough results to satisfy the query limit. 
+//
+//        int maxQueries = 10; // max re-queries to satisfy query limit
+//
+//        Results results = null;
+//        int queryCount = 0;
+//        int originalLimit = query.getLimit();
+//        boolean satisfied = false;
+//
+//        while ( !satisfied && queryCount++ < maxQueries ) {
+//
+//            CandidateResults crs = ei.search( query );
+//
+//            if ( results == null ) {
+//                results = buildResults( query, crs, collName );
+//
+//            } else {
+//                Results newResults = buildResults( query, crs, collName );
+//                results.merge( newResults );
+//            }
+//
+//            if ( crs.isEmpty() ) { // no more results
+//                satisfied = true;
+//
+//            } else if ( results.size() == query.getLimit() )  { // got what we need
+//                satisfied = true;
+//
+//            } else if ( crs.hasCursor() ) {
+//                satisfied = false;
+//
+//                // need to query for more
+//                // ask for just what we need to satisfy, don't want to exceed limit
+//                query.setCursor( results.getCursor() );
+//                query.setLimit( originalLimit - results.size() );
+//
+//                logger.warn("Satisfy query limit {}, new limit {} query count {}", new Object[] {
+//                    originalLimit, query.getLimit(), queryCount 
+//                });
+//            }
+//        }
+//
+//        return results;
     }
 
 
