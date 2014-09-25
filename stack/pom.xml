@@ -85,8 +85,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- you can override these via MAVEN_OPTS -->
-    <ug.heapmax>1024m</ug.heapmax>
-    <ug.heapmin>1024m</ug.heapmin>
+    <ug.heapmax>2048m</ug.heapmax>
+    <ug.heapmin>2048m</ug.heapmin>
+	<ug.argline>-Djava.awt.headless=true</ug.argline>
 
     <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
     <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
@@ -1608,7 +1609,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.15</version>
           <configuration>
-            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
           </configuration>
         </plugin>
 
