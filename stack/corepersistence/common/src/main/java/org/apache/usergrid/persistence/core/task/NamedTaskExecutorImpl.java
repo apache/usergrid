@@ -1,11 +1,11 @@
 package org.apache.usergrid.persistence.core.task;
 
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -17,10 +17,6 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 
 /**
@@ -30,54 +26,45 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
 
     private static final Logger LOG = org.slf4j.LoggerFactory.getLogger( NamedTaskExecutorImpl.class );
 
-    private final ListeningExecutorService executorService;
+    private final NamedForkJoinPool executorService;
 
     private final String name;
     private final int poolSize;
-    private final int queueLength;
 
 
     /**
      * @param name The name of this instance of the task executor
      * @param poolSize The size of the pool.  This is the number of concurrent tasks that can execute at once.
-     * @param queueLength The length of tasks to keep in the queue
      */
-    public NamedTaskExecutorImpl( final String name, final int poolSize, final int queueLength ) {
+    public NamedTaskExecutorImpl( final String name, final int poolSize) {
         Preconditions.checkNotNull( name );
         Preconditions.checkArgument( name.length() > 0, "name must have a length" );
         Preconditions.checkArgument( poolSize > 0, "poolSize must be > than 0" );
-        Preconditions.checkArgument( queueLength > -1, "queueLength must be 0 or more" );
 
         this.name = name;
         this.poolSize = poolSize;
-        this.queueLength = queueLength;
 
-        final BlockingQueue<Runnable> queue =
-                queueLength > 0 ? new ArrayBlockingQueue<Runnable>( queueLength ) : new SynchronousQueue<Runnable>();
+//        final BlockingQueue<Runnable> queue =
+//                queueLength > 0 ? new ArrayBlockingQueue<Runnable>( queueLength ) : new SynchronousQueue<Runnable>();
+//
+//        executorService = MoreExecutors.listeningDecorator( new MaxSizeThreadPool( queue ) );
 
-        executorService = MoreExecutors.listeningDecorator( new MaxSizeThreadPool( queue ) );
+       this.executorService =  new NamedForkJoinPool(poolSize);
     }
 
 
     @Override
-    public <V, I> ListenableFuture<V> submit( final Task<V, I> task ) {
-
-        final ListenableFuture<V> future;
+    public <V, I> Task<V, I> submit( final Task<V, I> task ) {
 
         try {
-            future = executorService.submit( task );
-
-            /**
-             * Log our success or failures for debugging purposes
-             */
-            Futures.addCallback( future, new TaskFutureCallBack<V, I>( task ) );
+           executorService.submit( task );
         }
         catch ( RejectedExecutionException ree ) {
             task.rejected();
-            return Futures.immediateCancelledFuture();
         }
 
-        return future;
+        return task;
+
     }
 
 
@@ -109,6 +96,41 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
     }
 
 
+    private final class NamedForkJoinPool extends ForkJoinPool{
+
+        private NamedForkJoinPool( final int workerThreadCount ) {
+            //TODO, verify the scheduler at the end
+            super( workerThreadCount, defaultForkJoinWorkerThreadFactory, new TaskExceptionHandler(), true );
+        }
+
+
+
+    }
+
+    private final class TaskExceptionHandler implements Thread.UncaughtExceptionHandler{
+
+        @Override
+        public void uncaughtException( final Thread t, final Throwable e ) {
+            LOG.error( "Uncaught exception on thread {} was {}", t, e );
+        }
+    }
+
+
+
+
+    private final class NamedWorkerThread extends ForkJoinWorkerThread{
+
+        /**
+         * Creates a ForkJoinWorkerThread operating in the given pool.
+         *
+         * @param pool the pool this thread works in
+         *
+         * @throws NullPointerException if pool is null
+         */
+        protected NamedWorkerThread(final String name,  final ForkJoinPool pool ) {
+            super( pool );
+        }
+    }
     /**
      * Create a thread pool that will reject work if our audit tasks become overwhelmed
      */

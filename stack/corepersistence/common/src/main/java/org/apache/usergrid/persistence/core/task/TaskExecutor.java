@@ -13,5 +13,5 @@ public interface TaskExecutor {
      * Submit the task asynchronously
      * @param task
      */
-    public <V, I> ListenableFuture<V> submit( Task<V, I> task );
+    public <V, I> Task<V, I > submit( Task<V, I> task );
 }

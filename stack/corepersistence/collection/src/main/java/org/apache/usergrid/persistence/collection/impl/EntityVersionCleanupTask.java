@@ -22,7 +22,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
  * Cleans up previous versions from the specified version. Note that this means the version passed in the io event is
  * retained, the range is exclusive.
  */
-class EntityVersionCleanupTask implements Task<CollectionIoEvent<EntityVersion>, CollectionIoEvent<EntityVersion>> {
+class EntityVersionCleanupTask extends Task<CollectionIoEvent<EntityVersion>, CollectionIoEvent<EntityVersion>> {
 
     private static final Logger LOG = LoggerFactory.getLogger( EntityVersionCleanupTask.class );
 
@@ -63,7 +63,7 @@ class EntityVersionCleanupTask implements Task<CollectionIoEvent<EntityVersion>,
         // so we'll run it in our current thread
 
         try {
-            call();
+            executeTask();
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Exception thrown in call task", e );
@@ -72,7 +72,7 @@ class EntityVersionCleanupTask implements Task<CollectionIoEvent<EntityVersion>,
 
 
     @Override
-    public CollectionIoEvent<EntityVersion> call() throws Exception {
+    public CollectionIoEvent<EntityVersion> executeTask() throws Exception {
 
         final CollectionScope scope = collectionIoEvent.getEntityCollection();
         final Id entityId = collectionIoEvent.getEvent().getId();
@@ -102,8 +102,6 @@ class EntityVersionCleanupTask implements Task<CollectionIoEvent<EntityVersion>,
             entitySerializationStrategy.delete( scope, entityId, currentVersion ).execute();
 
             logEntrySerializationStrategy.delete( scope, entityId, currentVersion ).execute();
-
-
         }
 
 
