@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest.applications.collection;
+package org.apache.usergrid.rest.applications.collection.paging;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
