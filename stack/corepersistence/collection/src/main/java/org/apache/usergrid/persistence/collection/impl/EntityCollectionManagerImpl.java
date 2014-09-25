@@ -19,11 +19,16 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
+import java.util.List;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
+import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
@@ -38,6 +43,8 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimist
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
+import org.apache.usergrid.persistence.core.task.Task;
+import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -83,6 +90,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final MarkStart markStart;
     private final MarkCommit markCommit;
 
+    private final TaskExecutor taskExecutor;
+
     @Inject
     public EntityCollectionManagerImpl( final UUIDService uuidService, @Write final WriteStart writeStart,
                                         @WriteUpdate final WriteStart writeUpdate,
@@ -90,6 +99,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                                         final WriteOptimisticVerify writeOptimisticVerify,
                                         final WriteCommit writeCommit, final RollbackAction rollback, final Load load,
                                         final MarkStart markStart, final MarkCommit markCommit,
+                                        final TaskExecutor taskExecutor,
                                         @Assisted final CollectionScope collectionScope) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
@@ -109,6 +119,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         this.uuidService = uuidService;
         this.collectionScope = collectionScope;
+        this.taskExecutor = taskExecutor;
     }
 
 
@@ -237,6 +248,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     }
                 } );
     }
+
 
 
 

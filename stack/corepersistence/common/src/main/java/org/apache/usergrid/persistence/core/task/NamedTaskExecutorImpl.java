@@ -32,6 +32,10 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
 
     private final ListeningExecutorService executorService;
 
+    private final String name;
+    private final int poolSize;
+    private final int queueLength;
+
 
     /**
      * @param name The name of this instance of the task executor
@@ -44,11 +48,14 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
         Preconditions.checkArgument( poolSize > 0, "poolSize must be > than 0" );
         Preconditions.checkArgument( queueLength > -1, "queueLength must be 0 or more" );
 
+        this.name = name;
+        this.poolSize = poolSize;
+        this.queueLength = queueLength;
 
         final BlockingQueue<Runnable> queue =
                 queueLength > 0 ? new ArrayBlockingQueue<Runnable>( queueLength ) : new SynchronousQueue<Runnable>();
 
-        executorService = MoreExecutors.listeningDecorator( new MaxSizeThreadPool( name, poolSize, queue ) );
+        executorService = MoreExecutors.listeningDecorator( new MaxSizeThreadPool( queue ) );
     }
 
 
@@ -105,11 +112,11 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
     /**
      * Create a thread pool that will reject work if our audit tasks become overwhelmed
      */
-    private static final class MaxSizeThreadPool extends ThreadPoolExecutor {
+    private final class MaxSizeThreadPool extends ThreadPoolExecutor {
 
-        public MaxSizeThreadPool( final String name, final int workerSize, BlockingQueue<Runnable> queue ) {
+        public MaxSizeThreadPool( BlockingQueue<Runnable> queue ) {
 
-            super( 1, workerSize, 30, TimeUnit.SECONDS, queue, new CountingThreadFactory( name ),
+            super( 1, poolSize, 30, TimeUnit.SECONDS, queue, new CountingThreadFactory( ),
                     new RejectedHandler() );
         }
     }
@@ -118,14 +125,9 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
     /**
      * Thread factory that will name and count threads for easier debugging
      */
-    private static final class CountingThreadFactory implements ThreadFactory {
+    private final class CountingThreadFactory implements ThreadFactory {
 
         private final AtomicLong threadCounter = new AtomicLong();
-
-        private final String name;
-
-
-        private CountingThreadFactory( final String name ) {this.name = name;}
 
 
         @Override
@@ -144,12 +146,12 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
     /**
      * The handler that will handle rejected executions and signal the interface
      */
-    private static final class RejectedHandler implements RejectedExecutionHandler {
+    private final class RejectedHandler implements RejectedExecutionHandler {
 
 
         @Override
         public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-            LOG.warn( "Audit queue full, rejecting audit task {}", r );
+            LOG.warn( "{} task queue full, rejecting task {}", name, r );
 
             throw new RejectedExecutionException( "Unable to run task, queue full" );
         }

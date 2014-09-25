@@ -27,7 +27,7 @@ public interface Task<V, I> extends Callable<V> {
      * Invoked when we weren't able to run this task by the the thread attempting to schedule the task.
      * If this task MUST be run immediately, you can invoke the call method from within this event to invoke the
      * task in the scheduling thread.  Note that this has performance implications to the user.  If you can drop the
-     * request and process later (lazy repair for instanc\\\\\\\\\\\\\\\\\\\\\\hjn ) do so.
+     * request and process later (lazy repair for instance ) do so.
      *
      */
     void rejected();
