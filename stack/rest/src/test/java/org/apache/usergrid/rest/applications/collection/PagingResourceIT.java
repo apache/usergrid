@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.applications.collection;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -278,6 +279,23 @@ public class PagingResourceIT extends AbstractRestIT {
                 .get(String.class));
         assertEquals(trinketsSize, trinketsNode.get("count").asInt()); // get back all 
         assertNull(trinketsNode.get("cursor")); // and no cursor
-
     }
+
+
+//    @Test
+//    public void testPagingWithUpdates() throws IOException {
+//
+//        // create 500 widgets
+//        int widgetsSize = 500;
+//        List<String> widgetIds = new ArrayList<String>();
+//        CustomCollection widgets = context.application().collection("widgets");
+//        for (int i = 0; i < widgetsSize; i++) {
+//            Map<String, String> entity = hashMap("name", String.valueOf(i));
+//            JsonNode widgetNode = widgets.create(entity);
+//            logger.info("widgetNode: " + widgetNode.toString());
+//        }
+//
+//        refreshIndex(context.getOrgName(), context.getAppName());
+//    }
+
 }
