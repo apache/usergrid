@@ -106,7 +106,7 @@ public class IndexRebuild extends ToolBase {
             Set<String> collections = getCollections( line, appId );
 
             for ( String collection : collections ) {
-                reindex( appId, collection );
+                emf.rebuildCollectionIndex(appId, collection);
                 emf.refreshIndex();
             }
         }
@@ -154,11 +154,5 @@ public class IndexRebuild extends ToolBase {
         EntityManager em = emf.getEntityManager( appId );
 
         return em.getApplicationCollections();
-    }
-
-
-    /** The application id. The collection name. */
-    private void reindex( UUID appId, String collectionName ) throws Exception {
-        emf.rebuildCollectionIndex(appId, collectionName);
     }
 }
