@@ -63,6 +63,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Override
     @Before
     public void before() throws Exception {
+        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString()+";"+"notifications/test/" + UUID.randomUUID().toString();
+        QueueListener.DEFAULT_SLEEP = 200;
+
         super.before();
 
         // create gcm notifier //
@@ -102,7 +105,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         PathQuery pathQuery =  new PathQuery(new SimpleEntityRef(  app.getEm().getApplicationRef()), query);
 
         ns.TEST_PATH_QUERY = pathQuery;
-        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString();
         listener = new QueueListener(ns.getServiceManagerFactory(),
                 ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
         listener.run();

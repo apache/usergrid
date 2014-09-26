@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ApplicationQueueManager implements QueueManager {
 
-    public static  String DEFAULT_QUEUE_NAME = "notifications/queuelistenerv1_12";
+    public static  String DEFAULT_QUEUE_NAME = "notifications/queuelistenerv1_20;notifications/queuelistenerv1_21";
     public static final String DEFAULT_QUEUE_PROPERTY = "usergrid.notifications.listener.queueName";
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
 
@@ -429,7 +429,8 @@ public class ApplicationQueueManager implements QueueManager {
     public static String getRandomQueue(String[] queueNames) {
         int size = queueNames.length;
         Random random = new Random();
-        return queueNames[random.nextInt(size)];
+        String name = queueNames[random.nextInt(size)];
+        return name;
     }
 
     private static final class IteratorObservable<T> implements rx.Observable.OnSubscribe<T> {

@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class QueueListener  {
     public static final long MESSAGE_TRANSACTION_TIMEOUT = 60 * 5 * 1000;
+    public static  long DEFAULT_SLEEP = 5000;
 
     private static final Logger LOG = LoggerFactory.getLogger(QueueListener.class);
 
@@ -91,7 +92,7 @@ public class QueueListener  {
 
             try {
                 sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", "0")).longValue();
-                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", "5000")).longValue();
+                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
                 batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
                 queueNames = ApplicationQueueManager.getQueueNames(properties);
 
