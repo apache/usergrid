@@ -586,11 +586,13 @@ public class CpRelationManager implements RelationManager {
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
-        Observable<String> str = gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(),null , null ));
+        Observable<String> str = gm.getEdgeTypesFromSource( 
+                new SimpleSearchEdgeType( cpHeadEntity.getId(),null , null ));
 
         Iterator<String> iter = str.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {
-            indexes.add( iter.next() );
+            String edgeType = iter.next();
+            indexes.add( getCollectionName( edgeType ) );
         }
 
         return indexes;
@@ -1695,10 +1697,10 @@ public class CpRelationManager implements RelationManager {
                 }
 
                 if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
-                    logger.debug("Stale version uuid:{} type:{} version:{} latest version:{}", 
-                        new Object[] {cr.getId().getUuid(), cr.getId().getType(), cr.getVersion(), 
-                            e.getVersion() });
-                    continue;
+                    logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
+                        new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
+                            cr.getVersion(), e.getVersion()});
+                continue;
                 }
 
                 org.apache.usergrid.persistence.model.entity.Entity alreadySeen = 
