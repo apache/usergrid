@@ -91,6 +91,9 @@ public class ApplicationQueueManager implements QueueManager {
     }
 
     public void queueNotification(final Notification notification, final JobExecution jobExecution) throws Exception {
+        if(scheduleQueueJob(notification)){
+            return;
+        }
         final Meter queueMeter = metricsFactory.getMeter(ApplicationQueueManager.class,"queue");
         long startTime = System.currentTimeMillis();
 
@@ -171,7 +174,6 @@ public class ApplicationQueueManager implements QueueManager {
                                 // update queued time
                                 now = System.currentTimeMillis();
                                 notification.setQueued(System.currentTimeMillis());
-                                em.update(notification);
                                 LOG.info("ApplicationQueueMessage: notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
                             }
                             now = System.currentTimeMillis();

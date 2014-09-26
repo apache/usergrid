@@ -30,7 +30,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class SingleQueueTaskManager implements NotificationsTaskManager {
+public class SingleQueueTaskManager {
 
     private static final Logger LOG = LoggerFactory
             .getLogger(SingleQueueTaskManager.class);
