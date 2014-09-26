@@ -153,18 +153,15 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
         Notification notification = em.get(this.notification.getUuid(), Notification.class);
         notification.setModified(System.currentTimeMillis());
 
-        long sent = successes,errors = failures;
+        long sent = successes, errors = failures;
         //and write them out again, this will produce the most accurate count
-        Map<String, Long> stats;
-        stats = new HashMap<String, Long>(2);
+        Map<String, Long> stats = new HashMap<>(2);
         stats.put("sent", sent);
         stats.put("errors", errors);
-        notification.setStatistics(stats);
-
-        LOG.info("notification {} sending to {}", notification.getUuid(), sent + errors);
+        notification.updateStatistics(successes, errors);
 
         //none of this is known and should you ever do this
-        if (notification.getExpectedCount() <= (errors + sent)) {
+        if (notification.getExpectedCount() <= (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"))) {
             Map<String, Object> properties = new HashMap<>();
             notification.setFinished(notification.getModified());
             properties.put("finished", notification.getModified());
@@ -172,9 +169,8 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
             LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
             notification.addProperties(properties);
         }
-        LOG.info("notification finished batch: {}", notification.getUuid());
+        LOG.info("notification finished batch: {} of {} devices", notification.getUuid(),sent+errors);
         em.update(notification);
-
 //        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
 //        proxy.asyncCheckForInactiveDevices(notifiers);
     }
