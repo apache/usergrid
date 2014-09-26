@@ -34,8 +34,8 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
 
     private static final Logger LOG = LoggerFactory
             .getLogger(SingleQueueTaskManager.class);
-    private final String path;
     private final QueueManager proxy;
+    private final String queuePath;
 
     private Notification notification;
     private AtomicLong successes = new AtomicLong();
@@ -45,14 +45,14 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
     private ConcurrentHashMap<UUID, ApplicationQueueMessage> messageMap;
     private boolean hasFinished;
 
-    public SingleQueueTaskManager(EntityManager em, org.apache.usergrid.mq.QueueManager qm, QueueManager proxy, Notification notification) {
+    public SingleQueueTaskManager(EntityManager em, org.apache.usergrid.mq.QueueManager qm, QueueManager proxy, Notification notification,String queuePath) {
         this.em = em;
         this.qm = qm;
-        this.path = proxy.getQueuePath();
         this.notification = notification;
         this.proxy = proxy;
         this.messageMap = new ConcurrentHashMap<UUID, ApplicationQueueMessage>();
         hasFinished = false;
+        this.queuePath = queuePath;
     }
 
     public void addMessage(UUID deviceId, ApplicationQueueMessage message) {
@@ -72,7 +72,7 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
             }
 
             LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
-            qm.commitTransaction(path, messageMap.get(deviceUUID).getTransaction(), null);
+            qm.commitTransaction(queuePath, messageMap.get(deviceUUID).getTransaction(), null);
             if (newProviderId != null) {
                 LOG.debug("notification {} replacing device {} notifierId", notification.getUuid(), deviceUUID);
                 replaceProviderId(deviceRef, notifier, newProviderId);

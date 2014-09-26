@@ -26,10 +26,6 @@ import java.util.Set;
  */
 public interface QueueManager {
 
-    public HashMap<Object,Notifier> getNotifierMap();
-
     public void asyncCheckForInactiveDevices(Set<Notifier> notifiers) throws Exception ;
-
-    public String getQueuePath();
 
 }

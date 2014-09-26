@@ -18,15 +18,9 @@ package org.apache.usergrid.services.notifications;
 
 import com.clearspring.analytics.hash.MurmurHash;
 import com.clearspring.analytics.stream.frequency.CountMinSketch;
-import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.metrics.MetricsFactory;
-import org.apache.usergrid.mq.QueueQuery;
-import org.apache.usergrid.mq.QueueResults;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.Device;
 import org.apache.usergrid.persistence.entities.Notification;
@@ -66,7 +60,7 @@ public class ApplicationQueueManager implements QueueManager {
     private final org.apache.usergrid.mq.QueueManager qm;
     private final JobScheduler jobScheduler;
     private final MetricsFactory metricsFactory;
-    private final String queueName;
+    private final String[] queueNames;
 
     HashMap<Object, Notifier> notifierHashMap; // only retrieve notifiers once
 
@@ -87,7 +81,7 @@ public class ApplicationQueueManager implements QueueManager {
         this.qm = queueManager;
         this.jobScheduler = jobScheduler;
         this.metricsFactory = metricsFactory;
-        this.queueName = properties.getProperty(DEFAULT_QUEUE_PROPERTY, DEFAULT_QUEUE_NAME);
+        this.queueNames = getQueueNames(properties);
     }
 
 
@@ -115,6 +109,7 @@ public class ApplicationQueueManager implements QueueManager {
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<String>(); //build up list of issues
 
         final HashMap<Object,Notifier> notifierMap =  getNotifierMap();
+        final String queueName = getRandomQueue(queueNames);
 
         //get devices in querystring, and make sure you have access
         if (pathQuery != null) {
@@ -235,7 +230,7 @@ public class ApplicationQueueManager implements QueueManager {
 
         //do i have devices, and have i already started batching.
         if (deviceCount.get() <= 0) {
-            SingleQueueTaskManager taskManager = new SingleQueueTaskManager(em, qm, this, notification);
+            SingleQueueTaskManager taskManager = new SingleQueueTaskManager(em, qm, this, notification,queueName);
             //if i'm in a test value will be false, do not mark finished for test orchestration, not ideal need real tests
             taskManager.finishedBatch();
         }
@@ -288,7 +283,7 @@ public class ApplicationQueueManager implements QueueManager {
      * @param messages
      * @throws Exception
      */
-    public Observable sendBatchToProviders( final List<ApplicationQueueMessage> messages) {
+    public Observable sendBatchToProviders( final List<ApplicationQueueMessage> messages, final String queuePath) {
         LOG.info("sending batch of {} notifications.", messages.size());
         final Meter sendMeter = metricsFactory.getMeter(NotificationsService.class, "send");
 
@@ -313,7 +308,7 @@ public class ApplicationQueueManager implements QueueManager {
                     SingleQueueTaskManager taskManager;
                     taskManager = taskMap.get(message.getNotificationId());
                     if (taskManager == null) {
-                        taskManager = new SingleQueueTaskManager(em, qm, proxy, notification);
+                        taskManager = new SingleQueueTaskManager(em, qm, proxy, notification,queuePath);
                         taskMap.putIfAbsent(message.getNotificationId(), taskManager);
                         taskManager = taskMap.get(message.getNotificationId());
                     }
@@ -427,6 +422,15 @@ public class ApplicationQueueManager implements QueueManager {
         return translatedPayloads;
     }
 
+    public static String[] getQueueNames(Properties properties) {
+        String[] names = properties.getProperty(ApplicationQueueManager.DEFAULT_QUEUE_PROPERTY,ApplicationQueueManager.DEFAULT_QUEUE_NAME).split(";");
+        return names;
+    }
+    public static String getRandomQueue(String[] queueNames) {
+        int size = queueNames.length;
+        Random random = new Random();
+        return queueNames[random.nextInt(size)];
+    }
 
     private static final class IteratorObservable<T> implements rx.Observable.OnSubscribe<T> {
         private final Iterator<T> input;
@@ -571,6 +575,5 @@ public class ApplicationQueueManager implements QueueManager {
         }
     }
 
-    public String getQueuePath(){return queueName;}
 
 }
