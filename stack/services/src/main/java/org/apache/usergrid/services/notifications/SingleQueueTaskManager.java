@@ -123,7 +123,7 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
             receipt.setUuid(savedReceipt.getUuid());
 
             List<EntityRef> entities = Arrays.asList(notification, device);
-            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
+//            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
         } else {
             em.update(receipt);
         }
@@ -153,35 +153,9 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
         Notification notification = em.get(this.notification.getUuid(), Notification.class);
         notification.setModified(System.currentTimeMillis());
 
-        Map<String, Long> stats;
-        String statsKey = "statistics_batch";
-        Map<String, Object> properties;
-        //write out current results to a set so no overlap in multiple writes will occur
-        if (successes + failures > 0) {
-            properties = new HashMap<String, Object>(4);
-            stats = new HashMap<String, Long>(2);
-            stats.put("sent", successes);
-            stats.put("errors", failures);
-            properties.put(statsKey + "_" + System.currentTimeMillis(), stats);
-            properties.put("modified", notification.getModified());
-            notification.addProperties(properties);
-            em.update(notification);
-        }
-
-        //resum the stats
-        notification = em.get(this.notification.getUuid(), Notification.class); // re-read
-        properties = notification.getProperties();
-        long sent = 0;
-        long errors = 0;
-        for (String key : properties.keySet()) {
-            if (key.contains(statsKey)) {
-                stats = (Map<String, Long>) properties.get(key);
-                sent += stats.get("sent");
-                errors += stats.get("errors");
-            }
-        }
-
+        long sent = successes,errors = failures;
         //and write them out again, this will produce the most accurate count
+        Map<String, Long> stats;
         stats = new HashMap<String, Long>(2);
         stats.put("sent", sent);
         stats.put("errors", errors);
@@ -191,22 +165,17 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
 
         //none of this is known and should you ever do this
         if (notification.getExpectedCount() <= (errors + sent)) {
+            Map<String, Object> properties = new HashMap<>();
             notification.setFinished(notification.getModified());
             properties.put("finished", notification.getModified());
             properties.put("state", notification.getState());
             LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
             notification.addProperties(properties);
         }
-
         LOG.info("notification finished batch: {}", notification.getUuid());
         em.update(notification);
 
-       // Set<Notifier> notifiers = new HashSet<Notifier>(proxy.getNotifierMap().values()); // remove dups
-        //proxy.asyncCheckForInactiveDevices(notifiers);
-    }
-
-
-    protected void hasFinished(boolean hasFinished) {
-        this.hasFinished = hasFinished;
+//        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
+//        proxy.asyncCheckForInactiveDevices(notifiers);
     }
 }
