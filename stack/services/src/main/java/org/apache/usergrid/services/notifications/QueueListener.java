@@ -63,7 +63,7 @@ public class QueueListener  {
     ExecutorService pool;
     List<Future> futures;
 
-    public static final String MAX_THREADS = "1";
+    public static final String MAX_THREADS = "2";
     private Integer batchSize = 1000;
     private String[] queueNames;
 

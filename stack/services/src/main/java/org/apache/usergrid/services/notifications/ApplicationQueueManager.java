@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ApplicationQueueManager implements QueueManager {
 
-    public static  String DEFAULT_QUEUE_NAME = "notifications/queuelistenerv1_20;notifications/queuelistenerv1_21";
+    public static  String DEFAULT_QUEUE_NAME = "notifications/queuelistenerv1_20;notifications/queuelistenerv1_21;notifications/queuelistenerv1_22";
     public static final String DEFAULT_QUEUE_PROPERTY = "usergrid.notifications.listener.queueName";
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
 
@@ -242,8 +242,6 @@ public class ApplicationQueueManager implements QueueManager {
         if (LOG.isInfoEnabled()) {
             long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
             LOG.info("ApplicationQueueMessage: notification {} done queuing to {} devices in "+elapsed+" ms",notification.getUuid().toString(),deviceCount.get());
-            LOG.info("ApplicationQueueMessage: notification {} finished in {} ms",notification.getUuid().toString(),elapsed);
-
         }
 
     }
