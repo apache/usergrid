@@ -92,6 +92,7 @@ public class ApplicationQueueManager implements QueueManager {
 
     public void queueNotification(final Notification notification, final JobExecution jobExecution) throws Exception {
         if(scheduleQueueJob(notification)){
+            em.update(notification);
             return;
         }
         final Meter queueMeter = metricsFactory.getMeter(ApplicationQueueManager.class,"queue");
@@ -121,6 +122,7 @@ public class ApplicationQueueManager implements QueueManager {
             //if there are more pages (defined by PAGE_SIZE) you probably want this to be async, also if this is already a job then don't reschedule
             if (iterator instanceof ResultsIterator && ((ResultsIterator) iterator).hasPages() && jobExecution == null) {
                 jobScheduler.scheduleQueueJob(notification, true);
+                em.update(notification);
                 return;
             }
             final CountMinSketch sketch = new CountMinSketch(0.0001,.99,7364181); //add probablistic counter to find dups

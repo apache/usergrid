@@ -74,7 +74,6 @@ public class JobScheduler{
             SchedulerService scheduler = getSchedulerService();
             scheduler.createJob("queueJob", scheduleAt, jobData);
             LOG.info("notification {} scheduled for queuing", notification.getUuid());
-            em.update(notification);
         }
         return scheduled;
     }
