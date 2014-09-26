@@ -18,7 +18,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
  * Iterator that will iterate all versions of the entity from the log from < the specified maxVersion
  *
  */
-public class VersionIterator implements Iterator<UUID> {
+public class LogEntryIterator implements Iterator<MvccLogEntry> {
 
 
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
@@ -39,9 +39,9 @@ public class VersionIterator implements Iterator<UUID> {
      * @param maxVersion The max version of the entity.  Iterator will iterate from max to min starting with the version < max
      * @param pageSize The fetch size to get when querying the serialization strategy
      */
-    public VersionIterator( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                            final CollectionScope scope, final Id entityId, final UUID maxVersion,
-                            final int pageSize ) {
+    public LogEntryIterator( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
+                             final CollectionScope scope, final Id entityId, final UUID maxVersion,
+                             final int pageSize ) {
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
         this.scope = scope;
         this.entityId = entityId;
@@ -66,12 +66,12 @@ public class VersionIterator implements Iterator<UUID> {
 
 
     @Override
-    public UUID next() {
+    public MvccLogEntry next() {
         if ( !hasNext() ) {
             throw new NoSuchElementException( "No more elements exist" );
         }
 
-        return elementItr.next().getVersion();
+        return elementItr.next();
     }
 
 
@@ -98,7 +98,7 @@ public class VersionIterator implements Iterator<UUID> {
 
 
         //we have results, set our next start
-        if ( results.size() == requestedSize ) {
+        if ( results.size() == pageSize ) {
             nextStart = results.get( results.size() - 1 ).getVersion();
         }
         //nothing left to do

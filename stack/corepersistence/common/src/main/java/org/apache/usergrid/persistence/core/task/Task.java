@@ -1,6 +1,28 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.usergrid.persistence.core.task;
 
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
 
@@ -24,6 +46,26 @@ public abstract class Task<V, I> extends RecursiveTask<V> {
             exceptionThrown( e );
             throw new RuntimeException( e );
         }
+    }
+
+
+    /**
+     * Fork all tasks in the list except the last one.  The last will be run in the caller thread
+     * The others will wait for join
+     * @param tasks
+     *
+     */
+    public <V, T extends ForkJoinTask<V>> List<V> joinAll(List<T> tasks) throws ExecutionException, InterruptedException {
+
+        //don't fork the last one
+       List<V> results = new ArrayList<>(tasks.size());
+
+        for(T task: tasks){
+            results.add( task.join() );
+        }
+
+        return results;
+
     }
 
 
