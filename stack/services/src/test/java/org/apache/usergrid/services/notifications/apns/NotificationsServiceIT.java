@@ -69,6 +69,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Override
     @Before
     public void before() throws Exception {
+        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString()+";"+"notifications/test/" + UUID.randomUUID().toString();
+
+        QueueListener.DEFAULT_SLEEP = 200;
         super.before();
         // create apns notifier //
         app.clear();
@@ -128,7 +131,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         ns.TEST_PATH_QUERY = pathQuery;
 
-        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString();
         listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
         listener.run();
     }
