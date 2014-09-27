@@ -27,8 +27,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.task.Task;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardGroupCompactionImpl;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -44,8 +42,9 @@ public interface ShardGroupCompaction {
      *
      * @return A ListenableFuture with the result.  Note that some
      */
-    public Task<AuditResult> evaluateShardGroup(
-            final ApplicationScope scope, final DirectedEdgeMeta edgeMeta, final ShardEntryGroup group );
+    public ListenableFuture<AuditResult> evaluateShardGroup( final ApplicationScope scope,
+                                                             final DirectedEdgeMeta edgeMeta,
+                                                             final ShardEntryGroup group );
 
 
     public enum AuditResult {

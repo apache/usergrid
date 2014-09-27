@@ -37,13 +37,14 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.task.ImmediateTask;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -65,6 +66,9 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.PrimitiveSink;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -273,29 +277,45 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
 
     @Override
-    public Task<AuditResult> evaluateShardGroup( final ApplicationScope scope,
-                                                                final DirectedEdgeMeta edgeMeta,
-                                                                final ShardEntryGroup group ) {
+    public ListenableFuture<AuditResult> evaluateShardGroup( final ApplicationScope scope,
+                                                             final DirectedEdgeMeta edgeMeta,
+                                                             final ShardEntryGroup group ) {
 
         final double repairChance = random.nextDouble();
 
 
         //don't audit, we didn't hit our chance
         if ( repairChance > graphFig.getShardRepairChance() ) {
-            return new ImmediateTask<AuditResult>(  AuditResult.NOT_CHECKED ) {};
+            return Futures.immediateFuture( AuditResult.NOT_CHECKED );
         }
 
         /**
          * Try and submit.  During back pressure, we may not be able to submit, that's ok.  Better to drop than to
          * hose the system
          */
-       return taskExecutor.submit( new ShardAuditTask( scope, edgeMeta, group ) );
+        ListenableFuture<AuditResult> future = taskExecutor.submit( new ShardAuditTask( scope, edgeMeta, group ) );
+
+        /**
+         * Log our success or failures for debugging purposes
+         */
+        Futures.addCallback( future, new FutureCallback<AuditResult>() {
+            @Override
+            public void onSuccess( @Nullable final AuditResult result ) {
+                LOG.debug( "Successfully completed audit of task {}", result );
+            }
 
 
+            @Override
+            public void onFailure( final Throwable t ) {
+                LOG.error( "Unable to perform audit.  Exception is ", t );
+            }
+        } );
+
+        return future;
     }
 
 
-    private final class ShardAuditTask extends Task<AuditResult> {
+    private final class ShardAuditTask implements Task<AuditResult, ShardAuditKey> {
 
         private final ApplicationScope scope;
         private final DirectedEdgeMeta edgeMeta;
@@ -310,6 +330,11 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         }
 
 
+        @Override
+        public ShardAuditKey getId() {
+            return new ShardAuditKey( scope, edgeMeta, group );
+        }
+
 
         @Override
         public void exceptionThrown( final Throwable throwable ) {
@@ -320,12 +345,12 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         @Override
         public void rejected() {
             //ignore, if this happens we don't care, we're saturated, we can check later
-            LOG.error( "Rejected audit for shard of with scope {}, edgeMeta of {} and group of {}", scope, edgeMeta, group );
+            LOG.error( "Rejected audit for shard of {}", getId() );
         }
 
 
         @Override
-        public AuditResult executeTask() throws Exception {
+        public AuditResult call() throws Exception {
             /**
              * We don't have a compaction pending.  Run an audit on the shards
              */
@@ -376,8 +401,10 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                  */
                 try {
                     CompactionResult result = compact( scope, edgeMeta, group );
-                    LOG.info( "Compaction result for compaction of scope {} with edge meta data of {} and shard group "
-                                    + "{} is {}", new Object[] { scope, edgeMeta, group, result } );
+                    LOG.info(
+                            "Compaction result for compaction of scope {} with edge meta data of {} and shard group " +
+                                    "{} is {}",
+                            new Object[] { scope, edgeMeta, group, result } );
                 }
                 finally {
                     shardCompactionTaskTracker.complete( scope, edgeMeta, group );
@@ -391,7 +418,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     }
 
 
-    public static final class ShardAuditKey {
+    private static final class ShardAuditKey {
         private final ApplicationScope scope;
         private final DirectedEdgeMeta edgeMeta;
         private final ShardEntryGroup group;
