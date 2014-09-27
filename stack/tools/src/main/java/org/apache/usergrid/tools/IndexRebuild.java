@@ -94,7 +94,7 @@ public class IndexRebuild extends ToolBase {
 
         logger.info( "Starting index rebuild" );
 
-        emf.rebuildInternalIndexes();
+        emf.rebuildInternalIndexes( null );
         emf.refreshIndex();
 
         /**
@@ -106,7 +106,7 @@ public class IndexRebuild extends ToolBase {
             Set<String> collections = getCollections( line, appId );
 
             for ( String collection : collections ) {
-                emf.rebuildCollectionIndex(appId, collection);
+                emf.rebuildCollectionIndex( appId, collection, null );
                 emf.refreshIndex();
             }
         }
@@ -135,7 +135,7 @@ public class IndexRebuild extends ToolBase {
 
         System.out.println( "Printing all apps" );
         for ( Entry<String, UUID> entry : ids.entrySet() ) {
-            System.out.println( entry.getKey() );
+            System.out.println( entry.getKey() + " appid=" + entry.getValue() );
         }
 
         return ids.values();

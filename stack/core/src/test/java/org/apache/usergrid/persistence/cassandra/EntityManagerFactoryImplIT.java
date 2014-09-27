@@ -26,7 +26,6 @@ import java.util.UUID;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,8 +93,13 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
     }
 
 
+    public void testRebuildIndexes() throws Exception {
+
+
+    }
+
+
     @Test
-    @Ignore("Fix this EntityManagerFactoryImplIT.testCreateAndGet:105->createApplication:90 » ApplicationAlreadyExists")
     public void testCreateAndGet() throws Exception {
         TraceTag traceTag = traceTagManager.create( "testCreateAndGet" );
         traceTagManager.attach( traceTag );

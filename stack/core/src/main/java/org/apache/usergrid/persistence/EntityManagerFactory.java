@@ -117,12 +117,17 @@ public interface EntityManagerFactory {
 
     public void refreshIndex();
 
-    public void rebuildInternalIndexes() throws Exception;
+    public void rebuildInternalIndexes( ProgressObserver po ) throws Exception;
 
-    public void rebuildCollectionIndex( UUID appId, String collectionName ) throws Exception;
+    public void rebuildCollectionIndex( 
+        UUID appId, String collectionName, ProgressObserver po ) throws Exception;
 
     public void setApplicationContext(ApplicationContext ac);
 
     /** For testing purposes */
     public void flushEntityManagerCaches();
+
+    public interface ProgressObserver {
+        public void onProgress();
+    }
 }

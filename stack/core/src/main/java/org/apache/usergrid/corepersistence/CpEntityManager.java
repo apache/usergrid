@@ -211,19 +211,19 @@ public class CpEntityManager implements EntityManager {
 
     static String getCollectionScopeNameFromEntityType( String type ) {
         String csn = Schema.defaultCollectionName( type ) + COLL_SUFFIX;
-        return csn;
+        return csn.toLowerCase();
     }
 
 
     static String getCollectionScopeNameFromCollectionName( String name ) {
         String csn = name + COLL_SUFFIX;
-        return csn;
+        return csn.toLowerCase();
     }
 
 
     static String getConnectionScopeName( String entityType, String connectionType ) {
         String csn = connectionType + entityType + CONN_SUFFIX;
-        return csn;
+        return csn.toLowerCase();
     }
 
 

@@ -423,12 +423,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
-    public void rebuildInternalIndexes() throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void rebuildCollectionIndex(UUID appId, String collectionName) throws Exception {
+    public void rebuildCollectionIndex(UUID appId, String collectionName, ProgressObserver po ) 
+            throws Exception {
 
         logger.info( "Reindexing collection: {} for app id: {}", collectionName, appId );
 
@@ -468,4 +464,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
 
     }
 
+    @Override
+    public void rebuildInternalIndexes(ProgressObserver po) throws Exception {
+        // no op
+    }
 }

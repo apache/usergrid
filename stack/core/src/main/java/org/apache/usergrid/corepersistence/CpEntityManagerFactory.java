@@ -48,7 +48,9 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
@@ -69,6 +71,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import rx.Observable;
 
 
 /**
@@ -581,32 +584,38 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public void rebuildInternalIndexes() throws Exception {
+    public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
+
+        // get all connections from systems app
+//        GraphManager gm = managerCache.getGraphManager( CpEntityManagerFactory.SYSTEM_APPS_SCOPE );
+//
+//        Observable<String> edgeTypes = gm.getEdgeTypesFromSource( 
+//            new SimpleSearchEdgeType( systemAppId, null , null ));
 
         logger.info("Rebuilding system apps index");
         rebuildIndexScope(
                 CpEntityManagerFactory.SYSTEM_APPS_SCOPE, 
-                CpEntityManagerFactory.SYSTEM_APPS_INDEX_SCOPE );
+                CpEntityManagerFactory.SYSTEM_APPS_INDEX_SCOPE, po );
 
         logger.info("Rebuilding system orgs index");
         rebuildIndexScope(
                 CpEntityManagerFactory.SYSTEM_ORGS_SCOPE,
-                CpEntityManagerFactory.SYSTEM_ORGS_INDEX_SCOPE );
+                CpEntityManagerFactory.SYSTEM_ORGS_INDEX_SCOPE, po );
 
         logger.info("Rebuilding system props index");
         rebuildIndexScope(
                 CpEntityManagerFactory.SYSTEM_PROPS_SCOPE,
-                CpEntityManagerFactory.SYSTEM_PROPS_INDEX_SCOPE );
+                CpEntityManagerFactory.SYSTEM_PROPS_INDEX_SCOPE, po );
 
         logger.info("Rebuilding management application index");
-        rebuildApplicationIndex( MANAGEMENT_APPLICATION_ID );
+        rebuildApplicationIndex( MANAGEMENT_APPLICATION_ID, po );
 
         logger.info("Rebuilding default application index");
-        rebuildApplicationIndex( DEFAULT_APPLICATION_ID );
+        rebuildApplicationIndex( DEFAULT_APPLICATION_ID, po );
     }
 
 
-    private void rebuildIndexScope( CollectionScope cs, IndexScope is ) {
+    private void rebuildIndexScope( CollectionScope cs, IndexScope is, ProgressObserver po ) {
 
         logger.info("Rebuild index scope for {}:{}:{}", new Object[] {
             cs.getOwner(), cs.getApplication(), cs.getName()
@@ -618,38 +627,37 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Query q = Query.fromQL("select *");
         CandidateResults results = ei.search( q );
 
-        Map<String, UUID> appMap = new HashMap<String, UUID>();
-
         Iterator<CandidateResult> iter = results.iterator();
         while (iter.hasNext()) {
             CandidateResult cr = iter.next();
 
             Entity entity = ecm.load(cr.getId()).toBlockingObservable().last();
 
-            if (cr.getVersion().compareTo( entity.getVersion()) < 0 ) {
-                logger.warn("    Ignoring stale version uuid:{} type:{} version:{} latest version:{}",
-                    new Object[]{
-                        cr.getId().getUuid(),
-                        cr.getId().getType(),
-                        cr.getVersion(),
-                        entity.getVersion()
+            if ( cr.getVersion().compareTo( entity.getVersion()) < 0 ) {
+                logger.warn("   Ignoring stale version uuid:{} type:{} state v:{} latest v:{}",
+                    new Object[] { 
+                        cr.getId().getUuid(), cr.getId().getType(), 
+                        cr.getVersion(), entity.getVersion()
                     });
-                continue;
-            }
 
-            logger.info("    Updating CP Entity type: {} with id: {} for app id: {}",
-                new Object[]{cr.getId().getType(), cr.getId().getUuid(),
-                    CpEntityManagerFactory.SYSTEM_APPS_SCOPE.getApplication().getUuid()
+            } else {
+
+                logger.info("   Updating entity type {} with id {} for app {}/{}", new Object[] { 
+                    cr.getId().getType(), cr.getId().getUuid(), cs.getApplication().getUuid()
+                });
+
+                ei.index(entity);
+
+                if ( po != null ) {
+                    po.onProgress();
                 }
-            );
 
-            ei.index(entity);
+            }
         }
-
     }
 
 
-    public void rebuildApplicationIndex( UUID appId ) throws Exception {
+    public void rebuildApplicationIndex( UUID appId, ProgressObserver po ) throws Exception {
 
         EntityManager em = getEntityManager( appId );
 
@@ -659,12 +667,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             appId, collections.size(), collections });
 
         for ( String collection : collections ) {
-            rebuildCollectionIndex( appId, collection );
+            rebuildCollectionIndex( appId, collection, po );
         }
     }
 
 
-    public void rebuildCollectionIndex( UUID appId, String collectionName ) throws Exception {
+    public void rebuildCollectionIndex( UUID appId, String collectionName, ProgressObserver po ) 
+            throws Exception {
 
         logger.info( "Reindexing collection: {} for app id: {}", collectionName, appId );
 
@@ -683,15 +692,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
             for ( org.apache.usergrid.persistence.Entity entity : r.getEntities() ) {
 
-                logger.info( "    Updating Entity name {}, type: {}, id: {} in app id: {}", new Object[] {
+                logger.info( "   Updating Entity name {}, type: {}, id: {} in app id: {}", new Object[] {
                         entity.getName(), entity.getType(), entity.getUuid(), appId
                 } );
 
                 try {
                     em.update( entity );
+
+                    if ( po != null ) {
+                        po.onProgress();
+                    }
                 }
                 catch ( DuplicateUniquePropertyExistsException dupee ) {
-                    logger.error( "Duplicate property for type: {} with id: {} for app id: {}.  "
+                    logger.error( "   Duplicate property for type: {} with id: {} for app id: {}.  "
                             + "Property name: {} , value: {}", new Object[] {
                             entity.getType(), entity.getUuid(), appId, dupee.getPropertyName(), 
                             dupee.getPropertyValue()
