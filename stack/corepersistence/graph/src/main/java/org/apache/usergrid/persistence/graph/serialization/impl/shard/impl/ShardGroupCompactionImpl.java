@@ -273,7 +273,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
 
     @Override
-    public Task<AuditResult, ShardAuditKey> evaluateShardGroup( final ApplicationScope scope,
+    public Task<AuditResult> evaluateShardGroup( final ApplicationScope scope,
                                                                 final DirectedEdgeMeta edgeMeta,
                                                                 final ShardEntryGroup group ) {
 
@@ -282,7 +282,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
         //don't audit, we didn't hit our chance
         if ( repairChance > graphFig.getShardRepairChance() ) {
-            return new ImmediateTask<AuditResult, ShardAuditKey>(  new ShardAuditKey( scope, edgeMeta, group ), AuditResult.NOT_CHECKED ) {};
+            return new ImmediateTask<AuditResult>(  AuditResult.NOT_CHECKED ) {};
         }
 
         /**
@@ -295,7 +295,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     }
 
 
-    private final class ShardAuditTask extends Task<AuditResult, ShardAuditKey> {
+    private final class ShardAuditTask extends Task<AuditResult> {
 
         private final ApplicationScope scope;
         private final DirectedEdgeMeta edgeMeta;
@@ -310,11 +310,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         }
 
 
-        @Override
-        public ShardAuditKey getId() {
-            return new ShardAuditKey( scope, edgeMeta, group );
-        }
-
 
         @Override
         public void exceptionThrown( final Throwable throwable ) {
@@ -325,7 +320,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         @Override
         public void rejected() {
             //ignore, if this happens we don't care, we're saturated, we can check later
-            LOG.error( "Rejected audit for shard of {}", getId() );
+            LOG.error( "Rejected audit for shard of with scope {}, edgeMeta of {} and group of {}", scope, edgeMeta, group );
         }
 
 

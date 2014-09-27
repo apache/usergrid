@@ -29,7 +29,7 @@ public class NamedTaskExecutorImplTest {
         final CountDownLatch rejectedLatch = new CountDownLatch( 0 );
         final CountDownLatch runLatch = new CountDownLatch( 1 );
 
-        final Task<Void, UUID> task = new TestTask<Void>( exceptionLatch, rejectedLatch, runLatch ) {};
+        final Task<Void> task = new TestTask<Void>( exceptionLatch, rejectedLatch, runLatch ) {};
 
         executor.submit( task );
 
@@ -254,7 +254,7 @@ public class NamedTaskExecutorImplTest {
     }
 
 
-    private static abstract class TestTask<V> extends Task<V, UUID> {
+    private static abstract class TestTask<V> extends Task<V> {
 
         protected final List<Throwable> exceptions;
         protected final CountDownLatch exceptionLatch;
@@ -271,11 +271,6 @@ public class NamedTaskExecutorImplTest {
             this.exceptions = new ArrayList<>();
         }
 
-
-        @Override
-        public UUID getId() {
-            return UUIDGenerator.newTimeUUID();
-        }
 
 
         @Override

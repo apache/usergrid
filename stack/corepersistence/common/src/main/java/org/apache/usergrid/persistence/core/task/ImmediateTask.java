@@ -5,22 +5,16 @@ package org.apache.usergrid.persistence.core.task;
  * Does not perform computation, just returns the value passed to it
  *
  */
-public class ImmediateTask<V, I> extends Task<V, I> {
+public class ImmediateTask<V> extends Task<V> {
 
-    private final I id;
+
     private final V returned;
 
 
-    protected ImmediateTask( final I id, final V returned ) {
-        this.id = id;
+    protected ImmediateTask( final V returned ) {
         this.returned = returned;
     }
 
-
-    @Override
-    public I getId() {
-        return id;
-    }
 
 
     @Override

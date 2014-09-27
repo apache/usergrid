@@ -1,10 +1,10 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 import java.util.UUID;
-import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RecursiveTask;
 
 import org.slf4j.Logger;
@@ -15,10 +15,8 @@ import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIterator;
-import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -27,12 +25,11 @@ import org.apache.usergrid.persistence.model.entity.Id;
  * Cleans up previous versions from the specified version. Note that this means the version passed in the io event is
  * retained, the range is exclusive.
  */
-public class EntityVersionCleanupTask extends Task<CollectionIoEvent<EntityVersion>, CollectionIoEvent<EntityVersion>> {
+public class EntityVersionCleanupTask extends Task<Void> {
 
     private static final Logger LOG = LoggerFactory.getLogger( EntityVersionCleanupTask.class );
 
 
-    private final CollectionIoEvent<EntityVersion> collectionIoEvent;
     private final List<EntityVersionDeleted> listeners;
 
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
@@ -40,29 +37,31 @@ public class EntityVersionCleanupTask extends Task<CollectionIoEvent<EntityVersi
 
     private final SerializationFig serializationFig;
 
+    private final CollectionScope scope;
+    private final Id entityId;
+    private final UUID version;
 
-    private EntityVersionCleanupTask( final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                                      final MvccEntitySerializationStrategy entitySerializationStrategy,
-                                      final CollectionIoEvent<EntityVersion> collectionIoEvent,
-                                      final List<EntityVersionDeleted> listeners,
-                                      final SerializationFig serializationFig ) {
-        this.collectionIoEvent = collectionIoEvent;
-        this.listeners = listeners;
+
+    public EntityVersionCleanupTask( final SerializationFig serializationFig,
+                                     final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
+                                     final MvccEntitySerializationStrategy entitySerializationStrategy,
+                                     final List<EntityVersionDeleted> listeners, final CollectionScope scope,
+                                     final Id entityId, final UUID version ) {
+
+        this.serializationFig = serializationFig;
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
-        this.serializationFig = serializationFig;
-    }
-
-
-    @Override
-    public CollectionIoEvent<EntityVersion> getId() {
-        return collectionIoEvent;
+        this.listeners = listeners;
+        this.scope = scope;
+        this.entityId = entityId;
+        this.version = version;
     }
 
 
     @Override
     public void exceptionThrown( final Throwable throwable ) {
-        LOG.error( "Unable to run update task for event {}", collectionIoEvent, throwable );
+        LOG.error( "Unable to run update task for collection {} with entity {} and version {}",
+                new Object[] { scope, entityId, version }, throwable );
     }
 
 
@@ -81,15 +80,15 @@ public class EntityVersionCleanupTask extends Task<CollectionIoEvent<EntityVersi
 
 
     @Override
-    public CollectionIoEvent<EntityVersion> executeTask() throws Exception {
+    public Void executeTask() throws Exception {
 
-        final CollectionScope scope = collectionIoEvent.getEntityCollection();
-        final Id entityId = collectionIoEvent.getEvent().getId();
-        final UUID maxVersion = collectionIoEvent.getEvent().getVersion();
+
+        final UUID maxVersion = version;
 
 
         LogEntryIterator logEntryIterator =
-                new LogEntryIterator( logEntrySerializationStrategy, scope, entityId, maxVersion, serializationFig.getHistorySize() );
+                new LogEntryIterator( logEntrySerializationStrategy, scope, entityId, maxVersion,
+                        serializationFig.getHistorySize() );
 
 
         //for every entry, we want to clean it up with listeners
@@ -100,26 +99,9 @@ public class EntityVersionCleanupTask extends Task<CollectionIoEvent<EntityVersi
 
 
             final UUID version = logEntry.getVersion();
-            List<ForkJoinTask<Void>> tasks = new ArrayList<>();
 
 
-            //execute all the listeners
-            for (final  EntityVersionDeleted listener : listeners ) {
-
-                tasks.add( new RecursiveTask<Void>() {
-                    @Override
-                    protected Void compute() {
-                        listener.versionDeleted( scope, entityId, version );
-                        return null;
-                    }
-                }.fork() );
-
-
-            }
-
-            //wait for them to complete
-
-            joinAll(tasks);
+            fireEvents();
 
             //we do multiple invocations on purpose.  Our log is our source of versions, only delete from it
             //after every successful invocation of listeners and entity removal
@@ -129,10 +111,61 @@ public class EntityVersionCleanupTask extends Task<CollectionIoEvent<EntityVersi
         }
 
 
-        return collectionIoEvent;
+        return null;
     }
 
 
+    private void fireEvents() throws ExecutionException, InterruptedException {
+
+        if ( listeners.size() == 0 ) {
+            return;
+        }
+
+        //stack to track forked tasks
+        final Stack<RecursiveTask<Void>> tasks = new Stack<>();
+
+
+        //we don't want to fork the final listener, we'll run that in our current thread
+        final int forkedTaskSize = listeners.size() - 1;
+
+
+        //execute all the listeners
+        for ( int i = 0; i < forkedTaskSize; i++ ) {
+
+            final EntityVersionDeleted listener = listeners.get( i );
+
+            final RecursiveTask<Void> task = createTask( listener );
+
+            task.fork();
+
+            tasks.push( task );
+        }
+
+
+        final RecursiveTask<Void> lastTask = createTask( listeners.get( forkedTaskSize ) );
+
+        lastTask.invoke();
+
+
+        //wait for them to complete
+        while ( !tasks.isEmpty() ) {
+            tasks.pop().get();
+        }
+    }
+
+
+    /**
+     * Return the new task to execute
+     */
+    private RecursiveTask<Void> createTask( final EntityVersionDeleted listener ) {
+        return new RecursiveTask<Void>() {
+            @Override
+            protected Void compute() {
+                listener.versionDeleted( scope, entityId, version );
+                return null;
+            }
+        };
+    }
 }
 
 

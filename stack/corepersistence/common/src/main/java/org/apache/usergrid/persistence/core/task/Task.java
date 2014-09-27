@@ -29,13 +29,7 @@ import java.util.concurrent.RecursiveTask;
 /**
  * The task to execute
  */
-public abstract class Task<V, I> extends RecursiveTask<V> {
-
-    /**
-     * Get the unique identifier of this task.  This may be used to collapse runnables over a time period in the future
-     */
-    public abstract I getId();
-
+public abstract class Task<V> extends RecursiveTask<V> {
 
     @Override
     protected V compute() {
@@ -48,25 +42,6 @@ public abstract class Task<V, I> extends RecursiveTask<V> {
         }
     }
 
-
-    /**
-     * Fork all tasks in the list except the last one.  The last will be run in the caller thread
-     * The others will wait for join
-     * @param tasks
-     *
-     */
-    public <V, T extends ForkJoinTask<V>> List<V> joinAll(List<T> tasks) throws ExecutionException, InterruptedException {
-
-        //don't fork the last one
-       List<V> results = new ArrayList<>(tasks.size());
-
-        for(T task: tasks){
-            results.add( task.join() );
-        }
-
-        return results;
-
-    }
 
 
     /**

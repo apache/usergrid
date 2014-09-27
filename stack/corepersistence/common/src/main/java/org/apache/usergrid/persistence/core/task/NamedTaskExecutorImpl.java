@@ -55,6 +55,8 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
      * @param poolSize The size of the pool.  This is the number of concurrent tasks that can execute at once.
      */
     public NamedTaskExecutorImpl( final String name, final int poolSize ) {
+
+        //TODO, figure out how to name the fork/join threads in the pool
         Preconditions.checkNotNull( name );
         Preconditions.checkArgument( name.length() > 0, "name must have a length" );
         Preconditions.checkArgument( poolSize > 0, "poolSize must be > than 0" );
@@ -67,7 +69,7 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
 
 
     @Override
-    public <V, I> Task<V, I> submit( final Task<V, I> task ) {
+    public <V> Task<V> submit( final Task<V> task ) {
 
         try {
             executorService.submit( task );
@@ -77,6 +79,12 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
         }
 
         return task;
+    }
+
+
+    @Override
+    public void shutdown() {
+        executorService.shutdownNow();
     }
 
 

@@ -44,7 +44,7 @@ public interface ShardGroupCompaction {
      *
      * @return A ListenableFuture with the result.  Note that some
      */
-    public Task<AuditResult, ShardGroupCompactionImpl.ShardAuditKey> evaluateShardGroup(
+    public Task<AuditResult> evaluateShardGroup(
             final ApplicationScope scope, final DirectedEdgeMeta edgeMeta, final ShardEntryGroup group );
 
 
