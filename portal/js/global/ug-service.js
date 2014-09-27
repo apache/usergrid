@@ -550,13 +550,8 @@ AppServices.Services.factory('ug', function(configuration, $rootScope, utility,
         self.notificationCollection = notifications;
       });
     },
-<<<<<<< HEAD
-    getNotificationReceipts: function (uuid) {
-      this.getCollection('receipts', 'receipts','created desc','notificationUUID='+uuid);
-=======
     getNotificationReceipts: function(uuid) {
       this.getCollection('receipts', 'notifications/' + uuid + '/receipts');
->>>>>>> d972699... fix create collections
       var self = this;
       $rootScope.$on('receipts-received', function(event, receipts) {
         self.receiptsCollection = receipts;
