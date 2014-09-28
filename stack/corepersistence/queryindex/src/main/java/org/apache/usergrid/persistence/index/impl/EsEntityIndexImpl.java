@@ -528,10 +528,6 @@ public class EsEntityIndexImpl implements EntityIndex {
                 locMap.put("lon", locField.getValue().getLongtitude());
                 entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap);
 
-            } else if ( f instanceof BooleanField  ) {
-
-                entityMap.put( NUMBER_PREFIX + field.getName().toLowerCase(), field.getValue());
-
             } else if ( f instanceof DoubleField
                      || f instanceof FloatField
                      || f instanceof IntegerField
