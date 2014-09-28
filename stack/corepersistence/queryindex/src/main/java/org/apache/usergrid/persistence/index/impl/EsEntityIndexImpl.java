@@ -57,7 +57,10 @@ import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsRequest;
+import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -402,18 +405,29 @@ public class EsEntityIndexImpl implements EntityIndex {
             srb = srb.setFrom(0).setSize(query.getLimit());
 
             for (Query.SortPredicate sp : query.getSortPredicates()) {
+
                 final SortOrder order;
                 if (sp.getDirection().equals(Query.SortDirection.ASCENDING)) {
                     order = SortOrder.ASC;
                 } else {
                     order = SortOrder.DESC;
                 }
+
+                String stringFieldName = STRING_PREFIX + sp.getPropertyName(); 
                 FieldSortBuilder sort = SortBuilders
-                    .fieldSort(sp.getPropertyName())
+                    .fieldSort( stringFieldName )
                     .order(order)
                     .ignoreUnmapped(true);
                 srb.addSort( sort );
-                log.debug("   Sort: {} order by {}", sp.getPropertyName(), order.toString());
+                log.debug("   Sort: {} order by {}", stringFieldName, order.toString());
+
+                String numberFieldName = NUMBER_PREFIX + sp.getPropertyName(); 
+                sort = SortBuilders
+                    .fieldSort( numberFieldName )
+                    .order(order)
+                    .ignoreUnmapped(true);
+                srb.addSort( sort );
+                log.debug("   Sort: {} order by {}", numberFieldName, order.toString());
             }
 
             searchResponse = srb.execute().actionGet();
@@ -437,8 +451,6 @@ public class EsEntityIndexImpl implements EntityIndex {
         SearchHits hits = searchResponse.getHits();
         log.debug("   Hit count: {} Total hits: {}", hits.getHits().length, hits.getTotalHits() );
 
-        // TODO: do we always want to fetch entities? When do we fetch refs or ids?
-        // list of entities that will be returned
         List<CandidateResult> candidates = new ArrayList<CandidateResult>();
 
         for (SearchHit hit : hits.getHits()) {
