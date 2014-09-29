@@ -411,6 +411,11 @@ public class EsEntityIndexImpl implements EntityIndex {
                     order = SortOrder.DESC;
                 }
 
+                // we do not know the type of the "order by" property and so we do not know what
+                // type prefix to use. So, here we add an order by clause for every possible type 
+                // that you can order by: string, number and boolean and we ask ElasticSearch 
+                // to ignore any fields that are not present.
+
                 final String stringFieldName = STRING_PREFIX + sp.getPropertyName(); 
                 final FieldSortBuilder stringSort = SortBuilders
                     .fieldSort( stringFieldName )
@@ -426,6 +431,14 @@ public class EsEntityIndexImpl implements EntityIndex {
                     .ignoreUnmapped(true);
                 srb.addSort( numberSort );
                 log.debug("   Sort: {} order by {}", numberFieldName, order.toString());
+
+                final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName(); 
+                final FieldSortBuilder booleanSort = SortBuilders
+                        .fieldSort( booleanFieldName )
+                        .order(order)
+                        .ignoreUnmapped(true);
+                srb.addSort( booleanSort );
+                log.debug("   Sort: {} order by {}", booleanFieldName, order.toString());
             }
 
             searchResponse = srb.execute().actionGet();
