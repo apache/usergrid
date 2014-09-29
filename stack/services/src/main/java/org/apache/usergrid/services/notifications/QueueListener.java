@@ -124,14 +124,15 @@ public class QueueListener  {
 
     private void execute(){
         Thread.currentThread().setName("Notifications_Processor"+UUID.randomUUID());
-        svcMgr = smf.getServiceManager(smf.getManagementAppId());
-        queueManager = svcMgr.getQueueManager();
+
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
         LOG.info("QueueListener: Starting execute process.");
 
         // run until there are no more active jobs
         while ( true ) {
             try {
+                svcMgr = smf.getServiceManager(smf.getManagementAppId());
+                queueManager = svcMgr.getQueueManager();
                 String queueName = ApplicationQueueManager.getRandomQueue(queueNames);
                 QueueResults results = getDeliveryBatch(queueManager,queueName);
                 LOG.info("QueueListener: retrieved batch of {} messages", results.size());
