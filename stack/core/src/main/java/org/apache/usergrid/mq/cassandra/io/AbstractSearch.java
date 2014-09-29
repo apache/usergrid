@@ -194,26 +194,15 @@ public abstract class AbstractSearch implements QueueSearch
             current_ts_shard = finish_ts_shard;
         }
 
+
+
         while ( ( current_ts_shard >= start_ts_shard ) && ( current_ts_shard <= finish_ts_shard ) )
         {
-
-            UUID slice_start = MIN_TIME_UUID;
-            UUID slice_end = MAX_TIME_UUID;
-
-            if ( current_ts_shard == start_ts_shard )
-            {
-                slice_start = start;
-            }
-
-            if ( current_ts_shard == finish_ts_shard )
-            {
-                slice_end = finish_uuid;
-            }
 
             SliceQuery<ByteBuffer, UUID, ByteBuffer> q = createSliceQuery( ko, be, ue, be );
             q.setColumnFamily( QUEUE_INBOX.getColumnFamily() );
             q.setKey( getQueueShardRowKey( queueId, current_ts_shard ) );
-            q.setRange( slice_start, slice_end, params.reversed, params.limit + 1 );
+            q.setRange( start, finish_uuid, params.reversed, params.limit + 1 );
 
             List<HColumn<UUID, ByteBuffer>> cassResults = q.execute().get().getColumns();
 
