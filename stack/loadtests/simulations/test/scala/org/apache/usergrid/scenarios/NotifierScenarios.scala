@@ -22,8 +22,8 @@ import scala.concurrent.duration._
  */
 object NotifierScenarios {
   
-  val notifier = Settings.notifier
-  val notifier = Settings.provider
+  val notifier = Settings.pushNotifier
+  val provider = Settings.pushProvider
 
   /**
    * Create a notifier

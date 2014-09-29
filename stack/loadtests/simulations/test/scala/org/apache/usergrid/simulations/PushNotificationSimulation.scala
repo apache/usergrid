@@ -15,7 +15,7 @@ class PushNotificationSimulation extends Simulation {
   val numEntities:Int = Settings.numEntities
   val rampTime:Int = Settings.rampTime
   val throttle:Int = Settings.throttle
-
+  val duration:Int = Settings.duration  
   val httpConf = Settings.httpConf
     .acceptHeader("application/json")
 
@@ -26,7 +26,7 @@ class PushNotificationSimulation extends Simulation {
   val deviceNameFeeder = FeederGenerator.generateEntityNameFeeder("device", numEntities).circular
 
   val scnToRun = scenario("Create Push Notification")    
-    .during(duration) {
+    .during(duration.seconds) {
       feed(deviceNameFeeder)
       .exec(sendNotification)
     }

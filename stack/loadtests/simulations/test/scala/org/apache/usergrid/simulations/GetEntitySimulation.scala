@@ -13,13 +13,13 @@ class GetEntitySimulation extends Simulation {
   val numUsers:Int = Settings.numUsers
   val numEntities:Int = Settings.numEntities
   val rampTime:Int = Settings.rampTime
-  val rps:Int = Settintgs.rps
+  val throttle:Int = Settings.throttle
 
   val feeder = FeederGenerator.generateEntityNameFeeder("user", numEntities).circular
 
   val scnToRun = scenario("GET entity")
     .exec(UserScenarios.getRandomUser)
 
-  setUp(scnToRun.inject(atOnceUsers(numUsers)).throttle(reachRps(rps) in (rampTime.seconds)).protocols(httpConf)).maxDuration(Settings.duration)
+  setUp(scnToRun.inject(atOnceUsers(numUsers)).throttle(reachRps(throttle) in (rampTime.seconds)).protocols(httpConf)).maxDuration(Settings.duration)
 
 }

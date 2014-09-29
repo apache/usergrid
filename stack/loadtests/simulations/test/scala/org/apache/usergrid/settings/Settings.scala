@@ -19,7 +19,7 @@ object Settings {
 
   val rampTime:Int = Integer.getInteger("rampTime", 0).toInt // in seconds
   val duration:Int = Integer.getInteger("duration", 300).toInt // in seconds
-  val rps:Int = Integer.getInteger("throttle", 50).toInt // in seconds
+  val throttle:Int = Integer.getInteger("throttle", 50).toInt // in seconds
 
   // Geolocation settings
   val centerLatitude:Double = 37.442348 // latitude of center point
