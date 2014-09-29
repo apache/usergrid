@@ -315,7 +315,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     }
 
 
-    private final class ShardAuditTask implements Task<AuditResult, ShardAuditKey> {
+    private final class ShardAuditTask implements Task<AuditResult> {
 
         private final ApplicationScope scope;
         private final DirectedEdgeMeta edgeMeta;
@@ -329,23 +329,18 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             this.group = group;
         }
 
-
-        @Override
-        public ShardAuditKey getId() {
-            return new ShardAuditKey( scope, edgeMeta, group );
-        }
-
-
-        @Override
+         @Override
         public void exceptionThrown( final Throwable throwable ) {
             LOG.error( "Unable to execute audit for shard of {}", throwable );
         }
 
 
         @Override
-        public void rejected() {
+        public AuditResult rejected() {
             //ignore, if this happens we don't care, we're saturated, we can check later
-            LOG.error( "Rejected audit for shard of {}", getId() );
+            LOG.error( "Rejected audit for shard of scope {} edge, meta {} and group {}", scope, edgeMeta, group );
+
+            return AuditResult.NOT_CHECKED;
         }
 
 
@@ -418,29 +413,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     }
 
 
-    private static final class ShardAuditKey {
-        private final ApplicationScope scope;
-        private final DirectedEdgeMeta edgeMeta;
-        private final ShardEntryGroup group;
-
-
-        private ShardAuditKey( final ApplicationScope scope, final DirectedEdgeMeta edgeMeta,
-                               final ShardEntryGroup group ) {
-            this.scope = scope;
-            this.edgeMeta = edgeMeta;
-            this.group = group;
-        }
-
-
-        @Override
-        public String toString() {
-            return "ShardAuditKey{" +
-                    "scope=" + scope +
-                    ", edgeMeta=" + edgeMeta +
-                    ", group=" + group +
-                    '}';
-        }
-    }
 
 
     /**

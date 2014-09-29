@@ -1,6 +1,7 @@
 package org.apache.usergrid.persistence.core.task;
 
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -61,7 +62,7 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
 
 
     @Override
-    public <V, I> ListenableFuture<V> submit( final Task<V, I> task ) {
+    public <V> ListenableFuture<V> submit( final Task<V> task ) {
 
         final ListenableFuture<V> future;
 
@@ -71,26 +72,31 @@ public class NamedTaskExecutorImpl implements TaskExecutor {
             /**
              * Log our success or failures for debugging purposes
              */
-            Futures.addCallback( future, new TaskFutureCallBack<V, I>( task ) );
+            Futures.addCallback( future, new TaskFutureCallBack<V>( task ) );
         }
         catch ( RejectedExecutionException ree ) {
-            task.rejected();
-            return Futures.immediateCancelledFuture();
+            return Futures.immediateFuture( task.rejected());
         }
 
         return future;
     }
 
 
+    @Override
+    public void shutdown() {
+        this.executorService.shutdownNow();
+    }
+
+
     /**
      * Callback for when the task succeeds or fails.
      */
-    private static final class TaskFutureCallBack<V, I> implements FutureCallback<V> {
+    private static final class TaskFutureCallBack<V> implements FutureCallback<V> {
 
-        private final Task<V, I> task;
+        private final Task<V> task;
 
 
-        private TaskFutureCallBack( Task<V, I> task ) {
+        private TaskFutureCallBack( Task<V> task ) {
             this.task = task;
         }
 

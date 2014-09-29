@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection.impl;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -27,6 +28,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 
 import org.junit.AfterClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
@@ -40,6 +42,7 @@ import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
@@ -57,7 +60,7 @@ import static org.mockito.Mockito.when;
  */
 public class EntityVersionCleanupTaskTest {
 
-    private static final TaskExecutor taskExecutor = new NamedTaskExecutorImpl( "test", 4 );
+    private static final TaskExecutor taskExecutor = new NamedTaskExecutorImpl( "test", 4, 0 );
 
 
     @AfterClass
@@ -119,10 +122,10 @@ public class EntityVersionCleanupTaskTest {
 
 
         //start the task
-        taskExecutor.submit( cleanupTask );
+        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
 
         //wait for the task
-        cleanupTask.get();
+        future.get();
 
         //verify it was run
         verify( firstBatch ).execute();
@@ -187,10 +190,10 @@ public class EntityVersionCleanupTaskTest {
 
 
         //start the task
-        taskExecutor.submit( cleanupTask );
+        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
 
         //wait for the task
-        cleanupTask.get();
+        future.get();
 
         //verify it was run
         verify( firstBatch, never() ).execute();
@@ -260,10 +263,10 @@ public class EntityVersionCleanupTaskTest {
 
 
         //start the task
-        taskExecutor.submit( cleanupTask );
+        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
 
         //wait for the task
-        cleanupTask.get();
+        future.get();
 
         //we deleted the version
         //verify it was run
@@ -343,10 +346,10 @@ public class EntityVersionCleanupTaskTest {
 
 
         //start the task
-        taskExecutor.submit( cleanupTask );
+        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
 
         //wait for the task
-        cleanupTask.get();
+        future.get();
 
         //we deleted the version
         //verify we deleted everything
@@ -440,18 +443,18 @@ public class EntityVersionCleanupTaskTest {
 
 
         //start the task
-        taskExecutor.submit( cleanupTask );
+        ListenableFuture<Void> future = taskExecutor.submit( cleanupTask );
 
         /**
          * While we're not done, release latches every 200 ms
          */
-        while(!cleanupTask.isDone()) {
+        while(!future.isDone()) {
             Thread.sleep( 200 );
             waitSemaphore.release( listenerCount );
         }
 
         //wait for the task
-        cleanupTask.get();
+        future.get();
 
         //we deleted the version
         //verify we deleted everything
@@ -479,7 +482,7 @@ public class EntityVersionCleanupTaskTest {
         /**
          * only 1 thread on purpose, we want to saturate the task
          */
-        final TaskExecutor taskExecutor = new NamedTaskExecutorImpl( "test", 1);
+        final TaskExecutor taskExecutor = new NamedTaskExecutorImpl( "test", 1, 0);
 
         final SerializationFig serializationFig = mock( SerializationFig.class );
 
@@ -496,17 +499,16 @@ public class EntityVersionCleanupTaskTest {
         final int sizeToReturn = 10;
 
 
-        final int listenerCount = 1;
+        final int listenerCount = 2;
 
         final CountDownLatch latch = new CountDownLatch( sizeToReturn * listenerCount );
         final Semaphore waitSemaphore = new Semaphore( 0 );
 
 
-        final SlowListener listener1 = new SlowListener( latch, waitSemaphore );
+        final SlowListener slowListener = new SlowListener( latch, waitSemaphore );
+        final EntityVersionDeletedTest runListener = new EntityVersionDeletedTest( latch );
 
-        final List<EntityVersionDeleted> listeners = new ArrayList<>();
 
-        listeners.add( listener1 );
 
         final Id applicationId = new SimpleId( "application" );
 
@@ -526,11 +528,16 @@ public class EntityVersionCleanupTaskTest {
 
         EntityVersionCleanupTask firstTask =
                 new EntityVersionCleanupTask( serializationFig, mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy, listeners, appScope, entityId, version );
+                        mvccEntitySerializationStrategy, Arrays.<EntityVersionDeleted>asList(slowListener), appScope, entityId, version );
+
+
+
+        //change the listeners to one that is just invoked quickly
+
 
         EntityVersionCleanupTask secondTask =
                       new EntityVersionCleanupTask( serializationFig, mvccLogEntrySerializationStrategy,
-                              mvccEntitySerializationStrategy, listeners, appScope, entityId, version );
+                              mvccEntitySerializationStrategy, Arrays.<EntityVersionDeleted>asList(runListener), appScope, entityId, version );
 
 
         final MutationBatch firstBatch = mock( MutationBatch.class );
@@ -548,24 +555,24 @@ public class EntityVersionCleanupTaskTest {
 
 
         //start the task
-        taskExecutor.submit( firstTask );
+        ListenableFuture<Void> future1 =  taskExecutor.submit( firstTask );
 
         //now start another task while the slow running task is running
-        taskExecutor.submit( secondTask );
+        ListenableFuture<Void> future2 =  taskExecutor.submit( secondTask );
 
         //get the second task, we shouldn't have been able to queue it, therefore it should just run in process
-        secondTask.get();
+        future2.get();
 
         /**
          * While we're not done, release latches every 200 ms
          */
-        while(!firstTask.isDone()) {
+        while(!future1.isDone()) {
             Thread.sleep( 200 );
             waitSemaphore.release( listenerCount );
         }
 
         //wait for the task
-        firstTask.get();
+        future1.get();
 
         //we deleted the version
         //verify we deleted everything

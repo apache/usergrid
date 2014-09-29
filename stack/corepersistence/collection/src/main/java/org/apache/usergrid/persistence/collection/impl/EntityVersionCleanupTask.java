@@ -2,10 +2,8 @@ package org.apache.usergrid.persistence.collection.impl;
 
 
 import java.util.List;
-import java.util.Stack;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.RecursiveTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +18,17 @@ import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIte
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
+
 
 /**
  * Cleans up previous versions from the specified version. Note that this means the version passed in the io event is
  * retained, the range is exclusive.
  */
-public class EntityVersionCleanupTask extends Task<Void> {
+public class EntityVersionCleanupTask implements Task<Void> {
 
     private static final Logger LOG = LoggerFactory.getLogger( EntityVersionCleanupTask.class );
 
@@ -66,21 +69,23 @@ public class EntityVersionCleanupTask extends Task<Void> {
 
 
     @Override
-    public void rejected() {
+    public Void rejected() {
         //Our task was rejected meaning our queue was full.  We need this operation to run,
         // so we'll run it in our current thread
 
         try {
-            executeTask();
+            call();
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Exception thrown in call task", e );
         }
+
+        return null;
     }
 
 
     @Override
-    public Void executeTask() throws Exception {
+    public Void call() throws Exception {
 
 
         final UUID maxVersion = version;
@@ -117,54 +122,46 @@ public class EntityVersionCleanupTask extends Task<Void> {
 
     private void fireEvents() throws ExecutionException, InterruptedException {
 
-        if ( listeners.size() == 0 ) {
+        final int listenerSize = listeners.size();
+
+        if ( listenerSize == 0 ) {
             return;
         }
 
-        //stack to track forked tasks
-        final Stack<RecursiveTask<Void>> tasks = new Stack<>();
-
-
-        //we don't want to fork the final listener, we'll run that in our current thread
-        final int forkedTaskSize = listeners.size() - 1;
-
-
-        //execute all the listeners
-        for ( int i = 0; i < forkedTaskSize; i++ ) {
-
-            final EntityVersionDeleted listener = listeners.get( i );
-
-            final RecursiveTask<Void> task = createTask( listener );
-
-            task.fork();
-
-            tasks.push( task );
+        if ( listenerSize == 1 ) {
+            listeners.get( 0 ).versionDeleted( scope, entityId, version );
+            return;
         }
 
+        LOG.debug( "Started firing {} listeners", listenerSize );
 
-        final RecursiveTask<Void> lastTask = createTask( listeners.get( forkedTaskSize ) );
+        //if we have more than 1, run them on the rx scheduler for a max of 8 operations at a time
+        Observable.from( listeners )
+                  .parallel( new Func1<Observable<EntityVersionDeleted>, Observable<EntityVersionDeleted>>() {
 
-        lastTask.invoke();
+                      @Override
+                      public Observable<EntityVersionDeleted> call(
+                              final Observable<EntityVersionDeleted> entityVersionDeletedObservable ) {
 
+                          return entityVersionDeletedObservable.doOnNext( new Action1<EntityVersionDeleted>() {
+                              @Override
+                              public void call( final EntityVersionDeleted listener ) {
+                                  listener.versionDeleted( scope, entityId, version );
+                              }
+                          } );
+                      }
+                  }, Schedulers.io() ).toBlocking().last();
 
-        //wait for them to complete
-        while ( !tasks.isEmpty() ) {
-            tasks.pop().get();
-        }
+        LOG.debug( "Finished firing {} listeners", listenerSize );
     }
 
 
-    /**
-     * Return the new task to execute
-     */
-    private RecursiveTask<Void> createTask( final EntityVersionDeleted listener ) {
-        return new RecursiveTask<Void>() {
-            @Override
-            protected Void compute() {
-                listener.versionDeleted( scope, entityId, version );
-                return null;
-            }
-        };
+    private static interface ListenerRunner {
+
+        /**
+         * Run the listeners
+         */
+        public void runListeners();
     }
 }
 

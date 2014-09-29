@@ -1,30 +1,14 @@
 package org.apache.usergrid.persistence.core.task;
 
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.RecursiveTask;
 
 
 /**
  * The task to execute
  */
-public interface Task<V, I> extends Callable<V> {
-
-    /**
-     * Get the unique identifier of this task.  This may be used to collapse runnables over a time period in the future
-     */
-    public abstract I getId();
-
-
-    @Override
-    protected V compute() {
-        try {
-            return executeTask();
-        }
-        catch ( Exception e ) {
-            exceptionThrown( e );
-            throw new RuntimeException( e );
-        }
-    }
+public interface Task<V> extends Callable<V> {
 
 
     /**
@@ -40,7 +24,7 @@ public interface Task<V, I> extends Callable<V> {
      * request and process later (lazy repair for instance ) do so.
      *
      */
-    void rejected();
+    V rejected();
 
 
 
