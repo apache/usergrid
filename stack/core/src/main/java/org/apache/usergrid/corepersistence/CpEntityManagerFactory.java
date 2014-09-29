@@ -91,7 +91,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public static final Class<DynamicEntity> APPLICATION_ENTITY_CLASS = DynamicEntity.class;
 
     // The System Application where we store app and org metadata
-    public static final String SYSTEM_APPS_UUID = "b6768a08-b5d5-11e3-a495-10ddb1de66c3";
+    public static final UUID SYSTEM_APP_ID = 
+            UUID.fromString("b6768a08-b5d5-11e3-a495-10ddb1de66c3");
     
     public static final  UUID MANAGEMENT_APPLICATION_ID = 
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
@@ -99,26 +100,41 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public static final  UUID DEFAULT_APPLICATION_ID = 
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
 
-    // Three types of things we store in System Application
+
+    @Deprecated // use system app for these in future
     public static final String SYSTEM_APPS_TYPE = "zzzappszzz";
+
+    @Deprecated 
     public static final String SYSTEM_ORGS_TYPE = "zzzorgszzz";
+    
+    @Deprecated 
     public static final String SYSTEM_PROPS_TYPE = "zzzpropszzz"; 
 
+    @Deprecated // use system app for these in future
     private static final Id systemAppId = 
-         new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE );
-
+         new SimpleId( SYSTEM_APP_ID, SYSTEM_APPS_TYPE );
+    
+    @Deprecated 
     public static final CollectionScope SYSTEM_APPS_SCOPE = 
         new CollectionScopeImpl( systemAppId, systemAppId, SYSTEM_APPS_TYPE );
+
+    @Deprecated 
     public static final IndexScope SYSTEM_APPS_INDEX_SCOPE = 
         new IndexScopeImpl( systemAppId, systemAppId,  SYSTEM_APPS_TYPE);
 
+    @Deprecated 
     public static final CollectionScope SYSTEM_ORGS_SCOPE = 
         new CollectionScopeImpl( systemAppId, systemAppId,  SYSTEM_ORGS_TYPE);
+
+    @Deprecated
     public static final IndexScope SYSTEM_ORGS_INDEX_SCOPE = 
         new IndexScopeImpl( systemAppId, systemAppId, SYSTEM_ORGS_TYPE);
 
+    @Deprecated
     public static final CollectionScope SYSTEM_PROPS_SCOPE = 
         new CollectionScopeImpl( systemAppId, systemAppId, SYSTEM_PROPS_TYPE);
+
+    @Deprecated
     public static final IndexScope SYSTEM_PROPS_INDEX_SCOPE = 
         new IndexScopeImpl( systemAppId, systemAppId, SYSTEM_PROPS_TYPE);
 
@@ -142,16 +158,29 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private static final int REBUILD_PAGE_SIZE = 100;
 
 
-    public CpEntityManagerFactory( 
-            CassandraService cass, CounterUtils counterUtils, boolean skipAggregateCounters ) {
+    public CpEntityManagerFactory(
+            CassandraService cass, CounterUtils counterUtils, boolean skipAggregateCounters) {
 
         this.cass = cass;
         this.counterUtils = counterUtils;
         this.skipAggregateCounters = skipAggregateCounters;
-        if ( skipAggregateCounters ) {
-            logger.warn( "NOTE: Counters have been disabled by configuration..." );
+        if (skipAggregateCounters) {
+            logger.warn("NOTE: Counters have been disabled by configuration...");
         }
-        logger.debug("Created a new CpEntityManagerFactory");
+
+        // if system app does have apps, orgs and props then populate it
+        try {
+            EntityManager em = getEntityManager(SYSTEM_APP_ID);
+            Results orgs = em.searchCollection(em.getApplicationRef(), "organizations", null);
+            if (orgs.isEmpty()) {
+                populateSystemAppsFromEs();
+                populateSystemOrgsFromEs();
+                populateSystemPropsFromEs();
+            }
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Fatal error migrating data", ex);
+        }
     }
     
 
@@ -726,4 +755,143 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             em.flushManagerCaches();
         }
     }
+
+
+    private void populateSystemOrgsFromEs() throws Exception {
+
+        logger.info("Migrating system orgs");
+
+        EntityCollectionManager ecm = getManagerCache()
+                .getEntityCollectionManager(SYSTEM_ORGS_SCOPE);
+        EntityIndex ei = getManagerCache()
+                .getEntityIndex( SYSTEM_ORGS_INDEX_SCOPE );
+
+        EntityManager systemAppEm = getEntityManager(SYSTEM_APP_ID);
+
+        String cursor = null;
+        boolean done = false;
+
+        while ( !done ) {
+
+            Query q = Query.fromQL("select *");
+            q.setCursor( cursor );
+
+            CandidateResults results = ei.search( q );
+            cursor = results.getCursor();
+
+            Iterator<CandidateResult> iter = results.iterator();
+            while ( iter.hasNext() ) {
+
+                CandidateResult cr = iter.next();
+                Entity e = ecm.load( cr.getId() ).toBlockingObservable().last();
+
+                if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
+                    logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
+                        new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
+                            cr.getVersion(), e.getVersion()});
+                    continue;
+                }
+
+                Map<String, Object> entityMap = CpEntityMapUtils.toMap( e );
+                systemAppEm.create("organization", entityMap );
+            }
+
+            if ( cursor == null ) {
+                done = true;
+            }
+        }
+    }
+
+
+    private void populateSystemAppsFromEs() throws Exception {
+
+        logger.info("Migrating system apps");
+
+        EntityCollectionManager ecm = getManagerCache()
+                .getEntityCollectionManager(SYSTEM_APPS_SCOPE );
+        EntityIndex ei = getManagerCache()
+                .getEntityIndex( SYSTEM_APPS_INDEX_SCOPE );
+
+        EntityManager systemAppEm = getEntityManager(SYSTEM_APP_ID);
+
+        String cursor = null;
+        boolean done = false;
+
+        while ( !done ) {
+
+            Query q = Query.fromQL("select *");
+            q.setCursor( cursor );
+
+            CandidateResults results = ei.search( q );
+            cursor = results.getCursor();
+
+            Iterator<CandidateResult> iter = results.iterator();
+            while ( iter.hasNext() ) {
+
+                CandidateResult cr = iter.next();
+                Entity e = ecm.load( cr.getId() ).toBlockingObservable().last();
+
+                if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
+                    logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
+                        new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
+                            cr.getVersion(), e.getVersion()});
+                    continue;
+                }
+
+                Map<String, Object> entityMap = CpEntityMapUtils.toMap( e );
+                systemAppEm.create("application", entityMap );
+            }
+
+            if ( cursor == null ) {
+                done = true;
+            }
+        }
+    }
+
+
+    private void populateSystemPropsFromEs() throws Exception {
+
+        logger.info("Migrating system props");
+
+        EntityCollectionManager ecm = getManagerCache()
+                .getEntityCollectionManager(SYSTEM_PROPS_SCOPE );
+        EntityIndex ei = getManagerCache()
+                .getEntityIndex( SYSTEM_PROPS_INDEX_SCOPE );
+
+        EntityManager systemAppEm = getEntityManager(SYSTEM_APP_ID);
+
+        String cursor = null;
+        boolean done = false;
+
+        while ( !done ) {
+
+            Query q = Query.fromQL("select *");
+            q.setCursor( cursor );
+
+            CandidateResults results = ei.search( q );
+            cursor = results.getCursor();
+
+            Iterator<CandidateResult> iter = results.iterator();
+            while ( iter.hasNext() ) {
+
+                CandidateResult cr = iter.next();
+                Entity e = ecm.load( cr.getId() ).toBlockingObservable().last();
+
+                if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
+                    logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
+                        new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
+                            cr.getVersion(), e.getVersion()});
+                    continue;
+                }
+
+                Map<String, Object> entityMap = CpEntityMapUtils.toMap( e );
+                systemAppEm.create("property", entityMap );
+            }
+
+            if ( cursor == null ) {
+                done = true;
+            }
+        }
+    }
+
 }
