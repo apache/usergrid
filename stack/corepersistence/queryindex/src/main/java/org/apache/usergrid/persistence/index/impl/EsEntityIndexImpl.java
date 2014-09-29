@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -57,10 +58,7 @@ import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
-import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsRequest;
-import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -413,20 +411,20 @@ public class EsEntityIndexImpl implements EntityIndex {
                     order = SortOrder.DESC;
                 }
 
-                String stringFieldName = STRING_PREFIX + sp.getPropertyName(); 
-                FieldSortBuilder sort = SortBuilders
+                final String stringFieldName = STRING_PREFIX + sp.getPropertyName(); 
+                final FieldSortBuilder stringSort = SortBuilders
                     .fieldSort( stringFieldName )
                     .order(order)
                     .ignoreUnmapped(true);
-                srb.addSort( sort );
+                srb.addSort( stringSort );
                 log.debug("   Sort: {} order by {}", stringFieldName, order.toString());
 
-                String numberFieldName = NUMBER_PREFIX + sp.getPropertyName(); 
-                sort = SortBuilders
+                final String numberFieldName = NUMBER_PREFIX + sp.getPropertyName(); 
+                final FieldSortBuilder numberSort = SortBuilders
                     .fieldSort( numberFieldName )
                     .order(order)
                     .ignoreUnmapped(true);
-                srb.addSort( sort );
+                srb.addSort( numberSort );
                 log.debug("   Sort: {} order by {}", numberFieldName, order.toString());
             }
 
@@ -490,12 +488,23 @@ public class EsEntityIndexImpl implements EntityIndex {
         Map<String, Object> entityMap = new HashMap<String, Object>();
 
         for (Object f : entity.getFields().toArray()) {
+
             Field field = (Field) f;
 
             if (f instanceof ListField)  {
                 List list = (List) field.getValue();
                 entityMap.put(field.getName().toLowerCase(),
                         new ArrayList(processCollectionForMap(list)));
+
+                if ( !list.isEmpty() ) {
+                    if ( list.get(0) instanceof String ) {
+                        Joiner joiner = Joiner.on(" ").skipNulls();
+                        String joined = joiner.join(list);
+                        entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
+                            new ArrayList(processCollectionForMap(list)));
+                        
+                    }
+                }
 
             } else if (f instanceof ArrayField) {
                 List list = (List) field.getValue();
@@ -510,6 +519,8 @@ public class EsEntityIndexImpl implements EntityIndex {
             } else if (f instanceof EntityObjectField) {
                 EntityObject eo = (EntityObject)field.getValue();
                 entityMap.put(field.getName().toLowerCase(), entityToMap(eo)); // recursion
+
+            // Add type information as field-name prefixes
 
             } else if (f instanceof StringField) {
 
