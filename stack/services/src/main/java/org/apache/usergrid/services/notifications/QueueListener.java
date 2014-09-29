@@ -40,16 +40,14 @@ public class QueueListener  {
 
     private static final Logger LOG = LoggerFactory.getLogger(QueueListener.class);
 
-    @Autowired
+
     private MetricsFactory metricsService;
 
-    @Autowired
     private ServiceManagerFactory smf;
 
-    @Autowired
     private EntityManagerFactory emf;
 
-    @Autowired
+
     private Properties properties;
 
     private org.apache.usergrid.mq.QueueManager queueManager;
@@ -60,18 +58,16 @@ public class QueueListener  {
 
     private long sleepBetweenRuns = 5000;
 
-    ExecutorService pool;
-    List<Future> futures;
+    private ExecutorService pool;
+    private List<Future> futures;
 
     public  final String MAX_THREADS = "2";
     private Integer batchSize = 1000;
     private String[] queueNames;
 
-    public QueueListener() {
-        pool = Executors.newFixedThreadPool(1);
-    }
+
+
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Properties props){
-        this();
         this.smf = smf;
         this.emf = emf;
         this.metricsService = metricsService;
@@ -79,11 +75,7 @@ public class QueueListener  {
     }
 
     @PostConstruct
-    void init() {
-        run();
-    }
-
-    public void run(){
+    public void start(){
         boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "true"));
 
         if(shouldRun) {
@@ -98,6 +90,11 @@ public class QueueListener  {
 
                 int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
                 futures = new ArrayList<Future>(maxThreads);
+
+                //create our thread pool based on our threadcount.
+
+                pool = Executors.newFixedThreadPool(maxThreads);
+
                 while (threadCount++ < maxThreads) {
                     LOG.info("QueueListener: Starting thread {}.", threadCount);
                     Runnable task = new Runnable() {
@@ -124,14 +121,15 @@ public class QueueListener  {
 
     private void execute(){
         Thread.currentThread().setName("Notifications_Processor"+UUID.randomUUID());
-        svcMgr = smf.getServiceManager(smf.getManagementAppId());
-        queueManager = svcMgr.getQueueManager();
+
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
         LOG.info("QueueListener: Starting execute process.");
 
         // run until there are no more active jobs
         while ( true ) {
             try {
+                svcMgr = smf.getServiceManager(smf.getManagementAppId());
+                queueManager = svcMgr.getQueueManager();
                 String queueName = ApplicationQueueManager.getRandomQueue(queueNames);
                 QueueResults results = getDeliveryBatch(queueManager,queueName);
                 LOG.info("QueueListener: retrieved batch of {} messages", results.size());
@@ -211,6 +209,8 @@ public class QueueListener  {
         for(Future future : futures){
             future.cancel(true);
         }
+
+        pool.shutdownNow();
     }
 
     private  QueueResults getDeliveryBatch(org.apache.usergrid.mq.QueueManager queueManager,String queuePath) throws Exception {

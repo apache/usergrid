@@ -108,7 +108,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
         listener.DEFAULT_SLEEP = 200;
 
-        listener.run();
+        listener.start();
     }
 
     @After

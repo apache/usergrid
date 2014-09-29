@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ import org.apache.usergrid.cassandra.Concurrent;
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
 @Concurrent()
+@Ignore("Kills embedded cassandra")
 public class PerformanceEntityReadTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(PerformanceEntityReadTest.class );
 
