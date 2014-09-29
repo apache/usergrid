@@ -24,12 +24,14 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.DynamicEntity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.Results;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
@@ -45,6 +47,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
+import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -93,7 +96,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public static final  UUID DEFAULT_APPLICATION_ID = 
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
 
-
     // Three types of things we store in System Application
     public static final String SYSTEM_APPS_TYPE = "zzzappszzz";
     public static final String SYSTEM_ORGS_TYPE = "zzzorgszzz";
@@ -102,9 +104,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private static final Id systemAppId = 
          new SimpleId( UUID.fromString(SYSTEM_APPS_UUID), SYSTEM_APPS_TYPE );
 
-    // Scopes for those three types of things
-
-    public static final CollectionScope SYSTEM_APP_SCOPE = 
+    public static final CollectionScope SYSTEM_APPS_SCOPE = 
         new CollectionScopeImpl( systemAppId, systemAppId, SYSTEM_APPS_TYPE );
     public static final IndexScope SYSTEM_APPS_INDEX_SCOPE = 
         new IndexScopeImpl( systemAppId, systemAppId,  SYSTEM_APPS_TYPE);
@@ -135,6 +135,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     CounterUtils counterUtils;
 
     private boolean skipAggregateCounters;
+
+    private static final int REBUILD_PAGE_SIZE = 100;
 
 
     public CpEntityManagerFactory( 
@@ -281,7 +283,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // create app in system app scope
         {
             EntityCollectionManager ecm = getManagerCache()
-                    .getEntityCollectionManager( SYSTEM_APP_SCOPE );
+                    .getEntityCollectionManager(SYSTEM_APPS_SCOPE );
             EntityIndex eci = getManagerCache()
                     .getEntityIndex( SYSTEM_APPS_INDEX_SCOPE );
 
@@ -354,24 +356,45 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Metered(group = "core", name = "EntityManagerFactory_getApplication")
     public Map<String, UUID> getApplications() throws Exception {
 
-        Query q = Query.fromQL("select *");
-
         EntityCollectionManager em = getManagerCache()
-                .getEntityCollectionManager( SYSTEM_APP_SCOPE );
+                .getEntityCollectionManager(SYSTEM_APPS_SCOPE );
         EntityIndex ei = getManagerCache()
                 .getEntityIndex( SYSTEM_APPS_INDEX_SCOPE );
 
-        CandidateResults results = ei.search( q );
-
         Map<String, UUID> appMap = new HashMap<String, UUID>();
 
-        Iterator<CandidateResult> iter = results.iterator();
-        while ( iter.hasNext() ) {
-            CandidateResult cr = iter.next();
-            Entity e = em.load( cr.getId() ).toBlockingObservable().last();
-            appMap.put( 
-                (String)e.getField(PROPERTY_NAME).getValue(), 
-                (UUID)e.getField(PROPERTY_UUID).getValue() );
+        String cursor = null;
+        boolean done = false;
+
+        while ( !done ) {
+
+            Query q = Query.fromQL("select *");
+            q.setCursor( cursor );
+
+            CandidateResults results = ei.search( q );
+            cursor = results.getCursor();
+
+            Iterator<CandidateResult> iter = results.iterator();
+            while ( iter.hasNext() ) {
+
+                CandidateResult cr = iter.next();
+                Entity e = em.load( cr.getId() ).toBlockingObservable().last();
+
+                if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
+                    logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
+                        new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
+                            cr.getVersion(), e.getVersion()});
+                    continue;
+                }
+                
+                appMap.put( 
+                    (String)e.getField(PROPERTY_NAME).getValue(), 
+                    (UUID)e.getField("applicationUuid").getValue() );
+            }
+
+            if ( cursor == null ) {
+                done = true;
+            }
         }
 
         return appMap;
@@ -435,7 +458,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
 
         // intentionally going only one-level deep into fields and treating all 
-        // values as strings because that is all we need for service properties.'
+        // values as strings because that is all we need for service properties
         for ( String key : properties.keySet() ) {
             propsEntity.setField( new StringField(key, properties.get(key)) );
         }
@@ -556,6 +579,131 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             new SimpleId( getDefaultAppId(), "application"), "dummy");
         managerCache.getEntityIndex( dscope ).refresh();
     }
+
+
+    public void rebuildInternalIndexes() throws Exception {
+
+        logger.info("Rebuilding system apps index");
+        rebuildIndexScope(
+                CpEntityManagerFactory.SYSTEM_APPS_SCOPE, 
+                CpEntityManagerFactory.SYSTEM_APPS_INDEX_SCOPE );
+
+        logger.info("Rebuilding system orgs index");
+        rebuildIndexScope(
+                CpEntityManagerFactory.SYSTEM_ORGS_SCOPE,
+                CpEntityManagerFactory.SYSTEM_ORGS_INDEX_SCOPE );
+
+        logger.info("Rebuilding system props index");
+        rebuildIndexScope(
+                CpEntityManagerFactory.SYSTEM_PROPS_SCOPE,
+                CpEntityManagerFactory.SYSTEM_PROPS_INDEX_SCOPE );
+
+        logger.info("Rebuilding management application index");
+        rebuildApplicationIndex( MANAGEMENT_APPLICATION_ID );
+
+        logger.info("Rebuilding default application index");
+        rebuildApplicationIndex( DEFAULT_APPLICATION_ID );
+    }
+
+
+    private void rebuildIndexScope( CollectionScope cs, IndexScope is ) {
+
+        logger.info("Rebuild index scope for {}:{}:{}", new Object[] {
+            cs.getOwner(), cs.getApplication(), cs.getName()
+        });
+
+        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( cs );
+        EntityIndex ei = managerCache.getEntityIndex( is );
+
+        Query q = Query.fromQL("select *");
+        CandidateResults results = ei.search( q );
+
+        Map<String, UUID> appMap = new HashMap<String, UUID>();
+
+        Iterator<CandidateResult> iter = results.iterator();
+        while (iter.hasNext()) {
+            CandidateResult cr = iter.next();
+
+            Entity entity = ecm.load(cr.getId()).toBlockingObservable().last();
+
+            if (cr.getVersion().compareTo( entity.getVersion()) < 0 ) {
+                logger.warn("    Ignoring stale version uuid:{} type:{} version:{} latest version:{}",
+                    new Object[]{
+                        cr.getId().getUuid(),
+                        cr.getId().getType(),
+                        cr.getVersion(),
+                        entity.getVersion()
+                    });
+                continue;
+            }
+
+            logger.info("    Updating CP Entity type: {} with id: {} for app id: {}",
+                new Object[]{cr.getId().getType(), cr.getId().getUuid(),
+                    CpEntityManagerFactory.SYSTEM_APPS_SCOPE.getApplication().getUuid()
+                }
+            );
+
+            ei.index(entity);
+        }
+
+    }
+
+
+    public void rebuildApplicationIndex( UUID appId ) throws Exception {
+
+        EntityManager em = getEntityManager( appId );
+
+        Set<String> collections = em.getApplicationCollections();
+
+        logger.debug("For app {} found {} collections: {}", new Object[] {
+            appId, collections.size(), collections });
+
+        for ( String collection : collections ) {
+            rebuildCollectionIndex( appId, collection );
+        }
+    }
+
+
+    public void rebuildCollectionIndex( UUID appId, String collectionName ) throws Exception {
+
+        logger.info( "Reindexing collection: {} for app id: {}", collectionName, appId );
+
+        EntityManager em = getEntityManager( appId );
+        Application app = em.getApplication();
+
+        // search for all orgs
+
+        Query query = new Query();
+        query.setLimit(REBUILD_PAGE_SIZE );
+        Results r = null;
+
+        do {
+
+            r = em.searchCollection( app, collectionName, query );
+
+            for ( org.apache.usergrid.persistence.Entity entity : r.getEntities() ) {
+
+                logger.info( "    Updating Entity name {}, type: {}, id: {} in app id: {}", new Object[] {
+                        entity.getName(), entity.getType(), entity.getUuid(), appId
+                } );
+
+                try {
+                    em.update( entity );
+                }
+                catch ( DuplicateUniquePropertyExistsException dupee ) {
+                    logger.error( "Duplicate property for type: {} with id: {} for app id: {}.  "
+                            + "Property name: {} , value: {}", new Object[] {
+                            entity.getType(), entity.getUuid(), appId, dupee.getPropertyName(), 
+                            dupee.getPropertyValue()
+                    } );
+                }
+            }
+
+            query.setCursor( r.getCursor() );
+        }
+        while ( r != null && r.size() == REBUILD_PAGE_SIZE );
+    }
+
 
     @Override
     public void flushEntityManagerCaches() {

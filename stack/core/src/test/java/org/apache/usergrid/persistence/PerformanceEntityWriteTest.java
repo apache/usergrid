@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ import com.codahale.metrics.Slf4jReporter;
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
 @Concurrent()
+@Ignore("Kills embedded cassandra")
 public class PerformanceEntityWriteTest extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( PerformanceEntityWriteTest.class );
 

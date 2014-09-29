@@ -58,6 +58,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -225,8 +226,11 @@ public class EntityIndexTest extends BaseIT {
     }
 
 
+    /**
+     * Tests that Entity-to-map and Map-to-entity round trip works.
+     */
     @Test
-    public void testEntityToMap() throws IOException {
+    public void testEntityIndexMapUtils() throws IOException {
 
         InputStream is = this.getClass().getResourceAsStream( "/sample-small.json" );
         ObjectMapper mapper = new ObjectMapper();
@@ -237,15 +241,14 @@ public class EntityIndexTest extends BaseIT {
             Map<String, Object> map1 = ( Map<String, Object> ) o;
 
             // convert map to entity
-
             Entity entity1 = EntityIndexMapUtils.fromMap( map1 );
 
             // convert entity back to map
             Map map2 = EntityIndexMapUtils.toMap( entity1 );
 
-            // the two maps should be the same except for six new system properties
+            // the two maps should be the same 
             Map diff = Maps.difference( map1, map2 ).entriesDiffering();
-            assertEquals( 6, diff.size() );
+            assertEquals( 0, diff.size() );
         }
     }
 
@@ -325,7 +328,6 @@ public class EntityIndexTest extends BaseIT {
         Query query = new Query();
         query.addEqualityFilter( "username", "edanuff" );
         CandidateResults r = ei.search( query );
-
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
         ei.deindex( user.getId(), user.getVersion() );
@@ -338,6 +340,71 @@ public class EntityIndexTest extends BaseIT {
         r = ei.search( query );
 
         assertFalse( r.iterator().hasNext() );
+    }
+
+    @Test 
+    public void multiValuedTypes() {
+
+        Id appId = new SimpleId( "entityindextest" );
+        Id ownerId = new SimpleId( "multivaluedtype" );
+        IndexScope appScope = new IndexScopeImpl( appId, ownerId, "user" );
+
+        EntityIndex ei = cif.createEntityIndex( appScope );
+
+        // Bill has favorites as string, age as string and retirement goal as number
+        Map billMap = new HashMap() {{
+            put( "username", "bill" );
+            put( "email", "bill@example.com" );
+            put( "age", "thirtysomething");
+            put( "favorites", "scallops, croquet, wine");
+            put( "retirementGoal", 100000);
+        }};
+        Entity bill = EntityIndexMapUtils.fromMap( billMap );
+        EntityUtils.setId( bill, new SimpleId( UUIDGenerator.newTimeUUID(), "user"  ) );
+        EntityUtils.setVersion( bill, UUIDGenerator.newTimeUUID() );
+        ei.index( bill );
+
+        // Fred has age as int, favorites as object and retirement goal as object
+        Map fredMap = new HashMap() {{
+            put( "username", "fred" );
+            put( "email", "fred@example.com" );
+            put( "age", 41 );
+            put( "favorites", new HashMap<String, Object>() {{
+                put("food", "cheezewiz"); 
+                put("sport", "nascar"); 
+                put("beer", "budwizer"); 
+            }});
+            put( "retirementGoal", new HashMap<String, Object>() {{
+                put("car", "Firebird"); 
+                put("home", "Mobile"); 
+            }});
+        }};
+        Entity fred = EntityIndexMapUtils.fromMap( fredMap );
+        EntityUtils.setId( fred, new SimpleId( UUIDGenerator.newTimeUUID(), "user"  ) );
+        EntityUtils.setVersion( fred, UUIDGenerator.newTimeUUID() );
+        ei.index( fred );
+
+        ei.refresh();
+
+        Query query = new Query();
+        query.addEqualityFilter( "username", "bill" );
+        CandidateResults r = ei.search( query );
+        assertEquals( bill.getId(), r.get( 0 ).getId() );
+
+        query = new Query();
+        query.addEqualityFilter( "username", "fred" );
+        r = ei.search( query );
+        assertEquals( fred.getId(), r.get( 0 ).getId() );
+
+        query = new Query();
+        query.addEqualityFilter( "age", 41 );
+        r = ei.search( query );
+        assertEquals( fred.getId(), r.get( 0 ).getId() );
+
+        query = new Query();
+        query.addEqualityFilter( "age", "thirtysomething" );
+        r = ei.search( query );
+        assertEquals( bill.getId(), r.get( 0 ).getId() );
     }
 }
 

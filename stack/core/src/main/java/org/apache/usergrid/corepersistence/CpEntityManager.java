@@ -503,6 +503,7 @@ public class CpEntityManager implements EntityManager {
             logger.debug("About to Write {}:{} version {}", new Object[] { 
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
 
+            // using ecm.update() here causes Core tests to fail
             cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
 
             logger.debug("Wrote {}:{} version {}", new Object[] { 

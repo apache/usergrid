@@ -47,6 +47,24 @@ What Tools are available?
 ---
 This README.md only documents two of the tools, WarehouseExport and WarehouseUpsert. You will have to seek documentation else where or look at the source code (in the org.apache.usergrid.tools package) to understand what other tools are avialable.
 
+Enabling additional logging for debugging purposes
+---
+
+If you want to control what is logged by the Usergrid Tools, you must provide your own log4j.configuration file.  When you start the tool with the java command, add the following option right after the word "java" and (of course) replace /path/to with the real path to your log4j file.
+
+    -Dlog4j.configuration=file:/path/to/log4j.properties
+
+Here is a simple log4j.properties file that will turn on DEBUG logging for the Usergrid Tools:
+
+    log4j.rootLogger=WARN,stdout
+    log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+    log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+    log4j.appender.stdout.layout.ConversionPattern=%d %p (%t) [%c] - %m%n
+
+    log4j.category.org.apache.usergrid.tools=DEBUG
+    log4j.category.org.apache.usergrid=INFO
+    log4j.logger.org.apache.usergrid.persistence.cassandra=WARN
+
 
 Redshift Warehouse Export and Upsert
 ===
