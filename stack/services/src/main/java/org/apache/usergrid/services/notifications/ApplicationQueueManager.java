@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ApplicationQueueManager implements QueueManager {
 
-    public static  String DEFAULT_QUEUE_NAME = "notifications/queuelistenerv1_23;notifications/queuelistenerv1_24;notifications/queuelistenerv1_25";
+    public static  String DEFAULT_QUEUE_NAME = "notifications/queuelistenerv1_34;notifications/queuelistenerv1_35;notifications/queuelistenerv1_36";
     public static final String DEFAULT_QUEUE_PROPERTY = "usergrid.notifications.listener.queueName";
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
 
