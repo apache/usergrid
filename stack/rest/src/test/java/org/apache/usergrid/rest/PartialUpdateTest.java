@@ -23,12 +23,13 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.ws.rs.core.MediaType;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 
 /**
@@ -40,15 +41,23 @@ public class PartialUpdateTest extends AbstractRestIT {
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
+    double latitude=37.772837;
+    double longitude=-122.409895;
+
+    Map<String, Object> geolocation = new LinkedHashMap<String, Object>() {{
+        put("latitude", latitude);
+        put("longitude", longitude);
+    }};
+
     @Test 
     public void testPartialUpdate() throws IOException {
 
         // create user bart
-
         Map<String, Object> userProperties = new LinkedHashMap<String, Object>() {{
             put( "username", "bart" );
             put( "employer", "Brawndo" );
             put( "email", "bart@personal-email.example.com" );
+            put( "location", geolocation);
         }};
 
         JsonNode userNode = mapper.readTree( 
@@ -64,22 +73,29 @@ public class PartialUpdateTest extends AbstractRestIT {
 
         refreshIndex( "test-organization", "test-app" );
 
-        // update user bart passing only an update to his employer
+        // update user bart passing only an update to a property
+        for(int i=1; i<20; i++) {
+            geolocation.put("latitude", latitude += 0.00001);
+            geolocation.put("longitude", longitude += 0.00001);
+            Map<String, Object> updateProperties = new LinkedHashMap<String, Object>() {{
+                put("employer", "Initech");
+                put("location", geolocation);
+            }};
 
-        Map<String, Object> updateProperties = new LinkedHashMap<String, Object>() {{
-            put( "employer", "Initech" );
-        }};
+            try {
+                JsonNode updatedNode = mapper.readTree(
+                        resource().path("/test-organization/test-app/user/" + uuid)
+                                .queryParam("access_token", adminAccessToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .type(MediaType.APPLICATION_JSON)
+                                .put(String.class, updateProperties));
+                assertNotNull(updatedNode);
+                assertNotEquals(latitude, updatedNode.get("entities").get(0).get("location").get("latitude"));
+                assertNotEquals(longitude, updatedNode.get("entities").get(0).get("location").get("longitude"));
 
-        try {
-            JsonNode updatedNode = mapper.readTree( 
-                resource().path( "/test-organization/test-app/user/" + uuid )
-                    .queryParam( "access_token", adminAccessToken )
-                    .accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON )
-                    .put( String.class, updateProperties ));
-
-        } catch ( UniformInterfaceException uie ) {
-            fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
+            } catch (UniformInterfaceException uie) {
+                fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
+            }
         }
     }
 }
