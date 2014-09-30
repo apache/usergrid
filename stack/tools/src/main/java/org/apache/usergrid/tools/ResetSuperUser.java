@@ -90,17 +90,6 @@ public class ResetSuperUser extends ToolBase {
     public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
-        // force the props to be set
-        AccountCreationProps props =  ( ( ManagementServiceImpl ) managementService ).getAccountCreationProps();
-
-        props.setProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED, "true" );
-        props.setProperty( PROPERTIES_SYSADMIN_LOGIN_NAME, line.getOptionValue( "username" ) );
-        props.setProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL, line.getOptionValue( "email" ) );
-        props.setProperty( PROPERTIES_SYSADMIN_LOGIN_PASSWORD, line.getOptionValue( "password" ) );
-
-
-
-
         System.out.println( "Starting superuser provision" );
 
         try {
