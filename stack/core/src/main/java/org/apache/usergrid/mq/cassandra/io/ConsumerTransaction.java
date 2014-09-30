@@ -230,7 +230,7 @@ public class ConsumerTransaction extends NoTransactionSearch
 
             List<TransactionPointer> pointers = getConsumerIds( queueId, consumerId, params, startTimeUUID );
 
-            TransactionPointer pointer = null;
+            TransactionPointer pointer;
 
             int lastTransactionIndex = -1;
 
