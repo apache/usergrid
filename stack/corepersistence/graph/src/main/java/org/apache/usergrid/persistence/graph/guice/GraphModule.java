@@ -154,6 +154,7 @@ public class GraphModule extends AbstractModule {
     @Inject
     @Singleton
     @Provides
+    @GraphTaskExecutor
     public TaskExecutor graphTaskExecutor(final GraphFig graphFig){
         return new NamedTaskExecutorImpl( "graphTaskExecutor",  graphFig.getShardAuditWorkerCount(), graphFig.getShardAuditWorkerQueueSize()  );
     }

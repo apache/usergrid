@@ -100,6 +100,7 @@ public class CollectionModule extends AbstractModule {
     @Inject
     @Singleton
     @Provides
+    @CollectionTaskExecutor
     public TaskExecutor collectionTaskExecutor(final SerializationFig serializationFig){
         return new NamedTaskExecutorImpl( "collectiontasks", serializationFig.getTaskPoolThreadSize(), serializationFig.getTaskPoolQueueSize() );
     }
