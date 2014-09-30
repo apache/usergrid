@@ -217,8 +217,9 @@ public class QueueListener  {
         QueueQuery qq = new QueueQuery();
         qq.setLimit(this.getBatchSize());
         qq.setTimeout(MESSAGE_TRANSACTION_TIMEOUT);
+        LOG.debug("getting from queue {} ", queuePath);
         QueueResults results = queueManager.getFromQueue(queuePath, qq);
-        LOG.debug("got batch of {} devices", results.size());
+        LOG.debug("got batch of {} devices from queue {} ", results.size(), queuePath);
         return results;
     }
 
