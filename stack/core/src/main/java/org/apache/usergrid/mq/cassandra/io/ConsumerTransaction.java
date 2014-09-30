@@ -208,9 +208,9 @@ public class ConsumerTransaction extends NoTransactionSearch
 
             long startTime = System.currentTimeMillis();
 
-            UUID startTimeUUID = UUIDUtils.newTimeUUID( startTime, 0 );
+            UUID startTimeUUID = UUIDUtils.newTimeUUID( startTime, 0 );   //this exact moment in time + clockseq + node
 
-            QueueBounds bounds = getQueueBounds( queueId );
+            QueueBounds bounds = getQueueBounds( queueId );  //first write in time, most write in time
 
             //queue has never been written to
             if ( bounds == null )
@@ -223,6 +223,14 @@ public class ConsumerTransaction extends NoTransactionSearch
             bounds = new QueueBounds( bounds.getOldest(), startTimeUUID );
 
             SearchParam params = getParams( queueId, consumerId, query );
+
+            //if startId is greater than our max, we disregard it and reset to now because we've advanced beyond
+            //"now"
+            if( params.startId != null && UUIDUtils.compare( params.startId, startTimeUUID ) > 0){
+                logger.warn( "Our cursor has advanced beyond the end of the queue due to transactions.  Was {}, resetting to {}", params.startId, startTimeUUID );
+                params = new SearchParam( startTimeUUID, params.reversed, false, params.limit );
+            }
+
 
             List<UUID> ids = getQueueRange( queueId, bounds, params );
 
@@ -284,6 +292,9 @@ public class ConsumerTransaction extends NoTransactionSearch
             // the
             // last read messages uuid, whichever is greater
             UUID lastReadId = UUIDUtils.max( lastReadTransactionPointer, lastId );
+
+            //we can only store the min of the queue Id, beyond that we'll cause errors
+            lastReadId = UUIDUtils.min( lastReadId, bounds.getNewest() );
 
             writeClientPointer( queueId, consumerId, lastReadId );
         }
