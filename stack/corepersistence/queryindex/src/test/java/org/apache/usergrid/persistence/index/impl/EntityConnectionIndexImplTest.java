@@ -71,8 +71,6 @@ public class EntityConnectionIndexImplTest extends BaseIT {
     @Inject
     public EntityIndexFactory ecif;
 
-
-
     @Test
     public void testBasicOperation() throws IOException {
 

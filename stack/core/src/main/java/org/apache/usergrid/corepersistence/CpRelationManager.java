@@ -230,7 +230,7 @@ public class CpRelationManager implements RelationManager {
         }
         
         this.cpHeadEntity = ecm.load( new SimpleId( 
-            headEntity.getUuid(), headEntity.getType() )).toBlockingObservable().last();
+            headEntity.getUuid(), headEntity.getType() )).toBlocking().lastOrDefault(null);
 
         // commented out because it is possible that CP entity has not been created yet
         Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
@@ -586,11 +586,13 @@ public class CpRelationManager implements RelationManager {
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
-        Observable<String> str = gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(),null , null ));
+        Observable<String> str = gm.getEdgeTypesFromSource( 
+                new SimpleSearchEdgeType( cpHeadEntity.getId(),null , null ));
 
         Iterator<String> iter = str.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {
-            indexes.add( iter.next() );
+            String edgeType = iter.next();
+            indexes.add( getCollectionName( edgeType ) );
         }
 
         return indexes;
@@ -635,7 +637,13 @@ public class CpRelationManager implements RelationManager {
 
     public Entity addToCollection(String collName, EntityRef itemRef, boolean connectBack ) throws Exception {
 
-        Entity itemEntity = em.get( itemRef );
+        // don't fetch entity if we've already got one
+        final Entity itemEntity;
+        if ( itemRef instanceof Entity ) {
+            itemEntity = (Entity)itemRef;
+        } else {
+            itemEntity = em.get( itemRef );
+        }
 
         if ( itemEntity == null ) {
             return null;
@@ -682,6 +690,7 @@ public class CpRelationManager implements RelationManager {
                 itemRef.getType(), itemRef.getUuid() });
         UUID timeStampUuid =   memberEntity.getId().getUuid() != null &&  UUIDUtils.isTimeBased( memberEntity.getId().getUuid()) ?  memberEntity.getId().getUuid() : UUIDUtils.newTimeUUID();
         long uuidHash =    UUIDUtils.getUUIDLong(timeStampUuid);
+
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge(
             cpHeadEntity.getId(),
@@ -963,6 +972,50 @@ public class CpRelationManager implements RelationManager {
         CandidateResults crs = ei.search( query );
 
         return buildResults( query, crs, collName );
+
+//        // Because of possible stale entities, which are filtered out by buildResults(), 
+//        // we loop until the we've got enough results to satisfy the query limit. 
+//
+//        int maxQueries = 10; // max re-queries to satisfy query limit
+//
+//        Results results = null;
+//        int queryCount = 0;
+//        int originalLimit = query.getLimit();
+//        boolean satisfied = false;
+//
+//        while ( !satisfied && queryCount++ < maxQueries ) {
+//
+//            CandidateResults crs = ei.search( query );
+//
+//            if ( results == null ) {
+//                results = buildResults( query, crs, collName );
+//
+//            } else {
+//                Results newResults = buildResults( query, crs, collName );
+//                results.merge( newResults );
+//            }
+//
+//            if ( crs.isEmpty() ) { // no more results
+//                satisfied = true;
+//
+//            } else if ( results.size() == query.getLimit() )  { // got what we need
+//                satisfied = true;
+//
+//            } else if ( crs.hasCursor() ) {
+//                satisfied = false;
+//
+//                // need to query for more
+//                // ask for just what we need to satisfy, don't want to exceed limit
+//                query.setCursor( results.getCursor() );
+//                query.setLimit( originalLimit - results.size() );
+//
+//                logger.warn("Satisfy query limit {}, new limit {} query count {}", new Object[] {
+//                    originalLimit, query.getLimit(), queryCount 
+//                });
+//            }
+//        }
+//
+//        return results;
     }
 
 
@@ -1574,6 +1627,8 @@ public class CpRelationManager implements RelationManager {
 
     private Results buildResults(Query query, CandidateResults crs, String collName ) {
 
+        logger.debug("buildResults() for {} from {} candidates", collName, crs.size());
+
         Results results = null;
 
         if ( query.getLevel().equals( Level.IDS )) {
@@ -1644,9 +1699,9 @@ public class CpRelationManager implements RelationManager {
                 }
 
                 if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
-                    logger.debug("Stale version uuid:{} type:{} version:{} latest version:{}", 
-                        new Object[] {cr.getId().getUuid(), cr.getId().getType(), cr.getVersion(), 
-                            e.getVersion() });
+                    logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
+                        new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
+                            cr.getVersion(), e.getVersion()});
                     continue;
                 }
 
@@ -1688,7 +1743,7 @@ public class CpRelationManager implements RelationManager {
         results.setCursor( crs.getCursor() );
         results.setQueryProcessor( new CpQueryProcessor(em, query, headEntity, collName) );
 
-        logger.debug("Returning results size {}", results.getIds().size() );
+        logger.debug("Returning results size {}", results.size() );
 
         return results;
     }

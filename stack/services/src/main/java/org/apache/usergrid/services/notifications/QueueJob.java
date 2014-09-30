@@ -52,6 +52,8 @@ public class QueueJob extends OnlyOnceJob {
     @Autowired
     private ServiceManagerFactory smf;
 
+    static final long BATCH_DEATH_PERIOD = 10 * 60 * 1000;
+
     @Autowired
     private EntityManagerFactory emf;
     private Histogram histogram;
@@ -120,7 +122,7 @@ public class QueueJob extends OnlyOnceJob {
 
     @Override
     protected long getDelay( JobExecution execution ) throws Exception {
-        return TaskManager.BATCH_DEATH_PERIOD;
+        return BATCH_DEATH_PERIOD;
     }
 
 

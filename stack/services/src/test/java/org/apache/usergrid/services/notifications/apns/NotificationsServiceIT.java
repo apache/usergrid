@@ -69,6 +69,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Override
     @Before
     public void before() throws Exception {
+        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString()+";"+"notifications/test/" + UUID.randomUUID().toString();
+
         super.before();
         // create apns notifier //
         app.clear();
@@ -128,9 +130,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         ns.TEST_PATH_QUERY = pathQuery;
 
-        ApplicationQueueManager.QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString();
         listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
-        listener.run();
+        listener.DEFAULT_SLEEP = 200;
+        listener.start();
     }
 
     @After
@@ -753,8 +755,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         final int NUM_DEVICES = 50;
         // perform push //
-        int oldBatchSize = ApplicationQueueManager.BATCH_SIZE;
-        ApplicationQueueManager.BATCH_SIZE = 10;
+        int oldBatchSize = listener.getBatchSize();
+        listener.setBatchSize(10);
 
         app.clear();
         app.put("name", UUID.randomUUID().toString());
@@ -793,7 +795,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         try {
             scheduleNotificationAndWait(notification);
         } finally {
-            ApplicationQueueManager.BATCH_SIZE = oldBatchSize;
+            listener.setBatchSize( oldBatchSize);
         }
 
         // check receipts //

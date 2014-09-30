@@ -35,8 +35,6 @@ import org.apache.usergrid.persistence.index.query.tree.CpQueryFilterParser;
 import org.apache.usergrid.persistence.query.ir.AndNode;
 import org.apache.usergrid.persistence.query.ir.NotNode;
 import org.apache.usergrid.persistence.query.ir.OrNode;
-import org.apache.usergrid.persistence.query.ir.OrderByNode;
-import org.apache.usergrid.persistence.query.ir.QueryNode;
 import org.apache.usergrid.persistence.query.ir.QuerySlice;
 import org.apache.usergrid.persistence.query.ir.SliceNode;
 import org.apache.usergrid.persistence.query.ir.WithinNode;

@@ -14,9 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest.management.users;
+
+package org.apache.usergrid.rest.management;
 
 
+/**
+ * Created by ApigeeCorporation on 9/17/14.
+ */
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -27,13 +31,15 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.core.MediaType;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang.StringUtils;
+
 import org.apache.usergrid.management.AccountCreationProps;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.MockImapClient;
@@ -50,51 +56,163 @@ import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import org.apache.commons.lang.StringUtils;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.representation.Form;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_EMAIL;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
-/** @author zznate */
-public class MUUserResourceIT extends AbstractRestIT {
-    private Logger LOG = LoggerFactory.getLogger( MUUserResourceIT.class );
+/**
+ * Contains all tests relating to Admin Users
+ */
+public class AdminUsersIT extends AbstractRestIT {
+
+    //Used for all MUUserResourceITTests
+    private Logger LOG = LoggerFactory.getLogger( AdminUsersIT.class );
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
+    public AdminUsersIT() throws Exception {
+
+    }
+
+
+
+
     /**
-     * Tests mixed case creation of an administrative user, and failures to authenticate against 
-     * management interfaces when case is different from user creation case.
-     * <p/>
-     * From USERGRID-2075
+     * Test if we can reset our password as an admin
      */
+    @Test
+    public void setSelfAdminPasswordAsAdmin() throws IOException {
+
+        String newPassword = "foo";
+
+        Map<String, String> data = new HashMap<String, String>();
+        data.put( "newpassword", newPassword );
+        data.put( "oldpassword", "test" );
+
+        // change the password as admin. The old password isn't required
+        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
+                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
+
+        assertNull( getError( node ) );
+
+        refreshIndex("test-organization", "test-app");
+
+        adminAccessToken = mgmtToken( "test", newPassword );
+
+        data.put( "oldpassword", newPassword );
+        data.put( "newpassword", "test" );
+
+        node = mapper.readTree( resource().path( "/management/users/test/password" ).queryParam( "access_token", adminAccessToken )
+                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                          .post( String.class, data ));
+
+        assertNull( getError( node ) );
+    }
+
+
+    @Test
+    public void passwordMismatchErrorAdmin() {
+        String origPassword = "foo";
+        String newPassword = "bar";
+
+        Map<String, String> data = new HashMap<String, String>();
+        data.put( "newpassword", origPassword );
+
+        // now change the password, with an incorrect old password
+
+        data.put( "oldpassword", origPassword );
+        data.put( "newpassword", newPassword );
+
+        ClientResponse.Status responseStatus = null;
+
+        try {
+            resource().path( "/management/users/test/password" ).accept( MediaType.APPLICATION_JSON )
+                      .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data );
+        }
+        catch ( UniformInterfaceException uie ) {
+            responseStatus = uie.getResponse().getClientResponseStatus();
+        }
+
+        assertNotNull( responseStatus );
+
+        assertEquals( ClientResponse.Status.BAD_REQUEST, responseStatus );
+    }
+
+
+    @Test
+    public void setAdminPasswordAsSysAdmin() throws IOException {
+
+        String superToken = superAdminToken();
+
+        String newPassword = "foo";
+
+        Map<String, String> data = new HashMap<String, String>();
+        data.put( "newpassword", newPassword );
+
+        // change the password as admin. The old password isn't required
+        JsonNode node = mapper.readTree( resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
+                                                   .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                                   .post( String.class, data ));
+
+        assertNull( getError( node ) );
+
+        refreshIndex("test-organization", "test-app");
+
+        // log in with the new password
+        String token = mgmtToken( "test", newPassword );
+
+        assertNotNull( token );
+
+        data.put( "newpassword", "test" );
+
+        // now change the password back
+        node = mapper.readTree( resource().path( "/management/users/test/password" ).queryParam( "access_token", superToken )
+                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                          .post( String.class, data ));
+
+        assertNull( getError( node ) );
+    }
+
+    @Test
+    public void mgmtUserFeed() throws Exception {
+        JsonNode userdata = mapper.readTree( resource().path( "/management/users/test@usergrid.com/feed" )
+                                                       .queryParam( "access_token", adminAccessToken )
+                                                       .accept( MediaType.APPLICATION_JSON ).get( String.class ));
+        assertTrue( StringUtils.contains( this.getEntity( userdata, 0 ).get( "title" ).asText(),
+                "<a href=\"mailto:test@usergrid.com\">" ) );
+    }
+
+    //everything below is MUUserResourceIT
+
     @Test
     public void testCaseSensitivityAdminUser() throws Exception {
 
         LOG.info( "Starting testCaseSensitivityAdminUser()" );
 
         UserInfo mixcaseUser = setup.getMgmtSvc()
-            .createAdminUser( "AKarasulu", "Alex Karasulu", "AKarasulu@Apache.org", "test", true, false );
+                                    .createAdminUser( "AKarasulu", "Alex Karasulu", "AKarasulu@Apache.org", "test", true, false );
 
         refreshIndex(context.getOrgName(), context.getAppName());
 
-        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo( 
+        AuthPrincipalInfo adminPrincipal = new AuthPrincipalInfo(
                 AuthPrincipalType.ADMIN_USER, mixcaseUser.getUuid(), UUIDUtils.newTimeUUID() );
-        OrganizationInfo organizationInfo = 
+        OrganizationInfo organizationInfo =
                 setup.getMgmtSvc().createOrganization( "MixedCaseOrg", mixcaseUser, true );
 
         refreshIndex(context.getOrgName(), context.getAppName());
@@ -103,17 +221,17 @@ public class MUUserResourceIT extends AbstractRestIT {
 
         // Should succeed even when we use all lowercase
         JsonNode node = mapper.readTree( resource().path( "/management/users/akarasulu@apache.org" )
-                .queryParam( "access_token", tokenStr )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE )
-                .get( String.class ));
+                                                   .queryParam( "access_token", tokenStr )
+                                                   .accept( MediaType.APPLICATION_JSON )
+                                                   .type( MediaType.APPLICATION_JSON_TYPE )
+                                                   .get( String.class ));
         logNode( node );
     }
 
 
     @Test
     //@Ignore // Because JSP is broken in test setup, possibly due to JSTL classloader issue
-    // see also: https://issues.apache.org/jira/browse/USERGRID-209 
+    // see also: https://issues.apache.org/jira/browse/USERGRID-209
     public void testUnconfirmedAdminLogin() throws Exception {
 
         // Setup properties to require confirmation of users
@@ -140,7 +258,7 @@ public class MUUserResourceIT extends AbstractRestIT {
             String passwd = "testpassword";
             OrganizationOwnerInfo orgOwner;
 
-            orgOwner = setup.getMgmtSvc().createOwnerAndOrganization( 
+            orgOwner = setup.getMgmtSvc().createOwnerAndOrganization(
                     orgName, userName, appName, email, passwd, false, false );
             assertNotNull( orgOwner );
             String returnedUsername = orgOwner.getOwner().getUsername();
@@ -156,10 +274,10 @@ public class MUUserResourceIT extends AbstractRestIT {
             JsonNode node;
             try {
                 node = mapper.readTree( resource().path( "/management/token" )
-                        .queryParam( "grant_type", "password" )
-                        .queryParam( "username", userName )
-                        .queryParam( "password", passwd )
-                        .accept( MediaType.APPLICATION_JSON ).get( String.class ));
+                                                  .queryParam( "grant_type", "password" )
+                                                  .queryParam( "username", userName )
+                                                  .queryParam( "password", passwd )
+                                                  .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
                 fail( "Unconfirmed users should not be authorized to authenticate." );
             }
@@ -187,7 +305,7 @@ public class MUUserResourceIT extends AbstractRestIT {
             String token = getTokenFromMessage( confirmation );
             LOG.info( token );
 
-            ActivationState state = setup.getMgmtSvc().handleConfirmationTokenForAdminUser( 
+            ActivationState state = setup.getMgmtSvc().handleConfirmationTokenForAdminUser(
                     orgOwner.getOwner().getUuid(), token );
             assertEquals( ActivationState.ACTIVATED, state );
 
@@ -203,10 +321,10 @@ public class MUUserResourceIT extends AbstractRestIT {
             // -------------------------------------------
 
             node = mapper.readTree( resource().path( "/management/token" )
-                    .queryParam( "grant_type", "password" )
-                    .queryParam( "username", userName )
-                    .queryParam( "password", passwd )
-                    .accept( MediaType.APPLICATION_JSON ).get( String.class ));
+                                              .queryParam( "grant_type", "password" )
+                                              .queryParam( "username", userName )
+                                              .queryParam( "password", passwd )
+                                              .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
             assertNotNull( node );
             LOG.info( "Authentication succeeded after confirmation: {}.", node.toString() );
@@ -241,8 +359,8 @@ public class MUUserResourceIT extends AbstractRestIT {
             JsonNode node;
             try {
                 node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                        .queryParam( "username", sysadminUsername ).queryParam( "password", sysadminPassword )
-                        .accept( MediaType.APPLICATION_JSON ).get( String.class ));
+                                                  .queryParam( "username", sysadminUsername ).queryParam( "password", sysadminPassword )
+                                                  .accept( MediaType.APPLICATION_JSON ).get( String.class ));
             }
             catch ( UniformInterfaceException e ) {
                 fail( "Sysadmin should need no confirmation" );
@@ -280,8 +398,8 @@ public class MUUserResourceIT extends AbstractRestIT {
             JsonNode node;
             try {
                 node = mapper.readTree( resource().path( "/management/token" ).queryParam( "grant_type", "password" )
-                        .queryParam( "username", testUserUsername ).queryParam( "password", testUserPassword )
-                        .accept( MediaType.APPLICATION_JSON ).get( String.class ));
+                                                  .queryParam( "username", testUserUsername ).queryParam( "password", testUserPassword )
+                                                  .accept( MediaType.APPLICATION_JSON ).get( String.class ));
             }
             catch ( UniformInterfaceException e ) {
                 fail( "Test User should need no confirmation" );
@@ -303,10 +421,10 @@ public class MUUserResourceIT extends AbstractRestIT {
     public void updateManagementUser() throws Exception {
         Map<String, String> payload =
                 hashMap( "email", "uort-user-1@apigee.com" ).map( "username", "uort-user-1" ).map( "name", "Test User" )
-                        .map( "password", "password" ).map( "organization", "uort-org" ).map( "company", "Apigee" );
+                                                            .map( "password", "password" ).map( "organization", "uort-org" ).map( "company", "Apigee" );
 
         JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
+                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         logNode( node );
         String userId = node.get( "data" ).get( "owner" ).get( "uuid" ).asText();
 
@@ -315,17 +433,17 @@ public class MUUserResourceIT extends AbstractRestIT {
         String token = mgmtToken( "uort-user-1@apigee.com", "password" );
 
         node = mapper.readTree( resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+                                          .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         logNode( node );
 
         payload = hashMap( "company", "Usergrid" );
         LOG.info( "sending PUT for company update" );
         node = mapper.readTree( resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
-                .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, payload ));
+                                          .type( MediaType.APPLICATION_JSON_TYPE ).put( String.class, payload ));
         assertNotNull( node );
         node = mapper.readTree( resource().path( String.format( "/management/users/%s", userId ) ).queryParam( "access_token", token )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+                                          .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         assertEquals( "Usergrid", node.get( "data" ).get( "properties" ).get( "company" ).asText() );
 
 
@@ -421,7 +539,7 @@ public class MUUserResourceIT extends AbstractRestIT {
     public void reactivateMultipleSend() throws Exception {
 
         JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, buildOrgUserPayload( "reactivate" ) ));
+                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, buildOrgUserPayload( "reactivate" ) ));
 
         logNode( node );
         String email = node.get( "data" ).get( "owner" ).get( "email" ).asText();
@@ -434,8 +552,8 @@ public class MUUserResourceIT extends AbstractRestIT {
         // reactivate should send activation email
 
         node = mapper.readTree( resource().path( String.format( "/management/users/%s/reactivate", uuid ) )
-                .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+                                          .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
+                                          .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         refreshIndex(context.getOrgName(), context.getAppName());
 
@@ -479,7 +597,7 @@ public class MUUserResourceIT extends AbstractRestIT {
         formData.add( "password2", "sesame" );
 
         String html = resource().path( "/management/users/" + userInfo.getUsername() + "/resetpw" )
-                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
+                                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
 
         assertTrue( html.contains( "password set" ) );
 
@@ -488,7 +606,7 @@ public class MUUserResourceIT extends AbstractRestIT {
         assertFalse( setup.getMgmtSvc().checkPasswordResetTokenForAdminUser( userInfo.getUuid(), resetToken ) );
 
         html = resource().path( "/management/users/" + userInfo.getUsername() + "/resetpw" )
-                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
+                         .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
 
         assertTrue( html.contains( "invalid token" ) );
     }
@@ -511,12 +629,12 @@ public class MUUserResourceIT extends AbstractRestIT {
         formData.add( "password2", "sesa2me" );
 
         String html = resource().path( "/management/users/" + "noodle" + userInfo.getUsername() + "/resetpw" )
-                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
+                                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
 
         assertTrue( html.contains( "Incorrect username entered" ) );
 
         html = resource().path( "/management/users/" + userInfo.getUsername() + "/resetpw" )
-                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
+                         .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
 
         assertTrue( html.contains( "password set" ) );
     }
@@ -552,8 +670,8 @@ public class MUUserResourceIT extends AbstractRestIT {
 
         try {
             JsonNode node = mapper.readTree( resource().path( "/management/users/edanuff/password" )
-                    .accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
+                                                       .accept( MediaType.APPLICATION_JSON )
+                                                       .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
             fail( "should fail with conflict" );
         }
         catch ( UniformInterfaceException e ) {
@@ -562,8 +680,8 @@ public class MUUserResourceIT extends AbstractRestIT {
 
         payload.put( "newpassword", passwords[1] ); // ok
         JsonNode node = mapper.readTree( resource().path( "/management/users/edanuff/password" )
-                .accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
+                                                   .accept( MediaType.APPLICATION_JSON )
+                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         payload.put( "oldpassword", passwords[1] );
 
         refreshIndex(context.getOrgName(), context.getAppName());
@@ -571,8 +689,8 @@ public class MUUserResourceIT extends AbstractRestIT {
         payload.put( "newpassword", passwords[0] ); // fail
         try {
             node = mapper.readTree( resource().path( "/management/users/edanuff/password" )
-                    .accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
+                                              .accept( MediaType.APPLICATION_JSON )
+                                              .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
             fail( "should fail with conflict" );
         }
         catch ( UniformInterfaceException e ) {
@@ -599,41 +717,41 @@ public class MUUserResourceIT extends AbstractRestIT {
         formData.add( "password2", "sesame" );
 
         String html = resource().path( "/management/users/" + userInfo.getUsername() + "/resetpw" )
-                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
+                                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
         assertTrue( html.contains( "password set" ) );
 
         refreshIndex(context.getOrgName(), context.getAppName());
 
         JsonNode node = mapper.readTree( resource().path( "/management/token" )
-                .queryParam( "grant_type", "password" )
-                .queryParam( "username", email ).queryParam( "password", "sesame" )
-                .accept( MediaType.APPLICATION_JSON )
-                .get( String.class ));
+                                                   .queryParam( "grant_type", "password" )
+                                                   .queryParam( "username", email ).queryParam( "password", "sesame" )
+                                                   .accept( MediaType.APPLICATION_JSON )
+                                                   .get( String.class ));
 
         Long changeTime = node.get( "passwordChanged" ).longValue();
         assertTrue( System.currentTimeMillis() - changeTime < 2000 );
 
         Map<String, String> payload = hashMap( "oldpassword", "sesame" ).map( "newpassword", "test" );
         node = mapper.readTree( resource().path( "/management/users/" + userInfo.getUsername() + "/password" )
-                .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                .post( String.class, payload ));
+                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                                          .post( String.class, payload ));
 
         refreshIndex(context.getOrgName(), context.getAppName());
 
         node = mapper.readTree( resource().path( "/management/token" )
-                .queryParam( "grant_type", "password" )
-                .queryParam( "username", email )
-                .queryParam( "password", "test" )
-                .accept( MediaType.APPLICATION_JSON )
-                .get( String.class ));
+                                          .queryParam( "grant_type", "password" )
+                                          .queryParam( "username", email )
+                                          .queryParam( "password", "test" )
+                                          .accept( MediaType.APPLICATION_JSON )
+                                          .get( String.class ));
 
         Long changeTime2 = node.get( "passwordChanged" ).longValue();
         assertTrue( changeTime < changeTime2 );
         assertTrue( System.currentTimeMillis() - changeTime2 < 2000 );
 
         node = mapper.readTree( resource().path( "/management/me" ).queryParam( "grant_type", "password" )
-                .queryParam( "username", email ).queryParam( "password", "test" ).accept( MediaType.APPLICATION_JSON )
-                .get( String.class ));
+                                          .queryParam( "username", email ).queryParam( "password", "test" ).accept( MediaType.APPLICATION_JSON )
+                                          .get( String.class ));
 
         Long changeTime3 = node.get( "passwordChanged" ).longValue();
         assertEquals( changeTime2, changeTime3 );
@@ -651,4 +769,39 @@ public class MUUserResourceIT extends AbstractRestIT {
         assertEquals( context.getActiveUser().getEmail(), adminNode.get( "email" ).asText() );
         assertEquals( context.getActiveUser().getUser(), adminNode.get( "username" ).asText() );
     }
+
+    @Test
+    public void createOrgFromUserConnectionFail() throws Exception {
+
+
+        Map<String, String> payload = hashMap( "email", "orgfromuserconn@apigee.com" ).map( "password", "password" )
+                                                                                      .map( "organization", "orgfromuserconn" );
+
+        JsonNode node = mapper.readTree( resource().path( "/management/organizations" ).accept( MediaType.APPLICATION_JSON )
+                                                   .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
+
+        String userId = node.get( "data" ).get( "owner" ).get( "uuid" ).asText();
+
+        assertNotNull( node );
+
+        String token = mgmtToken( "orgfromuserconn@apigee.com", "password" );
+
+        node = mapper.readTree( resource().path( String.format( "/management/users/%s/", userId ) ).queryParam( "access_token", token )
+                                          .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
+
+        logNode( node );
+
+        payload = hashMap( "organization", "Orgfromuserconn" );
+
+        // try to create the same org again off the connection
+        try {
+            node = mapper.readTree( resource().path( String.format( "/management/users/%s/organizations", userId ) )
+                                              .queryParam( "access_token", token ).accept( MediaType.APPLICATION_JSON )
+                                              .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
+            fail( "Should have thrown unique exception on org name" );
+        }
+        catch ( Exception ex ) {
+        }
+    }
+
 }

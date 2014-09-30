@@ -42,31 +42,43 @@ cd /usr/share/usergrid/scripts
 #groovy registry_register.groovy elasticsearch
 #groovy wait_for_instances.groovy elasticsearch ${CASSANDRA_NUM_SERVERS}
 
-# use about one quarter of RAM for heap
+# leave room for Cassandra: use about one half of RAM for heap
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'm1.small' )
-    export ES_HEAP_SIZE=512M
+    # total of 1.7g
+    export ES_HEAP_SIZE=850m
 ;;
 'm1.medium' )
-    export ES_HEAP_SIZE=1G
+    # total of 3.75g
+    export ES_HEAP_SIZE=1700m
 ;;
 'm1.large' )
-    export ES_HEAP_SIZE=2G
+    # total of 7.5g
+    export ES_HEAP_SIZE=3500m
 ;;
 'm1.xlarge' )
-    export ES_HEAP_SIZE=5G
-;;
-'m3.xlarge' )
-    export ES_HEAP_SIZE=5G
+    # total of 15g
+    export ES_HEAP_SIZE=7500m
 ;;
 'm3.large' )
-    export ES_HEAP_SIZE=2G
+    # total of 7.5g
+    export ES_HEAP_SIZE=3500m
+;;
+'m3.xlarge' )
+    # total of 15g 
+    export ES_HEAP_SIZE=7500m
+;;
+'c3.xlarge' )
+    # total of 7.5g
+    export ES_HEAP_SIZE=3500m
 ;;
 'c3.2xlarge' )
-    export ES_HEAP_SIZE=4G
+    # total of 15g
+    export ES_HEAP_SIZE=7500m
 ;;
 'c3.4xlarge' )
-    export ES_HEAP_SIZE=12G
+    # total of 30g
+    export ES_HEAP_SIZE=15g
 esac
 
 cat >> /etc/default/elasticsearch << EOF

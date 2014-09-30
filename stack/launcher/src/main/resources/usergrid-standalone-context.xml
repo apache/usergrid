@@ -33,7 +33,7 @@
 			<list>
 				<value>classpath:/usergrid-default.properties</value>
 				<value>classpath:/usergrid-standalone.properties</value>
-				<value>classpath:/usergrid-custom.properties</value>
+				<value>classpath:/usergrid-deployment.properties</value>
 				<value>file:./usergrid-custom-standalone.properties</value>
 			</list>
 		</property>

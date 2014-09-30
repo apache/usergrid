@@ -18,12 +18,19 @@
 
 package org.apache.usergrid.persistence.index.impl;
 
+import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.UUID;
 import org.apache.usergrid.persistence.index.exceptions.NoFullTextIndexException;
 import org.apache.usergrid.persistence.index.exceptions.NoIndexException;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.ANALYZED_STRING_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.BOOLEAN_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.GEO_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.NUMBER_PREFIX;
+import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.STRING_PREFIX;
 import org.apache.usergrid.persistence.index.query.tree.AndOperand;
 import org.apache.usergrid.persistence.index.query.tree.ContainsOperand;
 import org.apache.usergrid.persistence.index.query.tree.Equal;
@@ -55,6 +62,7 @@ public class EsQueryVistor implements QueryVisitor {
     Stack<QueryBuilder> stack = new Stack<QueryBuilder>();
     List<FilterBuilder> filterBuilders = new ArrayList<FilterBuilder>();
 
+    
     @Override
     public void visit( AndOperand op ) throws IndexException {
 
@@ -99,6 +107,7 @@ public class EsQueryVistor implements QueryVisitor {
         stack.push( qb );
     }
 
+
     @Override
     public void visit( OrOperand op ) throws IndexException {
 
@@ -125,6 +134,7 @@ public class EsQueryVistor implements QueryVisitor {
         stack.push( qb );
     }
 
+
     @Override
     public void visit( NotOperand op ) throws IndexException {
         op.getOperation().visit( this );
@@ -134,16 +144,25 @@ public class EsQueryVistor implements QueryVisitor {
         }
     }
 
+
     @Override
     public void visit( ContainsOperand op ) throws NoFullTextIndexException {
         String name = op.getProperty().getValue();
         name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
-        if ( value instanceof String ) {
-            name = addAnayzedSuffix( name );
-        }        
-        stack.push( QueryBuilders.matchQuery( name, value ));
+
+        BoolQueryBuilder qb = QueryBuilders.boolQuery(); // let's do a boolean OR
+        qb.minimumNumberShouldMatch(1); 
+
+        // field is an entity/array that needs no name prefix
+        qb = qb.should( QueryBuilders.matchQuery( name, value ) );
+
+        // OR field is a string and needs the prefix on the name
+        qb = qb.should( QueryBuilders.matchQuery( addPrefix( value.toString(), name, true), value));
+        
+        stack.push( qb );
     }
+
 
     @Override
     public void visit( WithinOperand op ) {
@@ -155,8 +174,8 @@ public class EsQueryVistor implements QueryVisitor {
         float lon = op.getLongitude().getFloatValue();
         float distance = op.getDistance().getFloatValue();
 
-        if ( !name.endsWith( EsEntityIndexImpl.GEO_SUFFIX )) {
-            name += EsEntityIndexImpl.GEO_SUFFIX;
+        if ( !name.startsWith( GEO_PREFIX )) {
+            name = GEO_PREFIX + name;
         }
 
         FilterBuilder fb = FilterBuilders.geoDistanceFilter( name )
@@ -164,27 +183,26 @@ public class EsQueryVistor implements QueryVisitor {
         filterBuilders.add( fb );
     } 
 
+
     @Override
     public void visit( LessThan op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
-        if ( value instanceof String ) {
-            name = addAnayzedSuffix( name );
-        }
+        name = addPrefix( value, name );
         stack.push( QueryBuilders.rangeQuery( name ).lt( value ));
     }
+
 
     @Override
     public void visit( LessThanEqual op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
-        if ( value instanceof String ) {
-            name = addAnayzedSuffix( name );
-        }
+        name = addPrefix( value, name );
         stack.push( QueryBuilders.rangeQuery( name ).lte( value ));
     }
+
 
     @Override
     public void visit( Equal op ) throws NoIndexException {
@@ -195,47 +213,121 @@ public class EsQueryVistor implements QueryVisitor {
         if ( value instanceof String ) {
             String svalue = (String)value;
 
-            if ( svalue.indexOf("*") != -1 ) {
-                // for wildcard expression we need analuzed field, add suffix
-                //name = addAnayzedSuffix( name );
-                stack.push( QueryBuilders.wildcardQuery(name, svalue) );
-                return;
-            } 
+            BoolQueryBuilder qb = QueryBuilders.boolQuery();  // let's do a boolean OR
+            qb.minimumNumberShouldMatch(1); 
 
-            // for equal operation on string, need to use unanalyzed field, leave off the suffix
-            value = svalue; 
+            // field is an entity/array that does not need a prefix on its name
+            qb = qb.should( QueryBuilders.wildcardQuery( name, svalue ) );
+           
+            // or field is just a string that does need a prefix
+            if ( svalue.indexOf("*") != -1 ) {
+                qb = qb.should( QueryBuilders.wildcardQuery( addPrefix( value, name ), svalue ) );
+            } else {
+                qb = qb.should( QueryBuilders.termQuery(     addPrefix( value, name ), value ));
+            } 
+            stack.push( qb );
+            return;
         } 
-        stack.push( QueryBuilders.termQuery( name, value ));
+
+        // assume all other types need prefix
+        stack.push( QueryBuilders.termQuery( addPrefix( value, name ), value ));
     }
+
 
     @Override
     public void visit( GreaterThan op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
-        if ( value instanceof String ) {
-            name = addAnayzedSuffix( name );
-        }
+        name = addPrefix( value, name );
         stack.push( QueryBuilders.rangeQuery( name ).gt( value ) );
     }
+
 
     @Override
     public void visit( GreaterThanEqual op ) throws NoIndexException {
         String name = op.getProperty().getValue();
         name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
-        if ( value instanceof String ) {
-            name = addAnayzedSuffix( name );
-        }
+        name = addPrefix( value, name );
         stack.push( QueryBuilders.rangeQuery( name ).gte( value ) );
     }
 
-    private String addAnayzedSuffix( String name ) {
-        if ( name.endsWith(EsEntityIndexImpl.ANALYZED_SUFFIX) ) {
+
+    private String addPrefix( Object value, String origname ) {
+        return addPrefix(value, origname, false);
+    }
+
+
+    private String addPrefix( Object value, String origname, boolean analyzed ) {
+
+        String name = origname;
+
+        // logic to deal with nested property names
+        // only add prefix to last name in property
+        String[] parts = origname.split("\\.");
+        if ( parts.length > 1 ) {
+            name = parts[ parts.length - 1 ];
+        }
+        
+        if ( value instanceof String && analyzed ) {
+            name = addAnalyzedStringPrefix( name );
+
+        } else if ( value instanceof String ) {
+            name = addStringPrefix( name );
+
+        } else if ( value instanceof Number ) {
+            name = addNumberPrefix( name );
+
+        } else if ( value instanceof Boolean ) {
+            name = addBooleanPrefix( name );
+
+        } else if ( value instanceof UUID ) {
+            name = addStringPrefix( name );
+        }
+
+        // re-create nested property name 
+        if ( parts.length > 1 ) {
+            parts[parts.length - 1] = name;
+            Joiner joiner = Joiner.on(".").skipNulls();
+            return joiner.join(parts);
+        } 
+
+        return name;
+    }
+
+
+    private String addAnalyzedStringPrefix( String name ) {
+        if ( name.startsWith( ANALYZED_STRING_PREFIX ) ) {
+            return name;
+        }  
+        return ANALYZED_STRING_PREFIX + name;
+    } 
+   
+
+    private String addStringPrefix( String name ) {
+        if ( name.startsWith( STRING_PREFIX ) ) {
             return name;
         } 
-        return name + EsEntityIndexImpl.ANALYZED_SUFFIX;
+        return STRING_PREFIX + name;
     } 
+   
+
+    private String addNumberPrefix( String name ) {
+        if ( name.startsWith( NUMBER_PREFIX ) ) {
+            return name;
+        } 
+        return NUMBER_PREFIX + name;
+    } 
+   
+
+    private String addBooleanPrefix( String name ) {
+        if ( name.startsWith( BOOLEAN_PREFIX ) ) {
+            return name;
+        } 
+        return BOOLEAN_PREFIX + name;
+    } 
+   
 
     @Override
     public QueryBuilder getQueryBuilder() {
@@ -244,6 +336,7 @@ public class EsQueryVistor implements QueryVisitor {
         }
         return stack.pop();
     }
+
 
     @Override
 	public FilterBuilder getFilterBuilder() {

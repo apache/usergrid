@@ -14,16 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest.applications.collection;
+package org.apache.usergrid.rest.applications.collection.paging;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import javax.ws.rs.core.MediaType;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.java.client.entities.Entity;
 import org.apache.usergrid.java.client.response.ApiResponse;
@@ -34,6 +36,7 @@ import org.apache.usergrid.rest.test.resource.EntityResource;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Ignore;
@@ -51,6 +54,13 @@ public class PagingResourceIT extends AbstractRestIT {
 
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
+
+    private static ObjectMapper mapper = new ObjectMapper();
+
+    private static final ApiResponse parse( JsonNode response ) throws Exception {
+        String jsonResponseString = mapper.writeValueAsString( response );
+        return mapper.readValue( jsonResponseString, ApiResponse.class );
+    }
 
 
     @Test
@@ -229,11 +239,63 @@ public class PagingResourceIT extends AbstractRestIT {
     }
 
 
-    private static ObjectMapper mapper = new ObjectMapper();
+    @Test
+    public void testCursor() throws Exception {
 
+        // test that we do get cursor when we need one
+        // create 50 widgets
+        int widgetsSize = 50;
+        CustomCollection widgets = context.application().collection("widgets");
+        for (int i = 0; i < widgetsSize; i++) {
+            Map<String, String> entity = hashMap("name", String.valueOf(i));
+            widgets.create(entity);
+        }
+        refreshIndex(context.getOrgName(), context.getAppName());
 
-    private static final ApiResponse parse( JsonNode response ) throws Exception {
-        String jsonResponseString = mapper.writeValueAsString( response );
-        return mapper.readValue( jsonResponseString, ApiResponse.class );
+        // fetch all widgets 
+        JsonNode widgetsNode = mapper.readTree(
+            resource().path("/" + context.getOrgName() + "/" + context.getAppName() + "/widgets")
+                .queryParam("access_token", context.getActiveUser().getToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(String.class));
+        assertEquals(10, widgetsNode.get("count").asInt()); // get back default page size of 10
+        assertNotNull(widgetsNode.get("cursor")); // with a cursor
+
+        // test that we DO NOT get cursor when we should not get cursor
+        // create 5 trinkets
+        int trinketsSize = 5;
+        CustomCollection trinkets = context.application().collection("trinkets");
+        for (int i = 0; i < trinketsSize; i++) {
+            Map<String, String> entity = hashMap("name", String.valueOf(i));
+            trinkets.create(entity);
+        }
+        refreshIndex(context.getOrgName(), context.getAppName());
+
+        // fetch all trinkets 
+        JsonNode trinketsNode = mapper.readTree(
+            resource().path("/" + context.getOrgName() + "/" + context.getAppName() + "/trinkets")
+                .queryParam("access_token", context.getActiveUser().getToken())
+                .accept(MediaType.APPLICATION_JSON)
+                .get(String.class));
+        assertEquals(trinketsSize, trinketsNode.get("count").asInt()); // get back all 
+        assertNull(trinketsNode.get("cursor")); // and no cursor
     }
+
+
+//    @Test
+//    public void testPagingWithUpdates() throws IOException {
+//
+//        // create 500 widgets
+//        int widgetsSize = 500;
+//        List<String> widgetIds = new ArrayList<String>();
+//        CustomCollection widgets = context.application().collection("widgets");
+//        for (int i = 0; i < widgetsSize; i++) {
+//            Map<String, String> entity = hashMap("name", String.valueOf(i));
+//            JsonNode widgetNode = widgets.create(entity);
+//            logger.info("widgetNode: " + widgetNode.toString());
+//        }
+//
+//        refreshIndex(context.getOrgName(), context.getAppName());
+//    }
+
 }

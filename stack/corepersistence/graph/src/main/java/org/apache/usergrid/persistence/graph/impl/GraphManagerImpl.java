@@ -123,7 +123,7 @@ public class GraphManagerImpl implements GraphManager {
 
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
 
-        return Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
+        return Observable.from( markedEdge ).map( new Func1<MarkedEdge, Edge>() {
             @Override
             public Edge call( final MarkedEdge edge ) {
 
@@ -151,7 +151,7 @@ public class GraphManagerImpl implements GraphManager {
         final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
 
 
-        return Observable.from( markedEdge ).subscribeOn( Schedulers.io() ).map( new Func1<MarkedEdge, Edge>() {
+        return Observable.from( markedEdge ).map( new Func1<MarkedEdge, Edge>() {
             @Override
             public Edge call( final MarkedEdge edge ) {
 
@@ -179,7 +179,7 @@ public class GraphManagerImpl implements GraphManager {
 
     @Override
     public Observable<Id> deleteNode( final Id node, final long timestamp ) {
-        return Observable.from( node ).subscribeOn( Schedulers.io() ).map( new Func1<Id, Id>() {
+        return Observable.from( node ).map( new Func1<Id, Id>() {
             @Override
             public Id call( final Id id ) {
 

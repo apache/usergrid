@@ -96,6 +96,8 @@ public class MigrationManagerImpl implements MigrationManager {
 
         keyspace.createColumnFamily( columnFamily.getColumnFamily(), columnFamily.getOptions() );
 
+        logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
+
         waitForMigration();
     }
 
@@ -138,6 +140,10 @@ public class MigrationManagerImpl implements MigrationManager {
 
 
         keyspace.createKeyspace( options );
+
+        strategyOptions.toString();
+
+        logger.info( "Created keyspace {} with options {}", keyspace.getKeyspaceName(), options.toString() );
 
         waitForMigration();
     }

@@ -30,12 +30,12 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class SingleQueueTaskManager implements NotificationsTaskManager {
+public class SingleQueueTaskManager {
 
     private static final Logger LOG = LoggerFactory
-            .getLogger(TaskManager.class);
-    private final String path;
+            .getLogger(SingleQueueTaskManager.class);
     private final QueueManager proxy;
+    private final String queuePath;
 
     private Notification notification;
     private AtomicLong successes = new AtomicLong();
@@ -45,14 +45,14 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
     private ConcurrentHashMap<UUID, ApplicationQueueMessage> messageMap;
     private boolean hasFinished;
 
-    public SingleQueueTaskManager(EntityManager em, org.apache.usergrid.mq.QueueManager qm, QueueManager proxy, Notification notification) {
+    public SingleQueueTaskManager(EntityManager em, org.apache.usergrid.mq.QueueManager qm, QueueManager proxy, Notification notification,String queuePath) {
         this.em = em;
         this.qm = qm;
-        this.path = ApplicationQueueManager.QUEUE_NAME;
         this.notification = notification;
         this.proxy = proxy;
         this.messageMap = new ConcurrentHashMap<UUID, ApplicationQueueMessage>();
         hasFinished = false;
+        this.queuePath = queuePath;
     }
 
     public void addMessage(UUID deviceId, ApplicationQueueMessage message) {
@@ -72,7 +72,7 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
             }
 
             LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
-            qm.commitTransaction(path, messageMap.get(deviceUUID).getTransaction(), null);
+            qm.commitTransaction(queuePath, messageMap.get(deviceUUID).getTransaction(), null);
             if (newProviderId != null) {
                 LOG.debug("notification {} replacing device {} notifierId", notification.getUuid(), deviceUUID);
                 replaceProviderId(deviceRef, notifier, newProviderId);
@@ -123,7 +123,7 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
             receipt.setUuid(savedReceipt.getUuid());
 
             List<EntityRef> entities = Arrays.asList(notification, device);
-            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
+//            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
         } else {
             em.update(receipt);
         }
@@ -145,80 +145,33 @@ public class SingleQueueTaskManager implements NotificationsTaskManager {
     }
 
     public void finishedBatch() throws Exception {
-        synchronized (this) { //avoid issues with counting
-            long successes = this.successes.getAndSet(0); //reset counters
-            long failures = this.failures.getAndSet(0); //reset counters
-            this.hasFinished = true;
+        long successes = this.successes.getAndSet(0); //reset counters
+        long failures = this.failures.getAndSet(0); //reset counters
+        this.hasFinished = true;
 
-            // refresh notification
-            Notification notification = em.get(this.notification.getUuid(), Notification.class);
-            notification.setModified(System.currentTimeMillis());
+        // refresh notification
+        Notification notification = em.get(this.notification.getUuid(), Notification.class);
+        notification.setModified(System.currentTimeMillis());
 
-            Map<String, Object> properties;
-            Map<String, Long> stats;
-            String statsKey = "statistics_batch";
+        long sent = successes, errors = failures;
+        //and write them out again, this will produce the most accurate count
+        Map<String, Long> stats = new HashMap<>(2);
+        stats.put("sent", sent);
+        stats.put("errors", errors);
+        notification.updateStatistics(successes, errors);
 
-            //write out current results to a set so no overlap in multiple writes will occur
-            if (successes + failures > 0) {
-                properties = new HashMap<String, Object>(4);
-                stats = new HashMap<String, Long>(2);
-                stats.put("sent", successes);
-                stats.put("errors", failures);
-                properties.put(statsKey + "_" + System.currentTimeMillis(), stats);
-                properties.put("modified", notification.getModified());
-                em.updateProperties(notification, properties);
-            }
-
-            //resum the stats
-            properties = em.getProperties(notification); // re-read
-            long sent = 0;
-            long errors = 0;
-            for (String key : properties.keySet()) {
-                if (key.contains(statsKey)) {
-                    stats = (Map<String, Long>) properties.get(key);
-                    sent += stats.get("sent");
-                    errors += stats.get("errors");
-                }
-            }
-
-            //and write them out again, this will produce the most accurate count
-            stats = new HashMap<String, Long>(2);
-            stats.put("sent", sent);
-            stats.put("errors", errors);
-            notification.setStatistics(stats);
-
-            if (LOG.isInfoEnabled()) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("notification ").append(notification.getUuid());
-                sb.append(" sending to ").append(sent + errors);
-                LOG.info(sb.toString());
-            }
-
-            //none of this is known and should you ever do this
-            if (notification.getExpectedCount() <= (errors + sent)) {
-                notification.setFinished(notification.getModified());
-                properties.put("finished", notification.getModified());
-                properties.put("state", notification.getState());
-
-                if (LOG.isInfoEnabled()) {
-                    long elapsed = notification.getFinished() - notification.getStarted();
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("done sending to devices in ").append(elapsed).append(" ms");
-                    LOG.info(sb.toString());
-                }
-            }
-
-            LOG.info("notification finished batch: {}", notification.getUuid());
-            em.updateProperties(notification, properties);
-            em.update(notification);
+        //none of this is known and should you ever do this
+        if (notification.getExpectedCount() <= (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"))) {
+            Map<String, Object> properties = new HashMap<>();
+            notification.setFinished(notification.getModified());
+            properties.put("finished", notification.getModified());
+            properties.put("state", notification.getState());
+            LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
+            notification.addProperties(properties);
         }
-
-        Set<Notifier> notifiers = new HashSet<Notifier>(proxy.getNotifierMap().values()); // remove dups
-        proxy.asyncCheckForInactiveDevices(notifiers);
-    }
-
-
-    protected void hasFinished(boolean hasFinished) {
-        this.hasFinished = hasFinished;
+        LOG.info("notification finished batch: {} of {} devices", notification.getUuid(),sent+errors);
+        em.update(notification);
+//        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
+//        proxy.asyncCheckForInactiveDevices(notifiers);
     }
 }

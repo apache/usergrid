@@ -33,7 +33,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.clearspring.analytics.hash.MurmurHash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -144,7 +143,6 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.le;
 import static org.apache.usergrid.persistence.cassandra.Serializers.se;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
 import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
@@ -506,6 +504,8 @@ public class CpEntityManager implements EntityManager {
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
 
             cpEntity = ecm.update( cpEntity ).toBlockingObservable().last();
+            // using ecm.update() here causes Core tests to fail
+//            cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
 
             logger.debug("Wrote {}:{} version {}", new Object[] { 
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
@@ -1349,7 +1349,13 @@ public class CpEntityManager implements EntityManager {
     public Entity addToCollections( 
         List<EntityRef> ownerEntities, String collectionName, EntityRef itemRef ) throws Exception {
 
-        Entity entity = get( itemRef );
+        // don't fetch entity if we've already got one
+        final Entity entity;
+        if ( itemRef instanceof Entity ) {
+            entity = (Entity)itemRef;
+        } else {
+            entity = get( itemRef );
+        }
 
         for ( EntityRef eref : ownerEntities ) {
             addToCollection( eref, collectionName, entity );

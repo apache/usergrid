@@ -17,7 +17,7 @@ To launch an embedded Cassandra server and initialize the database:
 
 java -jar usergrid-launcher-${version}.jar -nogui -db -init
 
-The standalone server will load a usergrid-custom.properties file from the
+The standalone server will load a usergrid-deployment.properties file from the
 same location as the jar file. You can override things like the location of
 the Cassandra cluster in that file.
 

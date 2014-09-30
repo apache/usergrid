@@ -56,6 +56,7 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 
 
 import static me.prettyprint.hector.api.factory.HFactory.createRangeSlicesQuery;
+import org.apache.usergrid.persistence.Results;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
@@ -67,6 +68,8 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERT
 import static org.apache.usergrid.persistence.cassandra.CassandraService.RETRY_COUNT;
 import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.apache.usergrid.persistence.index.query.Query;
 
 
 /**
@@ -96,6 +99,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
                     return _getEntityManager( appId );
                 }
             } );
+
+    private static final int REBUILD_PAGE_SIZE = 100;
 
 
     /**
@@ -415,6 +420,52 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     @Override
     public void flushEntityManagerCaches() {
         // no-op
+    }
+
+    @Override
+    public void rebuildInternalIndexes() throws Exception {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void rebuildCollectionIndex(UUID appId, String collectionName) throws Exception {
+
+        logger.info( "Reindexing collection: {} for app id: {}", collectionName, appId );
+
+        EntityManager em = getEntityManager( appId );
+        Application app = em.getApplication();
+
+        // search for all orgs
+
+        Query query = new Query();
+        query.setLimit(REBUILD_PAGE_SIZE );
+        Results r = null;
+
+        do {
+
+            r = em.searchCollection( app, collectionName, query );
+
+            for ( org.apache.usergrid.persistence.Entity entity : r.getEntities() ) {
+                logger.info( "Updating entity type: {} with id: {} for app id: {}", new Object[] {
+                        entity.getType(), entity.getUuid(), appId
+                } );
+
+                try {
+                    em.update( entity );
+                }
+                catch ( DuplicateUniquePropertyExistsException dupee ) {
+                    logger.error( "duplicate property for type: {} with id: {} for app id: {}.  "
+                            + "Property name: {} , value: {}", new Object[] {
+                            entity.getType(), entity.getUuid(), appId, dupee.getPropertyName(), 
+                            dupee.getPropertyValue()
+                    } );
+                }
+            }
+
+            query.setCursor( r.getCursor() );
+        }
+        while ( r != null && r.size() == REBUILD_PAGE_SIZE );
+
     }
 
 }
