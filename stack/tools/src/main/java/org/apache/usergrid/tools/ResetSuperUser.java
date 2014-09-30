@@ -20,6 +20,7 @@ package org.apache.usergrid.tools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.AccountCreationProps;
+import org.apache.usergrid.management.cassandra.AccountCreationPropsImpl;
 import org.apache.usergrid.management.cassandra.ManagementServiceImpl;
 
 import org.apache.commons.cli.CommandLine;
@@ -90,15 +91,27 @@ public class ResetSuperUser extends ToolBase {
         startSpring();
 
         // force the props to be set
-        AccountCreationProps props = ( ( ManagementServiceImpl ) managementService ).getAccountCreationProps();
+        AccountCreationProps props =  ( ( ManagementServiceImpl ) managementService ).getAccountCreationProps();
 
         props.setProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED, "true" );
         props.setProperty( PROPERTIES_SYSADMIN_LOGIN_NAME, line.getOptionValue( "username" ) );
         props.setProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL, line.getOptionValue( "email" ) );
         props.setProperty( PROPERTIES_SYSADMIN_LOGIN_PASSWORD, line.getOptionValue( "password" ) );
 
-        logger.info( "Starting superuser provision" );
 
-        managementService.provisionSuperuser();
+
+
+        System.out.println( "Starting superuser provision" );
+
+        try {
+            ( ( ManagementServiceImpl ) managementService )
+                    .resetSuperUser( (String)line.getOptionValue( "username" ), (String)line.getOptionValue( "password" ),
+                            (String) line.getOptionValue( "email" ) );
+        }catch(Exception e){
+                    throw new Exception( e.toString());
+        }
+
+        System.out.println("ResetSuperUser has been reset");
+
     }
 }
