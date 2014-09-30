@@ -214,6 +214,7 @@ public class EsQueryVistor implements QueryVisitor {
             String svalue = (String)value;
 
             BoolQueryBuilder qb = QueryBuilders.boolQuery();  // let's do a boolean OR
+            qb.minimumNumberShouldMatch(1); 
 
             // field is an entity/array that does not need a prefix on its name
             qb = qb.should( QueryBuilders.wildcardQuery( name, svalue ) );
@@ -264,7 +265,6 @@ public class EsQueryVistor implements QueryVisitor {
 
         // logic to deal with nested property names
         // only add prefix to last name in property
-
         String[] parts = origname.split("\\.");
         if ( parts.length > 1 ) {
             name = parts[ parts.length - 1 ];
@@ -286,6 +286,7 @@ public class EsQueryVistor implements QueryVisitor {
             name = addStringPrefix( name );
         }
 
+        // re-create nested property name 
         if ( parts.length > 1 ) {
             parts[parts.length - 1] = name;
             Joiner joiner = Joiner.on(".").skipNulls();

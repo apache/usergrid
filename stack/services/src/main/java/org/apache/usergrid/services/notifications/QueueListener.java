@@ -35,11 +35,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class QueueListener  {
-    public  final long MESSAGE_TRANSACTION_TIMEOUT = 60 * 5 * 1000;
+    public  final long MESSAGE_TRANSACTION_TIMEOUT =  1 * 60 * 1000;
+
     public   long DEFAULT_SLEEP = 5000;
 
     private static final Logger LOG = LoggerFactory.getLogger(QueueListener.class);
-
 
     private MetricsFactory metricsService;
 
@@ -62,7 +62,7 @@ public class QueueListener  {
     private List<Future> futures;
 
     public  final String MAX_THREADS = "2";
-    private Integer batchSize = 1000;
+    private Integer batchSize = 100;
     private String[] queueNames;
 
 
