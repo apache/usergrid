@@ -37,6 +37,8 @@ import org.apache.usergrid.persistence.exceptions.QueueException;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import com.fasterxml.uuid.UUIDComparator;
+
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -63,6 +65,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.se;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import static org.apache.usergrid.utils.NumberUtils.roundLong;
+import static org.apache.usergrid.utils.UUIDUtils.compare;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
 
 
@@ -181,25 +184,26 @@ public abstract class AbstractSearch implements QueueSearch {
             current_ts_shard = finish_ts_shard;
         }
 
+        final MessageIdComparator comparator = new MessageIdComparator(params.reversed);
+
 
         //should be start < finish
-        if ( !params.reversed && UUIDUtils.compare( start, finish_uuid ) > 0 ) {
+        if ( comparator.compare( start, finish_uuid ) > 0 ) {
             logger.warn( "Tried to perform a slice with start UUID {} after finish UUID {}.", start, finish_uuid );
-            throw new IllegalArgumentException( String.format("You cannot specify a start value of %s after finish value of %s", start, finish_uuid) );
+            throw new IllegalArgumentException(
+                    String.format( "You cannot specify a start value of %s after finish value of %s", start,
+                            finish_uuid ) );
         }
 
-        // should be finish < start
-        else if ( params.reversed && UUIDUtils.compare( start, finish_uuid ) < 0 ) {
-            logger.warn( "Tried to perform a slice with start UUID {} after finish UUID {}.", start, finish_uuid );
-            throw new IllegalArgumentException( String.format("You cannot specify a start value of %s after finish value of %s", start, finish_uuid) );
-        }
 
 
 
         UUID lastValue = start;
         boolean firstPage = true;
 
-        while ( ( current_ts_shard >= start_ts_shard ) && ( current_ts_shard <= finish_ts_shard ) ) {
+        while ( ( current_ts_shard >= start_ts_shard ) && ( current_ts_shard <= finish_ts_shard ) && comparator.compare(start, finish_uuid) < 1 ) {
+
+            logger.info( "Starting search with start UUID {}, finish UUID {}, and reversed {}", new Object[]{lastValue, finish_uuid, params.reversed });
 
 
             SliceQuery<ByteBuffer, UUID, ByteBuffer> q = createSliceQuery( ko, be, ue, be );
@@ -215,8 +219,8 @@ public abstract class AbstractSearch implements QueueSearch {
                 final UUID columnName = column.getName();
 
                 // skip the first one, we've already read it
-                if ( i == 0 && (firstPage && params.skipFirst && params.startId.equals( columnName ))
-                        || (!firstPage &&  lastValue != null && lastValue.equals(columnName)) ) {
+                if ( i == 0 && ( firstPage && params.skipFirst && params.startId.equals( columnName ) ) || ( !firstPage
+                        && lastValue != null && lastValue.equals( columnName ) ) ) {
                     continue;
                 }
 
@@ -331,6 +335,24 @@ public abstract class AbstractSearch implements QueueSearch {
             int o2Idx = indexCache.get( o2.getUuid() );
 
             return o1Idx - o2Idx;
+        }
+    }
+
+
+    private static final class MessageIdComparator implements Comparator<UUID> {
+
+        private final int comparator;
+
+
+        private MessageIdComparator( final boolean reversed ) {
+
+            this.comparator = reversed ? -1 : 1;
+        }
+
+
+        @Override
+        public int compare( final UUID o1, final UUID o2 ) {
+            return UUIDUtils.compare( o1, o2 )*comparator;
         }
     }
 }
