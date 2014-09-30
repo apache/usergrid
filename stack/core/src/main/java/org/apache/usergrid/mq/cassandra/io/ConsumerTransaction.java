@@ -337,7 +337,7 @@ public class ConsumerTransaction extends NoTransactionSearch
         q.setKey( getQueueClientTransactionKey( queueId, consumerId ) );
         q.setRange( params.startId, startTimeUUID, false, params.limit + 1 );
 
-        List<HColumn<UUID, UUID>> cassResults = q.execute().get().getColumns();
+        List<HColumn<UUID, UUID>> cassResults = swallowOrderedExecution(q);
 
         List<TransactionPointer> results = new ArrayList<TransactionPointer>( params.limit );
 
