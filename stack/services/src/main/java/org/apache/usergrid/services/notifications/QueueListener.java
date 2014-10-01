@@ -131,8 +131,9 @@ public class QueueListener  {
                 svcMgr = smf.getServiceManager(smf.getManagementAppId());
                 queueManager = svcMgr.getQueueManager();
                 String queueName = ApplicationQueueManager.getRandomQueue(queueNames);
+                LOG.info("getting from queue {} ", queueName);
                 QueueResults results = getDeliveryBatch(queueManager,queueName);
-                LOG.info("QueueListener: retrieved batch of {} messages", results.size());
+                LOG.info("QueueListener: retrieved batch of {} messages from queue {} ", results.size(),queueName);
 
                 List<Message> messages = results.getMessages();
                 if (messages.size() > 0) {
@@ -218,7 +219,6 @@ public class QueueListener  {
         qq.setLimit(this.getBatchSize());
         qq.setTimeout(MESSAGE_TRANSACTION_TIMEOUT);
         QueueResults results = queueManager.getFromQueue(queuePath, qq);
-        LOG.debug("got batch of {} devices", results.size());
         return results;
     }
 
