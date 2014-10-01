@@ -32,8 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class TaskManager {
 
-    private static final Logger LOG = LoggerFactory
-            .getLogger(TaskManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TaskManager.class);
     private final QueueManager proxy;
     private final String queuePath;
 

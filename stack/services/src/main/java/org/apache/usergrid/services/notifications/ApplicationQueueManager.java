@@ -364,7 +364,7 @@ public class ApplicationQueueManager implements QueueManager {
                 } catch (Exception e) {
                     LOG.error("Failure while sending",e);
                     try {
-                        if(!messageCommitted) {
+                        if(!messageCommitted && queuePath != null) {
                             qm.commitTransaction(queuePath, message.getTransaction(), null);
                         }
                     }catch (Exception queueException){
