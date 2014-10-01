@@ -61,7 +61,7 @@ public class ApplicationQueueManager implements QueueManager {
     private final JobScheduler jobScheduler;
     private final MetricsFactory metricsFactory;
     private final String[] queueNames;
-    private boolean sendNow = false;
+    private boolean sendNow = true;
 
     HashMap<Object, Notifier> notifierHashMap; // only retrieve notifiers once
 
@@ -131,6 +131,9 @@ public class ApplicationQueueManager implements QueueManager {
             final CountMinSketch sketch = new CountMinSketch(0.0001,.99,7364181); //add probablistic counter to find dups
             final UUID appId = em.getApplication().getUuid();
             final Map<String,Object> payloads = notification.getPayloads();
+
+            final boolean sendNow = this.sendNow; //&& jobExecution == null;
+
             final Func1<Entity,Entity> entityListFunct = new Func1<Entity, Entity>() {
                 @Override
                 public Entity call(Entity entity) {
@@ -180,7 +183,7 @@ public class ApplicationQueueManager implements QueueManager {
                                 LOG.info("ApplicationQueueMessage: notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
                             }
                             now = System.currentTimeMillis();
-                            if(jobExecution == null && sendNow) {
+                            if(sendNow){ //if(jobExecution == null && sendNow) {
                                 messages.add(message);
                             }else{
                                 qm.postToQueue(queueName, message);
@@ -249,7 +252,7 @@ public class ApplicationQueueManager implements QueueManager {
             LOG.info("ApplicationQueueMessage: notification {} done queuing to {} devices in "+elapsed+" ms",notification.getUuid().toString(),deviceCount.get());
         }
 
-        if(sendNow && messages.size()>0){
+        if(messages.size()>0){
             now = System.currentTimeMillis();
             sendBatchToProviders(messages,null).toBlocking().lastOrDefault(null);
             LOG.info("ApplicationQueueMessage: notification {} done sending to "+messages.size()+" devicess in {} ms", notification.getUuid(), System.currentTimeMillis() - now);
