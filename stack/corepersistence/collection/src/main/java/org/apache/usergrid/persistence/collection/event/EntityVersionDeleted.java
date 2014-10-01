@@ -1,6 +1,7 @@
 package org.apache.usergrid.persistence.collection.event;
 
 
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
@@ -21,8 +22,8 @@ public interface EntityVersionDeleted {
      *
      * @param scope The scope of the entity
      * @param entityId The entity Id that was removed
-     * @param entityVersion The version that was removed
+     * @param entityVersions The versions that are to be removed
      */
-    public void versionDeleted(final CollectionScope scope, final Id entityId, final UUID entityVersion);
+    public void versionDeleted(final CollectionScope scope, final Id entityId, final List<UUID> entityVersions);
 
 }

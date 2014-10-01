@@ -1,9 +1,9 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +15,13 @@ import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerialization
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIterator;
+import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -37,6 +42,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
+    private final Keyspace keyspace;
 
     private final SerializationFig serializationFig;
 
@@ -48,12 +54,13 @@ public class EntityVersionCleanupTask implements Task<Void> {
     public EntityVersionCleanupTask( final SerializationFig serializationFig,
                                      final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
                                      final MvccEntitySerializationStrategy entitySerializationStrategy,
-                                     final List<EntityVersionDeleted> listeners, final CollectionScope scope,
-                                     final Id entityId, final UUID version ) {
+                                     final Keyspace keyspace, final List<EntityVersionDeleted> listeners,
+                                     final CollectionScope scope, final Id entityId, final UUID version ) {
 
         this.serializationFig = serializationFig;
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
+        this.keyspace = keyspace;
         this.listeners = listeners;
         this.scope = scope;
         this.entityId = entityId;
@@ -91,36 +98,67 @@ public class EntityVersionCleanupTask implements Task<Void> {
         final UUID maxVersion = version;
 
 
-        LogEntryIterator logEntryIterator =
-                new LogEntryIterator( logEntrySerializationStrategy, scope, entityId, maxVersion,
-                        serializationFig.getHistorySize() );
+        Observable<MvccLogEntry> versions = Observable.create( new ObservableIterator( "versionIterators" ) {
+            @Override
+            protected Iterator getIterator() {
+                return new LogEntryIterator( logEntrySerializationStrategy, scope, entityId, maxVersion,
+                        serializationFig.getBufferSize() );
+            }
+        } );
 
 
-        //for every entry, we want to clean it up with listeners
+        //get the uuid from the version
+        versions.map( new Func1<MvccLogEntry, UUID>() {
+            @Override
+            public UUID call( final MvccLogEntry mvccLogEntry ) {
+                return mvccLogEntry.getVersion();
+            }
+        } )
+                //buffer our versions
+         .buffer( serializationFig.getBufferSize() )
+         //for each buffer set, delete all of them
+         .doOnNext( new Action1<List<UUID>>() {
+            @Override
+            public void call( final List<UUID> versions ) {
 
-        while ( logEntryIterator.hasNext() ) {
+                //Fire all the listeners
+                fireEvents( versions );
 
-            final MvccLogEntry logEntry = logEntryIterator.next();
+                MutationBatch entityBatch = keyspace.prepareMutationBatch();
+                MutationBatch logBatch = keyspace.prepareMutationBatch();
+
+                for ( UUID version : versions ) {
+                    final MutationBatch entityDelete = entitySerializationStrategy.delete( scope, entityId, version );
+
+                    entityBatch.mergeShallow( entityDelete );
+
+                    final MutationBatch logDelete = logEntrySerializationStrategy.delete( scope, entityId, version );
+
+                    logBatch.mergeShallow( logDelete );
+                }
 
 
-            final UUID version = logEntry.getVersion();
+                try {
+                    entityBatch.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to delete entities in cleanup", e );
+                }
 
-
-            fireEvents();
-
-            //we do multiple invocations on purpose.  Our log is our source of versions, only delete from it
-            //after every successful invocation of listeners and entity removal
-            entitySerializationStrategy.delete( scope, entityId, version ).execute();
-
-            logEntrySerializationStrategy.delete( scope, entityId, version ).execute();
-        }
-
+                try {
+                    logBatch.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to delete entities from the log", e );
+                }
+            }
+        } ).count().toBlocking().last();
 
         return null;
     }
 
 
-    private void fireEvents() throws ExecutionException, InterruptedException {
+    private void fireEvents( final List<UUID> versions ) {
 
         final int listenerSize = listeners.size();
 
@@ -129,7 +167,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
         }
 
         if ( listenerSize == 1 ) {
-            listeners.get( 0 ).versionDeleted( scope, entityId, version );
+            listeners.get( 0 ).versionDeleted( scope, entityId, versions );
             return;
         }
 
@@ -146,22 +184,13 @@ public class EntityVersionCleanupTask implements Task<Void> {
                           return entityVersionDeletedObservable.doOnNext( new Action1<EntityVersionDeleted>() {
                               @Override
                               public void call( final EntityVersionDeleted listener ) {
-                                  listener.versionDeleted( scope, entityId, version );
+                                  listener.versionDeleted( scope, entityId, versions );
                               }
                           } );
                       }
                   }, Schedulers.io() ).toBlocking().last();
 
         LOG.debug( "Finished firing {} listeners", listenerSize );
-    }
-
-
-    private static interface ListenerRunner {
-
-        /**
-         * Run the listeners
-         */
-        public void runListeners();
     }
 }
 
