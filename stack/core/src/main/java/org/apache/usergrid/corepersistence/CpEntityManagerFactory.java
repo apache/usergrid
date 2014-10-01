@@ -617,4 +617,5 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po ) {
     }
+
 }

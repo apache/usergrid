@@ -160,7 +160,7 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     }
 
     @Override
-    public void rebuildCollectionIndex(UUID appId, String collection, Object object) {
-        factory.rebuildCollectionIndex(appId, collection, object);
+    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
+        factory.rebuildCollectionIndex(appId, collection, po);
     }
 }

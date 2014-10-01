@@ -435,7 +435,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     }
 
     @Override
-    public void rebuildCollectionIndex(UUID appId, String collection, Object object) {
+    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
         throw new UnsupportedOperationException("Not supported."); 
     }
 }

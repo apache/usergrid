@@ -128,7 +128,7 @@ public interface EntityManagerFactory {
     /** For testing purposes */
     public void flushEntityManagerCaches();
 
-    public void rebuildCollectionIndex(UUID appId, String collection, Object object);
+    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver object);
 
     public interface ProgressObserver {
         public void onProgress( EntityRef source, EntityRef target, String edgeType );

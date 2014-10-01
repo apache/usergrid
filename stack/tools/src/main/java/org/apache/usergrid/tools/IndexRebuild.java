@@ -74,7 +74,8 @@ public class IndexRebuild extends ToolBase {
         Option collOpt = OptionBuilder.withArgName( COLLECTION_ARG ).hasArg().isRequired( false )
                 .withDescription( "Collection name" ).create( COLLECTION_ARG );
 
-        Option allOpt = OptionBuilder.withType( Boolean.class ).withArgName( ALL_ARG ).hasArg().isRequired( false )
+        Option allOpt = OptionBuilder.withType( Boolean.class )
+                .withArgName( ALL_ARG ).hasArg().isRequired( false )
                 .withDescription( "True to reindex all application" ).create( ALL_ARG );
 
         Options options = new Options();
