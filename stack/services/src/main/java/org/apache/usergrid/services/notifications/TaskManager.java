@@ -63,7 +63,9 @@ public class TaskManager {
         LOG.debug("REMOVED {}", deviceUUID);
         try {
             LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
-            qm.commitTransaction(queuePath, messageMap.get(deviceUUID).getTransaction(), null);
+            if(queuePath!=null){
+                qm.commitTransaction(queuePath, messageMap.get(deviceUUID).getTransaction(), null);
+            }
 
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
             if (receipt != null) {

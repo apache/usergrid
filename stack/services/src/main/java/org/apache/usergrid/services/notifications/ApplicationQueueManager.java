@@ -61,6 +61,7 @@ public class ApplicationQueueManager implements QueueManager {
     private final JobScheduler jobScheduler;
     private final MetricsFactory metricsFactory;
     private final String[] queueNames;
+    private boolean sendNow = false;
 
     HashMap<Object, Notifier> notifierHashMap; // only retrieve notifiers once
 
@@ -82,6 +83,7 @@ public class ApplicationQueueManager implements QueueManager {
         this.jobScheduler = jobScheduler;
         this.metricsFactory = metricsFactory;
         this.queueNames = getQueueNames(properties);
+        this.sendNow = new Boolean(properties.getProperty("usergrid.notifications.sendNow",""+sendNow));
     }
 
 
@@ -114,6 +116,7 @@ public class ApplicationQueueManager implements QueueManager {
 
         final HashMap<Object,Notifier> notifierMap =  getNotifierMap();
         final String queueName = getRandomQueue(queueNames);
+        final List<ApplicationQueueMessage> messages = new ArrayList<>();
 
         //get devices in querystring, and make sure you have access
         if (pathQuery != null) {
@@ -128,8 +131,6 @@ public class ApplicationQueueManager implements QueueManager {
             final CountMinSketch sketch = new CountMinSketch(0.0001,.99,7364181); //add probablistic counter to find dups
             final UUID appId = em.getApplication().getUuid();
             final Map<String,Object> payloads = notification.getPayloads();
-
-
             final Func1<Entity,Entity> entityListFunct = new Func1<Entity, Entity>() {
                 @Override
                 public Entity call(Entity entity) {
@@ -179,7 +180,11 @@ public class ApplicationQueueManager implements QueueManager {
                                 LOG.info("ApplicationQueueMessage: notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
                             }
                             now = System.currentTimeMillis();
-                            qm.postToQueue(queueName, message);
+                            if(jobExecution == null && sendNow) {
+                                messages.add(message);
+                            }else{
+                                qm.postToQueue(queueName, message);
+                            }
                             LOG.info("ApplicationQueueMessage: notification {} post-queue to device {} duration " + (System.currentTimeMillis() - now) + " ms "+queueName+" queue", notification.getUuid(), deviceRef.getUuid());
                             deviceCount.incrementAndGet();
                             queueMeter.mark();
@@ -207,7 +212,7 @@ public class ApplicationQueueManager implements QueueManager {
                         }
                     });
             o.toBlocking().lastOrDefault(null);
-            LOG.info("ApplicationQueueMessage: notification {} done queueing duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
+            LOG.info("ApplicationQueueMessage: notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
 
 
         }
@@ -243,6 +248,12 @@ public class ApplicationQueueManager implements QueueManager {
             long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
             LOG.info("ApplicationQueueMessage: notification {} done queuing to {} devices in "+elapsed+" ms",notification.getUuid().toString(),deviceCount.get());
         }
+
+        now = System.currentTimeMillis();
+        if(sendNow && messages.size()>0){
+            sendBatchToProviders(messages,null).toBlocking().lastOrDefault(null);
+        }
+        LOG.info("ApplicationQueueMessage: notification {} done sending duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
 
     }
 
@@ -285,6 +296,7 @@ public class ApplicationQueueManager implements QueueManager {
      * @param messages
      * @throws Exception
      */
+
     public Observable sendBatchToProviders( final List<ApplicationQueueMessage> messages, final String queuePath) {
         LOG.info("sending batch of {} notifications.", messages.size());
         final Meter sendMeter = metricsFactory.getMeter(NotificationsService.class, "send");
