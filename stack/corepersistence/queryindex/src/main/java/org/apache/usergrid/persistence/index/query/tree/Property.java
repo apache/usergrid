@@ -40,7 +40,7 @@ public class Property extends Literal<String> {
 
 
     public Property( String property ) {
-        this( new ClassicToken( 0, property ) );
+        this( new ClassicToken( 1, property ) );
     }
 
 

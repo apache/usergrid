@@ -210,7 +210,6 @@ public class CollectionIT extends AbstractCoreIT {
         assertEquals( 1, r.size() );
     }
 
-
     @Test
     public void userFirstNameSearch() throws Exception {
         LOG.debug( "userFirstNameSearch" );
@@ -255,9 +254,7 @@ public class CollectionIT extends AbstractCoreIT {
         em.refreshIndex();
 
         // search with the old username, should be no results
-        query = new Query();
         query.addEqualityFilter( "firstname", firstName );
-
         r = em.searchCollection( em.getApplicationRef(), "users", query );
 
         assertEquals( 0, r.size() );

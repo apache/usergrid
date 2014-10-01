@@ -496,7 +496,7 @@ public class CpEntityManager implements EntityManager {
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
                 ecm.load( entityId ).toBlockingObservable().last();
 
-        cpEntity = CpEntityMapUtils.fromMap( 
+        cpEntity = CpEntityMapUtils.fromMap(
                 cpEntity, entity.getProperties(), entity.getType(), true );
 
         try {
@@ -504,8 +504,8 @@ public class CpEntityManager implements EntityManager {
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
 
             cpEntity = ecm.update( cpEntity ).toBlockingObservable().last();
-            // using ecm.update() here causes Core tests to fail
-//            cpEntity = ecm.write( cpEntity ).toBlockingObservable().last();
+            refreshIndex();
+            cpEntity = ecm.load( entityId ).toBlockingObservable().last();
 
             logger.debug("Wrote {}:{} version {}", new Object[] { 
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
@@ -520,7 +520,7 @@ public class CpEntityManager implements EntityManager {
                 handleWriteUniqueVerifyException( entity, wuve );
             }
         }
-        
+
         // update in all containing collections and connection indexes
         CpRelationManager rm = (CpRelationManager)getRelationManager( entity );
         rm.updateContainingCollectionAndCollectionIndexes( entity, cpEntity );

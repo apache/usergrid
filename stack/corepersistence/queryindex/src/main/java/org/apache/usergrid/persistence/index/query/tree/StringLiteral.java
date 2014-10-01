@@ -45,7 +45,7 @@ public class StringLiteral extends Literal<String> {
 
 
     public StringLiteral( String value ) {
-        super( new ClassicToken( 0, value ) );
+        super( new ClassicToken( 1, value ) );
         parseValue( value );
     }
 
