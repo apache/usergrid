@@ -249,11 +249,11 @@ public class ApplicationQueueManager implements QueueManager {
             LOG.info("ApplicationQueueMessage: notification {} done queuing to {} devices in "+elapsed+" ms",notification.getUuid().toString(),deviceCount.get());
         }
 
-        now = System.currentTimeMillis();
         if(sendNow && messages.size()>0){
+            now = System.currentTimeMillis();
             sendBatchToProviders(messages,null).toBlocking().lastOrDefault(null);
+            LOG.info("ApplicationQueueMessage: notification {} done sending to "+messages.size()+" devicess in {} ms", notification.getUuid(), System.currentTimeMillis() - now);
         }
-        LOG.info("ApplicationQueueMessage: notification {} done sending duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
 
     }
 
