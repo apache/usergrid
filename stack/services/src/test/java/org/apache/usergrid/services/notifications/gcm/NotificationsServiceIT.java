@@ -59,10 +59,13 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     private NotificationsService ns;
     private QueueListener listener;
 
+    @BeforeClass
+    public static void setup(){
+        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString()+";"+"notifications/test/" + UUID.randomUUID().toString();
+    }
     @Override
     @Before
     public void before() throws Exception {
-        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString()+";"+"notifications/test/" + UUID.randomUUID().toString();
 
         super.before();
 
