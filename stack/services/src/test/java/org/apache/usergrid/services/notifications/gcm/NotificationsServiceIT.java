@@ -47,8 +47,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
      * all run correctly
      */
     private static final boolean USE_REAL_CONNECTIONS = false;
-    private static final String PROVIDER = USE_REAL_CONNECTIONS ? "google"
-            : "noop";
+    private static final String PROVIDER = USE_REAL_CONNECTIONS ? "google" : "noop";
 
     private static final String API_KEY = "AIzaSyCIH_7WC0mOqBGMOXyQnFgrBpOePgHvQJM";
     private static final String PUSH_TOKEN = "APA91bGxRGnMK8tKgVPzSlxtCFvwSVqx0xEPjA06sBmiK0k"

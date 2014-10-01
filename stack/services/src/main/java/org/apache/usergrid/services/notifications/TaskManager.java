@@ -30,10 +30,10 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class SingleQueueTaskManager {
+public class TaskManager {
 
     private static final Logger LOG = LoggerFactory
-            .getLogger(SingleQueueTaskManager.class);
+            .getLogger(TaskManager.class);
     private final QueueManager proxy;
     private final String queuePath;
 
@@ -45,7 +45,7 @@ public class SingleQueueTaskManager {
     private ConcurrentHashMap<UUID, ApplicationQueueMessage> messageMap;
     private boolean hasFinished;
 
-    public SingleQueueTaskManager(EntityManager em, org.apache.usergrid.mq.QueueManager qm, QueueManager proxy, Notification notification,String queuePath) {
+    public TaskManager(EntityManager em, org.apache.usergrid.mq.QueueManager qm, QueueManager proxy, Notification notification, String queuePath) {
         this.em = em;
         this.qm = qm;
         this.notification = notification;
@@ -62,6 +62,9 @@ public class SingleQueueTaskManager {
     public void completed(Notifier notifier, Receipt receipt, UUID deviceUUID, String newProviderId) throws Exception {
         LOG.debug("REMOVED {}", deviceUUID);
         try {
+            LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
+            qm.commitTransaction(queuePath, messageMap.get(deviceUUID).getTransaction(), null);
+
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
             if (receipt != null) {
                 LOG.debug("notification {} sent to device {}. saving receipt.", notification.getUuid(), deviceUUID);
@@ -71,8 +74,7 @@ public class SingleQueueTaskManager {
                 successes.incrementAndGet();
             }
 
-            LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
-            qm.commitTransaction(queuePath, messageMap.get(deviceUUID).getTransaction(), null);
+
             if (newProviderId != null) {
                 LOG.debug("notification {} replacing device {} notifierId", notification.getUuid(), deviceUUID);
                 replaceProviderId(deviceRef, notifier, newProviderId);

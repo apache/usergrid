@@ -26,11 +26,11 @@ import java.util.UUID;
 public class TaskTracker {
 
     private Notifier notifier;
-    private SingleQueueTaskManager taskManager;
+    private TaskManager taskManager;
     private Receipt receipt;
     private UUID deviceId;
 
-    public TaskTracker(Notifier notifier, SingleQueueTaskManager taskManager, Receipt receipt, UUID deviceId) {
+    public TaskTracker(Notifier notifier, TaskManager taskManager, Receipt receipt, UUID deviceId) {
         this.notifier = notifier;
         this.taskManager = taskManager;
         this.receipt = receipt;
