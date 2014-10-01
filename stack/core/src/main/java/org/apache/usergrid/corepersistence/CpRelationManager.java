@@ -916,7 +916,7 @@ public class CpRelationManager implements RelationManager {
                 results.merge( newResults );
             }
 
-            if ( crs.isEmpty() ) { // no more results
+            if ( crs.isEmpty() || !crs.hasCursor() ) { // no results, no cursor, can't get more
                 satisfied = true;
 
             } else if ( results.size() == query.getLimit() )  { // got what we need
@@ -933,7 +933,7 @@ public class CpRelationManager implements RelationManager {
                 logger.warn("Satisfy query limit {}, new limit {} query count {}", new Object[] {
                     originalLimit, query.getLimit(), queryCount 
                 });
-            }
+            } 
         }
 
         return results;

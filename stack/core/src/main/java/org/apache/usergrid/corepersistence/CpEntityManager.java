@@ -2907,12 +2907,27 @@ public class CpEntityManager implements EntityManager {
                             CollectionScope collScope = new CollectionScopeImpl(
                                 applicationScope.getApplication(),
                                 applicationScope.getApplication(),
-                                CpEntityManager.getCollectionScopeNameFromCollectionName(collName));
+                                CpEntityManager.getCollectionScopeNameFromEntityType(entity.getType()));
                             EntityCollectionManager collMgr = 
                                 managerCache.getEntityCollectionManager(collScope);
 
                             org.apache.usergrid.persistence.model.entity.Entity collEntity = 
-                                collMgr.load( edge.getTargetNode()).toBlockingObservable().last();
+                                collMgr.load( edge.getSourceNode() ).toBlockingObservable().last();
+
+//                            if (collEntity == null) {
+//                                if (logger.isDebugEnabled()) {
+//                                    logger.error("FAILED to load entity {}:{} "
+//                                            + "from scope\n   app {}\n   owner {}\n   name {}",
+//                                            new Object[]{
+//                                                edge.getSourceNode().getType(), 
+//                                                edge.getSourceNode().getUuid(),
+//                                                collScope.getApplication(),
+//                                                collScope.getOwner(),
+//                                                collScope.getName()
+//                                            });
+//                                }
+//                                return;
+//                            }
 
                             CollectionScope memberScope = new CollectionScopeImpl(
                                 applicationScope.getApplication(),
@@ -2923,6 +2938,21 @@ public class CpEntityManager implements EntityManager {
 
                             org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
                                 memberMgr.load( edge.getTargetNode()).toBlockingObservable().last();
+
+//                            if (memberEntity == null) {
+//                                if (logger.isDebugEnabled()) {
+//                                    logger.error("FAILED to load entity {}:{} "
+//                                            + "from scope\n   app {}\n   owner {}\n   name {}",
+//                                            new Object[]{
+//                                                edge.getTargetNode().getType(), 
+//                                                edge.getTargetNode().getUuid(),
+//                                                memberScope.getApplication(),
+//                                                memberScope.getOwner(),
+//                                                memberScope.getName()
+//                                            });
+//                                }
+//                                return;
+//                            }
 
                             indexEntityIntoCollections( collEntity, memberEntity, collName, true );
 
@@ -2948,7 +2978,7 @@ public class CpEntityManager implements EntityManager {
                                 managerCache.getEntityCollectionManager(sourceScope);
 
                             org.apache.usergrid.persistence.model.entity.Entity sourceEntity = 
-                                sourceEcm.load( edge.getTargetNode()).toBlockingObservable().last();
+                                sourceEcm.load( fromEntityId ).toBlockingObservable().last();
 
                             CollectionScope targetScope = new CollectionScopeImpl(
                                 applicationScope.getApplication(),
@@ -2998,6 +3028,10 @@ public class CpEntityManager implements EntityManager {
                 .getCollection( memberEntity.getId().getType(), collName);
 
         if (connectBack && collection != null && collection.getLinkedCollection() != null) {
+
+            logger.debug("Linking back from entity in collection {} to collection {}", 
+                collection.getName(), collection.getLinkedCollection());
+
             indexEntityIntoCollections( 
                 memberEntity, collectionEntity, collection.getLinkedCollection(), false );
         }

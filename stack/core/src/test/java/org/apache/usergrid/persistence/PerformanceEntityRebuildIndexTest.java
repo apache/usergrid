@@ -33,11 +33,24 @@ import org.apache.usergrid.CoreApplication;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
+import com.google.inject.Injector;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
+import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
+import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 
@@ -52,7 +65,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
     private static final long RUNTIME = TimeUnit.MINUTES.toMillis( 1 );
 
-    private static final long writeDelayMs = 9;
+    private static final long writeDelayMs = 15;
     //private static final long readDelayMs = 7;
 
     @Rule
@@ -81,12 +94,15 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
 
     @Test
-    public void rebuildIndex() {
+    public void rebuildIndex() throws Exception {
 
         logger.info("Started rebuildIndex()");
 
         final EntityManager em = app.getEntityManager();
-        final long stopTime = System.currentTimeMillis() + RUNTIME;
+
+        // ----------------- create a bunch of entities
+
+        final long stopTime = System.currentTimeMillis() + 300; // + RUNTIME;
         final Map<String, Object> entityMap = new HashMap<>();
 
         entityMap.put( "key1", 1000 );
@@ -94,29 +110,48 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         entityMap.put( "key3", "Some value" );
 
         List<EntityRef> entityRefs = new ArrayList<EntityRef>();
-
-        int i = 0;
+        int entityCount = 0;
         while ( System.currentTimeMillis() < stopTime ) {
-
-            entityMap.put( "key", i );
+            entityMap.put("key", entityCount );
             final Entity created;
             try {
                 created = em.create("testType", entityMap );
             } catch (Exception ex) {
                 throw new RuntimeException("Error creating entity", ex);
             }
-
             entityRefs.add( new SimpleEntityRef( created.getType(), created.getUuid() ) );
-
-            if ( i % 100 == 0 ) {
-                logger.info("Created {} entities", i );
+            if ( entityCount % 100 == 0 ) {
+                logger.info("Created {} entities", entityCount );
             }
-            i++;
-
+            entityCount++;
             try { Thread.sleep( writeDelayMs ); } catch (InterruptedException ignored ) {}
         }
-        logger.info("Created {} entities", i);
+        logger.info("Created {} entities", entityCount);
+        em.refreshIndex();
 
+        // ----------------- test that we can read them, should work fine 
+
+        logger.debug("Read the data");
+        readData("testTypes", entityCount );
+
+        // ----------------- delete the system and application indexes
+
+        logger.debug("Deleting app index and system app index");
+        deleteIndex( CpEntityManagerFactory.SYSTEM_APP_ID );
+        deleteIndex( em.getApplicationId() );
+
+        // ----------------- test that we can read them, should fail
+
+        logger.debug("Reading data, should fail this time ");
+        try {
+            readData( "testTypes", entityCount );
+            fail("should have failed to read data");
+
+        } catch (Exception expected) {}
+
+        // ----------------- rebuild index
+
+        logger.debug("Preparing to rebuild all indexes");;
 
         final String meterName = this.getClass().getSimpleName() + ".rebuildIndex";
         final Meter meter = registry.meter( meterName );
@@ -125,12 +160,9 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             int counter = 0;
             @Override
             public void onProgress( EntityRef s, EntityRef t, String etype ) {
-
                 meter.mark();
-
                 logger.debug("Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
                     s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype });
-
                 if ( !logger.isDebugEnabled() && counter % 100 == 0 ) {
                     logger.info("Reindexed {} entities", counter );
                 }
@@ -142,12 +174,68 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             setup.getEmf().rebuildAllIndexes( po );
 
             registry.remove( meterName );
-            logger.info("Finished rebuildIndex()");
+            logger.info("Rebuilt index");
 
         } catch (Exception ex) {
             logger.error("Error rebuilding index", ex);
             fail();
         }
 
+        // ----------------- test that we can read them
+        
+        readData( "testTypes", entityCount );
+    }
+
+    /** 
+     * Delete index for all applications, just need the one to get started.
+     */
+    private void deleteIndex( UUID appUuid ) {
+
+        Injector injector = CpSetup.getInjector();
+        EntityIndexFactory eif = injector.getInstance( EntityIndexFactory.class );
+
+        Id appId = new SimpleId( appUuid, "application");
+        IndexScope is = new IndexScopeImpl( appId, appId, "application");
+        EntityIndex ei = eif.createEntityIndex(is);
+        EsEntityIndexImpl eeii = (EsEntityIndexImpl)ei;
+
+        eeii.deleteIndex();
+    }
+
+    private int readData( String collectionName ) throws Exception {
+        return readData( collectionName, -1 );
+    }
+
+    private int readData( String collectionName, int expected ) throws Exception {
+
+        EntityManager em = app.getEntityManager();
+
+        Query q = Query.fromQL("select * where key1=1000");
+        q.setLimit(40);
+        Results results = em.searchCollection( em.getApplicationRef(), collectionName, q );
+
+        int count = 0;
+        while ( true ) {
+
+            for ( Entity e : results.getEntities() ) {
+                assertEquals( 2000, e.getProperty("key2"));
+                //if ( count % 100 == 0 ) {
+                    logger.info( "read {} entities", count++);
+                //}
+            }
+
+            if ( results.hasCursor() ) {
+                logger.info( "Counted {} : query again with cursor", count);
+                q.setCursor( results.getCursor() );
+                results = em.searchCollection( em.getApplicationRef(), collectionName, q );
+            } else {
+                break;
+            }
+        }
+
+        if ( expected != -1 && expected != count ) {
+            throw new RuntimeException("Did not get expected " + expected + " entities");
+        }
+        return count;
     }
 }

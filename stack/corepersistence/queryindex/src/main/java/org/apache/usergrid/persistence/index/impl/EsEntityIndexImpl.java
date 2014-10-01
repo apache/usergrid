@@ -58,7 +58,10 @@ import org.apache.usergrid.persistence.model.field.SetField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -671,10 +674,12 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
 
+    @Override
     public void refresh() {
         client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
         log.debug("Refreshed index: " + indexName);
     }
+
 
     @Override
     public CandidateResults getEntityVersions(Id id) {
@@ -682,6 +687,19 @@ public class EsEntityIndexImpl implements EntityIndex {
         query.addEqualityFilter(ENTITYID_FIELDNAME,id.getUuid().toString());
         CandidateResults results = search( query );
         return results;
+    }
+
+    /**
+     * For testing only.
+     */
+    public void deleteIndex() {
+        AdminClient adminClient = client.admin();
+        DeleteIndexResponse response = adminClient.indices().prepareDelete( indexName ).get();
+        if ( response.isAcknowledged() ) {
+            log.info("Deleted index: " + indexName );
+        } else {
+            log.info("Failed to delete index " + indexName );
+        }
     }
 
 }

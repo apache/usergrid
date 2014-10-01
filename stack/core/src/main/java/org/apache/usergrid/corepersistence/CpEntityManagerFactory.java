@@ -597,11 +597,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception {
         
-        logger.info("Rebuilding index for application id {}", appId);
         EntityManager em = getEntityManager( appId );
         Application app = em.getApplication();
 
         ((CpEntityManager)em).reindex( po );
+        em.refreshIndex();
+
+        logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId );
     }
 
 
@@ -616,6 +618,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po ) {
+        throw new UnsupportedOperationException( "Not supported yet." );
     }
 
 }
