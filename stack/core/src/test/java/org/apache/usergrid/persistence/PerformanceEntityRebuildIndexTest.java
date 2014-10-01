@@ -17,9 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -37,7 +34,11 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.usergrid.cassandra.Concurrent;
+import static org.junit.Assert.fail;
 
 
 //@RunWith(JukitoRunner.class)
@@ -47,21 +48,21 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(PerformanceEntityRebuildIndexTest.class );
 
     private static final MetricRegistry registry = new MetricRegistry();
+    private Slf4jReporter reporter;
 
     private static final long RUNTIME = TimeUnit.MINUTES.toMillis( 1 );
 
-    private static final long writeDelayMs = 7;
-    private static final long readDelayMs = 7;
+    private static final long writeDelayMs = 9;
+    //private static final long readDelayMs = 7;
 
     @Rule
     public Application app = new CoreApplication( setup );
-
-    private Slf4jReporter reporter;
 
 
     @Before
     public void startReporting() {
 
+        logger.debug("Starting metrics reporting");
         reporter = Slf4jReporter.forRegistry( registry ).outputTo( logger )
                 .convertRatesTo( TimeUnit.SECONDS )
                 .convertDurationsTo( TimeUnit.MILLISECONDS ).build();
@@ -72,13 +73,15 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
     @After
     public void printReport() {
+
+        logger.debug("Printing metrics report");
         reporter.report();
         reporter.stop();
     }
 
 
     @Test
-    public void rebuildIndex() throws Exception {
+    public void rebuildIndex() {
 
         logger.info("Started rebuildIndex()");
 
@@ -96,34 +99,55 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         while ( System.currentTimeMillis() < stopTime ) {
 
             entityMap.put( "key", i );
-            final Entity created = em.create("testType", entityMap );
+            final Entity created;
+            try {
+                created = em.create("testType", entityMap );
+            } catch (Exception ex) {
+                throw new RuntimeException("Error creating entity", ex);
+            }
 
             entityRefs.add( new SimpleEntityRef( created.getType(), created.getUuid() ) );
 
+            if ( i % 100 == 0 ) {
+                logger.info("Created {} entities", i );
+            }
             i++;
 
-            if ( i % 1000 == 0 ) {
-                logger.debug("rebuildIndex() Created {} entities",i );
-            }
-            Thread.sleep( writeDelayMs );
+            try { Thread.sleep( writeDelayMs ); } catch (InterruptedException ignored ) {}
         }
-        logger.info("rebuildIndex() Created {} entities", i);
+        logger.info("Created {} entities", i);
+
 
         final String meterName = this.getClass().getSimpleName() + ".rebuildIndex";
         final Meter meter = registry.meter( meterName );
-
+        
         EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+            int counter = 0;
             @Override
-            public void onProgress() {
+            public void onProgress( EntityRef s, EntityRef t, String etype ) {
+
                 meter.mark();
+
+                logger.debug("Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
+                    s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype });
+
+                if ( !logger.isDebugEnabled() && counter % 100 == 0 ) {
+                    logger.info("Reindexed {} entities", counter );
+                }
+                counter++;
             }
         };
 
-        setup.getEmf().rebuildInternalIndexes( po );
+        try {
+            setup.getEmf().rebuildAllIndexes( po );
 
-        setup.getEmf().rebuildCollectionIndex( app.getId(), "testTypes", po);
+            registry.remove( meterName );
+            logger.info("Finished rebuildIndex()");
 
-        registry.remove( meterName );
-        logger.info("Finished rebuildIndex()");
+        } catch (Exception ex) {
+            logger.error("Error rebuilding index", ex);
+            fail();
+        }
+
     }
 }
