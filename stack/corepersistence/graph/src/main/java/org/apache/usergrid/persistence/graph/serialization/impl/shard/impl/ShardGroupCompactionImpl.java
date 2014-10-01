@@ -30,7 +30,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
@@ -46,9 +45,12 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.hystrix.HystrixCassandra;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.task.Task;
+import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.guice.GraphTaskExecutor;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
@@ -68,8 +70,6 @@ import com.google.common.hash.PrimitiveSink;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -91,7 +91,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     private static final HashFunction MURMUR_128 = Hashing.murmur3_128();
 
 
-    private final ListeningExecutorService executorService;
+    private final TaskExecutor taskExecutor;
     private final TimeService timeService;
     private final GraphFig graphFig;
     private final NodeShardAllocation nodeShardAllocation;
@@ -110,7 +110,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                                      final NodeShardAllocation nodeShardAllocation,
                                      final ShardedEdgeSerialization shardedEdgeSerialization,
                                      final EdgeColumnFamilies edgeColumnFamilies, final Keyspace keyspace,
-                                     final EdgeShardSerialization edgeShardSerialization ) {
+                                     final EdgeShardSerialization edgeShardSerialization,
+                                     @GraphTaskExecutor final TaskExecutor taskExecutor ) {
 
         this.timeService = timeService;
         this.graphFig = graphFig;
@@ -124,8 +125,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         this.shardCompactionTaskTracker = new ShardCompactionTaskTracker();
         this.shardAuditTaskTracker = new ShardAuditTaskTracker();
 
-        executorService = MoreExecutors.listeningDecorator(
-                new MaxSizeThreadPool( graphFig.getShardAuditWorkerCount(), graphFig.getShardAuditWorkerQueueSize() ) );
+        this.taskExecutor = taskExecutor;
     }
 
 
@@ -232,7 +232,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         resultBuilder.withCopiedEdges( edgeCount ).withSourceShards( sourceShards ).withTargetShard( targetShard );
 
         /**
-         * We didn't move anything this pass, mark the shard as compacted.  If we move something, it means that we missed it on the first pass
+         * We didn't move anything this pass, mark the shard as compacted.  If we move something,
+         * it means that we missed it on the first pass
          * or someone is still not writing to the target shard only.
          */
         if ( edgeCount == 0 ) {
@@ -293,73 +294,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
          * Try and submit.  During back pressure, we may not be able to submit, that's ok.  Better to drop than to
          * hose the system
          */
-        ListenableFuture<AuditResult> future = executorService.submit( new Callable<AuditResult>() {
-            @Override
-            public AuditResult call() throws Exception {
-
-
-                /**
-                 * We don't have a compaction pending.  Run an audit on the shards
-                 */
-                if ( !group.isCompactionPending() ) {
-
-                    /**
-                     * Check if we should allocate, we may want to
-                     */
-
-                    /**
-                     * It's already compacting, don't do anything
-                     */
-                    if ( !shardAuditTaskTracker.canStartTask( scope, edgeMeta, group ) ) {
-                        return AuditResult.CHECKED_NO_OP;
-                    }
-
-                    try {
-
-                        final boolean created = nodeShardAllocation.auditShard( scope, group, edgeMeta );
-                        if ( !created ) {
-                            return AuditResult.CHECKED_NO_OP;
-                        }
-                    }
-                    finally {
-                        shardAuditTaskTracker.complete( scope, edgeMeta, group );
-                    }
-
-
-                    return AuditResult.CHECKED_CREATED;
-                }
-
-                //check our taskmanager
-
-
-                /**
-                 * Do the compaction
-                 */
-                if ( group.shouldCompact( timeService.getCurrentTime() ) ) {
-                    /**
-                     * It's already compacting, don't do anything
-                     */
-                    if ( !shardCompactionTaskTracker.canStartTask( scope, edgeMeta, group ) ) {
-                        return AuditResult.COMPACTING;
-                    }
-
-                    /**
-                     * We use a finally b/c we always want to remove the task track
-                     */
-                    try {
-                        CompactionResult result = compact( scope, edgeMeta, group );
-                        LOG.info( "Compaction result for compaction of scope {} with edge meta data of {} and shard group {} is {}", new Object[]{scope, edgeMeta, group, result} );
-                    }
-                    finally {
-                        shardCompactionTaskTracker.complete( scope, edgeMeta, group );
-                    }
-                    return AuditResult.COMPACTED;
-                }
-
-                //no op, there's nothing we need to do to this shard
-                return AuditResult.NOT_CHECKED;
-            }
-        } );
+        ListenableFuture<AuditResult> future = taskExecutor.submit( new ShardAuditTask( scope, edgeMeta, group ) );
 
         /**
          * Log our success or failures for debugging purposes
@@ -379,6 +314,106 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
         return future;
     }
+
+
+    private final class ShardAuditTask implements Task<AuditResult> {
+
+        private final ApplicationScope scope;
+        private final DirectedEdgeMeta edgeMeta;
+        private final ShardEntryGroup group;
+
+
+        public ShardAuditTask( final ApplicationScope scope, final DirectedEdgeMeta edgeMeta,
+                               final ShardEntryGroup group ) {
+            this.scope = scope;
+            this.edgeMeta = edgeMeta;
+            this.group = group;
+        }
+
+         @Override
+        public void exceptionThrown( final Throwable throwable ) {
+            LOG.error( "Unable to execute audit for shard of {}", throwable );
+        }
+
+
+        @Override
+        public AuditResult rejected() {
+            //ignore, if this happens we don't care, we're saturated, we can check later
+            LOG.error( "Rejected audit for shard of scope {} edge, meta {} and group {}", scope, edgeMeta, group );
+
+            return AuditResult.NOT_CHECKED;
+        }
+
+
+        @Override
+        public AuditResult call() throws Exception {
+            /**
+             * We don't have a compaction pending.  Run an audit on the shards
+             */
+            if ( !group.isCompactionPending() ) {
+
+                /**
+                 * Check if we should allocate, we may want to
+                 */
+
+                /**
+                 * It's already compacting, don't do anything
+                 */
+                if ( !shardAuditTaskTracker.canStartTask( scope, edgeMeta, group ) ) {
+                    return AuditResult.CHECKED_NO_OP;
+                }
+
+                try {
+
+                    final boolean created = nodeShardAllocation.auditShard( scope, group, edgeMeta );
+                    if ( !created ) {
+                        return AuditResult.CHECKED_NO_OP;
+                    }
+                }
+                finally {
+                    shardAuditTaskTracker.complete( scope, edgeMeta, group );
+                }
+
+
+                return AuditResult.CHECKED_CREATED;
+            }
+
+            //check our taskmanager
+
+
+            /**
+             * Do the compaction
+             */
+            if ( group.shouldCompact( timeService.getCurrentTime() ) ) {
+                /**
+                 * It's already compacting, don't do anything
+                 */
+                if ( !shardCompactionTaskTracker.canStartTask( scope, edgeMeta, group ) ) {
+                    return AuditResult.COMPACTING;
+                }
+
+                /**
+                 * We use a finally b/c we always want to remove the task track
+                 */
+                try {
+                    CompactionResult result = compact( scope, edgeMeta, group );
+                    LOG.info(
+                            "Compaction result for compaction of scope {} with edge meta data of {} and shard group " +
+                                    "{} is {}",
+                            new Object[] { scope, edgeMeta, group, result } );
+                }
+                finally {
+                    shardCompactionTaskTracker.complete( scope, edgeMeta, group );
+                }
+                return AuditResult.COMPACTED;
+            }
+
+            //no op, there's nothing we need to do to this shard
+            return AuditResult.NOT_CHECKED;
+        }
+    }
+
+
 
 
     /**
@@ -531,7 +566,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     }
 
 
-
     public static final class CompactionResult {
 
         public final long copiedEdges;
@@ -539,7 +573,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         public final Set<Shard> sourceShards;
         public final Set<Shard> removedShards;
         public final Shard compactedShard;
-
 
 
         private CompactionResult( final long copiedEdges, final Shard targetShard, final Set<Shard> sourceShards,
