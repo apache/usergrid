@@ -105,7 +105,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         traceTagManager.attach( traceTag );
         logger.info( "EntityDaoTest.testCreateAndGet" );
 
-        UUID applicationId = createApplication( "testOrganization", "testCreateAndGet" );
+        UUID applicationId = createApplication( "EntityManagerFactoryImplIT", "testCreateAndGet" );
         logger.info( "Application id " + applicationId );
 
         EntityManager em = emf.getEntityManager( applicationId );

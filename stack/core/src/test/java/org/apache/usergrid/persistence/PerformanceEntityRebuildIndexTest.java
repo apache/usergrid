@@ -102,7 +102,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- create a bunch of entities
 
-        final long stopTime = System.currentTimeMillis() + 300; // + RUNTIME;
+        final long stopTime = System.currentTimeMillis() + RUNTIME;
         final Map<String, Object> entityMap = new HashMap<>();
 
         entityMap.put( "key1", 1000 );
