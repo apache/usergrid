@@ -143,15 +143,12 @@ public class NotificationsService extends AbstractCollectionService {
                 Map<String, Object> properties = new HashMap<String, Object>(2);
                 properties.put("started", notification.getStarted());
                 properties.put("state", notification.getState());
-                em.updateProperties(notification, properties);
+                notification.addProperties(properties);
                 LOG.info("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
             }
 
             long now = System.currentTimeMillis();
-            if(!notificationQueueManager.scheduleQueueJob(notification)){
-                notificationQueueManager.queueNotification(notification, null);
-            }
-
+            notificationQueueManager.queueNotification(notification, null);
             LOG.info("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(),System.currentTimeMillis() - now);
             // future: somehow return 202?
             return results;

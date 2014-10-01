@@ -1531,6 +1531,8 @@ public class CpRelationManager implements RelationManager {
 
     private Results buildResults(Query query, CandidateResults crs, String collName ) {
 
+        logger.debug("buildResults() for {} from {} candidates", collName, crs.size());
+
         Results results = null;
 
         if ( query.getLevel().equals( Level.IDS )) {
@@ -1604,7 +1606,7 @@ public class CpRelationManager implements RelationManager {
                     logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
                         new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
                             cr.getVersion(), e.getVersion()});
-                continue;
+                    continue;
                 }
 
                 org.apache.usergrid.persistence.model.entity.Entity alreadySeen = 
@@ -1645,7 +1647,7 @@ public class CpRelationManager implements RelationManager {
         results.setCursor( crs.getCursor() );
         results.setQueryProcessor( new CpQueryProcessor(em, query, headEntity, collName) );
 
-        logger.debug("Returning results size {}", results.getIds().size() );
+        logger.debug("Returning results size {}", results.size() );
 
         return results;
     }

@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -402,18 +403,42 @@ public class EsEntityIndexImpl implements EntityIndex {
             srb = srb.setFrom(0).setSize(query.getLimit());
 
             for (Query.SortPredicate sp : query.getSortPredicates()) {
+
                 final SortOrder order;
                 if (sp.getDirection().equals(Query.SortDirection.ASCENDING)) {
                     order = SortOrder.ASC;
                 } else {
                     order = SortOrder.DESC;
                 }
-                FieldSortBuilder sort = SortBuilders
-                    .fieldSort(sp.getPropertyName())
+
+                // we do not know the type of the "order by" property and so we do not know what
+                // type prefix to use. So, here we add an order by clause for every possible type 
+                // that you can order by: string, number and boolean and we ask ElasticSearch 
+                // to ignore any fields that are not present.
+
+                final String stringFieldName = STRING_PREFIX + sp.getPropertyName(); 
+                final FieldSortBuilder stringSort = SortBuilders
+                    .fieldSort( stringFieldName )
                     .order(order)
                     .ignoreUnmapped(true);
-                srb.addSort( sort );
-                log.debug("   Sort: {} order by {}", sp.getPropertyName(), order.toString());
+                srb.addSort( stringSort );
+                log.debug("   Sort: {} order by {}", stringFieldName, order.toString());
+
+                final String numberFieldName = NUMBER_PREFIX + sp.getPropertyName(); 
+                final FieldSortBuilder numberSort = SortBuilders
+                    .fieldSort( numberFieldName )
+                    .order(order)
+                    .ignoreUnmapped(true);
+                srb.addSort( numberSort );
+                log.debug("   Sort: {} order by {}", numberFieldName, order.toString());
+
+                final String booleanFieldName = BOOLEAN_PREFIX + sp.getPropertyName(); 
+                final FieldSortBuilder booleanSort = SortBuilders
+                        .fieldSort( booleanFieldName )
+                        .order(order)
+                        .ignoreUnmapped(true);
+                srb.addSort( booleanSort );
+                log.debug("   Sort: {} order by {}", booleanFieldName, order.toString());
             }
 
             searchResponse = srb.execute().actionGet();
@@ -437,8 +462,6 @@ public class EsEntityIndexImpl implements EntityIndex {
         SearchHits hits = searchResponse.getHits();
         log.debug("   Hit count: {} Total hits: {}", hits.getHits().length, hits.getTotalHits() );
 
-        // TODO: do we always want to fetch entities? When do we fetch refs or ids?
-        // list of entities that will be returned
         List<CandidateResult> candidates = new ArrayList<CandidateResult>();
 
         for (SearchHit hit : hits.getHits()) {
@@ -478,12 +501,23 @@ public class EsEntityIndexImpl implements EntityIndex {
         Map<String, Object> entityMap = new HashMap<String, Object>();
 
         for (Object f : entity.getFields().toArray()) {
+
             Field field = (Field) f;
 
             if (f instanceof ListField)  {
                 List list = (List) field.getValue();
                 entityMap.put(field.getName().toLowerCase(),
                         new ArrayList(processCollectionForMap(list)));
+
+                if ( !list.isEmpty() ) {
+                    if ( list.get(0) instanceof String ) {
+                        Joiner joiner = Joiner.on(" ").skipNulls();
+                        String joined = joiner.join(list);
+                        entityMap.put( ANALYZED_STRING_PREFIX + field.getName().toLowerCase(),
+                            new ArrayList(processCollectionForMap(list)));
+                        
+                    }
+                }
 
             } else if (f instanceof ArrayField) {
                 List list = (List) field.getValue();
@@ -498,6 +532,8 @@ public class EsEntityIndexImpl implements EntityIndex {
             } else if (f instanceof EntityObjectField) {
                 EntityObject eo = (EntityObject)field.getValue();
                 entityMap.put(field.getName().toLowerCase(), entityToMap(eo)); // recursion
+
+            // Add type information as field-name prefixes
 
             } else if (f instanceof StringField) {
 
@@ -515,10 +551,6 @@ public class EsEntityIndexImpl implements EntityIndex {
                 locMap.put("lat", locField.getValue().getLatitude());
                 locMap.put("lon", locField.getValue().getLongtitude());
                 entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap);
-
-            } else if ( f instanceof BooleanField  ) {
-
-                entityMap.put( NUMBER_PREFIX + field.getName().toLowerCase(), field.getValue());
 
             } else if ( f instanceof DoubleField
                      || f instanceof FloatField

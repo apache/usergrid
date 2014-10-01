@@ -192,18 +192,24 @@ public class QueueManagerImpl implements QueueManager {
 
         long shard_ts = roundLong( message.getTimestamp(), QUEUE_SHARD_INTERVAL );
 
-        logger.debug( "Adding message with id '{}' to queue '{}'", message.getUuid(), queueId );
+        final UUID messageUuid = message.getUuid();
+
+
+        logger.debug( "Adding message with id '{}' to queue '{}'", messageUuid, queueId );
+
 
         batch.addInsertion( getQueueShardRowKey( queueId, shard_ts ), QUEUE_INBOX.getColumnFamily(),
-                createColumn( message.getUuid(), ByteBuffer.allocate( 0 ), timestamp, ue, be ) );
+                createColumn( messageUuid, ByteBuffer.allocate( 0 ), timestamp, ue, be ) );
 
-        long oldest_ts = Long.MAX_VALUE - getTimestampInMicros( message.getUuid() );
+        long oldest_ts = Long.MAX_VALUE - getTimestampInMicros( messageUuid );
         batch.addInsertion( bytebuffer( queueId ), QUEUE_PROPERTIES.getColumnFamily(),
-                createColumn( QUEUE_OLDEST, message.getUuid(), oldest_ts, se, ue ) );
+                createColumn( QUEUE_OLDEST, messageUuid, oldest_ts, se, ue ) );
 
-        long newest_ts = getTimestampInMicros( message.getUuid() );
+        long newest_ts = getTimestampInMicros( messageUuid );
         batch.addInsertion( bytebuffer( queueId ), QUEUE_PROPERTIES.getColumnFamily(),
-                createColumn( QUEUE_NEWEST, message.getUuid(), newest_ts, se, ue ) );
+                createColumn( QUEUE_NEWEST, messageUuid, newest_ts, se, ue ) );
+
+        logger.debug( "Writing UUID {} with oldest timestamp {} and newest with timestamp {}", new Object[]{messageUuid, oldest_ts, newest_ts});
 
         batch.addInsertion( bytebuffer( getQueueId( "/" ) ), QUEUE_SUBSCRIBERS.getColumnFamily(),
                 createColumn( queuePath, queueId, timestamp, se, ue ) );

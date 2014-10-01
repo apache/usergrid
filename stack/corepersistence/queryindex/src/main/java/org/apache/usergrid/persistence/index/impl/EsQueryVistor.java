@@ -150,8 +150,17 @@ public class EsQueryVistor implements QueryVisitor {
         String name = op.getProperty().getValue();
         name = name.toLowerCase();
         Object value = op.getLiteral().getValue();
-        name = addPrefix( value, name, true );
-        stack.push( QueryBuilders.matchQuery( name, value ));
+
+        BoolQueryBuilder qb = QueryBuilders.boolQuery(); // let's do a boolean OR
+        qb.minimumNumberShouldMatch(1); 
+
+        // field is an entity/array that needs no name prefix
+        qb = qb.should( QueryBuilders.matchQuery( name, value ) );
+
+        // OR field is a string and needs the prefix on the name
+        qb = qb.should( QueryBuilders.matchQuery( addPrefix( value.toString(), name, true), value));
+        
+        stack.push( qb );
     }
 
 
@@ -203,19 +212,25 @@ public class EsQueryVistor implements QueryVisitor {
 
         if ( value instanceof String ) {
             String svalue = (String)value;
-            
-            // use normal prefix, we need unanalyzed field for equals op
-            name = addPrefix( value, name );
 
+            BoolQueryBuilder qb = QueryBuilders.boolQuery();  // let's do a boolean OR
+            qb.minimumNumberShouldMatch(1); 
+
+            // field is an entity/array that does not need a prefix on its name
+            qb = qb.should( QueryBuilders.wildcardQuery( name, svalue ) );
+           
+            // or field is just a string that does need a prefix
             if ( svalue.indexOf("*") != -1 ) {
-                stack.push( QueryBuilders.wildcardQuery(name, svalue) );
-                return;
+                qb = qb.should( QueryBuilders.wildcardQuery( addPrefix( value, name ), svalue ) );
+            } else {
+                qb = qb.should( QueryBuilders.termQuery(     addPrefix( value, name ), value ));
             } 
+            stack.push( qb );
+            return;
+        } 
 
-        } else {
-            name = addPrefix( value, name );
-        }
-        stack.push( QueryBuilders.termQuery( name, value ));
+        // assume all other types need prefix
+        stack.push( QueryBuilders.termQuery( addPrefix( value, name ), value ));
     }
 
 
@@ -250,7 +265,6 @@ public class EsQueryVistor implements QueryVisitor {
 
         // logic to deal with nested property names
         // only add prefix to last name in property
-
         String[] parts = origname.split("\\.");
         if ( parts.length > 1 ) {
             name = parts[ parts.length - 1 ];
@@ -263,15 +277,16 @@ public class EsQueryVistor implements QueryVisitor {
             name = addStringPrefix( name );
 
         } else if ( value instanceof Number ) {
-            name = addNumberPrefix(name);
+            name = addNumberPrefix( name );
 
         } else if ( value instanceof Boolean ) {
-            name = addBooleanPrefix(name);
+            name = addBooleanPrefix( name );
 
         } else if ( value instanceof UUID ) {
-            name = addStringPrefix(name);
+            name = addStringPrefix( name );
         }
 
+        // re-create nested property name 
         if ( parts.length > 1 ) {
             parts[parts.length - 1] = name;
             Joiner joiner = Joiner.on(".").skipNulls();

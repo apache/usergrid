@@ -35,22 +35,19 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class QueueListener  {
-    public static int MAX_CONSECUTIVE_FAILS = 10000;
+    public  final long MESSAGE_TRANSACTION_TIMEOUT =  1 * 60 * 1000;
 
-    public static final long MESSAGE_TRANSACTION_TIMEOUT = 60 * 5 * 1000;
+    public   long DEFAULT_SLEEP = 5000;
 
     private static final Logger LOG = LoggerFactory.getLogger(QueueListener.class);
 
-    @Autowired
     private MetricsFactory metricsService;
 
-    @Autowired
     private ServiceManagerFactory smf;
 
-    @Autowired
     private EntityManagerFactory emf;
 
-    @Autowired
+
     private Properties properties;
 
     private org.apache.usergrid.mq.QueueManager queueManager;
@@ -61,18 +58,16 @@ public class QueueListener  {
 
     private long sleepBetweenRuns = 5000;
 
-    ExecutorService pool;
-    List<Future> futures;
+    private ExecutorService pool;
+    private List<Future> futures;
 
-    public static final String MAX_THREADS = "1";
-    private Integer batchSize = 1000;
-    private String queueName;
+    public  final String MAX_THREADS = "2";
+    private Integer batchSize = 100;
+    private String[] queueNames;
 
-    public QueueListener() {
-        pool = Executors.newFixedThreadPool(1);
-    }
+
+
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Properties props){
-        this();
         this.smf = smf;
         this.emf = emf;
         this.metricsService = metricsService;
@@ -80,11 +75,7 @@ public class QueueListener  {
     }
 
     @PostConstruct
-    void init() {
-        run();
-    }
-
-    public void run(){
+    public void start(){
         boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "true"));
 
         if(shouldRun) {
@@ -93,12 +84,17 @@ public class QueueListener  {
 
             try {
                 sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", "0")).longValue();
-                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", "5000")).longValue();
+                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
                 batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
-                queueName = properties.getProperty(ApplicationQueueManager.DEFAULT_QUEUE_PROPERTY,ApplicationQueueManager.DEFAULT_QUEUE_NAME);
+                queueNames = ApplicationQueueManager.getQueueNames(properties);
 
                 int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
                 futures = new ArrayList<Future>(maxThreads);
+
+                //create our thread pool based on our threadcount.
+
+                pool = Executors.newFixedThreadPool(maxThreads);
+
                 while (threadCount++ < maxThreads) {
                     LOG.info("QueueListener: Starting thread {}.", threadCount);
                     Runnable task = new Runnable() {
@@ -125,16 +121,19 @@ public class QueueListener  {
 
     private void execute(){
         Thread.currentThread().setName("Notifications_Processor"+UUID.randomUUID());
-        svcMgr = smf.getServiceManager(smf.getManagementAppId());
-        queueManager = svcMgr.getQueueManager();
+
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
         LOG.info("QueueListener: Starting execute process.");
 
         // run until there are no more active jobs
         while ( true ) {
             try {
-                QueueResults results = getDeliveryBatch(queueManager);
-                LOG.info("QueueListener: retrieved batch of {} messages", results.size());
+                svcMgr = smf.getServiceManager(smf.getManagementAppId());
+                queueManager = svcMgr.getQueueManager();
+                String queueName = ApplicationQueueManager.getRandomQueue(queueNames);
+                LOG.info("getting from queue {} ", queueName);
+                QueueResults results = getDeliveryBatch(queueManager,queueName);
+                LOG.info("QueueListener: retrieved batch of {} messages from queue {} ", results.size(),queueName);
 
                 List<Message> messages = results.getMessages();
                 if (messages.size() > 0) {
@@ -167,7 +166,7 @@ public class QueueListener  {
                         );
 
                         LOG.info("QueueListener: send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
-                        Observable current = manager.sendBatchToProviders(entry.getValue());
+                        Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
                         if(merge == null)
                             merge = current;
                         else {
@@ -193,7 +192,9 @@ public class QueueListener  {
             }catch (Exception ex){
                 LOG.error("failed to dequeue",ex);
                 try {
-                    long sleeptime = sleepWhenNoneFound*(consecutiveExceptions.incrementAndGet());
+                    long sleeptime = sleepWhenNoneFound*consecutiveExceptions.incrementAndGet();
+                    long maxSleep = 15000;
+                    sleeptime = sleeptime > maxSleep ? maxSleep : sleeptime ;
                     LOG.info("sleeping due to failures {} ms", sleeptime);
                     Thread.sleep(sleeptime);
                 }catch (InterruptedException ie){
@@ -209,14 +210,15 @@ public class QueueListener  {
         for(Future future : futures){
             future.cancel(true);
         }
+
+        pool.shutdownNow();
     }
 
-    private  QueueResults getDeliveryBatch(org.apache.usergrid.mq.QueueManager queueManager) throws Exception {
+    private  QueueResults getDeliveryBatch(org.apache.usergrid.mq.QueueManager queueManager,String queuePath) throws Exception {
         QueueQuery qq = new QueueQuery();
         qq.setLimit(this.getBatchSize());
         qq.setTimeout(MESSAGE_TRANSACTION_TIMEOUT);
-        QueueResults results = queueManager.getFromQueue(queueName, qq);
-        LOG.debug("got batch of {} devices", results.size());
+        QueueResults results = queueManager.getFromQueue(queuePath, qq);
         return results;
     }
 
