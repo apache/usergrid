@@ -27,14 +27,14 @@ import rx.Observable;
 
 /**
  *
- *
- * @author: tnine
+ * The operations for performing changes on an entity
  *
  */
 public interface EntityCollectionManager {
 
     /**
-     * Write the entity in the entity collection.
+     * Write the entity in the entity collection.  This is an entire entity, it's contents will
+     * completely overwrite the previous values, if it exists.
      *
      * @param entity The entity to update
      */
@@ -52,10 +52,10 @@ public interface EntityCollectionManager {
     public Observable<Entity> load( Id entityId );
 
 
-    //TODO add partial update
-
     /**
-     * Takes the change and reloads an entity with all changes applied.
+     * Takes the change and reloads an entity with all changes applied in this entity applied.
+     * The resulting entity from calling load will be the previous version of this entity + the entity
+     * in this object applied to it.
      * @param entity
      * @return
      */

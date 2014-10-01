@@ -36,6 +36,8 @@ import org.apache.usergrid.persistence.collection.serialization.SerializationFig
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
+import org.apache.usergrid.persistence.core.task.NamedTaskExecutorImpl;
+import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -79,8 +81,7 @@ public class CollectionModule extends AbstractModule {
     @Singleton
     @Inject
     @Write
-
-    public WriteStart write (MvccLogEntrySerializationStrategy logStrategy, UUIDService uuidService) {
+    public WriteStart write (final MvccLogEntrySerializationStrategy logStrategy) {
         final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.COMPLETE);
 
         return writeStart;
@@ -90,12 +91,21 @@ public class CollectionModule extends AbstractModule {
     @Singleton
     @Inject
     @WriteUpdate
-
-    public WriteStart writeUpdate (MvccLogEntrySerializationStrategy logStrategy, UUIDService uuidService) {
+    public WriteStart writeUpdate (final MvccLogEntrySerializationStrategy logStrategy) {
         final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.PARTIAL );
 
         return writeStart;
     }
+
+    @Inject
+    @Singleton
+    @Provides
+    @CollectionTaskExecutor
+    public TaskExecutor collectionTaskExecutor(final SerializationFig serializationFig){
+        return new NamedTaskExecutorImpl( "collectiontasks", serializationFig.getTaskPoolThreadSize(), serializationFig.getTaskPoolQueueSize() );
+    }
+
+
 
 
 }
