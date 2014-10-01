@@ -24,6 +24,7 @@ import java.util.Set;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.Singleton;
 import com.netflix.astyanax.AstyanaxConfiguration;
 import com.netflix.astyanax.AstyanaxContext;
 import com.netflix.astyanax.Keyspace;
@@ -41,6 +42,7 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
  *
  * @author tnine
  */
+@Singleton
 public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
     private final CassandraFig cassandraFig;
     private final CassandraConfig cassandraConfig;

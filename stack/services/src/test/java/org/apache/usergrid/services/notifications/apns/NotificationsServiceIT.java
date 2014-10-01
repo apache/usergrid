@@ -24,7 +24,7 @@ import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.services.notifications.*;
-import org.junit.After;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,9 +38,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import static org.apache.usergrid.services.notifications.NotificationsService.NOTIFIER_ID_POSTFIX;
 
@@ -66,10 +63,14 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     private NotificationsService ns;
     QueueListener listener;
 
+    @BeforeClass
+    public static void setup(){
+        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString()+";"+"notifications/test/" + UUID.randomUUID().toString();
+    }
+
     @Override
     @Before
     public void before() throws Exception {
-        ApplicationQueueManager.DEFAULT_QUEUE_NAME = "notifications/test/" + UUID.randomUUID().toString()+";"+"notifications/test/" + UUID.randomUUID().toString();
 
         super.before();
         // create apns notifier //
