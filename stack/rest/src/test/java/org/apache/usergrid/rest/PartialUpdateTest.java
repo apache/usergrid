@@ -30,8 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.fail;
 
 
@@ -103,11 +103,21 @@ public class PartialUpdateTest extends AbstractRestIT {
                             .queryParam("access_token", adminAccessToken)
                             .accept(MediaType.APPLICATION_JSON)
                             .get(String.class));
+
+            log.info(userNode.toString());
+
             assertNotNull(userNode);
+
             assertEquals("Initech", userNode.withArray("entities").get(0).get("employer").asText());
-            //TODO Alex fix this, it doesn't compile
-            assertNotEquals(latitude, userNode.withArray("entities").get(0).get("location").get("latitude").asDouble(), 0d);
-            assertNotEquals(longitude, userNode.withArray("entities").get(0).get("location").get("longitude").asDouble(), 0d);
+
+            assertNotNull(userNode.withArray("entities").get(0).get("location"));
+            assertNotNull(userNode.withArray("entities").get(0).get("location").get("latitude"));
+            assertNotNull(userNode.withArray("entities").get(0).get("location").get("longitude"));
+
+            assertNotSame( latitude, 
+                userNode.withArray("entities").get(0).get("location").get("latitude").asDouble());
+            assertNotSame( longitude, 
+                userNode.withArray("entities").get(0).get("location").get("longitude").asDouble());
         }
 
         // Update bart's employer without specifying any required fields 

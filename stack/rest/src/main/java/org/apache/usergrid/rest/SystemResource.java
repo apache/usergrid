@@ -17,9 +17,14 @@
 package org.apache.usergrid.rest;
 
 
+import java.util.Set;
+import java.util.UUID;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -31,6 +36,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
@@ -99,5 +108,116 @@ public class SystemResource extends AbstractContextResource {
         response.setSuccess();
 
         return new JSONWithPadding( response, callback );
+    }
+
+
+    @RequireSystemAccess
+    @PUT
+    @Path( "index/rebuild" )
+    public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
+                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception {
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "rebuild indexes" );
+
+
+        EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+            @Override
+            public void onProgress( EntityRef s, EntityRef t, String etype ) {
+                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
+                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
+                } );
+            }
+        };
+
+
+        logger.info( "Rebuilding all indexes" );
+
+        emf.rebuildInternalIndexes( po );
+        emf.refreshIndex();
+
+        emf.rebuildAllIndexes( po );
+
+
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    @RequireSystemAccess
+    @PUT
+    @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH  )
+    public JSONWithPadding rebuildIndexes( @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr,
+                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception {
+
+        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
+        ApiResponse response = createApiResponse();
+        response.setAction( "rebuild indexes" );
+
+
+        EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+            @Override
+            public void onProgress( EntityRef s, EntityRef t, String etype ) {
+                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
+                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
+                } );
+            }
+        };
+
+
+        EntityManager em = emf.getEntityManager( appId );
+
+        Set<String> collectionNames = em.getApplicationCollections();
+
+
+        for(String collectionName: collectionNames){
+            rebuildCollection(appId, collectionName);
+        }
+
+
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    @RequireSystemAccess
+    @PUT
+    @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
+    public JSONWithPadding rebuildIndexes( @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr,
+                                           @PathParam( "collectionName" ) String collectionName,
+                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception {
+
+        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
+        ApiResponse response = createApiResponse();
+        response.setAction( "rebuild indexes" );
+
+        rebuildCollection( appId, collectionName );
+
+        response.setSuccess();
+
+        return new JSONWithPadding( response, callback );
+    }
+
+
+    private void rebuildCollection( final UUID applicationId, final String collectionName ) {
+        EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+            @Override
+            public void onProgress( EntityRef s, EntityRef t, String etype ) {
+                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
+                        s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype
+                } );
+            }
+        };
+
+
+        logger.info( "Reindexing for app id: {} and collection {}", applicationId, collectionName );
+
+        emf.rebuildCollectionIndex( applicationId, collectionName, po );
+        emf.refreshIndex();
     }
 }
