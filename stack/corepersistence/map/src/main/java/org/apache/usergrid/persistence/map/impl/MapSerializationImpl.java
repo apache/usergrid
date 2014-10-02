@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.map.impl;/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,7 @@ package org.apache.usergrid.persistence.map.impl;/*
  * under the License.
  */
 
-
+package org.apache.usergrid.persistence.map.impl;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
