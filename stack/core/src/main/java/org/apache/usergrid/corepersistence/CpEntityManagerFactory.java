@@ -326,7 +326,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             return null; 
         } 
 
-        return results.iterator().next().getUuid();
+        Entity entity = results.iterator().next();
+        Object uuidObject = entity.getProperty("applicationUuid"); 
+        if ( uuidObject instanceof UUID ) {
+            return (UUID)uuidObject;
+        }
+        return UUIDUtils.tryExtractUUID( entity.getProperty("applicationUuid").toString() );
     }
 
 

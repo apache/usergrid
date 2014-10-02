@@ -65,7 +65,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
     private static final long RUNTIME = TimeUnit.MINUTES.toMillis( 1 );
 
-    private static final long writeDelayMs = 15;
+    private static final long writeDelayMs = 100;
     //private static final long readDelayMs = 7;
 
     @Rule
@@ -103,29 +103,58 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         // ----------------- create a bunch of entities
 
         final long stopTime = System.currentTimeMillis() + RUNTIME;
-        final Map<String, Object> entityMap = new HashMap<>();
 
-        entityMap.put( "key1", 1000 );
-        entityMap.put( "key2", 2000 );
-        entityMap.put( "key3", "Some value" );
+        Map<String, Object> entityMap = new HashMap<String, Object>() {{
+            put("key1", 1000 );
+            put("key2", 2000 );
+            put("key3", "Some value");
+        }};
+        Map<String, Object> cat1map = new HashMap<String, Object>() {{
+            put("name", "enzo");
+            put("color", "orange");
+        }};
+        Map<String, Object> cat2map = new HashMap<String, Object>() {{
+            put("name", "marquee");
+            put("color", "grey");
+        }};
+        Map<String, Object> cat3map = new HashMap<String, Object>() {{
+            put("name", "bertha");
+            put("color", "tabby");
+        }};
+
+        Entity cat1 = em.create("cat", cat1map );
+        Entity cat2 = em.create("cat", cat2map );
+        Entity cat3 = em.create("cat", cat3map );
 
         List<EntityRef> entityRefs = new ArrayList<EntityRef>();
         int entityCount = 0;
         while ( System.currentTimeMillis() < stopTime ) {
-            entityMap.put("key", entityCount );
-            final Entity created;
+
+            final Entity entity;
+
             try {
-                created = em.create("testType", entityMap );
+                entityMap.put("key", entityCount );
+                entity = em.create("testType", entityMap );
+
+                em.refreshIndex();
+
+                em.createConnection(entity, "herds", cat1);
+                em.createConnection(entity, "herds", cat2);
+                em.createConnection(entity, "herds", cat3);
+
             } catch (Exception ex) {
                 throw new RuntimeException("Error creating entity", ex);
             }
-            entityRefs.add( new SimpleEntityRef( created.getType(), created.getUuid() ) );
+
+            entityRefs.add(new SimpleEntityRef( entity.getType(), entity.getUuid() ) );
             if ( entityCount % 100 == 0 ) {
                 logger.info("Created {} entities", entityCount );
             }
+
             entityCount++;
             try { Thread.sleep( writeDelayMs ); } catch (InterruptedException ignored ) {}
         }
+
         logger.info("Created {} entities", entityCount);
         em.refreshIndex();
 
@@ -218,23 +247,31 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         while ( true ) {
 
             for ( Entity e : results.getEntities() ) {
+
                 assertEquals( 2000, e.getProperty("key2"));
-                //if ( count % 100 == 0 ) {
-                    logger.info( "read {} entities", count++);
-                //}
+
+                Results catResults = em.searchConnectedEntities(e, Query.fromQL("select *"));
+                assertEquals( 3, catResults.size() );
+
+                if ( count % 100 == 0 ) {
+                    logger.info( "read {} entities", count);
+                }
+                count++;
             }
 
             if ( results.hasCursor() ) {
                 logger.info( "Counted {} : query again with cursor", count);
                 q.setCursor( results.getCursor() );
                 results = em.searchCollection( em.getApplicationRef(), collectionName, q );
+
             } else {
                 break;
             }
         }
 
         if ( expected != -1 && expected != count ) {
-            throw new RuntimeException("Did not get expected " + expected + " entities");
+            throw new RuntimeException("Did not get expected " 
+                    + expected + " entities, instead got " + count );
         }
         return count;
     }

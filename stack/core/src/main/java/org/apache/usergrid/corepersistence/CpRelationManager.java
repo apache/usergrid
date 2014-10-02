@@ -642,7 +642,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
-        logger.debug("\n\nWrote edgeType {}\n   from {}:{}\n   to {}:{}\n   scope {}:{}\n\n", new Object[] { 
+        logger.debug("Wrote edgeType {}\n   from {}:{}\n   to {}:{}\n   scope {}:{}", new Object[] { 
             edgeType, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid(),
             memberEntity.getId().getType(), memberEntity.getId().getUuid(),
             applicationScope.getApplication().getType(), applicationScope.getApplication().getUuid()});  
@@ -998,7 +998,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
-        logger.debug("\n\nWrote edgeType {}\n   from {}:{}\n   to {}:{}\n   scope {}:{}\n\n", new Object[] { 
+        logger.debug("Wrote edgeType {}\n   from {}:{}\n   to {}:{}\n   scope {}:{}", new Object[] { 
             edgeType, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid(),
             targetEntity.getId().getType(), targetEntity.getId().getUuid(),
             applicationScope.getApplication().getType(), applicationScope.getApplication().getUuid()}); 
