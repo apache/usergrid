@@ -16,9 +16,11 @@
 
 package org.apache.usergrid.corepersistence;
 
+import com.yammer.metrics.annotation.Metered;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import static java.util.Arrays.asList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,12 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
-import org.apache.usergrid.utils.UUIDUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
-
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.DynamicComposite;
+import me.prettyprint.hector.api.beans.HColumn;
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import me.prettyprint.hector.api.mutation.Mutator;
+import static org.apache.usergrid.corepersistence.CpEntityManager.getEdgeTypeFromCollectionName;
+import static org.apache.usergrid.corepersistence.CpEntityManager.getEdgeTypeFromConnectionType;
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
@@ -45,12 +48,43 @@ import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
+import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_TYPES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_ENTITIES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_TYPES;
+import static org.apache.usergrid.persistence.Schema.INDEX_CONNECTIONS;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TITLE;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
+import static org.apache.usergrid.persistence.Schema.TYPE_ROLE;
+import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.SimpleRoleRef;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX_ENTRIES;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchDeleteLocationInConnectionsIndex;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchRemoveLocationFromCollectionIndex;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInCollectionIndex;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInConnectionsIndex;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate;
+import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
+import static org.apache.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
+import static org.apache.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
 import org.apache.usergrid.persistence.cassandra.QueryProcessorImpl;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import org.apache.usergrid.persistence.cassandra.index.ConnectedIndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
@@ -96,56 +130,18 @@ import org.apache.usergrid.persistence.query.ir.result.GeoIterator;
 import org.apache.usergrid.persistence.query.ir.result.SliceIterator;
 import org.apache.usergrid.persistence.query.ir.result.StaticIdIterator;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
-import org.apache.usergrid.utils.IndexUtils;
-import org.apache.usergrid.utils.MapUtils;
-
-import com.yammer.metrics.annotation.Metered;
-
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.mutation.Mutator;
-import rx.Observable;
-
-import static java.util.Arrays.asList;
-
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_TYPES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_ENTITIES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_TYPES;
-import static org.apache.usergrid.persistence.Schema.INDEX_CONNECTIONS;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TITLE;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.TYPE_ROLE;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX_ENTRIES;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
-import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchDeleteLocationInConnectionsIndex;
-import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchRemoveLocationFromCollectionIndex;
-import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInCollectionIndex;
-import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInConnectionsIndex;
-import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
-import static org.apache.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
-import static org.apache.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
-import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
+import org.apache.usergrid.utils.IndexUtils;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
+import org.apache.usergrid.utils.MapUtils;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
+import org.apache.usergrid.utils.UUIDUtils;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
+import rx.Observable;
 
 
 /**
@@ -155,11 +151,11 @@ public class CpRelationManager implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
 
-    public static final String ALL_TYPES = "zzzalltypeszzz";
+    static final String ALL_TYPES = "zzzalltypeszzz";
 
-    private static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
+    static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
 
-    private static final String EDGE_CONN_SUFFIX = "zzzconnzzz";
+    static final String EDGE_CONN_SUFFIX = "zzzconnzzz";
 
     private CpEntityManagerFactory emf;
     
@@ -239,59 +235,6 @@ public class CpRelationManager implements RelationManager {
     }
 
     
-    static String getEdgeTypeFromConnectionType( String connectionType, String targetEntityType ) {
-
-        if ( connectionType != null && targetEntityType != null ) {
-            String csn = connectionType + "|" + targetEntityType + "|" + EDGE_CONN_SUFFIX;
-            return csn;
-        }
-
-        if ( connectionType != null ) {
-            // no suffix, this must be a search
-            String csn = connectionType;
-            return csn;
-        } 
-
-        return null;
-    }
-
-
-    static String getEdgeTypeFromCollectionName( String collectionName, String targetEntityType ) {
-
-        if ( collectionName != null && targetEntityType != null ) {
-            String csn = collectionName + "|" + targetEntityType + "|" + EDGE_COLL_SUFFIX;
-            return csn;
-        }
-
-        if ( collectionName != null ) {
-            // no suffix, this must be a search
-            String csn = collectionName;
-            return csn;
-        } 
-
-        return null;
-    }
-
-
-    static boolean isCollectionEdgeType( String type )  {
-        return type.endsWith( EDGE_COLL_SUFFIX );
-    }
-    
-    static boolean isConnectionEdgeType( String type )  {
-        return type.endsWith( EDGE_CONN_SUFFIX );
-    }
-    
-    public String getConnectionName( String edgeType ) {
-        String[] parts = edgeType.split("\\|");
-        return parts[0];
-    }
-
-    public String getCollectionName( String edgeType ) {
-        String[] parts = edgeType.split("\\|");
-        return parts[0];
-    }
-
-
     @Override
     public Set<String> getCollectionIndexes( String collectionName ) throws Exception {
         final Set<String> indexes = new HashSet<String>();
@@ -387,10 +330,10 @@ public class CpRelationManager implements RelationManager {
                     edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
 
                 String name = null;
-                if ( isConnectionEdgeType( edge.getType() )) {
-                    name = getConnectionName( edge.getType() );
+                if ( CpEntityManager.isConnectionEdgeType( edge.getType() )) {
+                    name = CpEntityManager.getConnectionType( edge.getType() );
                 } else {
-                    name = getCollectionName( edge.getType() );
+                    name = CpEntityManager.getCollectionName( edge.getType() );
                 }
                 addMapSet( results, eref, name );
             }
@@ -445,9 +388,9 @@ public class CpRelationManager implements RelationManager {
                 // reindex the entity in the source entity's collection or connection index
 
                 IndexScope indexScope;
-                if ( isCollectionEdgeType( edge.getType() )) {
+                if ( CpEntityManager.isCollectionEdgeType( edge.getType() )) {
 
-                    String collName = getCollectionName( edge.getType() ); 
+                    String collName = CpEntityManager.getCollectionName( edge.getType() ); 
                     indexScope = new IndexScopeImpl(
                         applicationScope.getApplication(),
                         new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
@@ -455,7 +398,7 @@ public class CpRelationManager implements RelationManager {
 
                 } else {
 
-                    String connName = getCollectionName( edge.getType() ); 
+                    String connName = CpEntityManager.getCollectionName( edge.getType() ); 
                     indexScope = new IndexScopeImpl(
                         applicationScope.getApplication(),
                         new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
@@ -545,7 +488,7 @@ public class CpRelationManager implements RelationManager {
 
         Observable<Edge> edgesToTarget = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
             targetId,
-            CpRelationManager.getEdgeTypeFromConnectionType( connectionType, target.getType() ),
+            CpEntityManager.getEdgeTypeFromConnectionType( connectionType, target.getType() ),
             System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,
             null)); // last
 
@@ -569,7 +512,7 @@ public class CpRelationManager implements RelationManager {
 
         Observable<Edge> edgesFromSource = gm.loadEdgesFromSource(new SimpleSearchByEdgeType(
             sourceId,
-            CpRelationManager.getEdgeTypeFromConnectionType( connectionType, null ),
+            CpEntityManager.getEdgeTypeFromConnectionType( connectionType, null ),
             System.currentTimeMillis(),SearchByEdgeType.Order.DESCENDING,
             null)); // last
 
@@ -587,12 +530,12 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
         Observable<String> str = gm.getEdgeTypesFromSource( 
-                new SimpleSearchEdgeType( cpHeadEntity.getId(),null , null ));
+                new SimpleSearchEdgeType( cpHeadEntity.getId(), null , null ));
 
         Iterator<String> iter = str.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {
             String edgeType = iter.next();
-            indexes.add( getCollectionName( edgeType ) );
+            indexes.add( CpEntityManager.getCollectionName( edgeType ) );
         }
 
         return indexes;
@@ -670,7 +613,8 @@ public class CpRelationManager implements RelationManager {
         }
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug("Loaded member entity {}:{} from scope\n   app {}\n   owner {}\n   name {} data {}", 
+            logger.debug("Loaded member entity {}:{} from scope\n   app {}\n   "
+                    + "owner {}\n   name {} data {}", 
                 new Object[] { 
                     itemRef.getType(), 
                     itemRef.getUuid(), 
@@ -683,12 +627,10 @@ public class CpRelationManager implements RelationManager {
 
         String edgeType = getEdgeTypeFromCollectionName( collName, memberEntity.getId().getType() );
 
-        logger.debug("addToCollection(): Creating edge type {} from {}:{} to {}:{}", 
-            new Object[] { 
-                edgeType, 
-                headEntity.getType(), headEntity.getUuid(), 
-                itemRef.getType(), itemRef.getUuid() });
-        UUID timeStampUuid =   memberEntity.getId().getUuid() != null &&  UUIDUtils.isTimeBased( memberEntity.getId().getUuid()) ?  memberEntity.getId().getUuid() : UUIDUtils.newTimeUUID();
+        UUID timeStampUuid =   memberEntity.getId().getUuid() != null 
+                &&  UUIDUtils.isTimeBased( memberEntity.getId().getUuid()) 
+                ?  memberEntity.getId().getUuid() : UUIDUtils.newTimeUUID();
+
         long uuidHash =    UUIDUtils.getUUIDLong(timeStampUuid);
 
         // create graph edge connection from head entity to member entity
@@ -700,37 +642,20 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
-        // index member into entity collection | type scope
-        IndexScope collectionIndexScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
-            cpHeadEntity.getId(), 
-            CpEntityManager.getCollectionScopeNameFromCollectionName( collName ));
-        EntityIndex collectionIndex = managerCache.getEntityIndex(collectionIndexScope);
-        collectionIndex.index( memberEntity );
+        logger.debug("Wrote edgeType {}\n   from {}:{}\n   to {}:{}\n   scope {}:{}", new Object[] { 
+            edgeType, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid(),
+            memberEntity.getId().getType(), memberEntity.getId().getUuid(),
+            applicationScope.getApplication().getType(), applicationScope.getApplication().getUuid()});  
 
-        // index member into entity | all-types scope
-        IndexScope entityAllTypesScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
-            cpHeadEntity.getId(), 
-            ALL_TYPES);
-        EntityIndex entityAllCollectionIndex = managerCache.getEntityIndex(entityAllTypesScope);
-        entityAllCollectionIndex.index( memberEntity );
+        ((CpEntityManager)em).indexEntityIntoCollection( cpHeadEntity, memberEntity, collName );
 
-        // index member into application | all-types scope
-        IndexScope appAllTypesScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
-            applicationScope.getApplication(), 
-            ALL_TYPES);
-        EntityIndex allCollectionIndex = managerCache.getEntityIndex(appAllTypesScope);
-        allCollectionIndex.index( memberEntity );
-
-        logger.debug("Added entity {}:{} to collection {}", new String[] { 
+        logger.debug("Added entity {}:{} to collection {}", new Object[] { 
             itemRef.getUuid().toString(), itemRef.getType(), collName }); 
 
-        logger.debug("With head entity scope is {}:{}:{}", new String[] { 
-            headEntityScope.getApplication().toString(), 
-            headEntityScope.getOwner().toString(),
-            headEntityScope.getName()}); 
+//        logger.debug("With head entity scope is {}:{}:{}", new Object[] { 
+//            headEntityScope.getApplication().toString(), 
+//            headEntityScope.getOwner().toString(),
+//            headEntityScope.getName()}); 
 
         if ( connectBack && collection != null && collection.getLinkedCollection() != null ) {
             getRelationManager( itemEntity )
@@ -969,53 +894,49 @@ public class CpRelationManager implements RelationManager {
         query.setEntityType( collection.getType() );
         query = adjustQuery( query );
 
-        CandidateResults crs = ei.search( query );
+        // Because of possible stale entities, which are filtered out by buildResults(), 
+        // we loop until the we've got enough results to satisfy the query limit. 
 
-        return buildResults( query, crs, collName );
+        int maxQueries = 10; // max re-queries to satisfy query limit
 
-//        // Because of possible stale entities, which are filtered out by buildResults(), 
-//        // we loop until the we've got enough results to satisfy the query limit. 
-//
-//        int maxQueries = 10; // max re-queries to satisfy query limit
-//
-//        Results results = null;
-//        int queryCount = 0;
-//        int originalLimit = query.getLimit();
-//        boolean satisfied = false;
-//
-//        while ( !satisfied && queryCount++ < maxQueries ) {
-//
-//            CandidateResults crs = ei.search( query );
-//
-//            if ( results == null ) {
-//                results = buildResults( query, crs, collName );
-//
-//            } else {
-//                Results newResults = buildResults( query, crs, collName );
-//                results.merge( newResults );
-//            }
-//
-//            if ( crs.isEmpty() ) { // no more results
-//                satisfied = true;
-//
-//            } else if ( results.size() == query.getLimit() )  { // got what we need
-//                satisfied = true;
-//
-//            } else if ( crs.hasCursor() ) {
-//                satisfied = false;
-//
-//                // need to query for more
-//                // ask for just what we need to satisfy, don't want to exceed limit
-//                query.setCursor( results.getCursor() );
-//                query.setLimit( originalLimit - results.size() );
-//
-//                logger.warn("Satisfy query limit {}, new limit {} query count {}", new Object[] {
-//                    originalLimit, query.getLimit(), queryCount 
-//                });
-//            }
-//        }
-//
-//        return results;
+        Results results = null;
+        int queryCount = 0;
+        int originalLimit = query.getLimit();
+        boolean satisfied = false;
+
+        while ( !satisfied && queryCount++ < maxQueries ) {
+
+            CandidateResults crs = ei.search( query );
+
+            if ( results == null ) {
+                results = buildResults( query, crs, collName );
+
+            } else {
+                Results newResults = buildResults( query, crs, collName );
+                results.merge( newResults );
+            }
+
+            if ( crs.isEmpty() || !crs.hasCursor() ) { // no results, no cursor, can't get more
+                satisfied = true;
+
+            } else if ( results.size() == query.getLimit() )  { // got what we need
+                satisfied = true;
+
+            } else if ( crs.hasCursor() ) {
+                satisfied = false;
+
+                // need to query for more
+                // ask for just what we need to satisfy, don't want to exceed limit
+                query.setCursor( results.getCursor() );
+                query.setLimit( originalLimit - results.size() );
+
+                logger.warn("Satisfy query limit {}, new limit {} query count {}", new Object[] {
+                    originalLimit, query.getLimit(), queryCount 
+                });
+            } 
+        }
+
+        return results;
     }
 
 
@@ -1065,19 +986,8 @@ public class CpRelationManager implements RelationManager {
             new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ))
                 .toBlockingObservable().last();
 
-        String edgeType = CpRelationManager
+        String edgeType = CpEntityManager
                 .getEdgeTypeFromConnectionType( connectionType, connectedEntityRef.getType() );
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug("createConnection(): "
-                    + "Creating edge type {} \n   from {}:{}\n   to {}:{}\n   in scope {}", 
-                new Object[] { 
-                    edgeType, 
-                    headEntity.getType(), headEntity.getUuid(), 
-                    connectedEntityRef.getType(), connectedEntityRef.getUuid(),
-                    applicationScope.getApplication()
-            });
-        }
 
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge( 
@@ -1088,21 +998,13 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
-        // Index the new connection in app|source|type context
-        IndexScope indexScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
-            cpHeadEntity.getId(), 
-            CpEntityManager.getConnectionScopeName( connectedEntityRef.getType(), connectionType ));
-        EntityIndex ei = managerCache.getEntityIndex(indexScope);
-        ei.index( targetEntity );
+        logger.debug("Wrote edgeType {}\n   from {}:{}\n   to {}:{}\n   scope {}:{}", new Object[] { 
+            edgeType, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid(),
+            targetEntity.getId().getType(), targetEntity.getId().getUuid(),
+            applicationScope.getApplication().getType(), applicationScope.getApplication().getUuid()}); 
 
-        // Index the new connection in app|scope|all-types context
-        IndexScope allTypesIndexScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
-            cpHeadEntity.getId(), 
-            ALL_TYPES);
-        EntityIndex aei = managerCache.getEntityIndex(allTypesIndexScope);
-        aei.index( targetEntity );
+        ((CpEntityManager)em).indexEntityIntoConnection( 
+            cpHeadEntity, targetEntity, connectedEntityRef.getType(), connectionType );
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -1338,7 +1240,9 @@ public class CpRelationManager implements RelationManager {
 
     @Override
     public Set<String> getConnectionTypes(boolean filterConnection) throws Exception {
-        Set<String> connections = cast( em.getDictionaryAsSet( headEntity, Schema.DICTIONARY_CONNECTED_TYPES ) );
+        Set<String> connections = cast( 
+                em.getDictionaryAsSet( headEntity, Schema.DICTIONARY_CONNECTED_TYPES ) );
+
         if ( connections == null ) {
             return null;
         }
@@ -1435,7 +1339,7 @@ public class CpRelationManager implements RelationManager {
 
         // looking for edges to the head entity
         String edgeType = 
-                CpRelationManager.getEdgeTypeFromConnectionType( connType, headEntity.getType() );
+                CpEntityManager.getEdgeTypeFromConnectionType( connType, headEntity.getType() );
 
         Map<EntityRef, Set<String>> containers = 
             getContainers( count, edgeType, fromEntityType );
@@ -2522,6 +2426,8 @@ public class CpRelationManager implements RelationManager {
 
         return scanner;
     }
+
+
 
 
 }
