@@ -208,6 +208,9 @@ public class QueueListener  {
     public void stop(){
         LOG.info("QueueListener: stop processes");
 
+        if(futures == null){
+            return;
+        }
         for(Future future : futures){
             future.cancel(true);
         }
