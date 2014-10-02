@@ -2847,17 +2847,15 @@ public class CpEntityManager implements EntityManager {
                                 collMgr.load( edge.getSourceNode() ).toBlockingObservable().last();
 
                             if (collEntity == null) {
-                                if (logger.isDebugEnabled()) {
-                                    logger.error("FAILED to load entity {}:{} "
-                                            + "from scope\n   app {}\n   owner {}\n   name {}",
-                                            new Object[]{
-                                                edge.getSourceNode().getType(), 
-                                                edge.getSourceNode().getUuid(),
-                                                collScope.getApplication(),
-                                                collScope.getOwner(),
-                                                collScope.getName()
-                                            });
-                                }
+                                logger.warn("(Empty collection?) Failed to load collection entity "
+                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}",
+                                        new Object[]{
+                                            edge.getSourceNode().getType(), 
+                                            edge.getSourceNode().getUuid(),
+                                            collScope.getApplication(),
+                                            collScope.getOwner(),
+                                            collScope.getName()
+                                        });
                                 return;
                             }
 
@@ -2872,17 +2870,15 @@ public class CpEntityManager implements EntityManager {
                                 memberMgr.load( edge.getTargetNode()).toBlockingObservable().last();
 
                             if (memberEntity == null) {
-                                if (logger.isDebugEnabled()) {
-                                    logger.error("FAILED to load entity {}:{} "
-                                            + "from scope\n   app {}\n   owner {}\n   name {}",
-                                            new Object[]{
-                                                edge.getTargetNode().getType(), 
-                                                edge.getTargetNode().getUuid(),
-                                                memberScope.getApplication(),
-                                                memberScope.getOwner(),
-                                                memberScope.getName()
-                                            });
-                                }
+                                logger.warn("(Empty collection?) Failed to load member entity "
+                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}",
+                                        new Object[]{
+                                            edge.getTargetNode().getType(), 
+                                            edge.getTargetNode().getUuid(),
+                                            memberScope.getApplication(),
+                                            memberScope.getOwner(),
+                                            memberScope.getName()
+                                        });
                                 return;
                             }
 
@@ -2917,17 +2913,15 @@ public class CpEntityManager implements EntityManager {
                                 sourceEcm.load( edge.getSourceNode() ).toBlockingObservable().last();
 
                             if (sourceEntity == null) {
-                                if (logger.isDebugEnabled()) {
-                                    logger.error("FAILED to load entity {}:{} "
-                                            + "from scope\n   app {}\n   owner {}\n   name {}",
-                                            new Object[]{
-                                                edge.getSourceNode().getType(), 
-                                                edge.getSourceNode().getUuid(),
-                                                sourceScope.getApplication(),
-                                                sourceScope.getOwner(),
-                                                sourceScope.getName()
-                                            });
-                                }
+                                logger.warn("(Empty connection?) Failed to load source entity "
+                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}", 
+                                        new Object[]{
+                                            edge.getSourceNode().getType(), 
+                                            edge.getSourceNode().getUuid(),
+                                            sourceScope.getApplication(),
+                                            sourceScope.getOwner(),
+                                            sourceScope.getName()
+                                        });
                                 return;
                             }
 
@@ -2942,17 +2936,15 @@ public class CpEntityManager implements EntityManager {
                                 targetEcm.load( edge.getTargetNode() ).toBlockingObservable().last();
 
                             if (targetEntity == null) {
-                                if (logger.isDebugEnabled()) {
-                                    logger.error("FAILED to load entity {}:{} "
-                                            + "from scope\n   app {}\n   owner {}\n   name {}",
-                                            new Object[]{
-                                                edge.getTargetNode().getType(), 
-                                                edge.getTargetNode().getUuid(),
-                                                targetScope.getApplication(),
-                                                targetScope.getOwner(),
-                                                targetScope.getName()
-                                            });
-                                }
+                                logger.warn("(Empty connection?) Failed to load target entity "
+                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}",
+                                        new Object[]{
+                                            edge.getTargetNode().getType(), 
+                                            edge.getTargetNode().getUuid(),
+                                            targetScope.getApplication(),
+                                            targetScope.getOwner(),
+                                            targetScope.getName()
+                                        });
                                 return;
                             }
 
