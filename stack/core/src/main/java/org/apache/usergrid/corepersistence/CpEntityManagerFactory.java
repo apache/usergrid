@@ -302,8 +302,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         init();
 
         Query q = Query.fromQL(PROPERTY_NAME + " = '" + name + "'");
-        EntityManager em = getEntityManager(SYSTEM_APP_ID);
-        Results results = em.searchCollection( em.getApplicationRef(), "organizations", q);
+        EntityManager em = getEntityManager( SYSTEM_APP_ID );
+        Results results = em.searchCollection( em.getApplicationRef(), "organizations", q );
 
         if ( results.isEmpty() ) {
             return null; 
@@ -348,7 +348,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Application app = em.getApplication();
         Id fromEntityId = new SimpleId( app.getUuid(), app.getType() );
 
-        String edgeType = CpEntityManager.getEdgeTypeFromCollectionName("appinfos", "appinfo");
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( "appinfos" );
 
         logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}", 
             new Object[] { edgeType, fromEntityId.getType(), fromEntityId.getUuid() } );
@@ -371,7 +371,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             CollectionScope collScope = new CollectionScopeImpl(
                     appScope.getApplication(),
                     appScope.getApplication(),
-                    CpEntityManager.getCollectionScopeNameFromCollectionName("appinfos"));
+                    CpNamingUtils.getCollectionScopeNameFromCollectionName( "appinfos" ));
 
             org.apache.usergrid.persistence.model.entity.Entity e = 
                     managerCache.getEntityCollectionManager( collScope ).load( targetId )
@@ -558,22 +558,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // refresh special indexes without calling EntityManager refresh because stack overflow 
        
         // system app
-        IndexScope sscope = new IndexScopeImpl( 
-            new SimpleId( SYSTEM_APP_ID, "application"), 
-            new SimpleId( SYSTEM_APP_ID, "application"), "dummy");
-        managerCache.getEntityIndex( sscope ).refresh();
-       
+
+        managerCache.getEntityIndex( new ApplicationScopeImpl( new SimpleId( SYSTEM_APP_ID, "application" ) ) )
+                    .refresh();
+
         // default app
-        IndexScope mscope = new IndexScopeImpl( 
-            new SimpleId( getManagementAppId(), "application"), 
-            new SimpleId( getManagementAppId(), "application"), "dummy");
-        managerCache.getEntityIndex( mscope ).refresh();
+        managerCache.getEntityIndex( new ApplicationScopeImpl( new SimpleId( getManagementAppId(), "application" ) ) )
+                    .refresh();
 
         // management app
-        IndexScope dscope = new IndexScopeImpl( 
-            new SimpleId( getDefaultAppId(), "application"), 
-            new SimpleId( getDefaultAppId(), "application"), "dummy");
-        managerCache.getEntityIndex( dscope ).refresh();
+        managerCache.getEntityIndex( new ApplicationScopeImpl( new SimpleId( getDefaultAppId(), "application" ) ) )
+                    .refresh();
     }
 
 

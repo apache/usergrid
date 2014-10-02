@@ -23,7 +23,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public interface IndexScope extends ApplicationScope {
+public interface IndexScope {
 
     /**
      * @return The name of the index. If you use pluralization for you names vs types,

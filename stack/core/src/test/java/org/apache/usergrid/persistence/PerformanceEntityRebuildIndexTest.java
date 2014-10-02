@@ -42,6 +42,8 @@ import java.util.UUID;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
 import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
@@ -224,8 +226,9 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         EntityIndexFactory eif = injector.getInstance( EntityIndexFactory.class );
 
         Id appId = new SimpleId( appUuid, "application");
-        IndexScope is = new IndexScopeImpl( appId, appId, "application");
-        EntityIndex ei = eif.createEntityIndex(is);
+        ApplicationScope scope = new ApplicationScopeImpl( appId );
+        IndexScope is = new IndexScopeImpl( appId, "application");
+        EntityIndex ei = eif.createEntityIndex(scope);
         EsEntityIndexImpl eeii = (EsEntityIndexImpl)ei;
 
         eeii.deleteIndex();

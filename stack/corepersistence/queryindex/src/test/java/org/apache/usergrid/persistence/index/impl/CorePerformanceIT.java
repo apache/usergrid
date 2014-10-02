@@ -32,7 +32,10 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
@@ -51,6 +54,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 
 /**
@@ -92,20 +96,26 @@ public class CorePerformanceIT extends BaseIT {
         ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
         ecif = injector.getInstance( EntityIndexFactory.class );
 
+        final ApplicationScope scope = new ApplicationScopeImpl( new SimpleId( "application" ) );
+
         log.info("Start Data Load");
-        List<IndexScope> scopes = loadData();
+
+        List<IndexScope> scopes = loadData(scope);
+
         log.info("Finish Data Load");
 
         log.info("Start Data Read");
-        readData( scopes );
+
+
+        readData( scope, scopes );
         log.info("Finish Data Read");
 
-        runSelectedQueries( scopes );
+        runSelectedQueries( scope, scopes );
 
     }
 
 
-    private List<IndexScope> loadData() throws InterruptedException {
+    private List<IndexScope> loadData(final ApplicationScope applicationScope) throws InterruptedException {
 
         long time = new Date().getTime();
 
@@ -117,10 +127,10 @@ public class CorePerformanceIT extends BaseIT {
 
             String appName = "app-" + j + "-" + time;
             Id appId = new SimpleId( appName );
-            IndexScope indexScope = new IndexScopeImpl( appId, appId, "reviews" );
+            IndexScope indexScope = new IndexScopeImpl( appId, "reviews" );
             scopes.add( indexScope );
 
-            Thread t = new Thread( new DataLoader( indexScope ) );
+            Thread t = new Thread( new DataLoader( applicationScope, indexScope ) );
             t.start();
             threads.add( t );
         }
@@ -134,12 +144,12 @@ public class CorePerformanceIT extends BaseIT {
     }
 
 
-    private void readData( List<IndexScope> scopes ) throws InterruptedException {
+    private void readData(final ApplicationScope applicationScope,  List<IndexScope> scopes ) throws InterruptedException {
 
         List<Thread> threads = new ArrayList<Thread>();
         for ( IndexScope scope : scopes ) {
 
-            Thread t = new Thread( new DataReader( scope ));
+            Thread t = new Thread( new DataReader( applicationScope, scope ));
             t.start();
             threads.add(t);
         }
@@ -152,27 +162,28 @@ public class CorePerformanceIT extends BaseIT {
 
 
     static class DataReader implements Runnable {
-        IndexScope indexScope;
+        final ApplicationScope scope;
+       final  IndexScope indexScope;
 
-        public DataReader( IndexScope indexScope ) {
+        public DataReader( final ApplicationScope scope, IndexScope indexScope ) {
+            this.scope = scope;
             this.indexScope = indexScope;
         }
 
         public void run() {
 
-            EntityIndex eci =   ecif.createEntityIndex( indexScope );
-            EntityCollectionManager ecm = ecmf.createCollectionManager( new CollectionScopeImpl( 
-                indexScope.getApplication(), indexScope.getOwner(), indexScope.getName() ) );
+            EntityIndex eci =   ecif.createEntityIndex( scope);
+            EntityCollectionManager ecm = ecmf.createCollectionManager( new CollectionScopeImpl( scope.getApplication(), indexScope.getOwner(), indexScope.getName() ) );
 
             Query query = Query.fromQL( "review_score > 0"); // get all reviews;
             query.withLimit( maxEntities < 1000 ? maxEntities : 1000 );
 
-            CandidateResults candidateResults = eci.search( query );
+            CandidateResults candidateResults = eci.search(indexScope,  query );
             int count = candidateResults.size();
 
             while ( candidateResults.hasCursor() && count < maxEntities ) {
                 query.setCursor( candidateResults.getCursor() )   ;
-                candidateResults = eci.search( query );
+                candidateResults = eci.search(indexScope,  query );
                 count += candidateResults.size();
 
                 //cause retrieval from cassandra
@@ -191,18 +202,20 @@ public class CorePerformanceIT extends BaseIT {
 
 
     static class DataLoader implements Runnable {
-        IndexScope indexScope;
+        final ApplicationScope applicationScope;
+        final IndexScope indexScope;
 
-        public DataLoader( IndexScope indexScope ) {
+        public DataLoader( final ApplicationScope applicationScope, IndexScope indexScope ) {
+            this.applicationScope = applicationScope;
             this.indexScope = indexScope;
         }
 
         public void run() {
 
             CollectionScope collectionScope = new CollectionScopeImpl( 
-                    indexScope.getApplication(), indexScope.getOwner(), indexScope.getName() );
+                    applicationScope.getApplication(), indexScope.getOwner(), indexScope.getName() );
             EntityCollectionManager ecm = ecmf.createCollectionManager(collectionScope );
-            EntityIndex eci = ecif.createEntityIndex(indexScope );
+            EntityIndex eci = ecif.createEntityIndex(applicationScope );
 
             FileReader fr;
             try {
@@ -221,6 +234,9 @@ public class CorePerformanceIT extends BaseIT {
 //            Id appId = orgAppScope.scope.getOwner();
 
             int count = 0;
+
+            EntityIndexBatch entityIndexBatch = eci.createBatch();
+
             try {
                 while ( (s = br.readLine()) != null && count < maxEntities ) {
                     
@@ -230,7 +246,8 @@ public class CorePerformanceIT extends BaseIT {
                             
                             // write and index current entity
                             ecm.write( current ).toBlocking().last();
-                            eci.index( current );
+
+                            entityIndexBatch.index(indexScope, current  );
                             
                             if ( maxEntities < 20 ) {
                                 log.info("Index written for {}", current.getId());
@@ -242,11 +259,15 @@ public class CorePerformanceIT extends BaseIT {
                                     new SimpleId(UUIDGenerator.newTimeUUID(), "review"));
                             
                             count++;
+                            if(count % 1000 == 0){
+                                entityIndexBatch.execute();
+                            }
+
                             if (count % 100000 == 0) {
                                 log.info("Indexed {} reviews in {} / {} ", 
                                     new Object[] { 
                                         count, 
-                                        indexScope.getApplication(), 
+                                            applicationScope,
                                         indexScope.getOwner() } );
                             }
                             continue;
@@ -284,34 +305,34 @@ public class CorePerformanceIT extends BaseIT {
     }   
 
 
-    public void runSelectedQueries( List<IndexScope> indexScopes ) {
+    public void runSelectedQueries(final ApplicationScope scope,  List<IndexScope> indexScopes ) {
 
         for ( IndexScope indexScope : indexScopes ) {
 
 
-            CollectionScope scope = new CollectionScopeImpl( 
-                    indexScope.getApplication(), indexScope.getOwner(), indexScope.getName() );
-            EntityIndex eci = ecif.createEntityIndex(indexScope );
+            CollectionScope collectionScope = new CollectionScopeImpl(
+                    scope.getApplication(), indexScope.getOwner(), indexScope.getName() );
+            EntityIndex eci = ecif.createEntityIndex(scope );
 
             // TODO: come up with more and more complex queries for CorePerformanceIT
 
-            query(eci, "product_productid = 'B006K2ZZ7K'") ;
-            query(eci, "review_profilename = 'Twoapennything'") ;
-            query(eci, "review_profilename contains 'Natalia'") ;
-            query(eci, "review_profilename contains 'Patrick'") ;
-            query(eci, "review_time = 1342051200") ;
-            query(eci, "review_time > 1342051200") ;
-            query(eci, "review_score > 0");
-            query(eci, "review_score > 2");
-            query(eci, "review_score > 3");
-            query(eci, "review_score > 4");
-            query(eci, "review_score > 5");
+            query(indexScope, eci, "product_productid = 'B006K2ZZ7K'") ;
+            query(indexScope, eci, "review_profilename = 'Twoapennything'") ;
+            query(indexScope, eci, "review_profilename contains 'Natalia'") ;
+            query(indexScope, eci, "review_profilename contains 'Patrick'") ;
+            query(indexScope, eci, "review_time = 1342051200") ;
+            query(indexScope, eci, "review_time > 1342051200") ;
+            query(indexScope, eci, "review_score > 0");
+            query(indexScope, eci, "review_score > 2");
+            query(indexScope, eci, "review_score > 3");
+            query(indexScope, eci, "review_score > 4");
+            query(indexScope, eci, "review_score > 5");
         }
     }
 
-    public static void query( EntityIndex eci, String query ) {;
+    public static void query(final IndexScope indexScope, final EntityIndex eci, final String query ) {;
         Query q = Query.fromQL(query) ;
-        CandidateResults candidateResults = eci.search( q );
+        CandidateResults candidateResults = eci.search(indexScope,  q );
         log.info("size = {} returned from query {}", candidateResults.size(), q.getQl() );
     }
 

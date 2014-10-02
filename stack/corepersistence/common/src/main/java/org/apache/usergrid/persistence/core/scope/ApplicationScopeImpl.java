@@ -48,13 +48,13 @@ public class ApplicationScopeImpl implements ApplicationScope {
         if ( this == o ) {
             return true;
         }
-        if ( !( o instanceof ApplicationScopeImpl ) ) {
+        if ( !( o instanceof ApplicationScope ) ) {
             return false;
         }
 
-        final ApplicationScopeImpl that = ( ApplicationScopeImpl ) o;
+        final ApplicationScope that = ( ApplicationScope ) o;
 
-        if ( !application.equals( that.application ) ) {
+        if ( !application.equals( that.getApplication() ) ) {
             return false;
         }
 
