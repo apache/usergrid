@@ -15,28 +15,16 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.event;
-
-
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.model.entity.Entity;
+package org.apache.usergrid.persistence.map;
 
 
 /**
- *
- * Invoked after a new version of an entity has been created.  The entity should be a complete
- * view of the entity.
- *
+ * Factory for creating map managers
  */
-public interface EntityVersionCreated {
-
+public interface MapManagerFactory {
 
     /**
-     * The new version of the entity.  Note that this should be a fully merged view of the entity.
-     * In the case of partial updates, the passed entity should be fully merged with it's previous entries
-     * @param scope The scope of the entity
-     * @param entity The fully loaded and merged entity
+     * Get the map manager
      */
-    public void versionCreated( final CollectionScope scope, final Entity entity );
-
+    public MapManager getMapManager( final MapScope scope );
 }
