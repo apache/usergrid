@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
@@ -167,12 +168,12 @@ public class CorePerformanceIT extends BaseIT {
             Query query = Query.fromQL( "review_score > 0"); // get all reviews;
             query.withLimit( maxEntities < 1000 ? maxEntities : 1000 );
 
-            CandidateResults candidateResults = eci.search( query );
+            CandidateResults candidateResults = eci.search(indexScope,  query );
             int count = candidateResults.size();
 
             while ( candidateResults.hasCursor() && count < maxEntities ) {
                 query.setCursor( candidateResults.getCursor() )   ;
-                candidateResults = eci.search( query );
+                candidateResults = eci.search(indexScope,  query );
                 count += candidateResults.size();
 
                 //cause retrieval from cassandra
@@ -221,6 +222,9 @@ public class CorePerformanceIT extends BaseIT {
 //            Id appId = orgAppScope.scope.getOwner();
 
             int count = 0;
+
+            EntityIndexBatch entityIndexBatch = eci.createBatch();
+
             try {
                 while ( (s = br.readLine()) != null && count < maxEntities ) {
                     
@@ -230,7 +234,8 @@ public class CorePerformanceIT extends BaseIT {
                             
                             // write and index current entity
                             ecm.write( current ).toBlocking().last();
-                            eci.index( current );
+
+                            entityIndexBatch.index(indexScope, current  );
                             
                             if ( maxEntities < 20 ) {
                                 log.info("Index written for {}", current.getId());
@@ -242,6 +247,10 @@ public class CorePerformanceIT extends BaseIT {
                                     new SimpleId(UUIDGenerator.newTimeUUID(), "review"));
                             
                             count++;
+                            if(count % 1000 == 0){
+                                entityIndexBatch.execute();
+                            }
+
                             if (count % 100000 == 0) {
                                 log.info("Indexed {} reviews in {} / {} ", 
                                     new Object[] { 
@@ -295,23 +304,23 @@ public class CorePerformanceIT extends BaseIT {
 
             // TODO: come up with more and more complex queries for CorePerformanceIT
 
-            query(eci, "product_productid = 'B006K2ZZ7K'") ;
-            query(eci, "review_profilename = 'Twoapennything'") ;
-            query(eci, "review_profilename contains 'Natalia'") ;
-            query(eci, "review_profilename contains 'Patrick'") ;
-            query(eci, "review_time = 1342051200") ;
-            query(eci, "review_time > 1342051200") ;
-            query(eci, "review_score > 0");
-            query(eci, "review_score > 2");
-            query(eci, "review_score > 3");
-            query(eci, "review_score > 4");
-            query(eci, "review_score > 5");
+            query(indexScope, eci, "product_productid = 'B006K2ZZ7K'") ;
+            query(indexScope, eci, "review_profilename = 'Twoapennything'") ;
+            query(indexScope, eci, "review_profilename contains 'Natalia'") ;
+            query(indexScope, eci, "review_profilename contains 'Patrick'") ;
+            query(indexScope, eci, "review_time = 1342051200") ;
+            query(indexScope, eci, "review_time > 1342051200") ;
+            query(indexScope, eci, "review_score > 0");
+            query(indexScope, eci, "review_score > 2");
+            query(indexScope, eci, "review_score > 3");
+            query(indexScope, eci, "review_score > 4");
+            query(indexScope, eci, "review_score > 5");
         }
     }
 
-    public static void query( EntityIndex eci, String query ) {;
+    public static void query(final IndexScope indexScope, final EntityIndex eci, final String query ) {;
         Query q = Query.fromQL(query) ;
-        CandidateResults candidateResults = eci.search( q );
+        CandidateResults candidateResults = eci.search(indexScope,  q );
         log.info("size = {} returned from query {}", candidateResults.size(), q.getQl() );
     }
 

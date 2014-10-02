@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
@@ -104,6 +105,9 @@ public class EntityIndexTest extends BaseIT {
         int count = 0;
         StopWatch timer = new StopWatch();
         timer.start();
+
+        final EntityIndexBatch batch = entityIndex.createBatch();
+
         for ( Object o : sampleJson ) {
 
             Map<String, Object> item = ( Map<String, Object> ) o;
@@ -112,12 +116,20 @@ public class EntityIndexTest extends BaseIT {
             entity = EntityIndexMapUtils.fromMap( entity, item );
             EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
 
-            entityIndex.index( entity );
+            batch.index( indexScope, entity );
+
+            if(count %1000 == 0){
+                batch.execute();
+            }
+
+
 
             if ( count++ > MAX_ENTITIES ) {
                 break;
             }
         }
+
+        batch.execute();
         timer.stop();
         log.info( "Total time to index {} entries {}ms, average {}ms/entry",
                 new Object[] { count, timer.getTime(), timer.getTime() / count } );
@@ -125,7 +137,7 @@ public class EntityIndexTest extends BaseIT {
         entityIndex.refresh();
 
 
-        testQueries( entityIndex );
+        testQueries( indexScope, entityIndex );
     }
 
 
@@ -147,29 +159,27 @@ public class EntityIndexTest extends BaseIT {
         Entity entity = EntityIndexMapUtils.fromMap( entityMap );
         EntityUtils.setId( entity, new SimpleId( "fastcar" ) );
         EntityUtils.setVersion( entity, UUIDGenerator.newTimeUUID() );
-        entityIndex.index( entity );
+        entityIndex.createBatch().index(indexScope , entity ).executeAndRefresh();
 
-        entityIndex.refresh();
-
-        CandidateResults candidateResults = entityIndex.search( Query.fromQL( "name contains 'Ferrari*'" ) );
+        CandidateResults candidateResults = entityIndex.search(indexScope,  Query.fromQL( "name contains 'Ferrari*'" ) );
         assertEquals( 1, candidateResults.size() );
 
-        entityIndex.deindex( entity );
+        entityIndex.createBatch().deindex( indexScope, entity ).execute();
 
         entityIndex.refresh();
 
-        candidateResults = entityIndex.search( Query.fromQL( "name contains 'Ferrari*'" ) );
+        candidateResults = entityIndex.search( indexScope, Query.fromQL( "name contains 'Ferrari*'" ) );
         assertEquals( 0, candidateResults.size() );
     }
 
 
-    private void testQuery( EntityIndex entityIndex, String queryString, int num ) {
+    private void testQuery(final IndexScope scope, final EntityIndex entityIndex, final String queryString, final int num ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
         Query query = Query.fromQL( queryString );
         query.setLimit( 1000 );
-        CandidateResults candidateResults = entityIndex.search( query );
+        CandidateResults candidateResults = entityIndex.search( scope, query );
         timer.stop();
 
         assertEquals( num, candidateResults.size() );
@@ -177,34 +187,34 @@ public class EntityIndexTest extends BaseIT {
     }
 
 
-    private void testQueries( EntityIndex entityIndex ) {
+    private void testQueries(final IndexScope scope, final EntityIndex entityIndex ) {
 
 
-        testQuery( entityIndex, "name = 'Morgan Pierce'", 1 );
+        testQuery(scope,  entityIndex, "name = 'Morgan Pierce'", 1 );
 
-        testQuery( entityIndex, "name = 'morgan pierce'", 1 );
+        testQuery(scope,  entityIndex, "name = 'morgan pierce'", 1 );
 
-        testQuery( entityIndex, "name = 'Morgan'", 0 );
+        testQuery(scope,  entityIndex, "name = 'Morgan'", 0 );
 
-        testQuery( entityIndex, "name contains 'Morgan'", 1 );
+        testQuery(scope,  entityIndex, "name contains 'Morgan'", 1 );
 
-        testQuery( entityIndex, "company > 'GeoLogix'", 64 );
+        testQuery(scope,  entityIndex, "company > 'GeoLogix'", 64 );
 
-        testQuery( entityIndex, "gender = 'female'", 45 );
+        testQuery(scope,  entityIndex, "gender = 'female'", 45 );
 
-        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 39", 1 );
+        testQuery(scope,  entityIndex, "name = 'Minerva Harrell' and age > 39", 1 );
 
-        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 39 and age < 41", 1 );
+        testQuery(scope,  entityIndex, "name = 'Minerva Harrell' and age > 39 and age < 41", 1 );
 
-        testQuery( entityIndex, "name = 'Minerva Harrell' and age > 40", 0 );
+        testQuery(scope,  entityIndex, "name = 'Minerva Harrell' and age > 40", 0 );
 
-        testQuery( entityIndex, "name = 'Minerva Harrell' and age >= 40", 1 );
+        testQuery(scope,  entityIndex, "name = 'Minerva Harrell' and age >= 40", 1 );
 
-        testQuery( entityIndex, "name = 'Minerva Harrell' and age <= 40", 1 );
+        testQuery(scope,  entityIndex, "name = 'Minerva Harrell' and age <= 40", 1 );
         
-        testQuery( entityIndex, "name = 'Morgan* '", 1 );
+        testQuery(scope,  entityIndex, "name = 'Morgan* '", 1 );
         
-        testQuery( entityIndex, "name = 'Morgan*'", 1 );
+        testQuery(scope,  entityIndex, "name = 'Morgan*'", 1 );
 
         
         // test a couple of array sub-property queries
@@ -212,16 +222,16 @@ public class EntityIndexTest extends BaseIT {
         int totalUsers = 102;
 
         // nobody has a friend named Jack the Ripper
-        testQuery( entityIndex, "friends.name = 'Jack the Ripper'", 0 );
+        testQuery(scope,  entityIndex, "friends.name = 'Jack the Ripper'", 0 );
 
         // everybody doesn't have a friend named Jack the Ripper
-        testQuery( entityIndex, "not (friends.name = 'Jack the Ripper')", totalUsers );
+        testQuery(scope,  entityIndex, "not (friends.name = 'Jack the Ripper')", totalUsers );
 
         // one person has a friend named Shari Hahn
-        testQuery( entityIndex, "friends.name = 'Wendy Moody'", 1 );
+        testQuery(scope,  entityIndex, "friends.name = 'Wendy Moody'", 1 );
 
         // everybody but 1 doesn't have a friend named Shari Hahh
-        testQuery( entityIndex, "not (friends.name = 'Shari Hahn')", totalUsers - 1);
+        testQuery(scope,  entityIndex, "not (friends.name = 'Shari Hahn')", totalUsers - 1);
 
     }
 
@@ -282,17 +292,20 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setId( user, new SimpleId( "edanuff" ) );
         EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
 
-        entityIndex.index( user );
+
+        final EntityIndexBatch batch = entityIndex.createBatch();
+
+        batch.index( indexScope, user );
 
         user.setField( new StringField( "address1", "1782 address st" ) );
-        entityIndex.index( user );
+        batch.index( indexScope, user );
         user.setField( new StringField( "address2", "apt 508" ) );
-        entityIndex.index( user );
+        batch.index( indexScope,  user );
         user.setField( new StringField( "address3", "apt 508" ) );
-        entityIndex.index( user );
-        entityIndex.refresh();
+        batch.index( indexScope,  user );
+        batch.executeAndRefresh();
 
-        CandidateResults results = entityIndex.getEntityVersions( user.getId() );
+        CandidateResults results = entityIndex.getEntityVersions(indexScope,  user.getId() );
 
         assertEquals(1,  results.size());
         assertEquals( results.get( 0 ).getId(), user.getId() );
@@ -323,21 +336,21 @@ public class EntityIndexTest extends BaseIT {
         EntityUtils.setVersion( user, UUIDGenerator.newTimeUUID() );
 
 
-        ei.index( user );
-        ei.refresh();
+        EntityIndexBatch batch = ei.createBatch();
+
+        batch.index( appScope, user ).executeAndRefresh();
         Query query = new Query();
         query.addEqualityFilter( "username", "edanuff" );
-        CandidateResults r = ei.search( query );
+        CandidateResults r = ei.search( appScope, query );
         assertEquals( user.getId(), r.get( 0 ).getId() );
 
-        ei.deindex( user.getId(), user.getVersion() );
-        ei.refresh();
+        batch.deindex(appScope, user.getId(), user.getVersion() ).executeAndRefresh();
 
 
         // EntityRef
         query = new Query();
         query.addEqualityFilter( "username", "edanuff" );
-        r = ei.search( query );
+        r = ei.search(appScope, query );
 
         assertFalse( r.iterator().hasNext() );
     }
@@ -362,7 +375,10 @@ public class EntityIndexTest extends BaseIT {
         Entity bill = EntityIndexMapUtils.fromMap( billMap );
         EntityUtils.setId( bill, new SimpleId( UUIDGenerator.newTimeUUID(), "user"  ) );
         EntityUtils.setVersion( bill, UUIDGenerator.newTimeUUID() );
-        ei.index( bill );
+
+        EntityIndexBatch batch = ei.createBatch();
+
+        batch.index( appScope,  bill );
 
         // Fred has age as int, favorites as object and retirement goal as object
         Map fredMap = new HashMap() {{
@@ -382,28 +398,28 @@ public class EntityIndexTest extends BaseIT {
         Entity fred = EntityIndexMapUtils.fromMap( fredMap );
         EntityUtils.setId( fred, new SimpleId( UUIDGenerator.newTimeUUID(), "user"  ) );
         EntityUtils.setVersion( fred, UUIDGenerator.newTimeUUID() );
-        ei.index( fred );
+        batch.index( appScope, fred );
 
-        ei.refresh();
+        batch.executeAndRefresh();
 
         Query query = new Query();
         query.addEqualityFilter( "username", "bill" );
-        CandidateResults r = ei.search( query );
+        CandidateResults r = ei.search( appScope, query );
         assertEquals( bill.getId(), r.get( 0 ).getId() );
 
         query = new Query();
         query.addEqualityFilter( "username", "fred" );
-        r = ei.search( query );
+        r = ei.search( appScope,  query );
         assertEquals( fred.getId(), r.get( 0 ).getId() );
 
         query = new Query();
         query.addEqualityFilter( "age", 41 );
-        r = ei.search( query );
+        r = ei.search( appScope,  query );
         assertEquals( fred.getId(), r.get( 0 ).getId() );
 
         query = new Query();
         query.addEqualityFilter( "age", "thirtysomething" );
-        r = ei.search( query );
+        r = ei.search(  appScope, query );
         assertEquals( bill.getId(), r.get( 0 ).getId() );
     }
 }

@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.guice.TestIndexModule;
@@ -105,12 +106,14 @@ public class EntityConnectionIndexImplTest extends BaseIT {
         IndexScope scope = new IndexScopeImpl( appId, person.getId(), "likes" );
 
         EntityIndex personLikesIndex = ecif.createEntityIndex( scope );
-        personLikesIndex.index( muffin );
 
-        personLikesIndex.refresh();
+        EntityIndexBatch batch = personLikesIndex.createBatch();
+
+        batch.index( scope, muffin );
+        batch.executeAndRefresh();
 
         // now, let's search for things that Dave likes
-        CandidateResults likes = personLikesIndex.search( Query.fromQL( "select *" ) );
+        CandidateResults likes = personLikesIndex.search(scope,  Query.fromQL( "select *" ) );
         assertEquals( 1, likes.size() );
         assertEquals(muffin.getId(), likes.get(0).getId());
 
