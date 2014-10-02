@@ -2846,20 +2846,20 @@ public class CpEntityManager implements EntityManager {
                             org.apache.usergrid.persistence.model.entity.Entity collEntity = 
                                 collMgr.load( edge.getSourceNode() ).toBlockingObservable().last();
 
-//                            if (collEntity == null) {
-//                                if (logger.isDebugEnabled()) {
-//                                    logger.error("FAILED to load entity {}:{} "
-//                                            + "from scope\n   app {}\n   owner {}\n   name {}",
-//                                            new Object[]{
-//                                                edge.getSourceNode().getType(), 
-//                                                edge.getSourceNode().getUuid(),
-//                                                collScope.getApplication(),
-//                                                collScope.getOwner(),
-//                                                collScope.getName()
-//                                            });
-//                                }
-//                                return;
-//                            }
+                            if (collEntity == null) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.error("FAILED to load entity {}:{} "
+                                            + "from scope\n   app {}\n   owner {}\n   name {}",
+                                            new Object[]{
+                                                edge.getSourceNode().getType(), 
+                                                edge.getSourceNode().getUuid(),
+                                                collScope.getApplication(),
+                                                collScope.getOwner(),
+                                                collScope.getName()
+                                            });
+                                }
+                                return;
+                            }
 
                             CollectionScope memberScope = new CollectionScopeImpl(
                                 applicationScope.getApplication(),
@@ -2871,20 +2871,20 @@ public class CpEntityManager implements EntityManager {
                             org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
                                 memberMgr.load( edge.getTargetNode()).toBlockingObservable().last();
 
-//                            if (memberEntity == null) {
-//                                if (logger.isDebugEnabled()) {
-//                                    logger.error("FAILED to load entity {}:{} "
-//                                            + "from scope\n   app {}\n   owner {}\n   name {}",
-//                                            new Object[]{
-//                                                edge.getTargetNode().getType(), 
-//                                                edge.getTargetNode().getUuid(),
-//                                                memberScope.getApplication(),
-//                                                memberScope.getOwner(),
-//                                                memberScope.getName()
-//                                            });
-//                                }
-//                                return;
-//                            }
+                            if (memberEntity == null) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.error("FAILED to load entity {}:{} "
+                                            + "from scope\n   app {}\n   owner {}\n   name {}",
+                                            new Object[]{
+                                                edge.getTargetNode().getType(), 
+                                                edge.getTargetNode().getUuid(),
+                                                memberScope.getApplication(),
+                                                memberScope.getOwner(),
+                                                memberScope.getName()
+                                            });
+                                }
+                                return;
+                            }
 
                             indexEntityIntoCollections( collEntity, memberEntity, collName, true );
 
@@ -2914,7 +2914,22 @@ public class CpEntityManager implements EntityManager {
                                 managerCache.getEntityCollectionManager(sourceScope);
 
                             org.apache.usergrid.persistence.model.entity.Entity sourceEntity = 
-                                sourceEcm.load( fromEntityId ).toBlockingObservable().last();
+                                sourceEcm.load( edge.getSourceNode() ).toBlockingObservable().last();
+
+                            if (sourceEntity == null) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.error("FAILED to load entity {}:{} "
+                                            + "from scope\n   app {}\n   owner {}\n   name {}",
+                                            new Object[]{
+                                                edge.getSourceNode().getType(), 
+                                                edge.getSourceNode().getUuid(),
+                                                sourceScope.getApplication(),
+                                                sourceScope.getOwner(),
+                                                sourceScope.getName()
+                                            });
+                                }
+                                return;
+                            }
 
                             CollectionScope targetScope = new CollectionScopeImpl(
                                 applicationScope.getApplication(),
@@ -2925,6 +2940,21 @@ public class CpEntityManager implements EntityManager {
 
                             org.apache.usergrid.persistence.model.entity.Entity targetEntity = 
                                 targetEcm.load( edge.getTargetNode() ).toBlockingObservable().last();
+
+                            if (targetEntity == null) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.error("FAILED to load entity {}:{} "
+                                            + "from scope\n   app {}\n   owner {}\n   name {}",
+                                            new Object[]{
+                                                edge.getTargetNode().getType(), 
+                                                edge.getTargetNode().getUuid(),
+                                                targetScope.getApplication(),
+                                                targetScope.getOwner(),
+                                                targetScope.getName()
+                                            });
+                                }
+                                return;
+                            }
 
                             indexEntityIntoConnection( 
                                     sourceEntity, targetEntity, targetEntityType, connType );
