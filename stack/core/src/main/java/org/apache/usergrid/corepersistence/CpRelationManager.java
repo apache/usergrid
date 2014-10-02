@@ -16,6 +16,8 @@
 
 package org.apache.usergrid.corepersistence;
 
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.usergrid.corepersistence.CpEntityManager.*;
 import com.yammer.metrics.annotation.Metered;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,6 +143,11 @@ import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
+
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.DynamicComposite;
+import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.mutation.Mutator;
 import rx.Observable;
 
 
@@ -917,7 +925,7 @@ public class CpRelationManager implements RelationManager {
 
         while ( !satisfied && queryCount++ < maxQueries ) {
 
-            CandidateResults crs = ei.search( query );
+            CandidateResults crs = ei.search( indexScope, query );
 
             if ( results == null ) {
                 results = buildResults( query, crs, collName );
@@ -1009,23 +1017,24 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
+        EntityIndex ei = managerCache.getEntityIndex(applicationScope);
+        EntityIndexBatch batch = ei.createBatch();
+
         // Index the new connection in app|source|type context
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             CpEntityManager.getConnectionScopeName( connectedEntityRef.getType(), connectionType ));
-        EntityIndex ei = managerCache.getEntityIndex(indexScope);
-        ei.index( targetEntity );
+
+        batch.index(indexScope, targetEntity );
 
         // Index the new connection in app|scope|all-types context
         IndexScope allTypesIndexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             ALL_TYPES);
-        EntityIndex aei = managerCache.getEntityIndex(allTypesIndexScope);
-        aei.index( targetEntity );
+        batch.index(allTypesIndexScope,  targetEntity );
 
-        batch.index( allTypesIndexScope, targetEntity );
 
         batch.execute();
 

@@ -626,7 +626,7 @@ public class CpEntityManager implements EntityManager {
             logger.debug( "Deleting indexes of all {} collections owning the entity", 
                     owners.keySet().size() );
 
-            final  EntityIndex ei = managerCache.getEntityIndex( appScope );
+            final  EntityIndex ei = managerCache.getEntityIndex( applicationScope );
 
             final EntityIndexBatch batch = ei.createBatch();
 
@@ -1054,7 +1054,7 @@ public class CpEntityManager implements EntityManager {
                 getCollectionScopeNameFromEntityType( entityRef.getType()) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-        EntityIndex ei = managerCache.getEntityIndex( appScope );
+        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
@@ -2611,12 +2611,12 @@ public class CpEntityManager implements EntityManager {
         }
 
         // Index CP entity into default collection scope
-        IndexScope defaultIndexScope = new IndexScopeImpl( 
-            applicationScope.getApplication(), 
-            applicationScope.getApplication(), 
-            CpEntityManager.getCollectionScopeNameFromEntityType( entity.getType() ) );
-        EntityIndex ei = managerCache.getEntityIndex( defaultIndexScope );
-        ei.index( cpEntity );
+//        IndexScope defaultIndexScope = new IndexScopeImpl(
+//            applicationScope.getApplication(),
+//            applicationScope.getApplication(),
+//            CpEntityManager.getCollectionScopeNameFromEntityType( entity.getType() ) );
+//        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+//        ei.createBatch().index( defaultIndexScope, cpEntity ).execute();
 
         // reflect changes in the legacy Entity
         entity.setUuid( cpEntity.getId().getUuid() );
@@ -3033,7 +3033,7 @@ public class CpEntityManager implements EntityManager {
             collName, collectionEntity.getId().getType(), collectionEntity.getId().getUuid(),
             memberEntity.getId().getType(), memberEntity.getId().getUuid() });
 
-        indexEntityIntoCollection( collectionEntity, memberEntity, collName );
+        indexEntityIntoCollection( collectionEntity, memberEntity, collName);
 
         CollectionInfo collection = getDefaultSchema()
                 .getCollection( memberEntity.getId().getType(), collName);
@@ -3053,58 +3053,71 @@ public class CpEntityManager implements EntityManager {
             org.apache.usergrid.persistence.model.entity.Entity sourceEntity,
             org.apache.usergrid.persistence.model.entity.Entity targetEntity,
             String targetEntityType,
-            String connType ) {
+            String connType) {
 
         logger.debug("Indexing into connection {} source {}:{} target {}:{}", new Object[] { 
             connType, sourceEntity.getId().getType(), sourceEntity.getId().getUuid(),
             targetEntity.getId().getType(), targetEntity.getId().getUuid() });
+
+
+        final EntityIndex ei = getManagerCache().getEntityIndex( applicationScope );
+        final EntityIndexBatch batch = ei.createBatch();
+
+
+
 
         // Index the new connection in app|source|type context
         IndexScope indexScope = new IndexScopeImpl(
                 applicationScope.getApplication(),
                 sourceEntity.getId(),
                 CpEntityManager.getConnectionScopeName(targetEntityType, connType));
-        EntityIndex ei = managerCache.getEntityIndex(indexScope);
-        ei.index(targetEntity);
+        batch.index(indexScope, targetEntity);
         
         // Index the new connection in app|scope|all-types context
         IndexScope allTypesIndexScope = new IndexScopeImpl(
                 applicationScope.getApplication(),
                 sourceEntity.getId(),
                 ALL_TYPES);
-        EntityIndex aei = managerCache.getEntityIndex(allTypesIndexScope);
-        aei.index(targetEntity);
+
+        batch.index(allTypesIndexScope, targetEntity);
+
+        batch.execute();
     }
 
 
     void indexEntityIntoCollection(
             org.apache.usergrid.persistence.model.entity.Entity collectionEntity, 
             org.apache.usergrid.persistence.model.entity.Entity memberEntity, 
-            String collName ) {
+            String collName) {
+
+        final EntityIndex ei = getManagerCache().getEntityIndex( applicationScope );
+        final EntityIndexBatch batch = ei.createBatch();
 
         // index member into entity collection | type scope
         IndexScope collectionIndexScope = new IndexScopeImpl(
                 applicationScope.getApplication(),
                 collectionEntity.getId(),
                 CpEntityManager.getCollectionScopeNameFromCollectionName(collName));
-        EntityIndex collectionIndex = managerCache.getEntityIndex(collectionIndexScope);
-        collectionIndex.index(memberEntity);
+
+        batch.index(collectionIndexScope, memberEntity);
         
         // index member into entity | all-types scope
         IndexScope entityAllTypesScope = new IndexScopeImpl(
                 applicationScope.getApplication(),
                 collectionEntity.getId(),
                 ALL_TYPES);
-        EntityIndex entityAllCollectionIndex = managerCache.getEntityIndex(entityAllTypesScope);
-        entityAllCollectionIndex.index(memberEntity);
+
+        batch.index(entityAllTypesScope, memberEntity);
         
         // index member into application | all-types scope
         IndexScope appAllTypesScope = new IndexScopeImpl(
                 applicationScope.getApplication(),
                 applicationScope.getApplication(),
                 ALL_TYPES);
-        EntityIndex allCollectionIndex = managerCache.getEntityIndex(appAllTypesScope);
-        allCollectionIndex.index(memberEntity);
+
+        batch.index(appAllTypesScope, memberEntity);
+
+        batch.execute();
     }
 }
 

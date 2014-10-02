@@ -26,6 +26,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
@@ -308,9 +309,5 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
 
-    @Override
-    public void refresh() {
-        client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
-        log.debug( "Refreshed index: " + indexName );
-    }
+
 }
