@@ -568,7 +568,6 @@ public class CpEntityManager implements EntityManager {
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
 
             cpEntity = ecm.update( cpEntity ).toBlockingObservable().last();
-            refreshIndex();
             cpEntity = ecm.load( entityId ).toBlockingObservable().last();
 
             logger.debug("Wrote {}:{} version {}", new Object[] { 
