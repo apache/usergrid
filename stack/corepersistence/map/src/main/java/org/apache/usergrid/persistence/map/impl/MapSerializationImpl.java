@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
 
+import com.google.common.base.Preconditions;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
@@ -88,28 +89,16 @@ public class MapSerializationImpl implements MapSerialization {
 
     @Override
     public String getString( final MapScope scope, final String key ) {
-         //add it to the entry
-        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
-
-
-        try {
-            final Column<Boolean> result =
-                    keyspace.prepareQuery( MAP_ENTRIES ).getKey( entryRowKey ).getColumn( true ).execute().getResult();
-
-            return result.getStringValue();
-        }
-        catch ( NotFoundException nfe ) {
-            //nothing to return
-            return null;
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
+        Column<Boolean> col = getValue(scope, key);
+        return (col !=null) ?  col.getStringValue(): null;
     }
 
 
     @Override
     public void putString( final MapScope scope, final String key, final String value ) {
+        Preconditions.checkNotNull(scope, "mapscope is required");
+        Preconditions.checkNotNull( key, "key is required" );
+        Preconditions.checkNotNull( value, "value is required" );
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         //add it to the entry
@@ -134,25 +123,65 @@ public class MapSerializationImpl implements MapSerialization {
 
     @Override
     public UUID getUuid( final MapScope scope, final String key ) {
-        return null;
+
+        Column<Boolean> col = getValue(scope, key);
+        return (col !=null) ?  col.getUUIDValue(): null;
     }
 
 
     @Override
-    public UUID putUuid( final MapScope scope, final String key, final UUID putUuid ) {
-        return null;
+    public void putUuid( final MapScope scope, final String key, final UUID putUuid ) {
+
+        final MutationBatch batch = keyspace.prepareMutationBatch();
+
+        //add it to the entry
+        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+
+        //serialize to the entry
+        batch.withRow(MAP_ENTRIES, entryRowKey).putColumn(true, putUuid);
+
+        //add it to the keys
+
+        final ScopedRowKey<ApplicationScope, String> keyRowKey =
+                ScopedRowKey.fromKey((ApplicationScope) scope, key);
+
+        //serialize to the entry
+        batch.withRow(MAP_KEYS, keyRowKey).putColumn(key, true);
+
+        executeBatch(batch);
+
     }
 
 
     @Override
     public Long getLong( final MapScope scope, final String key ) {
-        return null;
+        Column<Boolean> col = getValue(scope, key);
+        return (col !=null) ?  col.getLongValue(): null;
     }
 
 
+
+
     @Override
-    public Long putLong( final MapScope scope, final String key, final Long value ) {
-        return null;
+    public void putLong( final MapScope scope, final String key, final Long value ) {
+
+        final MutationBatch batch = keyspace.prepareMutationBatch();
+
+        //add it to the entry
+        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+
+        //serialize to the entry
+        batch.withRow(MAP_ENTRIES, entryRowKey).putColumn(true, value);
+
+        //add it to the keys
+
+        final ScopedRowKey<ApplicationScope, String> keyRowKey =
+                ScopedRowKey.fromKey((ApplicationScope) scope, key);
+
+        //serialize to the entry
+        batch.withRow(MAP_KEYS, keyRowKey).putColumn(key, true);
+
+        executeBatch(batch);
     }
 
 
@@ -185,6 +214,26 @@ public class MapSerializationImpl implements MapSerialization {
                                BytesType.class.getSimpleName(), UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Arrays.asList( mapEntries, mapKeys );
+    }
+
+    private  Column<Boolean> getValue(MapScope scope, String key) {
+        //add it to the entry
+        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
+
+
+        try {
+            final Column<Boolean> result =
+                    keyspace.prepareQuery( MAP_ENTRIES ).getKey( entryRowKey ).getColumn( true ).execute().getResult();
+
+            return result;
+        }
+        catch ( NotFoundException nfe ) {
+            //nothing to return
+            return null;
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to connect to cassandra", e );
+        }
     }
 
     private void executeBatch(MutationBatch batch) {

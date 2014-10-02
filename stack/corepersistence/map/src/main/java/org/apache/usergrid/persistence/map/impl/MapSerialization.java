@@ -44,7 +44,7 @@ public interface MapSerialization extends Migration {
     /**
      * Return the uuid, null if not found
      */
-    public UUID putUuid(final MapScope scope,  final String key, final UUID putUuid );
+    public void putUuid(final MapScope scope,  final String key, final UUID putUuid );
 
     /**
      * Return the long, null if not found
@@ -54,7 +54,7 @@ public interface MapSerialization extends Migration {
     /**
      * Return the long, null if not found
      */
-    public Long putLong(final MapScope scope,  final String key, final Long value );
+    public void putLong(final MapScope scope,  final String key, final Long value );
 
     /**
      * Delete the key

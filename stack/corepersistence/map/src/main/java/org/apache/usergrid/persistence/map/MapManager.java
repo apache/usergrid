@@ -48,7 +48,7 @@ public interface MapManager {
     /**
      * Return the uuid, null if not found
      */
-    public UUID putUuid( final String key, final UUID putUuid );
+    public void putUuid( final String key, final UUID putUuid );
 
     /**
      * Return the long, null if not found
@@ -58,7 +58,7 @@ public interface MapManager {
     /**
      * Return the long, null if not found
      */
-    public Long putLong( final String key, final Long value );
+    public void putLong( final String key, final Long value );
 
     /**
      * Delete the key

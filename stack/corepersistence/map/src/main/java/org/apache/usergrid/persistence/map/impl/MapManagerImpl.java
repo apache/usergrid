@@ -57,9 +57,6 @@ import com.netflix.astyanax.serializers.StringSerializer;
  */
 public class MapManagerImpl implements MapManager {
 
-
-
-
     private final MapScope scope;
     private final MapSerialization mapSerialization;
 
@@ -90,8 +87,8 @@ public class MapManagerImpl implements MapManager {
 
 
     @Override
-    public UUID putUuid( final String key, final UUID putUuid ) {
-        return mapSerialization.putUuid(scope,key,putUuid);
+    public void putUuid( final String key, final UUID putUuid ) {
+         mapSerialization.putUuid(scope,key,putUuid);
     }
 
 
@@ -102,8 +99,8 @@ public class MapManagerImpl implements MapManager {
 
 
     @Override
-    public Long putLong( final String key, final Long value ) {
-        return mapSerialization.putLong(scope,key,value);
+    public void putLong( final String key, final Long value ) {
+         mapSerialization.putLong(scope,key,value);
     }
 
 
