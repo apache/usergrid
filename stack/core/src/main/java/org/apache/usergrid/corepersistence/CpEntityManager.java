@@ -16,9 +16,13 @@
 package org.apache.usergrid.corepersistence;
 
 
+import com.netflix.hystrix.exception.HystrixRuntimeException;
+import com.yammer.metrics.annotation.Metered;
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import static java.util.Arrays.asList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,11 +36,26 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
-
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.ColumnSlice;
+import me.prettyprint.hector.api.beans.CounterRow;
+import me.prettyprint.hector.api.beans.CounterRows;
+import me.prettyprint.hector.api.beans.CounterSlice;
+import me.prettyprint.hector.api.beans.DynamicComposite;
+import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.beans.HCounterColumn;
+import me.prettyprint.hector.api.factory.HFactory;
+import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
+import me.prettyprint.hector.api.query.QueryResult;
+import me.prettyprint.hector.api.query.SliceCounterQuery;
+import static org.apache.commons.lang.StringUtils.capitalize;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.usergrid.corepersistence.CpRelationManager.ALL_TYPES;
+import static org.apache.usergrid.corepersistence.CpRelationManager.EDGE_COLL_SUFFIX;
+import static org.apache.usergrid.corepersistence.CpRelationManager.EDGE_CONN_SUFFIX;
 import org.apache.usergrid.persistence.AggregateCounter;
 import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.CollectionRef;
@@ -50,71 +69,7 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.TypedEntity;
-import org.apache.usergrid.persistence.cassandra.ApplicationCF;
-import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
-import org.apache.usergrid.persistence.cassandra.CounterUtils;
-import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
-import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.entities.Event;
-import org.apache.usergrid.persistence.entities.Group;
-import org.apache.usergrid.persistence.entities.Role;
-import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
-import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
-import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
-import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.IndexScope;
-import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
-import org.apache.usergrid.persistence.index.query.CounterResolution;
-import org.apache.usergrid.persistence.index.query.Identifier;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.index.query.Query.Level;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.utils.ClassUtils;
-import org.apache.usergrid.utils.CompositeUtils;
-import org.apache.usergrid.utils.StringUtils;
-import org.apache.usergrid.utils.UUIDUtils;
-
-import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.yammer.metrics.annotation.Metered;
-
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.beans.CounterRow;
-import me.prettyprint.hector.api.beans.CounterRows;
-import me.prettyprint.hector.api.beans.CounterSlice;
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.HCounterColumn;
-import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.mutation.Mutator;
-import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
-import me.prettyprint.hector.api.query.QueryResult;
-import me.prettyprint.hector.api.query.SliceCounterQuery;
-import rx.Observable;
-
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
-import static java.util.Arrays.asList;
-
-import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.apache.commons.lang.StringUtils.capitalize;
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.usergrid.corepersistence.CpRelationManager.ALL_TYPES;
+import org.apache.usergrid.persistence.Schema;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
@@ -130,26 +85,75 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import org.apache.usergrid.persistence.Schema;
+import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
 import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
 import org.apache.usergrid.persistence.SimpleRoleRef;
+import org.apache.usergrid.persistence.TypedEntity;
+import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
+import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
+import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
+import org.apache.usergrid.persistence.cassandra.CounterUtils;
+import org.apache.usergrid.persistence.cassandra.GeoIndexManager;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.le;
 import static org.apache.usergrid.persistence.cassandra.Serializers.se;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
+import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
+import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
+import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.entities.Event;
+import org.apache.usergrid.persistence.entities.Group;
+import org.apache.usergrid.persistence.entities.Role;
+import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
+import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.persistence.schema.CollectionInfo;
+import org.apache.usergrid.utils.ClassUtils;
 import static org.apache.usergrid.utils.ClassUtils.cast;
+import org.apache.usergrid.utils.CompositeUtils;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.ConversionUtils.getLong;
 import static org.apache.usergrid.utils.ConversionUtils.object;
 import static org.apache.usergrid.utils.ConversionUtils.string;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
+import org.apache.usergrid.utils.StringUtils;
+import org.apache.usergrid.utils.UUIDUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
+import rx.Observable;
+import rx.functions.Action1;
 
 
 
@@ -172,7 +176,7 @@ public class CpEntityManager implements EntityManager {
 
     private CpManagerCache managerCache;
 
-    private ApplicationScope appScope;
+    private ApplicationScope applicationScope;
 
     private CassandraService cass;
 
@@ -191,7 +195,7 @@ public class CpEntityManager implements EntityManager {
         this.managerCache = this.emf.getManagerCache();
         this.applicationId = applicationId;
 
-        appScope = this.emf.getApplicationScope( applicationId );
+        applicationScope = this.emf.getApplicationScope( applicationId );
 
         this.cass = this.emf.cass;
         this.counterUtils = this.emf.counterUtils;
@@ -200,7 +204,7 @@ public class CpEntityManager implements EntityManager {
         this.skipAggregateCounters = false;
 
 
-        appScope = this.emf.getApplicationScope( applicationId );
+        applicationScope = this.emf.getApplicationScope( applicationId );
     }
 
 
@@ -211,19 +215,79 @@ public class CpEntityManager implements EntityManager {
 
     static String getCollectionScopeNameFromEntityType( String type ) {
         String csn = Schema.defaultCollectionName( type ) + COLL_SUFFIX;
-        return csn;
+        return csn.toLowerCase();
     }
 
 
     static String getCollectionScopeNameFromCollectionName( String name ) {
         String csn = name + COLL_SUFFIX;
-        return csn;
+        return csn.toLowerCase();
     }
 
 
     static String getConnectionScopeName( String entityType, String connectionType ) {
         String csn = connectionType + entityType + CONN_SUFFIX;
-        return csn;
+        return csn.toLowerCase();
+    }
+
+    static boolean isCollectionEdgeType( String type )  {
+        return type.endsWith( EDGE_COLL_SUFFIX );
+    }
+    
+    static boolean isConnectionEdgeType( String type )  {
+        return type.endsWith( EDGE_CONN_SUFFIX );
+    }
+    
+    static public String getConnectionType( String edgeType ) {
+        String[] parts = edgeType.split("\\|");
+        return parts[0];
+    }
+
+    static public String getCollectionEntityType( String edgeType ) {
+        String[] parts = edgeType.split("\\|");
+        return parts[1];
+    }
+
+    static public String getCollectionName( String edgeType ) {
+        String[] parts = edgeType.split("\\|");
+        return parts[0];
+    }
+
+    static public String getConnectedEntityType( String edgeType ) {
+        String[] parts = edgeType.split("\\|");
+        return parts[1];
+    }
+
+    static String getEdgeTypeFromConnectionType( String connectionType, String targetEntityType ) {
+
+        if ( connectionType != null && targetEntityType != null ) {
+            String csn = connectionType + "|" + targetEntityType + "|" + EDGE_CONN_SUFFIX;
+            return csn;
+        }
+
+        if ( connectionType != null ) {
+            // no suffix, this must be a search
+            String csn = connectionType;
+            return csn;
+        } 
+
+        return null;
+    }
+
+    static String getEdgeTypeFromCollectionName( String collectionName, String targetEntityType ) {
+
+        if ( collectionName != null && targetEntityType != null ) {
+            String csn = collectionName + "|" + targetEntityType + "|" + EDGE_COLL_SUFFIX;
+            return csn;
+        }
+
+        if ( collectionName != null ) {
+            // no suffix, this must be a search
+            String csn = collectionName;
+            return csn;
+        } 
+
+        return null;
     }
 
 
@@ -318,7 +382,7 @@ public class CpEntityManager implements EntityManager {
         String collectionName = getCollectionScopeNameFromEntityType( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-                appScope.getApplication(), appScope.getApplication(), collectionName );
+                applicationScope.getApplication(), applicationScope.getApplication(), collectionName );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -405,7 +469,7 @@ public class CpEntityManager implements EntityManager {
         String collectionName = getCollectionScopeNameFromEntityType( type );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-                appScope.getApplication(), appScope.getApplication(), collectionName );
+                applicationScope.getApplication(), applicationScope.getApplication(), collectionName );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -471,8 +535,8 @@ public class CpEntityManager implements EntityManager {
 
         // first, update entity index in its own collection scope
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            appScope.getApplication(), 
-            appScope.getApplication(),
+            applicationScope.getApplication(), 
+            applicationScope.getApplication(),
             getCollectionScopeNameFromEntityType( entity.getType() ) );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -536,8 +600,8 @@ public class CpEntityManager implements EntityManager {
     private Observable deleteAsync( EntityRef entityRef ) throws Exception {
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-            appScope.getApplication(), 
-            appScope.getApplication(),
+            applicationScope.getApplication(), 
+            applicationScope.getApplication(),
             getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
@@ -570,7 +634,7 @@ public class CpEntityManager implements EntityManager {
                     for ( String coll : collectionNames ) {
 
                         IndexScope indexScope = new IndexScopeImpl( 
-                                appScope.getApplication(), 
+                                applicationScope.getApplication(), 
                                 new SimpleId( uuid, ownerType ), 
                                 CpEntityManager.getCollectionScopeNameFromCollectionName(coll) );
 
@@ -583,15 +647,15 @@ public class CpEntityManager implements EntityManager {
 
             // deindex from default index scope
             IndexScope defaultIndexScope = new IndexScopeImpl( 
-                    appScope.getApplication(), 
-                    appScope.getApplication(),
+                    applicationScope.getApplication(), 
+                    applicationScope.getApplication(),
                     getCollectionScopeNameFromEntityType( entityRef.getType() ) );
             EntityIndex entityIndex = managerCache.getEntityIndex( defaultIndexScope );
             entityIndex.deindex( entity );
 
             IndexScope allTypesIndexScope = new IndexScopeImpl( 
-                appScope.getApplication(), 
-                appScope.getApplication(), 
+                applicationScope.getApplication(), 
+                applicationScope.getApplication(), 
                 ALL_TYPES);
             EntityIndex aei = managerCache.getEntityIndex( allTypesIndexScope );
             aei.deindex( entity );
@@ -971,13 +1035,13 @@ public class CpEntityManager implements EntityManager {
         String collectionName = getCollectionScopeNameFromEntityType( entityRef.getType() );
 
         CollectionScope collectionScope = new CollectionScopeImpl( 
-                appScope.getApplication(), 
-                appScope.getApplication(), 
+                applicationScope.getApplication(), 
+                applicationScope.getApplication(), 
                 collectionName );
 
         IndexScope defaultIndexScope = new IndexScopeImpl( 
-                appScope.getApplication(), 
-                appScope.getApplication(), 
+                applicationScope.getApplication(), 
+                applicationScope.getApplication(), 
                 getCollectionScopeNameFromEntityType( entityRef.getType()) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
@@ -1240,7 +1304,8 @@ public class CpEntityManager implements EntityManager {
 
         ColumnSlice<ByteBuffer, ByteBuffer> results =
                 cass.getColumns( cass.getApplicationKeyspace( applicationId ), dictionaryCf,
-                        CassandraPersistenceUtils.key( entity.getUuid(), dictionaryName ), columnNames, be, be );
+                        CassandraPersistenceUtils.key( entity.getUuid(), dictionaryName ), 
+                        columnNames, be, be );
         if ( results != null ) {
             values = new HashMap<String, Object>();
             for ( HColumn<ByteBuffer, ByteBuffer> result : results.getColumns() ) {
@@ -1620,11 +1685,14 @@ public class CpEntityManager implements EntityManager {
 
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
         CassandraPersistenceUtils.addInsertToMutator( batch, ENTITY_DICTIONARIES, 
-                CassandraPersistenceUtils.key( ownerId, Schema.DICTIONARY_ROLENAMES ), roleName, roleTitle, timestamp );
+                CassandraPersistenceUtils.key( ownerId, Schema.DICTIONARY_ROLENAMES ), 
+                roleName, roleTitle, timestamp );
         CassandraPersistenceUtils.addInsertToMutator( batch, ENTITY_DICTIONARIES, 
-                CassandraPersistenceUtils.key( ownerId, Schema.DICTIONARY_ROLETIMES ), roleName, inactivity, timestamp );
+                CassandraPersistenceUtils.key( ownerId, Schema.DICTIONARY_ROLETIMES ), 
+                roleName, inactivity, timestamp );
         CassandraPersistenceUtils.addInsertToMutator( batch, ENTITY_DICTIONARIES, 
-                CassandraPersistenceUtils.key( ownerId, DICTIONARY_SETS ), Schema.DICTIONARY_ROLENAMES, null, timestamp );
+                CassandraPersistenceUtils.key( ownerId, DICTIONARY_SETS ), 
+                Schema.DICTIONARY_ROLENAMES, null, timestamp );
 
         CassandraPersistenceUtils.batchExecute( batch, CassandraService.RETRY_COUNT );
 
@@ -1664,13 +1732,15 @@ public class CpEntityManager implements EntityManager {
 
 
     private Object getRolePermissionsKey( String roleName ) {
-        return CassandraPersistenceUtils.key( SimpleRoleRef.getIdForRoleName( roleName ), DICTIONARY_PERMISSIONS );
+        return CassandraPersistenceUtils.key( SimpleRoleRef.getIdForRoleName( roleName ), 
+                DICTIONARY_PERMISSIONS );
     }
 
 
     private Object getRolePermissionsKey( UUID groupId, String roleName ) {
         try {
-            return CassandraPersistenceUtils.key( getGroupRoleRef( groupId, roleName ).getUuid(), DICTIONARY_PERMISSIONS );
+            return CassandraPersistenceUtils.key( getGroupRoleRef( groupId, roleName ).getUuid(), 
+                    DICTIONARY_PERMISSIONS );
         } catch ( Exception e ) {
             logger.error("Error creating role key for uuid {} and role {}", groupId, roleName );
             return null;
@@ -2487,8 +2557,8 @@ public class CpEntityManager implements EntityManager {
 
         // prepare to write and index Core Persistence Entity into default scope
         CollectionScope collectionScope = new CollectionScopeImpl( 
-                appScope.getApplication(), 
-                appScope.getApplication(),
+                applicationScope.getApplication(), 
+                applicationScope.getApplication(),
                 getCollectionScopeNameFromEntityType( eType ) );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -2532,8 +2602,8 @@ public class CpEntityManager implements EntityManager {
 
         // Index CP entity into default collection scope
         IndexScope defaultIndexScope = new IndexScopeImpl( 
-            appScope.getApplication(), 
-            appScope.getApplication(), 
+            applicationScope.getApplication(), 
+            applicationScope.getApplication(), 
             CpEntityManager.getCollectionScopeNameFromEntityType( entity.getType() ) );
         EntityIndex ei = managerCache.getEntityIndex( defaultIndexScope );
         ei.index( cpEntity );
@@ -2646,16 +2716,18 @@ public class CpEntityManager implements EntityManager {
             if ( !removeFromDictionary ) {
                 // Set the new value
 
-                elementCoValue = CassandraPersistenceUtils.toStorableBinaryValue( elementCoValue, !entityHasDictionary );
+                elementCoValue = CassandraPersistenceUtils.toStorableBinaryValue( 
+                        elementCoValue, !entityHasDictionary );
 
-                CassandraPersistenceUtils.addInsertToMutator( 
-                        batch, dictionary_cf, CassandraPersistenceUtils.key( entity.getUuid(), dictionaryName ),
+                CassandraPersistenceUtils.addInsertToMutator( batch, dictionary_cf, 
+                        CassandraPersistenceUtils.key( entity.getUuid(), dictionaryName ),
                     entityHasDictionary 
                         ? elementValue : asList( elementValue ), elementCoValue, timestamp );
 
                 if ( !entityHasDictionary ) {
                     CassandraPersistenceUtils.addInsertToMutator( batch, ENTITY_DICTIONARIES, 
-                        CassandraPersistenceUtils.key( entity.getUuid(), DICTIONARY_SETS ), dictionaryName, null, timestamp );
+                        CassandraPersistenceUtils.key( entity.getUuid(), DICTIONARY_SETS ), 
+                        dictionaryName, null, timestamp );
                 }
             }
             else {
@@ -2751,14 +2823,15 @@ public class CpEntityManager implements EntityManager {
 
         // refresh this Entity Manager's application's index
         IndexScope indexScope = new IndexScopeImpl( 
-                appScope.getApplication(), appScope.getApplication(), "dummy" );
+                applicationScope.getApplication(), applicationScope.getApplication(), "dummy" );
 
         EntityIndex ei = managerCache.getEntityIndex( indexScope );
         ei.refresh();
     }
 
 
-    public static org.apache.usergrid.persistence.model.entity.Entity entityToCpEntity( Entity entity, UUID importId ) {
+    public static org.apache.usergrid.persistence.model.entity.Entity 
+        entityToCpEntity( Entity entity, UUID importId ) {
 
         UUID uuid = importId != null ? importId : entity.getUuid();
 
@@ -2778,6 +2851,250 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void flushManagerCaches() {
         managerCache.flush();
+    }
+
+
+    /** 
+     * Completely reindex the application associated with this EntityManager.
+     */
+    public void reindex( EntityManagerFactory.ProgressObserver po ) throws Exception {
+        indexEntityConnectionsAndCollections( getApplication(), po );
+    }
+
+
+    /**
+     * Recursively index (or reindex) all of the collections and connections of a 
+     * specified entity, and all of the collected and connected entities as well.
+     */
+    private void indexEntityConnectionsAndCollections( 
+            final EntityRef entity, final EntityManagerFactory.ProgressObserver po ) {
+
+        final GraphManager gm = managerCache.getGraphManager(applicationScope);
+
+        final Id fromEntityId = new SimpleId( entity.getUuid(), entity.getType() );
+
+        logger.debug("Loading edges types from {}:{}\n   scope {}:{}", 
+                new Object[] { entity.getType(), entity.getUuid(), 
+                applicationScope.getApplication().getType(), 
+                applicationScope.getApplication().getUuid() } );
+
+        Observable<String> edgeTypes = gm.getEdgeTypesFromSource( 
+                new SimpleSearchEdgeType( fromEntityId, null , null ));
+
+        edgeTypes.forEach( new Action1<String>() {
+
+            @Override
+            public void call( final String edgeType ) {
+
+                logger.debug("Loading edges of edgeType {} from {}:{}\n   scope {}:{}", 
+                        new Object[] { edgeType, entity.getType(), entity.getUuid(),
+                        applicationScope.getApplication().getType(), 
+                        applicationScope.getApplication().getUuid() } );
+
+                Observable<Edge> edges = gm.loadEdgesFromSource( new SimpleSearchByEdgeType( 
+                        fromEntityId, edgeType, Long.MAX_VALUE, 
+                        SearchByEdgeType.Order.DESCENDING, null ));
+
+                edges.forEach( new Action1<Edge>() {
+
+                    @Override
+                    public void call( Edge edge ) {
+
+                        if ( isCollectionEdgeType( edge.getType() )) {
+
+                            String collName = getCollectionName(edgeType);
+                            String memberType = getCollectionEntityType(edgeType);
+
+                            CollectionScope collScope = new CollectionScopeImpl(
+                                applicationScope.getApplication(),
+                                applicationScope.getApplication(),
+                                CpEntityManager.getCollectionScopeNameFromEntityType(entity.getType()));
+                            EntityCollectionManager collMgr = 
+                                managerCache.getEntityCollectionManager(collScope);
+
+                            org.apache.usergrid.persistence.model.entity.Entity collEntity = 
+                                collMgr.load( edge.getSourceNode() ).toBlockingObservable().last();
+
+//                            if (collEntity == null) {
+//                                if (logger.isDebugEnabled()) {
+//                                    logger.error("FAILED to load entity {}:{} "
+//                                            + "from scope\n   app {}\n   owner {}\n   name {}",
+//                                            new Object[]{
+//                                                edge.getSourceNode().getType(), 
+//                                                edge.getSourceNode().getUuid(),
+//                                                collScope.getApplication(),
+//                                                collScope.getOwner(),
+//                                                collScope.getName()
+//                                            });
+//                                }
+//                                return;
+//                            }
+
+                            CollectionScope memberScope = new CollectionScopeImpl(
+                                applicationScope.getApplication(),
+                                applicationScope.getApplication(),
+                                CpEntityManager.getCollectionScopeNameFromEntityType(memberType));
+                            EntityCollectionManager memberMgr = 
+                                managerCache.getEntityCollectionManager(memberScope);
+
+                            org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
+                                memberMgr.load( edge.getTargetNode()).toBlockingObservable().last();
+
+//                            if (memberEntity == null) {
+//                                if (logger.isDebugEnabled()) {
+//                                    logger.error("FAILED to load entity {}:{} "
+//                                            + "from scope\n   app {}\n   owner {}\n   name {}",
+//                                            new Object[]{
+//                                                edge.getTargetNode().getType(), 
+//                                                edge.getTargetNode().getUuid(),
+//                                                memberScope.getApplication(),
+//                                                memberScope.getOwner(),
+//                                                memberScope.getName()
+//                                            });
+//                                }
+//                                return;
+//                            }
+
+                            indexEntityIntoCollections( collEntity, memberEntity, collName, true );
+
+                            EntityRef ref = new SimpleEntityRef( 
+                                    memberEntity.getId().getType(), memberEntity.getId().getUuid());
+                            po.onProgress( entity, ref, edge.getType());
+
+                            // recursion
+                            indexEntityConnectionsAndCollections( new SimpleEntityRef(
+                                memberEntity.getId().getType(), memberEntity.getId().getUuid()),po);
+
+                        } else if ( isConnectionEdgeType( edge.getType() )) {
+
+                            String connType = getConnectionType(edgeType);
+                            String targetEntityType = getConnectedEntityType(edgeType);
+                            String sourceEntityType = entity.getType();
+
+                            CollectionScope sourceScope = new CollectionScopeImpl(
+                                applicationScope.getApplication(),
+                                applicationScope.getApplication(),
+                                CpEntityManager.getCollectionScopeNameFromEntityType(sourceEntityType));
+                            EntityCollectionManager sourceEcm = 
+                                managerCache.getEntityCollectionManager(sourceScope);
+
+                            org.apache.usergrid.persistence.model.entity.Entity sourceEntity = 
+                                sourceEcm.load( fromEntityId ).toBlockingObservable().last();
+
+                            CollectionScope targetScope = new CollectionScopeImpl(
+                                applicationScope.getApplication(),
+                                applicationScope.getApplication(),
+                                CpEntityManager.getCollectionScopeNameFromEntityType(targetEntityType));
+                            EntityCollectionManager targetEcm = 
+                                managerCache.getEntityCollectionManager(targetScope);
+
+                            org.apache.usergrid.persistence.model.entity.Entity targetEntity = 
+                                targetEcm.load( edge.getTargetNode() ).toBlockingObservable().last();
+
+                            indexEntityIntoConnection( 
+                                    sourceEntity, targetEntity, targetEntityType, connType );
+
+                            EntityRef ref = new SimpleEntityRef( 
+                                targetEntity.getId().getType(), targetEntity.getId().getUuid());
+                            po.onProgress( entity, ref, edge.getType());
+
+                            // recursion
+                            indexEntityConnectionsAndCollections( new SimpleEntityRef(
+                                targetEntity.getId().getType(), targetEntity.getId().getUuid()),po);
+                        }
+                    }
+
+                }); // end foreach on edges
+
+            }
+
+        }); // end foreach on edgeTypes
+
+    }
+
+
+    private void indexEntityIntoCollections( 
+            org.apache.usergrid.persistence.model.entity.Entity collectionEntity, 
+            org.apache.usergrid.persistence.model.entity.Entity memberEntity, 
+            String collName, 
+            boolean connectBack ) {
+
+        logger.debug("Indexing into collections {} {}:{} member {}:{}", new Object[] { 
+            collName, collectionEntity.getId().getType(), collectionEntity.getId().getUuid(),
+            memberEntity.getId().getType(), memberEntity.getId().getUuid() });
+
+        indexEntityIntoCollection( collectionEntity, memberEntity, collName );
+
+        CollectionInfo collection = getDefaultSchema()
+                .getCollection( memberEntity.getId().getType(), collName);
+
+        if (connectBack && collection != null && collection.getLinkedCollection() != null) {
+
+            logger.debug("Linking back from entity in collection {} to collection {}", 
+                collection.getName(), collection.getLinkedCollection());
+
+            indexEntityIntoCollections( 
+                memberEntity, collectionEntity, collection.getLinkedCollection(), false );
+        }
+    }
+
+
+    void indexEntityIntoConnection(
+            org.apache.usergrid.persistence.model.entity.Entity sourceEntity,
+            org.apache.usergrid.persistence.model.entity.Entity targetEntity,
+            String targetEntityType,
+            String connType ) {
+
+        logger.debug("Indexing into connection {} source {}:{} target {}:{}", new Object[] { 
+            connType, sourceEntity.getId().getType(), sourceEntity.getId().getUuid(),
+            targetEntity.getId().getType(), targetEntity.getId().getUuid() });
+
+        // Index the new connection in app|source|type context
+        IndexScope indexScope = new IndexScopeImpl(
+                applicationScope.getApplication(),
+                sourceEntity.getId(),
+                CpEntityManager.getConnectionScopeName(targetEntityType, connType));
+        EntityIndex ei = managerCache.getEntityIndex(indexScope);
+        ei.index(targetEntity);
+        
+        // Index the new connection in app|scope|all-types context
+        IndexScope allTypesIndexScope = new IndexScopeImpl(
+                applicationScope.getApplication(),
+                sourceEntity.getId(),
+                ALL_TYPES);
+        EntityIndex aei = managerCache.getEntityIndex(allTypesIndexScope);
+        aei.index(targetEntity);
+    }
+
+
+    void indexEntityIntoCollection(
+            org.apache.usergrid.persistence.model.entity.Entity collectionEntity, 
+            org.apache.usergrid.persistence.model.entity.Entity memberEntity, 
+            String collName ) {
+
+        // index member into entity collection | type scope
+        IndexScope collectionIndexScope = new IndexScopeImpl(
+                applicationScope.getApplication(),
+                collectionEntity.getId(),
+                CpEntityManager.getCollectionScopeNameFromCollectionName(collName));
+        EntityIndex collectionIndex = managerCache.getEntityIndex(collectionIndexScope);
+        collectionIndex.index(memberEntity);
+        
+        // index member into entity | all-types scope
+        IndexScope entityAllTypesScope = new IndexScopeImpl(
+                applicationScope.getApplication(),
+                collectionEntity.getId(),
+                ALL_TYPES);
+        EntityIndex entityAllCollectionIndex = managerCache.getEntityIndex(entityAllTypesScope);
+        entityAllCollectionIndex.index(memberEntity);
+        
+        // index member into application | all-types scope
+        IndexScope appAllTypesScope = new IndexScopeImpl(
+                applicationScope.getApplication(),
+                applicationScope.getApplication(),
+                ALL_TYPES);
+        EntityIndex allCollectionIndex = managerCache.getEntityIndex(appAllTypesScope);
+        allCollectionIndex.index(memberEntity);
     }
 }
 

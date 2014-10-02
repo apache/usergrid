@@ -33,18 +33,21 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.EntityRef;
 
 
 /**
- * This is a utility to load all entities in an application and re-save them, this forces 
- * the secondary indexing to be updated.
+ * Index rebuild utility for Usergrid. Can be used to rebuild the index for a specific 
+ * application, a specific application's collection or for an entire Usergrid system.
  */
 public class IndexRebuild extends ToolBase {
 
     private static final String APPLICATION_ARG = "app";
 
     private static final String COLLECTION_ARG = "col";
+
+    private static final String ALL_ARG = "all";
 
     private static final int PAGE_SIZE = 100;
 
@@ -71,12 +74,17 @@ public class IndexRebuild extends ToolBase {
         Option collOpt = OptionBuilder.withArgName( COLLECTION_ARG ).hasArg().isRequired( false )
                 .withDescription( "Collection name" ).create( COLLECTION_ARG );
 
+        Option allOpt = OptionBuilder.withType( Boolean.class )
+                .withArgName( ALL_ARG ).hasArg().isRequired( false )
+                .withDescription( "True to reindex all application" ).create( ALL_ARG );
+
         Options options = new Options();
         options.addOption( hostOpt );
         options.addOption( esHostsOpt );
         options.addOption( esClusterOpt );
         options.addOption( appOpt );
         options.addOption( collOpt );
+        options.addOption( allOpt );
 
         return options;
     }
@@ -94,20 +102,40 @@ public class IndexRebuild extends ToolBase {
 
         logger.info( "Starting index rebuild" );
 
-        emf.rebuildInternalIndexes();
+        EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+            @Override
+            public void onProgress(EntityRef s, EntityRef t, String etype) {
+                logger.info("Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
+                    s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype });
+            }
+        };
+
+        emf.rebuildInternalIndexes( po ); 
         emf.refreshIndex();
 
-        /**
-         * Goes through each app id specified
-         */
-        for ( UUID appId : getAppIds( line ) ) {
+        if ( line.getOptionValue("all") != null && line.getOptionValue("all").equalsIgnoreCase("true") ) {
+            emf.rebuildAllIndexes( po );
 
-            logger.info( "Reindexing for app id: {}", appId );
-            Set<String> collections = getCollections( line, appId );
+        } else if ( line.getOptionValue( APPLICATION_ARG ) != null ) {
 
-            for ( String collection : collections ) {
-                emf.rebuildCollectionIndex(appId, collection);
-                emf.refreshIndex();
+            // Goes through each app id specified
+            for ( UUID appId : getAppIds( line ) ) {
+
+                logger.info( "Reindexing for app id: {}", appId );
+                Set<String> collections = getCollections( line, appId );
+
+                for ( String collection : collections ) {
+                    emf.rebuildCollectionIndex( appId, collection, po );
+                    emf.refreshIndex();
+                }
+            }
+
+        } else {
+
+            Map<String, UUID> ids = emf.getApplications();
+            System.out.println( "Printing all apps" );
+            for ( Entry<String, UUID> entry : ids.entrySet() ) {
+                System.out.println( entry.getKey() + " appid=" + entry.getValue() );
             }
         }
 
@@ -117,25 +145,18 @@ public class IndexRebuild extends ToolBase {
 
     /** Get all app id */
     private Collection<UUID> getAppIds( CommandLine line ) throws Exception {
+
         String appId = line.getOptionValue( APPLICATION_ARG );
 
         Map<String, UUID> ids = emf.getApplications();
 
         if ( appId != null ) {
-
             UUID id = UUIDUtils.tryExtractUUID( appId );
-
             if ( id == null ) {
                 logger.debug("Got applications: " + ids );
                 id = emf.getApplications().get( appId );
             }
-
             return Collections.singleton( id );
-        }
-
-        System.out.println( "Printing all apps" );
-        for ( Entry<String, UUID> entry : ids.entrySet() ) {
-            System.out.println( entry.getKey() );
         }
 
         return ids.values();
