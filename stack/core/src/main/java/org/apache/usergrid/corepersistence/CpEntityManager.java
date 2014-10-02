@@ -33,6 +33,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -2857,7 +2858,11 @@ public class CpEntityManager implements EntityManager {
      * Completely reindex the application associated with this EntityManager.
      */
     public void reindex( EntityManagerFactory.ProgressObserver po ) throws Exception {
-        indexEntityConnectionsAndCollections( getApplication(), po );
+
+        Stack stack = new Stack();
+        stack.push( getApplication() );
+
+        indexEntityConnectionsAndCollections( getApplication(), po, stack );
     }
 
 
@@ -2865,8 +2870,8 @@ public class CpEntityManager implements EntityManager {
      * Recursively index (or reindex) all of the collections and connections of a 
      * specified entity, and all of the collected and connected entities as well.
      */
-    private void indexEntityConnectionsAndCollections( 
-            final EntityRef entity, final EntityManagerFactory.ProgressObserver po ) {
+    private void indexEntityConnectionsAndCollections( final EntityRef entity, 
+            final EntityManagerFactory.ProgressObserver po, final Stack stack ) {
 
         final GraphManager gm = managerCache.getGraphManager(applicationScope);
 
@@ -2961,8 +2966,12 @@ public class CpEntityManager implements EntityManager {
                             po.onProgress( entity, ref, edge.getType());
 
                             // recursion
-                            indexEntityConnectionsAndCollections( new SimpleEntityRef(
-                                memberEntity.getId().getType(), memberEntity.getId().getUuid()),po);
+                            if ( !stack.contains( ref )) {
+                                stack.push( ref );
+                                indexEntityConnectionsAndCollections( ref, po, stack );
+                                stack.pop(); 
+                            }
+
 
                         } else if ( isConnectionEdgeType( edge.getType() )) {
 
@@ -2998,8 +3007,11 @@ public class CpEntityManager implements EntityManager {
                             po.onProgress( entity, ref, edge.getType());
 
                             // recursion
-                            indexEntityConnectionsAndCollections( new SimpleEntityRef(
-                                targetEntity.getId().getType(), targetEntity.getId().getUuid()),po);
+                            if ( !stack.contains( ref )) {
+                                stack.push( ref );
+                                indexEntityConnectionsAndCollections( ref, po, stack );
+                                stack.pop(); 
+                            }
                         }
                     }
 
