@@ -17,32 +17,21 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.io.IOException;
-import java.util.Properties;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.mq.cassandra.QueuesCF;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.cassandra.ApplicationCF;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.Setup;
-import org.apache.usergrid.persistence.core.migration.MigrationException;
-import org.apache.usergrid.persistence.core.migration.MigrationManager;
-import org.apache.usergrid.persistence.entities.Application;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.netflix.config.ConfigurationManager;
-
+import java.util.Properties;
+import java.util.UUID;
+import java.util.logging.Level;
 import me.prettyprint.cassandra.service.CassandraHost;
 import me.prettyprint.hector.api.ddl.ComparatorType;
-
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.mq.cassandra.QueuesCF;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_ORGANIZATION;
@@ -54,6 +43,13 @@ import static org.apache.usergrid.persistence.cassandra.CassandraService.SYSTEM_
 import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.USE_VIRTUAL_KEYSPACES;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
+import org.apache.usergrid.persistence.cassandra.Setup;
+import org.apache.usergrid.persistence.core.migration.MigrationException;
+import org.apache.usergrid.persistence.core.migration.MigrationManager;
+import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -168,11 +164,19 @@ public class CpSetup implements Setup {
 
         logger.info("Setting up default applications");
 
-        emf.initializeApplication( DEFAULT_ORGANIZATION, 
-                emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
+        try {
+            emf.initializeApplication( DEFAULT_ORGANIZATION,
+                    emf.getDefaultAppId(), DEFAULT_APPLICATION, null );
+        } catch (ApplicationAlreadyExistsException ex) {
+            logger.warn("Application {}/{} already exists", DEFAULT_ORGANIZATION, DEFAULT_APPLICATION);
+        }
 
-        emf.initializeApplication( DEFAULT_ORGANIZATION, 
-                emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
+        try {
+            emf.initializeApplication( DEFAULT_ORGANIZATION,
+                    emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
+        } catch (ApplicationAlreadyExistsException ex) {
+            logger.warn("Application {}/{} already exists", DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION);
+        }
     }
 
 
@@ -181,12 +185,7 @@ public class CpSetup implements Setup {
         return SystemDefaults.managementApp;
     }
 
-
-    /** @return statically constructed reference to the default application */
-//    public static Application getDefaultApp() {
-//        return SystemDefaults.defaultApp;
-//    }
-
+    
     @Override
     public void setupSystemKeyspace() throws Exception {
 

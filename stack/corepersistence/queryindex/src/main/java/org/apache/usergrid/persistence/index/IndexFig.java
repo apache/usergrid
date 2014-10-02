@@ -33,6 +33,8 @@ public interface IndexFig extends GuicyFig {
 
     public static final String ELASTICSEARCH_CLUSTER_NAME = "elasticsearch.cluster_name";
 
+    public static final String ELASTICSEARCH_NODENAME = "elasticsearch.node_name";
+
     public static final String ELASTICSEARCH_INDEX_PREFIX = "elasticsearch.index_prefix";
 
     public static final String ELASTICSEARCH_STARTUP = "elasticsearch.startup";
@@ -75,4 +77,9 @@ public interface IndexFig extends GuicyFig {
     @Default( "false" ) 
     @Key( ELASTICSEARCH_FORCE_REFRESH )
     public boolean isForcedRefresh();
+
+    /** Identify the client node with a unique name. */
+    @Default("default")
+    @Key( ELASTICSEARCH_NODENAME )
+    public String getNodeName();
 }

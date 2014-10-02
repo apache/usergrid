@@ -281,12 +281,30 @@ public class EsEntityIndexImpl implements EntityIndex {
     }
 
 
+    public void refresh() {
+        client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
+        log.debug("Refreshed index: " + indexName);
+    }
+
     @Override
     public CandidateResults getEntityVersions( final IndexScope scope, final Id id ) {
         Query query = new Query();
         query.addEqualityFilter( ENTITYID_FIELDNAME, id.getUuid().toString() );
         CandidateResults results = search( scope, query );
         return results;
+    }
+
+    /**
+     * For testing only.
+     */
+    public void deleteIndex() {
+        AdminClient adminClient = client.admin();
+        DeleteIndexResponse response = adminClient.indices().prepareDelete( indexName ).get();
+        if ( response.isAcknowledged() ) {
+            log.info("Deleted index: " + indexName );
+        } else {
+            log.info("Failed to delete index " + indexName );
+        }
     }
 
 
