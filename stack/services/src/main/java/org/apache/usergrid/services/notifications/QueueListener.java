@@ -76,7 +76,7 @@ public class QueueListener  {
 
     @PostConstruct
     public void start(){
-        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "true"));
+        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "false"));
 
         if(shouldRun) {
             LOG.info("QueueListener: starting.");
@@ -120,6 +120,7 @@ public class QueueListener  {
     }
 
     private void execute(){
+        Thread.currentThread().setDaemon(true);
         Thread.currentThread().setName("Notifications_Processor"+UUID.randomUUID());
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
