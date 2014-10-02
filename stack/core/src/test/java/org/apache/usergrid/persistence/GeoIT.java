@@ -490,7 +490,7 @@ public class GeoIT extends AbstractCoreIT {
             // QuerySlice slice = new QuerySlice( "location", 0 );
             // GeoIterator itr = new GeoIterator( new CollectionGeoSearch( 
             //     em, setup.getIbl(), setup.getCassSvc(), em.getApplicationRef(), "stores" ),
-            //     limit, slice, "location", new Point( lattitude, longtitude ), distance );
+            //     limit, slice, "location", new Point( lattitude, longitude ), distance );
             //
             // // check we got back all 500 entities
             // assertFalse( itr.hasNext() );

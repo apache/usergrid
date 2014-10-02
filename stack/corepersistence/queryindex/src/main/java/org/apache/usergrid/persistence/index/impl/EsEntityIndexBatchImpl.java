@@ -331,7 +331,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
                 // field names lat and lon trigger ElasticSearch geo location
                 locMap.put( "lat", locField.getValue().getLatitude() );
-                locMap.put( "lon", locField.getValue().getLongtitude() );
+                locMap.put( "lon", locField.getValue().getLongitude() );
                 entityMap.put( GEO_PREFIX + field.getName().toLowerCase(), locMap );
             }
             else if ( f instanceof DoubleField || f instanceof FloatField || f instanceof IntegerField
