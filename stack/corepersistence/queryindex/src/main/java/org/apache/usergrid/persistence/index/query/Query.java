@@ -739,7 +739,7 @@ public class Query {
 
     /** Add a equal filter to this query. && with existing clauses */
     public Query addEqualityFilter( String propName, Object value ) {
-        Equal equality = new Equal( new ClassicToken( 0, "=" ) );
+        Equal equality = new Equal( new ClassicToken( 1, "=" ) );
 
         addClause( equality, propName, value );
 

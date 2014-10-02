@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.index.utils;
 
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexScope;
 
 import com.google.common.base.Preconditions;
@@ -46,8 +47,8 @@ public class IndexValidationUtils {
 
         verifyString( scope.getName(), "name" );
 
-        validateApplicationScope( scope );
     }
+
 
 
 }

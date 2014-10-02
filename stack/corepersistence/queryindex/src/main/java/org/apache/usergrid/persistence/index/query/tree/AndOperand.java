@@ -27,7 +27,7 @@ import org.apache.usergrid.persistence.index.exceptions.IndexException;
 public class AndOperand extends BooleanOperand {
 
     public AndOperand() {
-        super( new CommonToken( 0, "and" ) );
+        super( new CommonToken( 1, "and" ) );
     }
 
 

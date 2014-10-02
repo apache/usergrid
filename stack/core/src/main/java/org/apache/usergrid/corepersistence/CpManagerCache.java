@@ -36,8 +36,8 @@ class CpManagerCache {
     private final LRUCache2<CollectionScope, EntityCollectionManager> ecmCache
             = new LRUCache2<CollectionScope, EntityCollectionManager>(50, 1 * 60 * 60 * 1000);
 
-    private final LRUCache2<IndexScope, EntityIndex> eiCache
-            = new LRUCache2<IndexScope, EntityIndex>(50, 1 * 60 * 60 * 1000);
+    private final LRUCache2<ApplicationScope, EntityIndex> eiCache
+            = new LRUCache2<>(50, 1 * 60 * 60 * 1000);
 
     private final LRUCache2<ApplicationScope, GraphManager> gmCache
             = new LRUCache2<ApplicationScope, GraphManager>(50, 1 * 60 * 60 * 1000);
@@ -61,13 +61,13 @@ class CpManagerCache {
         return ecm;
     }
 
-    public EntityIndex getEntityIndex(IndexScope indexScope) {
+    public EntityIndex getEntityIndex(ApplicationScope applicationScope) {
 
-        EntityIndex ei = eiCache.get(indexScope);
+        EntityIndex ei = eiCache.get(applicationScope);
 
         if (ei == null) {
-            ei = eif.createEntityIndex(indexScope);
-            eiCache.put(indexScope, ei);
+            ei = eif.createEntityIndex(applicationScope);
+            eiCache.put(applicationScope, ei);
         }
         return ei;
     }

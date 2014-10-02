@@ -68,12 +68,12 @@ public class CollectionScopeImpl extends ApplicationScopeImpl implements Collect
             return false;
         }
 
-        final CollectionScopeImpl that = ( CollectionScopeImpl ) o;
+        final CollectionScope that = ( CollectionScope ) o;
 
-        if ( !name.equals( that.name ) ) {
+        if ( !name.equals( that.getName() ) ) {
             return false;
         }
-        if ( !ownerId.equals( that.ownerId ) ) {
+        if ( !ownerId.equals( that.getOwner() ) ) {
             return false;
         }
 

@@ -24,13 +24,11 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 
 public class IndexScopeImpl implements IndexScope {
-    private final Id appId;
     private final Id ownerId;
     private final String type;
 
 
-    public IndexScopeImpl( final Id appId, final Id ownerId, final String type ) {
-        this.appId = appId;
+    public IndexScopeImpl( final Id ownerId, final String type ) {
         this.ownerId = ownerId;
         this.type = type;
 
@@ -50,8 +48,4 @@ public class IndexScopeImpl implements IndexScope {
     }
 
 
-    @Override
-    public Id getApplication() {
-        return appId;
-    }
 }
