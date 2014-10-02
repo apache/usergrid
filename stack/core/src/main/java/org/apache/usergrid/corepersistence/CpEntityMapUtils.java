@@ -262,7 +262,7 @@ public class CpEntityMapUtils {
 
                 // field names lat and lon trigger ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude());
-                locMap.put("lon", locField.getValue().getLongtitude());
+                locMap.put("lon", locField.getValue().getLongitude());
                  entityMap.put( field.getName(), field.getValue());
 
             } else if (f instanceof ByteArrayField) {

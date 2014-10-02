@@ -30,19 +30,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Location implements Serializable {
 
     private double latitude;
-    private double longtitude;
+    private double longitude;
 
     @JsonCreator
-    public Location(@JsonProperty("latitude") double latitude,@JsonProperty("longtitude") double longtitude ) {
+    public Location(
+            @JsonProperty("latitude") double latitude,
+            @JsonProperty("longitude") double longitude ) {
         this.latitude = latitude;
-        this.longtitude = longtitude;
+        this.longitude = longitude;
     }
 
     public double getLatitude() {
         return latitude;
     }
 
-    public double getLongtitude() {
-        return longtitude;
+    public double getLongitude() {
+        return longitude;
     }
 }
