@@ -67,7 +67,7 @@
         <module>graph</module>
         <module>queryindex</module>
         <module>common</module>
-      <module>map</module>
+        <module>map</module>
     </modules>
 
     <build>
