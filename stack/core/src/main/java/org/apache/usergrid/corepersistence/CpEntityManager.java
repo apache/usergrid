@@ -562,8 +562,7 @@ public class CpEntityManager implements EntityManager {
                     Set<String> collectionNames = collectionsByUuid.get( uuid );
                     for ( String coll : collectionNames ) {
 
-                        IndexScope indexScope = new IndexScopeImpl( 
-                                applicationScope.getApplication(), 
+                        IndexScope indexScope = new IndexScopeImpl(
                                 new SimpleId( uuid, ownerType ), 
                                 CpNamingUtils.getCollectionScopeNameFromCollectionName( coll ) );
 
@@ -576,15 +575,13 @@ public class CpEntityManager implements EntityManager {
 
 
             // deindex from default index scope
-            IndexScope defaultIndexScope = new IndexScopeImpl( 
-                    applicationScope.getApplication(), 
+            IndexScope defaultIndexScope = new IndexScopeImpl(
                     applicationScope.getApplication(),
                     CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
             batch.deindex(defaultIndexScope,  entity );
 
-            IndexScope allTypesIndexScope = new IndexScopeImpl( 
-                applicationScope.getApplication(), 
+            IndexScope allTypesIndexScope = new IndexScopeImpl(
                 applicationScope.getApplication(), 
                     CpNamingUtils.ALL_TYPES);
 
@@ -971,8 +968,7 @@ public class CpEntityManager implements EntityManager {
                 applicationScope.getApplication(), 
                 collectionName );
 
-        IndexScope defaultIndexScope = new IndexScopeImpl( 
-                applicationScope.getApplication(), 
+        IndexScope defaultIndexScope = new IndexScopeImpl(
                 applicationScope.getApplication(), 
                 CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
 
@@ -2755,10 +2751,7 @@ public class CpEntityManager implements EntityManager {
         emf.refreshIndex();
 
         // refresh this Entity Manager's application's index
-        IndexScope indexScope = new IndexScopeImpl( 
-                applicationScope.getApplication(), applicationScope.getApplication(), "dummy" );
-
-        EntityIndex ei = managerCache.getEntityIndex( indexScope );
+        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
         ei.refresh();
     }
 
@@ -2991,14 +2984,12 @@ public class CpEntityManager implements EntityManager {
 
         // Index the new connection in app|source|type context
         IndexScope indexScope = new IndexScopeImpl(
-                applicationScope.getApplication(),
                 sourceEntity.getId(),
                 CpNamingUtils.getConnectionScopeName( targetEntityType, connType ));
         batch.index(indexScope, targetEntity);
         
         // Index the new connection in app|scope|all-types context
         IndexScope allTypesIndexScope = new IndexScopeImpl(
-                applicationScope.getApplication(),
                 sourceEntity.getId(),
                 CpNamingUtils.ALL_TYPES);
 
@@ -3018,7 +3009,6 @@ public class CpEntityManager implements EntityManager {
 
         // index member into entity collection | type scope
         IndexScope collectionIndexScope = new IndexScopeImpl(
-                applicationScope.getApplication(),
                 collectionEntity.getId(),
                 CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
 
@@ -3026,7 +3016,6 @@ public class CpEntityManager implements EntityManager {
         
         // index member into entity | all-types scope
         IndexScope entityAllTypesScope = new IndexScopeImpl(
-                applicationScope.getApplication(),
                 collectionEntity.getId(),
                 CpNamingUtils.ALL_TYPES);
 
@@ -3034,7 +3023,6 @@ public class CpEntityManager implements EntityManager {
         
         // index member into application | all-types scope
         IndexScope appAllTypesScope = new IndexScopeImpl(
-                applicationScope.getApplication(),
                 applicationScope.getApplication(),
                 CpNamingUtils.ALL_TYPES);
 

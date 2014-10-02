@@ -35,6 +35,8 @@ import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -76,6 +78,7 @@ public class EntityConnectionIndexImplTest extends BaseIT {
     public void testBasicOperation() throws IOException {
 
         Id appId = new SimpleId( "application" );
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
         // create a muffin
         CollectionScope muffinScope = new CollectionScopeImpl( appId, appId, "muffins" );
@@ -103,9 +106,9 @@ public class EntityConnectionIndexImplTest extends BaseIT {
 
         // index connection of "person Dave likes Large Blueberry muffin"
 
-        IndexScope scope = new IndexScopeImpl( appId, person.getId(), "likes" );
+        IndexScope scope = new IndexScopeImpl(  person.getId(), "likes" );
 
-        EntityIndex personLikesIndex = ecif.createEntityIndex( scope );
+        EntityIndex personLikesIndex = ecif.createEntityIndex( applicationScope );
 
         EntityIndexBatch batch = personLikesIndex.createBatch();
 

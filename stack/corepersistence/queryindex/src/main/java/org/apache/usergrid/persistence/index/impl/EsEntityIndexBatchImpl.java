@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.AdminClient;
@@ -114,13 +115,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     public EntityIndexBatch index( final IndexScope indexScope, final Entity entity ) {
 
 
-        IndexValidationUtils.validateScopeMatch( indexScope, applicationScope );
+        IndexValidationUtils.validateIndexScope( indexScope );
 
         final String indexType = createCollectionScopeTypeName( indexScope );
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {}\n   type {}", new Object[] {
-                    entity.getId().getType(), entity.getId().getUuid(), indexScope.getApplication(),
+                    entity.getId().getType(), entity.getId().getUuid(), applicationScope.getApplication(),
                     indexScope.getOwner(), indexScope.getName(), indexType
             } );
         }
@@ -153,13 +154,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     @Override
     public EntityIndexBatch deindex( final IndexScope indexScope, final Id id, final UUID version ) {
 
-        IndexValidationUtils.validateScopeMatch( indexScope, applicationScope );
+        IndexValidationUtils.validateIndexScope( indexScope );
 
         final String indexType = createCollectionScopeTypeName( indexScope );
 
         if ( log.isDebugEnabled() ) {
             log.debug( "De-indexing entity {}:{} in scope\n   app {}\n   owner {}\n   name {} type {}", new Object[] {
-                    id.getType(), id.getUuid(), indexScope.getApplication(), indexScope.getOwner(),
+                    id.getType(), id.getUuid(), applicationScope.getApplication(), indexScope.getOwner(),
                     indexScope.getName(), indexType
             } );
         }
@@ -201,10 +202,19 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
      * Execute the request, check for errors, then re-init the batch for future use
      */
     private void execute( final BulkRequestBuilder request ) {
-        final BulkResponse response = request.execute().actionGet();
 
-        if ( response.hasFailures() ) {
-            throw new RuntimeException( "Unable to index documents.  Errors are :" + response.buildFailureMessage() );
+        //nothing to do, we haven't added anthing to the index
+        if(request.numberOfActions() == 0){
+            return;
+        }
+
+        final BulkResponse responses = request.execute().actionGet();
+
+        for ( BulkItemResponse response : responses ) {
+            if ( response.isFailed() ) {
+                throw new RuntimeException(
+                        "Unable to index documents.  Errors are :" + response.getFailure().getMessage() );
+            }
         }
 
         initBatch();
@@ -259,7 +269,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
         catch ( IOException ex ) {
             throw new RuntimeException(
-                    "Exception initing type " + typeName + " in app " + indexScope.getApplication().toString() );
+                    "Exception initializing type " + typeName + " in app " + applicationScope.getApplication()
+                                                                                             .toString() );
         }
     }
 

@@ -54,11 +54,8 @@ public class IndexingUtils {
       */
      public static String createCollectionScopeTypeName( IndexScope scope ) {
          StringBuilder sb = new StringBuilder();
-         String sep = DOC_TYPE_SEPARATOR;
-         sb.append( scope.getApplication().getUuid() ).append(sep);
-         sb.append( scope.getApplication().getType() ).append(sep);
-         sb.append( scope.getOwner().getUuid() ).append(sep);
-         sb.append( scope.getOwner().getType() ).append(sep);
+         sb.append( scope.getOwner().getUuid() ).append(DOC_TYPE_SEPARATOR);
+         sb.append( scope.getOwner().getType() ).append(DOC_TYPE_SEPARATOR);
          sb.append( scope.getName() );
          return sb.toString();
      }
@@ -74,9 +71,8 @@ public class IndexingUtils {
     public static String createIndexName(
             String prefix, ApplicationScope applicationScope) {
         StringBuilder sb = new StringBuilder();
-        String sep = INDEX_NAME_SEPARATOR;
-        sb.append( prefix ).append(sep);
-        sb.append( applicationScope.getApplication().getUuid() ).append(sep);
+        sb.append( prefix ).append(INDEX_NAME_SEPARATOR);
+        sb.append( applicationScope.getApplication().getUuid() ).append(INDEX_NAME_SEPARATOR);
         sb.append( applicationScope.getApplication().getType() );
         return sb.toString();
     }
@@ -101,9 +97,8 @@ public class IndexingUtils {
      */
     public static String createIndexDocId(Id entityId, UUID version) {
         StringBuilder sb = new StringBuilder();
-        String sep = DOC_ID_SEPARATOR;
-        sb.append( entityId.getUuid() ).append(sep);
-        sb.append( entityId.getType() ).append(sep);
+        sb.append( entityId.getUuid() ).append(DOC_ID_SEPARATOR);
+        sb.append( entityId.getType() ).append(DOC_ID_SEPARATOR);
         sb.append( version.toString() );
         return sb.toString();
     }

@@ -41,6 +41,8 @@ import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.cassandra.CassandraRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -93,10 +95,12 @@ public class EntityIndexTest extends BaseIT {
 
         Id appId = new SimpleId( "application" );
 
-        IndexScope indexScope = new IndexScopeImpl( appId, appId, "things" );
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        IndexScope indexScope = new IndexScopeImpl( appId, "things" );
 
 
-        EntityIndex entityIndex = cif.createEntityIndex( indexScope );
+        EntityIndex entityIndex = cif.createEntityIndex( applicationScope );
 
         InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
         ObjectMapper mapper = new ObjectMapper();
@@ -145,9 +149,12 @@ public class EntityIndexTest extends BaseIT {
     public void testDeindex() {
 
         Id appId = new SimpleId( "application" );
-        IndexScope indexScope = new IndexScopeImpl( appId, appId, "fastcars" );
 
-        EntityIndex entityIndex = cif.createEntityIndex( indexScope );
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
+
+        IndexScope indexScope = new IndexScopeImpl( appId, "fastcars" );
+
+        EntityIndex entityIndex = cif.createEntityIndex( applicationScope );
 
         Map entityMap = new HashMap() {{
             put( "name", "Ferrari 212 Inter" );
@@ -269,12 +276,13 @@ public class EntityIndexTest extends BaseIT {
         Id appId = new SimpleId( "application" );
         Id ownerId = new SimpleId( "owner" );
 
-        IndexScope indexScope = new IndexScopeImpl( appId, ownerId, "user" );
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        CollectionScope scope = new CollectionScopeImpl( appId, ownerId, "user" );
+        IndexScope indexScope = new IndexScopeImpl( ownerId, "user" );
 
 
-        EntityIndex entityIndex = cif.createEntityIndex( indexScope );
+
+        EntityIndex entityIndex = cif.createEntityIndex( applicationScope );
 
         final String middleName = "middleName" + UUIDUtils.newTimeUUID();
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -319,9 +327,11 @@ public class EntityIndexTest extends BaseIT {
         Id appId = new SimpleId( "application" );
         Id ownerId = new SimpleId( "owner" );
 
-        IndexScope appScope = new IndexScopeImpl( appId, ownerId, "user" );
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        EntityIndex ei = cif.createEntityIndex( appScope );
+        IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
+
+        EntityIndex ei = cif.createEntityIndex( applicationScope );
 
         final String middleName = "middleName" + UUIDUtils.newTimeUUID();
 
@@ -360,9 +370,11 @@ public class EntityIndexTest extends BaseIT {
 
         Id appId = new SimpleId( "entityindextest" );
         Id ownerId = new SimpleId( "multivaluedtype" );
-        IndexScope appScope = new IndexScopeImpl( appId, ownerId, "user" );
+        ApplicationScope applicationScope = new ApplicationScopeImpl( appId );
 
-        EntityIndex ei = cif.createEntityIndex( appScope );
+        IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
+
+        EntityIndex ei = cif.createEntityIndex( applicationScope );
 
         // Bill has favorites as string, age as string and retirement goal as number
         Map billMap = new HashMap() {{

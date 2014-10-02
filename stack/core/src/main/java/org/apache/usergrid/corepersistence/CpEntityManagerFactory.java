@@ -558,22 +558,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // refresh special indexes without calling EntityManager refresh because stack overflow 
        
         // system app
-        IndexScope sscope = new IndexScopeImpl( 
-            new SimpleId( SYSTEM_APP_ID, "application"), 
-            new SimpleId( SYSTEM_APP_ID, "application"), "dummy");
-        managerCache.getEntityIndex( sscope ).refresh();
-       
+
+        managerCache.getEntityIndex( new ApplicationScopeImpl( new SimpleId( SYSTEM_APP_ID, "application" ) ) )
+                    .refresh();
+
         // default app
-        IndexScope mscope = new IndexScopeImpl( 
-            new SimpleId( getManagementAppId(), "application"), 
-            new SimpleId( getManagementAppId(), "application"), "dummy");
-        managerCache.getEntityIndex( mscope ).refresh();
+        managerCache.getEntityIndex( new ApplicationScopeImpl( new SimpleId( getManagementAppId(), "application" ) ) )
+                    .refresh();
 
         // management app
-        IndexScope dscope = new IndexScopeImpl( 
-            new SimpleId( getDefaultAppId(), "application"), 
-            new SimpleId( getDefaultAppId(), "application"), "dummy");
-        managerCache.getEntityIndex( dscope ).refresh();
+        managerCache.getEntityIndex( new ApplicationScopeImpl( new SimpleId( getDefaultAppId(), "application" ) ) )
+                    .refresh();
     }
 
 

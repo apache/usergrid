@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDel
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
@@ -60,8 +61,8 @@ public class CpEntityIndexDeleteListener {
 
     public Observable<EntityVersion> receive(final MvccEntityDeleteEvent event) {
         final CollectionScope collectionScope = event.getCollectionScope();
-        final IndexScope indexScope = new IndexScopeImpl(collectionScope.getApplication(), collectionScope.getOwner(), collectionScope.getName());
-        final EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexScope);
+        final IndexScope indexScope = new IndexScopeImpl(collectionScope.getOwner(), collectionScope.getName());
+        final EntityIndex entityIndex = entityIndexFactory.createEntityIndex(new ApplicationScopeImpl( collectionScope.getApplication()));
         return Observable.create(new ObservableIterator<CandidateResult>("deleteEsIndexVersions") {
             @Override
             protected Iterator<CandidateResult> getIterator() {

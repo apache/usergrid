@@ -41,47 +41,48 @@ public class CpNamingUtils {
      */
     static final String EDGE_CONN_SUFFIX = "zzzconnzzz";
 
+
     static String getCollectionScopeNameFromEntityType( String type ) {
-          String csn = EDGE_COLL_SUFFIX + Schema.defaultCollectionName( type );
-          return csn.toLowerCase();
-      }
+        String csn = EDGE_COLL_SUFFIX + Schema.defaultCollectionName( type );
+        return csn.toLowerCase();
+    }
 
 
-      static String getCollectionScopeNameFromCollectionName( String name ) {
-          String csn = EDGE_COLL_SUFFIX + name ;
-          return csn.toLowerCase();
-      }
+    static String getCollectionScopeNameFromCollectionName( String name ) {
+        String csn = EDGE_COLL_SUFFIX + name;
+        return csn.toLowerCase();
+    }
 
 
-      static String getConnectionScopeName( String entityType, String connectionType ) {
-          String csn = EDGE_CONN_SUFFIX + connectionType + entityType ;
-          return csn.toLowerCase();
-      }
+    static String getConnectionScopeName( String entityType, String connectionType ) {
+        String csn = EDGE_CONN_SUFFIX + connectionType + entityType;
+        return csn.toLowerCase();
+    }
 
-      static boolean isCollectionEdgeType( String type )  {
-          return type.startsWith( EDGE_COLL_SUFFIX );
-      }
 
-      static boolean isConnectionEdgeType( String type )  {
-          return type.startsWith( EDGE_CONN_SUFFIX );
-      }
+    static boolean isCollectionEdgeType( String type ) {
+        return type.startsWith( EDGE_COLL_SUFFIX );
+    }
 
+
+    static boolean isConnectionEdgeType( String type ) {
+        return type.startsWith( EDGE_CONN_SUFFIX );
+    }
 
 
     static public String getConnectionType( String edgeType ) {
-        String[] parts = edgeType.split("\\|");
+        String[] parts = edgeType.split( "\\|" );
         return parts[1];
     }
 
 
     static public String getCollectionName( String edgeType ) {
-        String[] parts = edgeType.split("\\|");
+        String[] parts = edgeType.split( "\\|" );
         return parts[1];
     }
 
 
-
-    static String getEdgeTypeFromConnectionType( String connectionType) {
+    static String getEdgeTypeFromConnectionType( String connectionType ) {
 
         if ( connectionType != null ) {
             String csn = EDGE_CONN_SUFFIX + "|" + connectionType;
@@ -91,16 +92,15 @@ public class CpNamingUtils {
         return null;
     }
 
-    static String getEdgeTypeFromCollectionName( String collectionName) {
 
-        if ( collectionName != null  ) {
+    static String getEdgeTypeFromCollectionName( String collectionName ) {
+
+        if ( collectionName != null ) {
             String csn = EDGE_COLL_SUFFIX + "|" + collectionName;
             return csn;
         }
 
 
-
         return null;
     }
-
 }

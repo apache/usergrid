@@ -396,7 +396,6 @@ public class CpRelationManager implements RelationManager {
 
                     String collName = CpNamingUtils.getCollectionName( edge.getType() );
                     indexScope = new IndexScopeImpl(
-                        applicationScope.getApplication(),
                         new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
                         CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
 
@@ -404,7 +403,6 @@ public class CpRelationManager implements RelationManager {
 
                     String connName = CpNamingUtils.getCollectionName( edge.getType() );
                     indexScope = new IndexScopeImpl(
-                        applicationScope.getApplication(),
                         new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
                         CpNamingUtils.getConnectionScopeName( cpHeadEntity.getId().getType(), connName ));
                 }
@@ -414,7 +412,6 @@ public class CpRelationManager implements RelationManager {
                 // reindex the entity in the source entity's all-types index
                 
                 indexScope = new IndexScopeImpl(
-                    applicationScope.getApplication(),
                     new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
                         CpNamingUtils.ALL_TYPES);
 
@@ -781,7 +778,6 @@ public class CpRelationManager implements RelationManager {
 
         // remove item from collection index
         IndexScope indexScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
 
@@ -789,7 +785,6 @@ public class CpRelationManager implements RelationManager {
 
         // remove collection from item index 
         IndexScope itemScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
             memberEntity.getId(), 
             CpNamingUtils.getCollectionScopeNameFromCollectionName(
                     Schema.defaultCollectionName( cpHeadEntity.getId().getType() ) ));
@@ -892,17 +887,15 @@ public class CpRelationManager implements RelationManager {
         }
 
         IndexScope indexScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
 
         EntityIndex ei = managerCache.getEntityIndex(applicationScope);
       
-        logger.debug("Searching scope {}:{}:{}",
-            new String[] { 
-                indexScope.getApplication().toString(), 
+        logger.debug("Searching scope {}:{}",
+
                 indexScope.getOwner().toString(),
-                indexScope.getName() }); 
+                indexScope.getName() );
 
         query.setEntityType( collection.getType() );
         query = adjustQuery( query );
@@ -1016,7 +1009,6 @@ public class CpRelationManager implements RelationManager {
 
         // Index the new connection in app|source|type context
         IndexScope indexScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             CpNamingUtils.getConnectionScopeName( connectedEntityRef.getType(), connectionType ));
 
@@ -1024,7 +1016,6 @@ public class CpRelationManager implements RelationManager {
 
         // Index the new connection in app|scope|all-types context
         IndexScope allTypesIndexScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
                 CpNamingUtils.ALL_TYPES);
         batch.index(allTypesIndexScope,  targetEntity );
@@ -1240,14 +1231,12 @@ public class CpRelationManager implements RelationManager {
 
         // Deindex the connection in app|source|type context
         IndexScope indexScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
             new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
             CpNamingUtils.getConnectionScopeName( targetEntity.getId().getType(), connectionType ));
         batch.deindex( indexScope , targetEntity );
 
         // Deindex the connection in app|source|type context
         IndexScope allTypesIndexScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
             new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
                 CpNamingUtils.ALL_TYPES);
 
@@ -1306,17 +1295,15 @@ public class CpRelationManager implements RelationManager {
             }
 
             IndexScope indexScope = new IndexScopeImpl(
-                applicationScope.getApplication(), 
                 cpHeadEntity.getId(), 
                 scopeName);
 
             final EntityIndex ei = managerCache.getEntityIndex(applicationScope);
 
         
-            logger.debug("Searching connected entities from scope {}:{}:{}", new String[] { 
-                indexScope.getApplication().toString(), 
+            logger.debug("Searching connected entities from scope {}:{}",
                 indexScope.getOwner().toString(),
-                indexScope.getName()}); 
+                indexScope.getName());
 
             query = adjustQuery( query );
             CandidateResults crs = ei.search( indexScope, query );
@@ -1411,16 +1398,14 @@ public class CpRelationManager implements RelationManager {
 
             // search across all types of collections of the head-entity
             IndexScope indexScope = new IndexScopeImpl(
-                applicationScope.getApplication(), 
                 cpHeadEntity.getId(), 
                     CpNamingUtils.ALL_TYPES);
 
             EntityIndex ei = managerCache.getEntityIndex(applicationScope);
         
-            logger.debug("Searching connections from the all-types scope {}:{}:{}", new String[] { 
-                indexScope.getApplication().toString(), 
+            logger.debug("Searching connections from the all-types scope {}:{}",
                 indexScope.getOwner().toString(),
-                indexScope.getName()}); 
+                indexScope.getName());
 
             query = adjustQuery( query );
             CandidateResults crs = ei.search(indexScope,  query );
@@ -1429,15 +1414,13 @@ public class CpRelationManager implements RelationManager {
         }
 
         IndexScope indexScope = new IndexScopeImpl(
-            applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             CpNamingUtils.getConnectionScopeName( query.getEntityType(), query.getConnectionType() ));
         EntityIndex ei = managerCache.getEntityIndex(applicationScope);
     
-        logger.debug("Searching connections from the '{}' scope {}:{}:{}", new String[] { 
-            indexScope.getApplication().toString(), 
+        logger.debug("Searching connections from the scope {}:{}",
             indexScope.getOwner().toString(),
-            indexScope.getName()}); 
+            indexScope.getName());
 
         query = adjustQuery( query );
         CandidateResults crs = ei.search( indexScope, query );

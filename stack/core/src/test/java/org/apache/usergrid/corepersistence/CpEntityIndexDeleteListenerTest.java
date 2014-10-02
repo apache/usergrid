@@ -28,12 +28,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.apache.usergrid.Application;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDeleteEvent;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -81,7 +83,7 @@ public class CpEntityIndexDeleteListenerTest {
         when(scope.getOwner()).thenReturn(entityId);
         when(scope.getName()).thenReturn("test");
         when(scope.getApplication()).thenReturn(entityId);
-        when(eif.createEntityIndex(any(IndexScope.class))).thenReturn(entityIndex);
+        when(eif.createEntityIndex(any(ApplicationScope.class))).thenReturn(entityIndex);
 
         final EntityIndexBatch batch = mock(EntityIndexBatch.class);
 

@@ -47,17 +47,8 @@ public class IndexValidationUtils {
 
         verifyString( scope.getName(), "name" );
 
-        validateApplicationScope( scope );
     }
 
 
-    /**
-     * Validate the scope in the index matches the application scope
-     * @param indexScope
-     * @param scope
-     */
-    public static void validateScopeMatch(final IndexScope indexScope,final ApplicationScope scope){
-        Preconditions.checkArgument( scope.equals( indexScope ) );
-    }
 
 }
