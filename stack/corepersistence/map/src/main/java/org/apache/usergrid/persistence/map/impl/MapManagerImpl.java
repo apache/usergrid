@@ -73,7 +73,7 @@ public class MapManagerImpl implements MapManager {
 
     @Override
     public String getString( final String key ) {
-         return mapSerialization.getString( scope, key );
+        return mapSerialization.getString( scope, key );
     }
 
 
@@ -85,31 +85,31 @@ public class MapManagerImpl implements MapManager {
 
     @Override
     public UUID getUuid( final String key ) {
-        return null;
+        return mapSerialization.getUuid(scope,key);
     }
 
 
     @Override
     public UUID putUuid( final String key, final UUID putUuid ) {
-        return null;
+        return mapSerialization.putUuid(scope,key,putUuid);
     }
 
 
     @Override
     public Long getLong( final String key ) {
-        return null;
+        return mapSerialization.getLong(scope,key);
     }
 
 
     @Override
     public Long putLong( final String key, final Long value ) {
-        return null;
+        return mapSerialization.putLong(scope,key,value);
     }
 
 
     @Override
     public void delete( final String key ) {
-
+        mapSerialization.delete(scope,key);
     }
 
 

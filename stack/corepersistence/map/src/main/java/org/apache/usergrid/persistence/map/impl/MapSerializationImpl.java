@@ -112,27 +112,24 @@ public class MapSerializationImpl implements MapSerialization {
     public void putString( final MapScope scope, final String key, final String value ) {
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-                //add it to the entry
-                final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
+        //add it to the entry
+        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
 
-                //serialize to the entry
-                batch.withRow( MAP_ENTRIES, entryRowKey ).putColumn( true, value );
+        //serialize to the entry
+        batch.withRow(MAP_ENTRIES, entryRowKey).putColumn(true, value);
 
-                //add it to the keys
+        //add it to the keys
 
-                final ScopedRowKey<ApplicationScope, String> keyRowKey =
-                        ScopedRowKey.fromKey( ( ApplicationScope ) scope, key );
+        final ScopedRowKey<ApplicationScope, String> keyRowKey =
+                ScopedRowKey.fromKey((ApplicationScope) scope, key);
 
-                //serialize to the entry
-                batch.withRow( MAP_KEYS, keyRowKey ).putColumn( key, true );
+        //serialize to the entry
+        batch.withRow(MAP_KEYS, keyRowKey).putColumn(key, true);
 
-                try {
-                    batch.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to connect to cassandra", e );
-                }
+        executeBatch(batch);
     }
+
+
 
 
     @Override
@@ -161,7 +158,19 @@ public class MapSerializationImpl implements MapSerialization {
 
     @Override
     public void delete( final MapScope scope, final String key ) {
+        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
 
+        //serialize to the entry
+        batch.withRow(MAP_ENTRIES, entryRowKey).delete();
+
+        //add it to the keys
+
+        final ScopedRowKey<ApplicationScope, String> keyRowKey = ScopedRowKey.fromKey((ApplicationScope) scope, key);
+
+        //serialize to the entry
+        batch.withRow(MAP_KEYS, keyRowKey).delete();
+        executeBatch(batch);
     }
 
 
@@ -178,7 +187,13 @@ public class MapSerializationImpl implements MapSerialization {
         return Arrays.asList( mapEntries, mapKeys );
     }
 
-
+    private void executeBatch(MutationBatch batch) {
+        try {
+            batch.execute();
+        } catch (ConnectionException e) {
+            throw new RuntimeException("Unable to connect to cassandra", e);
+        }
+    }
     /**
      * Inner class to serialize and edgeIdTypeKey
      */

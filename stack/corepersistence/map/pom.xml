@@ -13,6 +13,7 @@
   <description>The module for handling map operations</description>
 
   <artifactId>map</artifactId>
+  <name>Usergrid Map</name>
 
   <dependencies>
 
