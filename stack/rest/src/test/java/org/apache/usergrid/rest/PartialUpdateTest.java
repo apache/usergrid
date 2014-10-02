@@ -29,8 +29,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -103,8 +105,9 @@ public class PartialUpdateTest extends AbstractRestIT {
                             .get(String.class));
             assertNotNull(userNode);
             assertEquals("Initech", userNode.withArray("entities").get(0).get("employer").asText());
-            assertNotEquals(latitude, userNode.withArray("entities").get(0).get("location").get("latitude"));
-            assertNotEquals(longitude, userNode.withArray("entities").get(0).get("location").get("longitude"));
+            //TODO Alex fix this, it doesn't compile
+            assertNotEquals(latitude, userNode.withArray("entities").get(0).get("location").get("latitude").asDouble(), 0d);
+            assertNotEquals(longitude, userNode.withArray("entities").get(0).get("location").get("longitude").asDouble(), 0d);
         }
 
         // Update bart's employer without specifying any required fields 
