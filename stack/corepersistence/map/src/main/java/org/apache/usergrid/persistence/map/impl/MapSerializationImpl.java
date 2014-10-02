@@ -99,6 +99,7 @@ public class MapSerializationImpl implements MapSerialization {
         Preconditions.checkNotNull(scope, "mapscope is required");
         Preconditions.checkNotNull( key, "key is required" );
         Preconditions.checkNotNull( value, "value is required" );
+
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         //add it to the entry
@@ -132,6 +133,10 @@ public class MapSerializationImpl implements MapSerialization {
     @Override
     public void putUuid( final MapScope scope, final String key, final UUID putUuid ) {
 
+        Preconditions.checkNotNull(scope, "mapscope is required");
+        Preconditions.checkNotNull( key, "key is required" );
+        Preconditions.checkNotNull( putUuid, "value is required" );
+
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
         //add it to the entry
@@ -164,6 +169,10 @@ public class MapSerializationImpl implements MapSerialization {
 
     @Override
     public void putLong( final MapScope scope, final String key, final Long value ) {
+
+        Preconditions.checkNotNull(scope, "mapscope is required");
+        Preconditions.checkNotNull( key, "key is required" );
+        Preconditions.checkNotNull( value, "value is required" );
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 

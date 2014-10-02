@@ -167,9 +167,22 @@ public class MapManagerTest {
 
 
     @Test( expected = NullPointerException.class )
-    public void nullInput() {
+    public void nullInputString() {
         MapManager mm = mmf.getMapManager( this.scope );
 
         mm.putString( null, null );
+    }
+
+    @Test( expected = NullPointerException.class )
+    public void nullInputLong() {
+        MapManager mm = mmf.getMapManager( this.scope );
+
+        mm.putLong( null, null );
+    }
+    @Test( expected = NullPointerException.class )
+     public void nullInputUUID() {
+        MapManager mm = mmf.getMapManager( this.scope );
+
+        mm.putUuid( null, null );
     }
 }
