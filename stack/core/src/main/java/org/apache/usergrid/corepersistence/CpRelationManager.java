@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -425,6 +426,11 @@ public class CpRelationManager implements RelationManager {
 
         // loop through all types of edge to target
         int count = 0;
+
+        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+
+        final EntityIndexBatch entityIndexBatch = ei.createBatch();
+
         while ( edgeTypesToTarget.hasNext() ) {
 
             // get all edges of the type
@@ -460,10 +466,9 @@ public class CpRelationManager implements RelationManager {
                         applicationScope.getApplication(),
                         new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
                         CpEntityManager.getConnectionScopeName( cpHeadEntity.getId().getType(), connName ));
-                } 
-           
-                EntityIndex ei = managerCache.getEntityIndex(indexScope);
-                ei.index(cpEntity);
+                }
+
+                entityIndexBatch.index(indexScope, cpEntity);
 
                 // reindex the entity in the source entity's all-types index
                 
@@ -471,8 +476,8 @@ public class CpRelationManager implements RelationManager {
                     applicationScope.getApplication(),
                     new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
                     ALL_TYPES);
-                ei = managerCache.getEntityIndex(indexScope);
-                ei.index(cpEntity);
+
+                entityIndexBatch.index(indexScope, cpEntity);
 
                 count++;
             }
@@ -659,6 +664,7 @@ public class CpRelationManager implements RelationManager {
             applicationScope.getApplication(), 
             applicationScope.getApplication(), 
             CpEntityManager.getCollectionScopeNameFromEntityType( itemRef.getType()));
+
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
@@ -700,29 +706,36 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
+        final EntityIndex index = managerCache.getEntityIndex( applicationScope );
+
+        final EntityIndexBatch batch = index.createBatch();
+
+
         // index member into entity collection | type scope
         IndexScope collectionIndexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             CpEntityManager.getCollectionScopeNameFromCollectionName( collName ));
-        EntityIndex collectionIndex = managerCache.getEntityIndex(collectionIndexScope);
-        collectionIndex.index( memberEntity );
+
+        batch.index(collectionIndexScope, memberEntity );
 
         // index member into entity | all-types scope
         IndexScope entityAllTypesScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             ALL_TYPES);
-        EntityIndex entityAllCollectionIndex = managerCache.getEntityIndex(entityAllTypesScope);
-        entityAllCollectionIndex.index( memberEntity );
+
+        batch.index(entityAllTypesScope, memberEntity );
 
         // index member into application | all-types scope
         IndexScope appAllTypesScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             applicationScope.getApplication(), 
             ALL_TYPES);
-        EntityIndex allCollectionIndex = managerCache.getEntityIndex(appAllTypesScope);
-        allCollectionIndex.index( memberEntity );
+
+        batch.index( appAllTypesScope,  memberEntity );
+
+        batch.execute();
 
         logger.debug("Added entity {}:{} to collection {}", new String[] { 
             itemRef.getUuid().toString(), itemRef.getType(), collName }); 
@@ -844,13 +857,16 @@ public class CpRelationManager implements RelationManager {
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
             new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlockingObservable().last();
 
+        final EntityIndex ei = managerCache.getEntityIndex(applicationScope);
+        final EntityIndexBatch batch = ei.createBatch();
+
         // remove item from collection index
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             CpEntityManager.getCollectionScopeNameFromCollectionName( collName ));
-        EntityIndex ei = managerCache.getEntityIndex(indexScope);
-        ei.deindex( memberEntity );
+
+        batch.deindex(indexScope,  memberEntity );
 
         // remove collection from item index 
         IndexScope itemScope = new IndexScopeImpl(
@@ -858,8 +874,11 @@ public class CpRelationManager implements RelationManager {
             memberEntity.getId(), 
             CpEntityManager.getCollectionScopeNameFromCollectionName( 
                 Schema.defaultCollectionName( cpHeadEntity.getId().getType() )));
-        ei = managerCache.getEntityIndex(itemScope);
-        ei.deindex( cpHeadEntity );
+
+
+        batch.deindex(itemScope,  cpHeadEntity );
+
+        batch.execute();
 
         // remove edge from collection to item 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
@@ -958,7 +977,8 @@ public class CpRelationManager implements RelationManager {
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             CpEntityManager.getCollectionScopeNameFromCollectionName( collName ));
-        EntityIndex ei = managerCache.getEntityIndex(indexScope);
+
+        EntityIndex ei = managerCache.getEntityIndex(applicationScope);
       
         logger.debug("Searching scope {}:{}:{}",
             new String[] { 
@@ -969,7 +989,7 @@ public class CpRelationManager implements RelationManager {
         query.setEntityType( collection.getType() );
         query = adjustQuery( query );
 
-        CandidateResults crs = ei.search( query );
+        CandidateResults crs = ei.search(indexScope,  query );
 
         return buildResults( query, crs, collName );
 
@@ -1088,21 +1108,25 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.writeEdge(edge).toBlockingObservable().last();
 
+        final EntityIndex ei = managerCache.getEntityIndex(applicationScope);
+        final EntityIndexBatch batch = ei.createBatch();
+
         // Index the new connection in app|source|type context
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             CpEntityManager.getConnectionScopeName( connectedEntityRef.getType(), connectionType ));
-        EntityIndex ei = managerCache.getEntityIndex(indexScope);
-        ei.index( targetEntity );
+       batch.index( indexScope, targetEntity );
 
         // Index the new connection in app|scope|all-types context
         IndexScope allTypesIndexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
             ALL_TYPES);
-        EntityIndex aei = managerCache.getEntityIndex(allTypesIndexScope);
-        aei.index( targetEntity );
+
+        batch.index( allTypesIndexScope, targetEntity );
+
+        batch.execute();
 
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -1307,21 +1331,23 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         gm.deleteEdge(edge).toBlockingObservable().last();
 
+        final EntityIndex ei = managerCache.getEntityIndex( applicationScope )  ;
+        final EntityIndexBatch batch = ei.createBatch();
+
         // Deindex the connection in app|source|type context
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
             CpEntityManager.getConnectionScopeName( targetEntity.getId().getType(), connectionType ));
-        EntityIndex ei = managerCache.getEntityIndex( indexScope );
-        ei.deindex( targetEntity );
+        batch.deindex( indexScope , targetEntity );
 
         // Deindex the connection in app|source|type context
         IndexScope allTypesIndexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
             ALL_TYPES);
-        EntityIndex aei = managerCache.getEntityIndex(allTypesIndexScope);
-        aei.deindex( targetEntity );
+
+        batch.deindex( allTypesIndexScope,  targetEntity );
 
     }
 
@@ -1377,7 +1403,9 @@ public class CpRelationManager implements RelationManager {
                 applicationScope.getApplication(), 
                 cpHeadEntity.getId(), 
                 scopeName);
-            EntityIndex ei = managerCache.getEntityIndex(indexScope);
+
+            final EntityIndex ei = managerCache.getEntityIndex(applicationScope);
+
         
             logger.debug("Searching connected entities from scope {}:{}:{}", new String[] { 
                 indexScope.getApplication().toString(), 
@@ -1385,7 +1413,7 @@ public class CpRelationManager implements RelationManager {
                 indexScope.getName()}); 
 
             query = adjustQuery( query );
-            CandidateResults crs = ei.search( query );
+            CandidateResults crs = ei.search( indexScope, query );
 
             raw = buildResults( query , crs, query.getConnectionType() );
         }
@@ -1480,7 +1508,8 @@ public class CpRelationManager implements RelationManager {
                 applicationScope.getApplication(), 
                 cpHeadEntity.getId(), 
                 ALL_TYPES);
-            EntityIndex ei = managerCache.getEntityIndex(indexScope);
+
+            EntityIndex ei = managerCache.getEntityIndex(applicationScope);
         
             logger.debug("Searching connections from the all-types scope {}:{}:{}", new String[] { 
                 indexScope.getApplication().toString(), 
@@ -1488,7 +1517,7 @@ public class CpRelationManager implements RelationManager {
                 indexScope.getName()}); 
 
             query = adjustQuery( query );
-            CandidateResults crs = ei.search( query );
+            CandidateResults crs = ei.search(indexScope,  query );
 
             return buildConnectionResults(query , crs, query.getConnectionType() );
         }
@@ -1498,7 +1527,7 @@ public class CpRelationManager implements RelationManager {
             cpHeadEntity.getId(), 
             CpEntityManager.getConnectionScopeName( 
                     query.getEntityType(), query.getConnectionType() ));
-        EntityIndex ei = managerCache.getEntityIndex(indexScope);
+        EntityIndex ei = managerCache.getEntityIndex(applicationScope);
     
         logger.debug("Searching connections from the '{}' scope {}:{}:{}", new String[] { 
             indexScope.getApplication().toString(), 
@@ -1506,7 +1535,7 @@ public class CpRelationManager implements RelationManager {
             indexScope.getName()}); 
 
         query = adjustQuery( query );
-        CandidateResults crs = ei.search( query );
+        CandidateResults crs = ei.search( indexScope, query );
 
         return buildConnectionResults(query , crs, query.getConnectionType() );
     }

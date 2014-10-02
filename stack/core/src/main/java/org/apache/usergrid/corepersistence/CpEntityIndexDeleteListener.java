@@ -59,13 +59,13 @@ public class CpEntityIndexDeleteListener {
 
 
     public Observable<EntityVersion> receive(final MvccEntityDeleteEvent event) {
-        CollectionScope collectionScope = event.getCollectionScope();
-        IndexScope indexScope = new IndexScopeImpl(collectionScope.getApplication(), collectionScope.getOwner(), collectionScope.getName());
+        final CollectionScope collectionScope = event.getCollectionScope();
+        final IndexScope indexScope = new IndexScopeImpl(collectionScope.getApplication(), collectionScope.getOwner(), collectionScope.getName());
         final EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexScope);
         return Observable.create(new ObservableIterator<CandidateResult>("deleteEsIndexVersions") {
             @Override
             protected Iterator<CandidateResult> getIterator() {
-                CandidateResults results = entityIndex.getEntityVersions(event.getEntity().getId());
+                CandidateResults results = entityIndex.getEntityVersions(indexScope, event.getEntity().getId());
                 return results.iterator();
             }
         }).subscribeOn(Schedulers.io())
@@ -78,7 +78,7 @@ public class CpEntityIndexDeleteListener {
                             //filter find entities <= current version
                             if (entity.getVersion().timestamp() <= event.getVersion().timestamp()) {
                                 versions.add(entity);
-                                entityIndex.deindex(entity.getId(), entity.getVersion());
+                                entityIndex.createBatch().deindex(indexScope, entity.getId(), entity.getVersion());
                             }
                         }
                         return Observable.from(versions);

@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
+import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.ArrayField;
@@ -91,21 +92,29 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     private BulkRequestBuilder bulkRequest;
 
+    private final int autoFlushSize;
 
-    public EsEntityIndexBatchImpl( final ApplicationScope applicationScope,
-                                   final Client client, final IndexFig config, final Set<String> knownTypes ) {
+    private int count;
+
+
+    public EsEntityIndexBatchImpl( final ApplicationScope applicationScope, final Client client, final IndexFig config,
+                                   final Set<String> knownTypes, final int autoFlushSize ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
         this.knownTypes = knownTypes;
         this.indexName = createIndexName( config.getIndexPrefix(), applicationScope );
         this.refresh = config.isForcedRefresh();
+        this.autoFlushSize = autoFlushSize;
         initBatch();
     }
 
 
     @Override
     public EntityIndexBatch index( final IndexScope indexScope, final Entity entity ) {
+
+
+        IndexValidationUtils.validateScopeMatch( indexScope, applicationScope );
 
         final String indexType = createCollectionScopeTypeName( indexScope );
 
@@ -118,7 +127,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         ValidationUtils.verifyEntityWrite( entity );
 
-        initType(indexScope,  indexType );
+        initType( indexScope, indexType );
 
         Map<String, Object> entityAsMap = entityToMap( entity );
 
@@ -135,12 +144,16 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         bulkRequest.add( client.prepareIndex( indexName, indexType, indexId ).setSource( entityAsMap ) );
 
+        maybeFlush();
+
         return this;
     }
 
 
     @Override
-    public EntityIndexBatch deindex(final IndexScope indexScope, final Id id, final UUID version ) {
+    public EntityIndexBatch deindex( final IndexScope indexScope, final Id id, final UUID version ) {
+
+        IndexValidationUtils.validateScopeMatch( indexScope, applicationScope );
 
         final String indexType = createCollectionScopeTypeName( indexScope );
 
@@ -158,6 +171,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         log.debug( "Deindexed Entity with index id " + indexId );
 
+        maybeFlush();
+
         return this;
     }
 
@@ -165,14 +180,14 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     @Override
     public EntityIndexBatch deindex( final IndexScope indexScope, final Entity entity ) {
 
-       return  deindex(indexScope,  entity.getId(), entity.getVersion() );
+        return deindex( indexScope, entity.getId(), entity.getVersion() );
     }
 
 
     @Override
     public EntityIndexBatch deindex( final IndexScope indexScope, final CandidateResult entity ) {
 
-        return deindex(indexScope,  entity.getId(), entity.getVersion() );
+        return deindex( indexScope, entity.getId(), entity.getVersion() );
     }
 
 
@@ -184,7 +199,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     /**
      * Execute the request, check for errors, then re-init the batch for future use
-     * @param request
      */
     private void execute( final BulkRequestBuilder request ) {
         final BulkResponse response = request.execute().actionGet();
@@ -199,7 +213,17 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public void executeAndRefresh() {
-        execute(bulkRequest.setRefresh( true ) );
+        execute( bulkRequest.setRefresh( true ) );
+    }
+
+
+    private void maybeFlush() {
+        count++;
+
+        if ( count % autoFlushSize == 0 ) {
+            execute();
+            count = 0;
+        }
     }
 
 
@@ -217,6 +241,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         try {
             XContentBuilder mxcb = EsEntityIndexImpl.createDoubleStringIndexMapping( jsonBuilder(), typeName );
 
+
+            //TODO Dave can this be collapsed into the build as well?
             admin.indices().preparePutMapping( indexName ).setType( typeName ).setSource( mxcb ).execute().actionGet();
 
             admin.indices().prepareGetMappings( indexName ).addTypes( typeName ).execute().actionGet();

@@ -134,7 +134,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     @Override
     public EntityIndexBatch createBatch() {
-        return new EsEntityIndexBatchImpl( applicationScope, client, config, knownTypes );
+        return new EsEntityIndexBatchImpl( applicationScope, client, config, knownTypes, 1000 );
     }
 
 

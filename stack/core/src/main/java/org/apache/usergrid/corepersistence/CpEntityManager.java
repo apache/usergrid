@@ -74,6 +74,7 @@ import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
@@ -561,6 +562,12 @@ public class CpEntityManager implements EntityManager {
             logger.debug( "Deleting indexes of all {} collections owning the entity", 
                     owners.keySet().size() );
 
+            final  EntityIndex ei = managerCache.getEntityIndex( appScope );
+
+            final EntityIndexBatch batch = ei.createBatch();
+
+
+
             for ( String ownerType : owners.keySet() ) {
                 Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
 
@@ -573,27 +580,30 @@ public class CpEntityManager implements EntityManager {
                                 new SimpleId( uuid, ownerType ), 
                                 CpEntityManager.getCollectionScopeNameFromCollectionName(coll) );
 
-                        EntityIndex ei = managerCache.getEntityIndex( indexScope );
 
-                        ei.deindex( entity );
+                        batch.index( indexScope, entity );
                     }
                 }
             }
+
+
 
             // deindex from default index scope
             IndexScope defaultIndexScope = new IndexScopeImpl( 
                     appScope.getApplication(), 
                     appScope.getApplication(),
                     getCollectionScopeNameFromEntityType( entityRef.getType() ) );
-            EntityIndex entityIndex = managerCache.getEntityIndex( defaultIndexScope );
-            entityIndex.deindex( entity );
+
+            batch.deindex(defaultIndexScope,  entity );
 
             IndexScope allTypesIndexScope = new IndexScopeImpl( 
                 appScope.getApplication(), 
                 appScope.getApplication(), 
                 ALL_TYPES);
-            EntityIndex aei = managerCache.getEntityIndex( allTypesIndexScope );
-            aei.deindex( entity );
+
+            batch.deindex( allTypesIndexScope,  entity );
+
+            batch.execute();
 
             decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
 
@@ -980,7 +990,7 @@ public class CpEntityManager implements EntityManager {
                 getCollectionScopeNameFromEntityType( entityRef.getType()) );
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-        EntityIndex ei = managerCache.getEntityIndex( defaultIndexScope );
+        EntityIndex ei = managerCache.getEntityIndex( appScope );
 
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
@@ -1002,7 +1012,8 @@ public class CpEntityManager implements EntityManager {
         logger.debug("Wrote {}:{} version {}", new Object[] { 
             cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
 
-        ei.index( cpEntity );
+
+        ei.createBatch().index(defaultIndexScope, cpEntity ).execute();
 
         // update in all containing collections and connection indexes
         CpRelationManager rm = (CpRelationManager)getRelationManager( entityRef );
@@ -2530,12 +2541,13 @@ public class CpEntityManager implements EntityManager {
         }
 
         // Index CP entity into default collection scope
-        IndexScope defaultIndexScope = new IndexScopeImpl( 
-            appScope.getApplication(), 
-            appScope.getApplication(), 
-            CpEntityManager.getCollectionScopeNameFromEntityType( entity.getType() ) );
-        EntityIndex ei = managerCache.getEntityIndex( defaultIndexScope );
-        ei.index( cpEntity );
+//        IndexScope defaultIndexScope = new IndexScopeImpl(
+//            appScope.getApplication(),
+//            appScope.getApplication(),
+//            CpEntityManager.getCollectionScopeNameFromEntityType( entity.getType() ) );
+//        EntityIndex ei = managerCache.getEntityIndex( appScope );
+//
+//        ei.createBatch().index( defaultIndexScope,  cpEntity ).execute();
 
         // reflect changes in the legacy Entity
         entity.setUuid( cpEntity.getId().getUuid() );

@@ -50,6 +50,7 @@ import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsExcept
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
@@ -263,8 +264,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                     .getEntityIndex( SYSTEM_ORGS_INDEX_SCOPE );
 
             orgInfoEntity = ecm.write( orgInfoEntity ).toBlockingObservable().last();
-            eci.index( orgInfoEntity );
-            eci.refresh();
+            eci.createBatch().index(SYSTEM_ORGS_INDEX_SCOPE,  orgInfoEntity ).executeAndRefresh();
         }
 
         if ( properties == null ) {
@@ -288,7 +288,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                     .getEntityIndex( SYSTEM_APPS_INDEX_SCOPE );
 
             appInfoEntity = ecm.write( appInfoEntity ).toBlockingObservable().last();
-            eci.index( appInfoEntity );
+            eci.createBatch().index(SYSTEM_APPS_INDEX_SCOPE,  appInfoEntity ).executeAndRefresh();
             eci.refresh();
         }
 
@@ -325,7 +325,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Query q = Query.fromQL(PROPERTY_NAME + " = '" + name + "'");
 
         EntityIndex ei = getManagerCache().getEntityIndex( SYSTEM_ORGS_INDEX_SCOPE );
-        CandidateResults results = ei.search( q );
+        CandidateResults results = ei.search(SYSTEM_ORGS_INDEX_SCOPE,  q );
 
         if ( results.isEmpty() ) {
             return null; 
@@ -342,7 +342,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         EntityIndex ei = getManagerCache().getEntityIndex( SYSTEM_APPS_INDEX_SCOPE );
         
-        CandidateResults results = ei.search( q );
+        CandidateResults results = ei.search(SYSTEM_APPS_INDEX_SCOPE,  q );
 
         if ( results.isEmpty() ) {
             return null; 
@@ -371,7 +371,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             Query q = Query.fromQL("select *");
             q.setCursor( cursor );
 
-            CandidateResults results = ei.search( q );
+            CandidateResults results = ei.search(SYSTEM_APPS_INDEX_SCOPE,  q );
             cursor = results.getCursor();
 
             Iterator<CandidateResult> iter = results.iterator();
@@ -417,7 +417,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Query q = Query.fromQL("select *");
 
-        CandidateResults results = ei.search( q );
+        CandidateResults results = ei.search(SYSTEM_PROPS_INDEX_SCOPE,  q );
 
         if ( results.isEmpty() ) {
             return new HashMap<String,String>();
@@ -447,7 +447,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             .getEntityIndex( SYSTEM_PROPS_INDEX_SCOPE );
 
         Query q = Query.fromQL("select *");
-        CandidateResults results = ei.search( q );
+        CandidateResults results = ei.search(SYSTEM_PROPS_INDEX_SCOPE,  q );
         Entity propsEntity;
         if ( !results.isEmpty() ) {
             propsEntity = em.load( results.iterator().next().getId()).toBlockingObservable().last();
@@ -464,7 +464,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
 
         propsEntity = em.write( propsEntity ).toBlockingObservable().last();
-        ei.index( propsEntity );    
+        ei.createBatch().index( SYSTEM_PROPS_INDEX_SCOPE, propsEntity );
 
         return true;
     }
@@ -485,7 +485,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityIndex ei = getManagerCache().getEntityIndex( SYSTEM_PROPS_INDEX_SCOPE );
 
         Query q = Query.fromQL("select *");
-        CandidateResults results = ei.search( q );
+        CandidateResults results = ei.search(SYSTEM_PROPS_INDEX_SCOPE,  q );
 
         Entity propsEntity = em.load( 
                 results.iterator().next().getId() ).toBlockingObservable().last();
@@ -501,7 +501,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         propsEntity.removeField( name );
 
         propsEntity = em.write( propsEntity ).toBlockingObservable().last();
-        ei.index( propsEntity );    
+        ei.createBatch().index( SYSTEM_PROPS_INDEX_SCOPE, propsEntity );
 
         return true;
     }
@@ -616,9 +616,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityIndex ei = managerCache.getEntityIndex( is );
 
         Query q = Query.fromQL("select *");
-        CandidateResults results = ei.search( q );
+        CandidateResults results = ei.search(is,  q );
 
-        Map<String, UUID> appMap = new HashMap<String, UUID>();
+        int count = 0;
+        final EntityIndexBatch batch = ei.createBatch();
 
         Iterator<CandidateResult> iter = results.iterator();
         while (iter.hasNext()) {
@@ -643,7 +644,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 }
             );
 
-            ei.index(entity);
+            batch.index(is, entity);
+
+
+
+            count++;
         }
 
     }

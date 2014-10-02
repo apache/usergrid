@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImp
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
@@ -82,6 +83,10 @@ public class CpEntityIndexDeleteListenerTest {
         when(scope.getApplication()).thenReturn(entityId);
         when(eif.createEntityIndex(any(IndexScope.class))).thenReturn(entityIndex);
 
+        final EntityIndexBatch batch = mock(EntityIndexBatch.class);
+
+        when(entityIndex.createBatch()).thenReturn( batch );
+
         CandidateResults results = mock(CandidateResults.class);
         List<CandidateResult> resultsList  = new ArrayList<>();
         resultsList.add(entity);
@@ -90,7 +95,7 @@ public class CpEntityIndexDeleteListenerTest {
         when(results.iterator()).thenReturn(entities);
         when(serializationFig.getBufferSize()).thenReturn(10);
         when(serializationFig.getHistorySize()).thenReturn(20);
-        when(entityIndex.getEntityVersions(entityId)).thenReturn(results);
+        when(entityIndex.getEntityVersions(any(IndexScope.class), entityId)).thenReturn(results);
         MvccEntity mvccEntity = new MvccEntityImpl(entityId,uuid, MvccEntity.Status.COMPLETE,mock(Entity.class));
 
 
@@ -98,6 +103,9 @@ public class CpEntityIndexDeleteListenerTest {
         Observable<EntityVersion> o = esEntityIndexDeleteListener.receive(event);
         EntityVersion testEntity = o.toBlocking().last();
         assertEquals(testEntity.getId(),mvccEntity.getId());
-        verify(entityIndex).deindex(entity.getId(),entity.getVersion());
+
+        verify(entityIndex).createBatch();
+
+        verify(batch).deindex(any(IndexScope.class), entity.getId(),entity.getVersion());
     }
 }

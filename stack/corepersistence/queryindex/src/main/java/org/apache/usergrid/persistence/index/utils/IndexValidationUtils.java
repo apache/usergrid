@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.index.utils;
 
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexScope;
 
 import com.google.common.base.Preconditions;
@@ -49,5 +50,14 @@ public class IndexValidationUtils {
         validateApplicationScope( scope );
     }
 
+
+    /**
+     * Validate the scope in the index matches the application scope
+     * @param indexScope
+     * @param scope
+     */
+    public static void validateScopeMatch(final IndexScope indexScope,final ApplicationScope scope){
+        Preconditions.checkArgument( scope.equals( indexScope ) );
+    }
 
 }
