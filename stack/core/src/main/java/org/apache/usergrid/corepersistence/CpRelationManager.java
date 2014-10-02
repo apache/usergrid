@@ -17,7 +17,7 @@
 package org.apache.usergrid.corepersistence;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static org.apache.usergrid.corepersistence.CpEntityManager.*;
+
 import com.yammer.metrics.annotation.Metered;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
@@ -138,11 +138,7 @@ import org.apache.usergrid.utils.IndexUtils;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import org.apache.usergrid.utils.MapUtils;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
-import org.apache.usergrid.utils.UUIDUtils;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
@@ -158,11 +154,7 @@ public class CpRelationManager implements RelationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
 
-    static final String ALL_TYPES = "zzzalltypeszzz";
 
-    static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
-
-    static final String EDGE_CONN_SUFFIX = "zzzconnzzz";
 
     private CpEntityManagerFactory emf;
     
@@ -218,7 +210,7 @@ public class CpRelationManager implements RelationManager {
         this.headEntityScope = new CollectionScopeImpl( 
             this.applicationScope.getApplication(), 
             this.applicationScope.getApplication(), 
-            CpEntityManager.getCollectionScopeNameFromEntityType( headEntity.getType()));
+                CpNamingUtils.getCollectionScopeNameFromEntityType( headEntity.getType() ));
 
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager(headEntityScope);
         if ( logger.isDebugEnabled() ) {
@@ -248,7 +240,7 @@ public class CpRelationManager implements RelationManager {
 
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
-        String edgeTypePrefix = getEdgeTypeFromCollectionName( collectionName, null );
+        String edgeTypePrefix = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
 
         logger.debug("getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}", 
             new Object[] {
@@ -337,10 +329,10 @@ public class CpRelationManager implements RelationManager {
                     edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
 
                 String name = null;
-                if ( CpEntityManager.isConnectionEdgeType( edge.getType() )) {
-                    name = CpEntityManager.getConnectionType( edge.getType() );
+                if ( CpNamingUtils.isConnectionEdgeType( edge.getType() )) {
+                    name = CpNamingUtils.getConnectionType( edge.getType() );
                 } else {
-                    name = CpEntityManager.getCollectionName( edge.getType() );
+                    name = CpNamingUtils.getCollectionName( edge.getType() );
                 }
                 addMapSet( results, eref, name );
             }
@@ -400,21 +392,21 @@ public class CpRelationManager implements RelationManager {
                 // reindex the entity in the source entity's collection or connection index
 
                 IndexScope indexScope;
-                if ( CpEntityManager.isCollectionEdgeType( edge.getType() )) {
+                if ( CpNamingUtils.isCollectionEdgeType( edge.getType() )) {
 
-                    String collName = CpEntityManager.getCollectionName( edge.getType() ); 
+                    String collName = CpNamingUtils.getCollectionName( edge.getType() );
                     indexScope = new IndexScopeImpl(
                         applicationScope.getApplication(),
                         new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
-                        CpEntityManager.getCollectionScopeNameFromCollectionName( collName ));
+                        CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
 
                 } else {
 
-                    String connName = CpEntityManager.getCollectionName( edge.getType() ); 
+                    String connName = CpNamingUtils.getCollectionName( edge.getType() );
                     indexScope = new IndexScopeImpl(
                         applicationScope.getApplication(),
                         new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
-                        CpEntityManager.getConnectionScopeName( cpHeadEntity.getId().getType(), connName ));
+                        CpNamingUtils.getConnectionScopeName( cpHeadEntity.getId().getType(), connName ));
                 }
 
                 entityIndexBatch.index(indexScope, cpEntity);
@@ -424,13 +416,16 @@ public class CpRelationManager implements RelationManager {
                 indexScope = new IndexScopeImpl(
                     applicationScope.getApplication(),
                     new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
-                    ALL_TYPES);
+                        CpNamingUtils.ALL_TYPES);
 
                 entityIndexBatch.index(indexScope, cpEntity);
 
                 count++;
             }
         }
+
+        entityIndexBatch.execute();
+
         logger.debug("updateContainingCollectionsAndCollections() updated {} indexes", count);
         return results;
     }
@@ -441,7 +436,7 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-        String edgeType = getEdgeTypeFromConnectionType( connectionType, entity.getType() );  
+        String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType( connectionType );
 
         logger.debug("isConnectionMember(): Checking for edge type {} from {}:{} to {}:{}", 
             new Object[] { 
@@ -469,7 +464,7 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-        String edgeType = getEdgeTypeFromCollectionName( collName, entity.getType() );  
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collName );
 
         logger.debug("isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}", 
             new Object[] { 
@@ -499,7 +494,7 @@ public class CpRelationManager implements RelationManager {
 
         Observable<Edge> edgesToTarget = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
             targetId,
-            CpEntityManager.getEdgeTypeFromConnectionType( connectionType, target.getType() ),
+            CpNamingUtils.getEdgeTypeFromConnectionType( connectionType ),
             System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,
             null)); // last
 
@@ -523,7 +518,7 @@ public class CpRelationManager implements RelationManager {
 
         Observable<Edge> edgesFromSource = gm.loadEdgesFromSource(new SimpleSearchByEdgeType(
             sourceId,
-            CpEntityManager.getEdgeTypeFromConnectionType( connectionType, null ),
+            CpNamingUtils.getEdgeTypeFromConnectionType( connectionType ),
             System.currentTimeMillis(),SearchByEdgeType.Order.DESCENDING,
             null)); // last
 
@@ -546,7 +541,7 @@ public class CpRelationManager implements RelationManager {
         Iterator<String> iter = str.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {
             String edgeType = iter.next();
-            indexes.add( CpEntityManager.getCollectionName( edgeType ) );
+            indexes.add( CpNamingUtils.getCollectionName( edgeType ) );
         }
 
         return indexes;
@@ -611,8 +606,8 @@ public class CpRelationManager implements RelationManager {
         // load the new member entity to be added to the collection from its default scope
         CollectionScope memberScope = new CollectionScopeImpl( 
             applicationScope.getApplication(), 
-            applicationScope.getApplication(), 
-            CpEntityManager.getCollectionScopeNameFromEntityType( itemRef.getType()));
+            applicationScope.getApplication(),
+            CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ));
 
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
@@ -637,7 +632,7 @@ public class CpRelationManager implements RelationManager {
             });
         }
 
-        String edgeType = getEdgeTypeFromCollectionName( collName, memberEntity.getId().getType() );
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collName );
 
         UUID timeStampUuid =   memberEntity.getId().getUuid() != null 
                 &&  UUIDUtils.isTimeBased( memberEntity.getId().getUuid()) 
@@ -763,7 +758,7 @@ public class CpRelationManager implements RelationManager {
         CollectionScope memberScope = new CollectionScopeImpl( 
             this.applicationScope.getApplication(), 
             this.applicationScope.getApplication(), 
-            CpEntityManager.getCollectionScopeNameFromEntityType( itemRef.getType() ));
+            CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ));
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
         if ( logger.isDebugEnabled() ) {
@@ -788,7 +783,7 @@ public class CpRelationManager implements RelationManager {
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
-            CpEntityManager.getCollectionScopeNameFromCollectionName( collName ));
+            CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
 
         batch.deindex(indexScope,  memberEntity );
 
@@ -796,8 +791,8 @@ public class CpRelationManager implements RelationManager {
         IndexScope itemScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             memberEntity.getId(), 
-            CpEntityManager.getCollectionScopeNameFromCollectionName( 
-                Schema.defaultCollectionName( cpHeadEntity.getId().getType() )));
+            CpNamingUtils.getCollectionScopeNameFromCollectionName(
+                    Schema.defaultCollectionName( cpHeadEntity.getId().getType() ) ));
 
 
         batch.deindex(itemScope,  cpHeadEntity );
@@ -808,7 +803,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
         Edge collectionToItemEdge = new SimpleEdge( 
             cpHeadEntity.getId(),
-            getEdgeTypeFromCollectionName( collName, memberEntity.getId().getType() ), 
+             CpNamingUtils.getEdgeTypeFromCollectionName( collName),
             memberEntity.getId(), 
             memberEntity.getId().getUuid().timestamp() );
         gm.deleteEdge(collectionToItemEdge).toBlockingObservable().last();
@@ -816,9 +811,8 @@ public class CpRelationManager implements RelationManager {
         // remove edge from item to collection
         Edge itemToCollectionEdge = new SimpleEdge( 
             memberEntity.getId(), 
-            getEdgeTypeFromCollectionName( 
-                Schema.defaultCollectionName( cpHeadEntity.getId().getType() ), 
-                cpHeadEntity.getId().getType() ), 
+                CpNamingUtils
+                        .getEdgeTypeFromCollectionName( Schema.defaultCollectionName( cpHeadEntity.getId().getType() )),
             cpHeadEntity.getId(),
             cpHeadEntity.getId().getUuid().timestamp() );
         gm.deleteEdge(itemToCollectionEdge).toBlockingObservable().last();
@@ -900,7 +894,7 @@ public class CpRelationManager implements RelationManager {
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
-            CpEntityManager.getCollectionScopeNameFromCollectionName( collName ));
+            CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
 
         EntityIndex ei = managerCache.getEntityIndex(applicationScope);
       
@@ -981,7 +975,7 @@ public class CpRelationManager implements RelationManager {
         CollectionScope targetScope = new CollectionScopeImpl( 
             applicationScope.getApplication(), 
             applicationScope.getApplication(), 
-            CpEntityManager.getCollectionScopeNameFromEntityType( connectedEntityRef.getType() ));
+            CpNamingUtils.getCollectionScopeNameFromEntityType( connectedEntityRef.getType() ));
 
         EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager(targetScope);
 
@@ -1005,8 +999,8 @@ public class CpRelationManager implements RelationManager {
             new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ))
                 .toBlockingObservable().last();
 
-        String edgeType = CpEntityManager
-                .getEdgeTypeFromConnectionType( connectionType, connectedEntityRef.getType() );
+        String edgeType = CpNamingUtils
+                .getEdgeTypeFromConnectionType( connectionType );
 
         // create graph edge connection from head entity to member entity
         Edge edge = new SimpleEdge( 
@@ -1024,7 +1018,7 @@ public class CpRelationManager implements RelationManager {
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
-            CpEntityManager.getConnectionScopeName( connectedEntityRef.getType(), connectionType ));
+            CpNamingUtils.getConnectionScopeName( connectedEntityRef.getType(), connectionType ));
 
         batch.index(indexScope, targetEntity );
 
@@ -1032,7 +1026,7 @@ public class CpRelationManager implements RelationManager {
         IndexScope allTypesIndexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
-            ALL_TYPES);
+                CpNamingUtils.ALL_TYPES);
         batch.index(allTypesIndexScope,  targetEntity );
 
 
@@ -1213,7 +1207,7 @@ public class CpRelationManager implements RelationManager {
         CollectionScope targetScope = new CollectionScopeImpl( 
             applicationScope.getApplication(), 
             applicationScope.getApplication(), 
-            CpEntityManager.getCollectionScopeNameFromEntityType( connectedEntityRef.getType() ));
+            CpNamingUtils.getCollectionScopeNameFromEntityType( connectedEntityRef.getType() ));
 
         EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager(targetScope);
 
@@ -1248,14 +1242,14 @@ public class CpRelationManager implements RelationManager {
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
-            CpEntityManager.getConnectionScopeName( targetEntity.getId().getType(), connectionType ));
+            CpNamingUtils.getConnectionScopeName( targetEntity.getId().getType(), connectionType ));
         batch.deindex( indexScope , targetEntity );
 
         // Deindex the connection in app|source|type context
         IndexScope allTypesIndexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
-            ALL_TYPES);
+                CpNamingUtils.ALL_TYPES);
 
         batch.deindex( allTypesIndexScope,  targetEntity );
 
@@ -1306,9 +1300,9 @@ public class CpRelationManager implements RelationManager {
 
             String scopeName = null;
             if ( connectedEntityType != null ) {
-                scopeName = CpEntityManager.getConnectionScopeName( connectedEntityType, connectionType );
+                scopeName = CpNamingUtils.getConnectionScopeName( connectedEntityType, connectionType );
             } else {
-                scopeName = ALL_TYPES;
+                scopeName = CpNamingUtils.ALL_TYPES;
             }
 
             IndexScope indexScope = new IndexScopeImpl(
@@ -1375,7 +1369,7 @@ public class CpRelationManager implements RelationManager {
 
         // looking for edges to the head entity
         String edgeType = 
-                CpEntityManager.getEdgeTypeFromConnectionType( connType, headEntity.getType() );
+                CpNamingUtils.getEdgeTypeFromConnectionType( connType );
 
         Map<EntityRef, Set<String>> containers = 
             getContainers( count, edgeType, fromEntityType );
@@ -1419,7 +1413,7 @@ public class CpRelationManager implements RelationManager {
             IndexScope indexScope = new IndexScopeImpl(
                 applicationScope.getApplication(), 
                 cpHeadEntity.getId(), 
-                ALL_TYPES);
+                    CpNamingUtils.ALL_TYPES);
 
             EntityIndex ei = managerCache.getEntityIndex(applicationScope);
         
@@ -1437,8 +1431,7 @@ public class CpRelationManager implements RelationManager {
         IndexScope indexScope = new IndexScopeImpl(
             applicationScope.getApplication(), 
             cpHeadEntity.getId(), 
-            CpEntityManager.getConnectionScopeName( 
-                    query.getEntityType(), query.getConnectionType() ));
+            CpNamingUtils.getConnectionScopeName( query.getEntityType(), query.getConnectionType() ));
         EntityIndex ei = managerCache.getEntityIndex(applicationScope);
     
         logger.debug("Searching connections from the '{}' scope {}:{}:{}", new String[] { 
@@ -1618,7 +1611,7 @@ public class CpRelationManager implements RelationManager {
                 CollectionScope collScope = new CollectionScopeImpl( 
                     applicationScope.getApplication(), 
                     applicationScope.getApplication(), 
-                    CpEntityManager.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
+                    CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
                 EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
 
                 if ( logger.isDebugEnabled() ) {

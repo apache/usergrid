@@ -51,7 +51,6 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
-import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
@@ -349,7 +348,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Application app = em.getApplication();
         Id fromEntityId = new SimpleId( app.getUuid(), app.getType() );
 
-        String edgeType = CpEntityManager.getEdgeTypeFromCollectionName("appinfos", "appinfo");
+        String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( "appinfos" );
 
         logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}", 
             new Object[] { edgeType, fromEntityId.getType(), fromEntityId.getUuid() } );
@@ -372,7 +371,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             CollectionScope collScope = new CollectionScopeImpl(
                     appScope.getApplication(),
                     appScope.getApplication(),
-                    CpEntityManager.getCollectionScopeNameFromCollectionName("appinfos"));
+                    CpNamingUtils.getCollectionScopeNameFromCollectionName( "appinfos" ));
 
             org.apache.usergrid.persistence.model.entity.Entity e = 
                     managerCache.getEntityCollectionManager( collScope ).load( targetId )
