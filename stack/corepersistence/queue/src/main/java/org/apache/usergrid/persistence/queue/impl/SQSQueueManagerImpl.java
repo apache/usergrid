@@ -67,7 +67,8 @@ public class SQSQueueManagerImpl implements QueueManager {
     }
 
     private String getName() {
-        return scope.getApplication().getType() + scope.getApplication().getUuid().toString() + scope.getName();
+        String name = scope.getApplication().getType() + scope.getApplication().getUuid().toString() + scope.getName();
+        return name;
     }
 
     public Queue getQueue(){

@@ -17,9 +17,6 @@
  */
 package org.apache.usergrid.persistence.queue;
 
-/**
- * Created by ApigeeCorporation on 10/3/14.
- */
 public interface QueueManagerFactory {
     public QueueManager getQueueManager( final QueueScope scope );
 

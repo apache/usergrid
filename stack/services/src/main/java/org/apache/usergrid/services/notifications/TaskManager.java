@@ -23,6 +23,8 @@ import org.apache.usergrid.persistence.entities.Device;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,28 +35,26 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TaskManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(TaskManager.class);
-    private final QueueManager proxy;
-    private final String queuePath;
+    private final ApplicationQueueManager proxy;
+    private final QueueManager queueManager;
 
     private Notification notification;
     private AtomicLong successes = new AtomicLong();
     private AtomicLong failures = new AtomicLong();
-    private org.apache.usergrid.mq.QueueManager qm;
     private EntityManager em;
-    private ConcurrentHashMap<UUID, ApplicationQueueMessage> messageMap;
+    private ConcurrentHashMap<UUID, QueueMessage> messageMap;
     private boolean hasFinished;
 
-    public TaskManager(EntityManager em, org.apache.usergrid.mq.QueueManager qm, QueueManager proxy, Notification notification, String queuePath) {
+    public TaskManager(EntityManager em,ApplicationQueueManager proxy, Notification notification, QueueManager queueManager) {
         this.em = em;
-        this.qm = qm;
         this.notification = notification;
         this.proxy = proxy;
-        this.messageMap = new ConcurrentHashMap<UUID, ApplicationQueueMessage>();
+        this.messageMap = new ConcurrentHashMap<UUID, QueueMessage>();
         hasFinished = false;
-        this.queuePath = queuePath;
+        this.queueManager = queueManager;
     }
 
-    public void addMessage(UUID deviceId, ApplicationQueueMessage message) {
+    public void addMessage(UUID deviceId, QueueMessage message) {
         messageMap.put(deviceId, message);
     }
 
@@ -62,9 +62,7 @@ public class TaskManager {
         LOG.debug("REMOVED {}", deviceUUID);
         try {
             LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
-            if(queuePath!=null){
-                qm.commitTransaction(queuePath, messageMap.get(deviceUUID).getTransaction(), null);
-            }
+
 
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
             if (receipt != null) {
@@ -148,6 +146,11 @@ public class TaskManager {
     }
 
     public void finishedBatch() throws Exception {
+        if(queueManager!=null){
+            List<QueueMessage> list = new ArrayList<QueueMessage>();
+            list.addAll(messageMap.values());
+            queueManager.commitMessages(list);
+        }
         long successes = this.successes.getAndSet(0); //reset counters
         long failures = this.failures.getAndSet(0); //reset counters
         this.hasFinished = true;
