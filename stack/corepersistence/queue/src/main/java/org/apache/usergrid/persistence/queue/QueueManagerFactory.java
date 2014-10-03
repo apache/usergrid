@@ -15,19 +15,12 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.queue.guice;
+package org.apache.usergrid.persistence.queue;
 
+/**
+ * Created by ApigeeCorporation on 10/3/14.
+ */
+public interface QueueManagerFactory {
+    public QueueManager getQueueManager( final QueueScope scope );
 
-import org.apache.usergrid.persistence.collection.guice.TestModule;
-import org.apache.usergrid.persistence.core.guice.CommonModule;
-
-
-
-public class TestQueueModule extends TestModule {
-
-    @Override
-    protected void configure() {
-        install( new CommonModule());
-        install( new QueueModule() );
-    }
 }

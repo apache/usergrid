@@ -19,16 +19,14 @@ package org.apache.usergrid.persistence.queue.guice;
 
 
 import org.apache.usergrid.persistence.core.migration.Migration;
-import org.apache.usergrid.persistence.queue.MapManager;
-import org.apache.usergrid.persistence.queue.MapManagerFactory;
-import org.apache.usergrid.persistence.queue.impl.MapManagerImpl;
-import org.apache.usergrid.persistence.queue.impl.MapSerialization;
-import org.apache.usergrid.persistence.queue.impl.MapSerializationImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.impl.QueueManagerImpl;
 
 
 /**
@@ -43,14 +41,9 @@ public class QueueModule extends AbstractModule {
     protected void configure() {
 
         // create a guice factory for getting our collection manager
-        install( new FactoryModuleBuilder().implement( MapManager.class, MapManagerImpl.class )
-                                           .build( MapManagerFactory.class ) );
+        install( new FactoryModuleBuilder().implement( QueueManager.class, QueueManagerImpl.class )
+                                           .build( QueueManagerFactory.class ) );
 
-
-        bind( MapSerialization.class).to( MapSerializationImpl.class );
-
-        Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
-        migrationBinding.addBinding().to(  Key.get( MapSerialization.class ) );
 
     }
 

@@ -20,6 +20,10 @@
 package org.apache.usergrid.persistence.queue;
 
 
+import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.Rule;
@@ -28,8 +32,6 @@ import org.junit.runner.RunWith;
 
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
-import org.apache.usergrid.persistence.queue.guice.TestMapModule;
-import org.apache.usergrid.persistence.queue.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.inject.Inject;
@@ -41,7 +43,7 @@ import static org.junit.Assert.assertNull;
 
 
 @RunWith( ITRunner.class )
-@UseModules( { TestMapModule.class } )
+@UseModules( { TestQueueModule.class } )
 public class QueueManagerTest {
 
 
@@ -51,156 +53,20 @@ public class QueueManagerTest {
 
 
     @Inject
-    protected MapManagerFactory mmf;
+    protected QueueManagerFactory mmf;
 
-    protected MapScope scope;
+    protected QueueScope scope;
 
 
     @Before
     public void mockApp() {
-        this.scope = new MapScopeImpl( new SimpleId( "application" ), "testMap" );
+        this.scope = new QueueScopeImpl( new SimpleId( "application" ), "testQueue" );
     }
 
 
     @Test
     public void writeReadString() {
-        MapManager mm = mmf.getMapManager( this.scope );
 
-        final String key = "key";
-        final String value = "value";
-
-        mm.putString( key, value );
-
-        final String returned = mm.getString( key );
-
-        assertEquals( value, returned );
     }
 
-    @Test
-    public void writeReadUUID() {
-        MapManager mm = mmf.getMapManager( this.scope );
-
-        final String key = "key";
-        final UUID value = UUID.randomUUID();
-
-        mm.putUuid( key, value );
-
-        final UUID returned = mm.getUuid( key );
-
-        assertEquals( value, returned );
-    }
-
-    @Test
-    public void writeReadLong() {
-        MapManager mm = mmf.getMapManager( this.scope );
-
-        final String key = "key";
-        final Long value = 1234L;
-
-        mm.putLong( key, value );
-
-        final Long returned = mm.getLong( key );
-
-        assertEquals( value, returned );
-    }
-
-
-    @Test
-    public void readMissingEntry() {
-        MapManager mm = mmf.getMapManager( this.scope );
-
-        final String returned = mm.getString( "key" );
-
-        assertNull( returned );
-
-        final Long returnedL = mm.getLong( "key" );
-
-        assertNull( returnedL );
-
-        final UUID returnedUUID = mm.getUuid( "key" );
-
-        assertNull( returnedUUID );
-    }
-
-
-    @Test
-    public void deleteString() {
-        MapManager mm = mmf.getMapManager( this.scope );
-
-        final String key = "key";
-        final String value = "value";
-
-        mm.putString( key, value );
-
-        final String returned = mm.getString( key );
-
-        assertEquals( value, returned );
-
-        mm.delete( key );
-
-        final String postDelete = mm.getString( key );
-
-        assertNull( postDelete );
-    }
-
-    @Test
-    public void deleteUUID() {
-        MapManager mm = mmf.getMapManager( this.scope );
-
-        final String key = "key";
-        final UUID value = UUID.randomUUID();
-
-        mm.putUuid( key, value );
-
-        final UUID returned = mm.getUuid( key );
-
-        assertEquals( value, returned );
-
-        mm.delete( key );
-
-        final UUID postDelete = mm.getUuid( key );
-
-        assertNull( postDelete );
-    }
-
-    @Test
-    public void deleteLong() {
-        MapManager mm = mmf.getMapManager( this.scope );
-
-        final String key = "key";
-        final Long value = 1L;
-
-        mm.putLong( key, value );
-
-        final Long returned = mm.getLong( key );
-
-        assertEquals( value, returned );
-
-        mm.delete( key );
-
-        final Long postDelete = mm.getLong( key );
-
-        assertNull( postDelete );
-    }
-
-
-    @Test( expected = NullPointerException.class )
-    public void nullInputString() {
-        MapManager mm = mmf.getMapManager( this.scope );
-
-        mm.putString( null, null );
-    }
-
-    @Test( expected = NullPointerException.class )
-    public void nullInputLong() {
-        MapManager mm = mmf.getMapManager( this.scope );
-
-        mm.putLong( null, null );
-    }
-    @Test( expected = NullPointerException.class )
-     public void nullInputUUID() {
-        MapManager mm = mmf.getMapManager( this.scope );
-
-        mm.putUuid( null, null );
-    }
 }

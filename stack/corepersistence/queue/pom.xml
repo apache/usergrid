@@ -35,11 +35,24 @@
 
   <dependencies>
 
+
     <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>common</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+
+
+    <!-- lang utils for setting uuids etc -->
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons.lang.version}</version>
+    </dependency>
+
+    <!-- tests -->
 
     <dependency>
       <groupId>org.apache.usergrid</groupId>
@@ -49,12 +62,13 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-collections4</artifactId>
-      <version>4.0</version>
-    </dependency>
 
+    <dependency>
+      <groupId>org.jukito</groupId>
+      <artifactId>jukito</artifactId>
+      <version>${jukito.version}</version>
+      <scope>test</scope>
+    </dependency>
 
 
     <dependency>
@@ -66,20 +80,10 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jukito</groupId>
-      <artifactId>jukito</artifactId>
-      <version>${jukito.version}</version>
-      <scope>test</scope>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk</artifactId>
+      <version>1.0.002</version>
     </dependency>
-
-    <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>3.0.2</version>
-      <scope>test</scope>
-    </dependency>
-
-
 
   </dependencies>
 
