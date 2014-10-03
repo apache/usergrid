@@ -9,7 +9,7 @@ import org.safehaus.guicyfig.Key;
 public interface QueueFig extends GuicyFig {
 
     @Key( "queue.region" )
-    @Default("US_EAST_1")
+    @Default("us-east-1")
     public String getRegion();
 
 

@@ -28,4 +28,6 @@ public interface QueueManager {
     List<QueueMessage> getMessages(int limit,int timeout);
     void commitMessage( QueueMessage queueMessage);
     void commitMessages( List<QueueMessage> queueMessages);
+    void sendMessages(List<String> bodies);
+    void sendMessage(String body);
 }

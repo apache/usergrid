@@ -36,10 +36,10 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.inject.Inject;
 
+import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 
 @RunWith( ITRunner.class )
@@ -51,19 +51,33 @@ public class QueueManagerTest {
     protected QueueManagerFactory qmf;
 
     protected QueueScope scope;
+    private QueueManager qm;
 
 
     @Before
     public void mockApp() {
         this.scope = new QueueScopeImpl( new SimpleId( "application" ), "testQueue" );
+        qm = qmf.getQueueManager(scope);
     }
 
 
     @Test
-    public void createQueue() {
-        QueueManager qm = qmf.getQueueManager(scope);
-        qm.createQueue();
+    public void get() {
         Queue queue = qm.getQueue();
+        assertNotNull(queue);
+    }
+
+    @Test
+    public void send(){
+        qm.sendMessage("bodytest");
+        List<QueueMessage> messageList = qm.getMessages(1,5000);
+        assertTrue(messageList.size() >= 1);
+        for(QueueMessage message : messageList){
+            qm.commitMessage(message);
+        }
+        messageList = qm.getMessages(1,5000);
+        assertTrue(messageList.size() <= 0);
+
     }
 
 }
