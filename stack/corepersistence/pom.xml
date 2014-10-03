@@ -68,6 +68,7 @@
         <module>queryindex</module>
         <module>common</module>
         <module>map</module>
+        <module>queue</module>
     </modules>
 
     <build>
