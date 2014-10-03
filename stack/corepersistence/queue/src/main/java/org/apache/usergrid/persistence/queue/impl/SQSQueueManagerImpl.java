@@ -17,6 +17,7 @@
  */
 package org.apache.usergrid.persistence.queue.impl;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -28,20 +29,20 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import org.apache.usergrid.persistence.core.util.UsergridAwsCredentialsProvider;
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.queue.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class QueueManagerImpl implements QueueManager {
+public class SQSQueueManagerImpl implements QueueManager {
     private final AmazonSQSClient sqs;
     private final QueueScope scope;
     private final QueueFig fig;
     private Queue queue;
 
     @Inject
-    public QueueManagerImpl(@Assisted QueueScope scope, QueueFig fig){
+    public SQSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig){
         this.fig = fig;
         this.scope = scope;
         UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
@@ -123,5 +124,41 @@ public class QueueManagerImpl implements QueueManager {
         }
         DeleteMessageBatchRequest request = new DeleteMessageBatchRequest(getQueue().getUrl(),entries);
         DeleteMessageBatchResult result = sqs.deleteMessageBatch(request);
+    }
+    public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
+
+        private AWSCredentials creds;
+
+        public  UsergridAwsCredentialsProvider(){
+            init();
+        }
+
+        private void init() {
+            creds = new AWSCredentials() {
+                @Override
+                public String getAWSAccessKeyId() {
+                    return StringUtils.trim(System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR));
+                }
+
+                @Override
+                public String getAWSSecretKey() {
+                    return StringUtils.trim(System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR));
+                }
+            };
+            if(StringUtils.isEmpty(creds.getAWSAccessKeyId()) || StringUtils.isEmpty(creds.getAWSSecretKey()) ){
+                throw new AmazonClientException("could not retrieve credentials from system properties");
+            }
+        }
+
+        @Override
+        public AWSCredentials getCredentials() {
+            return creds;
+        }
+
+
+        @Override
+        public void refresh() {
+            init();
+        }
     }
 }
