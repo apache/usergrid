@@ -204,13 +204,11 @@
         </dependency>
 
         <dependency>
-            <!-- TODO - should not scope be 'test' ? -->
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
         </dependency>
 
         <dependency>
-            <!-- TODO - should not scope be 'test' ? -->
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
         </dependency>
@@ -222,20 +220,21 @@
 
         <dependency>
             <groupId>junit</groupId>
-            <artifactId>junit-dep</artifactId>
+            <artifactId>junit</artifactId>
+            <!-- we need this in all scopes, not just test -->
         </dependency>
+
+        <!--  "The artifact junit:junit-dep:jar:4.11 has been relocated to junit:junit:jar:4.11"    
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit-dep</artifactId>
+        </dependency>-->
 
         <!-- Test Dependencies -->
 
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
 
