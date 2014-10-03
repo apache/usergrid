@@ -23,11 +23,18 @@ import java.util.List;
 
 
 public interface QueueManager {
+
     Queue createQueue( );
+
     Queue getQueue();
+
     List<QueueMessage> getMessages(int limit,int timeout);
+
     void commitMessage( QueueMessage queueMessage);
+
     void commitMessages( List<QueueMessage> queueMessages);
+
     void sendMessages(List<Serializable> bodies) throws IOException;
+
     void sendMessage(Serializable body)throws IOException;
 }
