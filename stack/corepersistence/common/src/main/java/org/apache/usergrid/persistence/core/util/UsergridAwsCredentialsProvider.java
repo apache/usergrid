@@ -17,9 +17,11 @@
  */
 package org.apache.usergrid.persistence.core.util;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import org.apache.commons.lang.StringUtils;
 
 
 public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
@@ -34,14 +36,17 @@ public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
         creds = new AWSCredentials() {
             @Override
             public String getAWSAccessKeyId() {
-                return System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
+                return StringUtils.trim(System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR));
             }
 
             @Override
             public String getAWSSecretKey() {
-                return System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+                return StringUtils.trim(System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR));
             }
         };
+        if(StringUtils.isEmpty(creds.getAWSAccessKeyId()) || StringUtils.isEmpty(creds.getAWSSecretKey()) ){
+            throw new AmazonClientException("could not retrieve credentials from system properties");
+        }
     }
 
     @Override
