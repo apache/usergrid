@@ -82,28 +82,10 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.0.002</version>
+      <version>1.8.11</version>
     </dependency>
 
   </dependencies>
 
-  <build>
-    <plugins>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <!-- We want to exclude any chop tests or stress tests.  They kill the embedded cassandra and
-          aren't intended to be part of the build process-->
-          <excludes>
-            <exclude>**/*ChopTest.java</exclude>
-            <exclude>**/*LoadTest.java</exclude>
-            <exclude>**/*StressTest.java</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
-
-    </plugins>
-  </build>
 </project>

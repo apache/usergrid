@@ -17,15 +17,27 @@
  */
 package org.apache.usergrid.persistence.queue;
 
-import java.util.List;
 
-/**
- * Created by ApigeeCorporation on 10/3/14.
- */
-public interface QueueManager {
-    Queue createQueue( );
-    Queue getQueue();
-    List<QueueMessage> getMessages(int limit,int timeout);
-    void commitMessage( QueueMessage queueMessage);
-    void commitMessages( List<QueueMessage> queueMessages);
+public class QueueMessage {
+    private final String body;
+    private final String messageId;
+    private final String handle;
+
+    public QueueMessage(String messageId, String handle, String body) {
+        this.body = body;
+        this.messageId = messageId;
+        this.handle = handle;
+    }
+
+    public String getHandle() {
+        return handle;
+    }
+
+    public String getBody(){
+        return body;
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
 }

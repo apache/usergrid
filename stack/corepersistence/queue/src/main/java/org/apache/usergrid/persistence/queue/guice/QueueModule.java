@@ -17,16 +17,15 @@
  */
 package org.apache.usergrid.persistence.queue.guice;
 
-
-import org.apache.usergrid.persistence.core.migration.Migration;
-
 import com.google.inject.AbstractModule;
-import com.google.inject.Key;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.multibindings.Multibinder;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.migration.MigrationManagerFig;
+import org.apache.usergrid.persistence.queue.QueueFig;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.impl.QueueManagerImpl;
+import org.safehaus.guicyfig.GuicyFigModule;
 
 
 /**
@@ -40,10 +39,10 @@ public class QueueModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        install( new GuicyFigModule( QueueFig.class) );
         // create a guice factory for getting our collection manager
         install( new FactoryModuleBuilder().implement( QueueManager.class, QueueManagerImpl.class )
                                            .build( QueueManagerFactory.class ) );
-
 
     }
 

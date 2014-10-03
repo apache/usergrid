@@ -48,12 +48,7 @@ public class QueueManagerTest {
 
 
     @Inject
-    @Rule
-    public MigrationManagerRule migrationManagerRule;
-
-
-    @Inject
-    protected QueueManagerFactory mmf;
+    protected QueueManagerFactory qmf;
 
     protected QueueScope scope;
 
@@ -65,8 +60,10 @@ public class QueueManagerTest {
 
 
     @Test
-    public void writeReadString() {
-
+    public void createQueue() {
+        QueueManager qm = qmf.getQueueManager(scope);
+        qm.createQueue();
+        Queue queue = qm.getQueue();
     }
 
 }
