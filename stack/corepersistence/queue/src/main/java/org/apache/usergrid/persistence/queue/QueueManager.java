@@ -17,17 +17,17 @@
  */
 package org.apache.usergrid.persistence.queue;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 
-/**
- * Created by ApigeeCorporation on 10/3/14.
- */
+
 public interface QueueManager {
     Queue createQueue( );
     Queue getQueue();
     List<QueueMessage> getMessages(int limit,int timeout);
     void commitMessage( QueueMessage queueMessage);
     void commitMessages( List<QueueMessage> queueMessages);
-    void sendMessages(List<String> bodies);
-    void sendMessage(String body);
+    void sendMessages(List<Serializable> bodies) throws IOException;
+    void sendMessage(Serializable body)throws IOException;
 }

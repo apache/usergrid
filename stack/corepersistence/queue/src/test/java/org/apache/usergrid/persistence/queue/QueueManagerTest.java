@@ -19,28 +19,24 @@
 
 package org.apache.usergrid.persistence.queue;
 
-
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.collection.util.InvalidEntityGenerator;
 import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
 import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.jukito.UseModules;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.inject.Inject;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.Assert.*;
-
 
 @RunWith( ITRunner.class )
 @UseModules( { TestQueueModule.class } )
@@ -60,19 +56,21 @@ public class QueueManagerTest {
         qm = qmf.getQueueManager(scope);
     }
 
-
+    @Ignore("need aws creds")
     @Test
     public void get() {
         Queue queue = qm.getQueue();
         assertNotNull(queue);
     }
-
+    @Ignore("need aws creds")
     @Test
-    public void send(){
-        qm.sendMessage("bodytest");
+    public void send() throws IOException{
+        String value = "bodytest";
+        qm.sendMessage(value);
         List<QueueMessage> messageList = qm.getMessages(1,5000);
         assertTrue(messageList.size() >= 1);
         for(QueueMessage message : messageList){
+            assertTrue(message.getBody().equals(value));
             qm.commitMessage(message);
         }
         messageList = qm.getMessages(1,5000);

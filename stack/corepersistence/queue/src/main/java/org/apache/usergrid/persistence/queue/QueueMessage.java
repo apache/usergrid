@@ -17,13 +17,12 @@
  */
 package org.apache.usergrid.persistence.queue;
 
-
 public class QueueMessage {
-    private final String body;
+    private final Object body;
     private final String messageId;
     private final String handle;
 
-    public QueueMessage(String messageId, String handle, String body) {
+    public QueueMessage(String messageId, String handle, Object body) {
         this.body = body;
         this.messageId = messageId;
         this.handle = handle;
@@ -33,7 +32,7 @@ public class QueueMessage {
         return handle;
     }
 
-    public String getBody(){
+    public Object getBody(){
         return body;
     }
 

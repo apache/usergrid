@@ -31,11 +31,17 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.queue.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.util.Base64Coder;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SQSQueueManagerImpl implements QueueManager {
+    private static final Logger LOG = LoggerFactory.getLogger(SQSQueueManagerImpl.class);
+
     private final AmazonSQSClient sqs;
     private final QueueScope scope;
     private final QueueFig fig;
@@ -80,24 +86,25 @@ public class SQSQueueManagerImpl implements QueueManager {
         return queue;
     }
 
-    public void sendMessage(String body){
-        SendMessageRequest request = new SendMessageRequest(getQueue().getUrl(),body);
+    public void sendMessage(Serializable body) throws IOException{
+        SendMessageRequest request = new SendMessageRequest(getQueue().getUrl(),toString(body));
         sqs.sendMessage(request);
     }
 
-    public void sendMessages(List<String> bodies){
+
+    public void sendMessages(List<Serializable> bodies) throws IOException{
         SendMessageBatchRequest request = new SendMessageBatchRequest(getQueue().getUrl());
         List<SendMessageBatchRequestEntry> entries = new ArrayList<>(bodies.size());
-        for(String body : bodies){
+        for(Serializable body : bodies){
             SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry();
-            entry.setMessageBody(body);
+            entry.setMessageBody(toString(body));
             entries.add(entry);
         }
         request.setEntries(entries);
         sqs.sendMessageBatch(request);
     }
 
-    public  List<QueueMessage> getMessages( int limit,int timeout){
+    public  List<QueueMessage> getMessages( int limit,int timeout) {
         System.out.println("Receiving messages from MyQueue.\n");
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(getQueue().getUrl());
         receiveMessageRequest.setMaxNumberOfMessages(limit);
@@ -105,7 +112,14 @@ public class SQSQueueManagerImpl implements QueueManager {
         List<Message> messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
         List<QueueMessage> queueMessages = new ArrayList<>(messages.size());
         for (Message message : messages) {
-            QueueMessage queueMessage = new QueueMessage(message.getMessageId(),message.getReceiptHandle(),message.getBody());
+            Object body ;
+            try{
+                body = fromString( message.getBody());
+            }catch (Exception e){
+                LOG.error("failed to deserialize message", e);
+                body  = message.getBody();
+            }
+            QueueMessage queueMessage = new QueueMessage(message.getMessageId(),message.getReceiptHandle(),body);
             queueMessages.add(queueMessage);
         }
         return queueMessages;
@@ -125,6 +139,26 @@ public class SQSQueueManagerImpl implements QueueManager {
         DeleteMessageBatchRequest request = new DeleteMessageBatchRequest(getQueue().getUrl(),entries);
         DeleteMessageBatchResult result = sqs.deleteMessageBatch(request);
     }
+
+    /** Read the object from Base64 string. */
+    private static Object fromString( String s ) throws IOException, ClassNotFoundException {
+        byte [] data = Base64Coder.decode(s.toCharArray());
+        ObjectInputStream ois = new ObjectInputStream(
+                new ByteArrayInputStream(  data ) );
+        Object o  = ois.readObject();
+        ois.close();
+        return o;
+    }
+
+    /** Write the object to a Base64 string. */
+    private static String toString( Serializable o ) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream( baos );
+        oos.writeObject( o );
+        oos.close();
+        return new String( Base64Coder.encode( baos.toByteArray() ) );
+    }
+
     public class UsergridAwsCredentialsProvider implements AWSCredentialsProvider {
 
         private AWSCredentials creds;
