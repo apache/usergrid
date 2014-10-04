@@ -181,7 +181,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // verify Query for CREATED state
         Query query = new Query();
-        query.addEqualityFilter("state", Notification.State.FINISHED.toString());
+        query.addEqualityFilter("state", Notification.State.STARTED.toString());
         Results results = app.getEm().searchCollection(
                 app.getEm().getApplicationRef(), "notifications", query);
         Entity entity = results.getEntitiesMap().get(notification.getUuid());

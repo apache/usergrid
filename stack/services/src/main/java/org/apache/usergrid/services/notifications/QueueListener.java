@@ -138,7 +138,7 @@ public class QueueListener  {
                 LOG.info("getting from queue {} ", queueName);
                 QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),"notifications"),queueName);
                 QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
-                List<QueueMessage> messages = getDeliveryBatch(queueManager);
+                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(),MESSAGE_TRANSACTION_TIMEOUT);
                 LOG.info("QueueListener: retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
                 if (messages.size() > 0) {
@@ -222,11 +222,6 @@ public class QueueListener  {
         pool.shutdownNow();
     }
 
-    private  List<QueueMessage> getDeliveryBatch(QueueManager queueManager) throws Exception {
-
-        List<QueueMessage> results = queueManager.getMessages(getBatchSize(),MESSAGE_TRANSACTION_TIMEOUT);
-        return results;
-    }
 
     public void setBatchSize(int batchSize){
         this.batchSize = batchSize;

@@ -62,7 +62,9 @@ public class TaskManager {
         LOG.debug("REMOVED {}", deviceUUID);
         try {
             LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
-
+            if(queueManager!=null){
+                queueManager.commitMessage(messageMap.get(deviceUUID));
+            }
 
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
             if (receipt != null) {
@@ -146,11 +148,7 @@ public class TaskManager {
     }
 
     public void finishedBatch() throws Exception {
-        if(queueManager!=null){
-            List<QueueMessage> list = new ArrayList<QueueMessage>();
-            list.addAll(messageMap.values());
-            queueManager.commitMessages(list);
-        }
+
         long successes = this.successes.getAndSet(0); //reset counters
         long failures = this.failures.getAndSet(0); //reset counters
         this.hasFinished = true;
