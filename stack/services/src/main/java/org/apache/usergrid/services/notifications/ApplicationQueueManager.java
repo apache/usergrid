@@ -112,7 +112,6 @@ public class ApplicationQueueManager  {
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<String>(); //build up list of issues
 
         final HashMap<Object,Notifier> notifierMap =  getNotifierMap();
-        final List<ApplicationQueueMessage> messages = new ArrayList<>();
 
         //get devices in querystring, and make sure you have access
         if (pathQuery != null) {
@@ -127,7 +126,6 @@ public class ApplicationQueueManager  {
             final CountMinSketch sketch = new CountMinSketch(0.0001,.99,7364181); //add probablistic counter to find dups
             final UUID appId = em.getApplication().getUuid();
             final Map<String,Object> payloads = notification.getPayloads();
-
 
             final Func1<Entity,Entity> entityListFunct = new Func1<Entity, Entity>() {
                 @Override
@@ -144,7 +142,7 @@ public class ApplicationQueueManager  {
                             LOG.info("ApplicationQueueMessage: notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
                             long hash = MurmurHash.hash(deviceRef.getUuid());
                             if (sketch.estimateCount(hash) > 0) { //look for duplicates
-                                LOG.debug("ApplicationQueueMessage: Maybe Found duplicate device: {}", deviceRef.getUuid());
+                                LOG.warn("ApplicationQueueMessage: Maybe Found duplicate device: {}", deviceRef.getUuid());
                                 continue;
                             } else {
                                 sketch.add(hash, 1);
@@ -166,7 +164,7 @@ public class ApplicationQueueManager  {
                             }
 
                             if (notifierId == null) {
-                                LOG.debug("ApplicationQueueMessage: Notifier did not match for device {} ", deviceRef);
+                                LOG.info("ApplicationQueueMessage: Notifier did not match for device {} ", deviceRef);
                                 continue;
                             }
 
@@ -178,8 +176,7 @@ public class ApplicationQueueManager  {
                                 LOG.info("ApplicationQueueMessage: notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
                             }
                             now = System.currentTimeMillis();
-
-                                qm.sendMessage(message);
+                            qm.sendMessage(message);
                             LOG.info("ApplicationQueueMessage: notification {} post-queue to device {} duration " + (System.currentTimeMillis() - now) + " ms "+queueName+" queue", notification.getUuid(), deviceRef.getUuid());
                             deviceCount.incrementAndGet();
                             queueMeter.mark();

@@ -93,10 +93,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.clear();
         app.put(notifierKey, PUSH_TOKEN);
         app.put("name", "device1");
-
         e = app.testRequest(ServiceAction.POST, 1, "devices").getEntity();
         app.testRequest(ServiceAction.GET, 1, "devices", e.getUuid());
-
         device1 = app.getEm().get(e.getUuid(), Device.class);
         assertEquals(device1.getProperty(notifierKey), PUSH_TOKEN);
 
@@ -105,6 +103,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("name", "device2");
         e = app.testRequest(ServiceAction.POST, 1, "devices").getEntity();
         device2 = app.getEm().get(e.getUuid(), Device.class);
+        Map<String, Object> props = app.getEm().getProperties(e);
+        assertEquals(device2.getProperty(notifierKey), PUSH_TOKEN);
+        app.getEm().refreshIndex();
 
         // create User
         user1 = new User();
@@ -130,6 +131,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         PathQuery pathQuery = new PathQuery( new SimpleEntityRef(app.getEm().getApplicationRef()), query);
 
         ns.TEST_PATH_QUERY = pathQuery;
+        app.getEm().refreshIndex();
 
         listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
         listener.DEFAULT_SLEEP = 200;
@@ -465,24 +467,18 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     public void twoDevicesOneNotifier() throws Exception {
 
         // create push notification //
-
-
         app.clear();
         String payload = getPayload();
         Map<String, String> payloads = new HashMap<String, String>(1);
-        payloads.put(notifier.getUuid().toString(), payload);
+        payloads.put(notifier.getName().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
-                .getEntity();
+        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
-        Notification notification = app.getEm().get(e.getUuid(),
-                Notification.class);
-        assertEquals(
-                notification.getPayloads().get(notifier.getUuid().toString()),
-                payload);
+        Notification notification = app.getEm().get(e.getUuid(),Notification.class);
+        assertEquals(notification.getPayloads().get(notifier.getUuid().toString()),payload);
 
 
         // perform push //
