@@ -147,36 +147,36 @@ public class TaskManager {
         }
     }
 
-    public  void finishedBatch() throws Exception {
-        synchronized (this) {
-            long successes = this.successes.getAndSet(0); //reset counters
-            long failures = this.failures.getAndSet(0); //reset counters
-            this.hasFinished = true;
+    public void finishedBatch() throws Exception {
+        long successes = this.successes.get(); //reset counters
+        long failures = this.failures.get(); //reset counters
+        for(int i = 0;i<successes;i++){this.successes.decrementAndGet();}
+        for(int i = 0;i<failures;i++){this.failures.decrementAndGet();}
 
-            // refresh notification
-            Notification notification = em.get(this.notification.getUuid(), Notification.class);
-            notification.setModified(System.currentTimeMillis());
+        this.hasFinished = true;
 
-            //and write them out again, this will produce the most accurate count
-            Map<String, Long> stats = new HashMap<>(2);
-            stats.put("sent", successes);
-            stats.put("errors", failures);
-            notification.updateStatistics(successes, failures);
+        // refresh notification
+        Notification notification = em.get(this.notification.getUuid(), Notification.class);
+        notification.setModified(System.currentTimeMillis());
 
-            //none of this is known and should you ever do this
-            if (notification.getExpectedCount() <= (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"))) {
-                Map<String, Object> properties = new HashMap<>();
-                notification.setFinished(notification.getModified());
-                properties.put("finished", notification.getModified());
-                properties.put("state", notification.getState());
-                LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
-                notification.addProperties(properties);
-            }
+        //and write them out again, this will produce the most accurate count
+        Map<String, Long> stats = new HashMap<>(2);
+        stats.put("sent", successes);
+        stats.put("errors", failures);
+        notification.updateStatistics(successes, failures);
 
-            LOG.info("notification finished batch: {} of {} devices", notification.getUuid(), successes + failures);
-            em.update(notification);
+        long totals = (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"));
+        //none of this is known and should you ever do this
+        Map<String, Object> properties = new HashMap<>();
+        notification.setFinished(notification.getModified());
+        properties.put("finished", notification.getModified());
+        properties.put("state", notification.getState());
+        LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
+        notification.addProperties(properties);
+
+        LOG.info("notification finished batch: {} of {} devices", notification.getUuid(), totals);
+        em.update(notification);
 //        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
 //        proxy.asyncCheckForInactiveDevices(notifiers);
-        }
     }
 }
