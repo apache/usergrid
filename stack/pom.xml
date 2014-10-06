@@ -171,7 +171,7 @@
     <developer>
       <id>snoopdave</id>
       <name>Dave Johnson</name>
-    </developer> 
+    </developer>
   </developers>
 
 
@@ -207,7 +207,7 @@
     <module>launcher</module>
     -->
     <module>mongo-emulator</module>
-    <!--  
+    <!--
     Re-enable when query-validator updated to work with Core Persistence.
     https://issues.apache.org/jira/browse/USERGRID-221
     <module>query-validator</module>
@@ -1670,13 +1670,13 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-report-plugin</artifactId>
-          <version>2.15</version>
+          <version>2.7</version>
         </plugin>
 
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.15</version>
+          <version>2.7</version>
           <configuration>
               <parallel>${usergrid.it.parallel}</parallel>
               <forkCount>${usergrid.it.forkCount}</forkCount>
