@@ -16,11 +16,17 @@
  */
 package org.apache.usergrid.services.notifications;
 
+import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.metrics.MetricsFactory;
-import org.apache.usergrid.mq.*;
+
+import org.apache.usergrid.mq.QueueResults;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.queue.*;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceManagerFactory;
 import org.slf4j.Logger;
@@ -35,7 +41,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class QueueListener  {
-    public  final long MESSAGE_TRANSACTION_TIMEOUT =  1 * 60 * 1000;
+    public  final int MESSAGE_TRANSACTION_TIMEOUT =  25 * 1000;
+    private final QueueManagerFactory queueManagerFactory;
 
     public   long DEFAULT_SLEEP = 5000;
 
@@ -50,7 +57,6 @@ public class QueueListener  {
 
     private Properties properties;
 
-    private org.apache.usergrid.mq.QueueManager queueManager;
 
     private ServiceManager svcMgr;
 
@@ -61,13 +67,12 @@ public class QueueListener  {
     private ExecutorService pool;
     private List<Future> futures;
 
-    public  final String MAX_THREADS = "2";
-    private Integer batchSize = 100;
-    private String[] queueNames;
-
-
+    public  final int MAX_THREADS = 2;
+    private Integer batchSize = 10;
+    private String queueName;
 
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Properties props){
+        this.queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
         this.smf = smf;
         this.emf = emf;
         this.metricsService = metricsService;
@@ -76,7 +81,7 @@ public class QueueListener  {
 
     @PostConstruct
     public void start(){
-        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "false"));
+        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "true"));
 
         if(shouldRun) {
             LOG.info("QueueListener: starting.");
@@ -86,9 +91,9 @@ public class QueueListener  {
                 sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", "0")).longValue();
                 sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
                 batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
-                queueNames = ApplicationQueueManager.getQueueNames(properties);
+                queueName = ApplicationQueueManager.getQueueNames(properties);
 
-                int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
+                int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", ""+MAX_THREADS));
                 futures = new ArrayList<Future>(maxThreads);
 
                 //create our thread pool based on our threadcount.
@@ -120,7 +125,7 @@ public class QueueListener  {
     }
 
     private void execute(){
-        Thread.currentThread().setDaemon(true);
+//        Thread.currentThread().setDaemon(true);
         Thread.currentThread().setName("Notifications_Processor"+UUID.randomUUID());
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
@@ -130,31 +135,30 @@ public class QueueListener  {
         while ( true ) {
             try {
                 svcMgr = smf.getServiceManager(smf.getManagementAppId());
-                queueManager = svcMgr.getQueueManager();
-                String queueName = ApplicationQueueManager.getRandomQueue(queueNames);
                 LOG.info("getting from queue {} ", queueName);
-                QueueResults results = getDeliveryBatch(queueManager,queueName);
-                LOG.info("QueueListener: retrieved batch of {} messages from queue {} ", results.size(),queueName);
+                QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),"notifications"),queueName);
+                QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
+                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(),MESSAGE_TRANSACTION_TIMEOUT,5000,ApplicationQueueMessage.class);
+                LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
-                List<Message> messages = results.getMessages();
                 if (messages.size() > 0) {
-                    HashMap<UUID, List<ApplicationQueueMessage>> messageMap = new HashMap<>(messages.size());
+                    HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
                     //group messages into hash map by app id
-                    for (Message message : messages) {
-                        ApplicationQueueMessage queueMessage = ApplicationQueueMessage.generate(message);
+                    for (QueueMessage message : messages) {
+                        ApplicationQueueMessage queueMessage = (ApplicationQueueMessage) message.getBody();
                         UUID applicationId = queueMessage.getApplicationId();
                         if (!messageMap.containsKey(applicationId)) {
-                            List<ApplicationQueueMessage> applicationQueueMessages = new ArrayList<ApplicationQueueMessage>();
-                            applicationQueueMessages.add(queueMessage);
+                            List<QueueMessage> applicationQueueMessages = new ArrayList<QueueMessage>();
+                            applicationQueueMessages.add(message);
                             messageMap.put(applicationId, applicationQueueMessages);
                         } else {
-                            messageMap.get(applicationId).add(queueMessage);
+                            messageMap.get(applicationId).add(message);
                         }
                     }
                     long now = System.currentTimeMillis();
                     Observable merge = null;
                     //send each set of app ids together
-                    for (Map.Entry<UUID, List<ApplicationQueueMessage>> entry : messageMap.entrySet()) {
+                    for (Map.Entry<UUID, List<QueueMessage>> entry : messageMap.entrySet()) {
                         UUID applicationId = entry.getKey();
                         EntityManager entityManager = emf.getEntityManager(applicationId);
                         ServiceManager serviceManager = smf.getServiceManager(applicationId);
@@ -166,7 +170,7 @@ public class QueueListener  {
                                 properties
                         );
 
-                        LOG.info("QueueListener: send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
+                        LOG.info("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
                         Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
                         if(merge == null)
                             merge = current;
@@ -176,16 +180,16 @@ public class QueueListener  {
                     }
                     if(merge!=null) {
                         merge.toBlocking().lastOrDefault(null);
+                        LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
                     }
-                    LOG.info("QueueListener: sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
                     if(sleepBetweenRuns > 0) {
-                        LOG.info("QueueListener: sleep between rounds...sleep...{}", sleepBetweenRuns);
+                        LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
                         Thread.sleep(sleepBetweenRuns);
                     }
                 }
                 else{
-                    LOG.info("QueueListener: no messages...sleep...{}", sleepWhenNoneFound);
+                    LOG.info("no messages...sleep...{}", sleepWhenNoneFound);
                     Thread.sleep(sleepWhenNoneFound);
                 }
                 //send to the providers
@@ -206,7 +210,7 @@ public class QueueListener  {
     }
 
     public void stop(){
-        LOG.info("QueueListener: stop processes");
+        LOG.info("stop processes");
 
         if(futures == null){
             return;
@@ -218,13 +222,6 @@ public class QueueListener  {
         pool.shutdownNow();
     }
 
-    private  QueueResults getDeliveryBatch(org.apache.usergrid.mq.QueueManager queueManager,String queuePath) throws Exception {
-        QueueQuery qq = new QueueQuery();
-        qq.setLimit(this.getBatchSize());
-        qq.setTimeout(MESSAGE_TRANSACTION_TIMEOUT);
-        QueueResults results = queueManager.getFromQueue(queuePath, qq);
-        return results;
-    }
 
     public void setBatchSize(int batchSize){
         this.batchSize = batchSize;
