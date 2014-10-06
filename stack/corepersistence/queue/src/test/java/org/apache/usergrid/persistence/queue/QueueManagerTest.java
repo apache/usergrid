@@ -58,12 +58,6 @@ public class QueueManagerTest {
 
     @Ignore("need aws creds")
     @Test
-    public void get() {
-        Queue queue = qm.getQueue();
-        assertNotNull(queue);
-    }
-    @Ignore("need aws creds")
-    @Test
     public void send() throws IOException,ClassNotFoundException{
         String value = "bodytest";
         qm.sendMessage(value);

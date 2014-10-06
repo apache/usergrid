@@ -21,8 +21,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQSClient;
@@ -36,13 +34,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.queue.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.util.Base64Coder;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SQSQueueManagerImpl implements QueueManager {
+public class SQSQueueManagerImpl<T> implements QueueManager {
     private static final Logger LOG = LoggerFactory.getLogger(SQSQueueManagerImpl.class);
 
     private final AmazonSQSClient sqs;
@@ -72,7 +68,6 @@ public class SQSQueueManagerImpl implements QueueManager {
         }
     }
 
-    @Override
     public Queue createQueue(){
         String name = getName();
         CreateQueueRequest createQueueRequest = new CreateQueueRequest()
@@ -87,7 +82,6 @@ public class SQSQueueManagerImpl implements QueueManager {
         String name = scope.getApplication().getType() + scope.getApplication().getUuid().toString() + scope.getName();
         return name;
     }
-    @Override
     public Queue getQueue(){
         if(queue == null) {
             ListQueuesResult result =  sqs.listQueues();
@@ -106,7 +100,7 @@ public class SQSQueueManagerImpl implements QueueManager {
     }
 
     @Override
-    public List<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) throws ClassNotFoundException, IOException {
+    public List<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
         waitTime = waitTime/1000;
         String url = getQueue().getUrl();
         LOG.info("Getting {} messages from {}",limit,url);
@@ -124,7 +118,7 @@ public class SQSQueueManagerImpl implements QueueManager {
                 body = fromString(message.getBody(),klass);
             }catch (Exception e){
                 LOG.error("failed to deserialize message", e);
-                throw e;
+                throw new RuntimeException(e);
             }
             QueueMessage queueMessage = new QueueMessage(message.getMessageId(),message.getReceiptHandle(),body);
             queueMessages.add(queueMessage);
@@ -143,15 +137,15 @@ public class SQSQueueManagerImpl implements QueueManager {
     }
 
     @Override
-    public void sendMessages(List bodies) throws IOException {
+    public void sendMessages(List<Serializable> bodies) throws IOException {
         String url = getQueue().getUrl();
         LOG.info("Sending Messages...{} to {}",bodies.size(),url);
 
         SendMessageBatchRequest request = new SendMessageBatchRequest(url);
         List<SendMessageBatchRequestEntry> entries = new ArrayList<>(bodies.size());
-        for(Object body : bodies){
+        for(Serializable body : bodies){
             SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry();
-            entry.setMessageBody(toString((Serializable)body));
+            entry.setMessageBody(toString(body));
             entries.add(entry);
         }
         request.setEntries(entries);
@@ -160,7 +154,7 @@ public class SQSQueueManagerImpl implements QueueManager {
     }
 
     @Override
-    public void sendMessage(Object body) throws IOException {
+    public void sendMessage(Serializable body) throws IOException {
         String url = getQueue().getUrl();
         LOG.info("Sending Message...{} to {}",body.toString(),url);
         SendMessageRequest request = new SendMessageRequest(url,toString((Serializable)body));

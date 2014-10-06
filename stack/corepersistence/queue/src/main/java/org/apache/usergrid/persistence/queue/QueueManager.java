@@ -21,20 +21,44 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 
-
+/**
+ * Manages queues for usergrid.  Current implementation is sqs based.
+ */
 public interface QueueManager {
 
-    Queue createQueue( );
+    /**
+     * Read messages from queue
+     * @param limit
+     * @param transactionTimeout timeout in ms
+     * @param waitTime wait time for next message in ms
+     * @param klass class to cast the return from
+     * @return List of Queue Messages
+     */
+    List<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime, Class klass);
 
-    Queue getQueue();
-
-    List<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime, Class klass) throws ClassNotFoundException, IOException;
-
+    /**
+     * Commit the transaction
+     * @param queueMessage
+     */
     void commitMessage( QueueMessage queueMessage);
 
+    /**
+     * commit multiple messages
+     * @param queueMessages
+     */
     void commitMessages( List<QueueMessage> queueMessages);
 
-    void sendMessages(List bodies) throws IOException;
+    /**
+     * send messages to queue
+     * @param bodies body objects must be serializable
+     * @throws IOException
+     */
+    void sendMessages(List<Serializable> bodies) throws IOException;
 
-    void sendMessage(Object body)throws IOException;
+    /**
+     * send a message to queue
+     * @param body
+     * @throws IOException
+     */
+    void sendMessage(Serializable body)throws IOException;
 }
