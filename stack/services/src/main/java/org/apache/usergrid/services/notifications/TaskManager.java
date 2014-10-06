@@ -161,7 +161,7 @@ public class TaskManager {
             Map<String, Long> stats = new HashMap<>(2);
             stats.put("sent", successes);
             stats.put("errors", failures);
-            notification.updateStatistics(successes, successes);
+            notification.updateStatistics(successes, failures);
 
             //none of this is known and should you ever do this
             if (notification.getExpectedCount() <= (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"))) {
