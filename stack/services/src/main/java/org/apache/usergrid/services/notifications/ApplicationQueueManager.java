@@ -98,14 +98,14 @@ public class ApplicationQueueManager  {
         long startTime = System.currentTimeMillis();
 
         if (notification.getCanceled() == Boolean.TRUE) {
-            LOG.info("ApplicationQueueMessage: notification " + notification.getUuid() + " canceled");
+            LOG.info("notification " + notification.getUuid() + " canceled");
             if (jobExecution != null) {
                 jobExecution.killed();
             }
             return;
         }
 
-        LOG.info("ApplicationQueueMessage: notification {} start queuing", notification.getUuid());
+        LOG.info("notification {} start queuing", notification.getUuid());
 
         final PathQuery<Device> pathQuery = notification.getPathQuery() ; //devices query
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
@@ -115,7 +115,7 @@ public class ApplicationQueueManager  {
 
         //get devices in querystring, and make sure you have access
         if (pathQuery != null) {
-            LOG.info("ApplicationQueueMessage: notification {} start query", notification.getUuid());
+            LOG.info("notification {} start query", notification.getUuid());
             final Iterator<Device> iterator = pathQuery.iterator(em);
             //if there are more pages (defined by PAGE_SIZE) you probably want this to be async, also if this is already a job then don't reschedule
             if (iterator instanceof ResultsIterator && ((ResultsIterator) iterator).hasPages() && jobExecution == null) {
@@ -136,13 +136,13 @@ public class ApplicationQueueManager  {
                         long now = System.currentTimeMillis();
                         List<EntityRef> devicesRef = getDevices(entity); // resolve group
 
-                        LOG.info("ApplicationQueueMessage: notification {} queue  {} devices, duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), devicesRef.size());
+                        LOG.info("notification {} queue  {} devices, duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), devicesRef.size());
 
                         for (EntityRef deviceRef : devicesRef) {
-                            LOG.info("ApplicationQueueMessage: notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
+                            LOG.info("notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
                             long hash = MurmurHash.hash(deviceRef.getUuid());
                             if (sketch.estimateCount(hash) > 0) { //look for duplicates
-                                LOG.warn("ApplicationQueueMessage: Maybe Found duplicate device: {}", deviceRef.getUuid());
+                                LOG.warn("Maybe Found duplicate device: {}", deviceRef.getUuid());
                                 continue;
                             } else {
                                 sketch.add(hash, 1);
@@ -160,11 +160,11 @@ public class ApplicationQueueManager  {
                                     notifierKey = entry.getKey().toLowerCase();
                                     break;
                                 }
-                                LOG.info("ApplicationQueueMessage: Provider query for notification {} device {} took "+(System.currentTimeMillis()-now)+" ms",notification.getUuid(),deviceRef.getUuid());
+                                LOG.info("Provider query for notification {} device {} took "+(System.currentTimeMillis()-now)+" ms",notification.getUuid(),deviceRef.getUuid());
                             }
 
                             if (notifierId == null) {
-                                LOG.info("ApplicationQueueMessage: Notifier did not match for device {} ", deviceRef);
+                                LOG.info("Notifier did not match for device {} ", deviceRef);
                                 continue;
                             }
 
@@ -173,11 +173,11 @@ public class ApplicationQueueManager  {
                                 // update queued time
                                 now = System.currentTimeMillis();
                                 notification.setQueued(System.currentTimeMillis());
-                                LOG.info("ApplicationQueueMessage: notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
+                                LOG.info("notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
                             }
                             now = System.currentTimeMillis();
                             qm.sendMessage(message);
-                            LOG.info("ApplicationQueueMessage: notification {} post-queue to device {} duration " + (System.currentTimeMillis() - now) + " ms "+queueName+" queue", notification.getUuid(), deviceRef.getUuid());
+                            LOG.info("notification {} post-queue to device {} duration " + (System.currentTimeMillis() - now) + " ms "+queueName+" queue", notification.getUuid(), deviceRef.getUuid());
                             deviceCount.incrementAndGet();
                             queueMeter.mark();
                         }
@@ -204,7 +204,7 @@ public class ApplicationQueueManager  {
                         }
                     });
             o.toBlocking().lastOrDefault(null);
-            LOG.info("ApplicationQueueMessage: notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+            LOG.info("notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
 
 
         }
@@ -227,7 +227,7 @@ public class ApplicationQueueManager  {
 
         em.update(notification);
 
-        LOG.info("ApplicationQueueMessage: notification {} updated notification duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
+        LOG.info("notification {} updated notification duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
 
         //do i have devices, and have i already started batching.
         if (deviceCount.get() <= 0) {
@@ -238,7 +238,7 @@ public class ApplicationQueueManager  {
 
         if (LOG.isInfoEnabled()) {
             long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
-            LOG.info("ApplicationQueueMessage: notification {} done queuing to {} devices in "+elapsed+" ms",notification.getUuid().toString(),deviceCount.get());
+            LOG.info("notification {} done queuing to {} devices in "+elapsed+" ms",notification.getUuid().toString(),deviceCount.get());
         }
     }
 

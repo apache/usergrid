@@ -67,13 +67,13 @@ public class QueueManagerTest {
     public void send() throws IOException{
         String value = "bodytest";
         qm.sendMessage(value);
-        List<QueueMessage> messageList = qm.getMessages(1,5000);
+        List<QueueMessage> messageList = qm.getMessages(1,5000,5000);
         assertTrue(messageList.size() >= 1);
         for(QueueMessage message : messageList){
             assertTrue(message.getBody().equals(value));
             qm.commitMessage(message);
         }
-        messageList = qm.getMessages(1,5000);
+        messageList = qm.getMessages(1,5000,5000);
         assertTrue(messageList.size() <= 0);
 
     }

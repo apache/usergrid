@@ -88,13 +88,18 @@ public class SQSQueueManagerImpl implements QueueManager {
     }
 
     public void sendMessage(Serializable body) throws IOException{
-        SendMessageRequest request = new SendMessageRequest(getQueue().getUrl(),toString(body));
+        String url = getQueue().getUrl();
+        LOG.info("Sending Message...{} to {}",body.toString(),url);
+        SendMessageRequest request = new SendMessageRequest(url,toString(body));
         sqs.sendMessage(request);
     }
 
 
     public void sendMessages(List<Serializable> bodies) throws IOException{
-        SendMessageBatchRequest request = new SendMessageBatchRequest(getQueue().getUrl());
+        String url = getQueue().getUrl();
+        LOG.info("Sending Messages...{} to {}",bodies.size(),url);
+
+        SendMessageBatchRequest request = new SendMessageBatchRequest(url);
         List<SendMessageBatchRequestEntry> entries = new ArrayList<>(bodies.size());
         for(Serializable body : bodies){
             SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry();
@@ -105,12 +110,17 @@ public class SQSQueueManagerImpl implements QueueManager {
         sqs.sendMessageBatch(request);
     }
 
-    public  List<QueueMessage> getMessages( int limit,int timeout) {
-        System.out.println("Receiving messages from MyQueue.\n");
-        ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(getQueue().getUrl());
+    public  List<QueueMessage> getMessages( int limit,int timeout, int waitTime) {
+        waitTime = waitTime/1000;
+        String url = getQueue().getUrl();
+        LOG.info("Getting {} messages from {}",limit,url);
+        ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(url);
         receiveMessageRequest.setMaxNumberOfMessages(limit);
         receiveMessageRequest.setVisibilityTimeout(timeout);
-        List<Message> messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
+        receiveMessageRequest.setWaitTimeSeconds(waitTime);
+        ReceiveMessageResult result = sqs.receiveMessage(receiveMessageRequest);
+        List<Message> messages = result.getMessages();
+        LOG.info("Received {} messages from {}",messages.size(),url);
         List<QueueMessage> queueMessages = new ArrayList<>(messages.size());
         for (Message message : messages) {
             Object body ;

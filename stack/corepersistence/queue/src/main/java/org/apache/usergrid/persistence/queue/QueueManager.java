@@ -28,7 +28,7 @@ public interface QueueManager {
 
     Queue getQueue();
 
-    List<QueueMessage> getMessages(int limit,int timeout);
+    List<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime);
 
     void commitMessage( QueueMessage queueMessage);
 

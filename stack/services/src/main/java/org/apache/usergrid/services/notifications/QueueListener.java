@@ -138,8 +138,8 @@ public class QueueListener  {
                 LOG.info("getting from queue {} ", queueName);
                 QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),"notifications"),queueName);
                 QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
-                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(),MESSAGE_TRANSACTION_TIMEOUT);
-                LOG.info("QueueListener: retrieved batch of {} messages from queue {} ", messages.size(),queueName);
+                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(),MESSAGE_TRANSACTION_TIMEOUT,5000);
+                LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
                 if (messages.size() > 0) {
                     HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
@@ -170,7 +170,7 @@ public class QueueListener  {
                                 properties
                         );
 
-                        LOG.info("QueueListener: send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
+                        LOG.info("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
                         Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
                         if(merge == null)
                             merge = current;
@@ -180,16 +180,16 @@ public class QueueListener  {
                     }
                     if(merge!=null) {
                         merge.toBlocking().lastOrDefault(null);
+                        LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
                     }
-                    LOG.info("QueueListener: sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
                     if(sleepBetweenRuns > 0) {
-                        LOG.info("QueueListener: sleep between rounds...sleep...{}", sleepBetweenRuns);
+                        LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
                         Thread.sleep(sleepBetweenRuns);
                     }
                 }
                 else{
-                    LOG.info("QueueListener: no messages...sleep...{}", sleepWhenNoneFound);
+                    LOG.info("no messages...sleep...{}", sleepWhenNoneFound);
                     Thread.sleep(sleepWhenNoneFound);
                 }
                 //send to the providers
@@ -210,7 +210,7 @@ public class QueueListener  {
     }
 
     public void stop(){
-        LOG.info("QueueListener: stop processes");
+        LOG.info("stop processes");
 
         if(futures == null){
             return;
