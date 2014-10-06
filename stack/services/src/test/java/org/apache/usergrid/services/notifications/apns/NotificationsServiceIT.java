@@ -491,9 +491,10 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Test
     public void twoDevicesTwoNotifiers() throws Exception {
 
+        String notifier2Name = "apNs2";
         // create a 2nd notifier //
         app.clear();
-        app.put("name", "apNs2");
+        app.put("name", notifier2Name);
         app.put("provider", PROVIDER);
         app.put("environment", "development");
         InputStream fis = getClass().getClassLoader().getResourceAsStream(
@@ -513,10 +514,10 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertEquals(notifier2.getProvider(), PROVIDER);
         assertEquals(notifier2.getEnvironment(), "development");
 
-        String key = notifier.getName() + NOTIFIER_ID_POSTFIX;
-        String key2 = notifier2.getName() + NOTIFIER_ID_POSTFIX;
+        String key = notifierName + NOTIFIER_ID_POSTFIX;
+        String key2 = notifier2Name + NOTIFIER_ID_POSTFIX;
         device2.setProperty(key, null);
-        device2.setProperty(key2, null);
+        device2.setProperty(key2, PUSH_TOKEN);
         app.getEm().update(device2);
 
         app.getEm().refreshIndex();
@@ -526,8 +527,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.clear();
         String payload = getPayload();
         Map<String, String> payloads = new HashMap<String, String>(1);
-        payloads.put(notifier.getUuid().toString(), payload);
-        payloads.put(notifier2.getUuid().toString(), payload);
+        payloads.put(notifierName, payload);
+        payloads.put(notifier2Name, payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
 
@@ -536,11 +537,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         app.getEm().refreshIndex();
 
-        Notification notification = app.getEm().get(e.getUuid(),
-                Notification.class);
-        assertEquals(
-                notification.getPayloads().get(notifier.getUuid().toString()),
-                payload);
+        Notification notification = app.getEm().get(e.getUuid(),  Notification.class);
+        assertEquals(notification.getPayloads().get(notifierName), payload);
 
         // perform push //
         notification = scheduleNotificationAndWait(notification);

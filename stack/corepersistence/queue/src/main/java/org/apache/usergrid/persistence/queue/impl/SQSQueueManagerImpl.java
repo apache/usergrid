@@ -125,7 +125,7 @@ public class SQSQueueManagerImpl implements QueueManager {
         for (Message message : messages) {
             Object body ;
             try{
-                body = fromString( message.getBody());
+                body = fromString(message.getBody());
             }catch (Exception e){
                 LOG.error("failed to deserialize message", e);
                 body  = message.getBody();

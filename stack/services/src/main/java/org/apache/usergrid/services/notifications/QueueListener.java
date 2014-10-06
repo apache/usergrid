@@ -67,7 +67,7 @@ public class QueueListener  {
     private ExecutorService pool;
     private List<Future> futures;
 
-    public  final String MAX_THREADS = "2";
+    public  final int MAX_THREADS = 2;
     private Integer batchSize = 10;
     private String queueName;
 
@@ -93,7 +93,7 @@ public class QueueListener  {
                 batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
                 queueName = ApplicationQueueManager.getQueueNames(properties);
 
-                int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", MAX_THREADS));
+                int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", ""+MAX_THREADS));
                 futures = new ArrayList<Future>(maxThreads);
 
                 //create our thread pool based on our threadcount.
