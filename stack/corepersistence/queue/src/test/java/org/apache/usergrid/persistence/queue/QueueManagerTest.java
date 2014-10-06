@@ -19,6 +19,7 @@
 
 package org.apache.usergrid.persistence.queue;
 
+import com.amazonaws.services.glacier.TreeHashGenerator;
 import org.apache.usergrid.persistence.collection.util.InvalidEntityGenerator;
 import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
 import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
@@ -34,7 +35,10 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import com.google.inject.Inject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -68,6 +72,27 @@ public class QueueManagerTest {
             qm.commitMessage(message);
         }
         messageList = qm.getMessages(1,5000,5000,String.class);
+        assertTrue(messageList.size() <= 0);
+
+    }
+
+    @Ignore("need aws creds")
+    @Test
+    public void sendMore() throws IOException,ClassNotFoundException{
+        HashMap<String,String> values = new HashMap<>();
+        values.put("test","Test");
+
+        List<Map<String,String>> bodies = new ArrayList<>();
+        bodies.add(values);
+        qm.sendMessages(bodies);
+        List<QueueMessage> messageList = qm.getMessages(1,5000,5000,values.getClass());
+        assertTrue(messageList.size() >= 1);
+        for(QueueMessage message : messageList){
+            assertTrue(message.getBody().equals(values));
+        }
+        qm.commitMessages(messageList);
+
+        messageList = qm.getMessages(1,5000,5000,values.getClass());
         assertTrue(messageList.size() <= 0);
 
     }

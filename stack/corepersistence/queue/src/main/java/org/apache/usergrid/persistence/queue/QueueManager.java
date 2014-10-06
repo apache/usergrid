@@ -53,12 +53,12 @@ public interface QueueManager {
      * @param bodies body objects must be serializable
      * @throws IOException
      */
-    void sendMessages(List<Serializable> bodies) throws IOException;
+    void sendMessages(List bodies) throws IOException;
 
     /**
      * send a message to queue
      * @param body
      * @throws IOException
      */
-    void sendMessage(Serializable body)throws IOException;
+    void sendMessage(Object body)throws IOException;
 }
