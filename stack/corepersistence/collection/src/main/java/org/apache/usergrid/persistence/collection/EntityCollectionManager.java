@@ -51,6 +51,11 @@ public interface EntityCollectionManager {
      */
     public Observable<Entity> load( Id entityId );
 
+    //TODO TN Change load to use multiget and return multiple entities.  Only supports loading 1k per load operation.
+
+
+    //TODO Dave add a load versions using a multiget that will return a latest version structure for a collection of entity Ids
+
 
     /**
      * Takes the change and reloads an entity with all changes applied in this entity applied.
