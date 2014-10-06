@@ -60,10 +60,13 @@ public class SQSQueueManagerImpl implements QueueManager {
 
 
     public Queue createQueue(){
+        String name = getName();
         CreateQueueRequest createQueueRequest = new CreateQueueRequest()
-                .withQueueName(getName());
+                .withQueueName(name);
         CreateQueueResult result = sqs.createQueue(createQueueRequest);
-        return new Queue(result.getQueueUrl());
+        String url = result.getQueueUrl();
+        LOG.info("Created queue with url {}",url);
+        return new Queue(url);
     }
 
     private String getName() {
@@ -73,7 +76,8 @@ public class SQSQueueManagerImpl implements QueueManager {
 
     public Queue getQueue(){
         if(queue == null) {
-            for (String queueUrl : sqs.listQueues().getQueueUrls()) {
+            ListQueuesResult result =  sqs.listQueues();
+            for (String queueUrl : result.getQueueUrls()) {
                 boolean found = queueUrl.contains(getName());
                 if (found) {
                     queue = new Queue(queueUrl);
@@ -137,18 +141,27 @@ public class SQSQueueManagerImpl implements QueueManager {
     }
 
     public void commitMessage( QueueMessage queueMessage){
+        String url = getQueue().getUrl();
+        LOG.info("Commit message {} to queue {}",queueMessage.getMessageId(),url);
+
         sqs.deleteMessage(new DeleteMessageRequest()
-                .withQueueUrl(getQueue().getUrl())
+                .withQueueUrl(url)
                 .withReceiptHandle(queueMessage.getHandle()));
     }
 
     public void commitMessages( List<QueueMessage> queueMessages){
+        String url = getQueue().getUrl();
+        LOG.info("Commit messages {} to queue {}",queueMessages.size(),url);
         List<DeleteMessageBatchRequestEntry> entries = new ArrayList<>();
         for(QueueMessage message : queueMessages){
             entries.add(new DeleteMessageBatchRequestEntry(message.getMessageId(),message.getHandle()));
         }
-        DeleteMessageBatchRequest request = new DeleteMessageBatchRequest(getQueue().getUrl(),entries);
+        DeleteMessageBatchRequest request = new DeleteMessageBatchRequest(url,entries);
         DeleteMessageBatchResult result = sqs.deleteMessageBatch(request);
+        boolean successful = result.getFailed().size() > 0;
+        if(!successful){
+            LOG.error("Commit failed {} messages",result.getFailed().size());
+        }
     }
 
     /** Read the object from Base64 string. */
