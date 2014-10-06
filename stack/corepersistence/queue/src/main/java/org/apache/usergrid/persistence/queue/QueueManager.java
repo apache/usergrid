@@ -28,13 +28,13 @@ public interface QueueManager {
 
     Queue getQueue();
 
-    List<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime);
+    List<QueueMessage> getMessages(int limit,int transactionTimeout, int waitTime, Class klass) throws ClassNotFoundException, IOException;
 
     void commitMessage( QueueMessage queueMessage);
 
     void commitMessages( List<QueueMessage> queueMessages);
 
-    void sendMessages(List<Serializable> bodies) throws IOException;
+    void sendMessages(List bodies) throws IOException;
 
-    void sendMessage(Serializable body)throws IOException;
+    void sendMessage(Object body)throws IOException;
 }
