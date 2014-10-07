@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.map;
 
 
-import org.apache.usergrid.persistence.collection.UUIDComparatorTest;
 import org.jukito.UseModules;
 import org.junit.Before;
 import org.junit.Rule;
@@ -65,7 +64,7 @@ public class MapManagerTest {
 
     @Test
     public void writeReadString() {
-        MapManager mm = mmf.getMapManager( this.scope );
+        MapManager mm = mmf.createMapManager( this.scope );
 
         final String key = "key";
         final String value = "value";
@@ -79,7 +78,7 @@ public class MapManagerTest {
 
     @Test
     public void writeReadUUID() {
-        MapManager mm = mmf.getMapManager( this.scope );
+        MapManager mm = mmf.createMapManager( this.scope );
 
         final String key = "key";
         final UUID value = UUID.randomUUID();
@@ -93,7 +92,7 @@ public class MapManagerTest {
 
     @Test
     public void writeReadLong() {
-        MapManager mm = mmf.getMapManager( this.scope );
+        MapManager mm = mmf.createMapManager( this.scope );
 
         final String key = "key";
         final Long value = 1234L;
@@ -108,7 +107,7 @@ public class MapManagerTest {
 
     @Test
     public void readMissingEntry() {
-        MapManager mm = mmf.getMapManager( this.scope );
+        MapManager mm = mmf.createMapManager( this.scope );
 
         final String returned = mm.getString( "key" );
 
@@ -126,7 +125,7 @@ public class MapManagerTest {
 
     @Test
     public void deleteString() {
-        MapManager mm = mmf.getMapManager( this.scope );
+        MapManager mm = mmf.createMapManager( this.scope );
 
         final String key = "key";
         final String value = "value";
@@ -146,7 +145,7 @@ public class MapManagerTest {
 
     @Test
     public void deleteUUID() {
-        MapManager mm = mmf.getMapManager( this.scope );
+        MapManager mm = mmf.createMapManager( this.scope );
 
         final String key = "key";
         final UUID value = UUID.randomUUID();
@@ -166,7 +165,7 @@ public class MapManagerTest {
 
     @Test
     public void deleteLong() {
-        MapManager mm = mmf.getMapManager( this.scope );
+        MapManager mm = mmf.createMapManager( this.scope );
 
         final String key = "key";
         final Long value = 1L;
@@ -187,20 +186,20 @@ public class MapManagerTest {
 
     @Test( expected = NullPointerException.class )
     public void nullInputString() {
-        MapManager mm = mmf.getMapManager( this.scope );
+        MapManager mm = mmf.createMapManager( this.scope );
 
         mm.putString( null, null );
     }
 
     @Test( expected = NullPointerException.class )
     public void nullInputLong() {
-        MapManager mm = mmf.getMapManager( this.scope );
+        MapManager mm = mmf.createMapManager( this.scope );
 
         mm.putLong( null, null );
     }
     @Test( expected = NullPointerException.class )
      public void nullInputUUID() {
-        MapManager mm = mmf.getMapManager( this.scope );
+        MapManager mm = mmf.createMapManager( this.scope );
 
         mm.putUuid( null, null );
     }

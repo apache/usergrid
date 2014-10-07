@@ -61,6 +61,7 @@ public class NotificationsService extends AbstractCollectionService {
     private static final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
     //need a mocking framework, this is to substitute for no mocking
     public static PathQuery<Device> TEST_PATH_QUERY = null;
+    public static QueueManager TEST_QUEUE_MANAGER = null;
 
     public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
 
@@ -107,7 +108,7 @@ public class NotificationsService extends AbstractCollectionService {
         String name = ApplicationQueueManager.getQueueNames(props);
         QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),"notifications"),name);
         queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
-        QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
+        QueueManager queueManager = TEST_QUEUE_MANAGER !=null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,queueManager,metricsService,props);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;
     }
