@@ -36,35 +36,24 @@ public class TaskManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(TaskManager.class);
     private final ApplicationQueueManager proxy;
-    private final QueueManager queueManager;
 
     private Notification notification;
     private AtomicLong successes = new AtomicLong();
     private AtomicLong failures = new AtomicLong();
     private EntityManager em;
-    private ConcurrentHashMap<UUID, QueueMessage> messageMap;
     private boolean hasFinished;
 
-    public TaskManager(EntityManager em,ApplicationQueueManager proxy, Notification notification, QueueManager queueManager) {
+    public TaskManager(EntityManager em,ApplicationQueueManager proxy, Notification notification) {
         this.em = em;
         this.notification = notification;
         this.proxy = proxy;
-        this.messageMap = new ConcurrentHashMap<UUID, QueueMessage>();
         hasFinished = false;
-        this.queueManager = queueManager;
-    }
-
-    public void addMessage(UUID deviceId, QueueMessage message) {
-        messageMap.put(deviceId, message);
     }
 
     public void completed(Notifier notifier, Receipt receipt, UUID deviceUUID, String newProviderId) throws Exception {
         LOG.debug("REMOVED {}", deviceUUID);
         try {
             LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
-            if(queueManager!=null){
-                queueManager.commitMessage(messageMap.get(deviceUUID));
-            }
 
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
             if (receipt != null) {
@@ -74,7 +63,6 @@ public class TaskManager {
                 LOG.debug("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
                 successes.incrementAndGet();
             }
-
 
             if (newProviderId != null) {
                 LOG.debug("notification {} replacing device {} notifierId", notification.getUuid(), deviceUUID);
@@ -150,8 +138,12 @@ public class TaskManager {
     public void finishedBatch() throws Exception {
         long successes = this.successes.get(); //reset counters
         long failures = this.failures.get(); //reset counters
-        for(int i = 0;i<successes;i++){this.successes.decrementAndGet();}
-        for(int i = 0;i<failures;i++){this.failures.decrementAndGet();}
+        for (int i = 0; i < successes; i++) {
+            this.successes.decrementAndGet();
+        }
+        for (int i = 0; i < failures; i++) {
+            this.failures.decrementAndGet();
+        }
 
         this.hasFinished = true;
 

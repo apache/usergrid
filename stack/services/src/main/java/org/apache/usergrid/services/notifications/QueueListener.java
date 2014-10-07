@@ -181,8 +181,9 @@ public class QueueListener  {
                     }
                     if(merge!=null) {
                         merge.toBlocking().lastOrDefault(null);
-                        LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
                     }
+                    queueManager.commitMessages(messages);
+                    LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
                     if(sleepBetweenRuns > 0) {
                         LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
