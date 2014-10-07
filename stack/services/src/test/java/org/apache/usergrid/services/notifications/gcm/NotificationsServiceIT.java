@@ -100,8 +100,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         device2 = app.getEm().get(e.getUuid(), Device.class);
         ns = getNotificationService();
 
-        TestQueueManager qm = new TestQueueManager();
-        ns.TEST_QUEUE_MANAGER = qm;
+//        TestQueueManager qm = new TestQueueManager();
+//        ns.TEST_QUEUE_MANAGER = qm;
 
         Query query = new Query();
         //query.addIdentifier(sp.getIdentifier());
