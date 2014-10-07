@@ -1,10 +1,36 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements.  The ASF licenses this file to You
+ * under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.  For additional information regarding
+ * copyright in this work, please see the NOTICE file in the top level
+ * directory of this distribution.
+ */
 package org.apache.usergrid.persistence.collection.impl;
 
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +68,7 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
     private final MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
+    private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
     private final Keyspace keyspace;
 
     private final SerializationFig serializationFig;
@@ -51,15 +78,20 @@ public class EntityVersionCleanupTask implements Task<Void> {
     private final UUID version;
 
 
+    @Inject
     public EntityVersionCleanupTask( final SerializationFig serializationFig,
-                                     final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
-                                     final MvccEntitySerializationStrategy entitySerializationStrategy,
-                                     final Keyspace keyspace, final List<EntityVersionDeleted> listeners,
-                                     final CollectionScope scope, final Id entityId, final UUID version ) {
+                                      final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
+                                      final MvccEntitySerializationStrategy entitySerializationStrategy,
+                                      final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
+                                      final Keyspace keyspace,
+                                      final CollectionScope scope,
+                                      final List<EntityVersionDeleted> listeners,
+                                      @Assisted final Id entityId,@Assisted final UUID version ) {
 
         this.serializationFig = serializationFig;
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
+        this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.keyspace = keyspace;
         this.listeners = listeners;
         this.scope = scope;
@@ -97,68 +129,101 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
         final UUID maxVersion = version;
 
+        //TODO Refactor this logic into a a class that can be invoked from anywhere
+        //load every entity we have history of
+        Observable<List<MvccEntity>> deleteFieldsObservable =
+                Observable.create(new ObservableIterator<MvccEntity>("deleteColumns") {
+                    @Override
+                    protected Iterator<MvccEntity> getIterator() {
+                        Iterator<MvccEntity> entities =  entitySerializationStrategy.load(scope, entityId, version, serializationFig.getBufferSize());
+                        return entities;
+                    }
+                })       //buffer them for efficiency
+                        .buffer(serializationFig.getBufferSize()).doOnNext(
 
-        Observable<MvccLogEntry> versions = Observable.create( new ObservableIterator( "versionIterators" ) {
-            @Override
-            protected Iterator getIterator() {
-                return new LogEntryIterator( logEntrySerializationStrategy, scope, entityId, maxVersion,
-                        serializationFig.getBufferSize() );
-            }
-        } );
-
-
-        //get the uuid from the version
-        versions.map( new Func1<MvccLogEntry, UUID>() {
-            @Override
-            public UUID call( final MvccLogEntry mvccLogEntry ) {
-                return mvccLogEntry.getVersion();
-            }
-        } )
-                //buffer our versions
-         .buffer( serializationFig.getBufferSize() )
-         //for each buffer set, delete all of them
-         .doOnNext( new Action1<List<UUID>>() {
-            @Override
-            public void call( final List<UUID> versions ) {
-
-                //Fire all the listeners
-                fireEvents( versions );
-
-                MutationBatch entityBatch = keyspace.prepareMutationBatch();
-                MutationBatch logBatch = keyspace.prepareMutationBatch();
-
-                for ( UUID version : versions ) {
-                    final MutationBatch entityDelete = entitySerializationStrategy.delete( scope, entityId, version );
-
-                    entityBatch.mergeShallow( entityDelete );
-
-                    final MutationBatch logDelete = logEntrySerializationStrategy.delete( scope, entityId, version );
-
-                    logBatch.mergeShallow( logDelete );
-                }
+                        new Action1<List<MvccEntity>>() {
+                            @Override
+                            public void call(final List<MvccEntity> mvccEntities) {
 
 
-                try {
-                    entityBatch.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to delete entities in cleanup", e );
-                }
+                                final MutationBatch batch = keyspace.prepareMutationBatch();
+                                final MutationBatch entityBatch = keyspace.prepareMutationBatch();
+                                final MutationBatch logBatch = keyspace.prepareMutationBatch();
 
-                try {
-                    logBatch.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to delete entities from the log", e );
-                }
-            }
-        } ).count().toBlocking().last();
+                                for (MvccEntity mvccEntity : mvccEntities) {
+                                    if (!mvccEntity.getEntity().isPresent()) {
+                                        continue;
+                                    }
+
+                                    final UUID entityVersion = mvccEntity.getVersion();
+
+                                    final Entity entity = mvccEntity.getEntity().get();
+
+                                    //remove all unique fields from the index
+                                    for (final Field field : entity.getFields()) {
+
+                                        if (!field.isUnique()) {
+                                            continue;
+                                        }
+
+                                        final UniqueValue unique = new UniqueValueImpl(scope, field, entityId, entityVersion);
+
+                                        final MutationBatch deleteMutation = uniqueValueSerializationStrategy.delete(unique);
+
+                                        batch.mergeShallow(deleteMutation);
+                                    }
+
+                                    final MutationBatch entityDelete = entitySerializationStrategy.delete(scope, entityId,mvccEntity.getVersion() );
+
+                                    entityBatch.mergeShallow(entityDelete);
+
+                                    final MutationBatch logDelete = logEntrySerializationStrategy.delete(scope, entityId, version);
+
+                                    logBatch.mergeShallow(logDelete);
+
+
+
+                                }
+
+                                try {
+                                    batch.execute();
+                                } catch (ConnectionException e1) {
+                                    throw new RuntimeException("Unable to execute " +
+                                            "unique value " +
+                                            "delete", e1);
+                                }
+                                fireEvents(mvccEntities);
+                                try {
+                                    entityBatch.execute();
+                                }
+                                catch ( ConnectionException e ) {
+                                    throw new RuntimeException( "Unable to delete entities in cleanup", e );
+                                }
+
+                                try {
+                                    logBatch.execute();
+                                }
+                                catch ( ConnectionException e ) {
+                                    throw new RuntimeException( "Unable to delete entities from the log", e );
+                                }
+
+                            }
+                        }
+
+
+                );
+
+        final int removedCount = deleteFieldsObservable.count().toBlocking().last();
+
+        LOG.debug("Removed unique values for {} entities of entity {}",removedCount,entityId);
 
         return null;
     }
 
 
-    private void fireEvents( final List<UUID> versions ) {
+
+
+    private void fireEvents( final List<MvccEntity> versions ) {
 
         final int listenerSize = listeners.size();
 

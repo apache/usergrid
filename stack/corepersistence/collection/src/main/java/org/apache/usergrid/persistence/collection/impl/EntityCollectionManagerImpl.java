@@ -92,6 +92,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final MarkCommit markCommit;
 
     private final TaskExecutor taskExecutor;
+    private EntityVersionCleanupFactory entityVersionCleanupFactory;
 
     @Inject
     public EntityCollectionManagerImpl( final UUIDService uuidService, @Write final WriteStart writeStart,
@@ -102,6 +103,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                                         final MarkStart markStart, final MarkCommit markCommit,
                                         @CollectionTaskExecutor
                                         final TaskExecutor taskExecutor,
+                                        final EntityVersionCleanupFactory entityVersionCleanupFactory,
                                         @Assisted final CollectionScope collectionScope) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
@@ -122,6 +124,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.uuidService = uuidService;
         this.collectionScope = collectionScope;
         this.taskExecutor = taskExecutor;
+        this.entityVersionCleanupFactory = entityVersionCleanupFactory;
     }
 
 
@@ -147,11 +150,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(), 
         //                  writeVerifyUnique, writeOptimisticVerify );
 
-        observable.map( writeCommit ).doOnNext( new Action1<Entity>() {
+        observable.map(writeCommit).doOnNext( new Action1<Entity>() {
             @Override
             public void call( final Entity entity ) {
                 //TODO fire a task here
-
+                taskExecutor.submit(entityVersionCleanupFactory.getTask(entityId,entity.getVersion()));
                 //post-processing to come later. leave it empty for now.
             }
         } ).doOnError( rollback );
@@ -170,7 +173,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
         return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-                         .map( markStart ).doOnNext( markCommit ).map( new Func1<CollectionIoEvent<MvccEntity>,
+                         .map(markStart).doOnNext(markCommit).map( new Func1<CollectionIoEvent<MvccEntity>,
                         Void>() {
                     @Override
                     public Void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
@@ -229,29 +232,29 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     // fire the stages
     public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData, WriteStart writeState ) {
 
-        return Observable.from( writeData ).map( writeState ).doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
+        return Observable.from( writeData ).map( writeState ).doOnNext(new Action1<CollectionIoEvent<MvccEntity>>() {
 
-                    @Override
-                    public void call(
-                            final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+            @Override
+            public void call(
+                    final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
 
-                        Observable<CollectionIoEvent<MvccEntity>> unique =
-                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                          .doOnNext( writeVerifyUnique );
-
-
-                        // optimistic verification
-                        Observable<CollectionIoEvent<MvccEntity>> optimistic =
-                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                          .doOnNext( writeOptimisticVerify );
+                Observable<CollectionIoEvent<MvccEntity>> unique =
+                        Observable.from(mvccEntityCollectionIoEvent).subscribeOn(Schedulers.io())
+                                .doOnNext(writeVerifyUnique);
 
 
-                        //wait for both to finish
-                        Observable.merge( unique, optimistic ).toBlocking().last();
+                // optimistic verification
+                Observable<CollectionIoEvent<MvccEntity>> optimistic =
+                        Observable.from(mvccEntityCollectionIoEvent).subscribeOn(Schedulers.io())
+                                .doOnNext(writeOptimisticVerify);
 
 
-                    }
-                } );
+                //wait for both to finish
+                Observable.merge(unique, optimistic).toBlocking().last();
+
+
+            }
+        });
     }
 
 

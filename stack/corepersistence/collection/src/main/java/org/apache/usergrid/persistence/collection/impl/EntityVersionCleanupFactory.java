@@ -15,23 +15,17 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.event.impl;
+package org.apache.usergrid.persistence.collection.impl;
 
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.event.EntityDeleted;
+
+import com.google.inject.assistedinject.Assisted;
+import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import java.util.List;
+import java.util.UUID;
 
-public class EntityDeletedImpl implements EntityDeleted {
+public interface EntityVersionCleanupFactory {
+    public EntityVersionCleanupTask getTask( final Id entityId, final UUID version );
 
-    public EntityDeletedImpl(){
-
-    }
-
-    @Override
-    public void deleted(CollectionScope scope, Id entityId) {
-        //TODO: clean up cass versions
-        //TODO: de-index
-        //TODO: delete all versions
-    }
 }

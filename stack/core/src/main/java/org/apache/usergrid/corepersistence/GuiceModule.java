@@ -18,6 +18,10 @@ package org.apache.usergrid.corepersistence;
 
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
+import org.apache.usergrid.persistence.collection.event.EntityDeleted;
+import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
+import org.apache.usergrid.persistence.collection.event.impl.EntityDeletedImpl;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
@@ -32,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * Guice Module that encapsulates Core Persistence.
  */
 public class GuiceModule  extends AbstractModule {
-    private static final Logger log = LoggerFactory.getLogger( GuiceModule.class );
+    private static final Logger LOG = LoggerFactory.getLogger( GuiceModule.class );
 
     @Override
     protected void configure() {
@@ -46,6 +50,12 @@ public class GuiceModule  extends AbstractModule {
 
         bind(CpEntityDeleteListener.class).asEagerSingleton();
         bind(CpEntityIndexDeleteListener.class).asEagerSingleton();
+
+        Multibinder<EntityDeleted> uriBinder = Multibinder.newSetBinder(binder(), EntityDeleted.class);
+        uriBinder.addBinding().to( EntityDeletedImpl.class );
+        Multibinder<EntityVersionDeleted> versionBinder = Multibinder.newSetBinder(binder(), EntityVersionDeleted.class);
+
+
 
     }
 
