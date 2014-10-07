@@ -158,9 +158,9 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
                                             continue;
                                         }
 
-                                        final UniqueValue unique = new UniqueValueImpl( collectionScope, field, entityId, entityVersion );
+                                        final UniqueValue unique = new UniqueValueImpl( field, entityId, entityVersion );
 
-                                        final MutationBatch deleteMutation = uniqueValueStrat.delete( unique );
+                                        final MutationBatch deleteMutation = uniqueValueStrat.delete(collectionScope,  unique );
 
                                         batch.mergeShallow( deleteMutation );
                                     }

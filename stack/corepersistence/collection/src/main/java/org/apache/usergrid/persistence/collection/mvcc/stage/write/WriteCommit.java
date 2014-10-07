@@ -113,9 +113,10 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
             if ( field.isUnique() ) {
 
-                UniqueValue written  = new UniqueValueImpl( ioEvent.getEntityCollection(), field,
-                    mvccEntity.getEntity().get().getId(), mvccEntity.getEntity().get().getVersion());
-                MutationBatch mb = uniqueValueStrat.write( written );
+                UniqueValue written  = new UniqueValueImpl( field,
+                    entityId,version);
+
+                MutationBatch mb = uniqueValueStrat.write(collectionScope,  written );
 
                 LOG.debug("Finalizing {} unqiue value {}", field.getName(), field.getValue().toString());
 

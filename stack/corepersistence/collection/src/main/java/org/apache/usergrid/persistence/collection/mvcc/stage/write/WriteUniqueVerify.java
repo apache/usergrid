@@ -49,7 +49,6 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
-import rx.Observable;
 import rx.functions.Action1;
 
 
@@ -88,11 +87,13 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
         final MvccEntity mvccEntity = ioevent.getEvent();
 
+        final Id entityId = mvccEntity.getId();
+
+        final UUID entityVersion = mvccEntity.getVersion();
+
+
         final Entity entity = mvccEntity.getEntity().get();
 
-        final Id entityId = entity.getId();
-
-        final UUID entityVersion = entity.getVersion();
 
         final CollectionScope scope = ioevent.getEntityCollection();
 
@@ -115,10 +116,10 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
 
                 // use write-first then read strategy
-                final UniqueValue written = new UniqueValueImpl( scope, field, entityId, entityVersion );
+                final UniqueValue written = new UniqueValueImpl( field, entityId, entityVersion );
 
                 // use TTL in case something goes wrong before entity is finally committed
-                final MutationBatch mb = uniqueValueStrat.write( written, serializationFig.getTimeout() );
+                final MutationBatch mb = uniqueValueStrat.write( scope, written, serializationFig.getTimeout() );
 
                 batch.mergeShallow( mb );
 
@@ -142,7 +143,6 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         }
 
 
-
         //now get the set of fields back
         final UniqueValueSet uniqueValues;
 
@@ -154,7 +154,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         }
 
 
-        final Map<String, Field> uniquenessViolations = new HashMap<>( uniqueFields.size());
+        final Map<String, Field> uniquenessViolations = new HashMap<>( uniqueFields.size() );
 
 
         //loop through each field that was unique
@@ -182,8 +182,5 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         if ( !uniquenessViolations.isEmpty() ) {
             throw new WriteUniqueVerifyException( mvccEntity, ioevent.getEntityCollection(), uniquenessViolations );
         }
-
-
     }
-
 }

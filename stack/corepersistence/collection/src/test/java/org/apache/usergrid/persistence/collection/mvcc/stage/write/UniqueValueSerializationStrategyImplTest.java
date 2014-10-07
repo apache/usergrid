@@ -70,8 +70,8 @@ public class UniqueValueSerializationStrategyImplTest {
         IntegerField field = new IntegerField( "count", 5 );
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
-        UniqueValue stored = new UniqueValueImpl( scope, field, entityId, version );
-        strategy.write( stored ).execute();
+        UniqueValue stored = new UniqueValueImpl( field, entityId, version );
+        strategy.write(scope,  stored ).execute();
 
         UniqueValueSet fields = strategy.load( scope, Collections.<Field>singleton( field ) );
 
@@ -91,8 +91,8 @@ public class UniqueValueSerializationStrategyImplTest {
         IntegerField field = new IntegerField( "count", 5 );
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
-        UniqueValue stored = new UniqueValueImpl( scope, field, entityId, version );
-        strategy.write( stored, 2 ).execute();
+        UniqueValue stored = new UniqueValueImpl( field, entityId, version );
+        strategy.write(scope,  stored, 2 ).execute();
 
         Thread.sleep( 1000 );
 
@@ -123,10 +123,10 @@ public class UniqueValueSerializationStrategyImplTest {
         IntegerField field = new IntegerField( "count", 5 );
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
-        UniqueValue stored = new UniqueValueImpl( scope, field, entityId, version );
-        strategy.write( stored ).execute();
+        UniqueValue stored = new UniqueValueImpl( field, entityId, version );
+        strategy.write(scope,  stored ).execute();
 
-        strategy.delete( stored ).execute();
+        strategy.delete(scope,  stored ).execute();
 
         UniqueValueSet fields = strategy.load( scope, Collections.<Field>singleton( field ) );
 

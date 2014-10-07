@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,8 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.migration.Migration;
+import org.apache.usergrid.persistence.core.util.ValidationUtils;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.common.base.Preconditions;
@@ -46,6 +49,7 @@ import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.model.Row;
 import com.netflix.astyanax.util.RangeBuilder;
@@ -60,7 +64,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
     // TODO: use "real" field serializer here instead once it is ready
     private static final CollectionScopedRowKeySerializer<Field> ROW_KEY_SER =
-            new CollectionScopedRowKeySerializer<Field>( FieldSerializer.get() );
+            new CollectionScopedRowKeySerializer<>( FieldSerializer.get() );
 
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 
@@ -83,7 +87,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
     @Override
-    public java.util.Collection getColumnFamilies() {
+    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
 
         MultiTennantColumnFamilyDefinition cf =
                 new MultiTennantColumnFamilyDefinition( CF_UNIQUE_VALUES, BytesType.class.getSimpleName(),
@@ -94,19 +98,29 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
     }
 
 
-    public MutationBatch write( UniqueValue uniqueValue ) {
-        return write( uniqueValue, Integer.MAX_VALUE );
+    public MutationBatch write(final CollectionScope scope,  UniqueValue uniqueValue ) {
+        return write( scope, uniqueValue, Integer.MAX_VALUE );
     }
 
 
     @Override
-    public MutationBatch write( UniqueValue value, Integer timeToLive ) {
+    public MutationBatch write(final CollectionScope scope,  UniqueValue value, Integer timeToLive ) {
 
         Preconditions.checkNotNull( value, "value is required" );
         Preconditions.checkNotNull( timeToLive, "timeToLive is required" );
 
+        final Field field = value.getField();
+
+
+
+        final Id entityId = value.getEntityId();
+        final UUID entityVersion = value.getEntityVersion();
+
+        ValidationUtils.verifyIdentity( entityId );
+              ValidationUtils.verifyVersion( entityVersion );
+
         log.debug( "Writing unique value scope={} id={} version={} name={} value={} ttl={} ", new Object[] {
-                value.getCollectionScope().getName(), value.getEntityId(), value.getEntityVersion(),
+               scope.getName(), entityId, entityVersion,
                 value.getField().getName(), value.getField().getValue(), timeToLive
         } );
 
@@ -120,7 +134,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
             ttl = timeToLive;
         }
 
-        return doWrite( value.getCollectionScope(), value.getField(), new UniqueValueSerializationStrategyImpl.RowOp() {
+        return doWrite( scope, value.getField(), new UniqueValueSerializationStrategyImpl.RowOp() {
 
             @Override
             public void doOp( final ColumnListMutation<EntityVersion> colMutation ) {
@@ -131,13 +145,13 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
     @Override
-    public MutationBatch delete( UniqueValue value ) {
+    public MutationBatch delete(final CollectionScope scope,  UniqueValue value ) {
 
         Preconditions.checkNotNull( value, "value is required" );
 
         final EntityVersion ev = new EntityVersion( value.getEntityId(), value.getEntityVersion() );
 
-        return doWrite( value.getCollectionScope(), value.getField(), new UniqueValueSerializationStrategyImpl.RowOp() {
+        return doWrite( scope, value.getField(), new UniqueValueSerializationStrategyImpl.RowOp() {
 
             @Override
             public void doOp( final ColumnListMutation<EntityVersion> colMutation ) {
@@ -160,7 +174,7 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
     @Override
-    public UniqueValueSet load( final CollectionScope colScope, final Collection<Field> fields )
+    public UniqueValueSet load(final CollectionScope colScope, final Collection<Field> fields )
             throws ConnectionException {
 
         Preconditions.checkNotNull( fields, "fields are required" );
@@ -190,17 +204,17 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
             final Field field = unique.getKey().getKey();
 
-            final ColumnList<EntityVersion> columnList = unique.getColumns();
+            final Iterator<Column<EntityVersion>> columnList = unique.getColumns().iterator();
 
             //sanity check, nothing to do, skip it
-            if ( columnList.size() < 1 ) {
+            if ( !columnList.hasNext()) {
                 continue;
             }
 
-            final EntityVersion entityVersion = columnList.getColumnByIndex( 0 ).getName();
+            final EntityVersion entityVersion = columnList.next().getName();
 
 
-            final UniqueValueImpl uniqueValue = new UniqueValueImpl( colScope, field, entityVersion.getEntityId(),
+            final UniqueValueImpl uniqueValue = new UniqueValueImpl(field, entityVersion.getEntityId(),
                     entityVersion.getEntityVersion() );
 
             uniqueValueSet.addValue( uniqueValue );

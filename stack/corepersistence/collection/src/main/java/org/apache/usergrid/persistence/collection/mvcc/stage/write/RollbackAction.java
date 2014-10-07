@@ -83,9 +83,9 @@ public class RollbackAction implements Action1<Throwable> {
                     if ( field.isUnique() ) {
 
                         UniqueValue toDelete =
-                                new UniqueValueImpl( scope, field, entity.get().getId(), mvccEntity.getVersion() );
+                                new UniqueValueImpl( field, entity.get().getId(), mvccEntity.getVersion() );
 
-                        MutationBatch deleteMb = uniqueValueStrat.delete( toDelete );
+                        MutationBatch deleteMb = uniqueValueStrat.delete(scope,  toDelete );
 
                         if ( rollbackMb == null ) {
                             rollbackMb = deleteMb;

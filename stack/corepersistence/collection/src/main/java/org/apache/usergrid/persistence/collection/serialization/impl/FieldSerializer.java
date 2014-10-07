@@ -20,9 +20,6 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
@@ -51,12 +48,13 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
     @Override
     public void toComposite( final CompositeBuilder builder, final Field field ) {
 
-        builder.addString( field.getName() );
-
-        builder.addString( field.getValue().toString() );
 
         final FieldTypeName fieldType = field.getTypeName();
 
+
+        /**
+         * Validation we only support a subset
+         */
         switch ( fieldType ) {
             case BOOLEAN:
             case DOUBLE:
@@ -67,19 +65,27 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
                 break;
             default:
                 throw new RuntimeException(
-                        String.format( "Type %s is not a supported type for unique values", fieldType ));
+                        String.format( "Type %s is not a supported type for unique values", fieldType ) );
         }
 
+
         builder.addString( fieldType.name() );
+
+        builder.addString( field.getName() );
+
+        builder.addString( field.getValue().toString() );
     }
 
 
     @Override
     public Field fromComposite( final CompositeParser composite ) {
 
-        final String name = composite.readString();
-        final String value = composite.readString();
         final String typeString = composite.readString();
+
+        final String name = composite.readString();
+
+        final String value = composite.readString();
+
 
         final FieldTypeName fieldType = FieldTypeName.valueOf( typeString );
 
@@ -100,7 +106,6 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
                 throw new RuntimeException( "Unknown unique field type" );
         }
     }
-
 
 
     /**

@@ -77,7 +77,7 @@ public class EntityCollectionManagerIT {
         Entity returned = observable.toBlocking().lastOrDefault( null );
 
         assertNotNull( "Returned has a uuid", returned.getId() );
-        assertNotNull( "Version exists" );
+        assertNotNull( "Version exists", returned.getVersion() );
     }
 
     @Test
