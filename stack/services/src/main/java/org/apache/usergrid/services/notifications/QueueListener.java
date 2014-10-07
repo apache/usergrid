@@ -70,6 +70,7 @@ public class QueueListener  {
     public  final int MAX_THREADS = 2;
     private Integer batchSize = 10;
     private String queueName;
+    public QueueManager TEST_QUEUE_MANAGER;
 
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, MetricsFactory metricsService, Properties props){
         this.queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
@@ -137,8 +138,8 @@ public class QueueListener  {
                 svcMgr = smf.getServiceManager(smf.getManagementAppId());
                 LOG.info("getting from queue {} ", queueName);
                 QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),"notifications"),queueName);
-                QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
-                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(),MESSAGE_TRANSACTION_TIMEOUT,5000,ApplicationQueueMessage.class);
+                QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
+                List<QueueMessage> messages = queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, ApplicationQueueMessage.class);
                 LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
                 if (messages.size() > 0) {
