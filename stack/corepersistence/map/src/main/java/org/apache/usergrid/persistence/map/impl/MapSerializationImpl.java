@@ -68,8 +68,9 @@ public class MapSerializationImpl implements MapSerialization {
         /**
          * CFs where the row key contains the source node id
          */
-        private static final MultiTennantColumnFamily<ApplicationScope, MapEntryKey, Boolean> MAP_ENTRIES =
-                new MultiTennantColumnFamily<>( "Map_Entries", MAP_ENTRY_SERIALIZER, BOOLEAN_SERIALIZER );
+        private static final MultiTennantColumnFamily<ApplicationScope, MapEntryKey, Boolean> 
+            MAP_ENTRIES = new MultiTennantColumnFamily<>( 
+                "Map_Entries", MAP_ENTRY_SERIALIZER, BOOLEAN_SERIALIZER );
 
 
         /**
@@ -89,7 +90,7 @@ public class MapSerializationImpl implements MapSerialization {
 
     @Override
     public String getString( final MapScope scope, final String key ) {
-        Column<Boolean> col = getValue(scope, key);
+        Column<Boolean> col = getValue(scope, key); // TODO: why boolean?
         return (col !=null) ?  col.getStringValue(): null;
     }
 
@@ -213,26 +214,34 @@ public class MapSerializationImpl implements MapSerialization {
 
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies()
-    {
-        final MultiTennantColumnFamilyDefinition mapEntries = new MultiTennantColumnFamilyDefinition( MAP_ENTRIES,
-                       BytesType.class.getSimpleName(), BytesType.class.getSimpleName(), BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
 
+        final MultiTennantColumnFamilyDefinition mapEntries = 
+                new MultiTennantColumnFamilyDefinition( MAP_ENTRIES,
+                       BytesType.class.getSimpleName(), 
+                       BytesType.class.getSimpleName(), 
+                       BytesType.class.getSimpleName(), 
+                       MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
-        final MultiTennantColumnFamilyDefinition mapKeys = new MultiTennantColumnFamilyDefinition( MAP_KEYS,
-                               BytesType.class.getSimpleName(), UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+        final MultiTennantColumnFamilyDefinition mapKeys = 
+                new MultiTennantColumnFamilyDefinition( MAP_KEYS,
+                        BytesType.class.getSimpleName(), 
+                        UTF8Type.class.getSimpleName(), 
+                        BytesType.class.getSimpleName(), 
+                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Arrays.asList( mapEntries, mapKeys );
     }
 
+
     private  Column<Boolean> getValue(MapScope scope, String key) {
+
         //add it to the entry
         final ScopedRowKey<ApplicationScope, MapEntryKey> entryRowKey = MapEntryKey.fromKey(scope, key);
 
-
         try {
-            final Column<Boolean> result =
-                    keyspace.prepareQuery( MAP_ENTRIES ).getKey( entryRowKey ).getColumn( true ).execute().getResult();
+            final Column<Boolean> result = keyspace.prepareQuery( MAP_ENTRIES )
+                    .getKey( entryRowKey ).getColumn( true ).execute().getResult();
 
             return result;
         }
@@ -245,6 +254,7 @@ public class MapSerializationImpl implements MapSerialization {
         }
     }
 
+
     private void executeBatch(MutationBatch batch) {
         try {
             batch.execute();
@@ -252,9 +262,6 @@ public class MapSerializationImpl implements MapSerialization {
             throw new RuntimeException("Unable to connect to cassandra", e);
         }
     }
-    /**
-     * Inner class to serialize and edgeIdTypeKey
-     */
 
 
     /**
@@ -320,8 +327,11 @@ public class MapSerializationImpl implements MapSerialization {
         /**
          * Create a scoped row key from the key
          */
-        public static ScopedRowKey<ApplicationScope, MapEntryKey> fromKey( final MapScope mapScope, final String key ) {
-            return ScopedRowKey.fromKey( ( ApplicationScope ) mapScope, new MapEntryKey( mapScope.getName(), key ) );
+        public static ScopedRowKey<ApplicationScope, MapEntryKey> fromKey( 
+                final MapScope mapScope, final String key ) {
+
+            return ScopedRowKey.fromKey( 
+                    ( ApplicationScope ) mapScope, new MapEntryKey( mapScope.getName(), key ) );
         }
     }
 }
