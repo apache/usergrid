@@ -83,8 +83,6 @@ public class ApplicationQueueManager  {
         this.queueName = getQueueNames(properties);
     }
 
-
-
     public boolean scheduleQueueJob(Notification notification) throws Exception{
         return jobScheduler.scheduleQueueJob(notification);
     }
@@ -281,7 +279,6 @@ public class ApplicationQueueManager  {
      * @param messages
      * @throws Exception
      */
-
     public Observable sendBatchToProviders( final List<QueueMessage> messages, final String queuePath) {
         LOG.info("sending batch of {} notifications.", messages.size());
         final Meter sendMeter = metricsFactory.getMeter(NotificationsService.class, "send");

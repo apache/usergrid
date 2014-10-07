@@ -100,8 +100,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         device2 = app.getEm().get(e.getUuid(), Device.class);
         ns = getNotificationService();
 
-//        TestQueueManager qm = new TestQueueManager();
-//        ns.TEST_QUEUE_MANAGER = qm;
+        TestQueueManager qm = new TestQueueManager();
+        ns.TEST_QUEUE_MANAGER = qm;
 
         Query query = new Query();
         //query.addIdentifier(sp.getIdentifier());
@@ -114,7 +114,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         listener = new QueueListener(ns.getServiceManagerFactory(),
                 ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
         listener.DEFAULT_SLEEP = 200;
-
+        listener.TEST_QUEUE_MANAGER = qm;
         listener.start();
     }
 

@@ -124,8 +124,10 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.getEm().createConnection(group1, "users", user1);
 
         ns = getNotificationService();
-//        TestQueueManager qm = new TestQueueManager();
-//        ns.TEST_QUEUE_MANAGER = qm;
+
+        TestQueueManager qm = new TestQueueManager();
+        ns.TEST_QUEUE_MANAGER = qm;
+
         Query query = new Query();
         //query.addIdentifier(sp.getIdentifier());
         query.setLimit(100);
@@ -137,6 +139,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.getEm().refreshIndex();
 
         listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
+        listener.TEST_QUEUE_MANAGER = qm;
         listener.DEFAULT_SLEEP = 200;
         listener.start();
     }
