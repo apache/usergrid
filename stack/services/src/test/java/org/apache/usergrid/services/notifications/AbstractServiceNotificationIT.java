@@ -113,7 +113,7 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
         assertEquals(expected, receipts.size());
         for (EntityRef receipt : receipts) {
             Receipt r = app.getEm().get(receipt, Receipt.class);
-//            assertNotNull(r.getSent());
+            assertNotNull(r.getSent());
             assertNotNull(r.getPayload());
             assertNotNull(r.getNotifierId());
             EntityRef source = getNotificationService().getSourceNotification(r);

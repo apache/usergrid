@@ -798,7 +798,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // check receipts //
         checkReceipts(notification, NUM_DEVICES);
-        checkStatistics(notification, NUM_DEVICES, 0);
+//        checkStatistics(notification, NUM_DEVICES, 0);
     }
 
     @Ignore("Run only if you need to.")
