@@ -134,8 +134,10 @@ public class TaskManager {
             }
         }
     }
-
     public void finishedBatch() throws Exception {
+        finishedBatch(true);
+    }
+    public void finishedBatch(boolean update) throws Exception {
         long successes = this.successes.get(); //reset counters
         long failures = this.failures.get(); //reset counters
         for (int i = 0; i < successes; i++) {
@@ -167,7 +169,9 @@ public class TaskManager {
         notification.addProperties(properties);
 
         LOG.info("notification finished batch: {} of {} devices", notification.getUuid(), totals);
-        em.update(notification);
+        if (update){
+            em.update(notification);
+        }
 //        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
 //        proxy.asyncCheckForInactiveDevices(notifiers);
     }
