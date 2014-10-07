@@ -17,15 +17,14 @@
 package org.apache.usergrid.corepersistence;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.google.inject.AbstractModule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
-
-import com.google.inject.AbstractModule;
+import org.apache.usergrid.persistence.map.guice.MapModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -41,6 +40,7 @@ public class GuiceModule  extends AbstractModule {
         install(new CollectionModule());
         install(new GraphModule());
         install(new IndexModule());
+        install(new MapModule());
 
         bind(CpEntityDeleteListener.class).asEagerSingleton();
         bind(CpEntityIndexDeleteListener.class).asEagerSingleton();
