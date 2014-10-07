@@ -122,7 +122,7 @@ public class SystemResource extends AbstractContextResource {
         response.setAction( "rebuild indexes" );
 
 
-        EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
             @Override
             public void onProgress( EntityRef s, EntityRef t, String etype ) {
                 logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
@@ -132,12 +132,27 @@ public class SystemResource extends AbstractContextResource {
         };
 
 
-        logger.info( "Rebuilding all indexes" );
+        final Thread rebuild = new Thread() {
 
-        emf.rebuildInternalIndexes( po );
-        emf.refreshIndex();
+            @Override
+            public void run() {
+                logger.info( "Rebuilding all indexes" );
 
-        emf.rebuildAllIndexes( po );
+                try {
+                    emf.rebuildInternalIndexes( po );
+                    emf.refreshIndex();
+
+                    emf.rebuildAllIndexes( po );
+                }
+                catch ( Exception e ) {
+                    logger.error( "Unable to rebuild indexes", e );
+                }
+            }
+        };
+
+        rebuild.setName( "Index rebuild all usergrid" );
+        rebuild.setDaemon( true );
+        rebuild.start();
 
 
         response.setSuccess();
@@ -148,7 +163,7 @@ public class SystemResource extends AbstractContextResource {
 
     @RequireSystemAccess
     @PUT
-    @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH  )
+    @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH )
     public JSONWithPadding rebuildIndexes( @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr,
                                            @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
@@ -158,7 +173,7 @@ public class SystemResource extends AbstractContextResource {
         response.setAction( "rebuild indexes" );
 
 
-        EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
             @Override
             public void onProgress( EntityRef s, EntityRef t, String etype ) {
                 logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
@@ -168,15 +183,26 @@ public class SystemResource extends AbstractContextResource {
         };
 
 
-        EntityManager em = emf.getEntityManager( appId );
+        final EntityManager em = emf.getEntityManager( appId );
 
-        Set<String> collectionNames = em.getApplicationCollections();
+        final Set<String> collectionNames = em.getApplicationCollections();
+
+        final Thread rebuild = new Thread() {
+
+            @Override
+            public void run() {
+                for ( String collectionName : collectionNames )
 
 
-        for(String collectionName: collectionNames){
-            rebuildCollection(appId, collectionName);
-        }
+                {
+                    rebuildCollection( appId, collectionName );
+                }
+            }
+        };
 
+        rebuild.setName( String.format( "Index rebuild for app %s", appId ) );
+        rebuild.setDaemon( true );
+        rebuild.start();
 
         response.setSuccess();
 
@@ -187,8 +213,9 @@ public class SystemResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexes( @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr,
-                                           @PathParam( "collectionName" ) String collectionName,
+    public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
+                                           @PathParam( "applicationId" ) final String applicationIdStr,
+                                           @PathParam( "collectionName" ) final String collectionName,
                                            @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
@@ -196,7 +223,17 @@ public class SystemResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "rebuild indexes" );
 
-        rebuildCollection( appId, collectionName );
+        final Thread rebuild = new Thread() {
+
+            public void run() {
+
+                rebuildCollection( appId, collectionName );
+            }
+        };
+
+        rebuild.setName( String.format( "Index rebuild for app %s and collection %s", appId, collectionName ) );
+        rebuild.setDaemon( true );
+        rebuild.start();
 
         response.setSuccess();
 

@@ -41,6 +41,7 @@ public class GuiceModule  extends AbstractModule {
         install(new GraphModule());
         install(new IndexModule());
         install(new MapModule());
+        install(new QueueModule());
 
         bind(CpEntityDeleteListener.class).asEagerSingleton();
         bind(CpEntityIndexDeleteListener.class).asEagerSingleton();
