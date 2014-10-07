@@ -126,7 +126,9 @@ public class QueueListener  {
     }
 
     private void execute(){
-        Thread.currentThread().setDaemon(true);
+        if(Thread.currentThread().isDaemon()) {
+            Thread.currentThread().setDaemon(true);
+        }
         Thread.currentThread().setName("Notifications_Processor"+UUID.randomUUID());
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();

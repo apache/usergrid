@@ -230,7 +230,7 @@ public class ApplicationQueueManager  {
         if (deviceCount.get() <= 0) {
             TaskManager taskManager = new TaskManager(em, this, notification);
             //if i'm in a test value will be false, do not mark finished for test orchestration, not ideal need real tests
-            taskManager.finishedBatch(false);
+            taskManager.finishedBatch(false,false);
         }
 
         em.update(notification);

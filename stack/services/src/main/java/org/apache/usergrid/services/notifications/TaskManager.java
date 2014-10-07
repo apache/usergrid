@@ -135,9 +135,9 @@ public class TaskManager {
         }
     }
     public void finishedBatch() throws Exception {
-        finishedBatch(true);
+        finishedBatch(true,true);
     }
-    public void finishedBatch(boolean update) throws Exception {
+    public void finishedBatch(boolean update, boolean fetch) throws Exception {
         long successes = this.successes.get(); //reset counters
         long failures = this.failures.get(); //reset counters
         for (int i = 0; i < successes; i++) {
@@ -150,7 +150,8 @@ public class TaskManager {
         this.hasFinished = true;
 
         // refresh notification
-        Notification notification = em.get(this.notification.getUuid(), Notification.class);
+        if(fetch)
+            notification = em.get(this.notification.getUuid(), Notification.class);
         notification.setModified(System.currentTimeMillis());
 
         //and write them out again, this will produce the most accurate count
