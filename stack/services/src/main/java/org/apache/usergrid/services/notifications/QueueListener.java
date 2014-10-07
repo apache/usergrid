@@ -16,10 +16,11 @@
  */
 package org.apache.usergrid.services.notifications;
 
+import com.codahale.metrics.*;
+import com.codahale.metrics.Timer;
 import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.metrics.MetricsFactory;
 
-import org.apache.usergrid.mq.QueueResults;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 
@@ -31,7 +32,6 @@ import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import rx.Observable;
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -126,11 +126,15 @@ public class QueueListener  {
     }
 
     private void execute(){
-//        Thread.currentThread().setDaemon(true);
+        if(Thread.currentThread().isDaemon()) {
+            Thread.currentThread().setDaemon(true);
+        }
         Thread.currentThread().setName("Notifications_Processor"+UUID.randomUUID());
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
         LOG.info("QueueListener: Starting execute process.");
+        Meter meter = metricsService.getMeter(QueueListener.class, "queue");
+        com.codahale.metrics.Timer timer = metricsService.getTimer(QueueListener.class, "dequeue");
 
         // run until there are no more active jobs
         while ( true ) {
@@ -139,10 +143,12 @@ public class QueueListener  {
                 LOG.info("getting from queue {} ", queueName);
                 QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),"notifications"),queueName);
                 QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
+                Timer.Context timerContext = timer.time();
                 List<QueueMessage> messages = queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, ApplicationQueueMessage.class);
                 LOG.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
 
                 if (messages.size() > 0) {
+
                     HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
                     //group messages into hash map by app id
                     for (QueueMessage message : messages) {
@@ -183,6 +189,7 @@ public class QueueListener  {
                         merge.toBlocking().lastOrDefault(null);
                     }
                     queueManager.commitMessages(messages);
+                    meter.mark(messages.size());
                     LOG.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
 
                     if(sleepBetweenRuns > 0) {
@@ -194,6 +201,7 @@ public class QueueListener  {
                     LOG.info("no messages...sleep...{}", sleepWhenNoneFound);
                     Thread.sleep(sleepWhenNoneFound);
                 }
+                timerContext.stop();
                 //send to the providers
                 consecutiveExceptions.set(0);
             }catch (Exception ex){

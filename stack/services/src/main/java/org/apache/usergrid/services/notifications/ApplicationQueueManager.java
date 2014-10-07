@@ -223,7 +223,6 @@ public class ApplicationQueueManager  {
         notification.addProperties(properties);
         long now = System.currentTimeMillis();
 
-        em.update(notification);
 
         LOG.info("notification {} updated notification duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
 
@@ -231,13 +230,13 @@ public class ApplicationQueueManager  {
         if (deviceCount.get() <= 0) {
             TaskManager taskManager = new TaskManager(em, this, notification);
             //if i'm in a test value will be false, do not mark finished for test orchestration, not ideal need real tests
-            taskManager.finishedBatch();
+            taskManager.finishedBatch(false,false);
         }
 
-        if (LOG.isInfoEnabled()) {
-            long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
-            LOG.info("notification {} done queuing to {} devices in "+elapsed+" ms",notification.getUuid().toString(),deviceCount.get());
-        }
+        em.update(notification);
+
+        long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
+        LOG.info("notification {} done queuing to {} devices in " + elapsed + " ms", notification.getUuid().toString(), deviceCount.get());
     }
 
     /**
