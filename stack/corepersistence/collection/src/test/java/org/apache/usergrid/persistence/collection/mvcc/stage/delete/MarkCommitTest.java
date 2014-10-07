@@ -1,6 +1,8 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
+import java.security.Key;
+
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -13,11 +15,12 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
+import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 
 import static org.junit.Assert.assertEquals;
@@ -111,13 +114,16 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
         final MutationBatch entityMutation = mock( MutationBatch.class );
         final SerializationFig serializationFig = mock(SerializationFig.class);
         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy = mock(UniqueValueSerializationStrategy.class);
+        final Keyspace keyspace = mock( Keyspace.class );
+
+        when(keyspace.prepareMutationBatch()).thenReturn( entityMutation );
 
         when( logStrategy.write( any( CollectionScope.class ), any( MvccLogEntry.class ) ) ).thenReturn( logMutation );
         when( mvccEntityStrategy.write( any( CollectionScope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
 
 
-        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, serializationFig ).call( event );
+        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, serializationFig, keyspace ).call( event );
 
         //TODO: This doesn't assert anything, this needs fixed (should be a fail technically)
     }

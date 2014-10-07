@@ -38,6 +38,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
+import rx.functions.Action1;
 import rx.functions.Func1;
 
 
@@ -46,7 +47,7 @@ import rx.functions.Func1;
  */
 @Singleton
 public class WriteOptimisticVerify 
-    implements Func1<CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>> {
+    implements Action1<CollectionIoEvent<MvccEntity>> {
 
     private static final Logger log = LoggerFactory.getLogger( WriteOptimisticVerify.class );
 
@@ -59,7 +60,7 @@ public class WriteOptimisticVerify
 
 
     @Override
-    public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> ioevent ) {
+    public void call( final CollectionIoEvent<MvccEntity> ioevent ) {
         MvccValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
 
         // If the version was included on the entity write operation (delete or write) we need
@@ -74,7 +75,7 @@ public class WriteOptimisticVerify
         CollectionScope collectionScope = ioevent.getEntityCollection();
 
         if(entity.getVersion() == null){
-            return ioevent;
+            return;
         }
 
         try {
@@ -98,8 +99,7 @@ public class WriteOptimisticVerify
                 "Error reading entity log", e );
         }
 
-        // No op, just emit the value
-        return ioevent;
+
     }
 
 }

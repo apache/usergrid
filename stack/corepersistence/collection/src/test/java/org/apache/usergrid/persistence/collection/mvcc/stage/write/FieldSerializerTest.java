@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.apache.usergrid.persistence.collection.serialization.impl.FieldSerializer;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 

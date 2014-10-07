@@ -15,7 +15,7 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.serialization;
 
 
 import java.util.UUID;
@@ -29,11 +29,27 @@ import org.apache.usergrid.persistence.model.field.Field;
  */
 public interface UniqueValue {
 
+    /**
+     * The scope of this value
+     * @return
+     */
     public CollectionScope getCollectionScope();
 
+    /**
+     * The entity Id that owns this value
+     * @return
+     */
     public Id getEntityId();
 
+    /**
+     * The field value
+     * @return
+     */
     public Field getField();
 
+    /**
+     * The version of the entity that owns this value
+     * @return
+     */
     public UUID getEntityVersion();
 }
