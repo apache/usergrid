@@ -7,18 +7,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Created by ApigeeCorporation on 10/7/14.
  */
 public class TestQueueManager implements QueueManager {
-    public List<QueueMessage> queue = new ArrayList<>();
+    public ConcurrentLinkedQueue<QueueMessage> queue = new ConcurrentLinkedQueue<>();
     @Override
-    public List<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
+    public synchronized List<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
         List<QueueMessage> returnQueue = new ArrayList<>();
         for(int i=0;i<limit;i++){
             if(!queue.isEmpty()){
-                returnQueue.add( queue.remove(0));
+                returnQueue.add( queue.remove());
             }else{
                 break;
             }
@@ -35,7 +36,7 @@ public class TestQueueManager implements QueueManager {
     }
 
     @Override
-    public void sendMessages(List bodies) throws IOException {
+    public synchronized void sendMessages(List bodies) throws IOException {
         for(Object body : bodies){
             String uuid = UUID.randomUUID().toString();
             queue.add(new QueueMessage(uuid,"handle_"+uuid,body));
@@ -43,7 +44,7 @@ public class TestQueueManager implements QueueManager {
     }
 
     @Override
-    public void sendMessage(Object body) throws IOException {
+    public synchronized void sendMessage(Object body) throws IOException {
         String uuid = UUID.randomUUID().toString();
         queue.add(new QueueMessage(uuid,"handle_"+uuid,body));
     }
