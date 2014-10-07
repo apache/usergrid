@@ -324,8 +324,8 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         public EntitySerializer() {
             try {
                 mapper = new ObjectMapper( f );
-                mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class"); 
+//                mapper.enable(SerializationFeature.INDENT_OUTPUT); don't indent output, causes slowness
+                mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
             } catch ( Exception e ) {
                 throw new RuntimeException("Error setting up mapper", e);
             }
@@ -340,6 +340,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
             CompositeBuilder builder = Composites.newCompositeBuilder();
 
             builder.addBytes( VERSION );
+
             //mark this version as empty
             if ( !wrapper.entity.isPresent() ) {
                 //we're empty
@@ -362,7 +363,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 builder.addBytes( mapper.writeValueAsBytes( wrapper.entity.get() ) );
             }
             catch ( Exception e ) {
-                throw new RuntimeException(e.getMessage());
+                throw new RuntimeException("Unable to serialize entity", e);
             }
 
             return builder.build();
@@ -397,7 +398,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
                 storedEntity = mapper.readValue( array, start, length, Entity.class );
             }
             catch ( Exception e ) {
-                throw new RuntimeException(e.getMessage());
+                throw new RuntimeException("Unable to read entity data", e);
             }
 
             final Optional<Entity> entity = Optional.of( storedEntity);

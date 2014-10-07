@@ -32,4 +32,10 @@ public class BooleanField extends AbstractField<Boolean> {
 
     public BooleanField() {
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+        return FieldTypeName.BOOLEAN;
+    }
 }

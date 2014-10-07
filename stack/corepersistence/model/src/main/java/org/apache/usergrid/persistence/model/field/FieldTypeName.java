@@ -1,4 +1,4 @@
-/*
+package org.apache.usergrid.persistence.model.field;/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,37 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.model.field;
 
-import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 
 /**
- * A marker to signal array handling. Just delegates to list field for easier handling internally
+ * Enum of all field types.  DO NOT change these names, they're used in persistence, and will result in
+ * unique checks failing
  */
-public class ArrayField<T> extends ListField<T> {
-
-    /**
-     * Contructor that intializes with an empty set for adding to later
-     */
-    public ArrayField( String name ) {
-        super( name );
-    }
-
-    public ArrayField( String name, List<T> list ) {
-        super( name, list );
-    }
-
-    public ArrayField() {
-        super();
-    }
-
-    /**
-     * Add the value to the list
-     */
-    public void add( T listItem ) {
-        value.add( listItem );
-    }
-
-
-
+public enum FieldTypeName {
+    ARRAY,
+    BOOLEAN,
+    BYTE_ARRAY,
+    DOUBLE,
+    OBJECT,
+    FLOAT,
+    INTEGER,
+    LIST,
+    LOCATION,
+    LONG,
+    SET,
+    STRING,
+    UUID
 }

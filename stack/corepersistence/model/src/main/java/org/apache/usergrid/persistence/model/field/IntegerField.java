@@ -32,4 +32,10 @@ public class IntegerField extends AbstractField<Integer> {
 
     public IntegerField() {
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+        return FieldTypeName.INTEGER;
+    }
 }
