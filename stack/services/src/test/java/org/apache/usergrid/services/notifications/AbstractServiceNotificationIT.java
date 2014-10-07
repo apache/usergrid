@@ -91,7 +91,6 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
         List<EntityRef> list =new ArrayList<EntityRef>();//get all
         while(it.hasNext()){
             Receipt receipt =it.next();
-
             if(receipt.getNotificationUUID().equals(notification.getUuid())) {
                 list.add(receipt);
             }

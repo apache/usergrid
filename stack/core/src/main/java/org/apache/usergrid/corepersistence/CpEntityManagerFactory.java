@@ -53,6 +53,7 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -154,12 +155,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             EntityCollectionManagerFactory ecmf;
             EntityIndexFactory eif;
             GraphManagerFactory gmf;
+            MapManagerFactory mmf;
 
             ecmf = injector.getInstance( EntityCollectionManagerFactory.class );
             eif = injector.getInstance( EntityIndexFactory.class );
             gmf = injector.getInstance( GraphManagerFactory.class );
+            mmf = injector.getInstance( MapManagerFactory.class );
 
-            managerCache = new CpManagerCache( ecmf, eif, gmf );
+            managerCache = new CpManagerCache( ecmf, eif, gmf, mmf );
         }
         return managerCache;
     }

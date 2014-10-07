@@ -20,6 +20,7 @@ import java.util.*;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
+import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.metrics.MetricsFactory;
 import org.apache.usergrid.mq.Message;
 import org.apache.usergrid.persistence.*;
@@ -28,6 +29,11 @@ import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.apache.usergrid.services.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +61,7 @@ public class NotificationsService extends AbstractCollectionService {
     private static final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
     //need a mocking framework, this is to substitute for no mocking
     public static PathQuery<Device> TEST_PATH_QUERY = null;
+    public static QueueManager TEST_QUEUE_MANAGER = null;
 
     public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
 
@@ -80,10 +87,9 @@ public class NotificationsService extends AbstractCollectionService {
 
     private ApplicationQueueManager notificationQueueManager;
     private long gracePeriod;
-    @Autowired
     private ServiceManagerFactory smf;
-    @Autowired
     private EntityManagerFactory emf;
+    private QueueManagerFactory queueManagerFactory;
 
     public NotificationsService() {
         LOG.info("/notifications");
@@ -99,7 +105,11 @@ public class NotificationsService extends AbstractCollectionService {
         postMeter = metricsService.getMeter(NotificationsService.class, "requests");
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
-        notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,smf.getServiceManager(smf.getManagementAppId()).getQueueManager(),metricsService,props);
+        String name = ApplicationQueueManager.getQueueNames(props);
+        QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),"notifications"),name);
+        queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
+        QueueManager queueManager = TEST_QUEUE_MANAGER !=null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
+        notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,queueManager,metricsService,props);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;
     }
 

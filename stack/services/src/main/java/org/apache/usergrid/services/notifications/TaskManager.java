@@ -23,6 +23,8 @@ import org.apache.usergrid.persistence.entities.Device;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,38 +35,25 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TaskManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(TaskManager.class);
-    private final QueueManager proxy;
-    private final String queuePath;
+    private final ApplicationQueueManager proxy;
 
     private Notification notification;
     private AtomicLong successes = new AtomicLong();
     private AtomicLong failures = new AtomicLong();
-    private org.apache.usergrid.mq.QueueManager qm;
     private EntityManager em;
-    private ConcurrentHashMap<UUID, ApplicationQueueMessage> messageMap;
     private boolean hasFinished;
 
-    public TaskManager(EntityManager em, org.apache.usergrid.mq.QueueManager qm, QueueManager proxy, Notification notification, String queuePath) {
+    public TaskManager(EntityManager em,ApplicationQueueManager proxy, Notification notification) {
         this.em = em;
-        this.qm = qm;
         this.notification = notification;
         this.proxy = proxy;
-        this.messageMap = new ConcurrentHashMap<UUID, ApplicationQueueMessage>();
         hasFinished = false;
-        this.queuePath = queuePath;
-    }
-
-    public void addMessage(UUID deviceId, ApplicationQueueMessage message) {
-        messageMap.put(deviceId, message);
     }
 
     public void completed(Notifier notifier, Receipt receipt, UUID deviceUUID, String newProviderId) throws Exception {
         LOG.debug("REMOVED {}", deviceUUID);
         try {
             LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
-            if(queuePath!=null){
-                qm.commitTransaction(queuePath, messageMap.get(deviceUUID).getTransaction(), null);
-            }
 
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
             if (receipt != null) {
@@ -74,7 +63,6 @@ public class TaskManager {
                 LOG.debug("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
                 successes.incrementAndGet();
             }
-
 
             if (newProviderId != null) {
                 LOG.debug("notification {} replacing device {} notifierId", notification.getUuid(), deviceUUID);
@@ -146,34 +134,45 @@ public class TaskManager {
             }
         }
     }
-
     public void finishedBatch() throws Exception {
-        long successes = this.successes.getAndSet(0); //reset counters
-        long failures = this.failures.getAndSet(0); //reset counters
+        finishedBatch(true,true);
+    }
+    public void finishedBatch(boolean update, boolean fetch) throws Exception {
+        long successes = this.successes.get(); //reset counters
+        long failures = this.failures.get(); //reset counters
+        for (int i = 0; i < successes; i++) {
+            this.successes.decrementAndGet();
+        }
+        for (int i = 0; i < failures; i++) {
+            this.failures.decrementAndGet();
+        }
+
         this.hasFinished = true;
 
         // refresh notification
-        Notification notification = em.get(this.notification.getUuid(), Notification.class);
+        if(fetch)
+            notification = em.get(this.notification.getUuid(), Notification.class);
         notification.setModified(System.currentTimeMillis());
 
-        long sent = successes, errors = failures;
         //and write them out again, this will produce the most accurate count
         Map<String, Long> stats = new HashMap<>(2);
-        stats.put("sent", sent);
-        stats.put("errors", errors);
-        notification.updateStatistics(successes, errors);
+        stats.put("sent", successes);
+        stats.put("errors", failures);
+        notification.updateStatistics(successes, failures);
 
+        long totals = (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"));
         //none of this is known and should you ever do this
-        if (notification.getExpectedCount() <= (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"))) {
-            Map<String, Object> properties = new HashMap<>();
-            notification.setFinished(notification.getModified());
-            properties.put("finished", notification.getModified());
-            properties.put("state", notification.getState());
-            LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
-            notification.addProperties(properties);
+        Map<String, Object> properties = new HashMap<>();
+        notification.setFinished(notification.getModified());
+        properties.put("finished", notification.getModified());
+        properties.put("state", notification.getState());
+        LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
+        notification.addProperties(properties);
+
+        LOG.info("notification finished batch: {} of {} devices", notification.getUuid(), totals);
+        if (update){
+            em.update(notification);
         }
-        LOG.info("notification finished batch: {} of {} devices", notification.getUuid(),sent+errors);
-        em.update(notification);
 //        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
 //        proxy.asyncCheckForInactiveDevices(notifiers);
     }
