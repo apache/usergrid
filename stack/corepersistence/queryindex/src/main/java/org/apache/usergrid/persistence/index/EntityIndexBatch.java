@@ -59,6 +59,9 @@ public interface EntityIndexBatch {
      */
     public EntityIndexBatch deindex(final IndexScope scope, final Id id, final UUID version);
 
+
+    //TODO: Create a delete method that delete's  by Id.  This will delete all documents from ES with the same entity Id
+
     /**
      * Execute the batch
      */

@@ -15,8 +15,10 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.serialization;
 
+
+import java.util.Collection;
 
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -50,11 +52,11 @@ public interface UniqueValueSerializationStrategy {
      * Load UniqueValue that matches field from collection or null if that value does not exist.
      * 
      * @param colScope Collection scope in which to look for field name/value
-     * @param field Field name/value to search for
-     * @return UniqueValue or null if not found
+     * @param fields Field name/value to search for
+     * @return UniqueValueSet containing fields from the collection that exist in cassandra
      * @throws ConnectionException on error connecting to Cassandra
      */
-    public UniqueValue load( CollectionScope colScope, Field field ) throws ConnectionException;
+    public UniqueValueSet load( CollectionScope colScope, Collection<Field> fields ) throws ConnectionException;
 
     /**
      * Delete the specified Unique Value from Cassandra.

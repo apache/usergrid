@@ -36,6 +36,9 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
@@ -96,20 +99,10 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         // Run the stage
         WriteOptimisticVerify newStage = new WriteOptimisticVerify( noConflictLog );
 
-        CollectionIoEvent<MvccEntity> result;
-        result = newStage.call( new CollectionIoEvent<MvccEntity>( collectionScope, mvccEntity ) );
 
-        assertSame("Context was correct", collectionScope, result.getEntityCollection()) ;
+        newStage.call( new CollectionIoEvent<>( collectionScope, mvccEntity ) );
 
-        // Verify the entity is correct
-        MvccEntity entry = result.getEvent();
 
-        // Verify UUID and version in both the MvccEntity and the entity itself. Here assertSame 
-        // is used on purpose as we want to make sure the same instance is used, not a copy.
-        // This way the caller's runtime type is retained.
-        assertSame( "Id correct", entity.getId(), entry.getId() );
-        assertSame( "Version did not not match entityId", entity.getVersion(), entry.getVersion() );
-        assertSame( "Entity correct", entity, entry.getEntity().get() );
     }
 
     @Test
@@ -159,7 +152,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         RollbackAction rollbackAction = new RollbackAction( mvccLog, uvstrat );
 
         try {
-            newStage.call( new CollectionIoEvent<MvccEntity>(scope, mvccEntity));
+            newStage.call( new CollectionIoEvent<>(scope, mvccEntity));
 
         } catch (WriteOptimisticVerifyException e) {
             log.info("Error", e);
