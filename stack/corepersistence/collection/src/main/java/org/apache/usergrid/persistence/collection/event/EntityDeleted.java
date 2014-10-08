@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.collection.event;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import java.util.UUID;
+
 
 /**
  *
@@ -36,7 +38,8 @@ public interface EntityDeleted {
      *
      * @param scope The scope of the entity
      * @param entityId The id of the entity
+     * @param inclusiveVersionToDeleteFrom the entity version
      */
-    public void deleted( final CollectionScope scope, final Id entityId);
+    public void deleted( final CollectionScope scope, final Id entityId, final UUID inclusiveVersionToDeleteFrom);
 
 }

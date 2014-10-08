@@ -125,10 +125,6 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
     @Override
     public Void call() throws Exception {
-
-
-        final UUID maxVersion = version;
-
         //TODO Refactor this logic into a a class that can be invoked from anywhere
         //load every entity we have history of
         Observable<List<MvccEntity>> deleteFieldsObservable =
@@ -139,8 +135,8 @@ public class EntityVersionCleanupTask implements Task<Void> {
                         return entities;
                     }
                 })       //buffer them for efficiency
+                        .skip(1)
                         .buffer(serializationFig.getBufferSize()).doOnNext(
-
                         new Action1<List<MvccEntity>>() {
                             @Override
                             public void call(final List<MvccEntity> mvccEntities) {
@@ -173,14 +169,13 @@ public class EntityVersionCleanupTask implements Task<Void> {
                                         batch.mergeShallow(deleteMutation);
                                     }
 
-                                    final MutationBatch entityDelete = entitySerializationStrategy.delete(scope, entityId,mvccEntity.getVersion() );
+                                    final MutationBatch entityDelete = entitySerializationStrategy.delete(scope, entityId, mvccEntity.getVersion());
 
                                     entityBatch.mergeShallow(entityDelete);
 
                                     final MutationBatch logDelete = logEntrySerializationStrategy.delete(scope, entityId, version);
 
                                     logBatch.mergeShallow(logDelete);
-
 
 
                                 }
@@ -195,16 +190,14 @@ public class EntityVersionCleanupTask implements Task<Void> {
                                 fireEvents(mvccEntities);
                                 try {
                                     entityBatch.execute();
-                                }
-                                catch ( ConnectionException e ) {
-                                    throw new RuntimeException( "Unable to delete entities in cleanup", e );
+                                } catch (ConnectionException e) {
+                                    throw new RuntimeException("Unable to delete entities in cleanup", e);
                                 }
 
                                 try {
                                     logBatch.execute();
-                                }
-                                catch ( ConnectionException e ) {
-                                    throw new RuntimeException( "Unable to delete entities from the log", e );
+                                } catch (ConnectionException e) {
+                                    throw new RuntimeException("Unable to delete entities from the log", e);
                                 }
 
                             }
