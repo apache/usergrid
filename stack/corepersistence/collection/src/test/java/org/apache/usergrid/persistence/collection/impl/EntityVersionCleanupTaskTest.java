@@ -27,6 +27,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.junit.AfterClass;
 import org.junit.Test;
 
@@ -111,10 +113,20 @@ public class EntityVersionCleanupTaskTest {
 
         final UUID version = logEntryMock.getEntries().iterator().next().getVersion();
 
+        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy =
+                mock( UniqueValueSerializationStrategy.class );
 
         EntityVersionCleanupTask cleanupTask =
-                new EntityVersionCleanupTask( serializationFig, mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy, keyspace, listeners, appScope, entityId, version );
+                new EntityVersionCleanupTask( serializationFig,
+                        mvccLogEntrySerializationStrategy,
+                        mvccEntitySerializationStrategy,
+                        uniqueValueSerializationStrategy,
+                        keyspace,
+                        appScope,
+                        listeners,
+                        entityId,
+                        version
+                );
 
         final MutationBatch newBatch = mock( MutationBatch.class );
 
@@ -186,10 +198,20 @@ public class EntityVersionCleanupTaskTest {
 
         final UUID version = logEntryMock.getEntries().iterator().next().getVersion();
 
+        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy =
+                mock( UniqueValueSerializationStrategy.class );
 
         EntityVersionCleanupTask cleanupTask =
-                new EntityVersionCleanupTask( serializationFig, mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy, keyspace, listeners, appScope, entityId, version );
+                new EntityVersionCleanupTask( serializationFig,
+                        mvccLogEntrySerializationStrategy,
+                        mvccEntitySerializationStrategy,
+                        uniqueValueSerializationStrategy,
+                        keyspace,
+                        appScope,
+                        listeners,
+                        entityId,
+                        version
+                );
 
         final MutationBatch batch = mock( MutationBatch.class );
 
@@ -267,9 +289,20 @@ public class EntityVersionCleanupTaskTest {
         final UUID version = logEntryMock.getEntries().iterator().next().getVersion();
 
 
+        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy =
+                mock( UniqueValueSerializationStrategy.class );
+
         EntityVersionCleanupTask cleanupTask =
-                new EntityVersionCleanupTask( serializationFig, mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy, keyspace, listeners, appScope, entityId, version );
+                new EntityVersionCleanupTask( serializationFig,
+                        mvccLogEntrySerializationStrategy,
+                        mvccEntitySerializationStrategy,
+                        uniqueValueSerializationStrategy,
+                        keyspace,
+                        appScope,
+                        listeners,
+                        entityId,
+                        version
+                );
 
         final MutationBatch batch = mock( MutationBatch.class );
 
@@ -311,6 +344,9 @@ public class EntityVersionCleanupTaskTest {
 
         final MvccEntitySerializationStrategy mvccEntitySerializationStrategy =
                 mock( MvccEntitySerializationStrategy.class );
+
+        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy =
+                mock( UniqueValueSerializationStrategy.class );
 
         final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy =
                 mock( MvccLogEntrySerializationStrategy.class );
@@ -359,8 +395,16 @@ public class EntityVersionCleanupTaskTest {
 
 
         EntityVersionCleanupTask cleanupTask =
-                new EntityVersionCleanupTask( serializationFig, mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy, keyspace, listeners, appScope, entityId, version );
+                new EntityVersionCleanupTask( serializationFig,
+                        mvccLogEntrySerializationStrategy,
+                        mvccEntitySerializationStrategy,
+                        uniqueValueSerializationStrategy,
+                        keyspace,
+                        appScope,
+                        listeners,
+                        entityId,
+                        version
+                );
 
         final MutationBatch batch = mock( MutationBatch.class );
 
@@ -467,9 +511,20 @@ public class EntityVersionCleanupTaskTest {
         final UUID version = logEntryMock.getEntries().iterator().next().getVersion();
 
 
+        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy =
+                mock( UniqueValueSerializationStrategy.class );
+
         EntityVersionCleanupTask cleanupTask =
-                new EntityVersionCleanupTask( serializationFig, mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy, keyspace, listeners, appScope, entityId, version );
+                new EntityVersionCleanupTask( serializationFig,
+                        mvccLogEntrySerializationStrategy,
+                        mvccEntitySerializationStrategy,
+                        uniqueValueSerializationStrategy,
+                        keyspace,
+                        appScope,
+                        listeners,
+                        entityId,
+                        version
+                );
 
         final MutationBatch batch = mock( MutationBatch.class );
 
@@ -579,11 +634,14 @@ public class EntityVersionCleanupTaskTest {
 
         final UUID version = logEntryMock.getEntries().iterator().next().getVersion();
 
+        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy =
+                mock( UniqueValueSerializationStrategy.class );
+
 
         EntityVersionCleanupTask firstTask =
                 new EntityVersionCleanupTask( serializationFig, mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy, keyspace1, Arrays.<EntityVersionDeleted>asList( slowListener ),
-                        appScope, entityId, version );
+                        mvccEntitySerializationStrategy, uniqueValueSerializationStrategy, keyspace1,appScope,  Arrays.<EntityVersionDeleted>asList( slowListener ),
+                        entityId, version );
 
 
         //change the listeners to one that is just invoked quickly
@@ -591,8 +649,8 @@ public class EntityVersionCleanupTaskTest {
 
         EntityVersionCleanupTask secondTask =
                 new EntityVersionCleanupTask( serializationFig, mvccLogEntrySerializationStrategy,
-                        mvccEntitySerializationStrategy, keyspace2, Arrays.<EntityVersionDeleted>asList( runListener ),
-                        appScope, entityId, version );
+                        mvccEntitySerializationStrategy,uniqueValueSerializationStrategy, keyspace2, appScope,Arrays.<EntityVersionDeleted>asList( runListener ),
+                         entityId, version );
 
 
         final MutationBatch batch = mock( MutationBatch.class );
@@ -659,7 +717,7 @@ public class EntityVersionCleanupTaskTest {
 
 
         @Override
-        public void versionDeleted( final CollectionScope scope, final Id entityId, final List<UUID> entityVersion ) {
+        public void versionDeleted( final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersion ) {
             invocationLatch.countDown();
         }
     }
@@ -676,7 +734,7 @@ public class EntityVersionCleanupTaskTest {
 
 
         @Override
-        public void versionDeleted( final CollectionScope scope, final Id entityId, final List<UUID> entityVersion ) {
+        public void versionDeleted( final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersion ) {
             //wait for unblock to happen before counting down invocation latches
             try {
                 blockLatch.acquire();
