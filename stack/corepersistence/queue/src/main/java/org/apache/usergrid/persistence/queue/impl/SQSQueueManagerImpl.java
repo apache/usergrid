@@ -66,7 +66,7 @@ public class SQSQueueManagerImpl implements QueueManager {
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
             mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
         } catch ( Exception e ) {
-            LOG.error("failed to setup SQS",e);
+            LOG.warn("failed to setup SQS",e);
 //            throw new RuntimeException("Error setting up mapper", e);
         }
     }
