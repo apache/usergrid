@@ -31,20 +31,22 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-public class SQSQueueManagerImpl<T> implements QueueManager {
+public class SQSQueueManagerImpl implements QueueManager {
     private static final Logger LOG = LoggerFactory.getLogger(SQSQueueManagerImpl.class);
 
-    private final AmazonSQSClient sqs;
-    private final QueueScope scope;
-    private final QueueFig fig;
-    private final ObjectMapper mapper;
+    private  AmazonSQSClient sqs;
+    private  QueueScope scope;
+    private  QueueFig fig;
+    private  ObjectMapper mapper;
     private Queue queue;
     private static SmileFactory smileFactory = new SmileFactory();
 
@@ -53,18 +55,19 @@ public class SQSQueueManagerImpl<T> implements QueueManager {
     public SQSQueueManagerImpl(@Assisted QueueScope scope, QueueFig fig){
         this.fig = fig;
         this.scope = scope;
-        UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
-        this.sqs = new AmazonSQSClient(ugProvider.getCredentials());
-        Regions regions = Regions.fromName(fig.getRegion());
-        Region region = Region.getRegion(regions);
-        sqs.setRegion(region);
         try {
+            UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+            this.sqs = new AmazonSQSClient(ugProvider.getCredentials());
+            Regions regions = Regions.fromName(fig.getRegion());
+            Region region = Region.getRegion(regions);
+            sqs.setRegion(region);
             smileFactory.delegateToTextual(true);
             mapper = new ObjectMapper( smileFactory );
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
             mapper.enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, "@class");
         } catch ( Exception e ) {
-            throw new RuntimeException("Error setting up mapper", e);
+            LOG.warn("failed to setup SQS",e);
+//            throw new RuntimeException("Error setting up mapper", e);
         }
     }
 
@@ -101,9 +104,13 @@ public class SQSQueueManagerImpl<T> implements QueueManager {
 
     @Override
     public List<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
+        if(sqs == null){
+            LOG.error("Sqs is null");
+            return new ArrayList<>();
+        }
         waitTime = waitTime/1000;
         String url = getQueue().getUrl();
-        LOG.info("Getting {} messages from {}",limit,url);
+        LOG.info("Getting {} messages from {}", limit, url);
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(url);
         receiveMessageRequest.setMaxNumberOfMessages(limit);
         receiveMessageRequest.setVisibilityTimeout(transactionTimeout);
@@ -127,24 +134,19 @@ public class SQSQueueManagerImpl<T> implements QueueManager {
     }
 
     @Override
-    public void commitMessage(QueueMessage queueMessage) {
-        String url = getQueue().getUrl();
-        LOG.info("Commit message {} to queue {}",queueMessage.getMessageId(),url);
-
-        sqs.deleteMessage(new DeleteMessageRequest()
-                .withQueueUrl(url)
-                .withReceiptHandle(queueMessage.getHandle()));
-    }
-
-    @Override
-    public void sendMessages(List<Serializable> bodies) throws IOException {
+    public void sendMessages(List bodies) throws IOException {
+        if(sqs == null){
+            LOG.error("Sqs is null");
+            return;
+        }
         String url = getQueue().getUrl();
         LOG.info("Sending Messages...{} to {}",bodies.size(),url);
 
         SendMessageBatchRequest request = new SendMessageBatchRequest(url);
         List<SendMessageBatchRequestEntry> entries = new ArrayList<>(bodies.size());
-        for(Serializable body : bodies){
+        for(Object body : bodies){
             SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry();
+            entry.setId(UUID.randomUUID().toString());
             entry.setMessageBody(toString(body));
             entries.add(entry);
         }
@@ -154,12 +156,28 @@ public class SQSQueueManagerImpl<T> implements QueueManager {
     }
 
     @Override
-    public void sendMessage(Serializable body) throws IOException {
+    public void sendMessage(Object body) throws IOException {
+        if(sqs == null){
+            LOG.error("Sqs is null");
+            return;
+        }
         String url = getQueue().getUrl();
         LOG.info("Sending Message...{} to {}",body.toString(),url);
         SendMessageRequest request = new SendMessageRequest(url,toString((Serializable)body));
         sqs.sendMessage(request);
     }
+
+
+    @Override
+    public void commitMessage(QueueMessage queueMessage) {
+        String url = getQueue().getUrl();
+        LOG.info("Commit message {} to queue {}",queueMessage.getMessageId(),url);
+
+        sqs.deleteMessage(new DeleteMessageRequest()
+                .withQueueUrl(url)
+                .withReceiptHandle(queueMessage.getHandle()));
+    }
+
 
     @Override
     public void commitMessages(List<QueueMessage> queueMessages) {
@@ -186,7 +204,7 @@ public class SQSQueueManagerImpl<T> implements QueueManager {
     }
 
     /** Write the object to a Base64 string. */
-    private  String toString( Serializable o ) throws IOException {
+    private  String toString( Object o ) throws IOException {
         return mapper.writeValueAsString(o);
     }
 

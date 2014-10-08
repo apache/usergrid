@@ -25,7 +25,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
@@ -41,9 +40,6 @@ import com.google.inject.Inject;
 
 import rx.Observable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import static org.junit.Assert.*;
 
@@ -361,5 +357,33 @@ public class EntityCollectionManagerIT {
 
     }
 
+
+    @Test
+    public void updateVersioning() {
+
+        // create entity 
+        Entity origEntity = new Entity( new SimpleId( "testUpdate" ) );
+        origEntity.setField( new StringField( "testField", "value" ) );
+
+        CollectionScope context = new CollectionScopeImpl(
+            new SimpleId( "organization" ),  new SimpleId( "testUpdate" ), "testUpdate" );
+        EntityCollectionManager manager = factory.createCollectionManager( context );
+        Entity returned = manager.write(origEntity).toBlocking().lastOrDefault(null);
+
+        // note its version 
+        UUID oldVersion = returned.getVersion();
+
+        // partial update entity but we don't have version number
+        Entity updateEntity = new Entity( origEntity.getId() );
+        updateEntity.setField( new StringField("addedField", "other value" ) );
+        manager.update(origEntity).toBlocking().lastOrDefault(null);
+
+        // get entity now, it must have a new version
+        returned = manager.load(origEntity.getId() ).toBlocking().lastOrDefault(null);
+        UUID newVersion = returned.getVersion();
+
+        // this asswer fails
+        assertNotEquals( newVersion, oldVersion );
+    }
 
 }

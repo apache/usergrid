@@ -133,6 +133,9 @@ import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
 import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapScope;
+import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -180,6 +183,8 @@ public class CpEntityManager implements EntityManager {
     private CounterUtils counterUtils;
 
     private boolean skipAggregateCounters;
+
+    private String TYPES_BY_UUID_MAP = "zzz_typesbyuuid_zzz";
 
 
     public CpEntityManager() {}
@@ -482,8 +487,8 @@ public class CpEntityManager implements EntityManager {
 //                ecm.load( entityId ).toBlockingObservable().last();
 
 
-        org.apache.usergrid.persistence.model.entity.Entity cpEntity = new org.apache.usergrid.persistence.model
-                .entity.Entity( entityId );
+        org.apache.usergrid.persistence.model.entity.Entity cpEntity = 
+                new org.apache.usergrid.persistence.model.entity.Entity( entityId );
 
         cpEntity = CpEntityMapUtils.fromMap(
                 cpEntity, entity.getProperties(), entity.getType(), true );
@@ -2187,13 +2192,30 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public Entity get( UUID id ) throws Exception {
+    public Entity get( UUID uuid ) throws Exception {
 
-        Query q = Query.fromQL("select * where " + PROPERTY_UUID + " = '" + id.toString() + "'");
-        q.setResultsLevel( Level.ALL_PROPERTIES );
-        Results r = getRelationManager( getApplication() ).searchConnectedEntities( q );
+        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
+        MapScope ms = new MapScopeImpl( mapOwner, TYPES_BY_UUID_MAP );
+        MapManager mm = managerCache.getMapManager( ms );
+        String entityType = mm.getString(uuid.toString() );
 
-        return r.getEntity();
+        final Entity entity;
+
+        if ( entityType == null ) {
+
+            Query q = Query.fromQL(
+                "select * where " + PROPERTY_UUID + " = '" + uuid.toString() + "'");
+            q.setResultsLevel( Level.ALL_PROPERTIES );
+            Results r = getRelationManager( getApplication() ).searchConnectedEntities( q );
+            entity = r.getEntity();
+
+            mm.putString(uuid.toString(), entity.getType() );
+        
+        } else { 
+            entity = get(new SimpleEntityRef( entityType, uuid ));
+        }
+
+        return entity;
     } 
 
 
@@ -2505,7 +2527,8 @@ public class CpEntityManager implements EntityManager {
 //            if ( entity.getType().equals("group")) {
 //                logger.debug("Writing Group");
 //                for ( Field field : cpEntity.getFields() ) {
-//                    logger.debug("   Writing Group name={} value={}", field.getName(), field.getValue() );
+//                    logger.debug(
+//                        "   Writing Group name={} value={}", field.getName(), field.getValue() );
 //                }
 //            }
         }
@@ -2839,7 +2862,7 @@ public class CpEntityManager implements EntityManager {
                             CollectionScope collScope = new CollectionScopeImpl(
                                 applicationScope.getApplication(),
                                 applicationScope.getApplication(),
-                                    CpNamingUtils.getCollectionScopeNameFromEntityType( entity.getType() ));
+                                CpNamingUtils.getCollectionScopeNameFromEntityType( entity.getType()));
                             EntityCollectionManager collMgr = 
                                 managerCache.getEntityCollectionManager(collScope);
 
@@ -2905,7 +2928,7 @@ public class CpEntityManager implements EntityManager {
                             CollectionScope sourceScope = new CollectionScopeImpl(
                                 applicationScope.getApplication(),
                                 applicationScope.getApplication(),
-                                    CpNamingUtils.getCollectionScopeNameFromEntityType( sourceEntityType ));
+                                CpNamingUtils.getCollectionScopeNameFromEntityType( sourceEntityType ));
                             EntityCollectionManager sourceEcm = 
                                 managerCache.getEntityCollectionManager(sourceScope);
 
@@ -2928,7 +2951,7 @@ public class CpEntityManager implements EntityManager {
                             CollectionScope targetScope = new CollectionScopeImpl(
                                 applicationScope.getApplication(),
                                 applicationScope.getApplication(),
-                                    CpNamingUtils.getCollectionScopeNameFromEntityType( targetEntityType ));
+                                CpNamingUtils.getCollectionScopeNameFromEntityType( targetEntityType ));
                             EntityCollectionManager targetEcm = 
                                 managerCache.getEntityCollectionManager(targetScope);
 

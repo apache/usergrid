@@ -36,35 +36,24 @@ public class TaskManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(TaskManager.class);
     private final ApplicationQueueManager proxy;
-    private final QueueManager queueManager;
 
     private Notification notification;
     private AtomicLong successes = new AtomicLong();
     private AtomicLong failures = new AtomicLong();
     private EntityManager em;
-    private ConcurrentHashMap<UUID, QueueMessage> messageMap;
     private boolean hasFinished;
 
-    public TaskManager(EntityManager em,ApplicationQueueManager proxy, Notification notification, QueueManager queueManager) {
+    public TaskManager(EntityManager em,ApplicationQueueManager proxy, Notification notification) {
         this.em = em;
         this.notification = notification;
         this.proxy = proxy;
-        this.messageMap = new ConcurrentHashMap<UUID, QueueMessage>();
         hasFinished = false;
-        this.queueManager = queueManager;
-    }
-
-    public void addMessage(UUID deviceId, QueueMessage message) {
-        messageMap.put(deviceId, message);
     }
 
     public void completed(Notifier notifier, Receipt receipt, UUID deviceUUID, String newProviderId) throws Exception {
         LOG.debug("REMOVED {}", deviceUUID);
         try {
             LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
-            if(queueManager!=null){
-                queueManager.commitMessage(messageMap.get(deviceUUID));
-            }
 
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
             if (receipt != null) {
@@ -74,7 +63,6 @@ public class TaskManager {
                 LOG.debug("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
                 successes.incrementAndGet();
             }
-
 
             if (newProviderId != null) {
                 LOG.debug("notification {} replacing device {} notifierId", notification.getUuid(), deviceUUID);
@@ -121,15 +109,17 @@ public class TaskManager {
     * passed one w/ the UUID
     */
     private void saveReceipt(EntityRef notification, EntityRef device, Receipt receipt) throws Exception {
-        if (receipt.getUuid() == null) {
-            Receipt savedReceipt = em.create(receipt);
-            receipt.setUuid(savedReceipt.getUuid());
-
-            List<EntityRef> entities = Arrays.asList(notification, device);
-//            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
-        } else {
-            em.update(receipt);
+        if (this.notification.getDebug()) {
+            if (receipt.getUuid() == null) {
+                Receipt savedReceipt = em.create(receipt);
+                receipt.setUuid(savedReceipt.getUuid());
+                List<EntityRef> entities = Arrays.asList(notification, device);
+//              em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
+            } else {
+                em.update(receipt);
+            }
         }
+
     }
 
     protected void replaceProviderId(EntityRef device, Notifier notifier,
@@ -146,17 +136,24 @@ public class TaskManager {
             }
         }
     }
-
     public void finishedBatch() throws Exception {
+        finishedBatch(true);
+    }
+    public void finishedBatch(boolean fetch) throws Exception {
         long successes = this.successes.get(); //reset counters
         long failures = this.failures.get(); //reset counters
-        for(int i = 0;i<successes;i++){this.successes.decrementAndGet();}
-        for(int i = 0;i<failures;i++){this.failures.decrementAndGet();}
+        for (int i = 0; i < successes; i++) {
+            this.successes.decrementAndGet();
+        }
+        for (int i = 0; i < failures; i++) {
+            this.failures.decrementAndGet();
+        }
 
         this.hasFinished = true;
 
         // refresh notification
-        Notification notification = em.get(this.notification.getUuid(), Notification.class);
+        if(fetch)
+            notification = em.get(this.notification.getUuid(), Notification.class);
         notification.setModified(System.currentTimeMillis());
 
         //and write them out again, this will produce the most accurate count
@@ -171,10 +168,9 @@ public class TaskManager {
         notification.setFinished(notification.getModified());
         properties.put("finished", notification.getModified());
         properties.put("state", notification.getState());
-        LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
         notification.addProperties(properties);
-
-        LOG.info("notification finished batch: {} of {} devices", notification.getUuid(), totals);
+        long latency = notification.getFinished() - notification.getStarted();
+        LOG.info("notification finished batch: {} of {} devices in "+latency+"ms", notification.getUuid(), totals);
         em.update(notification);
 //        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
 //        proxy.asyncCheckForInactiveDevices(notifiers);

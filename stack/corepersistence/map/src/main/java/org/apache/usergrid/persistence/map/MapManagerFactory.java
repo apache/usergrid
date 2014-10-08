@@ -26,5 +26,5 @@ public interface MapManagerFactory {
     /**
      * Get the map manager
      */
-    public MapManager getMapManager( final MapScope scope );
+    public MapManager createMapManager( final MapScope scope );
 }

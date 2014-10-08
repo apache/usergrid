@@ -37,7 +37,6 @@ public class MapScopeImpl implements MapScope {
     }
 
 
-
     @Override
     public Id getApplication() {
         return owner;

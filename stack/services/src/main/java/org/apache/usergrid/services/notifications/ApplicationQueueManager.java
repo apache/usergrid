@@ -83,8 +83,6 @@ public class ApplicationQueueManager  {
         this.queueName = getQueueNames(properties);
     }
 
-
-
     public boolean scheduleQueueJob(Notification notification) throws Exception{
         return jobScheduler.scheduleQueueJob(notification);
     }
@@ -205,16 +203,12 @@ public class ApplicationQueueManager  {
                     });
             o.toBlocking().lastOrDefault(null);
             LOG.info("notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
-
-
         }
 
         // update queued time
         Map<String, Object> properties = new HashMap<String, Object>(2);
         properties.put("queued", notification.getQueued());
         properties.put("state", notification.getState());
-
-
         if(errorMessages.size()>0){
             if (notification.getErrorMessage() == null) {
                 notification.setErrorMessage("There was a problem delivering all of your notifications. See deliveryErrors in properties");
@@ -225,21 +219,20 @@ public class ApplicationQueueManager  {
         notification.addProperties(properties);
         long now = System.currentTimeMillis();
 
-        em.update(notification);
 
-        LOG.info("notification {} updated notification duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
+        LOG.info("notification {} updated notification duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
 
         //do i have devices, and have i already started batching.
-        if (deviceCount.get() <= 0) {
-            TaskManager taskManager = new TaskManager(em, this, notification,this.qm);
+        if (deviceCount.get() <= 0 || notification.getDebug()) {
+            TaskManager taskManager = new TaskManager(em, this, notification);
             //if i'm in a test value will be false, do not mark finished for test orchestration, not ideal need real tests
-            taskManager.finishedBatch();
+            taskManager.finishedBatch(false);
+        }else {
+            em.update(notification);
         }
 
-        if (LOG.isInfoEnabled()) {
-            long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
-            LOG.info("notification {} done queuing to {} devices in "+elapsed+" ms",notification.getUuid().toString(),deviceCount.get());
-        }
+        long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
+        LOG.info("notification {} done queuing to {} devices in " + elapsed + " ms", notification.getUuid().toString(), deviceCount.get());
     }
 
     /**
@@ -281,7 +274,6 @@ public class ApplicationQueueManager  {
      * @param messages
      * @throws Exception
      */
-
     public Observable sendBatchToProviders( final List<QueueMessage> messages, final String queuePath) {
         LOG.info("sending batch of {} notifications.", messages.size());
         final Meter sendMeter = metricsFactory.getMeter(NotificationsService.class, "send");
@@ -309,7 +301,7 @@ public class ApplicationQueueManager  {
                     }
                     TaskManager taskManager = taskMap.get(message.getNotificationId());
                     if (taskManager == null) {
-                        taskManager = new TaskManager(em, proxy, notification, qm);
+                        taskManager = new TaskManager(em, proxy, notification);
                         taskMap.putIfAbsent(message.getNotificationId(), taskManager);
                         taskManager = taskMap.get(message.getNotificationId());
                     }
@@ -318,7 +310,6 @@ public class ApplicationQueueManager  {
                     final Map<String, Object> translatedPayloads = translatePayloads(payloads, notifierMap);
                     LOG.info("sending notification for device {} for Notification: {}", deviceUUID, notification.getUuid());
 
-                    taskManager.addMessage(deviceUUID,queueMessage);
                     try {
                         String notifierName = message.getNotifierKey().toLowerCase();
                         Notifier notifier = notifierMap.get(notifierName.toLowerCase());
@@ -387,7 +378,8 @@ public class ApplicationQueueManager  {
                                 try {
                                     TaskManager taskManager = taskMap.get(message.getNotificationId());
                                     notifications.put(message.getNotificationId(), message);
-                                    taskManager.finishedBatch();
+                                    Notification notification = notificationMap.get(message.getNotificationId());
+                                    if(notification.getDebug())taskManager.finishedBatch();
                                 } catch (Exception e) {
                                     LOG.error("Failed to finish batch", e);
                                 }
@@ -529,7 +521,8 @@ public class ApplicationQueueManager  {
     }
 
     private boolean isOkToSend(Notification notification) {
-        if (notification.getFinished() != null) {
+        Map<String,Long> stats = notification.getStatistics();
+        if (stats != null && notification.getExpectedCount() == (stats.get("sent")+ stats.get("errors"))) {
             LOG.info("notification {} already processed. not sending.",
                     notification.getUuid());
             return false;
