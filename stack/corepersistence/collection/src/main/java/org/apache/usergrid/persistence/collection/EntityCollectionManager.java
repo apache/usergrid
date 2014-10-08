@@ -19,6 +19,8 @@
 package org.apache.usergrid.persistence.collection;
 
 
+import java.util.Collection;
+
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -52,6 +54,13 @@ public interface EntityCollectionManager {
     public Observable<Entity> load( Id entityId );
 
     //TODO TN Change load to use multiget and return multiple entities.  Only supports loading 1k per load operation.
+
+    /**
+     * Load all the entityIds into the observable entity set
+     * @param entityIds
+     * @return
+     */
+    public Observable<EntitySet> load(Collection<Id> entityIds);
 
 
     //TODO Dave add a load versions using a multiget that will return a latest version structure for a collection of entity Ids

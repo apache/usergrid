@@ -19,11 +19,14 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
+import java.util.Collection;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
@@ -183,6 +186,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
                          .map( load );
     }
+
+
+    @Override
+    public Observable<EntitySet> load( final Collection<Id> entityIds ) {
+        return null;
+    }
+
 
     @Override
     public Observable<Entity> update( final Entity entity ) {

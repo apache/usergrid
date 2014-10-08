@@ -29,8 +29,10 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.serialization.EntityRepair;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.impl.EntityRepairImpl;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
-import org.apache.usergrid.persistence.collection.util.RepairUtil;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -53,16 +55,20 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
 
     private final UUIDService uuidService;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
+    private final EntityRepair entityRepair;
 
 
     @Inject
-    public Load( final UUIDService uuidService, final MvccEntitySerializationStrategy entitySerializationStrategy ) {
+    public Load( final UUIDService uuidService, final MvccEntitySerializationStrategy entitySerializationStrategy, final
+                 SerializationFig serializationFig ) {
         Preconditions.checkNotNull( entitySerializationStrategy, "entitySerializationStrategy is required" );
         Preconditions.checkNotNull( uuidService, "uuidService is required" );
 
 
         this.uuidService = uuidService;
         this.entitySerializationStrategy = entitySerializationStrategy;
+        entityRepair = new EntityRepairImpl( entitySerializationStrategy, serializationFig );
+
     }
 
     //TODO: do reads partial merges in batches. maybe 5 or 10 at a time.
@@ -88,11 +94,18 @@ public class Load implements Func1<CollectionIoEvent<Id>, Entity> {
         Iterator<MvccEntity> results = entitySerializationStrategy.load(
                 collectionScope, entityId, versionMax, 1 );
 
-        MvccEntity repairedEntity = RepairUtil.repair( results,collectionScope,entitySerializationStrategy );
+        if(!results.hasNext()){
+            return null;
+        }
+
+        final MvccEntity returned = results.next();
+
+        final MvccEntity repairedEntity = entityRepair.maybeRepair( collectionScope,  returned );
+
         if(repairedEntity == null)
             return null;
 
-        return repairedEntity.getEntity().get();
+        return repairedEntity.getEntity().orNull();
 
     }
 }

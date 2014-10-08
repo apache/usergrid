@@ -17,6 +17,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractIdStageTest;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -46,6 +47,8 @@ public class LoadTest  extends AbstractIdStageTest {
         final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
+        final SerializationFig serializationFig = mock(SerializationFig.class);
+        when(serializationFig.getBufferSize()).thenReturn( 10 );
 
 
         final UUID loadVersion = UUIDGenerator.newTimeUUID();
@@ -69,7 +72,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
 
 
-        Load load = new Load( uuidService, serializationStrategy );
+        Load load = new Load( uuidService, serializationStrategy, serializationFig );
         Entity loaded = load.call( entityIoEvent );
 
 
@@ -87,6 +90,9 @@ public class LoadTest  extends AbstractIdStageTest {
         final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
+        final SerializationFig serializationFig = mock(SerializationFig.class);
+             when(serializationFig.getBufferSize()).thenReturn( 10 );
+
 
 
         final UUID loadVersion = UUIDGenerator.newTimeUUID();
@@ -128,7 +134,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
         when(serializationStrategy.write( same(collection), writtenEntityArg.capture() )).thenReturn( batch );
 
-        Load load = new Load( uuidService, serializationStrategy );
+        Load load = new Load( uuidService, serializationStrategy, serializationFig );
         Entity loaded = load.call( entityIoEvent );
 
         assertNotNull( loaded.getField( "derp" ) );
@@ -162,6 +168,9 @@ public class LoadTest  extends AbstractIdStageTest {
         final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
+        final SerializationFig serializationFig = mock(SerializationFig.class);
+             when(serializationFig.getBufferSize()).thenReturn( 10 );
+
         final ChangeLogGenerator changeLogGenerator = new ChangeLogGeneratorImpl();
 
 
@@ -206,7 +215,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
         when(serializationStrategy.write( same(collection), writtenEntityArg.capture() )).thenReturn( batch );
 
-        Load load = new Load( uuidService, serializationStrategy );
+        Load load = new Load( uuidService, serializationStrategy, serializationFig );
         Entity loaded = load.call( entityIoEvent );
 
         assertNotNull( loaded.getField( "derple" ) );
@@ -236,6 +245,9 @@ public class LoadTest  extends AbstractIdStageTest {
         final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
+        final SerializationFig serializationFig = mock(SerializationFig.class);
+             when(serializationFig.getBufferSize()).thenReturn( 10 );
+
 
         final UUID loadVersion = UUIDGenerator.newTimeUUID();
 
@@ -284,7 +296,7 @@ public class LoadTest  extends AbstractIdStageTest {
 
         when(serializationStrategy.write( same(collection), writtenEntityArg.capture() )).thenReturn( batch );
 
-        Load load = new Load( uuidService, serializationStrategy );
+        Load load = new Load( uuidService, serializationStrategy, serializationFig );
         Entity loaded = load.call( entityIoEvent );
 
         assertNotNull( loaded.getField( "derp" ) );
@@ -317,6 +329,9 @@ public class LoadTest  extends AbstractIdStageTest {
         final CollectionScope collection = mock(CollectionScope.class);
         final UUIDService uuidService = mock(UUIDService.class);
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
+        final SerializationFig serializationFig = mock(SerializationFig.class);
+             when(serializationFig.getBufferSize()).thenReturn( 10 );
+
 
 
         final UUID loadVersion = UUIDGenerator.newTimeUUID();
@@ -334,7 +349,7 @@ public class LoadTest  extends AbstractIdStageTest {
         //mock up returning a list of MvccEntities
         when(serializationStrategy.load( collection, entityId, loadVersion, 1 )).thenReturn( results);
 
-        Load load = new Load( uuidService, serializationStrategy );
+        Load load = new Load( uuidService, serializationStrategy, serializationFig );
         Entity loaded = load.call( entityIoEvent );
 
         assertNull( "No entity was loaded", loaded );
@@ -347,6 +362,9 @@ public class LoadTest  extends AbstractIdStageTest {
     @Override
     protected void validateStage( final CollectionIoEvent<Id> event ) {
         final UUIDService uuidService = mock(UUIDService.class);
+        final SerializationFig serializationFig = mock(SerializationFig.class);
+             when(serializationFig.getBufferSize()).thenReturn( 10 );
+
 
         /**
          * Mock up wrong UUID type
@@ -356,6 +374,6 @@ public class LoadTest  extends AbstractIdStageTest {
 
         final MvccEntitySerializationStrategy serializationStrategy = mock(MvccEntitySerializationStrategy.class);
 
-        new Load(uuidService, serializationStrategy).call( event );
+        new Load(uuidService, serializationStrategy, serializationFig).call( event );
     }
 }

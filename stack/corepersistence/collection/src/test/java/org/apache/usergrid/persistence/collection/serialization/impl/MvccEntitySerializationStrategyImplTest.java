@@ -649,7 +649,7 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadParamEntityId() throws ConnectionException {
 
         serializationStrategy
-                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), null, UUIDGenerator.newTimeUUID() );
+                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), (Id)null, UUIDGenerator.newTimeUUID() );
     }
 
 
