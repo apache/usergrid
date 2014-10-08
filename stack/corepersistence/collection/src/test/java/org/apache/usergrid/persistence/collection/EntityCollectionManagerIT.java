@@ -373,7 +373,7 @@ public class EntityCollectionManagerIT {
         // note its version 
         UUID oldVersion = returned.getVersion();
 
-        // partial update entity but we don't have version number
+        // partial update entity but with new entity that has version = null
         Entity updateEntity = new Entity( origEntity.getId() );
         updateEntity.setField( new StringField("addedField", "other value" ) );
         manager.update(origEntity).toBlocking().lastOrDefault(null);
@@ -382,7 +382,7 @@ public class EntityCollectionManagerIT {
         returned = manager.load(origEntity.getId() ).toBlocking().lastOrDefault(null);
         UUID newVersion = returned.getVersion();
 
-        // this asswer fails
+        // this assert fails
         assertNotEquals( newVersion, oldVersion );
     }
 
