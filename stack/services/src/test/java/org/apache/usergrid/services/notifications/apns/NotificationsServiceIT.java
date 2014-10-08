@@ -174,6 +174,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getName().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         // post notification to service manager
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
@@ -251,6 +252,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("payloads", payloads);
         app.put("started", System.currentTimeMillis());
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         Query pQuery = new Query();
         pQuery.setLimit(100);
@@ -306,6 +308,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("payloads", payloads);
         app.put("deliver", System.currentTimeMillis() + 240000);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
                 .getEntity();
@@ -352,6 +355,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         app.clear();
         app.put("payloads", "{asdf}");
+        app.put("debug",true);
 
         try {
             Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
@@ -444,6 +448,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         properties.put("payloads", payloads);
         properties.put("queued", System.currentTimeMillis());
+        properties.put("debug",true);
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
                 .getEntity();
@@ -479,6 +484,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifierName, payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
@@ -536,6 +542,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier2Name, payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
@@ -596,6 +603,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier2.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
@@ -663,6 +671,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
@@ -719,6 +728,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
                 .getEntity();
@@ -785,6 +795,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         // create a notification
         entity = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
@@ -818,6 +829,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         // create a notification
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")

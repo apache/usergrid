@@ -109,15 +109,17 @@ public class TaskManager {
     * passed one w/ the UUID
     */
     private void saveReceipt(EntityRef notification, EntityRef device, Receipt receipt) throws Exception {
-        if (receipt.getUuid() == null) {
-            Receipt savedReceipt = em.create(receipt);
-            receipt.setUuid(savedReceipt.getUuid());
-
-            List<EntityRef> entities = Arrays.asList(notification, device);
-//            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
-        } else {
-            em.update(receipt);
+        if (this.notification.getDebug()) {
+            if (receipt.getUuid() == null) {
+                Receipt savedReceipt = em.create(receipt);
+                receipt.setUuid(savedReceipt.getUuid());
+                List<EntityRef> entities = Arrays.asList(notification, device);
+//              em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
+            } else {
+                em.update(receipt);
+            }
         }
+
     }
 
     protected void replaceProviderId(EntityRef device, Notifier notifier,
@@ -135,9 +137,9 @@ public class TaskManager {
         }
     }
     public void finishedBatch() throws Exception {
-        finishedBatch(true,true);
+        finishedBatch(true);
     }
-    public void finishedBatch(boolean update, boolean fetch) throws Exception {
+    public void finishedBatch(boolean fetch) throws Exception {
         long successes = this.successes.get(); //reset counters
         long failures = this.failures.get(); //reset counters
         for (int i = 0; i < successes; i++) {
@@ -166,13 +168,10 @@ public class TaskManager {
         notification.setFinished(notification.getModified());
         properties.put("finished", notification.getModified());
         properties.put("state", notification.getState());
-        LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
         notification.addProperties(properties);
-
-        LOG.info("notification finished batch: {} of {} devices", notification.getUuid(), totals);
-        if (update){
-            em.update(notification);
-        }
+        long latency = notification.getFinished() - notification.getStarted();
+        LOG.info("notification finished batch: {} of {} devices in "+latency+"ms", notification.getUuid(), totals);
+        em.update(notification);
 //        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
 //        proxy.asyncCheckForInactiveDevices(notifiers);
     }
