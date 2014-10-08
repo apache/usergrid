@@ -93,6 +93,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         final UUID version = mvccEntity.getVersion();
         final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
+        //set the version into the entity
         EntityUtils.setVersion( mvccEntity.getEntity().get(), version );
 
         MvccValidationUtils.verifyMvccEntityWithEntity( ioEvent.getEvent() );
@@ -134,6 +135,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
             throw new WriteCommitException( mvccEntity, collectionScope,
                 "Failed to execute write asynchronously ", e );
         }
+
 
         return mvccEntity.getEntity().get();
     }

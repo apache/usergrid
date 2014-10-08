@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
 
+import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
 
 import rx.Observable;
@@ -283,6 +284,10 @@ public class EntityCollectionManagerIT {
 
         assertNotNull( "Returned has a uuid", returned.getId() );
 
+        final UUID writeVersion = returned.getVersion();
+
+        assertNotNull("Write version was set", writeVersion);
+
         /**
          * Modify the oldEntity
          */
@@ -296,8 +301,18 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Returned has a uuid", returned.getId() );
         assertEquals( oldEntity.getField( "testFud" ), returned.getField( "testFud" ) );
 
+        final UUID updatedVersion = updateReturned.getVersion();
+
+        assertNotNull("Updated version returned", updatedVersion);
+
+        assertTrue( "Updated version higher", UUIDComparator.staticCompare( updatedVersion, writeVersion ) > 0 );
+
         Observable<Entity> newEntityObs = manager.load( updateReturned.getId() );
         Entity newEntity = newEntityObs.toBlocking().last();
+
+        final UUID returnedVersion = newEntity.getVersion();
+
+        assertEquals("Loaded version matches updated version", updatedVersion, returnedVersion);
 
         assertNotNull( "Returned has a uuid", returned.getId() );
         assertEquals( addedField, newEntity.getField( "testFud" ));
