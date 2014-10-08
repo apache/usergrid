@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
 
 import com.fasterxml.uuid.UUIDComparator;
+import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.inject.Inject;
 
 import rx.Observable;
@@ -318,7 +319,7 @@ public class EntityCollectionManagerIT {
 
     @Test
     public void partialUpdateDelete() {
-        StringField testField1 = new StringField("testField","value");
+        StringField testField = new StringField("testField","value");
         StringField addedField = new StringField( "testFud", "NEWPARTIALUPDATEZOMG" );
 
         CollectionScope context = new CollectionScopeImpl(
@@ -335,7 +336,7 @@ public class EntityCollectionManagerIT {
 
         assertNotNull( "Returned has a uuid", returned.getId() );
 
-        oldEntity.getFields().remove( testField1  );
+        oldEntity.getFields().remove( testField  );
         oldEntity.setField( addedField );
 
         //Entity is deleted then updated right afterwards.
@@ -352,7 +353,7 @@ public class EntityCollectionManagerIT {
         Entity newEntity = newEntityObs.toBlocking().last();
 
         assertNotNull( "Returned has a uuid", returned.getId() );
-        assertEquals( addedField, newEntity.getField( "testFud" ));
+        assertEquals( addedField, newEntity.getField( addedField.getName()) );
 
 
     }
@@ -368,22 +369,27 @@ public class EntityCollectionManagerIT {
         CollectionScope context = new CollectionScopeImpl(
             new SimpleId( "organization" ),  new SimpleId( "testUpdate" ), "testUpdate" );
         EntityCollectionManager manager = factory.createCollectionManager( context );
-        Entity returned = manager.write(origEntity).toBlocking().lastOrDefault(null);
+        Entity returned = manager.write(origEntity).toBlocking().lastOrDefault( null );
 
         // note its version 
         UUID oldVersion = returned.getVersion();
 
         // partial update entity but with new entity that has version = null
+        assertNotNull( "A version must be assigned", oldVersion );
+
+        // partial update entity but we don't have version number
         Entity updateEntity = new Entity( origEntity.getId() );
         updateEntity.setField( new StringField("addedField", "other value" ) );
         manager.update(origEntity).toBlocking().lastOrDefault(null);
 
         // get entity now, it must have a new version
-        returned = manager.load(origEntity.getId() ).toBlocking().lastOrDefault(null);
+        returned = manager.load(origEntity.getId() ).toBlocking().lastOrDefault( null );
         UUID newVersion = returned.getVersion();
 
-        // this assert fails
-        assertNotEquals( newVersion, oldVersion );
+        assertNotNull( "A new version must be assigned", newVersion );
+
+        // new Version should be > old version
+        assertTrue( UUIDComparator.staticCompare( newVersion, oldVersion ) > 0);
     }
 
 }
