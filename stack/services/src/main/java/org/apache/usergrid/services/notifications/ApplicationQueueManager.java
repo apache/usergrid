@@ -223,10 +223,10 @@ public class ApplicationQueueManager  {
         LOG.info("notification {} updated notification duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
 
         //do i have devices, and have i already started batching.
-        if (deviceCount.get() <= 0 || notification.getDebug()) {
+        if (deviceCount.get() <= 0) {
             TaskManager taskManager = new TaskManager(em, this, notification);
             //if i'm in a test value will be false, do not mark finished for test orchestration, not ideal need real tests
-            taskManager.finishedBatch(false);
+            taskManager.finishedBatch(false,true);
         }else {
             em.update(notification);
         }
@@ -378,8 +378,7 @@ public class ApplicationQueueManager  {
                                 try {
                                     TaskManager taskManager = taskMap.get(message.getNotificationId());
                                     notifications.put(message.getNotificationId(), message);
-                                    Notification notification = notificationMap.get(message.getNotificationId());
-                                    if(notification.getDebug())taskManager.finishedBatch();
+                                    taskManager.finishedBatch();
                                 } catch (Exception e) {
                                     LOG.error("Failed to finish batch", e);
                                 }
