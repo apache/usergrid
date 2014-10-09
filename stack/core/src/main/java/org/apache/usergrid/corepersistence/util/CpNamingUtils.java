@@ -1,4 +1,4 @@
-package org.apache.usergrid.corepersistence;/*
+package org.apache.usergrid.corepersistence.util;/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,43 +29,43 @@ public class CpNamingUtils {
     /**
      * Edge types for all types
      */
-    static final String ALL_TYPES = "zzzalltypeszzz";
+    public static final String ALL_TYPES = "zzzalltypeszzz";
 
     /**
      * Edge types for collection suffix
      */
-    static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
+    public static final String EDGE_COLL_SUFFIX = "zzzcollzzz";
 
     /**
      * Edge types for connection suffix
      */
-    static final String EDGE_CONN_SUFFIX = "zzzconnzzz";
+    public static final String EDGE_CONN_SUFFIX = "zzzconnzzz";
 
 
-    static String getCollectionScopeNameFromEntityType( String type ) {
+    public static String getCollectionScopeNameFromEntityType( String type ) {
         String csn = EDGE_COLL_SUFFIX + Schema.defaultCollectionName( type );
         return csn.toLowerCase();
     }
 
 
-    static String getCollectionScopeNameFromCollectionName( String name ) {
+    public static String getCollectionScopeNameFromCollectionName( String name ) {
         String csn = EDGE_COLL_SUFFIX + name;
         return csn.toLowerCase();
     }
 
 
-    static String getConnectionScopeName( String entityType, String connectionType ) {
+    public static String getConnectionScopeName( String entityType, String connectionType ) {
         String csn = EDGE_CONN_SUFFIX + connectionType + entityType;
         return csn.toLowerCase();
     }
 
 
-    static boolean isCollectionEdgeType( String type ) {
+    public static boolean isCollectionEdgeType( String type ) {
         return type.startsWith( EDGE_COLL_SUFFIX );
     }
 
 
-    static boolean isConnectionEdgeType( String type ) {
+    public  static boolean isConnectionEdgeType( String type ) {
         return type.startsWith( EDGE_CONN_SUFFIX );
     }
 
@@ -82,7 +82,7 @@ public class CpNamingUtils {
     }
 
 
-    static String getEdgeTypeFromConnectionType( String connectionType ) {
+    public static String getEdgeTypeFromConnectionType( String connectionType ) {
 
         if ( connectionType != null ) {
             String csn = EDGE_CONN_SUFFIX + "|" + connectionType;
@@ -93,7 +93,7 @@ public class CpNamingUtils {
     }
 
 
-    static String getEdgeTypeFromCollectionName( String collectionName ) {
+    public static String getEdgeTypeFromCollectionName( String collectionName ) {
 
         if ( collectionName != null ) {
             String csn = EDGE_COLL_SUFFIX + "|" + collectionName;

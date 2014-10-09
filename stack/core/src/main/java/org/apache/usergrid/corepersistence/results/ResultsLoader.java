@@ -41,6 +41,7 @@ package org.apache.usergrid.corepersistence.results;/*
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
 /**
@@ -50,8 +51,8 @@ public interface ResultsLoader {
 
     /**
      * Using the candidate results, get the results
-     * @param crs
+     * @param  crs The candidate result set
      * @return
      */
-    public Results getResults(final ApplicationScope scope, final CandidateResults crs);
+    public Results getResults( final CandidateResults crs);
 }

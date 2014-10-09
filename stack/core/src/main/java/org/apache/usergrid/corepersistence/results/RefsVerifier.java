@@ -38,9 +38,25 @@ package org.apache.usergrid.corepersistence.results;/*
  */
 
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public class RefsLoader extends AbstractIdLoader{
+public class RefsVerifier extends VersionVerifier {
+
+
+    @Override
+    public Results getResults( final Collection<Id> ids ) {
+        List<EntityRef> refs = new ArrayList<EntityRef>();
+        for ( Id id : ids ) {
+            refs.add( new SimpleEntityRef( id.getType(), id.getUuid() ) );
+        }
+        return Results.fromRefList( refs );
+    }
 }

@@ -38,51 +38,66 @@ package org.apache.usergrid.corepersistence.results;/*
  */
 
 
-import org.junit.rules.Verifier;
+import java.util.Collection;
+import java.util.UUID;
 
-import org.apache.usergrid.corepersistence.CpManagerCache;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntitySet;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.VersionSet;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
 import org.apache.usergrid.persistence.model.entity.Id;
 
-import com.google.inject.Inject;
+import com.fasterxml.uuid.UUIDComparator;
 
 
 /**
- * Factory for creating results
+ * A loader that verifies versions are correct in cassandra and match elasticsearch
  */
+public abstract class VersionVerifier implements ResultsVerifier {
 
-public class ResultsLoaderFactoryImpl implements ResultsLoaderFactory {
+    private static final Logger logger = LoggerFactory.getLogger( VersionVerifier.class );
+
+    private VersionSet ids;
 
 
-    private final CpManagerCache managerCache;
-
-
-    @Inject
-    public ResultsLoaderFactoryImpl( final CpManagerCache managerCache ) {
-        this.managerCache = managerCache;
+    @Override
+    public void loadResults( final Collection<Id> idsToLoad, final EntityCollectionManager ecm ) {
+        ids = ecm.getLatestVersion( idsToLoad ).toBlocking().last();
     }
 
 
     @Override
-    public ResultsLoader getLoader( final ApplicationScope applicationScope, final EntityRef ownerId,
-                                    final Query.Level resultsLevel ) {
+    public boolean isValid( final CandidateResult candidateResult ) {
+        final Id entityId = candidateResult.getId();
+
+        final MvccLogEntry version = ids.getMaxVersion( entityId );
+
+        //version wasn't found ,deindex
+        if ( version == null ) {
+            logger.warn( "Version for Entity {}:{} not found", entityId.getUuid(), entityId.getUuid() );
 
 
-        ResultsVerifier verifier;
-
-        if ( resultsLevel == Query.Level.REFS ) {
-            verifier = new RefsVerifier();
-        }
-        else if ( resultsLevel == Query.Level.IDS ) {
-            verifier = new RefsVerifier();
-        }
-        else {
-            verifier = new EntityVerifier(Query.MAX_LIMIT);
+            return false;
         }
 
+        final UUID savedVersion = version.getVersion();
 
-        return new FilteringLoader( managerCache, verifier, ownerId, applicationScope );
+        if ( UUIDComparator.staticCompare( savedVersion, candidateResult.getVersion() ) > 0 ) {
+            logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", new Object[] {
+                    entityId.getUuid(), entityId.getType(), savedVersion, candidateResult.getVersion()
+            } );
+
+            return false;
+        }
+
+
+        return true;
     }
+
+
 }

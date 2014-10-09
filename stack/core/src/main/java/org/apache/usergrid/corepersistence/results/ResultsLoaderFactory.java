@@ -38,6 +38,12 @@ package org.apache.usergrid.corepersistence.results;/*
  */
 
 
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.entity.Id;
+
+
 /**
  * Factory for creating results
  */
@@ -49,5 +55,6 @@ public interface ResultsLoaderFactory {
      * Get the load for results
      * @return
      */
-    public ResultsLoader getLoader();
+    public ResultsLoader getLoader(final ApplicationScope applicationScope, final EntityRef ownerId,
+                                        final Query.Level resultsLevel );
 }

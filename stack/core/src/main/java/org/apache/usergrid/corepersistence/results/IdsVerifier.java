@@ -38,14 +38,28 @@ package org.apache.usergrid.corepersistence.results;/*
  */
 
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public class EntitiesLoader implements ResultsLoader {
+public class IdsVerifier extends VersionVerifier {
+
+
     @Override
-    public Results getResults( final ApplicationScope scope, final CandidateResults crs ) {
-        return null;
+    public Results getResults( final Collection<Id> ids ) {
+
+        final List<UUID> returnIds = new ArrayList<>( ids.size() );
+
+        for ( final Id id : ids ) {
+            returnIds.add( id.getUuid() );
+        }
+
+
+        return Results.fromIdList( returnIds );
     }
 }

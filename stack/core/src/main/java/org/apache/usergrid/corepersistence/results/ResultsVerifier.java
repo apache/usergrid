@@ -38,9 +38,35 @@ package org.apache.usergrid.corepersistence.results;/*
  */
 
 
+import java.util.Collection;
+
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.index.query.CandidateResults;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.index.query.CandidateResult;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 
-public class IdsLoader extends AbstractIdLoader{
+public interface ResultsVerifier {
+
+    /**
+     * Load all the candidate ides for verification
+     * @param ids The Id's to load
+     * @param ecm The entity collection manager
+     */
+    public void loadResults(Collection<Id> ids, EntityCollectionManager ecm);
+
+    /**
+     * Return true if the candidate result is a valid result that should be retained.  If it should not
+     * it should also be removed from the list of possible return values in this loader
+     * @param candidateResult
+     * @return
+     */
+    public boolean isValid(CandidateResult candidateResult);
+
+
+    /**
+     * Load the result set with the given ids
+     * @return
+     */
+    public Results getResults(Collection<Id> ids);
 }
