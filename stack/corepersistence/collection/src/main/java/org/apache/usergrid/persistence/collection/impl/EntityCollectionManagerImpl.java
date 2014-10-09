@@ -59,6 +59,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -212,10 +213,25 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         Preconditions.checkNotNull( entityIds, "entityIds cannot be null" );
 
-        final EntitySet results =
-                entitySerializationStrategy.load( collectionScope, entityIds, UUIDGenerator.newTimeUUID() );
+        return Observable.create( new Observable.OnSubscribe<EntitySet>() {
 
-        return Observable.just( results );
+            @Override
+            public void call( final Subscriber<? super EntitySet> subscriber ) {
+                try {
+                    final EntitySet results =
+                                   entitySerializationStrategy.load( collectionScope, entityIds, UUIDGenerator.newTimeUUID() );
+
+                    subscriber.onNext( results );
+                    subscriber.onCompleted();
+                }
+                catch ( Exception e ) {
+                    subscriber.onError( e );
+                }
+            }
+        } );
+
+
+
     }
 
 
@@ -284,13 +300,26 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Override
-    public Observable<VersionSet> getLatestVersion(
-            Collection<Id> entityIds ) {
+    public Observable<VersionSet> getLatestVersion( final Collection<Id> entityIds ) {
 
-        VersionSet logEntries = mvccLogEntrySerializationStrategy.load( collectionScope, entityIds,
-                UUIDGenerator.newTimeUUID() );
+        return Observable.create( new Observable.OnSubscribe<VersionSet>() {
+
+                  @Override
+                  public void call( final Subscriber<? super VersionSet> subscriber ) {
+                      try {
+                          final  VersionSet logEntries = mvccLogEntrySerializationStrategy.load( collectionScope, entityIds,
+                                          UUIDGenerator.newTimeUUID() );
+
+                          subscriber.onNext( logEntries );
+                          subscriber.onCompleted();
+                      }
+                      catch ( Exception e ) {
+                          subscriber.onError( e );
+                      }
+                  }
+              } );
 
 
-        return Observable.just(logEntries);
+
     }
 }
