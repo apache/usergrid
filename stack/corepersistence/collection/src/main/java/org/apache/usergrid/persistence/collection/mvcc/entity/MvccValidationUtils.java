@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection.mvcc.entity;
 
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 
 import com.google.common.base.Preconditions;
 

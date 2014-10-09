@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.mvcc.entity;
+package org.apache.usergrid.persistence.collection;
 
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 
