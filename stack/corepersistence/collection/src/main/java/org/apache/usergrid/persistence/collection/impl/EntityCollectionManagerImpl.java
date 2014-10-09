@@ -65,6 +65,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -222,22 +223,34 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         Preconditions.checkNotNull(entityIds, "entityIds cannot be null");
 
-        final EntitySet results =
-                entitySerializationStrategy.load(collectionScope, entityIds, UUIDGenerator.newTimeUUID());
 
-        return Observable.just(results);
+        return Observable.create(new Observable.OnSubscribe<EntitySet>() {
+
+            @Override
+            public void call(final Subscriber<? super EntitySet> subscriber) {
+                try {
+                    final EntitySet results =
+                            entitySerializationStrategy.load(collectionScope, entityIds, UUIDGenerator.newTimeUUID());
+
+                    subscriber.onNext(results);
+                    subscriber.onCompleted();
+                } catch (Exception e) {
+                    subscriber.onError(e);
+                }
+            }
+        });
     }
 
     @Override
     public Observable<Id> getIdField(final Field field) {
         final List<Field> fields = Collections.singletonList(field);
-        rx.Observable<Id> o = rx.Observable.from(fields).map(new Func1<Field, Id>() {
+        return rx.Observable.from(fields).map(new Func1<Field, Id>() {
             @Override
             public Id call(Field field) {
                 try {
                     UniqueValueSet set = uniqueValueSerializationStrategy.load(collectionScope, fields);
                     UniqueValue value = set.getValue(field.getName());
-                    Id id = value == null ? null :value.getEntityId();
+                    Id id = value == null ? null : value.getEntityId();
                     return id;
                 } catch (ConnectionException e) {
                     log.error("Failed to getIdField", e);
@@ -245,9 +258,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 }
             }
         });
-        return o;
     }
-
 
     @Override
     public Observable<Entity> update(final Entity entity) {
@@ -314,13 +325,34 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Override
+<<<<<<< HEAD
     public Observable<VersionSet> getLatestVersion(
             Collection<Id> entityIds) {
 
         VersionSet logEntries = mvccLogEntrySerializationStrategy.load(collectionScope, entityIds,
                 UUIDGenerator.newTimeUUID());
+=======
+    public Observable<VersionSet> getLatestVersion( final Collection<Id> entityIds ) {
+
+        return Observable.create( new Observable.OnSubscribe<VersionSet>() {
+
+                  @Override
+                  public void call( final Subscriber<? super VersionSet> subscriber ) {
+                      try {
+                          final  VersionSet logEntries = mvccLogEntrySerializationStrategy.load( collectionScope, entityIds,
+                                          UUIDGenerator.newTimeUUID() );
+
+                          subscriber.onNext( logEntries );
+                          subscriber.onCompleted();
+                      }
+                      catch ( Exception e ) {
+                          subscriber.onError( e );
+                      }
+                  }
+              } );
+
+>>>>>>> b3515f45cdfdcc0eedd6e667701f69eccad37a7d
 
 
-        return Observable.just(logEntries);
     }
 }
