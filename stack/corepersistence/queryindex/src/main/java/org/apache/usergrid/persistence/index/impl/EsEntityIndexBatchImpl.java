@@ -58,7 +58,6 @@ import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 
 import com.google.common.base.Joiner;
-import java.io.IOException;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
@@ -69,10 +68,6 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PR
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createCollectionScopeTypeName;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexName;
-import org.elasticsearch.client.AdminClient;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.indices.IndexAlreadyExistsException;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -82,10 +77,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final ApplicationScope applicationScope;
 
     private final Client client;
-
-    // Keep track of what types we have already initialized to avoid cost
-    // of attempting to init them again. Used in the initType() method.
-    private final Set<String> knownTypes;
 
     private final boolean refresh;
 
@@ -99,12 +90,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     public EsEntityIndexBatchImpl( 
-            final ApplicationScope applicationScope, final Client client, final IndexFig config,
-            final Set<String> knownTypes, final int autoFlushSize ) {
+            final ApplicationScope applicationScope, 
+            final Client client, 
+            final IndexFig config,
+            final int autoFlushSize ) {
 
         this.applicationScope = applicationScope;
         this.client = client;
-        this.knownTypes = knownTypes;
         this.indexName = createIndexName( config.getIndexPrefix(), applicationScope );
         this.refresh = config.isForcedRefresh();
         this.autoFlushSize = autoFlushSize;

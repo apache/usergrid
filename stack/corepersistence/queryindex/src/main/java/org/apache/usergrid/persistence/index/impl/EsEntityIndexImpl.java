@@ -19,8 +19,6 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
@@ -57,6 +55,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.DOC_ID_SEPARATOR_SPLITTER;
@@ -74,23 +73,23 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     private static final Logger log = LoggerFactory.getLogger(EsEntityIndexImpl.class);
 
+    private static final AtomicBoolean mappingsCreated = new AtomicBoolean(false);
+
     private final String indexName;
 
     private final ApplicationScope applicationScope;
 
     private final Client client;
 
-    // Keep track of what types we have already initialized to avoid cost 
-    // of attempting to init them again. Used in the initType() method.
-    private Set<String> knownTypes = new TreeSet<String>();
-
     private final int cursorTimeout;
 
     private final IndexFig config;
 
     @Inject
-    public EsEntityIndexImpl(@Assisted final ApplicationScope appScope, 
-            final IndexFig config, final EsProvider provider) {
+    public EsEntityIndexImpl(
+            @Assisted final ApplicationScope appScope, 
+            final IndexFig config, 
+            final EsProvider provider) {
 
         ValidationUtils.validateApplicationScope(appScope);
 
@@ -101,47 +100,59 @@ public class EsEntityIndexImpl implements EntityIndex {
             this.cursorTimeout = config.getQueryCursorTimeout();
             this.indexName = IndexingUtils.createIndexName(config.getIndexPrefix(), appScope);
 
-        } catch (Exception e) {
-            log.error("Error setting up index", e);
-            throw e;
-        }
+            initIndex();
 
-        AdminClient admin = client.admin();
+        } catch ( IOException ex ) {
+            throw new RuntimeException("Error initializing ElasticSearch mappings or index", ex);
+        }
+    }
+
+
+    private void initIndex() throws IOException {
+
         try {
+            if ( !mappingsCreated.getAndSet(true) ) {
+                createMappings();
+            }
+
+            AdminClient admin = client.admin();
             CreateIndexResponse cir = admin.indices().prepareCreate(indexName).execute().actionGet();
             log.debug("Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged());
 
-            client.admin().indices().prepareRefresh(indexName).execute().actionGet();
-
-            XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping( 
-                XContentFactory.jsonBuilder(), "_default_");
-
-            PutIndexTemplateResponse pitr = client.admin().indices()
-                .preparePutTemplate("usergrid_template")
-                .setTemplate(config.getIndexPrefix() + "*")
-                .addMapping("_default_", xcb)
-                .execute()
-                .actionGet();
-
-            log.debug("Create Mapping for new Index Name [{}] ACK=[{}]", 
-                    indexName, pitr.isAcknowledged());
+            admin.indices().prepareRefresh(indexName).execute().actionGet();
 
             try {
                 // TODO: figure out what refresh above is not enough to ensure index is ready
                 Thread.sleep(500);
             } catch (InterruptedException ex) {}
 
-        } catch (IndexAlreadyExistsException expected) {
+        } catch ( IndexAlreadyExistsException expected ) {
             // this is expected to happen if index already exists
-
-        } catch ( IOException ioe ) {
-            throw new RuntimeException("Error setting up index", ioe);
         }
     }
 
+
+    /**
+     * Setup ElasticSearch type mappings as a template that applies to all new indexes.
+     * Applies to all indexes that start with our prefix.
+     */
+    private void createMappings() throws IOException {
+
+        XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping(
+            XContentFactory.jsonBuilder(), "_default_");
+
+        PutIndexTemplateResponse pitr = client.admin().indices()
+            .preparePutTemplate("usergrid_template")
+            .setTemplate(config.getIndexPrefix() + "*") 
+            .addMapping("_default_", xcb) // set mapping as the default for all types
+            .execute()
+            .actionGet();
+    }
+
+
     @Override
     public EntityIndexBatch createBatch() {
-        return new EsEntityIndexBatchImpl(applicationScope, client, config, knownTypes, 1000);
+        return new EsEntityIndexBatchImpl(applicationScope, client, config, 1000);
     }
 
     @Override
