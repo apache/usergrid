@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.model.field.Field;
 import org.jukito.UseModules;
 import org.junit.Rule;
 import org.junit.Test;
@@ -276,6 +277,36 @@ public class EntityCollectionManagerIT {
                 new CollectionScopeImpl( new SimpleId( "organization2" ), collectionScope1.getOwner(),
                         collectionScope1.getName() );
         assertNotNull( collectionScope3 );
+    }
+
+    @Test
+    public void writeAndGetField() {
+
+
+        CollectionScope collectionScope1 =
+                new CollectionScopeImpl(new SimpleId("organization"), new SimpleId("test1"), "test1");
+
+        Entity newEntity = new Entity(new SimpleId("test"));
+        Field field = new StringField("testField", "unique", true);
+        newEntity.setField(field);
+
+        EntityCollectionManager manager = factory.createCollectionManager(collectionScope1);
+
+        Observable<Entity> observable = manager.write(newEntity);
+
+        Entity createReturned = observable.toBlocking().lastOrDefault(null);
+
+
+        assertNotNull("Id was assigned", createReturned.getId());
+        assertNotNull("Version was assigned", createReturned.getVersion());
+
+        Id id = manager.getIdField(field).toBlocking().lastOrDefault(null);
+        assertNotNull(id);
+
+        Field fieldNull = new StringField("testFieldNotThere", "uniquely", true);
+        id = manager.getIdField(fieldNull).toBlocking().lastOrDefault(null);
+        assertNull(id);
+
     }
 
 

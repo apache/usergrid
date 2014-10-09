@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import org.apache.usergrid.persistence.model.field.Field;
 import rx.Observable;
 
 
@@ -58,6 +59,13 @@ public interface EntityCollectionManager {
      * Return the latest versions of the specified entityIds
      */
     public Observable<VersionSet> getLatestVersion( Collection<Id> entityId );
+
+    /**
+     * Gets the Id for a field
+     * @param field
+     * @return most likely a single Id, watch for onerror events
+     */
+    public Observable<Id> getIdField(final Field field);
 
     /**
      * Load all the entityIds into the observable entity set

@@ -19,11 +19,18 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
+import java.net.ConnectException;
+import java.util.*;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +44,6 @@ import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.MvccEntity;
-import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
@@ -67,12 +73,12 @@ import rx.schedulers.Schedulers;
 
 /**
  * Simple implementation.  Should perform  writes, delete and load.
- *
+ * <p/>
  * TODO: maybe refactor the stage operations into their own classes for clarity and organization?
  */
 public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
-    private static final Logger log = LoggerFactory.getLogger( EntityCollectionManagerImpl.class );
+    private static final Logger log = LoggerFactory.getLogger(EntityCollectionManagerImpl.class);
 
     private final CollectionScope collectionScope;
     private final UUIDService uuidService;
@@ -95,24 +101,29 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
+    private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
 
     @Inject
-    public EntityCollectionManagerImpl( final UUIDService uuidService, @Write final WriteStart writeStart,
-                                        @WriteUpdate final WriteStart writeUpdate,
-                                        final WriteUniqueVerify writeVerifyUnique,
-                                        final WriteOptimisticVerify writeOptimisticVerify,
-                                        final WriteCommit writeCommit, final RollbackAction rollback,
-                                        final MarkStart markStart, final MarkCommit markCommit,
-                                        final MvccEntitySerializationStrategy entitySerializationStrategy,
-                                        @CollectionTaskExecutor final TaskExecutor taskExecutor,
-                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
-                                        @Assisted final CollectionScope collectionScope ) {
+    public EntityCollectionManagerImpl(final UUIDService uuidService, @Write final WriteStart writeStart,
+                                       @WriteUpdate final WriteStart writeUpdate,
+                                       final WriteUniqueVerify writeVerifyUnique,
+                                       final WriteOptimisticVerify writeOptimisticVerify,
+                                       final WriteCommit writeCommit, final RollbackAction rollback,
+                                       final MarkStart markStart, final MarkCommit markCommit,
+                                       final MvccEntitySerializationStrategy entitySerializationStrategy,
+                                       final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
+                                       final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+                                       @CollectionTaskExecutor final TaskExecutor taskExecutor,
+                                       @Assisted final CollectionScope collectionScope
+    ) {
+        this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
+        this.entitySerializationStrategy = entitySerializationStrategy;
 
 
-        Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
+        Preconditions.checkNotNull(uuidService, "uuidService must be defined");
 
-        MvccValidationUtils.validateCollectionScope( collectionScope );
+        MvccValidationUtils.validateCollectionScope(collectionScope);
 
         this.writeStart = writeStart;
         this.writeUpdate = writeUpdate;
@@ -128,137 +139,151 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.uuidService = uuidService;
         this.collectionScope = collectionScope;
         this.taskExecutor = taskExecutor;
-        this.entitySerializationStrategy = entitySerializationStrategy;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
     }
 
 
     @Override
-    public Observable<Entity> write( final Entity entity ) {
+    public Observable<Entity> write(final Entity entity) {
 
         //do our input validation
-        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
+        Preconditions.checkNotNull(entity, "Entity is required in the new stage of the mvcc write");
 
         final Id entityId = entity.getId();
 
-        ValidationUtils.verifyIdentity( entityId );
+        ValidationUtils.verifyIdentity(entityId);
 
 
         // create our observable and start the write
-        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
+        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>(collectionScope, entity);
 
-        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeStart );
+        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner(writeData, writeStart);
 
         // execute all validation stages concurrently.  Needs refactored when this is done.  
         // https://github.com/Netflix/RxJava/issues/627
         // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(), 
         //                  writeVerifyUnique, writeOptimisticVerify );
 
-        observable.map( writeCommit ).doOnNext( new Action1<Entity>() {
+        observable.map(writeCommit).doOnNext(new Action1<Entity>() {
             @Override
-            public void call( final Entity entity ) {
+            public void call(final Entity entity) {
                 //TODO fire a task here
 
                 //post-processing to come later. leave it empty for now.
             }
-        } ).doOnError( rollback );
+        }).doOnError(rollback);
 
 
         // return the commit result.
-        return observable.map( writeCommit ).doOnError( rollback );
+        return observable.map(writeCommit).doOnError(rollback);
     }
 
 
     @Override
-    public Observable<Void> delete( final Id entityId ) {
+    public Observable<Void> delete(final Id entityId) {
 
-        Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
-        Preconditions.checkNotNull( entityId.getUuid(), "Entity id is required in this stage" );
-        Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
+        Preconditions.checkNotNull(entityId, "Entity id is required in this stage");
+        Preconditions.checkNotNull(entityId.getUuid(), "Entity id is required in this stage");
+        Preconditions.checkNotNull(entityId.getType(), "Entity type is required in this stage");
 
-        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( markStart )
-                         .doOnNext( markCommit ).map( new Func1<CollectionIoEvent<MvccEntity>, Void>() {
-                            @Override
-                            public Void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
-                                return null;
-                            }
-                        } );
+        return Observable.from(new CollectionIoEvent<Id>(collectionScope, entityId)).map(markStart)
+                .doOnNext(markCommit).map(new Func1<CollectionIoEvent<MvccEntity>, Void>() {
+                    @Override
+                    public Void call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
+                        return null;
+                    }
+                });
     }
 
 
     @Override
-    public Observable<Entity> load( final Id entityId ) {
+    public Observable<Entity> load(final Id entityId) {
 
-        Preconditions.checkNotNull( entityId, "Entity id required in the load stage" );
-        Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage" );
-        Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage" );
+        Preconditions.checkNotNull(entityId, "Entity id required in the load stage");
+        Preconditions.checkNotNull(entityId.getUuid(), "Entity id uuid required in load stage");
+        Preconditions.checkNotNull(entityId.getType(), "Entity id type required in load stage");
 
-        return load( Collections.singleton( entityId ) ).map( new Func1<EntitySet, Entity>() {
+        return load(Collections.singleton(entityId)).map(new Func1<EntitySet, Entity>() {
             @Override
-            public Entity call( final EntitySet entitySet ) {
-                final MvccEntity entity = entitySet.getEntity( entityId );
+            public Entity call(final EntitySet entitySet) {
+                final MvccEntity entity = entitySet.getEntity(entityId);
 
-                if ( entity == null ) {
+                if (entity == null) {
                     return null;
                 }
 
                 return entity.getEntity().orNull();
             }
-        } );
+        });
     }
 
 
     @Override
-    public Observable<EntitySet> load( final Collection<Id> entityIds ) {
+    public Observable<EntitySet> load(final Collection<Id> entityIds) {
 
-        Preconditions.checkNotNull( entityIds, "entityIds cannot be null" );
+        Preconditions.checkNotNull(entityIds, "entityIds cannot be null");
 
-        return Observable.create( new Observable.OnSubscribe<EntitySet>() {
+
+        return Observable.create(new Observable.OnSubscribe<EntitySet>() {
 
             @Override
-            public void call( final Subscriber<? super EntitySet> subscriber ) {
+            public void call(final Subscriber<? super EntitySet> subscriber) {
                 try {
                     final EntitySet results =
-                                   entitySerializationStrategy.load( collectionScope, entityIds, UUIDGenerator.newTimeUUID() );
+                            entitySerializationStrategy.load(collectionScope, entityIds, UUIDGenerator.newTimeUUID());
 
-                    subscriber.onNext( results );
+                    subscriber.onNext(results);
                     subscriber.onCompleted();
-                }
-                catch ( Exception e ) {
-                    subscriber.onError( e );
+                } catch (Exception e) {
+                    subscriber.onError(e);
                 }
             }
-        } );
-
-
-
+        });
     }
 
+    @Override
+    public Observable<Id> getIdField(final Field field) {
+        final List<Field> fields = Collections.singletonList(field);
+        return rx.Observable.from(fields).map(new Func1<Field, Id>() {
+            @Override
+            public Id call(Field field) {
+                try {
+                    UniqueValueSet set = uniqueValueSerializationStrategy.load(collectionScope, fields);
+                    UniqueValue value = set.getValue(field.getName());
+                    Id id = value == null ? null : value.getEntityId();
+                    return id;
+                } catch (ConnectionException e) {
+                    log.error("Failed to getIdField", e);
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
 
     @Override
-    public Observable<Entity> update( final Entity entity ) {
+    public Observable<Entity> update(final Entity entity) {
 
-        log.debug( "Starting update process" );
+        log.debug("Starting update process");
 
         //do our input validation
-        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
+        Preconditions.checkNotNull(entity, "Entity is required in the new stage of the mvcc write");
 
         final Id entityId = entity.getId();
 
 
-        ValidationUtils.verifyIdentity( entityId );
+        ValidationUtils.verifyIdentity(entityId);
 
         // create our observable and start the write
-        CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
+        CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>(collectionScope, entity);
 
 
-        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeUpdate );
+        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner(writeData, writeUpdate);
 
 
-        return observable.map( writeCommit ).doOnNext( new Action1<Entity>() {
+        return observable.map(writeCommit).doOnNext(new Action1<Entity>() {
             @Override
-            public void call( final Entity entity ) {
-                log.debug( "sending entity to the queue" );
+            public void call(final Entity entity) {
+                log.debug("sending entity to the queue");
 
                 //we an update, signal the fix
 
@@ -268,38 +293,39 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
             }
-        } ).doOnError( rollback );
+        }).doOnError(rollback);
     }
 
 
     // fire the stages
-    public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData,
-                                                                  WriteStart writeState ) {
+    public Observable<CollectionIoEvent<MvccEntity>> stageRunner(CollectionIoEvent<Entity> writeData,
+                                                                 WriteStart writeState) {
 
-        return Observable.from( writeData ).map( writeState ).doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
+        return Observable.from(writeData).map(writeState).doOnNext(new Action1<CollectionIoEvent<MvccEntity>>() {
 
             @Override
-            public void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+            public void call(final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent) {
 
                 Observable<CollectionIoEvent<MvccEntity>> unique =
-                        Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                  .doOnNext( writeVerifyUnique );
+                        Observable.from(mvccEntityCollectionIoEvent).subscribeOn(Schedulers.io())
+                                .doOnNext(writeVerifyUnique);
 
 
                 // optimistic verification
                 Observable<CollectionIoEvent<MvccEntity>> optimistic =
-                        Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                  .doOnNext( writeOptimisticVerify );
+                        Observable.from(mvccEntityCollectionIoEvent).subscribeOn(Schedulers.io())
+                                .doOnNext(writeOptimisticVerify);
 
 
                 //wait for both to finish
-                Observable.merge( unique, optimistic ).toBlocking().last();
+                Observable.merge(unique, optimistic).toBlocking().last();
             }
-        } );
+        });
     }
 
 
     @Override
+
     public Observable<VersionSet> getLatestVersion( final Collection<Id> entityIds ) {
 
         return Observable.create( new Observable.OnSubscribe<VersionSet>() {
@@ -317,9 +343,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                           subscriber.onError( e );
                       }
                   }
-              } );
-
-
-
+              } ); 
     }
 }
