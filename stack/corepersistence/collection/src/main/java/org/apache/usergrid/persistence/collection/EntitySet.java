@@ -18,6 +18,7 @@ package org.apache.usergrid.persistence.collection;/*
  */
 
 
+import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -32,7 +33,7 @@ public interface EntitySet {
      * @param entityId
      * @return
      */
-    public Entity getEntity(Id entityId);
+    public MvccEntity getEntity(Id entityId);
 
     /**
      * Get the number of entities in this set

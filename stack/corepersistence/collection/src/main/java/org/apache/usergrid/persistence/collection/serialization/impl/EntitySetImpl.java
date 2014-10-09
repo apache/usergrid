@@ -45,14 +45,8 @@ public class EntitySetImpl implements EntitySet {
 
 
     @Override
-    public Entity getEntity( final Id entityId ) {
-        final MvccEntity entity = entities.get( entityId );
-
-        if ( entity == null ) {
-            return null;
-        }
-
-        return entity.getEntity().orNull();
+    public MvccEntity getEntity( final Id entityId ) {
+        return entities.get( entityId );
     }
 
 

@@ -142,33 +142,6 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
     }
 
 
-    @Override
-    public MvccEntity load( final CollectionScope collectionScope, final Id entityId, final UUID version ) {
-        Preconditions.checkNotNull( collectionScope, "collectionScope is required" );
-        Preconditions.checkNotNull( entityId, "entity id is required" );
-        Preconditions.checkNotNull( version, "version is required" );
-
-
-        Column<UUID> column;
-
-        try {
-            column = keyspace.prepareQuery( CF_ENTITY_DATA ).getKey( ScopedRowKey.fromKey( collectionScope, entityId ) )
-                             .getColumn( version ).execute().getResult();
-        }
-
-        catch ( NotFoundException e ) {
-            //swallow, there's just no column
-            return null;
-        }
-        catch ( ConnectionException e ) {
-            throw new CollectionRuntimeException( null, collectionScope, "An error occurred connecting to cassandra",
-                    e );
-        }
-
-
-        return new MvccColumnParser( entityId ).parseColumn( column );
-    }
-
 
     @Override
     public EntitySet load( final CollectionScope collectionScope, final Collection<Id> entityIds,
@@ -179,6 +152,11 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkNotNull( entityIds, "entityIds is required" );
         Preconditions.checkArgument( entityIds.size() > 0, "entityIds is required" );
         Preconditions.checkNotNull( maxVersion, "version is required" );
+
+
+        //didnt put the max in the error message, I don't want to take the string construction hit every time
+        Preconditions.checkArgument( entityIds.size() <=  serializationFig.getMaxLoadSize(), "requested size cannot be over configured maximum");
+
 
 
         final List<ScopedRowKey<CollectionScope, Id>> rowKeys = new ArrayList<>( entityIds.size() );

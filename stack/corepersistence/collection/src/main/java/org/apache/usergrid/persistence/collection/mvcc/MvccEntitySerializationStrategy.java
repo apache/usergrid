@@ -47,18 +47,6 @@ public interface MvccEntitySerializationStrategy {
     public MutationBatch write( CollectionScope context, MvccEntity entity );
 
 
-    /**
-     * Load and return the entity with the given id and a version that is <= the version provided
-     *
-     * @param context The context to persist the entity into
-     * @param entityId The entity id to load
-     * @param version The version to load.  This will return the version <= the given version
-     *
-     * @return The deserialized version of the entity.  Null if no version == to version exists. If the entity version
-     *         has been cleared, the MvccEntity will be returned, but the optional entity will not be set
-     */
-    public MvccEntity load( CollectionScope context, Id entityId, UUID version );
-
 
     /**
      * Load the entities into the entitySet from the specified Ids.  Loads versions <= the maxVersion

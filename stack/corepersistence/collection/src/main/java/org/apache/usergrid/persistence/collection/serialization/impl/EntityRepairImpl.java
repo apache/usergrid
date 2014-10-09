@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.netflix.astyanax.MutationBatch;
 
 
 @Singleton
@@ -102,7 +103,9 @@ public class EntityRepairImpl implements EntityRepair {
         final MvccEntity mergedEntity = entityRepair( changeLog, targetEntity );
 
         try {
-            mvccEntitySerializationStrategy.write( collectionScope, mergedEntity ).execute();
+            final MutationBatch batch = mvccEntitySerializationStrategy.write( collectionScope, mergedEntity );
+
+            batch.execute();
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Couldn't rewrite repaired entity", e );

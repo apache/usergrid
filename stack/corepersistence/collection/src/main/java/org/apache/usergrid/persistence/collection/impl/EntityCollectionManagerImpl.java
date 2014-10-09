@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection.impl;
 
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,12 +31,12 @@ import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
+import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
-import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
@@ -46,6 +47,7 @@ import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -79,9 +81,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final WriteCommit writeCommit;
     private final RollbackAction rollback;
 
-    //load stages
-    private final Load load;
-
 
     //delete stages
     private final MarkStart markStart;
@@ -89,16 +88,20 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private final TaskExecutor taskExecutor;
 
+    private final MvccEntitySerializationStrategy entitySerializationStrategy;
+
     @Inject
     public EntityCollectionManagerImpl( final UUIDService uuidService, @Write final WriteStart writeStart,
                                         @WriteUpdate final WriteStart writeUpdate,
                                         final WriteUniqueVerify writeVerifyUnique,
                                         final WriteOptimisticVerify writeOptimisticVerify,
-                                        final WriteCommit writeCommit, final RollbackAction rollback, final Load load,
+                                        final WriteCommit writeCommit, final RollbackAction rollback,
                                         final MarkStart markStart, final MarkCommit markCommit,
-                                        @CollectionTaskExecutor
-                                        final TaskExecutor taskExecutor,
-                                        @Assisted final CollectionScope collectionScope) {
+                                        final MvccEntitySerializationStrategy entitySerializationStrategy,
+                                        @CollectionTaskExecutor final TaskExecutor taskExecutor,
+                                        @Assisted final CollectionScope collectionScope
+                                         ) {
+
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
 
@@ -111,13 +114,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.writeCommit = writeCommit;
         this.rollback = rollback;
 
-        this.load = load;
         this.markStart = markStart;
         this.markCommit = markCommit;
 
         this.uuidService = uuidService;
         this.collectionScope = collectionScope;
         this.taskExecutor = taskExecutor;
+        this.entitySerializationStrategy = entitySerializationStrategy;
     }
 
 
@@ -183,14 +186,30 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage" );
 
-        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-                         .map( load );
+        return load( Collections.singleton(entityId) ).map( new Func1<EntitySet, Entity>() {
+            @Override
+            public Entity call( final EntitySet entitySet ) {
+                final MvccEntity entity = entitySet.getEntity( entityId );
+
+                if(entity == null){
+                    return null;
+                }
+
+                return entity.getEntity().orNull();
+            }
+        } );
     }
 
 
     @Override
     public Observable<EntitySet> load( final Collection<Id> entityIds ) {
-        return null;
+
+        Preconditions.checkNotNull( entityIds, "entityIds cannot be null" );
+
+        final EntitySet
+                results = entitySerializationStrategy.load( collectionScope, entityIds, UUIDGenerator.newTimeUUID() );
+
+        return Observable.just( results );
     }
 
 
@@ -222,7 +241,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                //we an update, signal the fix
 
                 //TODO T.N Change this to fire a task
-                Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
+//                Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
 
 
             }
