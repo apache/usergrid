@@ -497,9 +497,6 @@ public class CpEntityManager implements EntityManager {
                 cpEntity, entity.getProperties(), entity.getType(), true );
 
         try {
-            logger.debug("About to Write {}:{} version {}", new Object[] { 
-                cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() });
-
             cpEntity = ecm.update( cpEntity ).toBlockingObservable().last();
             cpEntity = ecm.load( entityId ).toBlockingObservable().last();
 

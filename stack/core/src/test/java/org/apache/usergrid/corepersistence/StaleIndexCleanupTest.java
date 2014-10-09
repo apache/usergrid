@@ -55,10 +55,14 @@ import org.slf4j.LoggerFactory;
 public class StaleIndexCleanupTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(StaleIndexCleanupTest.class );
 
-    private static final long writeDelayMs = 80;
-    //private static final long readDelayMs = 7;
+    // take it easy on embedded Cassandra
+    private static final long writeDelayMs = 50;
+    private static final long readDelayMs = 50;
 
 
+    /**
+     * Test that updating an entity causes the entity's version number to change.
+     */
     @Test
     public void testUpdateVersioning() throws Exception {
 
@@ -83,15 +87,17 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         assertEquals( "widget", cpUpdated.getField("stuff").getValue());
         UUID newVersion = cpUpdated.getVersion();
 
-        // this assertion fails
         assertTrue( "New version is greater than old", 
                 UUIDComparator.staticCompare( newVersion, oldVersion ) > 0 );
 
-        // this fails too 
         assertEquals( 2, queryCollectionCp("things", "select *").size() );
     }
 
 
+    /**
+     * Test that the CpRelationManager cleans up and stale indexes that it finds when it is 
+     * building search results.
+     */
     @Test
     public void testStaleIndexCleanup() throws Exception {
 
@@ -101,8 +107,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         final EntityManager em = app.getEntityManager();
 
-        int numEntities = 100;
-        int numUpdates = 10;
+        final int numEntities = 100;
+        final int numUpdates = 5;
 
         // create lots of entities
         final List<Entity> things = new ArrayList<Entity>();
@@ -116,7 +122,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         em.refreshIndex();
 
         CandidateResults crs = queryCollectionCp( "things", "select *");
-        Assert.assertEquals( numEntities, crs.size() );
+        Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
 
         // update each one a bunch of times
         int count = 0;
@@ -129,34 +135,43 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
                 em.update(toUpdate);
 
                 Thread.sleep( writeDelayMs );
-                em.refreshIndex();
-                count++;
 
+                count++;
                 if ( count % 100 == 0 ) {
                     logger.info("Updated {} of {} times", count, numEntities * numUpdates);
                 }
             }
         }
+        em.refreshIndex();
 
         // query Core Persistence directly for total number of result candidates
-        // should be entities X updates because of stale indexes 
         crs = queryCollectionCp("things", "select *");
-        Assert.assertEquals( numEntities * numUpdates, crs.size() );
+        Assert.assertEquals( "Expect stale candidates", numEntities * (numUpdates + 1), crs.size());
 
-        // query EntityManager for results
-        // should return 100 becuase it filters out the stale entities
+        // query EntityManager for results and page through them
+        // should return numEntities becuase it filters out the stale entities
         Query q = Query.fromQL("select *");
-        q.setLimit( 10000 );
-        Results results = em.searchCollection( em.getApplicationRef(), "things", q);
-        assertEquals( numEntities, results.size() );
+        q.setLimit( 8 ); 
+        int thingCount = 0;
+        String cursor = null;
+        do {
+            Results results = em.searchCollection( em.getApplicationRef(), "things", q);
+            cursor = results.getCursor();
+            if ( cursor != null ) {
+                assertEquals( 8, results.size() );
+            }
+            thingCount += results.size();
+
+        } while ( cursor != null );
+        assertEquals( "Expect no stale candidates", numEntities, thingCount );
 
         // EntityManager should have kicked off a batch cleanup of those stale indexes
         // wait a second for batch cleanup to complete
         Thread.sleep(600);
 
-        // query for total number of result candidates = 100
+        // query for total number of result candidates = numEntities
         crs = queryCollectionCp("things", "select *");
-        Assert.assertEquals( numEntities, crs.size() );
+        Assert.assertEquals( "Expect stale candidates de-indexed", numEntities, crs.size());
     }
 
 
