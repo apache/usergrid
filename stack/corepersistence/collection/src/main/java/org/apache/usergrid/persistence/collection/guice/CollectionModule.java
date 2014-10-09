@@ -64,11 +64,10 @@ public class CollectionModule extends AbstractModule {
         install( new ServiceModule() );
 
         // create a guice factor for getting our collection manager
-        install(
-                new FactoryModuleBuilder().implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
-                                          .implement( EntityCollectionManagerSync.class,
-                                                  EntityCollectionManagerSyncImpl.class )
-                                          .build( EntityCollectionManagerFactory.class ) );
+        install( new FactoryModuleBuilder()
+            .implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
+            .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
+            .build( EntityCollectionManagerFactory.class ) );
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
 
@@ -101,7 +100,8 @@ public class CollectionModule extends AbstractModule {
     @Provides
     @CollectionTaskExecutor
     public TaskExecutor collectionTaskExecutor(final SerializationFig serializationFig){
-        return new NamedTaskExecutorImpl( "collectiontasks", serializationFig.getTaskPoolThreadSize(), serializationFig.getTaskPoolQueueSize() );
+        return new NamedTaskExecutorImpl( "collectiontasks", 
+                serializationFig.getTaskPoolThreadSize(), serializationFig.getTaskPoolQueueSize() );
     }
 
 

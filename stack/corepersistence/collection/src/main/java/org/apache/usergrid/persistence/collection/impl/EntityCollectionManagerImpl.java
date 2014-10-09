@@ -37,6 +37,8 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtil
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
+import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
+import org.apache.usergrid.persistence.collection.mvcc.stage.load.GetVersion;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
@@ -52,6 +54,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import java.util.UUID;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -80,6 +83,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
     private final RollbackAction rollback;
+    private final GetVersion getVersion;
 
 
     //delete stages
@@ -114,13 +118,14 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.writeCommit = writeCommit;
         this.rollback = rollback;
 
+        this.load = load;
         this.markStart = markStart;
         this.markCommit = markCommit;
+        this.getVersion = getVersion;
 
         this.uuidService = uuidService;
         this.collectionScope = collectionScope;
         this.taskExecutor = taskExecutor;
-        this.entitySerializationStrategy = entitySerializationStrategy;
     }
 
 
@@ -277,6 +282,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     }
 
 
-
+    @Override
+    public Observable<UUID> getLatestVersion(Id entityId) {
+        return Observable.from( 
+                new CollectionIoEvent<Id>( collectionScope, entityId ) ).map(getVersion);
+    }
 
 }

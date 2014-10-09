@@ -25,6 +25,7 @@ import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Results;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
@@ -52,6 +53,9 @@ import org.slf4j.LoggerFactory;
  */
 public class StaleIndexCleanupTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(StaleIndexCleanupTest.class );
+
+    private static final long writeDelayMs = 80;
+    //private static final long readDelayMs = 7;
 
 
     @Test
@@ -92,45 +96,66 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         logger.info("Started testStaleIndexCleanup()");
 
+        // TODO: turn off post processing stuff that cleans up stale entities 
+
         final EntityManager em = app.getEntityManager();
 
+        int numEntities = 100;
+        int numUpdates = 10;
+
+        // create lots of entities
         final List<Entity> things = new ArrayList<Entity>();
-
-        int numEntities = 1;
-        int numUpdates = 3;
-
-        // create 100 entities
         for ( int i=0; i<numEntities; i++) {
             final String thingName = "thing" + i;
             things.add( em.create("thing", new HashMap<String, Object>() {{
                 put("name", thingName);
             }}));
+            Thread.sleep( writeDelayMs );
         }
         em.refreshIndex();
 
         CandidateResults crs = queryCollectionCp( "things", "select *");
         Assert.assertEquals( numEntities, crs.size() );
 
-        // update each one 10 times
+        // update each one a bunch of times
+        int count = 0;
         for ( Entity thing : things ) {
 
             for ( int j=0; j<numUpdates; j++) {
+
                 Entity toUpdate = em.get( thing.getUuid() );
                 thing.setProperty( "property"  + j, RandomStringUtils.randomAlphanumeric(10));
                 em.update(toUpdate);
+
+                Thread.sleep( writeDelayMs );
                 em.refreshIndex();
+                count++;
+
+                if ( count % 100 == 0 ) {
+                    logger.info("Updated {} of {} times", count, numEntities * numUpdates);
+                }
             }
         }
 
-        // new query for total number of result candidates = 1000
+        // query Core Persistence directly for total number of result candidates
+        // should be entities X updates because of stale indexes 
         crs = queryCollectionCp("things", "select *");
         Assert.assertEquals( numEntities * numUpdates, crs.size() );
 
-        // query for results, should be 100 (and it triggers background clean up of stale indexes)
+        // query EntityManager for results
+        // should return 100 becuase it filters out the stale entities
+        Query q = Query.fromQL("select *");
+        q.setLimit( 10000 );
+        Results results = em.searchCollection( em.getApplicationRef(), "things", q);
+        assertEquals( numEntities, results.size() );
 
+        // EntityManager should have kicked off a batch cleanup of those stale indexes
         // wait a second for batch cleanup to complete
+        Thread.sleep(600);
 
-        // query for total number of result candidates = 1000
+        // query for total number of result candidates = 100
+        crs = queryCollectionCp("things", "select *");
+        Assert.assertEquals( numEntities, crs.size() );
     }
 
 

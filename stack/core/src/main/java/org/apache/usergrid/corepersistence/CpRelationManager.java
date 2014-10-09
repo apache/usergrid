@@ -1542,118 +1542,143 @@ public class CpRelationManager implements RelationManager {
     }
     
 
+    /**
+     * Build results from a set of candidates, and discard those that represent stale indexes.
+     * 
+     * @param query Query that was executed
+     * @param crs Candidates to be considered for results
+     * @param collName Name of collection or null if querying all types
+     */
     private Results buildResults(Query query, CandidateResults crs, String collName ) {
 
         logger.debug("buildResults() for {} from {} candidates", collName, crs.size());
 
         Results results = null;
 
-        if ( query.getLevel().equals( Level.IDS )) {
+        EntityIndex index = managerCache.getEntityIndex(applicationScope);
+        EntityIndexBatch indexBatch = index.createBatch();
 
-            // TODO: add stale entity logic here
-            
-            // TODO: replace this with List<Id> someday
-            List<UUID> ids = new ArrayList<UUID>();
-            Iterator<CandidateResult> iter = crs.iterator();
-            while ( iter.hasNext() ) {
-                ids.add( iter.next().getId().getUuid() );
+
+        // map of the latest versions, we will discard stale indexes
+        Map<Id, CandidateResult> latestVersions = new LinkedHashMap<Id, CandidateResult>();
+
+        Iterator<CandidateResult> iter = crs.iterator();
+        while ( iter.hasNext() ) {
+
+            CandidateResult cr = iter.next();
+
+            CollectionScope collScope = new CollectionScopeImpl( 
+                applicationScope.getApplication(), 
+                applicationScope.getApplication(), 
+                CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
+
+            EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
+
+            UUID latestVersion = ecm.getLatestVersion( cr.getId() ).toBlocking().lastOrDefault(null);
+
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Getting version for entity {} from scope\n   app {}\n   owner {}\n   name {}", 
+                new Object[] { 
+                    cr.getId(),
+                    collScope.getApplication(), 
+                    collScope.getOwner(), 
+                    collScope.getName() 
+                });
             }
-            results = Results.fromIdList( ids );
 
-        } else if ( query.getLevel().equals( Level.REFS )) {
+            if ( latestVersion == null ) {
+                logger.error("Version for Entity {}:{} not found", 
+                        cr.getId().getType(), cr.getId().getUuid());
+                continue;
+            }
 
-            // TODO: add stale entity logic here
-            
-            if ( crs.size() == 1 ) {
-                CandidateResult cr = crs.iterator().next();
-                results = Results.fromRef( 
-                    new SimpleEntityRef( cr.getId().getType(), cr.getId().getUuid()));
+            if ( cr.getVersion().compareTo( latestVersion) < 0 )  {
+                logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
+                    new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
+                        cr.getVersion(), latestVersion});
+
+                IndexScope indexScope = new IndexScopeImpl(
+                    cpHeadEntity.getId(),
+                    CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
+                indexBatch.deindex( indexScope, cr);
+
+                continue;
+            }
+
+            CandidateResult alreadySeen = latestVersions.get( cr.getId() ); 
+
+            if ( alreadySeen == null ) { // never seen it, so add to map
+                latestVersions.put( cr.getId(), cr );
 
             } else {
+                // we seen this id before, only add entity if we now have newer version
+                if ( latestVersion.compareTo( alreadySeen.getVersion() ) > 0 ) {
 
-                List<EntityRef> entityRefs = new ArrayList<EntityRef>();
-                Iterator<CandidateResult> iter = crs.iterator();
-                while ( iter.hasNext() ) {
-                    Id id = iter.next().getId();
-                    entityRefs.add( new SimpleEntityRef( id.getType(), id.getUuid() ));
-                } 
-                results = Results.fromRefList(entityRefs);
+                    latestVersions.put( cr.getId(), cr);
+
+                    IndexScope indexScope = new IndexScopeImpl(
+                        cpHeadEntity.getId(),
+                        CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
+                    indexBatch.deindex( indexScope, alreadySeen);
+                }
             }
+        }
+
+        indexBatch.execute();
+
+        if (query.getLevel().equals(Level.IDS)) {
+
+            List<UUID> ids = new ArrayList<UUID>();
+            for ( Id id : latestVersions.keySet() ) {
+                CandidateResult cr = latestVersions.get(id);
+                ids.add( cr.getId().getUuid() );
+            }
+            results = Results.fromIdList(ids);
+
+        } else if (query.getLevel().equals(Level.REFS)) {
+
+            List<EntityRef> refs = new ArrayList<EntityRef>();
+            for ( Id id : latestVersions.keySet() ) {
+                CandidateResult cr = latestVersions.get(id);
+                refs.add( new SimpleEntityRef( cr.getId().getType(), cr.getId().getUuid()));
+            }
+            results = Results.fromRefList( refs );
 
         } else {
 
-            // first, build map of latest versions of entities
-            Map<Id, org.apache.usergrid.persistence.model.entity.Entity> latestVersions = 
-                new LinkedHashMap<Id, org.apache.usergrid.persistence.model.entity.Entity>();
+            List<Entity> entities = new ArrayList<Entity>();
+            for (Id id : latestVersions.keySet()) {
 
-            Iterator<CandidateResult> iter = crs.iterator();
-            while ( iter.hasNext() ) {
-
-                CandidateResult cr = iter.next();
+                CandidateResult cr = latestVersions.get(id);
 
                 CollectionScope collScope = new CollectionScopeImpl( 
                     applicationScope.getApplication(), 
                     applicationScope.getApplication(), 
                     CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
+
                 EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
 
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug("Loading entity {} from scope\n   app {}\n   owner {}\n   name {}", 
-                    new Object[] { 
-                        cr.getId(),
-                        collScope.getApplication(), 
-                        collScope.getOwner(), 
-                        collScope.getName() 
-                    });
-                }
-
-                org.apache.usergrid.persistence.model.entity.Entity e =
-                    ecm.load( cr.getId() ).toBlockingObservable().last();
+                org.apache.usergrid.persistence.model.entity.Entity e = 
+                        ecm.load( cr.getId() ).toBlocking().lastOrDefault(null);
 
                 if ( e == null ) {
-                    logger.error("Entity {}:{} not found", cr.getId().getType(), cr.getId().getUuid());
+                    logger.error("Entity {}:{} not found", 
+                            cr.getId().getType(), cr.getId().getUuid());
                     continue;
                 }
-
-                if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
-                    logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
-                        new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
-                            cr.getVersion(), e.getVersion()});
-                    continue;
-                }
-
-                org.apache.usergrid.persistence.model.entity.Entity alreadySeen = 
-                    latestVersions.get( e.getId() ); 
-                if ( alreadySeen == null ) { // never seen it, so add to map
-                    latestVersions.put( e.getId(), e);
-
-                } else {
-                    // we seen this id before, only add entity if newer version
-                    if ( e.getVersion().compareTo( alreadySeen.getVersion() ) > 0 ) {
-                        latestVersions.put( e.getId(), e);
-                    }
-                }
-            }
-
-            // now build collection of old-school entities
-            List<Entity> entities = new ArrayList<Entity>();
-            for ( Id id : latestVersions.keySet() ) {
-
-                org.apache.usergrid.persistence.model.entity.Entity e =
-                    latestVersions.get( id );
 
                 Entity entity = EntityFactory.newEntity(
-                    e.getId().getUuid(), e.getField("type").getValue().toString() );
+                        e.getId().getUuid(), e.getField("type").getValue().toString());
 
-                Map<String, Object> entityMap = CpEntityMapUtils.toMap( e );
-                entity.addProperties( entityMap ); 
-                entities.add( entity );
+                Map<String, Object> entityMap = CpEntityMapUtils.toMap(e);
+                entity.addProperties(entityMap);
+                entities.add(entity);
             }
 
-            if ( entities.size() == 1 ) {
-                results = Results.fromEntity( entities.get(0));
+            if (entities.size() == 1) {
+                results = Results.fromEntity(entities.get(0));
             } else {
-                results = Results.fromEntities( entities );
+                results = Results.fromEntities(entities);
             }
         }
 
