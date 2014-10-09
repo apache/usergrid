@@ -21,18 +21,20 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 import com.google.inject.assistedinject.Assisted;
-import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
+import org.apache.usergrid.persistence.collection.EntityVersionCleanupFactory;
+import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import java.util.List;
 import java.util.UUID;
@@ -44,24 +46,22 @@ public class EntityDeletedTask implements Task<Void> {
     private EntityVersionCleanupFactory entityVersionCleanupFactory;
     private MvccLogEntrySerializationStrategy logEntrySerializationStrategy;
     private MvccEntitySerializationStrategy entitySerializationStrategy;
+    private List<EntityDeleted> listeners;
     private CollectionScope collectionScope;
     private Id entityId;
     private UUID version;
     private static final Logger LOG =  LoggerFactory.getLogger(EntityDeletedTask.class);
 
     public EntityDeletedTask(EntityVersionCleanupFactory entityVersionCleanupFactory,
-                             final SerializationFig serializationFig,
                              final MvccLogEntrySerializationStrategy logEntrySerializationStrategy,
                              final MvccEntitySerializationStrategy entitySerializationStrategy,
-                             final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                             final Keyspace keyspace,
-                             final CollectionScope scope,
-                             final List<EntityVersionDeleted> listeners,
+                             final List<EntityDeleted> listeners,
                              CollectionScope collectionScope,
                              @Assisted Id entityId, @Assisted UUID version){
         this.entityVersionCleanupFactory = entityVersionCleanupFactory;
         this.logEntrySerializationStrategy = logEntrySerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
+        this.listeners = listeners;
         this.collectionScope = collectionScope;
         this.entityId = entityId;
         this.version = version;
@@ -94,6 +94,40 @@ public class EntityDeletedTask implements Task<Void> {
         entityDelete.execute();
         logDelete.execute();
         return null;
+    }
+
+    private void fireEvents() {
+        final int listenerSize = listeners.size();
+
+        if ( listenerSize == 0 ) {
+            return;
+        }
+
+        if ( listenerSize == 1 ) {
+            listeners.get( 0 ).deleted( collectionScope, entityId,version );
+            return;
+        }
+
+        LOG.debug( "Started firing {} listeners", listenerSize );
+
+        //if we have more than 1, run them on the rx scheduler for a max of 8 operations at a time
+        Observable.from(listeners)
+                .parallel( new Func1<Observable<EntityDeleted>, Observable<EntityDeleted>>() {
+
+                    @Override
+                    public Observable<EntityDeleted> call(
+                            final Observable<EntityDeleted> entityVersionDeletedObservable ) {
+
+                        return entityVersionDeletedObservable.doOnNext( new Action1<EntityDeleted>() {
+                            @Override
+                            public void call( final EntityDeleted listener ) {
+                                listener.deleted(collectionScope, entityId, version);
+                            }
+                        } );
+                    }
+                }, Schedulers.io() ).toBlocking().last();
+
+        LOG.debug( "Finished firing {} listeners", listenerSize );
     }
 
 

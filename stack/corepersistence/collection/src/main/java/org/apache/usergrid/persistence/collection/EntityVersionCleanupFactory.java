@@ -15,11 +15,12 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.impl;
+package org.apache.usergrid.persistence.collection;
 
 
 import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
+import org.apache.usergrid.persistence.collection.impl.EntityVersionCleanupTask;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import java.util.List;
