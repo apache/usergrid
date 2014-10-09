@@ -140,17 +140,13 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.3</version>
-            </plugin>
-
-            <plugin>
                 <groupId>org.jasig.mojo.jspc</groupId>
                 <artifactId>jspc-maven-plugin</artifactId>
                 <version>2.0.0</version>
                 <configuration>
-                    <includeInProject>false</includeInProject>
+                    <includeInProject>true</includeInProject>
+                    <inputWebXml>${basedir}/src/main/webapp/WEB-INF/web.xml</inputWebXml>
+                    <injectString>&lt;!--FRAGMENT--&gt;</injectString>
                     <webFragmentFile>${project.build.directory}/web-fragment.xml.txt</webFragmentFile>
                 </configuration>
                 <executions>
@@ -164,10 +160,19 @@
                 <dependencies>
                     <dependency>
                         <groupId>org.jasig.mojo.jspc</groupId>
-                        <artifactId>jspc-compiler-tomcat6</artifactId>
+                        <artifactId>jspc-compiler-tomcat7</artifactId>
                         <version>2.0.0</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <webXml>${project.build.directory}/jspweb.xml</webXml>
+                </configuration>
+                <version>2.3</version>
             </plugin>
 
             <plugin>
