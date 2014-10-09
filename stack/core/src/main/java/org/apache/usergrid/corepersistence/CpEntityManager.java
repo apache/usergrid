@@ -523,7 +523,10 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
-        deleteAsync( entityRef ).toBlockingObservable().lastOrDefault(null);
+        deleteAsync( entityRef ).toBlocking().lastOrDefault(null);
+        //delete from our UUID index
+        MapManager mm = getMapManagerForTypes();
+        mm.delete(entityRef.getUuid().toString() );
     }
 
 
@@ -2207,13 +2210,12 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Entity get( UUID uuid ) throws Exception {
 
-        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
-        MapScope ms = new MapScopeImpl( mapOwner, TYPES_BY_UUID_MAP );
-        MapManager mm = managerCache.getMapManager( ms );
+        MapManager mm = getMapManagerForTypes();
         String entityType = mm.getString(uuid.toString() );
 
         final Entity entity;
 
+      //this is the fall back, why isn't this writt
         if ( entityType == null ) {
 
             Query q = Query.fromQL(
@@ -2229,7 +2231,19 @@ public class CpEntityManager implements EntityManager {
         }
 
         return entity;
-    } 
+    }
+
+
+    /**
+     * Get the map manager for uuid mapping
+     */
+    private MapManager getMapManagerForTypes() {
+        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
+        MapScope ms = new MapScopeImpl( mapOwner, TYPES_BY_UUID_MAP );
+        MapManager mm = managerCache.getMapManager( ms );
+
+        return mm;
+    }
 
 
     @Override
@@ -2521,7 +2535,7 @@ public class CpEntityManager implements EntityManager {
                 entityToCpEntity( entity, importId );
 
         // prepare to write and index Core Persistence Entity into default scope
-        CollectionScope collectionScope = new CollectionScopeImpl( 
+        CollectionScope collectionScope = new CollectionScopeImpl(
                 applicationScope.getApplication(), 
                 applicationScope.getApplication(),
                 CpNamingUtils.getCollectionScopeNameFromEntityType( eType ) );
@@ -2588,6 +2602,10 @@ public class CpEntityManager implements EntityManager {
             // Invoke counters
             incrementEntityCollection( collectionName, timestamp );
         }
+
+        //write to our types map
+        MapManager mm = getMapManagerForTypes();
+        mm.putString( itemId.toString(), entity.getType() );
 
 
         return entity;
