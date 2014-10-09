@@ -38,8 +38,8 @@ public interface EntityDeleted {
      *
      * @param scope The scope of the entity
      * @param entityId The id of the entity
-     * @param inclusiveVersionToDeleteFrom the entity version
+     * @param version the entity version
      */
-    public void deleted( final CollectionScope scope, final Id entityId, final UUID inclusiveVersionToDeleteFrom);
+    public void deleted( final CollectionScope scope, final Id entityId, final UUID version);
 
 }

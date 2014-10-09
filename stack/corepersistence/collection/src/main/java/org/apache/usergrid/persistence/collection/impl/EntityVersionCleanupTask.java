@@ -111,7 +111,6 @@ public class EntityVersionCleanupTask implements Task<Void> {
     public Void rejected() {
         //Our task was rejected meaning our queue was full.  We need this operation to run,
         // so we'll run it in our current thread
-
         try {
             call();
         }
@@ -140,8 +139,6 @@ public class EntityVersionCleanupTask implements Task<Void> {
                         new Action1<List<MvccEntity>>() {
                             @Override
                             public void call(final List<MvccEntity> mvccEntities) {
-
-
                                 final MutationBatch batch = keyspace.prepareMutationBatch();
                                 final MutationBatch entityBatch = keyspace.prepareMutationBatch();
                                 final MutationBatch logBatch = keyspace.prepareMutationBatch();
@@ -152,32 +149,22 @@ public class EntityVersionCleanupTask implements Task<Void> {
                                     }
 
                                     final UUID entityVersion = mvccEntity.getVersion();
-
                                     final Entity entity = mvccEntity.getEntity().get();
 
                                     //remove all unique fields from the index
                                     for (final Field field : entity.getFields()) {
-
                                         if (!field.isUnique()) {
                                             continue;
                                         }
-
                                         final UniqueValue unique = new UniqueValueImpl(scope, field, entityId, entityVersion);
-
                                         final MutationBatch deleteMutation = uniqueValueSerializationStrategy.delete(unique);
-
                                         batch.mergeShallow(deleteMutation);
                                     }
 
                                     final MutationBatch entityDelete = entitySerializationStrategy.delete(scope, entityId, mvccEntity.getVersion());
-
                                     entityBatch.mergeShallow(entityDelete);
-
                                     final MutationBatch logDelete = logEntrySerializationStrategy.delete(scope, entityId, version);
-
                                     logBatch.mergeShallow(logDelete);
-
-
                                 }
 
                                 try {
@@ -212,8 +199,6 @@ public class EntityVersionCleanupTask implements Task<Void> {
 
         return null;
     }
-
-
 
 
     private void fireEvents( final List<MvccEntity> versions ) {

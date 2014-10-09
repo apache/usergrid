@@ -19,9 +19,10 @@ package org.apache.usergrid.corepersistence;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import org.apache.usergrid.event.EntityDeletedImpl;
+import org.apache.usergrid.event.EntityVersionDeletedImpl;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
-import org.apache.usergrid.persistence.collection.event.impl.EntityDeletedImpl;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
@@ -51,12 +52,11 @@ public class GuiceModule  extends AbstractModule {
         bind(CpEntityDeleteListener.class).asEagerSingleton();
         bind(CpEntityIndexDeleteListener.class).asEagerSingleton();
 
-        Multibinder<EntityDeleted> uriBinder = Multibinder.newSetBinder(binder(), EntityDeleted.class);
-        uriBinder.addBinding().to( EntityDeletedImpl.class );
+
+        Multibinder<EntityDeleted> entityBinder =  Multibinder.newSetBinder(binder(), EntityDeleted.class);
+        entityBinder.addBinding().to( EntityDeletedImpl.class );
         Multibinder<EntityVersionDeleted> versionBinder = Multibinder.newSetBinder(binder(), EntityVersionDeleted.class);
-
-
-
+        versionBinder.addBinding().to(EntityVersionDeletedImpl.class);
     }
 
 }
