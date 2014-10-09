@@ -325,13 +325,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Override
-<<<<<<< HEAD
-    public Observable<VersionSet> getLatestVersion(
-            Collection<Id> entityIds) {
 
-        VersionSet logEntries = mvccLogEntrySerializationStrategy.load(collectionScope, entityIds,
-                UUIDGenerator.newTimeUUID());
-=======
     public Observable<VersionSet> getLatestVersion( final Collection<Id> entityIds ) {
 
         return Observable.create( new Observable.OnSubscribe<VersionSet>() {
@@ -349,10 +343,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                           subscriber.onError( e );
                       }
                   }
-              } );
-
->>>>>>> b3515f45cdfdcc0eedd6e667701f69eccad37a7d
-
-
+              } ); 
     }
 }
