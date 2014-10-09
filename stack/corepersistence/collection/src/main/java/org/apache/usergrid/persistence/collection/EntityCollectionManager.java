@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.collection;
 
 
+import java.util.UUID;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -51,16 +52,22 @@ public interface EntityCollectionManager {
      */
     public Observable<Entity> load( Id entityId );
 
-    //TODO TN Change load to use multiget and return multiple entities.  Only supports loading 1k per load operation.
+    /**
+     * Return the latest version of the specified entity.
+     */
+    public Observable<UUID> getLatestVersion( Id entityId );
 
+    //TODO TN Change load to use multiget and return multiple entities.  
+    // Only supports loading 1k per load operation.
 
-    //TODO Dave add a load versions using a multiget that will return a latest version structure for a collection of entity Ids
+    //TODO Dave add a load versions using a multiget that will return a latest version 
+    //structure for a collection of entity Ids
 
 
     /**
      * Takes the change and reloads an entity with all changes applied in this entity applied.
-     * The resulting entity from calling load will be the previous version of this entity + the entity
-     * in this object applied to it.
+     * The resulting entity from calling load will be the previous version of this entity + the 
+     * entityin this object applied to it.
      * @param entity
      * @return
      */

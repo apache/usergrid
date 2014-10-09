@@ -18,7 +18,6 @@
  */
 package org.apache.usergrid.persistence.collection.impl;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +32,7 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
+import org.apache.usergrid.persistence.collection.mvcc.stage.load.GetVersion;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
@@ -47,6 +47,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import java.util.UUID;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -75,6 +76,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
     private final RollbackAction rollback;
+    private final GetVersion getVersion;
 
     //load stages
     private final Load load;
@@ -87,15 +89,21 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final TaskExecutor taskExecutor;
 
     @Inject
-    public EntityCollectionManagerImpl( final UUIDService uuidService, @Write final WriteStart writeStart,
-                                        @WriteUpdate final WriteStart writeUpdate,
-                                        final WriteUniqueVerify writeVerifyUnique,
-                                        final WriteOptimisticVerify writeOptimisticVerify,
-                                        final WriteCommit writeCommit, final RollbackAction rollback, final Load load,
-                                        final MarkStart markStart, final MarkCommit markCommit,
-                                        @CollectionTaskExecutor
-                                        final TaskExecutor taskExecutor,
-                                        @Assisted final CollectionScope collectionScope) {
+    public EntityCollectionManagerImpl( 
+            final UUIDService uuidService, 
+            @Write final WriteStart writeStart,
+            @WriteUpdate final WriteStart writeUpdate,
+            final WriteUniqueVerify writeVerifyUnique,
+            final WriteOptimisticVerify writeOptimisticVerify,
+            final WriteCommit writeCommit, 
+            final RollbackAction rollback, 
+            final Load load,
+            final MarkStart markStart, 
+            final MarkCommit markCommit,
+            final GetVersion getVersion,
+            @CollectionTaskExecutor
+            final TaskExecutor taskExecutor,
+            @Assisted final CollectionScope collectionScope) {
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
 
@@ -111,6 +119,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.load = load;
         this.markStart = markStart;
         this.markCommit = markCommit;
+        this.getVersion = getVersion;
 
         this.uuidService = uuidService;
         this.collectionScope = collectionScope;
@@ -180,8 +189,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage" );
 
-        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-                         .map( load );
+        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map(load);
     }
 
     @Override
@@ -212,7 +220,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                //we an update, signal the fix
 
                 //TODO T.N Change this to fire a task
-                Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
+                Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) )
+                        .map( load ).subscribeOn( Schedulers.io() ).subscribe();
 
 
             }
@@ -220,34 +229,39 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     }
 
     // fire the stages
-    public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData, WriteStart writeState ) {
+    public Observable<CollectionIoEvent<MvccEntity>> stageRunner( 
+            CollectionIoEvent<Entity> writeData, WriteStart writeState ) {
 
-        return Observable.from( writeData ).map( writeState ).doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
+        return Observable.from( writeData ).map( writeState ).doOnNext( 
+            new Action1<CollectionIoEvent<MvccEntity>>() {
 
-                    @Override
-                    public void call(
-                            final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+                @Override
+                public void call(
+                        final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
 
-                        Observable<CollectionIoEvent<MvccEntity>> unique =
-                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                          .doOnNext( writeVerifyUnique );
-
-
-                        // optimistic verification
-                        Observable<CollectionIoEvent<MvccEntity>> optimistic =
-                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                          .doOnNext( writeOptimisticVerify );
+                    Observable<CollectionIoEvent<MvccEntity>> unique =
+                        Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io())
+                            .doOnNext( writeVerifyUnique );
 
 
-                        //wait for both to finish
-                        Observable.merge( unique, optimistic ).toBlocking().last();
+                    // optimistic verification
+                    Observable<CollectionIoEvent<MvccEntity>> optimistic =
+                        Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io())
+                            .doOnNext( writeOptimisticVerify );
 
 
-                    }
-                } );
+                    //wait for both to finish
+                    Observable.merge( unique, optimistic ).toBlocking().last();
+                }
+            } 
+        );
     }
 
 
-
+    @Override
+    public Observable<UUID> getLatestVersion(Id entityId) {
+        return Observable.from( 
+                new CollectionIoEvent<Id>( collectionScope, entityId ) ).map(getVersion);
+    }
 
 }

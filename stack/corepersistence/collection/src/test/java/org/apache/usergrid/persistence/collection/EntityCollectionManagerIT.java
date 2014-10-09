@@ -392,4 +392,21 @@ public class EntityCollectionManagerIT {
         assertTrue( UUIDComparator.staticCompare( newVersion, oldVersion ) > 0);
     }
 
+    @Test
+    public void testGetVersion() {
+
+        CollectionScope context = new CollectionScopeImpl(
+                new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
+
+        Entity newEntity = new Entity( new SimpleId( "test" ) );
+        EntityCollectionManager manager = factory.createCollectionManager( context );
+        Observable<Entity> observable = manager.write( newEntity );
+        Entity created = observable.toBlocking().lastOrDefault( null );
+
+        assertNotNull("Id was assigned", created.getId() );
+        assertNotNull("Version was assigned", created.getVersion() );
+
+        assertTrue(UUIDComparator.staticCompare(created.getVersion(), 
+            manager.getLatestVersion( created.getId() ).toBlocking().lastOrDefault(null)) == 0);
+    }
 }
