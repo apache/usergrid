@@ -302,6 +302,7 @@ public class EntityCollectionManagerIT {
 
         Id id = manager.getIdField(field).toBlocking().lastOrDefault(null);
         assertNotNull(id);
+        assertEquals(newEntity.getId(), id);
 
         Field fieldNull = new StringField("testFieldNotThere", "uniquely", true);
         id = manager.getIdField(fieldNull).toBlocking().lastOrDefault(null);

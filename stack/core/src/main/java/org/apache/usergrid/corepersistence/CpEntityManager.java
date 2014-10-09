@@ -142,6 +142,7 @@ import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.ClassUtils;
@@ -825,10 +826,22 @@ public class CpEntityManager implements EntityManager {
     private Iterable<EntityRef> getEntityRefsForUniqueProperty( 
             EntityRef ownerRef, String collName, String propName, String alias ) throws Exception {
 
-        Results results = getRelationManager( ownerRef ).searchCollection( 
-                collName, Query.fromQL( "select * where " + propName + " = '" + alias + "'" ) );
 
-        return results.getRefs();
+        final CollectionScope collectionScope = new CollectionScopeImpl(
+                applicationScope.getApplication(),
+                new SimpleId(ownerRef.getUuid(), ownerRef.getType()),
+                collName );
+
+
+        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+
+        final Id results = ecm.getIdField( new StringField(propName, alias) ).toBlocking().lastOrDefault( null );
+
+        if(results == null){
+            return Collections.emptyList();
+        }
+
+        return Collections.<EntityRef>singleton( new SimpleEntityRef( results.getType(),  results.getUuid() ));
     }
 
 
@@ -2777,6 +2790,13 @@ public class CpEntityManager implements EntityManager {
         // refresh this Entity Manager's application's index
         EntityIndex ei = managerCache.getEntityIndex( applicationScope );
         ei.refresh();
+    }
+
+
+    @Override
+    public void createIndex() {
+        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        ei.initializeIndex();
     }
 
 

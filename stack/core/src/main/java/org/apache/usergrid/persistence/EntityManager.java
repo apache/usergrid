@@ -684,6 +684,11 @@ public interface EntityManager {
      */
     void refreshIndex();
 
+    /**
+     * Create the index, should ONLY ever be called the first time an application is created
+     */
+    void createIndex();
+
     public void init( EntityManagerFactory emf, UUID applicationId);
 
     /** For testing purposes */
