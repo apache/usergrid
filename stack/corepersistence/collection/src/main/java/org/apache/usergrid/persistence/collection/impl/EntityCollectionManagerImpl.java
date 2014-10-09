@@ -19,9 +19,10 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,6 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import java.util.UUID;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -83,7 +83,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
     private final RollbackAction rollback;
-    private final GetVersion getVersion;
 
 
     //delete stages
@@ -93,6 +92,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final TaskExecutor taskExecutor;
 
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
+    private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
     @Inject
     public EntityCollectionManagerImpl( final UUIDService uuidService, @Write final WriteStart writeStart,
@@ -102,9 +102,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                                         final WriteCommit writeCommit, final RollbackAction rollback,
                                         final MarkStart markStart, final MarkCommit markCommit,
                                         final MvccEntitySerializationStrategy entitySerializationStrategy,
+                                        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                         @CollectionTaskExecutor final TaskExecutor taskExecutor,
                                         @Assisted final CollectionScope collectionScope
                                          ) {
+        this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
+        this.entitySerializationStrategy = entitySerializationStrategy;
 
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
@@ -215,6 +218,15 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 results = entitySerializationStrategy.load( collectionScope, entityIds, UUIDGenerator.newTimeUUID() );
 
         return Observable.just( results );
+    }
+
+    @Override
+       public Observable<Id> getIdField(Field field){
+        List<Field> fields = new ArrayList<>(1);
+        fields.add(field);
+        List list = Collections.singletonList(field);
+        rx.Observable.from(list).su
+        return null;
     }
 
 
