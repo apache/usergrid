@@ -15,8 +15,10 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.collection.mvcc.stage.write;
+package org.apache.usergrid.persistence.collection.serialization;
 
+
+import java.util.Collection;
 
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -35,7 +37,7 @@ public interface UniqueValueSerializationStrategy {
      * @param uniqueValue Object to be written
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
-    public MutationBatch write( UniqueValue uniqueValue );
+    public MutationBatch write( CollectionScope scope,  UniqueValue uniqueValue );
 
     /**
      * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
@@ -44,17 +46,17 @@ public interface UniqueValueSerializationStrategy {
      * @param timeToLive How long object should live in seconds 
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
-    public MutationBatch write( UniqueValue uniqueValue, Integer timeToLive );
+    public MutationBatch write( CollectionScope scope,  UniqueValue uniqueValue, Integer timeToLive );
 
     /**
      * Load UniqueValue that matches field from collection or null if that value does not exist.
      * 
      * @param colScope Collection scope in which to look for field name/value
-     * @param field Field name/value to search for
-     * @return UniqueValue or null if not found
+     * @param fields Field name/value to search for
+     * @return UniqueValueSet containing fields from the collection that exist in cassandra
      * @throws ConnectionException on error connecting to Cassandra
      */
-    public UniqueValue load( CollectionScope colScope, Field field ) throws ConnectionException;
+    public UniqueValueSet load( CollectionScope colScope, Collection<Field> fields ) throws ConnectionException;
 
     /**
      * Delete the specified Unique Value from Cassandra.
@@ -62,5 +64,5 @@ public interface UniqueValueSerializationStrategy {
      * @param uniqueValue Object to be deleted.
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
-    public MutationBatch delete( UniqueValue uniqueValue );
+    public MutationBatch delete( CollectionScope scope,  UniqueValue uniqueValue );
 }

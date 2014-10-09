@@ -32,4 +32,10 @@ public class DoubleField extends AbstractField<Double> {
 
     public DoubleField() {
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+           return FieldTypeName.DOUBLE;
+       }
 }

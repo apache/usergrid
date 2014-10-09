@@ -39,28 +39,29 @@ public class RepairUtil {
             return null;
         }
 
-        MvccEntity mvccEntity = results.next();
+        final MvccEntity partialEntity = results.next();
         List<MvccEntity> partialEntities = new ArrayList<>();
 
         //this entity has been marked as cleared.(deleted)
         //The version exists, but does not have entity data
-        if ( !mvccEntity.getEntity().isPresent() && ( mvccEntity.getStatus() == MvccEntity.Status.DELETED
-                || mvccEntity.getStatus() == MvccEntity.Status.COMPLETE ) ) {
+        if ( !partialEntity.getEntity().isPresent() && ( partialEntity.getStatus() == MvccEntity.Status.DELETED
+                || partialEntity.getStatus() == MvccEntity.Status.COMPLETE ) ) {
             return null;
         }
 
-        if ( mvccEntity.getStatus() == MvccEntity.Status.COMPLETE ) {
-            return mvccEntity;
+        if ( partialEntity.getStatus() == MvccEntity.Status.COMPLETE ) {
+            return partialEntity;
         }
-        partialEntities.add( mvccEntity );
+
+        partialEntities.add( partialEntity );
 
 
         while ( results.hasNext() ) {
-            mvccEntity = results.next();
-            partialEntities.add( mvccEntity );
+           final MvccEntity previousEntity = results.next();
+            partialEntities.add( previousEntity );
 
-            if ( mvccEntity.getStatus() != MvccEntity.Status.PARTIAL ) {
-                return repairAndWrite( partialEntities, mvccEntity, entitySerializationStrategy, collectionScope );
+            if ( previousEntity.getStatus() != MvccEntity.Status.PARTIAL ) {
+                return repairAndWrite( partialEntities, partialEntity, entitySerializationStrategy, collectionScope );
             }
         }
         return null;
@@ -70,28 +71,28 @@ public class RepairUtil {
     /**
      * Repairs the entity then overwrites the previous entity to become the new completed entity.
      * @param partialEntities
-     * @param mvccEntity
+     * @param targetEntity The entity that should ultimately contain all merged data
      * @param entitySerializationStrategy
      * @param collectionScope
      * @return
      */
-    private static MvccEntity repairAndWrite( List<MvccEntity> partialEntities, MvccEntity mvccEntity,
+    private static MvccEntity repairAndWrite( List<MvccEntity> partialEntities, MvccEntity targetEntity,
                                               MvccEntitySerializationStrategy entitySerializationStrategy,
                                               CollectionScope collectionScope ) {
         Collections.reverse( partialEntities );
 
         //repair
-        mvccEntity = entityRepair( changeLogGenerator.getChangeLog( partialEntities.iterator(),
-                        partialEntities.get( partialEntities.size() - 1 ).getVersion() ), partialEntities, mvccEntity
+       final MvccEntity mergedEntity = entityRepair( changeLogGenerator.getChangeLog( partialEntities.iterator(),
+                        partialEntities.get( partialEntities.size() - 1 ).getVersion() ), partialEntities, targetEntity
                                  );
 
         try {
-            entitySerializationStrategy.write( collectionScope, mvccEntity ).execute();
+            entitySerializationStrategy.write( collectionScope, mergedEntity ).execute();
         }
         catch ( Exception e ) {
             throw new RuntimeException( "Couldn't rewrite repaired entity", e );
         }
-        return mvccEntity;
+        return mergedEntity;
     }
 
 

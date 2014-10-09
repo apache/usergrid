@@ -50,6 +50,13 @@ public class TaskManager {
         hasFinished = false;
     }
 
+    public long getSuccesses(){return successes.get();}
+
+    public long getFailures(){ return failures.get();}
+
+    public void completed(Notifier notifier, UUID deviceUUID) throws Exception {
+        completed(notifier,null,deviceUUID,null);
+    }
     public void completed(Notifier notifier, Receipt receipt, UUID deviceUUID, String newProviderId) throws Exception {
         LOG.debug("REMOVED {}", deviceUUID);
         try {
@@ -59,7 +66,7 @@ public class TaskManager {
             if (receipt != null) {
                 LOG.debug("notification {} sent to device {}. saving receipt.", notification.getUuid(), deviceUUID);
                 receipt.setSent(System.currentTimeMillis());
-                this.saveReceipt(notification, deviceRef, receipt);
+                this.saveReceipt(notification, deviceRef, receipt,false);
                 LOG.debug("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
                 successes.incrementAndGet();
             }
@@ -97,10 +104,10 @@ public class TaskManager {
             }
             receipt.setErrorCode(code);
             receipt.setErrorMessage(message);
-            this.saveReceipt(notification, new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID), receipt);
+            this.saveReceipt(notification, new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID), receipt,true);
             LOG.debug("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
         } finally {
-            completed(notifier, null, deviceUUID, null);
+            completed(notifier, deviceUUID);
         }
     }
 
@@ -108,16 +115,18 @@ public class TaskManager {
     * called from TaskManager - creates a persistent receipt and updates the
     * passed one w/ the UUID
     */
-    private void saveReceipt(EntityRef notification, EntityRef device, Receipt receipt) throws Exception {
-        if (receipt.getUuid() == null) {
-            Receipt savedReceipt = em.create(receipt);
-            receipt.setUuid(savedReceipt.getUuid());
-
-            List<EntityRef> entities = Arrays.asList(notification, device);
-//            em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
-        } else {
-            em.update(receipt);
+    private void saveReceipt(EntityRef notification, EntityRef device, Receipt receipt, boolean hasError) throws Exception {
+        if (this.notification.getDebug() || hasError) {
+            if (receipt.getUuid() == null) {
+                Receipt savedReceipt = em.create(receipt);
+                receipt.setUuid(savedReceipt.getUuid());
+                List<EntityRef> entities = Arrays.asList(notification, device);
+//              em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
+            } else {
+                em.update(receipt);
+            }
         }
+
     }
 
     protected void replaceProviderId(EntityRef device, Notifier notifier,
@@ -135,45 +144,44 @@ public class TaskManager {
         }
     }
     public void finishedBatch() throws Exception {
-        finishedBatch(true,true);
+        finishedBatch(true,false);
     }
-    public void finishedBatch(boolean update, boolean fetch) throws Exception {
-        long successes = this.successes.get(); //reset counters
-        long failures = this.failures.get(); //reset counters
-        for (int i = 0; i < successes; i++) {
-            this.successes.decrementAndGet();
-        }
-        for (int i = 0; i < failures; i++) {
-            this.failures.decrementAndGet();
-        }
+    public void finishedBatch(boolean fetch, boolean force) throws Exception {
+        if (notification.getDebug() || getFailures() > 0 || force) {
+            long successes = this.successes.get(); //reset counters
+            long failures = this.failures.get(); //reset counters
+            for (int i = 0; i < successes; i++) {
+                this.successes.decrementAndGet();
+            }
+            for (int i = 0; i < failures; i++) {
+                this.failures.decrementAndGet();
+            }
 
-        this.hasFinished = true;
+            this.hasFinished = true;
 
-        // refresh notification
-        if(fetch)
-            notification = em.get(this.notification.getUuid(), Notification.class);
-        notification.setModified(System.currentTimeMillis());
+            // refresh notification
+            if (fetch)
+                notification = em.get(this.notification.getUuid(), Notification.class);
+            notification.setModified(System.currentTimeMillis());
 
-        //and write them out again, this will produce the most accurate count
-        Map<String, Long> stats = new HashMap<>(2);
-        stats.put("sent", successes);
-        stats.put("errors", failures);
-        notification.updateStatistics(successes, failures);
+            //and write them out again, this will produce the most accurate count
+            Map<String, Long> stats = new HashMap<>(2);
+            stats.put("sent", successes);
+            stats.put("errors", failures);
+            notification.updateStatistics(successes, failures);
 
-        long totals = (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"));
-        //none of this is known and should you ever do this
-        Map<String, Object> properties = new HashMap<>();
-        notification.setFinished(notification.getModified());
-        properties.put("finished", notification.getModified());
-        properties.put("state", notification.getState());
-        LOG.info("done sending to devices in {} ms", notification.getFinished() - notification.getStarted());
-        notification.addProperties(properties);
-
-        LOG.info("notification finished batch: {} of {} devices", notification.getUuid(), totals);
-        if (update){
+            long totals = (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"));
+            //none of this is known and should you ever do this
+            Map<String, Object> properties = new HashMap<>();
+            notification.setFinished(notification.getModified());
+            properties.put("finished", notification.getModified());
+            properties.put("state", notification.getState());
+            notification.addProperties(properties);
+            long latency = notification.getFinished() - notification.getStarted();
+            LOG.info("notification finished batch: {} of {} devices in " + latency + "ms", notification.getUuid(), totals);
             em.update(notification);
-        }
 //        Set<Notifier> notifiers = new HashSet<>(proxy.getNotifierMap().values()); // remove dups
 //        proxy.asyncCheckForInactiveDevices(notifiers);
+        }
     }
 }

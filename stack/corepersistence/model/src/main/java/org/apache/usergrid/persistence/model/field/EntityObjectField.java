@@ -32,4 +32,10 @@ public class EntityObjectField extends AbstractField<EntityObject> {
     public EntityObjectField() {
 
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+        return FieldTypeName.OBJECT;
+    }
 }

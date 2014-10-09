@@ -25,6 +25,9 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 
@@ -80,9 +83,9 @@ public class RollbackAction implements Action1<Throwable> {
                     if ( field.isUnique() ) {
 
                         UniqueValue toDelete =
-                                new UniqueValueImpl( scope, field, entity.get().getId(), mvccEntity.getVersion() );
+                                new UniqueValueImpl( field, entity.get().getId(), mvccEntity.getVersion() );
 
-                        MutationBatch deleteMb = uniqueValueStrat.delete( toDelete );
+                        MutationBatch deleteMb = uniqueValueStrat.delete(scope,  toDelete );
 
                         if ( rollbackMb == null ) {
                             rollbackMb = deleteMb;

@@ -28,6 +28,8 @@ import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyEn
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyIdentity;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyString;
 import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyTimeUuid;
+import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyVersion;
+
 
 /**
  * Validation Utilities for collection
@@ -42,6 +44,7 @@ public class MvccValidationUtils {
 
 
         Preconditions.checkNotNull( entity.getEntity().isPresent(), "Entity is required" );
+        verifyVersion( entity.getVersion() );
         verifyMvccEntityOptionalEntity( entity );
     }
 

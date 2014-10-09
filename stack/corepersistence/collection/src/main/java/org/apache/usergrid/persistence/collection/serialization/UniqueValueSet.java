@@ -1,4 +1,4 @@
-/*
+package org.apache.usergrid.persistence.collection.serialization;/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,24 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.mvcc.event;
-
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
 
 
 /**
- * @author: tnine
+ * A read only view of unique values
  */
-public interface PostProcessObserver {
-
+public interface UniqueValueSet extends Iterable<UniqueValue> {
 
     /**
-     * The entity was comitted by the MVCC system.  Post processing needs to occur
-     *
-     * @param scope The scope used in the write pipeline
-     * @param entity The entity used in the write pipeline
-     *
+     * Get the unique value for the field
+     * @param fieldName
+     * @return
      */
-    public void postCommit(CollectionScope scope,  MvccEntity entity );
+    public UniqueValue getValue(final String fieldName);
 }

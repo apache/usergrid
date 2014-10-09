@@ -143,6 +143,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Map<String, String> payloads = new HashMap<String, String>(1);
         payloads.put("foo", payload);
         app.put("payloads", payloads);
+        app.put("debug",true);
         app.put("queued", System.currentTimeMillis());
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
@@ -173,6 +174,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
@@ -218,6 +220,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
@@ -241,6 +244,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
                 .getEntity();
@@ -291,6 +295,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
                 .getEntity();
@@ -320,6 +325,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         app.clear();
         app.put("payloads", "{asdf}");
+        app.put("debug",true);
 
         try {
             app.testRequest(ServiceAction.POST, 1, "notifications");
@@ -363,6 +369,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         app.clear();
         app.put("payloads", payloads);
+        app.put("debug",true);
 
         try {
             app.testRequest(ServiceAction.POST, 1, "notifications");
@@ -401,6 +408,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
                 .getEntity();
@@ -457,6 +465,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
                 .getEntity();
@@ -493,6 +502,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         payloads.put(notifier.getUuid().toString(), payload);
         properties.put("payloads", payloads);
         properties.put("queued", System.currentTimeMillis());
+        properties.put("debug",true);
 
         Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
                 .getEntity();

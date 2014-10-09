@@ -43,4 +43,10 @@ public class ByteArrayField extends AbstractField<byte[]> {
     public Class getClassinfo() {
         return classinfo;
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+        return FieldTypeName.BYTE_ARRAY;
+    }
 }

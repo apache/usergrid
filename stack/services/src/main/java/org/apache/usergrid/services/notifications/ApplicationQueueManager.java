@@ -203,16 +203,12 @@ public class ApplicationQueueManager  {
                     });
             o.toBlocking().lastOrDefault(null);
             LOG.info("notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
-
-
         }
 
         // update queued time
         Map<String, Object> properties = new HashMap<String, Object>(2);
         properties.put("queued", notification.getQueued());
         properties.put("state", notification.getState());
-
-
         if(errorMessages.size()>0){
             if (notification.getErrorMessage() == null) {
                 notification.setErrorMessage("There was a problem delivering all of your notifications. See deliveryErrors in properties");
@@ -224,16 +220,16 @@ public class ApplicationQueueManager  {
         long now = System.currentTimeMillis();
 
 
-        LOG.info("notification {} updated notification duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
+        LOG.info("notification {} updated notification duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
 
         //do i have devices, and have i already started batching.
         if (deviceCount.get() <= 0) {
             TaskManager taskManager = new TaskManager(em, this, notification);
             //if i'm in a test value will be false, do not mark finished for test orchestration, not ideal need real tests
-            taskManager.finishedBatch(false,false);
+            taskManager.finishedBatch(false,true);
+        }else {
+            em.update(notification);
         }
-
-        em.update(notification);
 
         long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
         LOG.info("notification {} done queuing to {} devices in " + elapsed + " ms", notification.getUuid().toString(), deviceCount.get());

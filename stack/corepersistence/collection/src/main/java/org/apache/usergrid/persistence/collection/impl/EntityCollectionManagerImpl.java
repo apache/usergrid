@@ -19,16 +19,11 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.List;
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.event.EntityVersionCreated;
-import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
@@ -44,7 +39,6 @@ import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimist
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
 import org.apache.usergrid.persistence.collection.service.UUIDService;
-import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.core.task.TaskExecutor;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -65,7 +59,6 @@ import rx.schedulers.Schedulers;
  *
  * TODO: maybe refactor the stage operations into their own classes for clarity and organization?
  *
- * @author tnine
  */
 public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
@@ -138,7 +131,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         // create our observable and start the write
-        CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
+        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
         Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData,writeStart );
 
@@ -147,15 +140,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         // observable = Concurrent.concurrent( observable, Schedulers.io(), new WaitZip(), 
         //                  writeVerifyUnique, writeOptimisticVerify );
 
-        observable.doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
-            @Override
-            public void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
-                //Queue future write here (verify)
-            }
-        } ).map( writeCommit ).doOnNext( new Action1<Entity>() {
+        observable.map( writeCommit ).doOnNext( new Action1<Entity>() {
             @Override
             public void call( final Entity entity ) {
-                //fork background processing here (start)
+                //TODO fire a task here
 
                 //post-processing to come later. leave it empty for now.
             }
@@ -175,7 +163,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
         return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-                         .map( markStart ).map( markCommit );
+                         .map( markStart ).doOnNext( markCommit ).map( new Func1<CollectionIoEvent<MvccEntity>,
+                        Void>() {
+                    @Override
+                    public Void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+                        return null;
+                    }
+                } );
     }
 
 
@@ -217,7 +211,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                //we an update, signal the fix
 
-                //TODO T.N Change this to use request collapsing
+                //TODO T.N Change this to fire a task
                 Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
 
 
@@ -226,27 +220,29 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     }
 
     // fire the stages
-    public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData,WriteStart writeState ) {
+    public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData, WriteStart writeState ) {
 
-        return Observable.from( writeData ).map( writeState ).flatMap(
-                new Func1<CollectionIoEvent<MvccEntity>, Observable<CollectionIoEvent<MvccEntity>>>() {
+        return Observable.from( writeData ).map( writeState ).doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
 
                     @Override
-                    public Observable<CollectionIoEvent<MvccEntity>> call(
+                    public void call(
                             final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
 
                         Observable<CollectionIoEvent<MvccEntity>> unique =
                                 Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                          .flatMap( writeVerifyUnique );
+                                          .doOnNext( writeVerifyUnique );
 
 
                         // optimistic verification
                         Observable<CollectionIoEvent<MvccEntity>> optimistic =
                                 Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                          .map( writeOptimisticVerify );
+                                          .doOnNext( writeOptimisticVerify );
 
 
-                        return Observable.merge( unique, optimistic).last();
+                        //wait for both to finish
+                        Observable.merge( unique, optimistic ).toBlocking().last();
+
+
                     }
                 } );
     }

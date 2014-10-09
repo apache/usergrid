@@ -23,6 +23,8 @@ import java.nio.ByteBuffer;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.apache.usergrid.persistence.collection.serialization.impl.EntityVersion;
+import org.apache.usergrid.persistence.collection.serialization.impl.EntityVersionSerializer;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 

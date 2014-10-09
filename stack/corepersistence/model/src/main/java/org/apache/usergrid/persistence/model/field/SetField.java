@@ -47,4 +47,10 @@ public class SetField<T> extends AbstractField<Set<T>> {
     public void addEntry( T setItem ) {
         value.add( setItem );
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+                return FieldTypeName.SET;
+            }
 }
