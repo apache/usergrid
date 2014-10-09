@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.collection;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,7 +32,7 @@ import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyExc
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -432,21 +433,19 @@ public class EntityCollectionManagerIT {
 
         assertNotNull( entitySet );
 
-        assertEquals(multigetSize, entitySet.size());
-        assertFalse(entitySet.isEmpty());
+        assertEquals( multigetSize, entitySet.size() );
+        assertFalse( entitySet.isEmpty() );
 
         /**
          * Validate every element exists
          */
-        for(int i = 0; i < multigetSize; i ++){
+        for ( int i = 0; i < multigetSize; i++ ) {
             final Entity expected = writtenEntities.get( i );
 
             final MvccEntity returned = entitySet.getEntity( expected.getId() );
 
-            assertEquals("Same entity returned", expected, returned.getEntity().get());
+            assertEquals( "Same entity returned", expected, returned.getEntity().get() );
         }
-
-
     }
 
 
@@ -454,64 +453,61 @@ public class EntityCollectionManagerIT {
      * Perform a multiget where every entity will need repaired on load
      */
     @Test
-     public void writeMultigetRepair() {
+    public void writeMultigetRepair() {
 
-           final CollectionScope context =
-                   new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
-           final EntityCollectionManager manager = factory.createCollectionManager( context );
+        final CollectionScope context =
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+        final EntityCollectionManager manager = factory.createCollectionManager( context );
 
-           final int multigetSize = serializationFig.getMaxLoadSize();
+        final int multigetSize = serializationFig.getMaxLoadSize();
 
-           final List<Entity> writtenEntities = new ArrayList<>( multigetSize );
-           final List<Id> entityIds = new ArrayList<>( multigetSize );
+        final List<Entity> writtenEntities = new ArrayList<>( multigetSize );
+        final List<Id> entityIds = new ArrayList<>( multigetSize );
 
-           for ( int i = 0; i < multigetSize; i++ ) {
-               final Entity entity = new Entity( new SimpleId( "test" ) );
+        for ( int i = 0; i < multigetSize; i++ ) {
+            final Entity entity = new Entity( new SimpleId( "test" ) );
 
-               final Entity written = manager.write( entity ).toBlocking().last();
+            final Entity written = manager.write( entity ).toBlocking().last();
 
-               written.setField( new BooleanField( "updated", true ) );
+            written.setField( new BooleanField( "updated", true ) );
 
-               final Entity updated  = manager.update( written ).toBlocking().last();
+            final Entity updated = manager.update( written ).toBlocking().last();
 
-               writtenEntities.add( updated );
-               entityIds.add( updated.getId() );
-           }
-
-
-           final EntitySet entitySet = manager.load( entityIds ).toBlocking().lastOrDefault( null );
-
-           assertNotNull( entitySet );
-
-           assertEquals(multigetSize, entitySet.size());
-           assertFalse(entitySet.isEmpty());
-
-           /**
-            * Validate every element exists
-            */
-           for(int i = 0; i < multigetSize; i ++){
-               final Entity expected = writtenEntities.get( i );
-
-               final MvccEntity returned = entitySet.getEntity( expected.getId() );
-
-               assertEquals("Same entity returned", expected, returned.getEntity().get());
-
-               assertTrue( ( Boolean ) returned.getEntity().get().getField( "updated" ).getValue() );
-           }
+            writtenEntities.add( updated );
+            entityIds.add( updated.getId() );
+        }
 
 
-       }
+        final EntitySet entitySet = manager.load( entityIds ).toBlocking().lastOrDefault( null );
+
+        assertNotNull( entitySet );
+
+        assertEquals( multigetSize, entitySet.size() );
+        assertFalse( entitySet.isEmpty() );
+
+        /**
+         * Validate every element exists
+         */
+        for ( int i = 0; i < multigetSize; i++ ) {
+            final Entity expected = writtenEntities.get( i );
+
+            final MvccEntity returned = entitySet.getEntity( expected.getId() );
+
+            assertEquals( "Same entity returned", expected, returned.getEntity().get() );
+
+            assertTrue( ( Boolean ) returned.getEntity().get().getField( "updated" ).getValue() );
+        }
+    }
 
 
-
-    @Test(expected = IllegalArgumentException.class)
+    @Test( expected = IllegalArgumentException.class )
     public void readTooLarge() {
 
         final CollectionScope context =
                 new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        final int multigetSize = serializationFig.getMaxLoadSize() +1;
+        final int multigetSize = serializationFig.getMaxLoadSize() + 1;
 
 
         final List<Id> entityIds = new ArrayList<>( multigetSize );
@@ -524,25 +520,47 @@ public class EntityCollectionManagerIT {
 
         //should throw an exception
         manager.load( entityIds ).toBlocking().lastOrDefault( null );
-
-
-
     }
+
+
     @Test
     public void testGetVersion() {
 
-        CollectionScope context = new CollectionScopeImpl(
-                new SimpleId( "organization" ),  new SimpleId( "test" ), "test" );
+        CollectionScope context =
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
 
-        Entity newEntity = new Entity( new SimpleId( "test" ) );
-        EntityCollectionManager manager = factory.createCollectionManager( context );
-        Observable<Entity> observable = manager.write( newEntity );
-        Entity created = observable.toBlocking().lastOrDefault( null );
 
-        assertNotNull("Id was assigned", created.getId() );
-        assertNotNull("Version was assigned", created.getVersion() );
+        final EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        assertTrue(UUIDComparator.staticCompare(created.getVersion(), 
-            manager.getLatestVersion( created.getId() ).toBlocking().lastOrDefault(null)) == 0);
+        final Entity newEntity = new Entity( new SimpleId( "test" ) );
+
+        Entity created1 = manager.write( newEntity ).toBlocking().lastOrDefault( null );
+
+        assertNotNull( "Id was assigned", created1.getId() );
+        assertNotNull( "Version was assigned", created1.getVersion() );
+
+        Entity secondEntity = new Entity( new SimpleId( "test" ) );
+
+        Entity created2 = manager.write( secondEntity ).toBlocking().lastOrDefault( null );
+
+        assertNotNull( "Id was assigned", created2.getId() );
+        assertNotNull( "Version was assigned", created2.getVersion() );
+
+
+        VersionSet results =
+                manager.getLatestVersion( Arrays.asList( created1.getId(), created2.getId() ) ).toBlocking().last();
+
+
+        final MvccLogEntry version1Log = results.getMaxVersion( created1.getId() );
+        assertEquals( created1.getId(), version1Log.getEntityId() );
+        assertEquals( created1.getVersion(), version1Log.getVersion() );
+        assertEquals( MvccLogEntry.State.COMPLETE, version1Log.getState() );
+        assertEquals( Stage.COMMITTED, version1Log.getStage() );
+
+        final MvccLogEntry version2Log = results.getMaxVersion( created2.getId() );
+        assertEquals( created2.getId(), version2Log.getEntityId() );
+        assertEquals( created2.getVersion(), version2Log.getVersion() );
+        assertEquals( MvccLogEntry.State.COMPLETE, version2Log.getState() );
+        assertEquals( Stage.COMMITTED, version2Log.getStage() );
     }
 }

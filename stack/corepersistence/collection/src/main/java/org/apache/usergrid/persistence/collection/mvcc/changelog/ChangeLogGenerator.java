@@ -19,11 +19,8 @@ package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 
 /**
  * This change log generator takes one or more entity versions and generates the change-log. 

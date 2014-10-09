@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.mvcc.entity;
+package org.apache.usergrid.persistence.collection;
 
 
 import org.apache.usergrid.persistence.core.entity.EntityVersion;

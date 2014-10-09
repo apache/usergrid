@@ -19,7 +19,7 @@ package org.apache.usergrid.persistence.collection.serialization;/*
 
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 
 
 /**

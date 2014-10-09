@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.collection.impl;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,17 +30,18 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntitySet;
+import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.persistence.collection.guice.CollectionTaskExecutor;
 import org.apache.usergrid.persistence.collection.guice.Write;
 import org.apache.usergrid.persistence.collection.guice.WriteUpdate;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
-import org.apache.usergrid.persistence.collection.mvcc.stage.load.Load;
-import org.apache.usergrid.persistence.collection.mvcc.stage.load.GetVersion;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
@@ -54,7 +57,6 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import java.util.UUID;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -66,7 +68,6 @@ import rx.schedulers.Schedulers;
  * Simple implementation.  Should perform  writes, delete and load.
  *
  * TODO: maybe refactor the stage operations into their own classes for clarity and organization?
- *
  */
 public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
@@ -83,7 +84,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final WriteOptimisticVerify writeOptimisticVerify;
     private final WriteCommit writeCommit;
     private final RollbackAction rollback;
-    private final GetVersion getVersion;
 
 
     //delete stages
@@ -92,7 +92,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     private final TaskExecutor taskExecutor;
 
+    private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
     private final MvccEntitySerializationStrategy entitySerializationStrategy;
+
 
     @Inject
     public EntityCollectionManagerImpl( final UUIDService uuidService, @Write final WriteStart writeStart,
@@ -103,8 +105,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                                         final MarkStart markStart, final MarkCommit markCommit,
                                         final MvccEntitySerializationStrategy entitySerializationStrategy,
                                         @CollectionTaskExecutor final TaskExecutor taskExecutor,
-                                        @Assisted final CollectionScope collectionScope
-                                         ) {
+                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+                                        @Assisted final CollectionScope collectionScope ) {
 
 
         Preconditions.checkNotNull( uuidService, "uuidService must be defined" );
@@ -118,14 +120,15 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.writeCommit = writeCommit;
         this.rollback = rollback;
 
-        this.load = load;
+
         this.markStart = markStart;
         this.markCommit = markCommit;
-        this.getVersion = getVersion;
 
         this.uuidService = uuidService;
         this.collectionScope = collectionScope;
         this.taskExecutor = taskExecutor;
+        this.entitySerializationStrategy = entitySerializationStrategy;
+        this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
     }
 
 
@@ -133,8 +136,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<Entity> write( final Entity entity ) {
 
         //do our input validation
-        Preconditions.checkNotNull( entity, 
-            "Entity is required in the new stage of the mvcc write" );
+        Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
 
         final Id entityId = entity.getId();
 
@@ -144,7 +146,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         // create our observable and start the write
         final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
-        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData,writeStart );
+        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeStart );
 
         // execute all validation stages concurrently.  Needs refactored when this is done.  
         // https://github.com/Netflix/RxJava/issues/627
@@ -173,14 +175,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
-        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) )
-                         .map( markStart ).doOnNext( markCommit ).map( new Func1<CollectionIoEvent<MvccEntity>,
-                        Void>() {
-                    @Override
-                    public Void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
-                        return null;
-                    }
-                } );
+        return Observable.from( new CollectionIoEvent<Id>( collectionScope, entityId ) ).map( markStart )
+                         .doOnNext( markCommit ).map( new Func1<CollectionIoEvent<MvccEntity>, Void>() {
+                            @Override
+                            public Void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+                                return null;
+                            }
+                        } );
     }
 
 
@@ -191,12 +192,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id uuid required in load stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity id type required in load stage" );
 
-        return load( Collections.singleton(entityId) ).map( new Func1<EntitySet, Entity>() {
+        return load( Collections.singleton( entityId ) ).map( new Func1<EntitySet, Entity>() {
             @Override
             public Entity call( final EntitySet entitySet ) {
                 final MvccEntity entity = entitySet.getEntity( entityId );
 
-                if(entity == null){
+                if ( entity == null ) {
                     return null;
                 }
 
@@ -211,8 +212,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         Preconditions.checkNotNull( entityIds, "entityIds cannot be null" );
 
-        final EntitySet
-                results = entitySerializationStrategy.load( collectionScope, entityIds, UUIDGenerator.newTimeUUID() );
+        final EntitySet results =
+                entitySerializationStrategy.load( collectionScope, entityIds, UUIDGenerator.newTimeUUID() );
 
         return Observable.just( results );
     }
@@ -235,7 +236,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( collectionScope, entity );
 
 
-        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData,writeUpdate );
+        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeUpdate );
 
 
         return observable.map( writeCommit ).doOnNext( new Action1<Entity>() {
@@ -243,49 +244,53 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
             public void call( final Entity entity ) {
                 log.debug( "sending entity to the queue" );
 
-               //we an update, signal the fix
+                //we an update, signal the fix
 
                 //TODO T.N Change this to fire a task
-//                Observable.from( new CollectionIoEvent<Id>(collectionScope, entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
+                //                Observable.from( new CollectionIoEvent<Id>(collectionScope,
+                // entityId ) ).map( load ).subscribeOn( Schedulers.io() ).subscribe();
 
 
             }
         } ).doOnError( rollback );
     }
 
+
     // fire the stages
-    public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData, WriteStart writeState ) {
+    public Observable<CollectionIoEvent<MvccEntity>> stageRunner( CollectionIoEvent<Entity> writeData,
+                                                                  WriteStart writeState ) {
 
         return Observable.from( writeData ).map( writeState ).doOnNext( new Action1<CollectionIoEvent<MvccEntity>>() {
 
-                    @Override
-                    public void call(
-                            final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
+            @Override
+            public void call( final CollectionIoEvent<MvccEntity> mvccEntityCollectionIoEvent ) {
 
-                        Observable<CollectionIoEvent<MvccEntity>> unique =
-                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                          .doOnNext( writeVerifyUnique );
-
-
-                        // optimistic verification
-                        Observable<CollectionIoEvent<MvccEntity>> optimistic =
-                                Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
-                                          .doOnNext( writeOptimisticVerify );
+                Observable<CollectionIoEvent<MvccEntity>> unique =
+                        Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                  .doOnNext( writeVerifyUnique );
 
 
-                        //wait for both to finish
-                        Observable.merge( unique, optimistic ).toBlocking().last();
+                // optimistic verification
+                Observable<CollectionIoEvent<MvccEntity>> optimistic =
+                        Observable.from( mvccEntityCollectionIoEvent ).subscribeOn( Schedulers.io() )
+                                  .doOnNext( writeOptimisticVerify );
 
 
-                    }
-                } );
+                //wait for both to finish
+                Observable.merge( unique, optimistic ).toBlocking().last();
+            }
+        } );
     }
 
 
     @Override
-    public Observable<UUID> getLatestVersion(Id entityId) {
-        return Observable.from( 
-                new CollectionIoEvent<Id>( collectionScope, entityId ) ).map(getVersion);
-    }
+    public Observable<VersionSet> getLatestVersion(
+            Collection<Id> entityIds ) {
 
+        VersionSet logEntries = mvccLogEntrySerializationStrategy.load( collectionScope, entityIds,
+                UUIDGenerator.newTimeUUID() );
+
+
+        return Observable.just(logEntries);
+    }
 }

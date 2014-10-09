@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,7 +34,7 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.core.cassandra.ITRunner;
@@ -74,7 +75,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
 
 
-        final SimpleId id = new SimpleId( "test" );
+        final Id id = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
 
         for ( Stage stage : Stage.values() ) {
@@ -83,7 +84,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
             //Read it back
 
-            MvccLogEntry returned = logEntryStrategy.load( context, id, version );
+            MvccLogEntry returned = logEntryStrategy.load( context, Collections.singleton(id), version ).getMaxVersion( id );
 
             assertNotNull( "Returned value should not be null", returned );
 
@@ -103,11 +104,11 @@ public class MvccLogEntrySerializationStrategyImplTest {
         CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
 
 
-        final SimpleId id = new SimpleId( "test" );
+        final Id id = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
 
 
-        MvccLogEntry returned = logEntryStrategy.load( context, id, version );
+        MvccLogEntry returned = logEntryStrategy.load( context, Collections.singleton(id), version ).getMaxVersion( id );
 
         assertNull( "Returned value should not exist", returned );
     }
@@ -124,7 +125,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
         CollectionScope context = new CollectionScopeImpl(organizationId, applicationId, name );
 
 
-        final SimpleId id = new SimpleId( "test" );
+        final Id id = new SimpleId( "test" );
 
         int count = 10;
 
@@ -141,7 +142,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
             //Read it back
 
-            MvccLogEntry returned = logEntryStrategy.load( context, id, versions[i] );
+            MvccLogEntry returned = logEntryStrategy.load( context, Collections.singleton(id), versions[i] ).getMaxVersion( id );
 
             assertNotNull( "Returned value should not be null", returned );
 
@@ -210,7 +211,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
     @Test(expected = NullPointerException.class)
     public void loadParamContext() throws ConnectionException {
-        logEntryStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID() );
+        logEntryStrategy.load( null, Collections.<Id>emptyList(), UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -227,7 +228,7 @@ public class MvccLogEntrySerializationStrategyImplTest {
 
         logEntryStrategy
                 .load( new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" ),
-                        new SimpleId( "test" ), null );
+                        Collections.<Id>singleton( new SimpleId( "test" )), null );
     }
 
 
