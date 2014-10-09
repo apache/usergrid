@@ -224,6 +224,9 @@ public class FilteringLoader implements ResultsLoader {
         }
 
 
+        //execute the cleanup
+        indexBatch.execute();
+
         return resultsLoader.getResults(sortedResults.values());
     }
 
