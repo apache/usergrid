@@ -130,7 +130,7 @@ public class EntityVerifier implements ResultsVerifier {
         for ( final Id id : ids ) {
             final org.apache.usergrid.persistence.model.entity.Entity cpEntity = entityMapping.get( id );
 
-            Entity entity = EntityFactory.newEntity( id.getUuid(), id.toString() );
+            Entity entity = EntityFactory.newEntity( id.getUuid(), id.getType() );
 
             Map<String, Object> entityMap = CpEntityMapUtils.toMap( cpEntity );
             entity.addProperties( entityMap );
