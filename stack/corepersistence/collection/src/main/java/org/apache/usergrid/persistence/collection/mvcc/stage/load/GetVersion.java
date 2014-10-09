@@ -61,7 +61,7 @@ public class GetVersion implements Func1<CollectionIoEvent<Id>, UUID> {
         final UUID latestVersion;
         try {
             List<MvccLogEntry> logEntries = logStrat.load( cs, id, UUIDGenerator.newTimeUUID(), 1 );
-            latestVersion = logEntries.get(0).getVersion();
+            latestVersion = logEntries.size()>0 ? logEntries.get(0).getVersion():null;
 
         } catch (ConnectionException ex) {
             throw new RuntimeException("Unable to get latest version of entity " +
