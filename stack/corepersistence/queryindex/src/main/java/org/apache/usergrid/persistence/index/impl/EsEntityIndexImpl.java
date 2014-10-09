@@ -17,7 +17,6 @@
  */
 package org.apache.usergrid.persistence.index.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -57,16 +56,15 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import java.io.IOException;
 
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ANALYZED_STRING_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.BOOLEAN_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.DOC_ID_SEPARATOR_SPLITTER;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.ENTITYID_FIELDNAME;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.GEO_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.NUMBER_PREFIX;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.STRING_PREFIX;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createCollectionScopeTypeName;
-import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexName;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
+import org.elasticsearch.common.xcontent.XContentFactory;
 
 
 /**
@@ -91,20 +89,18 @@ public class EsEntityIndexImpl implements EntityIndex {
     private final IndexFig config;
 
     @Inject
-    public EsEntityIndexImpl(@Assisted final ApplicationScope applicationScope, 
+    public EsEntityIndexImpl(@Assisted final ApplicationScope appScope, 
             final IndexFig config, final EsProvider provider) {
 
-        ValidationUtils.validateApplicationScope(applicationScope);
+        ValidationUtils.validateApplicationScope(appScope);
 
         try {
-            this.applicationScope = applicationScope;
-
+            this.applicationScope = appScope;
             this.client = provider.getClient();
-
-            this.indexName = createIndexName(config.getIndexPrefix(), applicationScope);
-            this.cursorTimeout = config.getQueryCursorTimeout();
-
             this.config = config;
+            this.cursorTimeout = config.getQueryCursorTimeout();
+            this.indexName = IndexingUtils.createIndexName(config.getIndexPrefix(), appScope);
+
         } catch (Exception e) {
             log.error("Error setting up index", e);
             throw e;
@@ -112,18 +108,34 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         AdminClient admin = client.admin();
         try {
-            CreateIndexResponse r = admin.indices().prepareCreate(indexName).execute().actionGet();
-            log.debug("Created new Index Name [{}] ACK=[{}]", indexName, r.isAcknowledged());
+            CreateIndexResponse cir = admin.indices().prepareCreate(indexName).execute().actionGet();
+            log.debug("Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged());
 
             client.admin().indices().prepareRefresh(indexName).execute().actionGet();
+
+            XContentBuilder xcb = IndexingUtils.createDoubleStringIndexMapping( 
+                XContentFactory.jsonBuilder(), "_default_");
+
+            PutIndexTemplateResponse pitr = client.admin().indices()
+                .preparePutTemplate("usergrid_template")
+                .setTemplate(config.getIndexPrefix() + "*")
+                .addMapping("_default_", xcb)
+                .execute()
+                .actionGet();
+
+            log.debug("Create Mapping for new Index Name [{}] ACK=[{}]", 
+                    indexName, pitr.isAcknowledged());
 
             try {
                 // TODO: figure out what refresh above is not enough to ensure index is ready
                 Thread.sleep(500);
-            } catch (InterruptedException ex) {
-            }
-        } catch (IndexAlreadyExistsException ignored) {
-            // expected
+            } catch (InterruptedException ex) {}
+
+        } catch (IndexAlreadyExistsException expected) {
+            // this is expected to happen if index already exists
+
+        } catch ( IOException ioe ) {
+            throw new RuntimeException("Error setting up index", ioe);
         }
     }
 
@@ -135,7 +147,7 @@ public class EsEntityIndexImpl implements EntityIndex {
     @Override
     public CandidateResults search(final IndexScope indexScope, final Query query) {
 
-        final String indexType = createCollectionScopeTypeName(indexScope);
+        final String indexType = IndexingUtils.createCollectionScopeTypeName(indexScope);
 
         QueryBuilder qb = query.createQueryBuilder();
 
@@ -203,7 +215,8 @@ public class EsEntityIndexImpl implements EntityIndex {
             }
             log.debug("Executing query with cursor: {} ", scrollId);
 
-            SearchScrollRequestBuilder ssrb = client.prepareSearchScroll(scrollId).setScroll(cursorTimeout + "m");
+            SearchScrollRequestBuilder ssrb = 
+                    client.prepareSearchScroll(scrollId).setScroll(cursorTimeout + "m");
             searchResponse = ssrb.execute().actionGet();
         }
 
@@ -232,70 +245,6 @@ public class EsEntityIndexImpl implements EntityIndex {
         }
 
         return candidateResults;
-    }
-
-    /**
-     * Build mappings for data to be indexed. Setup String fields as not_analyzed and analyzed,
-     * where the analyzed field is named {name}_ug_analyzed
-     *
-     * @param builder Add JSON object to this builder.
-     * @param type ElasticSearch type of entity.
-     *
-     * @return Content builder with JSON for mapping.
-     *
-     * @throws java.io.IOException On JSON generation error.
-     */
-    public static XContentBuilder createDoubleStringIndexMapping( XContentBuilder builder, String type )
-            throws IOException {
-
-        builder = builder
-
-            .startObject()
-
-                .startObject( type )
-
-                    .startArray( "dynamic_templates" )
-
-                        // any string with field name that starts with sa_ gets analyzed
-                        .startObject()
-                            .startObject( "template_1" )
-                                .field( "match", ANALYZED_STRING_PREFIX + "*" )
-                                .field( "match_mapping_type", "string" )
-                                .startObject( "mapping" ).field( "type", "string" )
-                                    .field( "index", "analyzed" )
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                            // all other strings are not analyzed
-                        .startObject()
-                            .startObject( "template_2" )
-                                .field( "match", "*" )
-                                .field( "match_mapping_type", "string" )
-                                .startObject( "mapping" )
-                                    .field( "type", "string" )
-                                    .field( "index", "not_analyzed" )
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                        // fields names starting with go_ get geo-indexed
-                        .startObject()
-                            .startObject( "template_3" )
-                                .field( "match", GEO_PREFIX + "location" )
-                                .startObject( "mapping" )
-                                    .field( "type", "geo_point" )
-                                .endObject()
-                            .endObject()
-                        .endObject()
-
-                    .endArray()
-
-                .endObject()
-
-            .endObject();
-
-        return builder;
     }
 
     public void refresh() {
