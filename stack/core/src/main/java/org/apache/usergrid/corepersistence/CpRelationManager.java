@@ -1551,7 +1551,11 @@ public class CpRelationManager implements RelationManager {
      */
     private Results buildResults(Query query, CandidateResults crs, String collName ) {
 
+
         logger.debug("buildResults() for {} from {} candidates", collName, crs.size());
+
+
+        //TODO T.N Change to results loader here
 
         Results results = null;
 
@@ -1574,7 +1578,7 @@ public class CpRelationManager implements RelationManager {
 
             EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
 
-            UUID latestVersion = ecm.getLatestVersion( cr.getId() ).toBlocking().lastOrDefault(null);
+            UUID latestVersion = ecm.getLatestVersion( Collections.singleton( cr.getId()) ).toBlocking().last().getMaxVersion( cr.getId() ).getVersion();
 
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Getting version for entity {} from scope\n   app {}\n   owner {}\n   name {}", 
