@@ -30,9 +30,14 @@ import org.apache.usergrid.persistence.index.query.CandidateResults;
 public interface ResultsLoader {
 
     /**
-     * Using the candidate results, get the results
+     * Using the candidate results, load our results.  Should filter stale results
      * @param  crs The candidate result set
-     * @return
+     * @return Results.  Null safe, but may be empty
      */
-    public Results getResults( final CandidateResults crs);
+    public Results loadResults( final CandidateResults crs);
+
+    /**
+     * Post process the load operation
+     */
+    public void postProcess();
 }

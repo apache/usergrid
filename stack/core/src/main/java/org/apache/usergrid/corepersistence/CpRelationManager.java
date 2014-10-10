@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.results.ResultsLoader;
 import org.apache.usergrid.corepersistence.results.ResultsLoaderFactory;
 import org.apache.usergrid.corepersistence.results.ResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
@@ -1553,8 +1554,17 @@ public class CpRelationManager implements RelationManager {
 
         logger.debug("buildResults() for {} from {} candidates", collName, crs.size());
 
-        final Results results = this.resultsLoaderFactory.getLoader( 
-                applicationScope, this.headEntity, query.getResultsLevel() ).getResults( crs );
+        //get an instance of our results loader
+        final ResultsLoader resultsLoader = this.resultsLoaderFactory.getLoader( applicationScope, this.headEntity,
+                query.getResultsLevel() );
+
+        //load the results
+        final Results results = resultsLoader.loadResults( crs );
+
+        //signal for post processing
+        resultsLoader.postProcess();
+
+
 
         results.setCursor( crs.getCursor() );
         results.setQueryProcessor( new CpQueryProcessor(em, query, headEntity, collName) );
