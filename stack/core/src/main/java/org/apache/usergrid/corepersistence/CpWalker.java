@@ -90,6 +90,11 @@ public class CpWalker {
                         applicationScope.getApplication().getUuid()
                 });
 
+
+                Observable<String> edgeTypes = gm.getEdgeTypesFromSource( new SimpleSearchEdgeType(fromEntityId, CpNamingUtils.EDGE_COLL_SUFFIX, null ));
+
+
+
                 Observable<Edge> edges = gm.loadEdgesFromSource( new SimpleSearchByEdgeType( 
                         fromEntityId, edgeType, Long.MAX_VALUE, 
                         SearchByEdgeType.Order.DESCENDING, null ));
