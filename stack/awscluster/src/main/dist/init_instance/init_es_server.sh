@@ -52,16 +52,9 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 
 
-# Install and stop Cassandra 
+# Install and start ElasticSearch
 cd /usr/share/usergrid/init_instance
-./install_cassandra.sh
-
-cd /usr/share/usergrid/init_instance
-./install_opscenter_agent.sh
-
-# Use the CQL to crate the keyspaces
-cd /usr/share/usergrid/init_instance
-./create_keyspaces.sh
+./install_elasticsearch.sh
 
 # tag last so we can see in the console that the script ran to completion
 cd /usr/share/usergrid/scripts
