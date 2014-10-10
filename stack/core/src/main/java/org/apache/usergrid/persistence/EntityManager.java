@@ -688,4 +688,9 @@ public interface EntityManager {
 
     /** For testing purposes */
     public void flushManagerCaches();
+
+    public void repersistApplication( 
+            final UUID appId, final EntityManagerFactory.ProgressObserver po ) throws Exception;
+
+    public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception;
 }

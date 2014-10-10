@@ -560,16 +560,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
        
         // system app
 
-        managerCache.getEntityIndex( new ApplicationScopeImpl( new SimpleId( SYSTEM_APP_ID, "application" ) ) )
-                    .refresh();
+        managerCache.getEntityIndex( new ApplicationScopeImpl( 
+                new SimpleId( SYSTEM_APP_ID, "application" ) ) ).refresh();
 
         // default app
-        managerCache.getEntityIndex( new ApplicationScopeImpl( new SimpleId( getManagementAppId(), "application" ) ) )
-                    .refresh();
+        managerCache.getEntityIndex( new ApplicationScopeImpl( 
+                new SimpleId( getManagementAppId(), "application" ) ) ).refresh();
 
         // management app
-        managerCache.getEntityIndex( new ApplicationScopeImpl( new SimpleId( getDefaultAppId(), "application" ) ) )
-                    .refresh();
+        managerCache.getEntityIndex( new ApplicationScopeImpl( 
+                new SimpleId( getDefaultAppId(), "application" ) ) ).refresh();
     }
 
 
@@ -590,7 +590,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
    
 
     @Override
-    public void rebuildInternalIndexes(ProgressObserver po) throws Exception {
+    public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
         rebuildApplicationIndexes(SYSTEM_APP_ID, po);
     }
 
@@ -620,6 +620,27 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po ) {
         throw new UnsupportedOperationException( "Not supported yet." );
+    }
+
+    @Override
+    public void repersistApplication( UUID appId, ProgressObserver po ) throws Exception {
+        EntityManager em = getEntityManager( appId );
+        em.repersistApplication( appId, po );
+    }
+
+    @Override
+    public void repersistAll( ProgressObserver po ) throws Exception {
+
+        logger.info("\n\nRepersisting all Entities\n");
+
+        Map<String, UUID> appMap = getApplications();
+
+        logger.info("About to repersist entities for {} applications", appMap.keySet().size());
+
+        for ( UUID appUuid : appMap.values() ) {
+            repersistApplication( appUuid, po );
+        }
+
     }
 
 }
