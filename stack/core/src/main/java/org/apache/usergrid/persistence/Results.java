@@ -475,7 +475,11 @@ public class Results implements Iterable<Entity> {
         }
         UUID u = getId();
         if ( u != null ) {
-            return ref( u );
+            String type= null;
+            if(refs!=null && refs.size()>0){
+                type = refs.get(0).getType();
+            }
+            return ref( type,u );
         }
         return null;
     }
