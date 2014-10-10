@@ -2,7 +2,7 @@
 check=`grep "DnumUsers" gatling/bin/gatling.sh`
 if [[ $check == "" ]]
 then 
-sed -i.bak 's/JAVA_OPTS="/JAVA_OPTS="-DnumUsers=${GATLING_NUMUSERS} -DrampTime=${GATLING_RAMPTIME} -Dduration=${GATLING_DURATION} -DnumEntities=${GATLING_NUMENTITIES} -Dbaseurl=${GATLING_BASE_URL} -Dorg=${GATLING_ORG} -Dapp=${GATLING_APP} -Dnotifier=${GATLING_NOTIFIER} -Dprovider=${GATLING_PPROVIDER} /g' gatling/bin/gatling.sh
+sed -i.bak 's/JAVA_OPTS="/JAVA_OPTS="-Dthrottle=${GATLING_THROTTLE} -DnumUsers=${GATLING_NUMUSERS} -DrampTime=${GATLING_RAMPTIME} -Dduration=${GATLING_DURATION} -DnumEntities=${GATLING_NUMENTITIES} -Dbaseurl=${GATLING_BASE_URL} -Dorg=${GATLING_ORG} -Dapp=${GATLING_APP} -Dnotifier=${GATLING_NOTIFIER} -Dprovider=${GATLING_PROVIDER} /g' gatling/bin/gatling.sh
 fi
 GATLING_NUMUSERS=5000
 GATLING_RAMPTIME=300

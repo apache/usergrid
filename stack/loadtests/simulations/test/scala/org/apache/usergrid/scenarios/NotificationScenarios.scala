@@ -39,6 +39,11 @@ object NotificationScenarios {
       .check(status.is(200))
     )
 
+  val sendNotificationToUser= exec(http("Send Notification to All Devices")
+    .post("/users/${user}/notifications")
+    .body(StringBody("{\"payloads\":{\"${notifier}\":\"testmessage\"}}"))
+    .check(status.is(200))
+  )
 
   /**
    * TODO: Add posting to users, which would expect a user in the session
