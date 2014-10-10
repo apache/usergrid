@@ -123,9 +123,9 @@ public class FilteringLoader implements ResultsLoader {
 
             //if we've already seen this one, put which ever is greater
 
-            final CandidateResult seen = idResultMapping.get( entityId );
+            final CandidateResult previousMax = idResultMapping.get( entityId );
 
-            if ( seen == null ) {
+            if ( previousMax == null ) {
                 idResultMapping.put( entityId, cr );
                 orderIndex.put( entityId, i );
                 groupedByScopes.put( collectionType, cr );
@@ -133,19 +133,21 @@ public class FilteringLoader implements ResultsLoader {
 
             //we have seen it, compare them
             else {
-                final UUID seenVersion = seen.getVersion();
+
+                final UUID previousMaxVersion = previousMax.getVersion();
+
                 final UUID currentVersion = cr.getVersion();
 
                 //this is a newer version, we know we already have a stale entity, add it to be cleaned up
-                if ( UUIDComparator.staticCompare( currentVersion, seenVersion ) > 0 ) {
+                if ( UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ) {
 
                     //de-index it
                     logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", new Object[] {
-                            entityId.getUuid(), entityId.getType(), seen, currentVersion
+                            entityId.getUuid(), entityId.getType(), previousMax, currentVersion
                     } );
 
                     //deindex
-                    deIndex( indexBatch, ownerId, cr );
+                    deIndex( indexBatch, ownerId, previousMax );
 
 
                     //TODO, fire the entity repair cleanup task here instead of de-indexing

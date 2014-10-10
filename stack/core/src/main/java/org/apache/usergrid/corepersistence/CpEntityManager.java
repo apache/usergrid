@@ -810,12 +810,12 @@ public class CpEntityManager implements EntityManager {
 
         String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
 
-        Map<String, EntityRef> results = new HashMap<String, EntityRef>();
+        Map<String, EntityRef> results = new HashMap<>();
 
         for ( String alias : aliases ) {
 
             Iterable<EntityRef> refs = 
-                    getEntityRefsForUniqueProperty( ownerRef, collName, propertyName, alias );
+                    getEntityRefsForUniqueProperty( collName, propertyName, alias );
 
             for ( EntityRef ref : refs ) {
                 results.put( alias, ref );
@@ -826,25 +826,18 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    private Iterable<EntityRef> getEntityRefsForUniqueProperty( 
-            EntityRef ownerRef, String collName, String propName, String alias ) throws Exception {
+    private Iterable<EntityRef> getEntityRefsForUniqueProperty( String collName, String propName,
+                                                                String alias ) throws Exception {
 
 
-        final CollectionScope collectionScope = new CollectionScopeImpl(
-                applicationScope.getApplication(),
-                new SimpleId(ownerRef.getUuid(), ownerRef.getType()),
-                collName );
+        final Id id = getIdForUniqueEntityField( collName, propName, alias );
 
-
-        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
-
-        final Id results = ecm.getIdField( new StringField(propName, alias) ).toBlocking().lastOrDefault( null );
-
-        if(results == null){
+        if ( id == null ) {
             return Collections.emptyList();
         }
 
-        return Collections.<EntityRef>singleton( new SimpleEntityRef( results.getType(),  results.getUuid() ));
+
+        return Collections.<EntityRef>singleton( new SimpleEntityRef( id.getType(), id.getUuid() ) );
     }
 
 
@@ -2198,12 +2191,29 @@ public class CpEntityManager implements EntityManager {
             String entityType, String propertyName, Object propertyValue )
             throws Exception {
 
-        Results results= this.searchCollection(
-                getApplication(), 
-                Schema.defaultCollectionName( entityType), 
-                Query.searchForProperty(propertyName, propertyValue));
 
-        return results.isEmpty();
+
+        return getIdForUniqueEntityField( entityType, propertyName, propertyValue ) == null;
+    }
+
+
+    /**
+     * Load the unique property for the field
+     */
+    private Id getIdForUniqueEntityField( final String collectionName, final String propertyName,
+                                          final Object propertyValue ) {
+        CollectionScope collectionScope =
+                new CollectionScopeImpl( applicationScope.getApplication(), applicationScope.getApplication(),
+                        CpNamingUtils.getCollectionScopeNameFromEntityType( collectionName ) );
+
+
+        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+
+        //convert to a string, that's what we store
+        final Id results = ecm.getIdField( new StringField( propertyName, propertyValue.toString() ) ).toBlocking()
+                              .lastOrDefault( null );
+
+        return results;
     }
 
 
