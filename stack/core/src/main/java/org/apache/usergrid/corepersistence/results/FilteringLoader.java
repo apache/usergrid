@@ -84,13 +84,13 @@ public class FilteringLoader implements ResultsLoader {
     private final ApplicationScope applicationScope;
 
 
-     protected FilteringLoader( final CpManagerCache managerCache, final ResultsVerifier resultsLoader,
-                                final EntityRef ownerId, final ApplicationScope applicationScope ) {
-         this.managerCache = managerCache;
-         this.resultsLoader = resultsLoader;
-         this.ownerId = new SimpleId( ownerId.getUuid(), ownerId.getType());
-         this.applicationScope = applicationScope;
-     }
+    protected FilteringLoader( final CpManagerCache managerCache, final ResultsVerifier resultsLoader,
+                               final EntityRef ownerId, final ApplicationScope applicationScope ) {
+        this.managerCache = managerCache;
+        this.resultsLoader = resultsLoader;
+        this.ownerId = new SimpleId( ownerId.getUuid(), ownerId.getType() );
+        this.applicationScope = applicationScope;
+    }
 
 
     @Override
@@ -101,10 +101,21 @@ public class FilteringLoader implements ResultsLoader {
 
         final EntityIndexBatch indexBatch = index.createBatch();
 
+        /**
+         * For each entity, holds the index it appears in our candidates for keeping ordering correct
+         */
         final Map<Id, Integer> orderIndex = new HashMap<>( crs.size() );
 
-        final Map<Id, CandidateResult> idResultMapping = new HashMap<>( crs.size() );
+        /**
+         * Maps the entity ids to our candidates
+         */
+        final Map<Id, CandidateResult> maxCandidateMapping = new HashMap<>( crs.size() );
 
+        /**
+         * Groups all candidate results by types.  When search connections there will be multiple types,
+         * so we want to batch
+         * fetch them more efficiently
+         */
         final HashMultimap<String, CandidateResult> groupedByScopes = HashMultimap.create( crs.size(), crs.size() );
 
         final Iterator<CandidateResult> iter = crs.iterator();
@@ -115,48 +126,48 @@ public class FilteringLoader implements ResultsLoader {
          */
         for ( int i = 0; iter.hasNext(); i++ ) {
 
-            final CandidateResult cr = iter.next();
+            final CandidateResult currentCandidate = iter.next();
 
-            final String collectionType = CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() );
+            final String collectionType = CpNamingUtils.getCollectionScopeNameFromEntityType( currentCandidate.getId().getType() );
 
-            final Id entityId = cr.getId();
+            final Id entityId = currentCandidate.getId();
 
-            //if we've already seen this one, put which ever is greater
+            //check if we've seen this candidate by id
+            final CandidateResult previousMax = maxCandidateMapping.get( entityId );
 
-            final CandidateResult previousMax = idResultMapping.get( entityId );
-
+            //its not been seen, save it
             if ( previousMax == null ) {
-                idResultMapping.put( entityId, cr );
+                maxCandidateMapping.put( entityId, currentCandidate );
                 orderIndex.put( entityId, i );
-                groupedByScopes.put( collectionType, cr );
+                groupedByScopes.put( collectionType, currentCandidate );
+                continue;
             }
 
             //we have seen it, compare them
-            else {
 
-                final UUID previousMaxVersion = previousMax.getVersion();
+            final UUID previousMaxVersion = previousMax.getVersion();
 
-                final UUID currentVersion = cr.getVersion();
+            final UUID currentVersion = currentCandidate.getVersion();
 
-                //this is a newer version, we know we already have a stale entity, add it to be cleaned up
-                if ( UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ) {
+            //this is a newer version, we know we already have a stale entity, add it to be cleaned up
+            if ( UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ) {
 
-                    //de-index it
-                    logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", new Object[] {
-                            entityId.getUuid(), entityId.getType(), previousMax, currentVersion
-                    } );
+                //de-index it
+                logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", new Object[] {
+                        entityId.getUuid(), entityId.getType(), previousMaxVersion, currentVersion
+                } );
 
-                    //deindex
-                    deIndex( indexBatch, ownerId, previousMax );
+                //deindex this document, and remove the previous maxVersion
+                deIndex( indexBatch, ownerId, previousMax );
+                groupedByScopes.remove( collectionType, previousMax );
 
 
-                    //TODO, fire the entity repair cleanup task here instead of de-indexing
+                //TODO, fire the entity repair cleanup task here instead of de-indexing
 
-                    //replace the value with a more current version
-                    idResultMapping.put( entityId, cr );
-                    orderIndex.put( entityId, i );
-                    groupedByScopes.put( collectionType, cr );
-                }
+                //replace the value with a more current version
+                maxCandidateMapping.put( entityId, currentCandidate );
+                orderIndex.put( entityId, i );
+                groupedByScopes.put( collectionType, currentCandidate );
             }
         }
 
@@ -166,7 +177,7 @@ public class FilteringLoader implements ResultsLoader {
 
         final TreeMap<Integer, Id> sortedResults = new TreeMap<>();
 
-        for ( final String scopeName : groupedByScopes.keys() ) {
+        for ( final String scopeName : groupedByScopes.keySet() ) {
 
 
             final Set<CandidateResult> candidateResults = groupedByScopes.get( scopeName );
@@ -198,30 +209,25 @@ public class FilteringLoader implements ResultsLoader {
             final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope );
 
 
-            //load the results into the loader for this ech
+            //load the results into the loader for this scope for validation
             resultsLoader.loadResults( idsToLoad, ecm );
 
-
-
-
-
-            //now compare them
-
+            //now let the loader validate each candidate.  For instance, the "max" in this candidate
+            //could still be a stale result, so it needs validated
             for ( final Id requestedId : idsToLoad ) {
 
-                final CandidateResult cr = idResultMapping.get( requestedId );
+                final CandidateResult cr = maxCandidateMapping.get( requestedId );
 
-                //ask the loader if this is valid, if not discard it
-                if(!resultsLoader.isValid( cr )){
+                //ask the loader if this is valid, if not discard it and de-index it
+                if ( !resultsLoader.isValid( cr ) ) {
                     deIndex( indexBatch, ownerId, cr );
                     continue;
                 }
 
                 //if we get here we're good, we need to add this to our results
-                final int candidateIndex = orderIndex.get( requestedId  );
+                final int candidateIndex = orderIndex.get( requestedId );
 
                 sortedResults.put( candidateIndex, requestedId );
-
             }
         }
 
@@ -229,11 +235,8 @@ public class FilteringLoader implements ResultsLoader {
         //execute the cleanup
         indexBatch.execute();
 
-        return resultsLoader.getResults(sortedResults.values());
+        return resultsLoader.getResults( sortedResults.values() );
     }
-
-
-
 
 
     protected void deIndex( final EntityIndexBatch batch, final Id ownerId, final CandidateResult candidateResult ) {

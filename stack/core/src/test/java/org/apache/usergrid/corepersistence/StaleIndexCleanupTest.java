@@ -111,7 +111,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         final int numUpdates = 5;
 
         // create lots of entities
-        final List<Entity> things = new ArrayList<Entity>();
+        final List<Entity> things = new ArrayList<Entity>(numEntities);
         for ( int i=0; i<numEntities; i++) {
             final String thingName = "thing" + i;
             things.add( em.create("thing", new HashMap<String, Object>() {{
@@ -126,12 +126,17 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         // update each one a bunch of times
         int count = 0;
+
+        List<Entity> maxVersions = new ArrayList<>(numEntities);
+
         for ( Entity thing : things ) {
+
+            Entity toUpdate = null;
 
             for ( int j=0; j<numUpdates; j++) {
 
-                Entity toUpdate = em.get( thing.getUuid() );
-                thing.setProperty( "property"  + j, RandomStringUtils.randomAlphanumeric(10));
+                toUpdate = em.get( thing.getUuid() );
+                toUpdate.setProperty( "property"  + j, RandomStringUtils.randomAlphanumeric(10));
                 em.update(toUpdate);
 
                 Thread.sleep( writeDelayMs );
@@ -141,6 +146,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
                     logger.info("Updated {} of {} times", count, numEntities * numUpdates);
                 }
             }
+
+            maxVersions.add( toUpdate );
         }
         em.refreshIndex();
 
@@ -150,19 +157,36 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         // query EntityManager for results and page through them
         // should return numEntities becuase it filters out the stale entities
+        final int limit  = 8;
         Query q = Query.fromQL("select *");
-        q.setLimit( 8 ); 
+        q.setLimit( limit );
         int thingCount = 0;
         String cursor = null;
+
+
+
+        int index = 0;
+
         do {
             Results results = em.searchCollection( em.getApplicationRef(), "things", q);
             cursor = results.getCursor();
             if ( cursor != null ) {
-                assertEquals( 8, results.size() );
+                assertEquals( limit, results.size() );
             }
             thingCount += results.size();
 
+            for(int i = 0; i < results.size(); i ++, index++){
+                final Entity returned = results.getEntities().get( i);
+                //last entities appear first
+                final Entity expected = maxVersions.get( index );
+
+                assertEquals("correct entity returned", expected, returned);
+
+            }
+
+
         } while ( cursor != null );
+
         assertEquals( "Expect no stale candidates", numEntities, thingCount );
 
         // EntityManager should have kicked off a batch cleanup of those stale indexes

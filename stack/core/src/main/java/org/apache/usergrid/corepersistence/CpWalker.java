@@ -17,6 +17,8 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.Stack;
 import java.util.logging.Level;
+
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityRef;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.apache.usergrid.persistence.collection.CollectionScope;

@@ -913,9 +913,11 @@ public class CpRelationManager implements RelationManager {
 
         int maxQueries = 10; // max re-queries to satisfy query limit
 
+        final int originalLimit = query.getLimit();
+
         Results results = null;
         int queryCount = 0;
-        int originalLimit = query.getLimit();
+
         boolean satisfied = false;
 
         while ( !satisfied && queryCount++ < maxQueries ) {
@@ -933,7 +935,7 @@ public class CpRelationManager implements RelationManager {
             if ( crs.isEmpty() || !crs.hasCursor() ) { // no results, no cursor, can't get more
                 satisfied = true;
 
-            } else if ( results.size() == query.getLimit() )  { // got what we need
+            } else if ( results.size() == originalLimit )  { // got what we need
                 satisfied = true;
 
             } else if ( crs.hasCursor() ) {
@@ -1487,6 +1489,7 @@ public class CpRelationManager implements RelationManager {
             
         if ( query.getSortPredicates().isEmpty() ) {
 
+            //TODO, should this be descending?
             Query.SortPredicate asc = new Query.SortPredicate( 
                 PROPERTY_CREATED, Query.SortDirection.ASCENDING );
 

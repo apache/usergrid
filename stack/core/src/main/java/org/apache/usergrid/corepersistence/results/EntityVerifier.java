@@ -89,30 +89,31 @@ public class EntityVerifier implements ResultsVerifier {
     public boolean isValid( final CandidateResult candidateResult ) {
         final Id entityId = candidateResult.getId();
 
-        final MvccEntity version = ids.getEntity( entityId );
+        final MvccEntity savedEntity = ids.getEntity( entityId );
 
-        //version wasn't found ,deindex
-        if ( version == null ) {
+        //version wasn't found deindex
+        if ( savedEntity == null ) {
             logger.warn( "Version for Entity {}:{} not found", entityId.getUuid(), entityId.getUuid() );
-
-
             return false;
         }
 
-        final UUID savedVersion = version.getVersion();
+        final UUID candidateVersion = candidateResult.getVersion();
+        final UUID savedVersion = savedEntity.getVersion();
 
-        if ( UUIDComparator.staticCompare( savedVersion, candidateResult.getVersion() ) > 0 ) {
+        if ( UUIDComparator.staticCompare( savedVersion, candidateVersion ) > 0 ) {
             logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", new Object[] {
-                    entityId.getUuid(), entityId.getType(), savedVersion, candidateResult.getVersion()
+                    entityId.getUuid(), entityId.getType(), candidateVersion, savedEntity
             } );
 
             return false;
         }
 
 
-        final Optional<org.apache.usergrid.persistence.model.entity.Entity> entity = version.getEntity();
+        final Optional<org.apache.usergrid.persistence.model.entity.Entity> entity = savedEntity.getEntity();
 
         if ( !entity.isPresent() ) {
+            logger.warn( "Entity uuid:{} version v:{} is deleted but indexed, this is a bug ", entityId.getUuid(),
+                    savedEntity.getEntity() );
             return false;
         }
 
