@@ -2862,85 +2862,30 @@ public class CpEntityManager implements EntityManager {
 
             @Override
             public void visitCollectionEntry(
-                EntityCollectionManager ecm,
-                String collectionName, 
-                org.apache.usergrid.persistence.model.entity.Entity collectionEntity, 
-                org.apache.usergrid.persistence.model.entity.Entity memberEntity) {
+                    EntityManager em, String collName, Entity source, Entity target) {
 
-                EntityRef source = new SimpleEntityRef( 
-                        collectionEntity.getId().getType(), collectionEntity.getId().getUuid() );
-                EntityRef target = new SimpleEntityRef( 
-                        memberEntity.getId().getType(), memberEntity.getId().getUuid() );
-                po.onProgress(source, target, "dummy");
+                try {
+                    em.update( target);
+                    po.onProgress(source, target, collName);
 
-                indexEntityIntoCollection( 
-                    collectionEntity, memberEntity, collectionName );
+                } catch (Exception ex) {
+                    logger.error("Error repersisting entity", ex);
+                }
             }
 
             @Override
             public void visitConnectionEntry(
-                EntityCollectionManager ecm,
-                String connectionType, 
-                org.apache.usergrid.persistence.model.entity.Entity sourceEntity, 
-                org.apache.usergrid.persistence.model.entity.Entity targetEntity) {
+                    EntityManager em, String connType, Entity source, Entity target) {
 
-                EntityRef source = new SimpleEntityRef( 
-                        sourceEntity.getId().getType(), sourceEntity.getId().getUuid() );
-                EntityRef target = new SimpleEntityRef( 
-                        targetEntity.getId().getType(), targetEntity.getId().getUuid() );
-                po.onProgress(source, target, "dummy");
+                try {
+                    em.update( target);
+                    po.onProgress(source, target, connType);
 
-                indexEntityIntoConnection( 
-                    sourceEntity, targetEntity, connectionType );
-            }
-        });
-    }
-
-
-    /** 
-     * Completely repersist the application associated with this EntityManager.
-     */
-    public void repersistApplication( 
-            final UUID appId, final EntityManagerFactory.ProgressObserver po ) throws Exception {
-
-        CpWalker walker = new CpWalker();
-
-        walker.walkCollections( this, application, new CpVisitor() {
-
-            @Override
-            public void visitCollectionEntry(
-                EntityCollectionManager ecm,
-                String collectionName, 
-                org.apache.usergrid.persistence.model.entity.Entity collectionEntity, 
-                org.apache.usergrid.persistence.model.entity.Entity memberEntity) {
-
-                EntityRef source = new SimpleEntityRef( 
-                        collectionEntity.getId().getType(), collectionEntity.getId().getUuid() );
-                EntityRef target = new SimpleEntityRef( 
-                        memberEntity.getId().getType(), memberEntity.getId().getUuid() );
-                po.onProgress(source, target, "dummy");
-
-                ecm.write( memberEntity).toBlocking().last();
-
-                indexEntityIntoCollection( 
-                    collectionEntity, memberEntity, collectionName );
+                } catch (Exception ex) {
+                    logger.error("Error repersisting entity", ex);
+                }
             }
 
-            @Override
-            public void visitConnectionEntry(
-                EntityCollectionManager ecm,
-                String connectionType, 
-                org.apache.usergrid.persistence.model.entity.Entity sourceEntity, 
-                org.apache.usergrid.persistence.model.entity.Entity targetEntity) {
-
-                EntityRef source = new SimpleEntityRef( 
-                        sourceEntity.getId().getType(), sourceEntity.getId().getUuid() );
-                EntityRef target = new SimpleEntityRef( 
-                        targetEntity.getId().getType(), targetEntity.getId().getUuid() );
-                po.onProgress(source, target, "dummy");
-
-                ecm.write( targetEntity).toBlocking().last();
-            }
         });
     }
 

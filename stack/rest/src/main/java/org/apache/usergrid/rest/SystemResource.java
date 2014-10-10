@@ -43,6 +43,7 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import com.sun.jersey.api.json.JSONWithPadding;
+import org.apache.usergrid.persistence.EntityManagerFactory.ProgressObserver;
 
 
 @Path( "/system" )
@@ -66,7 +67,7 @@ public class SystemResource extends AbstractContextResource {
     @GET
     @Path( "database/setup" )
     public JSONWithPadding getSetup( @Context UriInfo ui,
-                                     @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -90,7 +91,7 @@ public class SystemResource extends AbstractContextResource {
     @GET
     @Path( "superuser/setup" )
     public JSONWithPadding getSetupSuperuser( @Context UriInfo ui,
-                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
@@ -115,14 +116,14 @@ public class SystemResource extends AbstractContextResource {
     @PUT
     @Path( "index/rebuild" )
     public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
-                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "rebuild indexes" );
 
 
-        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+        final ProgressObserver po = new ProgressObserver() {
             @Override
             public void onProgress( EntityRef s, EntityRef t, String etype ) {
                 logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
@@ -164,8 +165,11 @@ public class SystemResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH )
-    public JSONWithPadding rebuildIndexes( @Context UriInfo ui, @PathParam( "applicationId" ) String applicationIdStr,
-                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public JSONWithPadding rebuildIndexes( 
+                @Context UriInfo ui, 
+                @PathParam( "applicationId" ) String applicationIdStr,
+                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+
             throws Exception {
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
@@ -173,7 +177,7 @@ public class SystemResource extends AbstractContextResource {
         response.setAction( "rebuild indexes" );
 
 
-        final EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
+        final ProgressObserver po = new ProgressObserver() {
             @Override
             public void onProgress( EntityRef s, EntityRef t, String etype ) {
                 logger.info( "Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
@@ -213,10 +217,11 @@ public class SystemResource extends AbstractContextResource {
     @RequireSystemAccess
     @PUT
     @Path( "index/rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
-    public JSONWithPadding rebuildIndexes( @Context UriInfo ui,
-                                           @PathParam( "applicationId" ) final String applicationIdStr,
-                                           @PathParam( "collectionName" ) final String collectionName,
-                                           @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public JSONWithPadding rebuildIndexes( 
+                @Context UriInfo ui,
+                @PathParam( "applicationId" ) final String applicationIdStr,
+                @PathParam( "collectionName" ) final String collectionName,
+                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
@@ -231,7 +236,8 @@ public class SystemResource extends AbstractContextResource {
             }
         };
 
-        rebuild.setName( String.format( "Index rebuild for app %s and collection %s", appId, collectionName ) );
+        rebuild.setName( String.format( 
+                "Index rebuild for app %s and collection %s", appId, collectionName ) );
         rebuild.setDaemon( true );
         rebuild.start();
 

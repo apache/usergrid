@@ -699,26 +699,4 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po ) {
         throw new UnsupportedOperationException( "Not supported yet." );
     }
-
-    @Override
-    public void repersistApplication( UUID appId, ProgressObserver po ) throws Exception {
-        EntityManager em = getEntityManager( appId );
-        em.repersistApplication( appId, po );
-    }
-
-    @Override
-    public void repersistAll( ProgressObserver po ) throws Exception {
-
-        logger.info("\n\nRepersisting all Entities\n");
-
-        Map<String, UUID> appMap = getApplications();
-
-        logger.info("About to repersist entities for {} applications", appMap.keySet().size());
-
-        for ( UUID appUuid : appMap.values() ) {
-            repersistApplication( appUuid, po );
-        }
-
-    }
-
 }

@@ -16,14 +16,12 @@
 package org.apache.usergrid.corepersistence;
 
 import java.util.Stack;
-import java.util.logging.Level;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
@@ -101,127 +99,53 @@ public class CpWalker {
                     @Override
                     public void call( Edge edge ) {
 
+                        EntityRef sourceEntityRef = new SimpleEntityRef( 
+                            edge.getSourceNode().getType(), edge.getSourceNode().getUuid());
+                        Entity sourceEntity;
+                        try {
+                            sourceEntity = em.get( sourceEntityRef );
+                        } catch (Exception ex) {
+                            logger.error( "Error getting sourceEntity {}:{}, continuing", 
+                                    sourceEntityRef.getType(), sourceEntityRef.getUuid());
+                            return;
+                        }
+
+                        EntityRef targetEntityRef = new SimpleEntityRef( 
+                            edge.getTargetNode().getType(), edge.getTargetNode().getUuid());
+                        Entity targetEntity;
+                        try {
+                            targetEntity = em.get( targetEntityRef );
+                        } catch (Exception ex) {
+                            logger.error( "Error getting sourceEntity {}:{}, continuing", 
+                                    sourceEntityRef.getType(), sourceEntityRef.getUuid());
+                            return;
+                        }
+                            
                         if ( CpNamingUtils.isCollectionEdgeType( edge.getType() )) {
 
                             String collName = CpNamingUtils.getCollectionName( edgeType );
-                            String memberType = edge.getTargetNode().getType();
-
-                            CollectionScope collScope = new CollectionScopeImpl(
-                                applicationScope.getApplication(),
-                                applicationScope.getApplication(),
-                                CpNamingUtils.getCollectionScopeNameFromEntityType( start.getType()));
-                            EntityCollectionManager collMgr = 
-                                em.getManagerCache().getEntityCollectionManager(collScope);
-
-                            org.apache.usergrid.persistence.model.entity.Entity collEntity = 
-                                collMgr.load( edge.getSourceNode() ).toBlockingObservable().last();
-
-                            if (collEntity == null) {
-                                logger.warn("(Empty collection?) Failed to load collection entity "
-                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}",
-                                        new Object[]{
-                                            edge.getSourceNode().getType(), 
-                                            edge.getSourceNode().getUuid(),
-                                            collScope.getApplication(),
-                                            collScope.getOwner(),
-                                            collScope.getName()
-                                        });
-                                return;
-                            }
-
-                            CollectionScope memberScope = new CollectionScopeImpl(
-                                applicationScope.getApplication(),
-                                applicationScope.getApplication(),
-                                CpNamingUtils.getCollectionScopeNameFromEntityType( memberType ));
-                            EntityCollectionManager memberMgr = 
-                                em.getManagerCache().getEntityCollectionManager(memberScope);
-
-                            org.apache.usergrid.persistence.model.entity.Entity memberEntity = 
-                                memberMgr.load( edge.getTargetNode()).toBlockingObservable().last();
-
-                            if (memberEntity == null) {
-                                logger.warn("(Empty collection?) Failed to load member entity "
-                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}",
-                                        new Object[]{
-                                            edge.getTargetNode().getType(), 
-                                            edge.getTargetNode().getUuid(),
-                                            memberScope.getApplication(),
-                                            memberScope.getOwner(),
-                                            memberScope.getName()
-                                        });
-                                return;
-                            }
 
                             visitor.visitCollectionEntry( 
-                                    memberMgr, collName, collEntity, memberEntity );
+                                    em, collName, sourceEntity, targetEntity );
 
                             // recursion
-                            if ( !stack.contains( memberEntity.getId() )) {
-                                stack.push( memberEntity.getId() );
-                                doWalkCollections( em, memberEntity.getId(), visitor, stack );
+                            if ( !stack.contains( targetEntity.getUuid() )) {
+                                stack.push( targetEntity.getUuid() );
+                                doWalkCollections( em, edge.getSourceNode(), visitor, stack );
                                 stack.pop(); 
                             }
 
+                        } else {
 
-                        } else if ( CpNamingUtils.isConnectionEdgeType( edge.getType() )) {
-
-                            String connType = CpNamingUtils.getConnectionType( edgeType );
-                            String targetEntityType = edge.getTargetNode().getType();
-                            String sourceEntityType = start.getType();
-
-                            CollectionScope sourceScope = new CollectionScopeImpl(
-                                applicationScope.getApplication(),
-                                applicationScope.getApplication(),
-                                CpNamingUtils.getCollectionScopeNameFromEntityType(sourceEntityType));
-                            EntityCollectionManager sourceEcm = 
-                                em.getManagerCache().getEntityCollectionManager(sourceScope);
-
-                            org.apache.usergrid.persistence.model.entity.Entity sourceEntity = 
-                                sourceEcm.load( edge.getSourceNode() ).toBlockingObservable().last();
-
-                            if (sourceEntity == null) {
-                                logger.warn("(Empty connection?) Failed to load source entity "
-                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}", 
-                                        new Object[]{
-                                            edge.getSourceNode().getType(), 
-                                            edge.getSourceNode().getUuid(),
-                                            sourceScope.getApplication(),
-                                            sourceScope.getOwner(),
-                                            sourceScope.getName()
-                                        });
-                                return;
-                            }
-
-                            CollectionScope targetScope = new CollectionScopeImpl(
-                                applicationScope.getApplication(),
-                                applicationScope.getApplication(),
-                                CpNamingUtils.getCollectionScopeNameFromEntityType(targetEntityType));
-                            EntityCollectionManager targetEcm = 
-                                em.getManagerCache().getEntityCollectionManager(targetScope);
-
-                            org.apache.usergrid.persistence.model.entity.Entity targetEntity = 
-                                targetEcm.load( edge.getTargetNode() ).toBlockingObservable().last();
-
-                            if (targetEntity == null) {
-                                logger.warn("(Empty connection?) Failed to load target entity "
-                                        + "{}:{} from scope\n   app {}\n   owner {}\n   name {}",
-                                        new Object[]{
-                                            edge.getTargetNode().getType(), 
-                                            edge.getTargetNode().getUuid(),
-                                            targetScope.getApplication(),
-                                            targetScope.getOwner(),
-                                            targetScope.getName()
-                                        });
-                                return;
-                            }
+                            String collName = CpNamingUtils.getConnectionType(edgeType);
 
                             visitor.visitConnectionEntry( 
-                                    targetEcm, connType, sourceEntity, targetEntity );
+                                    em, collName, sourceEntity, targetEntity );
 
                             // recursion
-                            if ( !stack.contains( targetEntity.getId() )) {
-                                stack.push( targetEntity.getId() );
-                                doWalkCollections( em, targetEntity.getId(), visitor, stack );
+                            if ( !stack.contains( targetEntity.getUuid() )) {
+                                stack.push( targetEntity.getUuid() );
+                                doWalkCollections( em, edge.getTargetNode(), visitor, stack );
                                 stack.pop(); 
                             }
                         }
