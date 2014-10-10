@@ -53,6 +53,9 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
+
+import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
 import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.CollectionRef;
@@ -133,6 +136,7 @@ import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.ClassUtils;
@@ -515,7 +519,10 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
-        deleteAsync( entityRef ).toBlockingObservable().lastOrDefault(null);
+        deleteAsync( entityRef ).toBlocking().lastOrDefault(null);
+        //delete from our UUID index
+        MapManager mm = getMapManagerForTypes();
+        mm.delete(entityRef.getUuid().toString() );
     }
 
 
@@ -799,12 +806,12 @@ public class CpEntityManager implements EntityManager {
 
         String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
 
-        Map<String, EntityRef> results = new HashMap<String, EntityRef>();
+        Map<String, EntityRef> results = new HashMap<>();
 
         for ( String alias : aliases ) {
 
             Iterable<EntityRef> refs = 
-                    getEntityRefsForUniqueProperty( ownerRef, collName, propertyName, alias );
+                    getEntityRefsForUniqueProperty( collName, propertyName, alias );
 
             for ( EntityRef ref : refs ) {
                 results.put( alias, ref );
@@ -815,13 +822,18 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    private Iterable<EntityRef> getEntityRefsForUniqueProperty( 
-            EntityRef ownerRef, String collName, String propName, String alias ) throws Exception {
+    private Iterable<EntityRef> getEntityRefsForUniqueProperty( String collName, String propName,
+                                                                String alias ) throws Exception {
 
-        Results results = getRelationManager( ownerRef ).searchCollection( 
-                collName, Query.fromQL( "select * where " + propName + " = '" + alias + "'" ) );
 
-        return results.getRefs();
+        final Id id = getIdForUniqueEntityField( collName, propName, alias );
+
+        if ( id == null ) {
+            return Collections.emptyList();
+        }
+
+
+        return Collections.<EntityRef>singleton( new SimpleEntityRef( id.getType(), id.getUuid() ) );
     }
 
 
@@ -2175,25 +2187,43 @@ public class CpEntityManager implements EntityManager {
             String entityType, String propertyName, Object propertyValue )
             throws Exception {
 
-        Results results= this.searchCollection(
-                getApplication(), 
-                Schema.defaultCollectionName( entityType), 
-                Query.searchForProperty(propertyName, propertyValue));
 
-        return results.isEmpty();
+
+        return getIdForUniqueEntityField( entityType, propertyName, propertyValue ) == null;
+    }
+
+
+    /**
+     * Load the unique property for the field
+     */
+    private Id getIdForUniqueEntityField( final String collectionName, final String propertyName,
+                                          final Object propertyValue ) {
+
+        CollectionScope collectionScope = new CollectionScopeImpl( 
+            applicationScope.getApplication(), 
+            applicationScope.getApplication(),
+            CpNamingUtils.getCollectionScopeNameFromEntityType( collectionName ) );
+
+
+        final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
+
+        //convert to a string, that's what we store
+        final Id results = ecm.getIdField( 
+            new StringField( propertyName, propertyValue.toString() ) ).toBlocking() .lastOrDefault( null );
+
+        return results;
     }
 
 
     @Override
     public Entity get( UUID uuid ) throws Exception {
 
-        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
-        MapScope ms = new MapScopeImpl( mapOwner, TYPES_BY_UUID_MAP );
-        MapManager mm = managerCache.getMapManager( ms );
+        MapManager mm = getMapManagerForTypes();
         String entityType = mm.getString(uuid.toString() );
 
         final Entity entity;
 
+      //this is the fall back, why isn't this writt
         if ( entityType == null ) {
 
             Query q = Query.fromQL(
@@ -2209,7 +2239,19 @@ public class CpEntityManager implements EntityManager {
         }
 
         return entity;
-    } 
+    }
+
+
+    /**
+     * Get the map manager for uuid mapping
+     */
+    private MapManager getMapManagerForTypes() {
+        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
+        MapScope ms = new MapScopeImpl( mapOwner, TYPES_BY_UUID_MAP );
+        MapManager mm = managerCache.getMapManager( ms );
+
+        return mm;
+    }
 
 
     @Override
@@ -2501,9 +2543,9 @@ public class CpEntityManager implements EntityManager {
                 entityToCpEntity( entity, importId );
 
         // prepare to write and index Core Persistence Entity into default scope
-        CollectionScope collectionScope = new CollectionScopeImpl( 
-                getApplicationScope().getApplication(), 
-                getApplicationScope().getApplication(),
+        CollectionScope collectionScope = new CollectionScopeImpl(
+                applicationScope.getApplication(), 
+                applicationScope.getApplication(),
                 CpNamingUtils.getCollectionScopeNameFromEntityType( eType ) );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
@@ -2568,6 +2610,10 @@ public class CpEntityManager implements EntityManager {
             // Invoke counters
             incrementEntityCollection( collectionName, timestamp );
         }
+
+        //write to our types map
+        MapManager mm = getMapManagerForTypes();
+        mm.putString( itemId.toString(), entity.getType() );
 
 
         return entity;
@@ -2770,6 +2816,13 @@ public class CpEntityManager implements EntityManager {
         // refresh this Entity Manager's application's index
         EntityIndex ei = managerCache.getEntityIndex(getApplicationScope());
         ei.refresh();
+    }
+
+
+    @Override
+    public void createIndex() {
+        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+        ei.initializeIndex();
     }
 
 

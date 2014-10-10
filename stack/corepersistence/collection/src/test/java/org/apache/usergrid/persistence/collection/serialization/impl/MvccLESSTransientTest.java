@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.util.Collections;
 import java.util.UUID;
 
 import org.jukito.UseModules;
@@ -35,7 +36,7 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
@@ -80,7 +81,7 @@ public class MvccLESSTransientTest {
 
         CollectionScope context = new CollectionScopeImpl( organizationId, applicationId, name );
 
-        final SimpleId id = new SimpleId( "test" );
+        final Id id = new SimpleId( "test" );
         final UUID version = UUIDGenerator.newTimeUUID();
 
         for ( Stage stage : Stage.values() ) {
@@ -93,7 +94,7 @@ public class MvccLESSTransientTest {
             //noinspection PointlessArithmeticExpression
             Thread.sleep( 1000 );
 
-            MvccLogEntry returned = logEntryStrategy.load( context, id, version );
+            MvccLogEntry returned = logEntryStrategy.load( context, Collections.singleton(id), version ).getMaxVersion( id );
 
 
             if ( stage.isTransient() ) {

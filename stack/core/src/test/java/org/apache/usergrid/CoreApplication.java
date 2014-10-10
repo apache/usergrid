@@ -151,6 +151,7 @@ public class CoreApplication implements Application, TestRule {
         assertNotNull( id );
 
         em = setup.getEmf().getEntityManager( id );
+        em.createIndex();
         assertNotNull( em );
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );

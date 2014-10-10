@@ -56,4 +56,23 @@ public interface SerializationFig extends GuicyFig {
     @Key( "collection.task.pool.queuesize" )
     @Default( "20" )
     int getTaskPoolQueueSize();
+
+    /**
+     * The maximum amount of entites we can load at any one time
+     * @return
+     */
+    @Key( "collection.max.load.size" )
+    @Default( "1000" )
+    int getMaxLoadSize();
+
+
+
+    /**
+     * The maximum number of bytes a serialized entity can be.  Any thing beyond this is rejected
+     * @return
+     */
+    @Key( "collection.max.entry.size" )
+    @Default( "512" )
+    int getMaxEntrySize();
+
 }

@@ -32,6 +32,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.results.ResultsLoaderFactory;
+import org.apache.usergrid.corepersistence.results.ResultsLoaderFactoryImpl;
+import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
@@ -175,6 +179,8 @@ public class CpRelationManager implements RelationManager {
 
     private IndexBucketLocator indexBucketLocator;
 
+    private ResultsLoaderFactory resultsLoaderFactory;
+
 
 
     public CpRelationManager() {}
@@ -229,6 +235,8 @@ public class CpRelationManager implements RelationManager {
 
         // commented out because it is possible that CP entity has not been created yet
         Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
+
+        this.resultsLoaderFactory = new ResultsLoaderFactoryImpl( managerCache );
 
         return this;
     }
@@ -625,7 +633,7 @@ public class CpRelationManager implements RelationManager {
                     memberScope.getApplication(), 
                     memberScope.getOwner(), 
                     memberScope.getName(),
-                    CpEntityMapUtils.toMap(memberEntity)
+                    CpEntityMapUtils.toMap( memberEntity )
             });
         }
 
@@ -1553,134 +1561,8 @@ public class CpRelationManager implements RelationManager {
 
         logger.debug("buildResults() for {} from {} candidates", collName, crs.size());
 
-        Results results = null;
-
-        EntityIndex index = managerCache.getEntityIndex(applicationScope);
-        EntityIndexBatch indexBatch = index.createBatch();
-
-
-        // map of the latest versions, we will discard stale indexes
-        Map<Id, CandidateResult> latestVersions = new LinkedHashMap<Id, CandidateResult>();
-
-        Iterator<CandidateResult> iter = crs.iterator();
-        while ( iter.hasNext() ) {
-
-            CandidateResult cr = iter.next();
-
-            CollectionScope collScope = new CollectionScopeImpl( 
-                applicationScope.getApplication(), 
-                applicationScope.getApplication(), 
-                CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
-
-            EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
-
-            UUID latestVersion = ecm.getLatestVersion( cr.getId() ).toBlocking().lastOrDefault(null);
-
-            if ( logger.isDebugEnabled() ) {
-                logger.debug("Getting version for entity {} from scope\n   app {}\n   owner {}\n   name {}", 
-                new Object[] { 
-                    cr.getId(),
-                    collScope.getApplication(), 
-                    collScope.getOwner(), 
-                    collScope.getName() 
-                });
-            }
-
-            if ( latestVersion == null ) {
-                logger.error("Version for Entity {}:{} not found", 
-                        cr.getId().getType(), cr.getId().getUuid());
-                continue;
-            }
-
-            if ( cr.getVersion().compareTo( latestVersion) < 0 )  {
-                logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
-                    new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
-                        cr.getVersion(), latestVersion});
-
-                IndexScope indexScope = new IndexScopeImpl(
-                    cpHeadEntity.getId(),
-                    CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
-                indexBatch.deindex( indexScope, cr);
-
-                continue;
-            }
-
-            CandidateResult alreadySeen = latestVersions.get( cr.getId() ); 
-
-            if ( alreadySeen == null ) { // never seen it, so add to map
-                latestVersions.put( cr.getId(), cr );
-
-            } else {
-                // we seen this id before, only add entity if we now have newer version
-                if ( latestVersion.compareTo( alreadySeen.getVersion() ) > 0 ) {
-
-                    latestVersions.put( cr.getId(), cr);
-
-                    IndexScope indexScope = new IndexScopeImpl(
-                        cpHeadEntity.getId(),
-                        CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
-                    indexBatch.deindex( indexScope, alreadySeen);
-                }
-            }
-        }
-
-        indexBatch.execute();
-
-        if (query.getLevel().equals(Level.IDS)) {
-
-            List<UUID> ids = new ArrayList<UUID>();
-            for ( Id id : latestVersions.keySet() ) {
-                CandidateResult cr = latestVersions.get(id);
-                ids.add( cr.getId().getUuid() );
-            }
-            results = Results.fromIdList(ids);
-
-        } else if (query.getLevel().equals(Level.REFS)) {
-
-            List<EntityRef> refs = new ArrayList<EntityRef>();
-            for ( Id id : latestVersions.keySet() ) {
-                CandidateResult cr = latestVersions.get(id);
-                refs.add( new SimpleEntityRef( cr.getId().getType(), cr.getId().getUuid()));
-            }
-            results = Results.fromRefList( refs );
-
-        } else {
-
-            List<Entity> entities = new ArrayList<Entity>();
-            for (Id id : latestVersions.keySet()) {
-
-                CandidateResult cr = latestVersions.get(id);
-
-                CollectionScope collScope = new CollectionScopeImpl( 
-                    applicationScope.getApplication(), 
-                    applicationScope.getApplication(), 
-                    CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
-
-                EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
-
-                org.apache.usergrid.persistence.model.entity.Entity e = 
-                        ecm.load( cr.getId() ).toBlocking().lastOrDefault(null);
-
-                if ( e == null ) {
-                    logger.error("Entity {}:{} not found", 
-                            cr.getId().getType(), cr.getId().getUuid());
-                    continue;
-                }
-
-                Entity entity = EntityFactory.newEntity(
-                        e.getId().getUuid(), e.getField("type").getValue().toString());
-
-                Map<String, Object> entityMap = CpEntityMapUtils.toMap(e);
-                entity.addProperties(entityMap);
-                entities.add(entity);
-            }
-
-            if (entities.size() == 1) {
-                results = Results.fromEntity(entities.get(0));
-            } else {
-                results = Results.fromEntities(entities);
-            }
-        }
+        final Results results = this.resultsLoaderFactory.getLoader( 
+                applicationScope, this.headEntity, query.getResultsLevel() ).getResults( crs );
 
         results.setCursor( crs.getCursor() );
         results.setQueryProcessor( new CpQueryProcessor(em, query, headEntity, collName) );
