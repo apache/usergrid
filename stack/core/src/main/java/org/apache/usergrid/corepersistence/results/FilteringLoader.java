@@ -1,24 +1,4 @@
 /*
- *
- *  * Licensed to the Apache Software Foundation (ASF) under one or more
- *  *  contributor license agreements.  The ASF licenses this file to You
- *  * under the Apache License, Version 2.0 (the "License"); you may not
- *  * use this file except in compliance with the License.
- *  * You may obtain a copy of the License at
- *  *
- *  *     http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.  For additional information regarding
- *  * copyright in this work, please see the NOTICE file in the top level
- *  * directory of this distribution.
- *
- */
-
-package org.apache.usergrid.corepersistence.results;/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,6 +16,8 @@ package org.apache.usergrid.corepersistence.results;/*
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package org.apache.usergrid.corepersistence.results;
 
 
 import java.util.Collection;
@@ -116,7 +98,8 @@ public class FilteringLoader implements ResultsLoader {
          * so we want to batch
          * fetch them more efficiently
          */
-        final HashMultimap<String, CandidateResult> groupedByScopes = HashMultimap.create( crs.size(), crs.size() );
+        final HashMultimap<String, CandidateResult> groupedByScopes = 
+                HashMultimap.create( crs.size(), crs.size() );
 
         final Iterator<CandidateResult> iter = crs.iterator();
 
@@ -128,7 +111,8 @@ public class FilteringLoader implements ResultsLoader {
 
             final CandidateResult currentCandidate = iter.next();
 
-            final String collectionType = CpNamingUtils.getCollectionScopeNameFromEntityType( currentCandidate.getId().getType() );
+            final String collectionType = CpNamingUtils.getCollectionScopeNameFromEntityType( 
+                    currentCandidate.getId().getType() );
 
             final Id entityId = currentCandidate.getId();
 
@@ -153,7 +137,8 @@ public class FilteringLoader implements ResultsLoader {
             if ( UUIDComparator.staticCompare( currentVersion, previousMaxVersion ) > 0 ) {
 
                 //de-index it
-                logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", new Object[] {
+                logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
+                        new Object[] {
                         entityId.getUuid(), entityId.getType(), previousMaxVersion, currentVersion
                 } );
 
@@ -172,8 +157,8 @@ public class FilteringLoader implements ResultsLoader {
         }
 
 
-        //now everything is ordered, and older versions are removed.  Batch fetch versions to verify existence and
-        // correct versions
+        //now everything is ordered, and older versions are removed.  Batch fetch versions to verify 
+        // existence and correct versions
 
         final TreeMap<Integer, Id> sortedResults = new TreeMap<>();
 
@@ -198,15 +183,15 @@ public class FilteringLoader implements ResultsLoader {
 
             //now using the scope, load the collection
 
-            /**
-             * Get the collection scope and batch load all the versions
-             */
-            final CollectionScope collScope =
-                    new CollectionScopeImpl( applicationScope.getApplication(), applicationScope.getApplication(),
-                            scopeName );
+            
+            // Get the collection scope and batch load all the versions
+            final CollectionScope collScope = new CollectionScopeImpl( 
+                    applicationScope.getApplication(), 
+                    applicationScope.getApplication(),
+                    scopeName );
 
 
-            final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope );
+            final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope);
 
 
             //load the results into the loader for this scope for validation
@@ -239,9 +224,11 @@ public class FilteringLoader implements ResultsLoader {
     }
 
 
-    protected void deIndex( final EntityIndexBatch batch, final Id ownerId, final CandidateResult candidateResult ) {
+    protected void deIndex( final EntityIndexBatch batch, final Id ownerId, 
+            final CandidateResult candidateResult ) {
+
         IndexScope indexScope = new IndexScopeImpl( ownerId,
-                CpNamingUtils.getCollectionScopeNameFromEntityType( candidateResult.getId().getType() ) );
+            CpNamingUtils.getCollectionScopeNameFromEntityType( candidateResult.getId().getType()));
 
         batch.deindex( indexScope, candidateResult );
     }
