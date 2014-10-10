@@ -20,14 +20,11 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.commons.lang3.StringUtils;
-
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
+import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.FieldTypeName;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.LongField;
 import org.apache.usergrid.persistence.model.field.StringField;
@@ -38,62 +35,75 @@ import com.netflix.astyanax.model.CompositeParser;
 
 // TODO: replace with "real" serializer
 
+
 /**
  * Serialize Field for use as part of row-key in Unique Values Column Family.
  */
 public class FieldSerializer implements CompositeFieldSerializer<Field> {
 
-    private static final Logger LOG = LoggerFactory.getLogger( FieldSerializer.class );
-
-    public enum FieldType {
-        BOOLEAN_FIELD,
-        DOUBLE_FIELD,
-        INTEGER_FIELD,
-        LONG_FIELD,
-        STRING_FIELD,
-        UUID_FIELD
-    };
 
     private static final FieldSerializer INSTANCE = new FieldSerializer();
+
 
     @Override
     public void toComposite( final CompositeBuilder builder, final Field field ) {
 
+
+        final FieldTypeName fieldType = field.getTypeName();
+
+
+        /**
+         * Validation we only support a subset
+         */
+        switch ( fieldType ) {
+            case BOOLEAN:
+            case DOUBLE:
+            case INTEGER:
+            case LONG:
+            case STRING:
+            case UUID:
+                break;
+            default:
+                throw new RuntimeException(
+                        String.format( "Type %s is not a supported type for unique values", fieldType ) );
+        }
+
+
+        builder.addString( fieldType.name() );
+
         builder.addString( field.getName() );
 
-        // TODO: use the real field value serializer(s) here? Store hash instead?
         builder.addString( field.getValue().toString() );
-         
-        String simpleName = field.getClass().getSimpleName();
-        int nameIndex = simpleName.lastIndexOf(".");
-        String fieldType = simpleName.substring(nameIndex + 1, simpleName.length() - "Field".length());
-        fieldType = StringUtils.upperCase( fieldType + "_FIELD" );
-
-        builder.addString( fieldType );
     }
+
 
     @Override
     public Field fromComposite( final CompositeParser composite ) {
 
-        final String name = composite.readString();
-        final String value = composite.readString();
         final String typeString = composite.readString();
 
-        final FieldType fieldType = FieldType.valueOf( typeString );
+        final String name = composite.readString();
 
-        switch (fieldType) {
-            case DOUBLE_FIELD: 
-                return new DoubleField(name, Double.parseDouble(value));
-            case INTEGER_FIELD: 
-                return new IntegerField(name, Integer.parseInt(value));
-            case LONG_FIELD: 
-                return new LongField(name, Long.parseLong(value));
-            case STRING_FIELD: 
-                return new StringField(name, value);
-            case UUID_FIELD: 
-                return new UUIDField(name, UUID.fromString(value));
+        final String value = composite.readString();
+
+
+        final FieldTypeName fieldType = FieldTypeName.valueOf( typeString );
+
+        switch ( fieldType ) {
+            case BOOLEAN:
+                return new BooleanField( name, Boolean.parseBoolean( value ) );
+            case DOUBLE:
+                return new DoubleField( name, Double.parseDouble( value ) );
+            case INTEGER:
+                return new IntegerField( name, Integer.parseInt( value ) );
+            case LONG:
+                return new LongField( name, Long.parseLong( value ) );
+            case STRING:
+                return new StringField( name, value );
+            case UUID:
+                return new UUIDField( name, UUID.fromString( value ) );
             default:
-                throw new RuntimeException("Unknown unique field type");
+                throw new RuntimeException( "Unknown unique field type" );
         }
     }
 

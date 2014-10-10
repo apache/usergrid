@@ -28,7 +28,7 @@ import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.utils.LRUCache2;
 
-class CpManagerCache {
+public class CpManagerCache {
 
     private final EntityCollectionManagerFactory ecmf;
     private final EntityIndexFactory eif;

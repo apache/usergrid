@@ -18,13 +18,19 @@
 package org.apache.usergrid.persistence.collection.mvcc.changelog;
 
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 
-import com.fasterxml.uuid.UUIDComparator;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 
 
 /**
@@ -33,79 +39,77 @@ import com.fasterxml.uuid.UUIDComparator;
 public class ChangeLogGeneratorImpl implements ChangeLogGenerator {
 
     /**
-     * See parent comment
-     * {@link ChangeLogGenerator#getChangeLog(java.util.Iterator<org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity>, java.util.UUID)}
-     * @param mvccEntities
+     * See parent comment {@link ChangeLogGenerator#getChangeLog(java.util.Collection)}
      */
     @Override
-    public List<ChangeLogEntry> getChangeLog( Iterator<MvccEntity> mvccEntities, UUID minVersion ) {
+    public ChangeLog getChangeLog( Collection<MvccEntity> mvccEntities ) {
 
-        Map<String, ChangeLogEntry> writeMap = new HashMap<String, ChangeLogEntry>();
-        Map<String, ChangeLogEntry> deleteMap = new HashMap<String, ChangeLogEntry>();
-        List<ChangeLogEntry> changeLog = new ArrayList<ChangeLogEntry>();
-        Entity keeper = null;
 
-        List<Entity> entityList = new ArrayList<>();
-        while(mvccEntities.hasNext()) {
-            MvccEntity mvccEntity = mvccEntities.next();
+        Preconditions.checkArgument( mvccEntities.size() > 0, "You must specify at least 1 entities for a change log" );
 
-            Entity entity = mvccEntity.getEntity().get();
-            entityList.add(entity);
-            int compare = UUIDComparator.staticCompare(mvccEntity.getVersion(), minVersion);
+        //TODO, this is a SWAG on the entity size, this may be too little or too much.
+        final ChangeLogImpl changeLog = new ChangeLogImpl( 50 );
 
-            if (compare == 0) {
-                keeper = entity;
+        Iterator<MvccEntity> iterator = mvccEntities.iterator();
+
+        Set<String> previousFieldNames = getFieldNames( iterator.next().getEntity() );
+
+        Set<String> currentFieldNames = null;
+
+        while ( iterator.hasNext() ) {
+
+
+            final MvccEntity mvccEntity = iterator.next();
+
+            currentFieldNames = getFieldNames( mvccEntity.getEntity() );
+
+            if(mvccEntity.getStatus() == MvccEntity.Status.DELETED){
+                changeLog.clear();
+                continue;
             }
+
+            final Entity currentEntity = mvccEntity.getEntity().orNull();
+
+            //get all fields in the current field that aren't in the previous fields
+            final Set<String> deletedFields = Sets.difference( previousFieldNames, currentFieldNames );
+
+            changeLog.addDeletes( deletedFields );
+
+            for ( String addedField : currentFieldNames ) {
+                changeLog.addWrite( currentEntity.getField( addedField ) );
+            }
+
+
+            previousFieldNames = currentFieldNames;
         }
 
-        for (Entity entity : entityList) {
-
-            int compare = UUIDComparator.staticCompare(entity.getVersion(), minVersion);
-
-
-            // TODO: what about cleared entities, all fields deleted but entity still there.
-            // i.e. the optional entity will be delete
-            if (compare < 0) { // less than minVersion
-
-                for (Field field : entity.getFields()) {
-
-                    // only delete field if it is not in the keeper
-                    Field keeperField = keeper.getField(field.getName());
-                    if (keeperField == null
-                            || keeperField.getValue() == null
-                            || !keeperField.getValue().equals(field.getValue())) {
-
-                        String key = field.getName() + field.getValue();
-                        ChangeLogEntry cle = deleteMap.get(key);
-                        if (cle == null) {
-                            cle = new ChangeLogEntry(
-                                    entity.getId(), entity.getVersion(),
-                                    ChangeLogEntry.ChangeType.PROPERTY_DELETE, field);
-                            changeLog.add(cle);
-                        } else {
-                            cle.addVersion(entity.getVersion());
-                        }
-                    }
-                }
-
-            } else { // greater than or equal to minVersion
-
-                for (Field field : entity.getFields()) {
-
-                    String key = field.getName() + field.getValue();
-                    ChangeLogEntry cle = writeMap.get(key);
-                    if (cle == null) {
-                        cle = new ChangeLogEntry(
-                                entity.getId(), entity.getVersion(),
-                                ChangeLogEntry.ChangeType.PROPERTY_WRITE, field);
-                        writeMap.put(key, cle);
-                        changeLog.add(cle);
-                    } else {
-                        cle.addVersion(entity.getVersion());
-                    }
-                }
-            }
+        //subtract off the the last set of fields from the entity
+        if(currentFieldNames != null) {
+            changeLog.clear( currentFieldNames );
         }
+
+
         return changeLog;
     }
- }
+
+
+    /**
+     * Get all the fieldNames on this entity
+     */
+    private Set<String> getFieldNames( final Optional<Entity> entity ) {
+        if ( !entity.isPresent() ) {
+            return Collections.emptySet();
+        }
+
+
+        Collection<Field> fields = entity.get().getFields();
+
+        Set<String> fieldNames = new HashSet<>( fields.size() );
+
+        for ( final Field field : entity.get().getFields() ) {
+            fieldNames.add( field.getName() );
+        }
+
+        return fieldNames;
+    }
+}

@@ -31,29 +31,22 @@ import com.google.common.base.Preconditions;
  * Represents a Unique Value of a field within a collection.
  */
 public class UniqueValueImpl implements UniqueValue {
-    private final CollectionScope collectionScope;
     private final Field field;
     private final Id entityId;
     private final UUID entityVersion;
 
-    public UniqueValueImpl(
-            final CollectionScope scope, final Field field, Id entityId, final UUID version ) {
+    public UniqueValueImpl(final Field field, Id entityId, final UUID version ) {
 
-        Preconditions.checkNotNull( scope, "scope is required" );
         Preconditions.checkNotNull( field, "field is required" );
-//        Preconditions.checkNotNull( version, "version is required" );
+        Preconditions.checkNotNull( version, "version is required" );
         Preconditions.checkNotNull( entityId, "entityId is required" );
 
-        this.collectionScope = scope;
         this.field = field;
         this.entityVersion = version;
         this.entityId = entityId;
     }
 
-    @Override
-    public CollectionScope getCollectionScope() {
-        return collectionScope;
-    }
+
 
     @Override
     public Field getField() {
@@ -82,9 +75,7 @@ public class UniqueValueImpl implements UniqueValue {
 
         final UniqueValueImpl that = ( UniqueValueImpl ) o;
 
-        if ( !getCollectionScope().equals( that.getCollectionScope() ) ) {
-            return false;
-        }
+
 
         if ( !getField().equals( that.getField()) ) {
             return false;
@@ -104,8 +95,7 @@ public class UniqueValueImpl implements UniqueValue {
 
     @Override
     public int hashCode() {
-        int result = 31 * getCollectionScope().hashCode();
-        result = 31 * result + getField().hashCode();
+        int result = 31 * getField().hashCode();
         result = 31 * result + getEntityVersion().hashCode();
         result = 31 * result + getEntityId().hashCode();
         return result;
@@ -115,7 +105,6 @@ public class UniqueValueImpl implements UniqueValue {
     @Override
     public String toString() {
         return "UniqueValueImpl{" +
-                ", collectionScope =" + collectionScope.getName() +
                 ", field =" + field +
                 ", entityVersion=" + entityVersion +
                 ", entityId =" + entityId +

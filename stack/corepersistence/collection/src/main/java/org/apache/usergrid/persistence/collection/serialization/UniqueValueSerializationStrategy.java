@@ -37,7 +37,7 @@ public interface UniqueValueSerializationStrategy {
      * @param uniqueValue Object to be written
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
-    public MutationBatch write( UniqueValue uniqueValue );
+    public MutationBatch write( CollectionScope scope,  UniqueValue uniqueValue );
 
     /**
      * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
@@ -46,7 +46,7 @@ public interface UniqueValueSerializationStrategy {
      * @param timeToLive How long object should live in seconds 
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
-    public MutationBatch write( UniqueValue uniqueValue, Integer timeToLive );
+    public MutationBatch write( CollectionScope scope,  UniqueValue uniqueValue, Integer timeToLive );
 
     /**
      * Load UniqueValue that matches field from collection or null if that value does not exist.
@@ -64,5 +64,5 @@ public interface UniqueValueSerializationStrategy {
      * @param uniqueValue Object to be deleted.
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
-    public MutationBatch delete( UniqueValue uniqueValue );
+    public MutationBatch delete( CollectionScope scope,  UniqueValue uniqueValue );
 }

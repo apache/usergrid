@@ -26,7 +26,7 @@ import org.junit.runner.RunWith;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
@@ -35,6 +35,8 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 
 import com.google.inject.Inject;
 import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
@@ -42,6 +44,7 @@ import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 @RunWith( ITRunner.class )
@@ -65,9 +68,12 @@ public class WriteUniqueVerifyTest {
 
 
     @Test
-    public void testNoFields() {
+    public void testNoFields() throws ConnectionException {
         final CollectionScope collectionScope = mock( CollectionScope.class );
         final Keyspace keyspace = mock(Keyspace.class);
+        final MutationBatch batch = mock(MutationBatch.class);
+
+        when(keyspace.prepareMutationBatch()).thenReturn(batch);
 
         // set up the mock to return the entity from the start phase
         final Entity entity = generateEntity();
@@ -82,7 +88,7 @@ public class WriteUniqueVerifyTest {
 
        //if we get here, it's a success.  We want to test no exceptions are thrown
 
-        verify(keyspace, never()).prepareMutationBatch();
+        verify(batch, never()).execute();
     }
 
 }

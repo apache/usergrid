@@ -35,4 +35,10 @@ public class LocationField extends AbstractField<Location> {
     public LocationField() {
 
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+            return FieldTypeName.LOCATION;
+        }
 }

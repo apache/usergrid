@@ -17,7 +17,7 @@
  */
 
 
-package org.apache.usergrid.corepersistence;
+package org.apache.usergrid.corepersistence.util;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

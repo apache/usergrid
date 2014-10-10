@@ -2907,6 +2907,13 @@ public class EntityManagerImpl implements EntityManager {
         // no action necessary
     }
 
+
+    @Override
+    public void createIndex() {
+        //no op
+    }
+
+
     @Override
     public EntityRef getGroupRoleRef( UUID ownerId, String roleName) throws Exception {
         return new SimpleEntityRef( Role.ENTITY_TYPE, SimpleRoleRef.getIdForGroupIdAndRoleName( ownerId, roleName ));
@@ -2915,6 +2922,16 @@ public class EntityManagerImpl implements EntityManager {
     @Override
     public void flushManagerCaches() {
         // no-op
+    }
+
+    @Override
+    public void repersistApplication(UUID appId, EntityManagerFactory.ProgressObserver po) throws Exception {
+        throw new UnsupportedOperationException("Not supported."); 
+    }
+
+    @Override
+    public void reindex(EntityManagerFactory.ProgressObserver po) throws Exception {
+        throw new UnsupportedOperationException("Not supported."); 
     }
 
 }

@@ -30,8 +30,8 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.AbstractMvccEntityStageTest;
@@ -136,13 +136,11 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
         // mock up unique values interface
         UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class);
-        UniqueValue uv1 = new UniqueValueImpl(
-            scope, entity.getField("name"), entity.getId(), entity.getVersion());
-        UniqueValue uv2 = new UniqueValueImpl(
-            scope, entity.getField("identifier"), entity.getId(), entity.getVersion());
+        UniqueValue uv1 = new UniqueValueImpl(entity.getField("name"), entity.getId(), entity.getVersion());
+        UniqueValue uv2 = new UniqueValueImpl(  entity.getField("identifier"), entity.getId(), entity.getVersion());
         MutationBatch mb = mock( MutationBatch.class );
-        when( uvstrat.delete(uv1) ).thenReturn(mb);
-        when( uvstrat.delete(uv2) ).thenReturn(mb);
+        when( uvstrat.delete(scope, uv1) ).thenReturn(mb);
+        when( uvstrat.delete(scope, uv2) ).thenReturn(mb);
 
         // Run the stage, conflict should be detected
         final MvccEntity mvccEntity = fromEntity( entity );
@@ -162,8 +160,8 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         assertTrue( conflictDetected );
 
         // check that unique values were deleted
-        verify( uvstrat, times(1) ).delete( uv1 );
-        verify( uvstrat, times(1) ).delete( uv2 );
+        verify( uvstrat, times(1) ).delete(scope,  uv1 );
+        verify( uvstrat, times(1) ).delete(scope,  uv2 );
     }
 
 }

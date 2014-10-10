@@ -18,14 +18,13 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
@@ -38,9 +37,7 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIterator;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.task.Task;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -156,8 +153,8 @@ public class EntityVersionCleanupTask implements Task<Void> {
                                         if (!field.isUnique()) {
                                             continue;
                                         }
-                                        final UniqueValue unique = new UniqueValueImpl(scope, field, entityId, entityVersion);
-                                        final MutationBatch deleteMutation = uniqueValueSerializationStrategy.delete(unique);
+                                        final UniqueValue unique = new UniqueValueImpl( field, entityId, entityVersion);
+                                        final MutationBatch deleteMutation = uniqueValueSerializationStrategy.delete(scope,unique);
                                         batch.mergeShallow(deleteMutation);
                                     }
 

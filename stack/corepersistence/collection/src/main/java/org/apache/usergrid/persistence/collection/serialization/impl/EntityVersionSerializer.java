@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.common.base.Preconditions;
@@ -44,11 +45,17 @@ public class EntityVersionSerializer extends AbstractSerializer<EntityVersion> {
     @Override
     public ByteBuffer toByteBuffer(final EntityVersion ev) {
 
+        final UUID entityVersion = ev.getEntityVersion();
+
+        final Id entityId = ev.getEntityId();
+        final UUID entityUuid = entityId.getUuid();
+        final String entityType = entityId.getType();
+
         CompositeBuilder builder = Composites.newDynamicCompositeBuilder();
 
-        builder.addTimeUUID( ev.getEntityVersion() );
-        builder.addTimeUUID( ev.getEntityId().getUuid() );
-        builder.addString( ev.getEntityId().getType() );
+        builder.addUUID( entityVersion );
+        builder.addUUID( entityUuid );
+        builder.addString(entityType );
 
         return builder.build();
     }

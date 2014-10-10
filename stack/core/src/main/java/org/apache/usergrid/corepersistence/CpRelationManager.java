@@ -32,6 +32,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.results.ResultsLoaderFactory;
+import org.apache.usergrid.corepersistence.results.ResultsLoaderFactoryImpl;
+import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
@@ -175,6 +179,8 @@ public class CpRelationManager implements RelationManager {
 
     private IndexBucketLocator indexBucketLocator;
 
+    private ResultsLoaderFactory resultsLoaderFactory;
+
 
 
     public CpRelationManager() {}
@@ -229,6 +235,8 @@ public class CpRelationManager implements RelationManager {
 
         // commented out because it is possible that CP entity has not been created yet
         Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
+
+        this.resultsLoaderFactory = new ResultsLoaderFactoryImpl( managerCache );
 
         return this;
     }
@@ -625,7 +633,7 @@ public class CpRelationManager implements RelationManager {
                     memberScope.getApplication(), 
                     memberScope.getOwner(), 
                     memberScope.getName(),
-                    CpEntityMapUtils.toMap(memberEntity)
+                    CpEntityMapUtils.toMap( memberEntity )
             });
         }
 
@@ -905,9 +913,11 @@ public class CpRelationManager implements RelationManager {
 
         int maxQueries = 10; // max re-queries to satisfy query limit
 
+        final int originalLimit = query.getLimit();
+
         Results results = null;
         int queryCount = 0;
-        int originalLimit = query.getLimit();
+
         boolean satisfied = false;
 
         while ( !satisfied && queryCount++ < maxQueries ) {
@@ -915,9 +925,11 @@ public class CpRelationManager implements RelationManager {
             CandidateResults crs = ei.search( indexScope, query );
 
             if ( results == null ) {
+                logger.debug("Calling build results 1");
                 results = buildResults( query, crs, collName );
 
             } else {
+                logger.debug("Calling build results 2");
                 Results newResults = buildResults( query, crs, collName );
                 results.merge( newResults );
             }
@@ -925,7 +937,7 @@ public class CpRelationManager implements RelationManager {
             if ( crs.isEmpty() || !crs.hasCursor() ) { // no results, no cursor, can't get more
                 satisfied = true;
 
-            } else if ( results.size() == query.getLimit() )  { // got what we need
+            } else if ( results.size() == originalLimit )  { // got what we need
                 satisfied = true;
 
             } else if ( crs.hasCursor() ) {
@@ -1311,19 +1323,6 @@ public class CpRelationManager implements RelationManager {
             raw = buildResults( query , crs, query.getConnectionType() );
         }
 
-//        if ( Level.REFS.equals(level ) ) {
-//            List<EntityRef> refList = new ArrayList<EntityRef>( raw.getEntities() );
-//            return Results.fromRefList( refList );
-//        } 
-//        if ( Level.IDS.equals(level ) ) {
-//            // TODO: someday this should return a list of Core Persistence Ids
-//            List<UUID> idList = new ArrayList<UUID>();
-//            for ( EntityRef ref : raw.getEntities() ) {
-//                idList.add( ref.getUuid() );
-//            }
-//            return Results.fromIdList( idList );
-//        }
-
         if ( Level.ALL_PROPERTIES.equals(level ) ) {
             List<Entity> entities = new ArrayList<Entity>();
             for ( EntityRef ref : raw.getEntities() ) {
@@ -1479,6 +1478,7 @@ public class CpRelationManager implements RelationManager {
             
         if ( query.getSortPredicates().isEmpty() ) {
 
+            //TODO, should this be descending?
             Query.SortPredicate asc = new Query.SortPredicate( 
                 PROPERTY_CREATED, Query.SortDirection.ASCENDING );
 
@@ -1542,120 +1542,19 @@ public class CpRelationManager implements RelationManager {
     }
     
 
+    /**
+     * Build results from a set of candidates, and discard those that represent stale indexes.
+     * 
+     * @param query Query that was executed
+     * @param crs Candidates to be considered for results
+     * @param collName Name of collection or null if querying all types
+     */
     private Results buildResults(Query query, CandidateResults crs, String collName ) {
 
         logger.debug("buildResults() for {} from {} candidates", collName, crs.size());
 
-        Results results = null;
-
-        if ( query.getLevel().equals( Level.IDS )) {
-
-            // TODO: add stale entity logic here
-            
-            // TODO: replace this with List<Id> someday
-            List<UUID> ids = new ArrayList<UUID>();
-            Iterator<CandidateResult> iter = crs.iterator();
-            while ( iter.hasNext() ) {
-                ids.add( iter.next().getId().getUuid() );
-            }
-            results = Results.fromIdList( ids );
-
-        } else if ( query.getLevel().equals( Level.REFS )) {
-
-            // TODO: add stale entity logic here
-            
-            if ( crs.size() == 1 ) {
-                CandidateResult cr = crs.iterator().next();
-                results = Results.fromRef( 
-                    new SimpleEntityRef( cr.getId().getType(), cr.getId().getUuid()));
-
-            } else {
-
-                List<EntityRef> entityRefs = new ArrayList<EntityRef>();
-                Iterator<CandidateResult> iter = crs.iterator();
-                while ( iter.hasNext() ) {
-                    Id id = iter.next().getId();
-                    entityRefs.add( new SimpleEntityRef( id.getType(), id.getUuid() ));
-                } 
-                results = Results.fromRefList(entityRefs);
-            }
-
-        } else {
-
-            // first, build map of latest versions of entities
-            Map<Id, org.apache.usergrid.persistence.model.entity.Entity> latestVersions = 
-                new LinkedHashMap<Id, org.apache.usergrid.persistence.model.entity.Entity>();
-
-            Iterator<CandidateResult> iter = crs.iterator();
-            while ( iter.hasNext() ) {
-
-                CandidateResult cr = iter.next();
-
-                CollectionScope collScope = new CollectionScopeImpl( 
-                    applicationScope.getApplication(), 
-                    applicationScope.getApplication(), 
-                    CpNamingUtils.getCollectionScopeNameFromEntityType( cr.getId().getType() ));
-                EntityCollectionManager ecm = managerCache.getEntityCollectionManager(collScope);
-
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug("Loading entity {} from scope\n   app {}\n   owner {}\n   name {}", 
-                    new Object[] { 
-                        cr.getId(),
-                        collScope.getApplication(), 
-                        collScope.getOwner(), 
-                        collScope.getName() 
-                    });
-                }
-
-                org.apache.usergrid.persistence.model.entity.Entity e =
-                    ecm.load( cr.getId() ).toBlockingObservable().last();
-
-                if ( e == null ) {
-                    logger.error("Entity {}:{} not found", cr.getId().getType(), cr.getId().getUuid());
-                    continue;
-                }
-
-                if ( cr.getVersion().compareTo( e.getVersion()) < 0 )  {
-                    logger.debug("Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
-                        new Object[] { cr.getId().getUuid(), cr.getId().getType(), 
-                            cr.getVersion(), e.getVersion()});
-                    continue;
-                }
-
-                org.apache.usergrid.persistence.model.entity.Entity alreadySeen = 
-                    latestVersions.get( e.getId() ); 
-                if ( alreadySeen == null ) { // never seen it, so add to map
-                    latestVersions.put( e.getId(), e);
-
-                } else {
-                    // we seen this id before, only add entity if newer version
-                    if ( e.getVersion().compareTo( alreadySeen.getVersion() ) > 0 ) {
-                        latestVersions.put( e.getId(), e);
-                    }
-                }
-            }
-
-            // now build collection of old-school entities
-            List<Entity> entities = new ArrayList<Entity>();
-            for ( Id id : latestVersions.keySet() ) {
-
-                org.apache.usergrid.persistence.model.entity.Entity e =
-                    latestVersions.get( id );
-
-                Entity entity = EntityFactory.newEntity(
-                    e.getId().getUuid(), e.getField("type").getValue().toString() );
-
-                Map<String, Object> entityMap = CpEntityMapUtils.toMap( e );
-                entity.addProperties( entityMap ); 
-                entities.add( entity );
-            }
-
-            if ( entities.size() == 1 ) {
-                results = Results.fromEntity( entities.get(0));
-            } else {
-                results = Results.fromEntities( entities );
-            }
-        }
+        final Results results = this.resultsLoaderFactory.getLoader( 
+                applicationScope, this.headEntity, query.getResultsLevel() ).getResults( crs );
 
         results.setCursor( crs.getCursor() );
         results.setQueryProcessor( new CpQueryProcessor(em, query, headEntity, collName) );

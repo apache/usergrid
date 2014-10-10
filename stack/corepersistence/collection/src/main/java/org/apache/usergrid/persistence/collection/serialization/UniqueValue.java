@@ -30,12 +30,6 @@ import org.apache.usergrid.persistence.model.field.Field;
 public interface UniqueValue {
 
     /**
-     * The scope of this value
-     * @return
-     */
-    public CollectionScope getCollectionScope();
-
-    /**
      * The entity Id that owns this value
      * @return
      */

@@ -19,9 +19,13 @@
 package org.apache.usergrid.persistence.collection;
 
 
+import java.util.Collection;
+
+import java.util.UUID;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import org.apache.usergrid.persistence.model.field.Field;
 import rx.Observable;
 
 
@@ -51,10 +55,24 @@ public interface EntityCollectionManager {
      */
     public Observable<Entity> load( Id entityId );
 
-    //TODO TN Change load to use multiget and return multiple entities.  Only supports loading 1k per load operation.
+    /**
+     * Return the latest versions of the specified entityIds
+     */
+    public Observable<VersionSet> getLatestVersion( Collection<Id> entityId );
 
+    /**
+     * Gets the Id for a field
+     * @param field
+     * @return most likely a single Id, watch for onerror events
+     */
+    public Observable<Id> getIdField(final Field field);
 
-    //TODO Dave add a load versions using a multiget that will return a latest version structure for a collection of entity Ids
+    /**
+     * Load all the entityIds into the observable entity set
+     * @param entityIds
+     * @return
+     */
+    public Observable<EntitySet> load(Collection<Id> entityIds);
 
 
     /**

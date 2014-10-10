@@ -163,4 +163,14 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
         factory.rebuildCollectionIndex(appId, collection, po);
     }
+
+    @Override
+    public void repersistAll( ProgressObserver po ) throws Exception {
+        factory.repersistAll( po );
+    }
+
+    @Override
+    public void repersistApplication(UUID appId, ProgressObserver po) throws Exception {
+        factory.repersistApplication( appId, po );
+    }
 }

@@ -19,12 +19,13 @@
 package org.apache.usergrid.persistence.collection.mvcc;
 
 
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.collection.CollectionScope;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.EntitySet;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.netflix.astyanax.MutationBatch;
@@ -45,17 +46,14 @@ public interface MvccEntitySerializationStrategy {
     public MutationBatch write( CollectionScope context, MvccEntity entity );
 
 
+
     /**
-     * Load and return the entity with the given id and a version that is <= the version provided
-     *
-     * @param context The context to persist the entity into
-     * @param entityId The entity id to load
-     * @param version The version to load.  This will return the version <= the given version
-     *
-     * @return The deserialized version of the entity.  Null if no version == to version exists. If the entity version
-     *         has been cleared, the MvccEntity will be returned, but the optional entity will not be set
+     * Load the entities into the entitySet from the specified Ids.  Loads versions <= the maxVersion
+     * @param scope
+     * @param entityIds
+     * @return
      */
-    public MvccEntity load( CollectionScope context, Id entityId, UUID version );
+    public EntitySet load( CollectionScope scope, Collection<Id> entityIds, UUID maxVersion);
 
     /**
      * Load a list, from highest to lowest of the entity with versions <= version up to maxSize elements
