@@ -22,9 +22,11 @@ import java.util.List;
 import java.util.UUID;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Results;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
@@ -53,7 +55,14 @@ import org.slf4j.LoggerFactory;
 public class StaleIndexCleanupTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(StaleIndexCleanupTest.class );
 
+    // take it easy on embedded Cassandra
+    private static final long writeDelayMs = 50;
+    private static final long readDelayMs = 50;
 
+
+    /**
+     * Test that updating an entity causes the entity's version number to change.
+     */
     @Test
     public void testUpdateVersioning() throws Exception {
 
@@ -78,59 +87,118 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         assertEquals( "widget", cpUpdated.getField("stuff").getValue());
         UUID newVersion = cpUpdated.getVersion();
 
-        // this assertion fails
         assertTrue( "New version is greater than old", 
                 UUIDComparator.staticCompare( newVersion, oldVersion ) > 0 );
 
-        // this fails too 
         assertEquals( 2, queryCollectionCp("things", "select *").size() );
     }
 
 
+    /**
+     * Test that the CpRelationManager cleans up and stale indexes that it finds when it is 
+     * building search results.
+     */
     @Test
     public void testStaleIndexCleanup() throws Exception {
 
         logger.info("Started testStaleIndexCleanup()");
 
+        // TODO: turn off post processing stuff that cleans up stale entities 
+
         final EntityManager em = app.getEntityManager();
 
-        final List<Entity> things = new ArrayList<Entity>();
+        final int numEntities = 10;
+        final int numUpdates = 3;
 
-        int numEntities = 1;
-        int numUpdates = 3;
-
-        // create 100 entities
+        // create lots of entities
+        final List<Entity> things = new ArrayList<Entity>(numEntities);
         for ( int i=0; i<numEntities; i++) {
             final String thingName = "thing" + i;
             things.add( em.create("thing", new HashMap<String, Object>() {{
                 put("name", thingName);
             }}));
+            Thread.sleep( writeDelayMs );
         }
         em.refreshIndex();
 
         CandidateResults crs = queryCollectionCp( "things", "select *");
-        Assert.assertEquals( numEntities, crs.size() );
+        Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
 
-        // update each one 10 times
+        // update each one a bunch of times
+        int count = 0;
+
+        List<Entity> maxVersions = new ArrayList<>(numEntities);
+
         for ( Entity thing : things ) {
 
+            Entity toUpdate = null;
+
             for ( int j=0; j<numUpdates; j++) {
-                Entity toUpdate = em.get( thing.getUuid() );
-                thing.setProperty( "property"  + j, RandomStringUtils.randomAlphanumeric(10));
+
+                toUpdate = em.get( thing.getUuid() );
+                toUpdate.setProperty( "property"  + j, RandomStringUtils.randomAlphanumeric(10));
                 em.update(toUpdate);
-                em.refreshIndex();
+
+                Thread.sleep( writeDelayMs );
+
+                count++;
+                if ( count % 100 == 0 ) {
+                    logger.info("Updated {} of {} times", count, numEntities * numUpdates);
+                }
             }
+
+            maxVersions.add( toUpdate );
         }
+        em.refreshIndex();
 
-        // new query for total number of result candidates = 1000
+        // query Core Persistence directly for total number of result candidates
         crs = queryCollectionCp("things", "select *");
-        Assert.assertEquals( numEntities * numUpdates, crs.size() );
+        Assert.assertEquals( "Expect stale candidates", numEntities * (numUpdates + 1), crs.size());
 
-        // query for results, should be 100 (and it triggers background clean up of stale indexes)
+        // query EntityManager for results and page through them
+        // should return numEntities becuase it filters out the stale entities
+        final int limit  = 8;
+        Query q = Query.fromQL("select *");
+        q.setLimit( limit );
+        int thingCount = 0;
+        String cursor = null;
 
+        int index = 0;
+
+        do {
+            Results results = em.searchCollection( em.getApplicationRef(), "things", q);
+            thingCount += results.size();
+
+            logger.debug("Retrieved total of {} entities", thingCount );
+
+            cursor = results.getCursor();
+            if ( cursor != null && thingCount < numEntities ) {
+                assertEquals( limit, results.size() );
+            }
+
+            for (int i = 0; i < results.size(); i ++, index++){
+
+                final Entity returned = results.getEntities().get( i);
+
+                //last entities appear first
+                final Entity expected = maxVersions.get( index );
+                assertEquals("correct entity returned", expected, returned);
+
+            }
+
+        } while ( cursor != null );
+
+        assertEquals( "Expect no stale candidates", numEntities, thingCount );
+
+        em.refreshIndex();
+
+        // EntityManager should have kicked off a batch cleanup of those stale indexes
         // wait a second for batch cleanup to complete
+        Thread.sleep(600);
 
-        // query for total number of result candidates = 1000
+        // query for total number of result candidates = numEntities
+        crs = queryCollectionCp("things", "select *");
+        Assert.assertEquals( "Expect stale candidates de-indexed", numEntities, crs.size());
     }
 
 

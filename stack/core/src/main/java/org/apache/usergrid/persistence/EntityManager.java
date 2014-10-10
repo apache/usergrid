@@ -684,8 +684,18 @@ public interface EntityManager {
      */
     void refreshIndex();
 
+    /**
+     * Create the index, should ONLY ever be called the first time an application is created
+     */
+    void createIndex();
+
     public void init( EntityManagerFactory emf, UUID applicationId);
 
     /** For testing purposes */
     public void flushManagerCaches();
+
+    public void repersistApplication( 
+            final UUID appId, final EntityManagerFactory.ProgressObserver po ) throws Exception;
+
+    public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception;
 }

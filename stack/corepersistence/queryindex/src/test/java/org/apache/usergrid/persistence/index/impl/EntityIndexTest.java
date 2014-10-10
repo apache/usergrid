@@ -101,6 +101,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         EntityIndex entityIndex = cif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
 
         InputStream is = this.getClass().getResourceAsStream( "/sample-large.json" );
         ObjectMapper mapper = new ObjectMapper();
@@ -155,6 +156,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope indexScope = new IndexScopeImpl( appId, "fastcars" );
 
         EntityIndex entityIndex = cif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
 
         Map entityMap = new HashMap() {{
             put( "name", "Ferrari 212 Inter" );
@@ -283,6 +285,7 @@ public class EntityIndexTest extends BaseIT {
 
 
         EntityIndex entityIndex = cif.createEntityIndex( applicationScope );
+        entityIndex.initializeIndex();
 
         final String middleName = "middleName" + UUIDUtils.newTimeUUID();
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -332,6 +335,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
         EntityIndex ei = cif.createEntityIndex( applicationScope );
+        ei.initializeIndex();
 
         final String middleName = "middleName" + UUIDUtils.newTimeUUID();
 
@@ -375,6 +379,7 @@ public class EntityIndexTest extends BaseIT {
         IndexScope appScope = new IndexScopeImpl( ownerId, "user" );
 
         EntityIndex ei = cif.createEntityIndex( applicationScope );
+        ei.createBatch();
 
         // Bill has favorites as string, age as string and retirement goal as number
         Map billMap = new HashMap() {{

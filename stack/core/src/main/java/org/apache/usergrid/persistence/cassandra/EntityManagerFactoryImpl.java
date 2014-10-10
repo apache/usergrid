@@ -438,4 +438,14 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
         throw new UnsupportedOperationException("Not supported."); 
     }
+
+    @Override
+    public void repersistAll( ProgressObserver po ) {
+        throw new UnsupportedOperationException("Not supported."); 
+    }
+
+    @Override
+    public void repersistApplication(UUID appId, ProgressObserver po) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet."); 
+    }
 }
