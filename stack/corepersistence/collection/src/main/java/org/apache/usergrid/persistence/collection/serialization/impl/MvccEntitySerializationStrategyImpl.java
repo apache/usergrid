@@ -153,7 +153,7 @@ public class MvccEntitySerializationStrategyImpl implements MvccEntitySerializat
         Preconditions.checkNotNull( maxVersion, "version is required" );
 
 
-        //didnt put the max in the error message, I don't want to take the string construction hit every time
+        //didn't put the max in the error message, I don't want to take the string construction hit every time
         Preconditions.checkArgument( entityIds.size() <=  serializationFig.getMaxLoadSize(), "requested size cannot be over configured maximum");
 
 

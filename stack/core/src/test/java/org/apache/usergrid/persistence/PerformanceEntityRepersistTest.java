@@ -118,7 +118,8 @@ public class PerformanceEntityRepersistTest extends AbstractCoreIT {
 
         List<EntityRef> entityRefs = new ArrayList<EntityRef>();
         int entityCount = 0;
-        while ( System.currentTimeMillis() < stopTime ) {
+        int i = 0;
+        while ( i++ < 10 ) {
 
             final Entity entity;
 

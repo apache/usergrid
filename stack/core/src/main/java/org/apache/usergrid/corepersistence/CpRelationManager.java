@@ -617,8 +617,9 @@ public class CpRelationManager implements RelationManager {
 
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
+        //TODO, this double load should disappear once events are in
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
-            new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlockingObservable().last();
+            new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlocking().last();
 
         if ( memberEntity == null ) {
             throw new RuntimeException("Unable to load entity uuid=" 
