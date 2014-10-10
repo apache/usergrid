@@ -925,9 +925,11 @@ public class CpRelationManager implements RelationManager {
             CandidateResults crs = ei.search( indexScope, query );
 
             if ( results == null ) {
+                logger.debug("Calling build results 1");
                 results = buildResults( query, crs, collName );
 
             } else {
+                logger.debug("Calling build results 2");
                 Results newResults = buildResults( query, crs, collName );
                 results.merge( newResults );
             }
@@ -1320,19 +1322,6 @@ public class CpRelationManager implements RelationManager {
 
             raw = buildResults( query , crs, query.getConnectionType() );
         }
-
-//        if ( Level.REFS.equals(level ) ) {
-//            List<EntityRef> refList = new ArrayList<EntityRef>( raw.getEntities() );
-//            return Results.fromRefList( refList );
-//        } 
-//        if ( Level.IDS.equals(level ) ) {
-//            // TODO: someday this should return a list of Core Persistence Ids
-//            List<UUID> idList = new ArrayList<UUID>();
-//            for ( EntityRef ref : raw.getEntities() ) {
-//                idList.add( ref.getUuid() );
-//            }
-//            return Results.fromIdList( idList );
-//        }
 
         if ( Level.ALL_PROPERTIES.equals(level ) ) {
             List<Entity> entities = new ArrayList<Entity>();

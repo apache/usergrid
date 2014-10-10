@@ -107,8 +107,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         final EntityManager em = app.getEntityManager();
 
-        final int numEntities = 100;
-        final int numUpdates = 5;
+        final int numEntities = 10;
+        final int numUpdates = 3;
 
         // create lots of entities
         final List<Entity> things = new ArrayList<Entity>(numEntities);
@@ -163,27 +163,28 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         int thingCount = 0;
         String cursor = null;
 
-
-
         int index = 0;
 
         do {
             Results results = em.searchCollection( em.getApplicationRef(), "things", q);
-            cursor = results.getCursor();
-            if ( cursor != null ) {
-                assertEquals( limit, results.size() );
-            }
             thingCount += results.size();
 
-            for(int i = 0; i < results.size(); i ++, index++){
+            logger.debug("Retrieved total of {} entities", thingCount );
+
+            cursor = results.getCursor();
+            if ( cursor != null && thingCount < numEntities ) {
+                assertEquals( limit, results.size() );
+            }
+
+            for (int i = 0; i < results.size(); i ++, index++){
+
                 final Entity returned = results.getEntities().get( i);
+
                 //last entities appear first
                 final Entity expected = maxVersions.get( index );
-
                 assertEquals("correct entity returned", expected, returned);
 
             }
-
 
         } while ( cursor != null );
 

@@ -61,15 +61,15 @@ public class FilteringLoader implements ResultsLoader {
     private static final Logger logger = LoggerFactory.getLogger( FilteringLoader.class );
 
     private final CpManagerCache managerCache;
-    private final ResultsVerifier resultsLoader;
+    private final ResultsVerifier resultsVerifier;
     private final Id ownerId;
     private final ApplicationScope applicationScope;
 
 
-    protected FilteringLoader( final CpManagerCache managerCache, final ResultsVerifier resultsLoader,
+    protected FilteringLoader( final CpManagerCache managerCache, final ResultsVerifier resultsVerifier,
                                final EntityRef ownerId, final ApplicationScope applicationScope ) {
         this.managerCache = managerCache;
-        this.resultsLoader = resultsLoader;
+        this.resultsVerifier = resultsVerifier;
         this.ownerId = new SimpleId( ownerId.getUuid(), ownerId.getType() );
         this.applicationScope = applicationScope;
     }
@@ -195,7 +195,7 @@ public class FilteringLoader implements ResultsLoader {
 
 
             //load the results into the loader for this scope for validation
-            resultsLoader.loadResults( idsToLoad, ecm );
+            resultsVerifier.loadResults( idsToLoad, ecm );
 
             //now let the loader validate each candidate.  For instance, the "max" in this candidate
             //could still be a stale result, so it needs validated
@@ -204,7 +204,7 @@ public class FilteringLoader implements ResultsLoader {
                 final CandidateResult cr = maxCandidateMapping.get( requestedId );
 
                 //ask the loader if this is valid, if not discard it and de-index it
-                if ( !resultsLoader.isValid( cr ) ) {
+                if ( !resultsVerifier.isValid( cr ) ) {
                     deIndex( indexBatch, ownerId, cr );
                     continue;
                 }
@@ -220,7 +220,7 @@ public class FilteringLoader implements ResultsLoader {
         //execute the cleanup
         indexBatch.execute();
 
-        return resultsLoader.getResults( sortedResults.values() );
+        return resultsVerifier.getResults( sortedResults.values() );
     }
 
 
