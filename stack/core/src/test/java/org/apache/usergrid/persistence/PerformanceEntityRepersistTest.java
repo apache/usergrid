@@ -126,7 +126,7 @@ public class PerformanceEntityRepersistTest extends AbstractCoreIT {
                 entityMap.put("key", entityCount );
                 entity = em.create("testType", entityMap );
 
-                em.refreshIndex();
+//                em.refreshIndex();
 
                 em.createConnection(entity, "herds", cat1);
                 em.createConnection(entity, "herds", cat2);
@@ -191,10 +191,6 @@ public class PerformanceEntityRepersistTest extends AbstractCoreIT {
         readData( "testTypes", entityCount );
     }
 
-
-    private int readData( String collectionName ) throws Exception {
-        return readData( collectionName, -1 );
-    }
 
 
     private int readData( String collectionName, int expected ) throws Exception {
