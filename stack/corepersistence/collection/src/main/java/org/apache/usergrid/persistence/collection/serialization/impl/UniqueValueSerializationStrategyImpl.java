@@ -104,14 +104,10 @@ public class UniqueValueSerializationStrategyImpl implements UniqueValueSerializ
 
 
     @Override
-    public MutationBatch write(final CollectionScope scope,  UniqueValue value, Integer timeToLive ) {
+    public MutationBatch write(final CollectionScope scope,  final UniqueValue value, final Integer timeToLive ) {
 
         Preconditions.checkNotNull( value, "value is required" );
         Preconditions.checkNotNull( timeToLive, "timeToLive is required" );
-
-        final Field field = value.getField();
-
-
 
         final Id entityId = value.getEntityId();
         final UUID entityVersion = value.getEntityVersion();

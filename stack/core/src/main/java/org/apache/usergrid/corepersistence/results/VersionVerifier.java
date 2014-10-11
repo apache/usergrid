@@ -65,16 +65,15 @@ public abstract class VersionVerifier implements ResultsVerifier {
             return false;
         }
 
-//        final UUID savedVersion = version.getVersion();
-//
-//        if ( UUIDComparator.staticCompare( savedVersion, candidateResult.getVersion() ) > 0 ) {
-//            logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
-//                new Object[] {
-//                 entityId.getUuid(), entityId.getType(), candidateResult.getVersion(), savedVersion
-//            } );
-//
-//            return false;
-//        }
+        final UUID savedVersion = version.getVersion();
+
+        if ( UUIDComparator.staticCompare( savedVersion, candidateResult.getVersion() ) > 0 ) {
+            logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
+                new Object[] { entityId.getUuid(), entityId.getType(), candidateResult.getVersion(), savedVersion
+            } );
+
+            return false;
+        }
 
         return true;
     }

@@ -1414,7 +1414,7 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public ConnectionRef createConnection( EntityRef connectingEntity, String connectionType, 
+    public ConnectionRef createConnection( EntityRef connectingEntity, String connectionType,
             EntityRef connectedEntityRef ) throws Exception {
 
         return getRelationManager( connectingEntity )
@@ -2095,25 +2095,33 @@ public class CpEntityManager implements EntityManager {
         }
         if ( identifier.isEmail() ) {
 
-            Query query = new Query();
-            query.setEntityType( "user" );
-            query.addEqualityFilter( "email", identifier.getEmail() );
-            query.setLimit( 1 );
-            query.setResultsLevel( REFS );
 
-            Results r = getRelationManager( 
-                ref( Application.ENTITY_TYPE, applicationId ) ).searchCollection( "users", query );
+            final Iterable<EntityRef>
+                    emailProperty = getEntityRefsForUniqueProperty( Schema.defaultCollectionName( "user" ), "email", identifier.getEmail() );
 
-            if ( r != null && r.getRef() != null ) {
-                logger.debug("Got entity ref!");
-                return r.getRef();
+            for(EntityRef firstRef: emailProperty){
+                return firstRef;
             }
-            else {
+
+//            Query query = new Query();
+//            query.setEntityType( "user" );
+//            query.addEqualityFilter( "email", identifier.getEmail() );
+//            query.setLimit( 1 );
+//            query.setResultsLevel( REFS );
+//
+//            Results r = getRelationManager(
+//                ref( Application.ENTITY_TYPE, applicationId ) ).searchCollection( "users", query );
+//
+//            if ( r != null && r.getRef() != null ) {
+//                logger.debug("Got entity ref!");
+//                return r.getRef();
+//            }
+//            else {
                 // look-aside as it might be an email in the name field
                 logger.debug("return alias");
                 return this.getAlias( new SimpleEntityRef( 
                         Application.ENTITY_TYPE, applicationId ), "user", identifier.getEmail() );
-            }
+//            }
         }
         return null;
     }
