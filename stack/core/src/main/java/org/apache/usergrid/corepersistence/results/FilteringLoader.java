@@ -189,12 +189,9 @@ public class FilteringLoader implements ResultsLoader {
 
             //now using the scope, load the collection
 
-
             // Get the collection scope and batch load all the versions
-            final CollectionScope collScope =
-                    new CollectionScopeImpl( applicationScope.getApplication(), applicationScope.getApplication(),
-                            scopeName );
-
+            final CollectionScope collScope = new CollectionScopeImpl( 
+                    applicationScope.getApplication(), ownerId, scopeName );
 
             final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope );
 

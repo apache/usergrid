@@ -65,6 +65,7 @@ public class EntityVerifier implements ResultsVerifier {
     @Override
     public void loadResults( final Collection<Id> idsToLoad, final EntityCollectionManager ecm ) {
         ids = ecm.load( idsToLoad ).toBlocking().last();
+        logger.debug("loadResults() asked for {} ids and got {}", idsToLoad.size(), ids.size());
     }
 
 
@@ -76,7 +77,7 @@ public class EntityVerifier implements ResultsVerifier {
 
         //version wasn't found deindex
         if ( savedEntity == null ) {
-            logger.warn( "Version for Entity {}:{} not found", entityId.getUuid(), entityId.getUuid() );
+            logger.warn( "Version for Entity {}:{} not found", entityId.getType(), entityId.getUuid() );
             return false;
         }
 
