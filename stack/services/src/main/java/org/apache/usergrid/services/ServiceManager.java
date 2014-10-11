@@ -100,7 +100,9 @@ public class ServiceManager {
             try {
                 application = em.getApplication();
                 if(application == null){
-                    throw new RuntimeException("application is returning null");
+                    Exception e = new RuntimeException("application id {"+em.getApplicationId()+"} is returning null");
+                    logger.error("Failed to get application",e);
+                    throw e;
                 }
                 applicationId = application.getUuid();
             }
