@@ -42,14 +42,17 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.IntegerField;
+import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
+import static org.junit.Assert.assertEquals;
 
-@RunWith( ITRunner.class )
-@UseModules( TestCollectionModule.class )
+
+@RunWith(ITRunner.class)
+@UseModules(TestCollectionModule.class)
 public class UniqueValueSerializationStrategyImplTest {
     private static final Logger LOG = LoggerFactory.getLogger( UniqueValueSerializationStrategyImplTest.class );
 
@@ -71,13 +74,13 @@ public class UniqueValueSerializationStrategyImplTest {
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
         UniqueValue stored = new UniqueValueImpl( field, entityId, version );
-        strategy.write(scope,  stored ).execute();
+        strategy.write( scope, stored ).execute();
 
         UniqueValueSet fields = strategy.load( scope, Collections.<Field>singleton( field ) );
 
         UniqueValue retrieved = fields.getValue( field.getName() );
         Assert.assertNotNull( retrieved );
-        Assert.assertEquals( stored, retrieved );
+        assertEquals( stored, retrieved );
     }
 
 
@@ -92,7 +95,7 @@ public class UniqueValueSerializationStrategyImplTest {
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
         UniqueValue stored = new UniqueValueImpl( field, entityId, version );
-        strategy.write(scope,  stored, 2 ).execute();
+        strategy.write( scope, stored, 2 ).execute();
 
         Thread.sleep( 1000 );
 
@@ -102,7 +105,7 @@ public class UniqueValueSerializationStrategyImplTest {
         UniqueValue retrieved = fields.getValue( field.getName() );
 
         Assert.assertNotNull( retrieved );
-        Assert.assertEquals( stored, retrieved );
+        assertEquals( stored, retrieved );
 
         Thread.sleep( 1500 );
 
@@ -124,9 +127,9 @@ public class UniqueValueSerializationStrategyImplTest {
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
         UniqueValue stored = new UniqueValueImpl( field, entityId, version );
-        strategy.write(scope,  stored ).execute();
+        strategy.write( scope, stored ).execute();
 
-        strategy.delete(scope,  stored ).execute();
+        strategy.delete( scope, stored ).execute();
 
         UniqueValueSet fields = strategy.load( scope, Collections.<Field>singleton( field ) );
 
@@ -134,5 +137,49 @@ public class UniqueValueSerializationStrategyImplTest {
 
 
         Assert.assertNull( nullExpected );
+    }
+
+
+    @Test
+    public void testCaptializationFixes() throws ConnectionException {
+        CollectionScope scope =
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+        StringField field = new StringField( "count", "MiXeD CaSe" );
+        Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        UUID version = UUIDGenerator.newTimeUUID();
+        UniqueValue stored = new UniqueValueImpl( field, entityId, version );
+        strategy.write( scope, stored ).execute();
+
+
+        UniqueValueSet fields = strategy.load( scope, Collections.<Field>singleton( field ) );
+
+        UniqueValue value = fields.getValue( field.getName() );
+
+
+        assertEquals( field.getName(), value.getField().getName() );
+
+        assertEquals( entityId, value.getEntityId() );
+
+        //now test will all upper and all lower, we should get it all the same
+        fields = strategy.load( scope,
+                Collections.<Field>singleton( new StringField( field.getName(), "MIXED CASE" ) ) );
+
+        value = fields.getValue( field.getName() );
+
+
+        assertEquals( field.getName(), value.getField().getName() );
+
+        assertEquals( entityId, value.getEntityId() );
+
+        fields = strategy.load( scope,
+                Collections.<Field>singleton( new StringField( field.getName(), "mixed case" ) ) );
+
+        value = fields.getValue( field.getName() );
+
+
+        assertEquals( field.getName(), value.getField().getName() );
+
+        assertEquals( entityId, value.getEntityId() );
     }
 }

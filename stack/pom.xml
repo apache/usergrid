@@ -199,14 +199,16 @@
     <module>core</module>
     <module>services</module>
     <module>rest</module>
+    <!--
     <module>tools</module>
     <module>websocket</module>
+    -->
     <!--
     Re-enable when we have a fix for the AppleJavaExtensions jar issue
     https://issues.apache.org/jira/browse/USERGRID-224
     <module>launcher</module>
     -->
-    <module>mongo-emulator</module>
+    <!-- <module>mongo-emulator</module> -->
     <!--  
     Re-enable when query-validator updated to work with Core Persistence.
     https://issues.apache.org/jira/browse/USERGRID-221

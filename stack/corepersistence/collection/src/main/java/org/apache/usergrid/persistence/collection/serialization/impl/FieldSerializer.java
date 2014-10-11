@@ -73,7 +73,8 @@ public class FieldSerializer implements CompositeFieldSerializer<Field> {
 
         builder.addString( field.getName() );
 
-        builder.addString( field.getValue().toString() );
+        //write all values as lowercase for normalization
+        builder.addString( field.getValue().toString().toLowerCase() );
     }
 
 

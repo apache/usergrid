@@ -326,23 +326,23 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
     @Override
 
-    public Observable<VersionSet> getLatestVersion( final Collection<Id> entityIds ) {
+    public Observable<VersionSet> getLatestVersion(final Collection<Id> entityIds) {
 
-        return Observable.create( new Observable.OnSubscribe<VersionSet>() {
+        return Observable.create(new Observable.OnSubscribe<VersionSet>() {
 
-                  @Override
-                  public void call( final Subscriber<? super VersionSet> subscriber ) {
-                      try {
-                          final  VersionSet logEntries = mvccLogEntrySerializationStrategy.load( collectionScope, entityIds,
-                                          UUIDGenerator.newTimeUUID() );
+            @Override
+            public void call(final Subscriber<? super VersionSet> subscriber) {
+                try {
+                    final VersionSet logEntries = mvccLogEntrySerializationStrategy
+                        .load(collectionScope, entityIds, UUIDGenerator.newTimeUUID());
 
-                          subscriber.onNext( logEntries );
-                          subscriber.onCompleted();
-                      }
-                      catch ( Exception e ) {
-                          subscriber.onError( e );
-                      }
-                  }
-              } ); 
+                    subscriber.onNext(logEntries);
+                    subscriber.onCompleted();
+
+                } catch (Exception e) {
+                    subscriber.onError(e);
+                }
+            }
+        });
     }
 }
