@@ -84,6 +84,9 @@ public class FilteringLoader implements ResultsLoader {
     public Results loadResults( final CandidateResults crs ) {
 
 
+        if(crs.size() == 0){
+            return new Results();
+        }
 
 
         /**
