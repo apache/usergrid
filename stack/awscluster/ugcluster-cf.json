@@ -1207,6 +1207,20 @@
                 }
             }
         },
+        "AllowRestToESOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "ESSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "RestSecurityGroup"
+                }
+            }
+        },
         "CassSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -1235,6 +1249,34 @@
                 }
             }
         },
+        "AllowESToCassOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "CassSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "ESSecurityGroup"
+                }
+            }
+        },
+        "AllowESToESOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "ESSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "ESSecurityGroup"
+                }
+            }
+        },
         "AllowRestToCassOnAllPorts": {
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
@@ -1260,6 +1302,20 @@
                 "ToPort": "65535",
                 "SourceSecurityGroupName": {
                     "Ref": "CassSecurityGroup"
+                }
+            }
+        },
+        "AllowESToRestOnAllPorts": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupName": {
+                    "Ref": "RestSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "0",
+                "ToPort": "65535",
+                "SourceSecurityGroupName": {
+                    "Ref": "ESSecurityGroup"
                 }
             }
         },
