@@ -39,8 +39,8 @@ chown elasticsearch /mnt/log/elasticsearch
 cd /usr/share/usergrid/scripts
 
 # No need to do this, elasticsearch nodes are also cassandra nodes
-#groovy registry_register.groovy elasticsearch
-#groovy wait_for_instances.groovy elasticsearch ${CASSANDRA_NUM_SERVERS}
+groovy registry_register.groovy elasticsearch
+groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
 
 # leave room for Cassandra: use about one half of RAM for heap
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in

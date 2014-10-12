@@ -668,6 +668,7 @@
                         "export ES_SECURITY_GROUP_NAME=", { "Ref":"ESSecurityGroup" }, "\n",
                         "\n",
                         "\n",
+                        "export ES_CLUSTER_NAME=", { "Ref":"CassClusterName" }, "\n",
                         "export ES_NUM_SERVERS=", { "Ref":"ESNumServers" }, "\n",
                         "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
                         "\n",
