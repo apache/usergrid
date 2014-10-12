@@ -30,13 +30,13 @@ import com.amazonaws.services.simpledb.*
 import com.amazonaws.services.simpledb.model.*
 
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
-def clusterName  = (String)System.getenv().get("CASSANDRA_CLUSTER_NAME")
+def clusterName  = (String)System.getenv().get("ES_CLUSTER_NAME")
 
 NodeRegistry registry = new NodeRegistry();
 
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
 // works because cassandra nodes are also elasticsearch nodes
-def selectResult = registry.searchNode('cassandra')
+def selectResult = registry.searchNode('elasticsearch')
 def esnodes = ""
 def sep = ""
 for (hostname in selectResult) {

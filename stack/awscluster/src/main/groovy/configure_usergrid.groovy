@@ -66,7 +66,7 @@ for (item in selectResult) {
 }
 
 // cassandra nodes are also our elasticsearch nodes
-selectResult = registry.searchNode('cassandra')
+selectResult = registry.searchNode('elasticsearch')
 def esnodes = ""
 sep = ""
 for (item in selectResult) {
