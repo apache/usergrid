@@ -84,6 +84,11 @@
             "Default": "3",
             "MinValue": "1"
         },
+        "ESClusterName": {
+            "Description": "Name to be used for Elasticsearch cluster.",
+            "Type": "String",
+            "Default": "usergrid"
+        },
         "ESNumServers": {
             "Description": "Number of ES servers to start.",
             "Type": "Number",
