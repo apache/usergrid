@@ -72,6 +72,9 @@ public abstract class AbstractIteratingQueryIT {
             entity.put( "name", String.valueOf( i ) );
 
             io.writeEntity( entity );
+            //we have to sleep, or we kill embedded cassandra
+            Thread.sleep( 10 );
+
         }
 
         long stop = System.currentTimeMillis();

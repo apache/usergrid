@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -59,6 +60,7 @@ import static org.junit.Assert.fail;
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
 @Concurrent()
+@Ignore("Temporary ignore")
 public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(PerformanceEntityRebuildIndexTest.class );
 

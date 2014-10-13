@@ -67,6 +67,13 @@ public class FilteringLoader implements ResultsLoader {
     private final EntityIndexBatch indexBatch;
 
 
+    /**
+     * Create an instance of a filter loader
+     * @param managerCache The manager cache to load
+     * @param resultsVerifier
+     * @param ownerId
+     * @param applicationScope
+     */
     protected FilteringLoader( final CpManagerCache managerCache, final ResultsVerifier resultsVerifier,
                                final EntityRef ownerId, final ApplicationScope applicationScope ) {
         this.managerCache = managerCache;
@@ -152,6 +159,7 @@ public class FilteringLoader implements ResultsLoader {
                         } );
 
                 //deindex this document, and remove the previous maxVersion
+                //we have to deindex this from our ownerId, since this is what gave us the reference
                 deIndex( indexBatch, ownerId, previousMax );
                 groupedByScopes.remove( collectionType, previousMax );
 
@@ -189,9 +197,10 @@ public class FilteringLoader implements ResultsLoader {
 
             //now using the scope, load the collection
 
-            // Get the collection scope and batch load all the versions
+            // Get the collection scope and batch load all the versions.  We put all entities in app/app for easy retrieval
+            // unless persistence changes, we never want to read from any scope other than the app, app, scope name scope
             final CollectionScope collScope = new CollectionScopeImpl( 
-                    applicationScope.getApplication(), ownerId, scopeName );
+                    applicationScope.getApplication(), applicationScope.getApplication(), scopeName );
 
             final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collScope );
 
