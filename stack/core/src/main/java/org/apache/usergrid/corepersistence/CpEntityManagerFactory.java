@@ -365,7 +365,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             return null;
         }
 
-        return entity.getUuid();
+
+        final UUID property = ( UUID ) entity.getProperty( "applicationUuid" );
+
+        return property;
 
 
         //        Query q = Query.fromQL( PROPERTY_NAME + " = '" + name + "'");
