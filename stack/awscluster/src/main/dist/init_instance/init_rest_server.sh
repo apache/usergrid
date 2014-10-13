@@ -123,6 +123,7 @@ EOF
 # wait for enough Cassandra nodes then delpoy and configure Usergrid 
 cd /usr/share/usergrid/scripts
 groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
+groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}
 groovy wait_for_instances.groovy graphite ${GRAPHITE_NUM_SERVERS}
 
 # link WAR and Portal into Tomcat's webapps dir
@@ -136,6 +137,8 @@ chown -R tomcat7 /var/lib/tomcat7/webapps
 mkdir -p /usr/share/tomcat7/lib 
 groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
+
+sudo sed -i '98i export CATALINA_OPTS=\"-DAWS_SECRET_KEY=${AWS_SECRET_KEY} -DAWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY} ${CATALINA_OPTS}\"' /usr/share/tomcat7/bin/catalina.sh
 
 # Go
 sh /etc/init.d/tomcat7 start

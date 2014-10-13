@@ -78,7 +78,7 @@ case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 ;;
 'c3.4xlarge' )
     # total of 30g
-    export ES_HEAP_SIZE=15g
+    export ES_HEAP_SIZE=24g
 esac
 
 cat >> /etc/default/elasticsearch << EOF
