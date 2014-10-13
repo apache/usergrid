@@ -90,11 +90,6 @@ public class CpWalker {
                         applicationScope.getApplication().getUuid()
                 });
 
-
-                Observable<String> edgeTypes = gm.getEdgeTypesFromSource( new SimpleSearchEdgeType(fromEntityId, CpNamingUtils.EDGE_COLL_SUFFIX, null ));
-
-
-
                 Observable<Edge> edges = gm.loadEdgesFromSource( new SimpleSearchByEdgeType( 
                         fromEntityId, edgeType, Long.MAX_VALUE, 
                         SearchByEdgeType.Order.DESCENDING, null ));
@@ -133,13 +128,6 @@ public class CpWalker {
                             visitor.visitCollectionEntry( 
                                     em, collName, sourceEntity, targetEntity );
 
-                            // recursion
-                            if ( !stack.contains( targetEntity.getUuid() )) {
-                                stack.push( targetEntity.getUuid() );
-                                doWalkCollections( em, edge.getSourceNode(), visitor, stack );
-                                stack.pop(); 
-                            }
-
                         } else {
 
                             String collName = CpNamingUtils.getConnectionType(edgeType);
@@ -147,12 +135,6 @@ public class CpWalker {
                             visitor.visitConnectionEntry( 
                                     em, collName, sourceEntity, targetEntity );
 
-                            // recursion
-                            if ( !stack.contains( targetEntity.getUuid() )) {
-                                stack.push( targetEntity.getUuid() );
-                                doWalkCollections( em, edge.getTargetNode(), visitor, stack );
-                                stack.pop(); 
-                            }
                         }
                     }
 
