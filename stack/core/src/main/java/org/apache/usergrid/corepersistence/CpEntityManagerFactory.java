@@ -245,10 +245,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         EntityManager em = getEntityManager(SYSTEM_APP_ID);
 
-        //create our ES index since we're initializing this application
-        em.createIndex();
-
-
         final String appName = buildAppName( organizationName, name );
 
         // check for pre-existing application
@@ -287,6 +283,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         properties.put( PROPERTY_NAME, appName );
         EntityManager appEm = getEntityManager( applicationId );
+
+        //create our ES index since we're initializing this application
+        appEm.createIndex();
+
         appEm.create( applicationId, TYPE_APPLICATION, properties );
         appEm.resetRoles();
         appEm.refreshIndex();
