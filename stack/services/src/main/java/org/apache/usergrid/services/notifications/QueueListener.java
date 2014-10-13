@@ -141,7 +141,7 @@ public class QueueListener  {
             try {
                 svcMgr = smf.getServiceManager(smf.getManagementAppId());
                 LOG.info("getting from queue {} ", queueName);
-                QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),"notifications"),queueName);
+                QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),"usergrid"),queueName);
                 QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
                 Timer.Context timerContext = timer.time();
                 List<QueueMessage> messages = queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, ApplicationQueueMessage.class);
