@@ -1256,6 +1256,8 @@ public class CpRelationManager implements RelationManager {
 
         batch.deindex( allTypesIndexScope,  targetEntity );
 
+        batch.execute();
+
     }
 
 

@@ -220,12 +220,20 @@ public class SQSQueueManagerImpl implements QueueManager {
             creds = new AWSCredentials() {
                 @Override
                 public String getAWSAccessKeyId() {
-                    return StringUtils.trim(System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR));
+                    String accessKey = System.getProperty(SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR);
+                    if(accessKey == null){
+                        accessKey = System.getProperty(SDKGlobalConfiguration.ALTERNATE_ACCESS_KEY_ENV_VAR);
+                    }
+                    return StringUtils.trim(accessKey);
                 }
 
                 @Override
                 public String getAWSSecretKey() {
-                    return StringUtils.trim(System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR));
+                    String secret = System.getProperty(SDKGlobalConfiguration.SECRET_KEY_ENV_VAR);
+                    if(secret==null){
+                        secret = System.getProperty(SDKGlobalConfiguration.ALTERNATE_SECRET_KEY_ENV_VAR);
+                    }
+                    return StringUtils.trim(secret);
                 }
             };
             if(StringUtils.isEmpty(creds.getAWSAccessKeyId()) || StringUtils.isEmpty(creds.getAWSSecretKey()) ){

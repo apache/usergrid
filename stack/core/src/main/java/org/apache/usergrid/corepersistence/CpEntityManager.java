@@ -2231,16 +2231,21 @@ public class CpEntityManager implements EntityManager {
 
         final Entity entity;
 
-      //this is the fall back, why isn't this writt
+        //this is the fall back, why isn't this writt
         if ( entityType == null ) {
 
+            //TODO, not sure we want this here any longer.  With 404's we'll hit elastic search every time
             Query q = Query.fromQL(
                 "select * where " + PROPERTY_UUID + " = '" + uuid.toString() + "'");
             q.setResultsLevel( Level.ALL_PROPERTIES );
             Results r = getRelationManager( getApplication() ).searchConnectedEntities( q );
             entity = r.getEntity();
 
-            mm.putString(uuid.toString(), entity.getType() );
+
+            //no gaurentee it even exists, ignore this
+            if(entity != null) {
+                mm.putString( uuid.toString(), entity.getType() );
+            }
         
         } else { 
             entity = get(new SimpleEntityRef( entityType, uuid ));
