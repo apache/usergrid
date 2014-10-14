@@ -107,7 +107,7 @@ public class CpWalker {
                             sourceEntity.getUuid();
 
                         } catch (Exception ex) {
-                            logger.error( "Error getting sourceEntity {}:{}, continuing", 
+                            logger.error( "Error getting sourceEntity {}:{}, skipping this edge", 
                                     sourceEntityRef.getType(), sourceEntityRef.getUuid());
                             logger.error( "Exception", ex);
                             return;
@@ -121,8 +121,8 @@ public class CpWalker {
                             targetEntity.getUuid();
 
                         } catch (Exception ex) {
-                            logger.error( "Error getting sourceEntity {}:{}, continuing", 
-                                sourceEntityRef.getType(), sourceEntityRef.getUuid());
+                            logger.error( "Error getting targetEntity {}:{}, skipping this edge", 
+                                targetEntityRef.getType(), targetEntityRef.getUuid());
                             logger.error( "Exception", ex);
                             return;
                         }
