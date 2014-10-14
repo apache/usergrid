@@ -64,6 +64,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     private NotificationsService ns;
     QueueListener listener;
     private String  notifierName = "apNs";
+    private User user2;
 
     @BeforeClass
     public static void setup(){
@@ -114,8 +115,23 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         user1.setUsername("user1");
         user1.setEmail("user1@usergrid.org");
         user1 = app.getEm().create(user1);
-        app.getEm().createConnection(user1, "devices", device1);
-        app.getEm().createConnection(user1, "devices", device2);
+
+        // create User
+         user2 = new User();
+        user2.setUsername("user2");
+        user2.setEmail("user2@usergrid.org");
+        user2 = app.getEm().create(user2);
+
+        app.clear();
+        e = app.testRequest(ServiceAction.POST, 1, "users",user2.getUuid(),"devices",device1.getUuid()).getEntity();
+        app.clear();
+        e = app.testRequest(ServiceAction.POST, 1, "users",user1.getUuid(),"devices",device1.getUuid()).getEntity();
+        List device1Users = app.getEm().getCollection(device1,"users",null,100, Query.Level.REFS,false).getEntities();
+        assertEquals(device1Users.size(),1);
+
+        app.clear();
+        e = app.testRequest(ServiceAction.POST, 1, "users",user1.getUuid(),"devices",device2.getUuid()).getEntity();
+
 
         // create Group
         group1 = new Group();

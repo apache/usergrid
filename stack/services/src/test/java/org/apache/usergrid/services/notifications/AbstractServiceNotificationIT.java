@@ -63,6 +63,8 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
         return ns;
     }
 
+
+
     protected Notification scheduleNotificationAndWait(Notification notification)
             throws Exception {
         long timeout = System.currentTimeMillis() + 60000;
