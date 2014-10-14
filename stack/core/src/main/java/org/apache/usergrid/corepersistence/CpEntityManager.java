@@ -463,7 +463,7 @@ public class CpEntityManager implements EntityManager {
         CollectionScope collectionScope = new CollectionScopeImpl( 
             getApplicationScope().getApplication(), 
             getApplicationScope().getApplication(),
-                CpNamingUtils.getCollectionScopeNameFromEntityType( entity.getType() ) );
+            CpNamingUtils.getCollectionScopeNameFromEntityType( entity.getType() ) );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );

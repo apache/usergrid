@@ -104,9 +104,12 @@ public class CpWalker {
                         Entity sourceEntity;
                         try {
                             sourceEntity = em.get( sourceEntityRef );
+                            sourceEntity.getUuid();
+
                         } catch (Exception ex) {
                             logger.error( "Error getting sourceEntity {}:{}, continuing", 
                                     sourceEntityRef.getType(), sourceEntityRef.getUuid());
+                            logger.error( "Exception", ex);
                             return;
                         }
 
@@ -115,9 +118,12 @@ public class CpWalker {
                         Entity targetEntity;
                         try {
                             targetEntity = em.get( targetEntityRef );
+                            targetEntity.getUuid();
+
                         } catch (Exception ex) {
                             logger.error( "Error getting sourceEntity {}:{}, continuing", 
-                                    sourceEntityRef.getType(), sourceEntityRef.getUuid());
+                                sourceEntityRef.getType(), sourceEntityRef.getUuid());
+                            logger.error( "Exception", ex);
                             return;
                         }
                             
