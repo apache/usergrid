@@ -16,8 +16,7 @@
  */
 package org.apache.usergrid.persistence.query.ir;
 
-
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 
 
 /**
@@ -44,6 +43,12 @@ public class EmailIdentifierNode extends QueryNode {
     @Override
     public int getCount() {
         return 1;
+    }
+
+
+    @Override
+    public boolean ignoreHintSize() {
+        return false;
     }
 
 

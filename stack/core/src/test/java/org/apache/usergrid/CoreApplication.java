@@ -29,10 +29,12 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 
 import static junit.framework.Assert.assertNotNull;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 
 
 public class CoreApplication implements Application, TestRule {
@@ -120,12 +122,6 @@ public class CoreApplication implements Application, TestRule {
 
 
     @Override
-    public Entity get( UUID id ) throws Exception {
-        return em.get( id );
-    }
-
-
-    @Override
     public Statement apply( final Statement base, final Description description ) {
         return new Statement() {
             @Override
@@ -155,9 +151,12 @@ public class CoreApplication implements Application, TestRule {
         assertNotNull( id );
 
         em = setup.getEmf().getEntityManager( id );
+        em.createIndex();
         assertNotNull( em );
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );
+
+
     }
 
 
@@ -168,5 +167,41 @@ public class CoreApplication implements Application, TestRule {
 
     public QueueManager getQm() {
         return setup.getQmf().getQueueManager( getId() );
+    }
+
+    
+    @Override
+    public void remove(Entity entity) throws Exception {
+        em.delete( entity );
+    }
+
+    
+    @Override
+    public void remove(EntityRef entityRef) throws Exception {
+        em.delete( entityRef );
+    }
+
+    
+    @Override
+    public Entity get( EntityRef entityRef ) throws Exception {
+        return em.get( entityRef );
+    }
+    
+
+    @Override
+    public Entity get( UUID id, String type ) throws Exception {
+        return em.get( new SimpleEntityRef( type, id ) );
+    }
+
+
+    @Override
+    public void refreshIndex() {
+        em.refreshIndex();
+    }
+
+
+    @Override
+    public EntityManager getEntityManager() {
+        return em;
     }
 }

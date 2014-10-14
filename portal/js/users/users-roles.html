@@ -1,131 +1,179 @@
 <div class="content-page" ng-controller="UsersRolesCtrl">
-
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
   <div ng:include="'users/users-tabs.html'"></div>
 
   <div>
 
-    <bsmodal id="addRole"
-             title="Add user to role"
-             close="hideModal"
-             closelabel="Cancel"
-             extrabutton="addUserToRoleDialog"
-             extrabuttonlabel="Add"
-             ng-cloak>
-      <div class="btn-group">
-        <a class="btn dropdown-toggle filter-selector" data-toggle="dropdown">
-          <span class="filter-label">{{$parent.name != '' ? $parent.name : 'Select a Role...'}}</span>
-          <span class="caret"></span>
-        </a>
-        <ul class="dropdown-menu">
-          <li ng-repeat="role in $parent.rolesTypeaheadValues" class="filterItem"><a ng-click="$parent.$parent.name = role.name">{{role.name}}</a></li>
-        </ul>
-      </div>
-    </bsmodal>
-
-    <bsmodal id="leaveRole"
-             title="Confirmation"
-             close="hideModal"
-             closelabel="Cancel"
-             extrabutton="leaveRoleDialog"
-             extrabuttonlabel="Leave"
-             ng-cloak>
-      <p>Are you sure you want to remove the user from the role(s)?</p>
-    </bsmodal>
-
-<div ng-controller="UsersRolesCtrl">
-
-<div class="button-strip">
-  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles add role button')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_add_leave_role}}" tooltip-placement="left">(?)</a>
-      <button class="btn btn-primary" ng-click="showModal('addRole')">Add Role</button>
-      <button class="btn btn-primary" ng-disabled="!hasRoles || !valueSelected(selectedUser.roles)" ng-click="showModal('leaveRole')">Leave role(s)</button>
+    <bsmodal id="addRole" title="Add user to role" close="hideModal"
+      closelabel="Cancel" extrabutton="addUserToRoleDialog"
+      extrabuttonlabel="Add" ng-cloak>
+    <div class="btn-group">
+      <a class="btn dropdown-toggle filter-selector"
+        data-toggle="dropdown"> <span class="filter-label">{{$parent.name
+          != '' ? $parent.name : 'Select a Role...'}}</span> <span
+        class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li ng-repeat="role in $parent.rolesTypeaheadValues"
+          class="filterItem"><a
+          ng-click="$parent.$parent.name = role.name">{{role.name}}</a></li>
+      </ul>
     </div>
-    <br>
-      <h4>Roles <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles roles list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_roles}}" tooltip-placement="top">(?)</a></h4>
-    <table class="table table-striped">
-      <tbody>
-      <tr class="table-header">
-        <td style="width: 30px;"><input type="checkbox" ng-show="hasRoles" id="rolesSelectAllCheckBox" ng-model="usersRolesSelected" ng-click="selectAllEntities(selectedUser.roles,this,'usersRolesSelected',true)" ></td>
-        <td>Role Name</td>
-        <td>Role title</td>
-      </tr>
-      <tr class="zebraRows" ng-repeat="role in selectedUser.roles">
-        <td>
-          <input
-            type="checkbox"
-            ng-model="role.checked"
-            >
-        </td>
-        <td>{{role.name}}</td>
-        <td>{{role.title}}</td>
-      </tr>
-      </tbody>
-    </table>
+    </bsmodal>
 
-    <bsmodal id="deletePermission"
-             title="Confirmation"
-             close="hideModal"
-             closelabel="Cancel"
-             extrabutton="deletePermissionDialog"
-             extrabuttonlabel="Delete"
-             ng-cloak>
+    <bsmodal id="leaveRole" title="Confirmation" close="hideModal"
+      closelabel="Cancel" extrabutton="leaveRoleDialog"
+      extrabuttonlabel="Leave" ng-cloak>
+    <p>Are you sure you want to remove the user from the role(s)?</p>
+    </bsmodal>
+
+    <div ng-controller="UsersRolesCtrl">
+
+      <div class="button-strip">
+        <a class="help_tooltip"
+          ng-mouseover="help.sendTooltipGA('users roles add role button')"
+          ng-show="help.helpTooltipsEnabled" href="#"
+          ng-attr-tooltip="{{tooltip_roles_add_leave_role}}"
+          tooltip-placement="left">(?)</a>
+        <button class="btn btn-primary" ng-click="showModal('addRole')">Add
+          Role</button>
+        <button class="btn btn-primary"
+          ng-disabled="!hasRoles || !valueSelected(selectedUser.roles)"
+          ng-click="showModal('leaveRole')">Leave role(s)</button>
+      </div>
+      <br>
+      <h4>
+        Roles <a class="help_tooltip"
+          ng-mouseover="help.sendTooltipGA('users roles roles list')"
+          ng-show="help.helpTooltipsEnabled" href="#"
+          ng-attr-tooltip="{{tooltip_roles_roles}}"
+          tooltip-placement="top">(?)</a>
+      </h4>
+      <table class="table table-striped">
+        <tbody>
+          <tr class="table-header">
+            <td style="width: 30px;"><input type="checkbox"
+              ng-show="hasRoles" id="rolesSelectAllCheckBox"
+              ng-model="usersRolesSelected"
+              ng-click="selectAllEntities(selectedUser.roles,this,'usersRolesSelected',true)"></td>
+            <td>Role Name</td>
+            <td>Role title</td>
+          </tr>
+          <tr class="zebraRows" ng-repeat="role in selectedUser.roles">
+            <td><input type="checkbox" ng-model="role.checked">
+            </td>
+            <td>{{role.name}}</td>
+            <td>{{role.title}}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <bsmodal id="deletePermission" title="Confirmation"
+        close="hideModal" closelabel="Cancel"
+        extrabutton="deletePermissionDialog" extrabuttonlabel="Delete"
+        ng-cloak>
       <p>Are you sure you want to delete the permission(s)?</p>
-    </bsmodal>
+      </bsmodal>
 
-    <bsmodal id="addPermission"
-             title="New Permission"
-             close="hideModal"
-             closelabel="Cancel"
-             extrabutton="addUserPermissionDialog"
-             extrabuttonlabel="Add"
-             ng-cloak>
-      <p>Path: <input ng-model="$parent.permissions.path" placeholder="ex: /mydata" id="usersRolePermissions" type="text" ng-pattern="pathRegex" required ug-validate ng-attr-title="{{pathRegexDescription}}" /> <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles new permission path box')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_new_permission_path}}" tooltip-placement="right">(?)</a></p>
+      <bsmodal id="addPermission" title="New Permission"
+        close="hideModal" closelabel="Cancel"
+        extrabutton="addUserPermissionDialog" extrabuttonlabel="Add"
+        ng-cloak>
+      <p>
+        Path: <input ng-model="$parent.permissions.path"
+          placeholder="ex: /mydata" id="usersRolePermissions"
+          type="text" ng-pattern="pathRegex" required ug-validate
+          ng-attr-title="{{pathRegexDescription}}" /> <a
+          class="help_tooltip"
+          ng-mouseover="help.sendTooltipGA('users roles new permission path box')"
+          ng-show="help.helpTooltipsEnabled" href="#"
+          ng-attr-tooltip="{{tooltip_roles_new_permission_path}}"
+          tooltip-placement="right">(?)</a>
+      </p>
       <div class="control-group">
-        <input type="checkbox" ng-model="$parent.permissions.getPerm"> GET <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles new permission verbs check boxes')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_new_permission_verbs}}" tooltip-placement="right">(?)</a>
+        <input type="checkbox" ng-model="$parent.permissions.getPerm">
+        GET <a class="help_tooltip"
+          ng-mouseover="help.sendTooltipGA('users roles new permission verbs check boxes')"
+          ng-show="help.helpTooltipsEnabled" href="#"
+          ng-attr-tooltip="{{tooltip_roles_new_permission_verbs}}"
+          tooltip-placement="right">(?)</a>
       </div>
       <div class="control-group">
-        <input type="checkbox" ng-model="$parent.permissions.postPerm"> POST
+        <input type="checkbox" ng-model="$parent.permissions.postPerm">
+        POST
       </div>
       <div class="control-group">
-        <input type="checkbox" ng-model="$parent.permissions.putPerm"> PUT
+        <input type="checkbox" ng-model="$parent.permissions.putPerm">
+        PUT
       </div>
       <div class="control-group">
-        <input type="checkbox" ng-model="$parent.permissions.deletePerm"> DELETE
+        <input type="checkbox" ng-model="$parent.permissions.deletePerm">
+        DELETE
       </div>
-    </bsmodal>
+      </bsmodal>
 
-    <div class="button-strip">
-      <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles add permission button')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_add_delete_permission}}" tooltip-placement="left">(?)</a>
-      <button class="btn btn-primary" ng-click="showModal('addPermission')">Add Permission</button>
-      <button class="btn btn-primary" ng-disabled="!hasPermissions || !valueSelected(selectedUser.permissions)" ng-click="showModal('deletePermission')">Delete Permission(s)</button>
+      <div class="button-strip">
+        <a class="help_tooltip"
+          ng-mouseover="help.sendTooltipGA('users roles add permission button')"
+          ng-show="help.helpTooltipsEnabled" href="#"
+          ng-attr-tooltip="{{tooltip_roles_add_delete_permission}}"
+          tooltip-placement="left">(?)</a>
+        <button class="btn btn-primary"
+          ng-click="showModal('addPermission')">Add Permission</button>
+        <button class="btn btn-primary"
+          ng-disabled="!hasPermissions || !valueSelected(selectedUser.permissions)"
+          ng-click="showModal('deletePermission')">Delete
+          Permission(s)</button>
+      </div>
+      <br>
+      <h4>
+        Permissions <a class="help_tooltip"
+          ng-mouseover="help.sendTooltipGA('users roles permissions list')"
+          ng-show="help.helpTooltipsEnabled" href="#"
+          ng-attr-tooltip="{{tooltip_roles_permissions}}"
+          tooltip-placement="top">(?)</a>
+      </h4>
+      <table class="table table-striped">
+        <tbody>
+          <tr class="table-header">
+            <td style="width: 30px;"><input type="checkbox"
+              ng-show="hasPermissions" id="permissionsSelectAllCheckBox"
+              ng-model="usersPermissionsSelected"
+              ng-click="selectAllEntities(selectedUser.permissions,this,'usersPermissionsSelected',true)"></td>
+            <td>Path</td>
+            <td>GET</td>
+            <td>POST</td>
+            <td>PUT</td>
+            <td>DELETE</td>
+          </tr>
+          <tr class="zebraRows"
+            ng-repeat="permission in selectedUser.permissions">
+            <td><input type="checkbox"
+              ng-model="permission.checked"></td>
+            <td>{{permission.path}}</td>
+            <td>{{permission.operations.get}}</td>
+            <td>{{permission.operations.post}}</td>
+            <td>{{permission.operations.put}}</td>
+            <td>{{permission.operations.delete}}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <br>
-      <h4>Permissions <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('users roles permissions list')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_roles_permissions}}" tooltip-placement="top">(?)</a></h4>
-    <table class="table table-striped">
-      <tbody>
-      <tr class="table-header">
-        <td style="width: 30px;"><input type="checkbox" ng-show="hasPermissions"  id="permissionsSelectAllCheckBox" ng-model="usersPermissionsSelected" ng-click="selectAllEntities(selectedUser.permissions,this,'usersPermissionsSelected',true)"  ></td>
-        <td>Path</td>
-        <td>GET</td>
-        <td>POST</td>
-        <td>PUT</td>
-        <td>DELETE</td>
-      </tr>
-      <tr class="zebraRows" ng-repeat="permission in selectedUser.permissions">
-        <td>
-          <input
-            type="checkbox"
-            ng-model="permission.checked"
-            >
-        </td>
-        <td>{{permission.path}}</td>
-        <td>{{permission.operations.get}}</td>
-        <td>{{permission.operations.post}}</td>
-        <td>{{permission.operations.put}}</td>
-        <td>{{permission.operations.delete}}</td>
-      </tr>
-      </tbody>
-    </table>
   </div>
- </div>
 
 </div>

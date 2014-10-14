@@ -28,6 +28,6 @@ public class DevicesService extends org.apache.usergrid.services.devices.Devices
 
     public DevicesService() {
         super();
-        logger.info( "/users/*/devices" );
+        logger.debug( "/users/*/devices" );
     }
 }

@@ -40,7 +40,7 @@ import static junit.framework.Assert.assertNotNull;
 
 
 /** @author zznate */
-@Ignore
+@Ignore("Experimental Ping Indentiyy test")
 @Concurrent()
 public class PingIdentityProviderIT {
     private static UserInfo adminUser;
@@ -51,7 +51,7 @@ public class PingIdentityProviderIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource, ServiceITSuite.elasticSearchResource );
 
 
     @BeforeClass

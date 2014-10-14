@@ -17,19 +17,17 @@
 package org.apache.usergrid.persistence;
 
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
-
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.codehaus.jackson.annotate.JsonAnyGetter;
-import org.codehaus.jackson.annotate.JsonAnySetter;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 
 @XmlRootElement
-public class CredentialsInfo implements Comparable<CredentialsInfo> {
+public class CredentialsInfo implements Comparable<CredentialsInfo>,Serializable {
 
     boolean recoverable;
     boolean encrypted;
@@ -73,7 +71,7 @@ public class CredentialsInfo implements Comparable<CredentialsInfo> {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getCipher() {
         return cipher;
     }
@@ -84,7 +82,7 @@ public class CredentialsInfo implements Comparable<CredentialsInfo> {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getKey() {
         return key;
     }
@@ -95,7 +93,7 @@ public class CredentialsInfo implements Comparable<CredentialsInfo> {
     }
 
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getSecret() {
         return secret;
     }

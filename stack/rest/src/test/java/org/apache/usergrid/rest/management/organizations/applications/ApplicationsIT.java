@@ -20,7 +20,8 @@ package org.apache.usergrid.rest.management.organizations.applications;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -28,6 +29,7 @@ import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.TestContextSetup;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 
 
 /**
@@ -41,7 +43,10 @@ public class ApplicationsIT extends AbstractRestIT {
 
 
     @Test
-    public void test10AppLimit() {
+    @Ignore("ignored because this test fails because it does not account for the default app "
+            + "created by the TestContext and the sandbox app. "
+            + "see also: https://issues.apache.org/jira/browse/USERGRID-210 ")
+    public void test10AppLimit() throws IOException {
 
         int size = 11;
 
@@ -53,7 +58,9 @@ public class ApplicationsIT extends AbstractRestIT {
             appNames.add( name );
 
             context.withApp( name ).createAppForOrg();
+            refreshIndex(context.getOrgName(), name);
         }
+
 
         //now go through and ensure each entry is present
 

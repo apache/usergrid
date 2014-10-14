@@ -36,9 +36,10 @@ import static org.junit.Assert.assertTrue;
  */
 @Concurrent
 public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
+
     /**
-     * Test the scheduler ramps up correctly when there are more jobs to be read after a pause when the job specifies
-     * the retry time
+     * Test the scheduler ramps up correctly when there are more jobs to be read after a 
+     * pause when the job specifies the retry time
      */
     @Test
     public void onlyOnceTest() throws Exception {
@@ -59,6 +60,8 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
         JobData returned = scheduler.createJob( "onlyOnceExceution", System.currentTimeMillis(), new JobData() );
 
+        scheduler.refreshIndex();
+
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
         boolean waited = getJobListener().blockTilDone( customRetry * numberOfRuns * 2 + 5000L );
@@ -69,6 +72,8 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
         getJobListener().setExpected( 2 );
         //reset our latch immediately for further tests
         job.setLatch( numberOfRuns );
+
+        scheduler.refreshIndex();
 
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 
@@ -84,11 +89,14 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
         assertTrue( "Job slept", slept );
 
+        scheduler.refreshIndex();
 
         //now wait again to see if the job fires one more time, it shouldn't
         waited = getJobListener().blockTilDone( customRetry * numberOfRuns * 2 );
 
         assertFalse( "Job ran twice", waited );
+
+        scheduler.refreshIndex();
 
         stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 

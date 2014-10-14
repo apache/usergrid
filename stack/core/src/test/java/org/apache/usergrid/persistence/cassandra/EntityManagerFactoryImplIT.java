@@ -26,7 +26,6 @@ import java.util.UUID;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +36,7 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.cassandra.util.TraceTag;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
@@ -80,7 +80,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
     public UUID createApplication( String organizationName, String applicationName ) throws Exception {
         if ( USE_DEFAULT_DOMAIN ) {
-            return CassandraService.DEFAULT_APPLICATION_ID;
+            return emf.getDefaultAppId();
         }
         return emf.createApplication( organizationName, applicationName );
     }
@@ -93,14 +93,19 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
     }
 
 
+    public void testRebuildIndexes() throws Exception {
+
+
+    }
+
+
     @Test
-    @Ignore("Fix this EntityManagerFactoryImplIT.testCreateAndGet:105->createApplication:90 » ApplicationAlreadyExists")
     public void testCreateAndGet() throws Exception {
         TraceTag traceTag = traceTagManager.create( "testCreateAndGet" );
         traceTagManager.attach( traceTag );
         logger.info( "EntityDaoTest.testCreateAndGet" );
 
-        UUID applicationId = createApplication( "testOrganization", "testCreateAndGet" );
+        UUID applicationId = createApplication( "EntityManagerFactoryImplIT", "testCreateAndGet" );
         logger.info( "Application id " + applicationId );
 
         EntityManager em = emf.getEntityManager( applicationId );
@@ -123,7 +128,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         i = 0;
         for ( Entity entity : things ) {
 
-            Entity thing = em.get( entity.getUuid() );
+            Entity thing = em.get( new SimpleEntityRef("thing", entity.getUuid()));
             assertNotNull( "thing should not be null", thing );
             assertFalse( "thing id not valid", thing.getUuid().equals( new UUID( 0, 0 ) ) );
             assertEquals( "name not expected value", "thing" + i, thing.getProperty( "name" ) );
@@ -135,7 +140,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         for ( Entity entity : things ) {
             ids.add( entity.getUuid() );
 
-            Entity en = em.get( entity.getUuid() );
+            Entity en = em.get( new SimpleEntityRef("thing", entity.getUuid()));
             String type = en.getType();
             assertEquals( "type not expected value", "thing", type );
 
@@ -148,7 +153,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         }
 
         i = 0;
-        Results results = em.get( ids, Results.Level.CORE_PROPERTIES );
+        Results results = em.getEntities( ids, "thing" );
         for ( Entity thing : results ) {
             assertNotNull( "thing should not be null", thing );
 

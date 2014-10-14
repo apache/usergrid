@@ -17,7 +17,8 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.apache.usergrid.cassandra.Concurrent;
@@ -69,7 +70,7 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
     }
 
 
-    private void doTest( String symbol, String org, String app ) {
+    private void doTest( String symbol, String org, String app ) throws IOException {
 
         org = org.toLowerCase();
         app = app.toLowerCase();
@@ -78,13 +79,14 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
         String user = email;
         String password = "password";
 
-
         TestAdminUser adminUser = new TestAdminUser( user, password, email );
 
         context.withApp( app ).withOrg( org ).withUser( adminUser );
 
         // create the org and app
         context.createNewOrgAndUser();
+
+        // no need for refresh here as Service module does an index refresh when org/app created
 
         // now log in via a GET
 

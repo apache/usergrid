@@ -19,17 +19,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>10</version>
     <relativePath></relativePath>
   </parent>
 
   <groupId>org.apache.usergrid</groupId>
   <artifactId>usergrid</artifactId>
-  <version>0.0.29-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <name>Usergrid Parent</name>
-  <description>Usergrid Project</description>
+  <description>Parent module for the Apache Usergrid Project</description>
   <packaging>pom</packaging>
 
   <properties>
@@ -85,10 +85,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- you can override these via MAVEN_OPTS -->
-    <ug.heapmax>1024m</ug.heapmax>
-    <ug.heapmin>1024m</ug.heapmin>
+    <ug.heapmax>2048m</ug.heapmax>
+    <ug.heapmin>2048m</ug.heapmin>
+	<ug.argline>-Djava.awt.headless=true</ug.argline>
 
-    <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
+    <usergrid-custom-spring-properties>classpath:/usergrid-deployment.properties</usergrid-custom-spring-properties>
     <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
 
     <!-- =================================================================== -->
@@ -96,23 +97,30 @@
     <!-- =================================================================== -->
 
     <amber-version>0.22-incubating</amber-version>
-    <cassandra-version>1.2.12</cassandra-version>
+    <cassandra-version>1.2.18</cassandra-version>
     <hector-om-version>3.0-03</hector-om-version>
     <hector-version>1.1-4</hector-version>
     <hector-test-version>1.1-4</hector-test-version>
     <jackson-version>1.9.9</jackson-version>
     <jclouds.version>1.7.1</jclouds.version>
-    <jersey-version>1.18</jersey-version>
+    <jackson-2-version>2.3.3</jackson-2-version>
+    <jersey-version>1.18.1</jersey-version>
     <junit-version>4.11</junit-version>
     <log4j-version>1.2.16</log4j-version>
     <metrics-version>2.1.2</metrics-version>
     <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
     <shiro-version>1.2.0</shiro-version>
     <slf4j-version>1.6.1</slf4j-version>
-    <snakeyaml-version>1.8</snakeyaml-version>
-    <tomcat-version>7.0.42</tomcat-version>
+    <snakeyaml-version>1.6</snakeyaml-version>
+    <tomcat-version>7.0.52</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
+    <elasticsearch.version>1.2.4</elasticsearch.version>
+
+    <usergrid.it.forkCount>3</usergrid.it.forkCount>
+    <usergrid.it.reuseForks>false</usergrid.it.reuseForks>
+    <usergrid.it.parallel>suites</usergrid.it.parallel>
+
     <metrics.version>3.0.0</metrics.version>
     <rx.version>0.19.6</rx.version>
   </properties>
@@ -160,13 +168,12 @@
       <id>tonuquq</id>
       <name>Alex Karasulu</name>
     </developer>
+    <developer>
+      <id>snoopdave</id>
+      <name>Dave Johnson</name>
+    </developer> 
   </developers>
 
-  <scm>
-    <connection>scm:git:git@github.com:usergrid/usergrid.git</connection>
-    <developerConnection>scm:git:git@github.com:usergrid/usergrid.git</developerConnection>
-    <url>https://github.com/usergrid/usergrid</url>
-  </scm>
 
   <distributionManagement>
     <!-- Versioned (non-snapshot) releases are published to this repository -->
@@ -185,17 +192,28 @@
   </distributionManagement>
 
   <modules>
+    <module>build-tools</module>
+    <module>test-utils</module>
     <module>config</module>
+    <module>corepersistence</module>
     <module>core</module>
     <module>services</module>
-    <module>tools</module>
-    <module>mongo-emulator</module>
-    <module>websocket</module>
     <module>rest</module>
+    <!--
+    <module>tools</module>
+    <module>websocket</module>
+    -->
+    <!--
+    Re-enable when we have a fix for the AppleJavaExtensions jar issue
+    https://issues.apache.org/jira/browse/USERGRID-224
     <module>launcher</module>
-    <module>test-utils</module>
-    <!--<module>query-validator</module>-->
-    <module>build-tools</module>
+    -->
+    <!-- <module>mongo-emulator</module> -->
+    <!--  
+    Re-enable when query-validator updated to work with Core Persistence.
+    https://issues.apache.org/jira/browse/USERGRID-221
+    <module>query-validator</module>
+    -->
   </modules>
 
   <dependencyManagement>
@@ -260,7 +278,7 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
-        <version>4.1.3</version>
+        <version>4.2</version>
         <exclusions>
           <exclusion>
             <groupId>commons-codec</groupId>
@@ -436,16 +454,14 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-core</artifactId>
-        <version>3.0.3</version>
-      </dependency>
-
-      <dependency>
         <groupId>org.apache.cassandra</groupId>
         <artifactId>cassandra-thrift</artifactId>
         <version>${cassandra-version}</version>
         <exclusions>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
@@ -501,14 +517,8 @@
 
       <dependency>
         <groupId>org.apache.tomcat</groupId>
-        <artifactId>catalina</artifactId>
-        <version>6.0.29</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.tomcat</groupId>
-        <artifactId>juli</artifactId>
-        <version>6.0.29</version>
+        <artifactId>tomcat-catalina</artifactId>
+        <version>${tomcat-version}</version>
       </dependency>
 
       <dependency>
@@ -721,6 +731,47 @@
         <version>1.2</version>
       </dependency>
 
+      <!-- the core, which includes Streaming API, shared low-level abstractions (but NOT data-binding) -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
+      <!-- Just the annotations; use this dependency if you want to attach annotations
+           to classes without connecting them to the code. -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
+      <!-- databinding; ObjectMapper, JsonNode and related classes are here -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
+      <!-- smile (binary JSON). Other artifacts in this group do other formats. -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-smile</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+      <!-- JAX-RS provider -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+        <artifactId>jackson-jaxrs-json-provider</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+      <!-- Support for JAX-B annotations as additional configuration -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-jaxb-annotations</artifactId>
+        <version>${jackson-2-version}</version>
+      </dependency>
+
       <!-- Other Commercial Dependencies -->
 
       <dependency>
@@ -837,9 +888,8 @@
       </dependency>
 
       <dependency>
-        <groupId>net.tanesha.recaptcha4j</groupId>
+        <groupId>com.google.code.maven-play-plugin.net.tanesha.recaptcha4j</groupId>
         <artifactId>recaptcha4j</artifactId>
-        <!-- included as local dependency -->
         <version>0.0.8</version>
       </dependency>
 
@@ -1199,7 +1249,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit-dep</artifactId>
-        <version>4.10</version>
+        <version>4.11</version>
       </dependency>
 
       <dependency>
@@ -1279,9 +1329,9 @@
       </dependency>
 
       <dependency>
-        <groupId>org.usergrid</groupId>
+        <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid-java-client</artifactId>
-        <version>0.0.3</version>
+        <version>0.0.10-SNAPSHOT</version>
       </dependency>
 
       <dependency>
@@ -1304,7 +1354,7 @@
         <groupId>com.apple</groupId>
         <artifactId>AppleJavaExtensions</artifactId>
         <!-- from local-depedendencies -->
-        <version>1.5.4</version>
+        <version>1.4</version>
       </dependency>
 
       <dependency>
@@ -1364,7 +1414,28 @@
         <artifactId>activation</artifactId>
         <version>1.1</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.relayrides</groupId>
+        <artifactId>pushy</artifactId>
+        <!-- The sha in the version is the git commit used in this build.  Check out the pushy source, then this commit to build the library locally -->
+        <version>0.4-apigee-63dec68314c97c6e3ef40c88590e1b196d3ec55b</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.ganyo</groupId>
+          <artifactId>gcm-server</artifactId>
+          <version>1.0.2</version>
+      </dependency>
+
     </dependencies>
+
   </dependencyManagement>
 
   <dependencies>
@@ -1437,8 +1508,8 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.1</version>
           <configuration>
-            <source>1.6</source>
-            <target>1.6</target>
+            <source>1.7</source>
+            <target>1.7</target>
             <optimize>true</optimize>
             <showDeprecation>true</showDeprecation>
             <debug>true</debug>
@@ -1613,7 +1684,10 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.15</version>
           <configuration>
-            <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+              <parallel>${usergrid.it.parallel}</parallel>
+              <forkCount>${usergrid.it.forkCount}</forkCount>
+              <reuseForks>${usergrid.it.reuseForks}</reuseForks>
+              <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
           </configuration>
         </plugin>
 
@@ -1765,12 +1839,14 @@
                     <exclude>**/CHANGES.txt</exclude>
                     <exclude>**/*.json</exclude>
                     <exclude>**/*.log</exclude>
+                    <exclude>**/*.md5</exclude>
 
                     <!-- git and IDE project files -->
                     <exclude>**/.git/**</exclude>
                     <exclude>**/.gitignore</exclude>
                     <exclude>**/.idea/**</exclude>
                     <exclude>**/*.iml</exclude>
+                    <exclude>**/*.log</exclude>
                     <exclude>**/nbactions.xml</exclude>
                     <exclude>**/nb-configuration.xml</exclude>
                     <exclude>**/.classpath/**</exclude>
@@ -1792,12 +1868,8 @@
                     <!-- other -->
                     <exclude>**/m2/**</exclude>
                     <exclude>**/*.asc</exclude>
-                    <exclude>**/src/test/resources/**</exclude>
+                    <exclude>**/dummy.txt</exclude>
                     <exclude>**/cloudbees.xml</exclude>
-		            <exclude>**/awscluster/**</exclude>
-                    <exclude>**/aws.properties</exclude>
-                    <exclude>**/launcher-vagrant/**</exclude>
-                    <exclude>**/usergrid-custom.properties</exclude>
 
                 </excludes>
             </configuration>
@@ -1808,8 +1880,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.7</source>
+          <target>1.7</target>
           <optimize>true</optimize>
           <showDeprecation>true</showDeprecation>
           <debug>true</debug>
@@ -1840,7 +1912,7 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>1.6.0</version>
+                  <version>1.7.0</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
                   <version>[3.0,)</version>
@@ -1897,4 +1969,12 @@
         </repository>
     </repositories>
 
+    <scm>
+    	<url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>
+    	<connection>scm:git:http://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</connection>
+    	<tag>HEAD</tag>
+    	<developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</developerConnection>
+    </scm>
+
 </project>
+

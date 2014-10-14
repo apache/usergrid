@@ -31,7 +31,7 @@ import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -47,8 +47,6 @@ import org.apache.commons.cli.Options;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
 
 /**
@@ -106,7 +104,7 @@ public class DupAdminRepair extends ExportingToolBase {
 
         logger.info( "Starting crawl of all admins" );
 
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
         Application app = em.getApplication();
 
         // search for all orgs
@@ -228,7 +226,7 @@ public class DupAdminRepair extends ExportingToolBase {
 
         boolean collision = false;
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
 
         for ( UUID id : ids ) {
             UserInfo other = managementService.getAdminUserByUuid( id );
@@ -276,7 +274,7 @@ public class DupAdminRepair extends ExportingToolBase {
     /** Merge the source admin to the target admin by copying oranizations. Then deletes the source admin */
     private void mergeAdmins( String targetDir, UUID sourceId, UUID targetId ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
 
         User sourceUser = em.get( sourceId, User.class );
 

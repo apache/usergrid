@@ -17,7 +17,8 @@
 package org.apache.usergrid.rest.test.resource.app.queue;
 
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.apache.usergrid.rest.test.resource.CollectionResource;
 import org.apache.usergrid.rest.test.resource.NamedResource;
 
@@ -33,15 +34,15 @@ public class SubscribersCollection extends CollectionResource {
     }
 
 
-    public JsonNode subscribe( String queueName ) {
+    public JsonNode subscribe( String queueName ) throws IOException {
         this.queueName = queueName;
-        return jsonMedia( withToken( resource() ) ).put( JsonNode.class );
+        return mapper.readTree( jsonMedia( withToken( resource() ) ).put( String.class ));
     }
 
 
-    public JsonNode unsubscribe( String queueName ) {
+    public JsonNode unsubscribe( String queueName ) throws IOException {
         this.queueName = queueName;
-        return jsonMedia( withToken( resource() ) ).delete( JsonNode.class );
+        return mapper.readTree( jsonMedia( withToken( resource() ) ).delete( String.class ));
     }
 
 

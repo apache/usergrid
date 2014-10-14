@@ -17,29 +17,22 @@
 
 package org.apache.usergrid.rest.management;
 
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.rest.AbstractRestIT;
-import org.codehaus.jackson.JsonNode;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
+import javax.ws.rs.core.MediaType;
+import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.rest.AbstractRestIT;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import org.junit.Ignore;
+import org.junit.Test;
 
 
-/**
- *
- *
- */
 @Concurrent
 public class ExportResourceIT extends AbstractRestIT {
 
@@ -56,9 +49,9 @@ public class ExportResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -68,8 +61,7 @@ public class ExportResourceIT extends AbstractRestIT {
     }
 
 
-    //is this test still valid knowing that the sch. won't run in intelliJ?
-    @Ignore
+    @Ignore("is this test still valid knowing that the sch. won't run in intelliJ?")
     public void exportCallCreationEntities100() throws Exception {
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
         JsonNode node = null;
@@ -89,15 +81,15 @@ public class ExportResourceIT extends AbstractRestIT {
         for ( int i = 0; i < 100; i++ ) {
             Map<String, String> userCreation = hashMap( "type", "app_user" ).map( "name", "fred" + i );
 
-            node = resource().path( "/test-organization/test-app/app_users" ).queryParam( "access_token", access_token )
+            node = mapper.readTree( resource().path( "/test-organization/test-app/app_users" ).queryParam( "access_token", access_token )
                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .post( JsonNode.class, userCreation );
+                             .post( String.class, userCreation ));
         }
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export" )
                              .queryParam( "access_token", adminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -118,9 +110,9 @@ public class ExportResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -143,9 +135,9 @@ public class ExportResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -164,9 +156,9 @@ public class ExportResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -177,9 +169,9 @@ public class ExportResourceIT extends AbstractRestIT {
         uuid = uuid.replaceAll( "\"", "" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + uuid )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/export/" + uuid )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -187,7 +179,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
 
         assertEquals( ClientResponse.Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
+        assertEquals( "SCHEDULED", node.get( "state" ).textValue() );//TODO: do tests for other states in service tier
     }
 
 
@@ -199,16 +191,16 @@ public class ExportResourceIT extends AbstractRestIT {
 
         HashMap<String, Object> payload = payloadBuilder();
 
-        node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+        node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export" )
                          .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                         .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         String uuid = String.valueOf( node.get( "Export Entity" ) );
         uuid = uuid.replaceAll( "\"", "" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + uuid )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/export/" + uuid )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -216,7 +208,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
 
         assertEquals( ClientResponse.Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
+        assertEquals( "SCHEDULED", node.get( "state" ).textValue() );//TODO: do tests for other states in service tier
     }
 
 
@@ -227,16 +219,16 @@ public class ExportResourceIT extends AbstractRestIT {
 
         HashMap<String, Object> payload = payloadBuilder();
 
-        node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+        node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                          .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                         .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                         .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         String uuid = String.valueOf( node.get( "Export Entity" ) );
         uuid = uuid.replaceAll( "\"", "" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + uuid )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/export/" + uuid )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -244,7 +236,7 @@ public class ExportResourceIT extends AbstractRestIT {
 
 
         assertEquals( ClientResponse.Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
+        assertEquals( "SCHEDULED", node.get( "state" ).textValue() );//TODO: do tests for other states in service tier
     }
 
 
@@ -255,9 +247,9 @@ public class ExportResourceIT extends AbstractRestIT {
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + fake )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/export/" + fake )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -275,9 +267,9 @@ public class ExportResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = new HashMap<String, Object>();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -294,9 +286,9 @@ public class ExportResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = new HashMap<String, Object>();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -314,9 +306,9 @@ public class ExportResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = new HashMap<String, Object>();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -331,9 +323,9 @@ public class ExportResourceIT extends AbstractRestIT {
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export/" + fake )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export/" + fake )
                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
+                             .get( String.class ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -348,9 +340,9 @@ public class ExportResourceIT extends AbstractRestIT {
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export/" + fake )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export/" + fake )
                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
+                             .get( String.class ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -365,9 +357,9 @@ public class ExportResourceIT extends AbstractRestIT {
         ClientResponse.Status responseStatus = ClientResponse.Status.OK;
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
         try {
-            node = resource().path( "/management/orgs/test-organization/export/" + fake )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/export/" + fake )
                              .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                             .get( JsonNode.class );
+                             .get( String.class ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -387,9 +379,9 @@ public class ExportResourceIT extends AbstractRestIT {
         properties.remove( "storage_info" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -408,9 +400,9 @@ public class ExportResourceIT extends AbstractRestIT {
         properties.remove( "storage_info" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -429,9 +421,9 @@ public class ExportResourceIT extends AbstractRestIT {
         properties.remove( "storage_info" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -473,9 +465,9 @@ public class ExportResourceIT extends AbstractRestIT {
 
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -495,9 +487,9 @@ public class ExportResourceIT extends AbstractRestIT {
 
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -571,9 +563,9 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_key" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -587,9 +579,9 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_access_id" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -603,9 +595,9 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "bucket_location" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -625,9 +617,9 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_key" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -641,9 +633,9 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "s3_access_id" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -656,9 +648,9 @@ public class ExportResourceIT extends AbstractRestIT {
         storage_info.remove( "bucket_location" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
+            node = mapper.readTree( resource().path( "/management/orgs/test-organization/apps/test-app/collection/users/export" )
                              .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                             .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                             .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();

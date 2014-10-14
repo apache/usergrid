@@ -1,0 +1,48 @@
+{
+  "name" : "UG-2.0",
+  "id" : "adb51dfa-ed4f-4a36-9cbf-6b5a7b6da31e",
+  "clusters" : [ {
+    "name" : "ElasticSearch",
+    "instanceSpec" : {
+      "imageId" : "ami-c56152ac",
+      "type" : "m1.large",
+      "keyName" : "TestKeyPair",
+      "setupScripts" : [ "file://./install_es.sh", "file://./setup_cassandra.sh" ],
+      "scriptEnvironment" : {
+        "ES_PATH" : "/var/lib/elastic_search",
+        "JAVA_HOME" : "/user/lib/jvm/default"
+      }
+    },
+    "size" : 6
+  }, {
+    "name" : "Cassandra",
+    "instanceSpec" : {
+      "imageId" : "ami-c56152ac",
+      "type" : "m1.xlarge",
+      "keyName" : "TestKeyPair",
+      "setupScripts" : [ "file://./install_cassandra.sh", "file://./setup_cassandra.sh" ],
+      "scriptEnvironment" : {
+        "CASSANDRA_PATH" : "/var/lib/cassandra",
+        "JAVA_HOME" : "/user/lib/jvm/default"
+      }
+    },
+    "size" : 6
+  } ],
+  "dataCenter" : "us-east-1c",
+  "ipRuleSet" : {
+    "name" : "UG-Chop-Rules",
+    "id" : "d637a8ce-1a4b-46ad-904b-b44aafbfac80",
+    "inboundRules" : [ {
+      "ipProtocol" : "tcp",
+      "toPort" : 8080,
+      "fromPort" : 80,
+      "ipRanges" : [ "0.0.0.0/32" ]
+    }, {
+      "ipProtocol" : "tcp",
+      "toPort" : 8443,
+      "fromPort" : 443,
+      "ipRanges" : [ "0.0.0.0/32" ]
+    } ],
+    "outboundRules" : [ ]
+  }
+}

@@ -28,8 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.Concurrent;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -73,7 +73,9 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( firstUserEntity, "likes", secondUserEntity );
 
-        Results r = em.getConnectedEntities( firstUserEntity.getUuid(), "likes", null, Level.IDS );
+        em.refreshIndex();
+
+        Results r = em.getConnectedEntities( firstUserEntity, "likes", null, Level.IDS );
 
         List<ConnectionRef> connections = r.getConnections();
 
@@ -139,32 +141,36 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         LOG.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catB.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catB );
 
+        em.refreshIndex();
+
         // List forward connections for cat A
 
         // Thread.sleep(5000);
 
         LOG.info( "Find all connections for cat A: " + catA.getUuid() );
 
-        testEntityConnections( applicationId, catA.getUuid(), 1 );
+        testEntityConnections( applicationId, catA.getUuid(), "cat", 1 );
 
         // List forward connections for award A
 
         LOG.info( "Find all connections for award A: " + awardA.getUuid() );
 
-        testEntityConnections( applicationId, awardA.getUuid(), 1 );
+        testEntityConnections( applicationId, awardA.getUuid(), "award", 1 );
 
         // Establish connection from award A to cat A
 
         LOG.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catA.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catA );
 
+        em.refreshIndex();
+
         // List forward connections for cat A
 
-        testEntityConnections( applicationId, catA.getUuid(), 1 );
+        testEntityConnections( applicationId, catA.getUuid(), "cat", 1 );
 
         // List forward connections for award A
 
-        testEntityConnections( applicationId, awardA.getUuid(), 2 );
+        testEntityConnections( applicationId, awardA.getUuid(), "award", 2 );
 
         // List all cats in application's cats collection
 
@@ -178,40 +184,44 @@ public class EntityConnectionsIT extends AbstractCoreIT {
     }
 
 
-    public Map<String, Map<String, List<UUID>>> testEntityConnections( UUID applicationId, UUID entityId,
-                                                                       int expectedCount ) throws Exception {
+    public Map<String, Map<String, List<UUID>>> testEntityConnections( 
+        UUID applicationId, UUID entityId, String entityType, int expectedCount ) throws Exception {
+
         LOG.info( "----------------------------------------------------" );
         LOG.info( "Checking connections for " + entityId.toString() );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        Entity en = em.get( entityId );
+        Entity en = em.get( new SimpleEntityRef( entityType, entityId));
 
-        Results results = em.getConnectedEntities( en.getUuid(), null, null, Results.Level.REFS );
-
+        Results results = em.getConnectedEntities( en, null, null, Level.REFS );
 
         LOG.info( "----------------------------------------------------" );
-        assertEquals( "Expected " + expectedCount + " connections", expectedCount, results.getConnections().size() );
+        assertEquals( "Expected " + expectedCount + " connections", 
+                expectedCount, results.getConnections().size() );
         // return connections;
         return null;
     }
 
 
-    public List<UUID> testApplicationCollections( UUID applicationId, String collectionName, int expectedCount )
-            throws Exception {
-        return testEntityCollections( applicationId, applicationId, collectionName, expectedCount );
+    public List<UUID> testApplicationCollections( 
+            UUID applicationId, String collectionName, int expectedCount ) throws Exception {
+
+        return testEntityCollections( 
+            applicationId, applicationId, "application", collectionName, expectedCount );
     }
 
 
-    public List<UUID> testEntityCollections( UUID applicationId, UUID entityId, String collectionName,
-                                             int expectedCount ) throws Exception {
+    public List<UUID> testEntityCollections( UUID applicationId, UUID entityId, String entityType, 
+            String collectionName, int expectedCount ) throws Exception {
+
         LOG.info( "----------------------------------------------------" );
         LOG.info( "Checking collection " + collectionName + " for " + entityId.toString() );
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-        Entity en = em.get( entityId );
+        Entity en = em.get( new SimpleEntityRef( entityType, entityId ));
 
         int i = 0;
-        Results entities = em.getCollection( en, collectionName, null, 100, Results.Level.IDS, false );
+        Results entities = em.getCollection( en, collectionName, null, 100, Level.IDS, false );
         for ( UUID id : entities.getIds() ) {
             LOG.info( ( i++ ) + " " + id.toString() );
         }
@@ -262,8 +272,9 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( secondUserEntity, "likes", arrogantbutcher );
 
+        em.refreshIndex();
 
-        Results r = em.getConnectedEntities( firstUserEntity.getUuid(), "likes", "restaurant", Level.IDS );
+        Results r = em.getConnectedEntities( firstUserEntity, "likes", "restaurant", Level.IDS );
 
         List<ConnectionRef> connections = r.getConnections();
 
@@ -277,7 +288,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         assertFalse( em.isConnectionMember( firstUserEntity, "likes", arrogantbutcher ) );
 
         // check we don't get the restaurant from the second user
-        r = em.getConnectedEntities( secondUserEntity.getUuid(), "likes", "restaurant", Level.IDS );
+        r = em.getConnectedEntities( secondUserEntity, "likes", "restaurant", Level.IDS );
 
         connections = r.getConnections();
 
@@ -289,5 +300,51 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         // now check membership
         assertTrue( em.isConnectionMember( secondUserEntity, "likes", arrogantbutcher ) );
         assertFalse( em.isConnectionMember( secondUserEntity, "likes", fourpeaks ) );
+    }
+
+    
+    @Test
+    public void testGetConnectingEntities() throws Exception {
+
+        UUID applicationId = setup.createApplication( 
+            "EntityConnectionsIT", "testGetConnectingEntities" );
+        assertNotNull( applicationId );
+
+        EntityManager em = setup.getEmf().getEntityManager( applicationId );
+        assertNotNull( em );
+
+        User fred = new User();
+        fred.setUsername( "fred" );
+        fred.setEmail( "fred@flintstones.com" );
+        Entity fredEntity = em.create( fred );
+        assertNotNull( fredEntity );
+
+        User wilma = new User();
+        wilma.setUsername( "wilma" );
+        wilma.setEmail( "wilma@flintstones.com" );
+        Entity wilmaEntity = em.create( wilma );
+        assertNotNull( wilmaEntity );
+
+        em.createConnection( fredEntity, "likes", wilmaEntity );
+
+        em.refreshIndex();
+
+//        // search for "likes" edges from fred
+//        assertEquals( 1, 
+//            em.getConnectedEntities( fredEntity, "likes", null, Level.IDS ).size());
+//
+//        // search for any type of edges from fred
+//        assertEquals( 1, 
+//            em.getConnectedEntities( fredEntity, null, null, Level.IDS ).size());
+
+        // search for "likes" edges to wilman from any type of object
+        Results res = em.getConnectingEntities( wilmaEntity, "likes", null, Level.ALL_PROPERTIES);
+        assertEquals( 1, res.size() ); 
+        assertEquals( "user", res.getEntity().getType() ); // fred is a user
+
+        // search for "likes" edges to wilman from user type object 
+        res = em.getConnectingEntities( wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
+        assertEquals( 1, res.size() );
+        assertEquals( "user", res.getEntity().getType() );
     }
 }

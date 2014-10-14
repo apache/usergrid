@@ -21,14 +21,14 @@
   <parent>
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>0.0.29-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>usergrid-tools</artifactId>
   <name>Usergrid Tools</name>
   <description>Command line tools for Usergrid system.</description>
   <packaging>jar</packaging>
-  <version>0.0.29-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
 
   <reporting>
     <plugins>
@@ -68,7 +68,7 @@
             <storage-config>${basedir}/src/test/conf</storage-config>
           </systemPropertyVariables>
           <forkMode>always</forkMode>
-          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar</argLine>
+          <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline}</argLine>
         </configuration>
       </plugin>
 

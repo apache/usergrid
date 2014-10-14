@@ -48,7 +48,7 @@ public class ConnectionIndexSliceParser implements SliceParser {
     public ScanColumn parse( ByteBuffer buff ) {
         DynamicComposite composite = DynamicComposite.fromByteBuffer( buff.duplicate() );
 
-        String connectedType = ( String ) composite.get( 1 );
+        String connectedType = composite.get( 1 ).toString();
 
 
         //connection type has been defined and it doesn't match, skip it

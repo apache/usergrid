@@ -70,7 +70,13 @@ public class ServiceApplication extends CoreApplication {
 
 
     public ServiceResults testRequest( ServiceAction action, int expectedCount, Object... params ) throws Exception {
-        return testRequest( action, expectedCount, true, params );
+        ServiceResults testRequest = testRequest( action, expectedCount, true, params );
+
+        if ( !action.equals( ServiceAction.GET )) {
+            getEm().refreshIndex();
+        }
+
+        return testRequest;
     }
 
 
@@ -97,6 +103,11 @@ public class ServiceApplication extends CoreApplication {
         ServiceResults results = request.execute();
         assertNotNull( results );
         dumpResults( results );
+
+        if ( !action.name().equals( ServiceAction.GET )) {
+            getEm().refreshIndex();
+        }
+
         return results;
     }
 
@@ -119,12 +130,15 @@ public class ServiceApplication extends CoreApplication {
     public Entity doCreate( String entityType, String name ) throws Exception {
         put( "name", name );
 
-        return testRequest( ServiceAction.POST, 1, pluralize( entityType ) ).getEntity();
+        Entity entity = testRequest( ServiceAction.POST, 1, pluralize( entityType ) ).getEntity();
+        getEm().refreshIndex();
+        return entity;
     }
 
 
     public void createConnection( Entity subject, String verb, Entity noun ) throws Exception {
         sm.getEntityManager().createConnection( subject, verb, noun );
+        getEm().refreshIndex();
     }
 
 
@@ -137,6 +151,11 @@ public class ServiceApplication extends CoreApplication {
         assertNotNull( results );
         assertEquals( expectedCount, results.getEntities().size() );
         dumpResults( results );
+
+        if ( !action.name().equals( ServiceAction.GET )) {
+            getEm().refreshIndex();
+        }
+
         return results;
     }
 
@@ -148,28 +167,38 @@ public class ServiceApplication extends CoreApplication {
         ServiceResults results = request.execute();
         assertNotNull( results );
         assertNotNull( results.getData() );
+
+        if ( !action.name().equals( ServiceAction.GET )) {
+            getEm().refreshIndex();
+        }
+
         // dump( results.getData() );
         return results;
     }
 
 
     public Entity createRole( String name, String title, int inactivity ) throws Exception {
-        return sm.getEntityManager().createRole( name, title, inactivity );
+        Entity createRole = sm.getEntityManager().createRole( name, title, inactivity );
+        getEm().refreshIndex();
+        return createRole;
     }
 
 
     public void grantRolePermission( String role, String permission ) throws Exception {
         sm.getEntityManager().grantRolePermission( role, permission );
+        getEm().refreshIndex();
     }
 
 
     public void grantUserPermission( UUID uuid, String permission ) throws Exception {
         sm.getEntityManager().grantUserPermission( uuid, permission );
+        getEm().refreshIndex();
     }
 
 
     public Set<String> getRolePermissions( String role ) throws Exception {
-        return sm.getEntityManager().getRolePermissions( role );
+        Set<String> rolePermissions = sm.getEntityManager().getRolePermissions( role );
+        return rolePermissions;
     }
 
 

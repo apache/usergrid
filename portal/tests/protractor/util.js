@@ -1,3 +1,23 @@
+
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
+
 'use strict';
 var fs=require('fs');
 var path=require('path');
@@ -127,7 +147,7 @@ module.exports = {
       element(by.id('new-user-username')).clear();
       element(by.id('new-user-username')).sendKeys(username);
       element(by.id('new-user-fullname')).sendKeys('Test ' + username);
-      element(by.id('new-user-email')).sendKeys('sfeldman+test' + username + '@apigee.com');
+      element(by.id('new-user-email')).sendKeys('rsimpson+test' + username + '@apigee.com');
       element(by.id('new-user-password')).sendKeys('P@ssw0rd1');
       element(by.id('new-user-re-password')).sendKeys('P@ssw0rd1');
       browser.sleep(1000);
@@ -146,7 +166,7 @@ module.exports = {
     browser.wait(function () {
       return element(by.id('user-' + username + '-checkbox')).isPresent();
     });
-    
+
     element(by.id('user-' + username + '-checkbox')).isPresent().then(function () {
       element(by.id('user-' + username + '-checkbox')).click();
       browser.sleep(1000);

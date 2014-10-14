@@ -28,9 +28,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +64,6 @@ import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.ColumnQuery;
-import me.prettyprint.hector.api.query.CountQuery;
 import me.prettyprint.hector.api.query.MultigetSliceQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
@@ -84,7 +80,6 @@ import static org.apache.commons.collections.MapUtils.getIntValue;
 import static org.apache.commons.collections.MapUtils.getString;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.buildSetIdListMutator;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffers;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
@@ -115,9 +110,6 @@ public class CassandraService {
     public static final String DEFAULT_APPLICATION = "default-app";
     public static final String DEFAULT_ORGANIZATION = "usergrid";
     public static final String MANAGEMENT_APPLICATION = "management";
-
-    public static final UUID MANAGEMENT_APPLICATION_ID = new UUID( 0, 1 );
-    public static final UUID DEFAULT_APPLICATION_ID = new UUID( 0, 16 );
 
     private static final Logger logger = LoggerFactory.getLogger( CassandraService.class );
 

@@ -22,13 +22,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.SchemaManager;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.Setup;
 
 import me.prettyprint.hector.api.Cluster;
+import org.apache.usergrid.persistence.cassandra.Setup;
 
 
 /** @author zznate */
-@Ignore
+@Ignore("Not a test")
 public class CoreSchemaManager implements SchemaManager {
     private static final Logger LOG = LoggerFactory.getLogger( CoreSchemaManager.class );
 
@@ -46,8 +46,6 @@ public class CoreSchemaManager implements SchemaManager {
     public void create() {
         try {
             setup.init();
-            setup.setupSystemKeyspace();
-            setup.setupStaticKeyspace();
         }
         catch ( Exception ex ) {
             LOG.error( "Could not setup usergrid core schema", ex );

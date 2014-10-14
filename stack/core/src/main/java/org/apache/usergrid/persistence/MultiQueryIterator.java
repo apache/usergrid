@@ -17,30 +17,33 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.index.query.Query;
 import java.util.Iterator;
 import java.util.UUID;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 /**
- * For each in a set of source UUIDs, executes a sub-query and provides a unified iterator over the union of all
- * results. Honors page sizes for the Query to ensure memory isn't blown out.
+ * For each in a set of source refs executes a sub-query and provides a unified iterator over 
+ * the union of all results. Honors page sizes for the Query to ensure memory isn't blown out.
  */
 public class MultiQueryIterator implements ResultsIterator {
 
     private EntityManager entityManager;
-    private Iterator<UUID> source;
+    private Iterator<EntityRef> source;
     private Query query;
     private MutableEntityRef entityRef = new MutableEntityRef();
     private Iterator currentIterator;
 
 
     public MultiQueryIterator( Results results, Query query ) {
-        this( results.getQueryProcessor().getEntityManager(), new PagingResultsIterator( results, Results.Level.IDS ),
-                query );
+        this( results.getQueryProcessor().getEntityManager(), 
+                new PagingResultsIterator( results, Level.IDS ), query );
     }
 
 
-    public MultiQueryIterator( EntityManager entityManager, Iterator<UUID> source, Query query ) {
+    public MultiQueryIterator( EntityManager entityManager, Iterator<EntityRef> source, Query query ) {
+
         if ( query.getCollection() == null && query.getConnectionType() == null ) {
             throw new IllegalArgumentException( "Query must have a collection or connectionType value" );
         }
@@ -59,8 +62,8 @@ public class MultiQueryIterator implements ResultsIterator {
             return true;
         }
         while ( source.hasNext() ) {
-            UUID uuid = source.next();
-            Results r = getResultsFor( uuid );
+            EntityRef ref = source.next();
+            Results r = getResultsFor( ref );
             if ( r.size() > 0 ) {
                 currentIterator = new PagingResultsIterator( r, query.getResultsLevel() );
                 return currentIterator.hasNext();
@@ -88,8 +91,10 @@ public class MultiQueryIterator implements ResultsIterator {
     }
 
 
-    private Results getResultsFor( UUID uuid ) {
-        entityRef.setUUID( uuid );
+    private Results getResultsFor( EntityRef ref ) {
+        entityRef.setUUID(ref.getUuid());
+        entityRef.setType(ref.getType());
+
         try {
             return ( query.getCollection() != null ) ?
                    entityManager.searchCollection( entityRef, query.getCollection(), query ) :
@@ -105,6 +110,7 @@ public class MultiQueryIterator implements ResultsIterator {
     private static class MutableEntityRef implements EntityRef {
 
         private UUID uuid;
+        private String type;
 
 
         public void setUUID( UUID uuid ) {
@@ -120,7 +126,11 @@ public class MultiQueryIterator implements ResultsIterator {
 
         @Override
         public String getType() {
-            return null;
+            return type;
+        }
+
+        public void setType( String type ) {
+            this.type = type;
         }
     }
 }

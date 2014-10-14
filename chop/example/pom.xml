@@ -1,0 +1,124 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.usergrid.chop</groupId>
+    <artifactId>chop-parent</artifactId>
+    <version>2.0.0-SNAPSHOT</version>
+  </parent>
+
+  <name>Chop Usage Example</name>
+  <artifactId>chop-example</artifactId>
+  <packaging>jar</packaging>
+  <description>
+    A test project used to test the plugin and components of Chop.
+  </description>
+
+
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>chop-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>chop-stack</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/stack.json</include>
+          <include>**/*.sh</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.usergrid.chop</groupId>
+        <artifactId>chop-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <id>chop-runner</id>
+            <phase>package</phase>
+            <goals>
+              <goal>runner</goal>
+            </goals>
+            <configuration>
+              <username>username</username>
+              <password>pass</password>
+              <endpoint>https://localhost:8443/</endpoint>
+              <testPackageBase>org.apache.usergrid.chop.example</testPackageBase>
+            </configuration>
+          </execution>
+        </executions>
+
+        <configuration>
+          <username>${chop.coordinator.username}</username>
+          <password>${chop.coordinator.password}</password>
+          <endpoint>https://${chop.coordinator.url}:8443</endpoint>
+          <testPackageBase>org.apache.usergrid.chop.example</testPackageBase>
+          <runnerCount>2</runnerCount>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <execution>
+            <phase>install</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <delete>
+                  <fileset dir="${project.build.directory}" includes="*-chop.jar" />
+                </delete>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

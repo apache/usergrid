@@ -35,7 +35,6 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Results.Level;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.Role;
@@ -80,7 +79,7 @@ import com.google.common.collect.HashBiMap;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
@@ -295,10 +294,10 @@ public class Realm extends AuthorizingRealm {
                     grant( info, principal, "applications:admin,access,get,put,post,delete:*:/**" );
                     grant( info, principal, "users:access:*" );
 
-                    grant( info, principal, getPermissionFromPath( MANAGEMENT_APPLICATION_ID, "access" ) );
+                    grant( info, principal, getPermissionFromPath( emf.getManagementAppId(), "access" ) );
 
                     grant( info, principal,
-                            getPermissionFromPath( MANAGEMENT_APPLICATION_ID, "get,put,post,delete", "/**" ) );
+                            getPermissionFromPath( emf.getManagementAppId(), "get,put,post,delete", "/**" ) );
                 }
                 else {
 
@@ -307,12 +306,12 @@ public class Realm extends AuthorizingRealm {
                     // An service user can be associated with multiple
                     // organizations
 
-                    grant( info, principal, getPermissionFromPath( MANAGEMENT_APPLICATION_ID, "access" ) );
+                    grant( info, principal, getPermissionFromPath( emf.getManagementAppId(), "access" ) );
 
                     // admin users cannot access the management app directly
                     // so open all permissions
                     grant( info, principal,
-                            getPermissionFromPath( MANAGEMENT_APPLICATION_ID, "get,put,post,delete", "/**" ) );
+                            getPermissionFromPath( emf.getManagementAppId(), "get,put,post,delete", "/**" ) );
 
                     role( info, principal, ROLE_ADMIN_USER );
 

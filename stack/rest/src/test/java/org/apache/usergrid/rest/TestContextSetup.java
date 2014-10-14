@@ -24,6 +24,7 @@ import org.apache.usergrid.rest.test.resource.TestContext;
 import org.apache.usergrid.rest.test.security.TestAdminUser;
 
 import com.sun.jersey.test.framework.JerseyTest;
+import java.io.IOException;
 
 
 /**
@@ -63,7 +64,7 @@ public class TestContextSetup extends TestContext implements TestRule {
     }
 
 
-    protected void before( Description description ) {
+    protected void before( Description description ) throws IOException {
         String testClass = description.getTestClass().getName();
         String methodName = description.getMethodName();
         String name = testClass + "." + methodName;

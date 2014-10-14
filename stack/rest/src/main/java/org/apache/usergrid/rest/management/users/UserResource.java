@@ -234,6 +234,8 @@ public class UserResource extends AbstractContextResource {
                                              @FormParam( "recaptcha_challenge_field" ) String challenge,
                                              @FormParam( "recaptcha_response_field" ) String uresponse ) {
 
+        logger.debug("handlePasswordResetForm");
+
         try {
             this.token = token;
 

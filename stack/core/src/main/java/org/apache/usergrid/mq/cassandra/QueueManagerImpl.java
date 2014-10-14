@@ -54,7 +54,6 @@ import org.apache.usergrid.mq.cassandra.io.QueueSearch;
 import org.apache.usergrid.mq.cassandra.io.StartSearch;
 import org.apache.usergrid.persistence.AggregateCounter;
 import org.apache.usergrid.persistence.AggregateCounterSet;
-import org.apache.usergrid.persistence.CounterResolution;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -128,6 +127,7 @@ import static org.apache.usergrid.utils.NumberUtils.roundLong;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
 
 
 public class QueueManagerImpl implements QueueManager {
@@ -192,18 +192,24 @@ public class QueueManagerImpl implements QueueManager {
 
         long shard_ts = roundLong( message.getTimestamp(), QUEUE_SHARD_INTERVAL );
 
-        logger.debug( "Adding message with id '{}' to queue '{}'", message.getUuid(), queueId );
+        final UUID messageUuid = message.getUuid();
+
+
+        logger.debug( "Adding message with id '{}' to queue '{}'", messageUuid, queueId );
+
 
         batch.addInsertion( getQueueShardRowKey( queueId, shard_ts ), QUEUE_INBOX.getColumnFamily(),
-                createColumn( message.getUuid(), ByteBuffer.allocate( 0 ), timestamp, ue, be ) );
+                createColumn( messageUuid, ByteBuffer.allocate( 0 ), timestamp, ue, be ) );
 
-        long oldest_ts = Long.MAX_VALUE - getTimestampInMicros( message.getUuid() );
+        long oldest_ts = Long.MAX_VALUE - getTimestampInMicros( messageUuid );
         batch.addInsertion( bytebuffer( queueId ), QUEUE_PROPERTIES.getColumnFamily(),
-                createColumn( QUEUE_OLDEST, message.getUuid(), oldest_ts, se, ue ) );
+                createColumn( QUEUE_OLDEST, messageUuid, oldest_ts, se, ue ) );
 
-        long newest_ts = getTimestampInMicros( message.getUuid() );
+        long newest_ts = getTimestampInMicros( messageUuid );
         batch.addInsertion( bytebuffer( queueId ), QUEUE_PROPERTIES.getColumnFamily(),
-                createColumn( QUEUE_NEWEST, message.getUuid(), newest_ts, se, ue ) );
+                createColumn( QUEUE_NEWEST, messageUuid, newest_ts, se, ue ) );
+
+        logger.debug( "Writing UUID {} with oldest timestamp {} and newest with timestamp {}", new Object[]{messageUuid, oldest_ts, newest_ts});
 
         batch.addInsertion( bytebuffer( getQueueId( "/" ) ), QUEUE_SUBSCRIBERS.getColumnFamily(),
                 createColumn( queuePath, queueId, timestamp, se, ue ) );

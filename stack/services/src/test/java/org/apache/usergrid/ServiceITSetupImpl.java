@@ -49,8 +49,8 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     private ImportService importService;
 
 
-    public ServiceITSetupImpl( CassandraResource cassandraResource ) {
-        super( cassandraResource );
+    public ServiceITSetupImpl( CassandraResource cassandraResource, ElasticSearchResource elasticSearchResource ) {
+        super( cassandraResource, elasticSearchResource );
     }
 
 

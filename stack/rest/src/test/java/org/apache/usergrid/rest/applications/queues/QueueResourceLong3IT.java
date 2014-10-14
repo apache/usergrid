@@ -30,6 +30,7 @@ import org.apache.usergrid.utils.MapUtils;
 
 import com.google.common.collect.BiMap;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -46,7 +47,7 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT {
 
     /** Tests that if we page before transaction expiration, we're always getting all elements consecutively */
     @Test
-    public void transactionPageConsistent() throws InterruptedException {
+    public void transactionPageConsistent() throws InterruptedException, IOException {
 
         Queue queue = context.application().queues().queue( "test" );
 
@@ -76,7 +77,7 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT {
 
 
     @Test
-    public void transaction10KMax() throws InterruptedException {
+    public void transaction10KMax() throws InterruptedException, IOException {
 
         Queue queue = context.application().queues().queue( "test" );
         queue.post( MapUtils.hashMap( "id", 0 ) );
@@ -96,7 +97,7 @@ public class QueueResourceLong3IT extends AbstractQueueResourceIT {
 
 
     @Test
-    public void transactionRenewal() throws InterruptedException {
+    public void transactionRenewal() throws InterruptedException, IOException {
         Queue queue = context.application().queues().queue( "test" );
 
         final int count = 2;

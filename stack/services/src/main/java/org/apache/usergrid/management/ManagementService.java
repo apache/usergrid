@@ -26,7 +26,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
@@ -46,7 +46,7 @@ public interface ManagementService {
     public void addAdminUserToOrganization( UserInfo user, OrganizationInfo organization, boolean email )
             throws Exception;
 
-    public UUID addApplicationToOrganization( UUID organizationId, UUID applicationId ) throws Exception;
+    public UUID addApplicationToOrganization( UUID organizationId, UUID applicationId, Entity appInfo ) throws Exception;
 
     public AccessInfo authorizeClient( String clientId, String clientSecret, long ttl ) throws Exception;
 

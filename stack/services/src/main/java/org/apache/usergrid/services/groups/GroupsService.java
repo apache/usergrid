@@ -26,7 +26,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.services.AbstractPathBasedColllectionService;
 import org.apache.usergrid.services.ServiceContext;
@@ -49,7 +49,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 
     public GroupsService() {
         super();
-        logger.info( "/groups" );
+        logger.debug( "/groups" );
 
         // rolenames is the one case of Entity Dictionary name not equal to path segment
         declareEntityDictionary( new EntityDictionaryEntry( "rolenames", "roles" ) );
@@ -67,7 +67,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
             throw new IllegalArgumentException( "You must provide a 'path' property when creating a group" );
         }
 
-        logger.info( "Creating group with path {}", path );
+        logger.debug( "Creating group with path {}", path );
 
         Preconditions.checkArgument( matcher.matchesAllOf( path ), "Illegal characters found in group name: " + path );
 

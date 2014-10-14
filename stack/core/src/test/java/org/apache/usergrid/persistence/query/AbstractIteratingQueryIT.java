@@ -35,7 +35,7 @@ import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.CoreITSetup;
 import org.apache.usergrid.CoreITSetupImpl;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 
 import static org.junit.Assert.assertEquals;
@@ -46,8 +46,11 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractIteratingQueryIT {
     private static final Logger LOG = LoggerFactory.getLogger( AbstractIteratingQueryIT.class );
 
+    public static final long WRITE_DELAY = 0; // milliseconds to delay between writes in loop
+
     @ClassRule
-    public static CoreITSetup setup = new CoreITSetupImpl( ConcurrentCoreIteratorITSuite.cassandraResource );
+    public static CoreITSetup setup = new CoreITSetupImpl( 
+            ConcurrentCoreIteratorITSuite.cassandraResource, ConcurrentCoreIteratorITSuite.elasticSearchResource );
 
     @Rule
     public CoreApplication app = new CoreApplication( setup );
@@ -69,6 +72,9 @@ public abstract class AbstractIteratingQueryIT {
             entity.put( "name", String.valueOf( i ) );
 
             io.writeEntity( entity );
+            //we have to sleep, or we kill embedded cassandra
+            Thread.sleep( 10 );
+
         }
 
         long stop = System.currentTimeMillis();
@@ -895,6 +901,8 @@ public abstract class AbstractIteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
+        app.getEm().refreshIndex();
+
         Query query = new Query();
         query.setLimit( 100 );
 
@@ -993,6 +1001,8 @@ public abstract class AbstractIteratingQueryIT {
         long stop = System.currentTimeMillis();
 
         LOG.info( "Writes took {} ms", stop - start );
+
+        app.getEm().refreshIndex();
 
         Query query = Query.fromQL( "select * order by boolean desc, index asc" );
         query.setLimit( queryLimit );
@@ -1098,6 +1108,8 @@ public abstract class AbstractIteratingQueryIT {
 
         LOG.info( "Writes took {} ms", stop - start );
 
+        app.getEm().refreshIndex();
+
         Query query =
                 Query.fromQL( "select * where intersect = true OR intersect2 = true order by created, intersect desc" );
         query.setLimit( queryLimit );
@@ -1144,7 +1156,7 @@ public abstract class AbstractIteratingQueryIT {
         /**
          * Leave this as a large size.  We have to write over 1k to reproduce this issue
          */
-        int size = 3000;
+        int size = 2000;
 
         long start = System.currentTimeMillis();
 
@@ -1153,7 +1165,7 @@ public abstract class AbstractIteratingQueryIT {
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
             entity.put( "name", String.valueOf( i ) );
-            entity.put( "boolean", !(i % 100 == 0));
+            entity.put( "boolean", !(i % 2 == 0));
             entity.put( "index", i);
 
             io.writeEntity( entity );
@@ -1240,12 +1252,20 @@ public abstract class AbstractIteratingQueryIT {
 
         @Override
         public Entity writeEntity( Map<String, Object> entity ) throws Exception {
-            return app.getEm().create( "test", entity );
+
+            Entity e = app.getEm().create( "test", entity );
+
+            if ( WRITE_DELAY > 0 ) {
+                Thread.sleep( WRITE_DELAY );
+            }
+
+            return e;
         }
 
 
         @Override
         public Results getResults( Query query ) throws Exception {
+            app.getEm().refreshIndex();
             return app.getEm().searchCollection( app.getEm().getApplicationRef(), "tests", query );
         }
     }
@@ -1275,9 +1295,14 @@ public abstract class AbstractIteratingQueryIT {
 
         @Override
         public Entity writeEntity( Map<String, Object> entity ) throws Exception {
+
             // write to the collection
             Entity created = super.writeEntity( entity );
             app.getEm().createConnection( rootEntity, CONNECTION, created );
+
+            if ( WRITE_DELAY > 0 ) {
+                Thread.sleep( WRITE_DELAY );
+            }
 
             return created;
         }
@@ -1292,8 +1317,11 @@ public abstract class AbstractIteratingQueryIT {
          */
         @Override
         public Results getResults( Query query ) throws Exception {
+
+            app.getEm().refreshIndex();
             query.setConnectionType( CONNECTION );
             query.setEntityType( "test" );
+
             return app.getEm().searchConnectedEntities( rootEntity, query );
         }
     }

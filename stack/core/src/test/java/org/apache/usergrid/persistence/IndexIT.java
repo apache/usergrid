@@ -21,10 +21,10 @@ import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
-
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
+import me.prettyprint.hector.api.Keyspace;
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import me.prettyprint.hector.api.mutation.Mutator;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.CoreITSuite;
 import org.apache.usergrid.cassandra.Concurrent;
@@ -33,16 +33,18 @@ import org.apache.usergrid.persistence.cassandra.IndexUpdate;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate.IndexEntry;
 import org.apache.usergrid.persistence.cassandra.RelationManagerImpl;
 import org.apache.usergrid.persistence.hector.CountingMutator;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
-
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.mutation.Mutator;
+import static org.junit.Assert.assertEquals;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Concurrent()
@@ -50,9 +52,9 @@ public class IndexIT extends AbstractCoreIT {
     private static final Logger LOG = LoggerFactory.getLogger( IndexIT.class );
 
     public static final String[] alphabet = {
-            "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima",
-            "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra", "Tango", "Uniform", "Victor", "Whiskey",
-            "X-ray", "Yankee", "Zulu"
+        "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", 
+        "Juliet", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra", 
+        "Tango", "Uniform", "Victor", "Whiskey", "X-ray", "Yankee", "Zulu"
     };
 
 
@@ -73,6 +75,8 @@ public class IndexIT extends AbstractCoreIT {
 
             em.create( "item", properties );
         }
+
+        em.refreshIndex();
 
         int i = 0;
 
@@ -145,7 +149,9 @@ public class IndexIT extends AbstractCoreIT {
             em.create( "item", properties );
         }
 
-        Query query = Query.fromQL( "name < 'delta'" );
+        em.refreshIndex();
+
+        Query query = Query.fromQL( "name < 'delta' order by name asc" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         int i = 0;
@@ -155,7 +161,7 @@ public class IndexIT extends AbstractCoreIT {
         }
         assertEquals( 3, i );
 
-        query = Query.fromQL( "name <= 'delta'" );
+        query = Query.fromQL( "name <= 'delta' order by name asc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 0;
@@ -165,7 +171,7 @@ public class IndexIT extends AbstractCoreIT {
         }
         assertEquals( 4, i );
 
-        query = Query.fromQL( "name <= 'foxtrot' and name > 'bravo'" );
+        query = Query.fromQL( "name <= 'foxtrot' and name > 'bravo' order by name asc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 2;
@@ -175,7 +181,7 @@ public class IndexIT extends AbstractCoreIT {
         }
         assertEquals( 6, i );
 
-        query = Query.fromQL( "name < 'foxtrot' and name > 'bravo'" );
+        query = Query.fromQL( "name < 'foxtrot' and name > 'bravo' order by name asc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 2;
@@ -185,7 +191,7 @@ public class IndexIT extends AbstractCoreIT {
         }
         assertEquals( 5, i );
 
-        query = Query.fromQL( "name < 'foxtrot' and name >= 'bravo'" );
+        query = Query.fromQL( "name < 'foxtrot' and name >= 'bravo' order by name asc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 1;
@@ -195,7 +201,7 @@ public class IndexIT extends AbstractCoreIT {
         }
         assertEquals( 5, i );
 
-        query = Query.fromQL( "name <= 'foxtrot' and name >= 'bravo'" );
+        query = Query.fromQL( "name <= 'foxtrot' and name >= 'bravo' order by name asc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
         LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 1;
@@ -265,11 +271,13 @@ public class IndexIT extends AbstractCoreIT {
             String name = alphabet[i];
             Map<String, Object> properties = new LinkedHashMap<String, Object>();
             properties.put( "name", name );
-            properties.put( "group", i / 3 );
+            properties.put( "group", (long)(i / 3) );
             properties.put( "reverse_name", alphabet[alphabet.length - 1 - i] );
 
             em.create( "item", properties );
         }
+
+        em.refreshIndex();
 
         Query query = Query.fromQL( "group = 1 order by name desc" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
@@ -308,6 +316,8 @@ public class IndexIT extends AbstractCoreIT {
 
         em.createConnection( entity2Ref, "connecting", entity1Ref );
 
+        em.refreshIndex();
+
         //should return valid values
         Query query = Query.fromQL( "select * where status = 'pickled'" );
 
@@ -324,6 +334,8 @@ public class IndexIT extends AbstractCoreIT {
         entity1Ref.setProperty( "status", "herring" );
 
         em.update( entity1Ref );
+
+        em.refreshIndex();
 
         //query and check the status has been updated, shouldn't return results
         query = Query.fromQL( "select * where status = 'pickled'" );
@@ -379,6 +391,8 @@ public class IndexIT extends AbstractCoreIT {
 
         em.createConnection( entity2Ref, "connecting", entity1Ref );
 
+        em.refreshIndex();
+
         //should return valid values
         Query query = Query.fromQL( "select * where status = 'pickled'" );
 
@@ -395,6 +409,8 @@ public class IndexIT extends AbstractCoreIT {
         entity1Ref.setProperty( "status", "herring" );
 
         em.update( entity1Ref );
+
+        em.refreshIndex();
 
         //query and check the status has been updated, shouldn't return results
         query = Query.fromQL( "select * where status = 'pickled'" );
@@ -422,42 +438,44 @@ public class IndexIT extends AbstractCoreIT {
         assertEquals( entity1Ref.getUuid(), r.getEntity().getUuid() );
 
 
-        RelationManagerImpl impl = ( RelationManagerImpl ) em.getRelationManager( entity2Ref );
 
         //now read the index and see what properties are there
 
+        RelationManager rm = em.getRelationManager( entity2Ref );
 
-        CassandraService cass = CoreITSuite.cassandraResource.getBean( CassandraService.class );
+        if ( rm instanceof RelationManagerImpl ) { // only relevant for old-school EntityManagers
 
-        ByteBufferSerializer buf = ByteBufferSerializer.get();
+            RelationManagerImpl impl = (RelationManagerImpl)rm;
 
-        Keyspace ko = cass.getApplicationKeyspace( applicationId );
-        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, buf );
+            CassandraService cass = CoreITSuite.cassandraResource.getBean( CassandraService.class );
 
+            ByteBufferSerializer buf = ByteBufferSerializer.get();
 
-        IndexUpdate update =
-                impl.batchStartIndexUpdate( m, entity1Ref, "status", "ignore", UUIDUtils.newTimeUUID(), false, false,
-                        true, false );
+            Keyspace ko = cass.getApplicationKeyspace( applicationId );
+            Mutator<ByteBuffer> m = createMutator( ko, buf );
 
-        int count = 0;
+            IndexUpdate update = impl.batchStartIndexUpdate( m, entity1Ref, 
+                    "status", "ignore", UUIDUtils.newTimeUUID(), false, false, true, false );
 
-        IndexEntry lastMatch = null;
+            int count = 0;
 
-        for ( IndexEntry entry : update.getPrevEntries() ) {
-            if ( "status".equals( entry.getPath() ) ) {
-                count++;
-                lastMatch = entry;
+            IndexEntry lastMatch = null;
+
+            for ( IndexEntry entry : update.getPrevEntries() ) {
+                if ( "status".equals( entry.getPath() ) ) {
+                    count++;
+                    lastMatch = entry;
+                }
             }
-        }
 
+            assertEquals( 1, count );
 
-        assertEquals( 1, count );
-
-        if ( lastMatch != null ) {
-            assertEquals( "herring", lastMatch.getValue() );
-        }
-        else {
-            fail( "The last match was null but should have been herring!" );
+            if ( lastMatch != null ) {
+                assertEquals( "herring", lastMatch.getValue() );
+            }
+            else {
+                fail( "The last match was null but should have been herring!" );
+            }
         }
     }
 }

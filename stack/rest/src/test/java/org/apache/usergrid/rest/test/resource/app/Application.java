@@ -19,7 +19,8 @@ package org.apache.usergrid.rest.test.resource.app;
 
 import javax.ws.rs.core.MediaType;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import org.apache.usergrid.rest.test.resource.CustomCollection;
 import org.apache.usergrid.rest.test.resource.RootResource;
 import org.apache.usergrid.rest.test.resource.ValueResource;
@@ -40,13 +41,13 @@ public class Application extends ValueResource {
 
 
     /** Get the token from management for this username and password */
-    public String token( String username, String password ) {
+    public String token( String username, String password ) throws IOException {
 
         String url = String.format( "%s/token", url() );
 
-        JsonNode node = resource().path( url ).queryParam( "grant_type", "password" ).queryParam( "username", username )
+        JsonNode node = mapper.readTree( resource().path( url ).queryParam( "grant_type", "password" ).queryParam( "username", username )
                 .queryParam( "password", password ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
 
         return node.get( "access_token" ).asText();
     }

@@ -17,6 +17,8 @@
 package org.apache.usergrid.rest.applications.users;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,14 +38,13 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
@@ -104,15 +105,19 @@ public class UserResource extends ServiceResource {
     @PUT
     @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
-    public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
+    public JSONWithPadding executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> json = mapper.readValue( body, mapTypeReference );
+
         if ( json != null ) {
             json.remove( "password" );
             json.remove( "pin" );
         }
 
-        return super.executePut( ui, json, callback );
+        return super.executePutWithMap( ui, json, callback );
     }
 
 
@@ -276,7 +281,7 @@ public class UserResource extends ServiceResource {
         response.setAction( "set user pin" );
 
         if ( getUser() != null ) {
-            String pin = json.path( "pin" ).getTextValue();
+            String pin = json.path( "pin" ).textValue();
             management.setAppUserPin( getApplicationId(), getUserUuid(), pin );
         }
         else {

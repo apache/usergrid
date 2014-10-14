@@ -32,8 +32,8 @@ import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.cassandra.Concurrent;
+import static org.apache.usergrid.management.EmailFlowIT.setup;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION_ID;
 import static org.apache.usergrid.services.ServiceParameter.filter;
 import static org.apache.usergrid.services.ServiceParameter.parameters;
 
@@ -47,13 +47,13 @@ public class ServiceRequestIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource, ServiceITSuite.elasticSearchResource );
 
 
     @Test
     public void testPaths() throws Exception {
 
-        UUID applicationId = DEFAULT_APPLICATION_ID;
+        UUID applicationId = setup.getEmf().getDefaultAppId();
 
         ServiceManager services = setup.getSmf().getServiceManager( applicationId );
 

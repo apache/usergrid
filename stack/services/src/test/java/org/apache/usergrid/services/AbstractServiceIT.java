@@ -32,7 +32,7 @@ public abstract class AbstractServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
-    public ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource, ServiceITSuite.elasticSearchResource );
 
     @Rule
     public ServiceApplication app = new ServiceApplication( setup );

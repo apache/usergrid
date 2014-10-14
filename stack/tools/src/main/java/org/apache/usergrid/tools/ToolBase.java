@@ -50,8 +50,8 @@ import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 /**
- * Base class for Usergrid Tools commands. Any class that implements this can be called with java -jar {jarname}
- * org.apache.usergrid.tools.{classname}.
+ * Base class for Usergrid Tools commands. Any class that implements this can be called with 
+ * java -jar {jarname} org.apache.usergrid.tools.{classname}.
  */
 public abstract class ToolBase {
 
@@ -95,6 +95,8 @@ public abstract class ToolBase {
 
         if ( line.hasOption( "host" ) ) {
             System.setProperty( "cassandra.url", line.getOptionValue( "host" ) );
+            System.setProperty( "elasticsearch.hosts", line.getOptionValue( "eshost" ) );
+            System.setProperty( "elasticsearch.cluster_name", line.getOptionValue( "escluster" ) );
         }
 
         try {
@@ -110,7 +112,7 @@ public abstract class ToolBase {
     public void printCliHelp( String message ) {
         System.out.println( message );
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp( "java -jar usergrid-tools-0.0.1-SNAPSHOT.jar " + getToolName(), createOptions() );
+        formatter.printHelp( "java -jar usergrid-tools.jar " + getToolName(), createOptions() );
         System.exit( -1 );
     }
 
@@ -123,14 +125,15 @@ public abstract class ToolBase {
     @SuppressWarnings("static-access")
     public Options createOptions() {
 
-        Option hostOption =
-                OptionBuilder.withArgName( "host" ).hasArg().withDescription( "Cassandra host" ).create( "host" );
+        Option hostOption = OptionBuilder.withArgName( "host" ).hasArg()
+            .withDescription( "Cassandra host" ).create( "host" );
 
-        Option remoteOption = OptionBuilder.withDescription( "Use remote Cassandra instance" ).create( "remote" );
+        Option remoteOption = OptionBuilder
+            .withDescription( "Use remote Cassandra instance" ).create( "remote" );
 
-        Option verbose =
-                OptionBuilder.withDescription( "Print on the console an echo of the content written to the file" )
-                             .create( VERBOSE );
+        Option verbose = OptionBuilder
+            .withDescription( "Print on the console an echo of the content written to the file" )
+            .create( VERBOSE );
 
         Options options = new Options();
         options.addOption( hostOption );
@@ -155,7 +158,6 @@ public abstract class ToolBase {
 
     public void startSpring() {
 
-        // copy("/testApplicationContext.xml", TMP);
         String[] locations = { "toolsApplicationContext.xml" };
         ApplicationContext ac = new ClassPathXmlApplicationContext( locations );
 
@@ -164,8 +166,8 @@ public abstract class ToolBase {
         acbf.initializeBean( this, "testClient" );
 
         assertNotNull( emf );
-        assertTrue( "EntityManagerFactory is instance of EntityManagerFactoryImpl",
-                emf instanceof EntityManagerFactoryImpl );
+        assertTrue( "EntityManagerFactory is instance of EntityManagerFactory",
+                emf instanceof EntityManagerFactory );
     }
 
 
@@ -173,7 +175,7 @@ public abstract class ToolBase {
 
         Setup setup = ( ( EntityManagerFactoryImpl ) emf ).getSetup();
         logger.info( "Setting up Usergrid schema" );
-        setup.setup();
+        setup.init();
         logger.info( "Usergrid schema setup" );
 
         logger.info( "Setting up Usergrid management services" );

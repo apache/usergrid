@@ -17,11 +17,11 @@
 package org.apache.usergrid.rest.management.organizations.users;
 
 
+import com.sun.jersey.api.json.JSONWithPadding;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -36,26 +36,22 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
-
-import org.apache.usergrid.rest.RootResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
+import static org.apache.commons.collections.MapUtils.getObject;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.RootResource;
+import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
-
-import com.sun.jersey.api.json.JSONWithPadding;
-
-import static org.apache.commons.collections.MapUtils.getObject;
-import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 import static org.apache.usergrid.utils.ConversionUtils.getBoolean;
 import static org.apache.usergrid.utils.ConversionUtils.string;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.users.UsersResource")
@@ -124,7 +120,7 @@ public class UsersResource extends AbstractContextResource {
                                                            @QueryParam("callback") @DefaultValue("callback")
                                                            String callback ) throws Exception {
 
-        logger.info( "New user for organization: " + username );
+        logger.info( "New user for organization: " + username + " (" + email + ")");
 
         ApiResponse response = createApiResponse();
         response.setAction( "create user" );

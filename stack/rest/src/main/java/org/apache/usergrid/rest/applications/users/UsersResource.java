@@ -17,10 +17,12 @@
 package org.apache.usergrid.rest.applications.users;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.json.JSONWithPadding;
+import com.sun.jersey.api.view.Viewable;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
@@ -35,32 +37,25 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
-
+import net.tanesha.recaptcha.ReCaptchaImpl;
+import net.tanesha.recaptcha.ReCaptchaResponse;
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
+import org.apache.usergrid.rest.applications.ServiceResource;
+import org.apache.usergrid.rest.exceptions.RedirectionException;
+import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
+import static org.apache.usergrid.services.ServiceParameter.addParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Identifier;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.rest.AbstractContextResource;
-import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.applications.ServiceResource;
-import org.apache.usergrid.rest.exceptions.RedirectionException;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
-
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.api.view.Viewable;
-import com.sun.jersey.core.provider.EntityHolder;
-
-import net.tanesha.recaptcha.ReCaptchaImpl;
-import net.tanesha.recaptcha.ReCaptchaResponse;
-
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.usergrid.services.ServiceParameter.addParameter;
 
 
 @Component("org.apache.usergrid.rest.applications.users.UsersResource")
@@ -191,37 +186,45 @@ public class UsersResource extends ServiceResource {
     @PUT
     @Override
     @RequireApplicationAccess
-    public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
+    public JSONWithPadding executePut( @Context UriInfo ui, String body,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> json = mapper.readValue( body, mapTypeReference );
+
         User user = getUser();
         if ( user == null ) {
-            return executePost( ui, new EntityHolder( json ), callback );
+            return executePost( ui, body, callback );
         }
         if ( json != null ) {
             json.remove( "password" );
             json.remove( "pin" );
         }
-        return super.executePut( ui, json, callback );
+        return super.executePutWithMap( ui, json, callback );
     }
 
 
     @POST
     @Override
     @RequireApplicationAccess
-    public JSONWithPadding executePost( @Context UriInfo ui, EntityHolder<Object> body,
+    public JSONWithPadding executePost( @Context UriInfo ui, String body,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
-        Object json = body.getEntity();
+
+        LOG.debug( "UsersResource.executePost: body = " + body);
+
+        Object json = readJsonToObject( body );
+
         String password = null;
         String pin = null;
 
-        Boolean registration_requires_email_confirmation = ( Boolean ) this.getServices().getEntityManager()
-                                                                           .getProperty( this.getServices()
-                                                                                             .getApplicationRef(),
-                                                                                   "registration_requires_email_confirmation" );
-        boolean activated =
-                !( ( registration_requires_email_confirmation != null ) && registration_requires_email_confirmation );
+        Boolean confRequred = (Boolean)this.getServices().getEntityManager().getProperty( 
+            this.getServices().getApplicationRef(), "registration_requires_email_confirmation" );
+
+        boolean activated = !( ( confRequred != null ) && confRequred );
+
+        LOG.debug("Confirmation required: {} Activated: {}", confRequred, activated );
 
         if ( json instanceof Map ) {
             @SuppressWarnings("unchecked") Map<String, Object> map = ( Map<String, Object> ) json;
@@ -242,7 +245,7 @@ public class UsersResource extends ServiceResource {
             }
         }
 
-        ApiResponse response = ( ApiResponse ) super.executePost( ui, body, callback ).getJsonSource();
+        ApiResponse response = ( ApiResponse ) super.executePostWithObject( ui, json, callback ).getJsonSource();
 
         if ( ( response.getEntities() != null ) && ( response.getEntities().size() == 1 ) ) {
 

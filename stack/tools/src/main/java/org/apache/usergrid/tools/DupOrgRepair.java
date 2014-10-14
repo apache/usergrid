@@ -29,10 +29,9 @@ import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.utils.JsonUtils;
 
@@ -43,6 +42,7 @@ import org.apache.commons.cli.Options;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import org.apache.usergrid.management.ApplicationInfo;
 
 
 /**
@@ -97,7 +97,7 @@ public class DupOrgRepair extends ExportingToolBase {
 
         logger.info( "Starting crawl of all admins" );
 
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
         Application app = em.getApplication();
 
         // search for all orgs
@@ -199,7 +199,7 @@ public class DupOrgRepair extends ExportingToolBase {
         }
 
         // get the root entity manager
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
 
         // Add the apps to the org
         Map<String, UUID> sourceApps = ( Map<String, UUID> ) sourceOrg.get( "applications" );
@@ -207,6 +207,8 @@ public class DupOrgRepair extends ExportingToolBase {
         Map<String, UUID> targetApps = ( Map<String, UUID> ) targetOrg.get( "applications" );
 
         for ( Entry<String, UUID> app : sourceApps.entrySet() ) {
+
+            Entity appEntity = null;
 
             // we have colliding app names
             if ( targetApps.get( app.getKey() ) != null ) {
@@ -225,7 +227,7 @@ public class DupOrgRepair extends ExportingToolBase {
                         appIdToKeep.equals( app.getValue() ) ? targetApps.get( app.getKey() ) : app.getValue();
 
                 // get the existing target entity
-                Entity appEntity = em.get( appIdToChange );
+                appEntity = em.get( new SimpleEntityRef("application", appIdToChange));
 
                 if ( appEntity != null ) {
 
@@ -242,7 +244,8 @@ public class DupOrgRepair extends ExportingToolBase {
             logger.info( "Adding application with name {} and id {} to organization with uuid {}", new Object[] {
                     app.getKey(), app.getValue(), targetOrgId
             } );
-            managementService.addApplicationToOrganization( targetOrgId, app.getValue() );
+
+            managementService.addApplicationToOrganization( targetOrgId, app.getValue(), appEntity);
         }
 
         // now delete the original org

@@ -17,22 +17,6 @@
 package org.apache.usergrid.management.export;
 
 
-import com.google.common.collect.BiMap;
-import org.apache.usergrid.batch.JobExecution;
-import org.apache.usergrid.batch.service.SchedulerService;
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.entities.Export;
-import org.apache.usergrid.persistence.entities.JobData;
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.util.DefaultPrettyPrinter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -40,7 +24,31 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.batch.JobExecution;
+import org.apache.usergrid.batch.service.SchedulerService;
+import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.persistence.ConnectionRef;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.PagingResultsIterator;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.entities.Export;
+import org.apache.usergrid.persistence.entities.JobData;
+import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.index.query.Query.Level;
+
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.BiMap;
 
 
 /**
@@ -73,7 +81,6 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     public UUID schedule( final Map<String, Object> config ) throws Exception {
-        ApplicationInfo defaultExportApp = null;
 
         if ( config == null ) {
             logger.error( "export information cannot be null" );
@@ -82,8 +89,9 @@ public class ExportServiceImpl implements ExportService {
 
         EntityManager em = null;
         try {
-            em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+            em = emf.getEntityManager( emf.getManagementAppId() );
             Set<String> collections = em.getApplicationCollections();
+            //Set<String> collections = em.getE
             if ( !collections.contains( "exports" ) ) {
                 em.createApplicationCollection( "exports" );
             }
@@ -138,7 +146,7 @@ public class ExportServiceImpl implements ExportService {
             return "UUID passed in cannot be null";
         }
 
-        EntityManager rootEm = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
 
         //retrieve the export entity.
         Export export = rootEm.get( uuid, Export.class );
@@ -191,7 +199,7 @@ public class ExportServiceImpl implements ExportService {
         //get the entity manager for the application, and the entity that this Export corresponds to.
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
 
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( emf.getManagementAppId() );
         Export export = em.get( exportId, Export.class );
 
         //update the entity state to show that the job has officially started.
@@ -305,7 +313,7 @@ public class ExportServiceImpl implements ExportService {
     public Export getExportEntity( final JobExecution jobExecution ) throws Exception {
 
         UUID exportId = ( UUID ) jobExecution.getJobData().getProperty( EXPORT_ID );
-        EntityManager exportManager = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        EntityManager exportManager = emf.getEntityManager( emf.getManagementAppId() );
 
         return exportManager.get( exportId, Export.class );
     }
@@ -437,7 +445,7 @@ public class ExportServiceImpl implements ExportService {
 
                 //is 100000 an arbitary number?
                 Results collectionMembers =
-                        em.getCollection( entity, collectionName, null, 100000, Results.Level.IDS, false );
+                        em.getCollection( entity, collectionName, null, 100000, Level.IDS, false );
 
                 List<UUID> entityIds = collectionMembers.getIds();
 
@@ -501,7 +509,10 @@ public class ExportServiceImpl implements ExportService {
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
 
-            Results results = em.getConnectedEntities( entity.getUuid(), connectionType, null, Results.Level.IDS );
+            Results results = em.getConnectedEntities( 
+                new SimpleEntityRef(entity.getType(), entity.getUuid()), 
+                connectionType, null, Level.IDS );
+
             List<ConnectionRef> connections = results.getConnections();
 
             for ( ConnectionRef connectionRef : connections ) {
@@ -518,7 +529,7 @@ public class ExportServiceImpl implements ExportService {
         //TODO:shouldn't the below be UTF-16?
 
         JsonGenerator jg = jsonFactory.createJsonGenerator( ephermal, JsonEncoding.UTF8 );
-        jg.setPrettyPrinter( new DefaultPrettyPrinter() );
+        jg.setPrettyPrinter( new DefaultPrettyPrinter(  ) );
         jg.setCodec( new ObjectMapper() );
         return jg;
     }
@@ -565,13 +576,12 @@ public class ExportServiceImpl implements ExportService {
         jg.writeStartArray();
 
         for ( String collectionName : metadata.keySet() ) {
+
             if ( collectionName.equals( "exports" ) ) {
                 continue;
             }
             //if the collection you are looping through doesn't match the name of the one you want. Don't export it.
-
-            if ( ( config.get( "collectionName" ) == null ) || collectionName
-                    .equals( config.get( "collectionName" ) ) ) {
+            if ( ( config.get( "collectionName" ) == null ) || collectionName.equalsIgnoreCase((String)config.get( "collectionName" ) ) ) {
                 //Query entity manager for the entities in a collection
                 Query query = null;
                 if ( config.get( "query" ) == null ) {
@@ -586,7 +596,7 @@ public class ExportServiceImpl implements ExportService {
                     }
                 }
                 query.setLimit( MAX_ENTITY_FETCH );
-                query.setResultsLevel( Results.Level.ALL_PROPERTIES );
+                query.setResultsLevel( Level.ALL_PROPERTIES );
                 query.setCollection( collectionName );
 
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );

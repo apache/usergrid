@@ -204,6 +204,23 @@ angular.module('appservices', ['ngRoute',
         templateUrl: 'login/logout.html',
         controller: 'LogoutCtrl'
       })
+      .when('/push/sendNotification', {
+        templateUrl: 'push/push-send-notification.html', 
+        controller: 'PushSendNotificationCtrl'
+      })
+      .when('/push/getStarted', {
+        templateUrl: 'push/push-get-started.html', 
+        controller: 'PushGetStartedCtrl'
+      })
+      .when('/push/history', {
+        templateUrl: 'push/push-history.html', controller: 'PushHistoryCtrl'
+      })
+      .when('/push/history/receipts', {
+        templateUrl: 'push/push-receipts.html', controller: 'PushReceiptsCtrl'
+      })
+      .when('/push/configuration', {
+        templateUrl: 'push/push-config.html', controller: 'PushConfigCtrl'
+      })
       .otherwise({
         redirectTo: '/org-overview'
       });

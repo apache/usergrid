@@ -23,9 +23,6 @@ import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.persistence.entities.Import;
 import org.apache.usergrid.rest.AbstractContextResource;
@@ -79,11 +76,13 @@ public class OrganizationResource extends AbstractContextResource {
 
 
     public OrganizationResource() {
+        logger.debug("OrganizationResource created");
     }
 
 
     public OrganizationResource init( OrganizationInfo organization ) {
         this.organization = organization;
+        logger.debug("OrganizationResource initialized for org {}", organization.getName());
         return this;
     }
 
@@ -253,7 +252,7 @@ public class OrganizationResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug( "OrganizationResource.executePut" );
+        logger.debug( "executePut" );
 
         ApiResponse response = createApiResponse();
         response.setAction( "put" );
@@ -275,6 +274,7 @@ public class OrganizationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
+        logger.debug( "executePostJson" );
 
         UUID jobUUID = null;
         Map<String, String> uuidRet = new HashMap<String, String>();
@@ -336,7 +336,7 @@ public class OrganizationResource extends AbstractContextResource {
 
         Export entity;
         try {
-            entity = smf.getServiceManager( CassandraService.MANAGEMENT_APPLICATION_ID ).getEntityManager()
+            entity = smf.getServiceManager( emf.getManagementAppId() ).getEntityManager()
                         .get( exportEntityUUIDStr, Export.class );
         }
         catch ( Exception e ) { //this might not be a bad request and needs better error checking

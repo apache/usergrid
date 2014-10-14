@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <parent>
+    <artifactId>chop-parent</artifactId>
+    <groupId>org.apache.usergrid.chop</groupId>
+    <version>2.0.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>Chop Webapp</name>
+  <artifactId>chop-webapp</artifactId>
+  <packaging>jar</packaging>
+  <description>
+    A REST based web application that services requests to load, run, and
+    archive performance tests.
+  </description>
+    <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <wagon.version>2.6</wagon.version>
+      <shade.plugin.version>2.2</shade.plugin.version>
+      <wagon.plugin.version>1.0-beta-5</wagon.plugin.version>
+      <webapp-shaded-jar>${project.artifactId}-${project.version}-shaded.${project.packaging}</webapp-shaded-jar>
+      <wagon.webapp.copy.file>${project.build.directory}/${webapp-shaded-jar}</wagon.webapp.copy.file>
+      <wagon.target.dir>${project.basedir}</wagon.target.dir>
+      <wagon.temp.directory>/tmp</wagon.temp.directory>
+      <chop.home.directory>/opt/chop</chop.home.directory>
+      <chop.webapp.directory>${chop.home.directory}/webapp</chop.webapp.directory>
+    </properties>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.cer</include>
+          <include>**/*.jks</include>
+          <include>**/*.js</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
+      </testResource>
+    </testResources>
+
+      <extensions>
+        <extension>
+          <groupId>org.apache.maven.wagon</groupId>
+          <artifactId>wagon-ssh</artifactId>
+          <version>${wagon.version}</version>
+        </extension>
+      </extensions>
+
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>wagon-maven-plugin</artifactId>
+        <version>${wagon.plugin.version}</version>
+          <configuration>
+            <serverId>ec2-coordinator-instance</serverId>
+            <fromDir>${wagon.target.dir}</fromDir>
+            <includes>target/${webapp-shaded-jar},jssecacerts,chop-webapp</includes>
+            <url>scp://${chop.coordinator.url}${wagon.temp.directory}</url>
+            <commands>
+              <command>if [ ! -f /etc/init.d/chop-webapp ]; then sudo cp ${wagon.temp.directory}/chop-webapp /etc/init.d/; fi</command>
+              <command>sudo chmod +x /etc/init.d/chop-webapp</command>
+              <command>if [ ! -f ${chop.webapp.java.home}/lib/security/jssecacerts ]; then sudo cp ${wagon.temp.directory}/jssecacerts ${chop.webapp.java.home}/jre/lib/security/; fi</command>
+              <command>if [ ! -d ${chop.webapp.directory} ]; then sudo mkdir -p ${chop.webapp.directory}; fi</command>
+              <command>sudo cp ${wagon.temp.directory}/target/${webapp-shaded-jar} ${chop.webapp.directory}</command>
+              <command>sudo service chop-webapp restart</command>
+            </commands>
+          </configuration>
+        <executions>
+          <execution>
+            <id>upload-webapp-jar</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>upload</goal>
+              <goal>sshexec</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.16</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.16</version>
+        <configuration>
+          <systemPropertyVariables>
+            <classes.base>${project.build.outputDirectory}</classes.base>
+            <archaius.deployment.environment>UNIT</archaius.deployment.environment>
+          </systemPropertyVariables>
+
+          <excludes>
+            <exclude>**/NoteDaoTest.java</exclude>
+            <exclude>**/UserDaoTest.java</exclude>
+            <exclude>**/CommitDaoTest.java</exclude>
+            <exclude>**/ModuleDaoTest.java</exclude>
+            <exclude>**/RunDaoTest.java</exclude>
+            <exclude>**/RunResultDaoTest.java</exclude>
+            <exclude>**/SummaryDaoTest.java</exclude>
+            <exclude>**/RunnerDaoTest.java</exclude>
+            <exclude>**/ProviderParamsDaoTest.java</exclude>
+            <exclude>**/ElasticSearchClientTest.java</exclude>
+            <exclude>**/RunsCalcTest.java</exclude>
+            <exclude>**/OverviewCalcTest.java</exclude>
+            <exclude>**/IterationsCalcTest.java</exclude>
+            <exclude>**/DataServiceTest.java</exclude>
+            <exclude>**/RunnerGroupTest.java</exclude>
+            <exclude>**/GroupedRunnersTest.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <excludeTransitive>false</excludeTransitive>
+              <outputDirectory>${project.build.directory}/classes</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${shade.plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <artifactSet>
+                <includes>
+                  <include>org.apache.usergrid.chop:chop-webapp</include>
+                  <include>org.safehaus.jettyjam:jettyjam-utils</include>
+                </includes>
+              </artifactSet>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>org.apache.usergrid.chop.webapp.ChopUiJarLauncher</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>chop-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>chop-spi</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>chop-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>chop-amazon</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.safehaus.guicyfig</groupId>
+      <artifactId>guicyfig</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-server</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-client</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-guice</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-multipart</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-json</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.jaxrs</groupId>
+      <artifactId>jackson-jaxrs-json-provider</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-guice</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.inject.extensions</groupId>
+      <artifactId>guice-multibindings</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.inject.extensions</groupId>
+      <artifactId>guice-servlet</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.netflix.archaius</groupId>
+      <artifactId>archaius-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.netflix.blitz4j</groupId>
+      <artifactId>blitz4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.netflix.archaius</groupId>
+      <artifactId>archaius-jclouds</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.reflections</groupId>
+      <artifactId>reflections</artifactId>
+    </dependency>
+
+    <!-- =================== -->
+    <!-- Vaadin Dependencies -->
+    <!-- =================== -->
+
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-server</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-client-compiled</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-themes</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.elasticsearch</groupId>
+      <artifactId>elasticsearch</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.safehaus.jettyjam</groupId>
+      <artifactId>jettyjam-utils</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jukito</groupId>
+      <artifactId>jukito</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+      <version>3.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-all</artifactId>
+      <version>1.2.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4.5</version>
+      <type>jar</type>
+    </dependency>
+  </dependencies>
+</project>

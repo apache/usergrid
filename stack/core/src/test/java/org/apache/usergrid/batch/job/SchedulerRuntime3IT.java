@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 
 /**
@@ -44,7 +43,8 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
         int failCount = Integer.parseInt( props.getProperty( FAIL_PROP ) );
         long sleepTime = Long.parseLong( props.getProperty( RUNLOOP_PROP ) );
 
-        FailureJobExecution job = cassandraResource.getBean( "failureJobExceuction", FailureJobExecution.class );
+        FailureJobExecution job = cassandraResource.getBean( 
+                "failureJobExceuction", FailureJobExecution.class );
 
         int totalAttempts = failCount + 1;
 
@@ -52,9 +52,10 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
 
         getJobListener().setExpected( 3 );
 
-        JobData returned = scheduler.createJob( "failureJobExceuction", System.currentTimeMillis(), new JobData() );
+        JobData returned = scheduler.createJob( 
+                "failureJobExceuction", System.currentTimeMillis(), new JobData() );
 
-
+        scheduler.refreshIndex();
 
         final long waitTime = ( failCount + 2 ) * sleepTime + 5000L ;
 
@@ -66,16 +67,18 @@ public class SchedulerRuntime3IT extends AbstractSchedulerRuntimeIT {
 
         assertTrue( "dead job signaled", deadInvoked );
 
+        scheduler.refreshIndex();
 
         // sleep until the job should have failed. We sleep 1 extra cycle just to
         // make sure we're not racing the test
         boolean waited = getJobListener().blockTilDone(waitTime);
 
+        scheduler.refreshIndex();
+
         //we shouldn't trip the latch.  It should fail failCount times, and not run again
         assertTrue( "Jobs ran", waited );
         assertTrue( failCount + " failures resulted", getJobListener().getFailureCount() == failCount );
         assertTrue( 1 + " success resulted", getJobListener().getSuccessCount() == 1 );
-
 
         JobStat stat = scheduler.getStatsForJob( returned.getJobName(), returned.getUuid() );
 

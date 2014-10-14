@@ -44,6 +44,12 @@ public class NameIdentifierNode extends QueryNode {
     }
 
 
+    @Override
+    public boolean ignoreHintSize() {
+        return false;
+    }
+
+
     public String getName() {
         return name;
     }

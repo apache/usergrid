@@ -17,16 +17,17 @@
 package org.apache.usergrid.batch.job;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.TimeUnit;
+import static org.apache.usergrid.batch.job.AbstractSchedulerRuntimeIT.cassandraResource;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.entities.JobData;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -48,12 +49,16 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
             scheduler.createJob( "countdownLatch", System.currentTimeMillis(), new JobData() );
         }
 
-
+        scheduler.refreshIndex();
         
         // now:
         // note that the waitForCount only wait for job execution. It does NOT wait for job Completion
         boolean waited = counterJob.waitForCount(waitTime, TimeUnit.MILLISECONDS);
-        assertTrue( "Failed to run " + getCount() + " number of jobs. Waited " + waitTime + " seconds.", waited );
+        assertTrue( "Failed to run " + getCount() 
+                + " number of jobs. Waited " + waitTime 
+                + " seconds.", waited );
+        
+        scheduler.refreshIndex();
         
         // now:
         // blockTilDone look into the JobListener hook and blocked until jobs are completed.
@@ -61,10 +66,15 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
         while (!getJobListener().blockTilDone(waitTime)) {
         	logger.warn("Jobs not yet finished after waited {}, block again" , waitTime);
         }
-        assertEquals( "Expected success job: " + getCount()+ ". Actual :" + getJobListener().getSuccessCount() + ". Total count: " + getJobListener().getDoneCount() , getCount() , getJobListener().getSuccessCount() );
+        assertEquals( "Expected success job: " + getCount()
+                + ". Actual :" + getJobListener().getSuccessCount() 
+                + ". Total count: " + getJobListener().getDoneCount() , 
+                getCount() , getJobListener().getSuccessCount() );
         
         Thread.sleep( 5000L );
 
+        scheduler.refreshIndex();
+        
         // set the counter job latch size
         counterJob.setLatch( getCount() );
         getJobListener().setExpected( getCount() );
@@ -73,11 +83,14 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
             scheduler.createJob( "countdownLatch", System.currentTimeMillis(), new JobData() );
         }
 
+        scheduler.refreshIndex();
+        
         // previously: 
         // now wait until everything fires
         // waited = getJobListener().blockTilDone( 2 * getCount(), 15000L );
         // waited = counterJob.waitForCount(waitTime, TimeUnit.MILLISECONDS );
-        // assertTrue( "Failed to run " + 2* getCount() + " number of jobs. Success count = " + getJobListener().getSuccessCount() + ". Waited " + waitTime  + " seconds.", waited );
+        // assertTrue( "Failed to run " + 2* getCount() + " number of jobs. 
+        // Success count = " + getJobListener().getSuccessCount() + ". Waited " + waitTime  + " seconds.", waited );
         // assertTrue( 2 * getCount() + " successful jobs ran",
         //  ( 2 * getCount() ) == getJobListener().getSuccessCount() );
 		
@@ -86,12 +99,20 @@ public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
         waited = counterJob.waitForCount(waitTime, TimeUnit.MILLISECONDS);
         assertTrue( "Failed to run " + getCount() + " number of jobs. Waited " + waitTime + " seconds.", waited );
         
+        scheduler.refreshIndex();
+        
         // now:
         // blockTilDone look into the JobListener hook and blocked until jobs are completed.
         // TODO : need a retry count so it doesn't reblock forever
         while (!getJobListener().blockTilDone(waitTime)) {
         	logger.warn("Jobs not yet finished after waited {}, block again" , waitTime);
         }
-        assertEquals( "Expected success job: " +2 * getCount()+ ". Actual :" + getJobListener().getSuccessCount() + ". Total count: " + getJobListener().getDoneCount() , 2 * getCount() , getJobListener().getSuccessCount() );
+
+        scheduler.refreshIndex();
+        
+        assertEquals( "Expected success job: " +2 * getCount()
+                + ". Actual :" + getJobListener().getSuccessCount() 
+                + ". Total count: " + getJobListener().getDoneCount() , 
+                2 * getCount() , getJobListener().getSuccessCount() );
     }
 }
