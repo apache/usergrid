@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.management.importUG;
+package org.apache.usergrid.management.importug;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.service.SchedulerService;
@@ -43,12 +43,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import static org.apache.usergrid.corepersistence.CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 
-/**
- * Created by ApigeeCorporation on 7/8/14.
- */
 public class ImportServiceImpl implements ImportService {
 
     public static final String IMPORT_ID = "importId";
@@ -399,7 +397,7 @@ public class ImportServiceImpl implements ImportService {
             // schedule each file as a separate job
             for (File eachfile : files) {
 
-                UUID jobID = scheduleFile(eachfile.getPath(), rooteEm.getRef(importId));
+                UUID jobID = scheduleFile(eachfile.getPath(), importUG);
                 Map<String, Object> fileJobID = new HashMap<String, Object>();
                 fileJobID.put("FileName", eachfile.getName());
                 fileJobID.put("JobID", jobID.toString());
@@ -613,12 +611,12 @@ public class ImportServiceImpl implements ImportService {
                     rootEm.update(fileImport);
 
                     //check other files status and mark the status of import Job as Finished if all others are finished
-                    Results ImportJobResults = rootEm.getConnectingEntities(fileImport.getUuid(), "includes", null, Results.Level.ALL_PROPERTIES);
+                    Results ImportJobResults = rootEm.getConnectingEntities(fileImport, "includes", null, Level.ALL_PROPERTIES);
                     List<Entity> importEntity = ImportJobResults.getEntities();
                     UUID importId = importEntity.get(0).getUuid();
                     Import importUG = rootEm.get(importId, Import.class);
 
-                    Results entities = rootEm.getConnectedEntities(importId, "includes", null, Results.Level.ALL_PROPERTIES);
+                    Results entities = rootEm.getConnectedEntities( importUG, "includes", null, Level.ALL_PROPERTIES);
                     List<Entity> importFile = entities.getEntities();
 
                     int count = 0;

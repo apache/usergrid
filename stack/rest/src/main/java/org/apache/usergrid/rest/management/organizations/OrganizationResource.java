@@ -54,6 +54,9 @@ import java.util.UUID;
 
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.usergrid.corepersistence.CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.OrganizationResource")
@@ -419,7 +422,7 @@ public class OrganizationResource extends AbstractContextResource {
 
         Import entity;
         try {
-            entity = smf.getServiceManager( CassandraService.MANAGEMENT_APPLICATION_ID ).getEntityManager()
+            entity = smf.getServiceManager( MANAGEMENT_APPLICATION_ID ).getEntityManager()
                     .get( importEntityUUIDStr, Import.class );
         }
         catch ( Exception e ) { //this might not be a bad request and needs better error checking
@@ -443,8 +446,8 @@ public class OrganizationResource extends AbstractContextResource {
 
         List<Entity> entity;
         try {
-            entity = smf.getServiceManager( CassandraService.MANAGEMENT_APPLICATION_ID ).getEntityManager()
-                    .getConnectedEntities(importEntityUUIDStr ,"includes",null, Results.Level.ALL_PROPERTIES).getEntities();
+            entity = smf.getServiceManager( MANAGEMENT_APPLICATION_ID ).getEntityManager()
+                    .getConnectedEntities(importEntityUUIDStr ,"includes", null, Level.ALL_PROPERTIES).getEntities();
         }
         catch ( Exception e ) { //this might not be a bad request and needs better error checking
             return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )

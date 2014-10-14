@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.management.importUG;
+package org.apache.usergrid.management.importug;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.entities.FileImport;

@@ -88,7 +88,6 @@ import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
-import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
 import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
@@ -129,7 +128,6 @@ import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
-import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
@@ -1480,6 +1478,14 @@ public class CpEntityManager implements EntityManager {
     public Set<String> getConnectionTypes( EntityRef ref ) throws Exception {
 
         return getRelationManager( ref ).getConnectionTypes();
+    }
+
+
+    @Override
+    public Results getConnectedEntities(UUID uuid, String connectionType, 
+            String connectedEntityType, Level resultsLevel) throws Exception {
+
+        return getConnectedEntities( get(uuid), connectionType, connectedEntityType, resultsLevel);
     }
 
 
@@ -2990,7 +2996,6 @@ public class CpEntityManager implements EntityManager {
 
         batch.execute();
     }
-
 }
 
 

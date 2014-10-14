@@ -2929,4 +2929,11 @@ public class EntityManagerImpl implements EntityManager {
         throw new UnsupportedOperationException("Not supported."); 
     }
 
+    @Override
+    public Results getConnectedEntities(UUID uuid, String connectionType, 
+            String connectedEntityType, Level resultsLevel) throws Exception {
+
+        return getConnectedEntities( get(uuid), connectionType, connectedEntityType, resultsLevel);
+    }
+
 }

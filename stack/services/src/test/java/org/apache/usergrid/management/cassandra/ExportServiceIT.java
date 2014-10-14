@@ -63,10 +63,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-/**
- *
- *
- */
 @Concurrent
 public class ExportServiceIT {
 

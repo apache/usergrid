@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.management.importUG;
+package org.apache.usergrid.management.importug;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.batch.job.OnlyOnceJob;
@@ -32,18 +32,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.UUID;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.apache.usergrid.corepersistence.CpEntityManagerFactory.MANAGEMENT_APPLICATION_ID;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 
-/**
- * Created by ApigeeCorporation on 7/8/14.
- */
+
 @Component("fileImportJob")
 public class FileImportJob extends OnlyOnceJob {
 
     public static final String FILE_IMPORT_ID = "fileImportId";
     private static final Logger logger = LoggerFactory.getLogger(FileImportJob.class);
 
-    //injected the Entity Manager Factory
+    // injected the Entity Manager Factory
     protected EntityManagerFactory emf;
 
     @Autowired
@@ -82,8 +81,9 @@ public class FileImportJob extends OnlyOnceJob {
         this.importService = importService;
     }
 
-    /*
-    This method is called when the job is retried maximum times by the scheduler but still fails. Thus the scheduler marks it as DEAD.
+    /**
+     * This method is called when the job is retried maximum times by the scheduler but still fails.
+     * Thus the scheduler marks it as DEAD.
      */
     @Override
     public void dead( final JobExecution execution ) throws Exception {
@@ -98,7 +98,8 @@ public class FileImportJob extends OnlyOnceJob {
         rootEm.update(fileImport);
 
         // If one file Job fails, mark the main import Job also as failed
-        Results ImportJobResults = rootEm.getConnectingEntities(fileImport.getUuid(), "includes", null, Results.Level.ALL_PROPERTIES);
+        Results ImportJobResults = rootEm.getConnectingEntities( 
+                fileImport, "includes", null, Level.ALL_PROPERTIES);
         List<Entity> importEntity = ImportJobResults.getEntities();
         UUID importId = importEntity.get(0).getUuid();
         Import importUG = rootEm.get(importId, Import.class);

@@ -32,9 +32,9 @@ import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.management.export.S3Export;
 import org.apache.usergrid.management.export.S3ExportImpl;
-import org.apache.usergrid.management.importUG.ImportService;
-import org.apache.usergrid.management.importUG.S3Import;
-import org.apache.usergrid.management.importUG.S3ImportImpl;
+import org.apache.usergrid.management.importug.ImportService;
+import org.apache.usergrid.management.importug.S3Import;
+import org.apache.usergrid.management.importug.S3ImportImpl;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.JobData;
 import org.jclouds.ContextBuilder;
@@ -48,15 +48,14 @@ import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
+import org.apache.usergrid.persistence.index.query.Query.Level;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-/**
- * Created by ApigeeCorporation on 7/8/14.
- */
+
 @Concurrent
 public class ImportServiceIT {
 
@@ -73,7 +72,7 @@ public class ImportServiceIT {
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @ClassRule
-    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource );
+    public static final ServiceITSetup setup = new ServiceITSetupImpl( cassandraResource, ServiceITSuite.elasticSearchResource );
 
 
     @BeforeClass
@@ -99,12 +98,17 @@ public class ImportServiceIT {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "name", "user" + i );
             userProperties.put( "email", "user" + i + "@test.com" );
-            entityTest[i] = emTest.create( "usertests", userProperties );
+            entityTest[i] = emTest.create( "testobject", userProperties );
         }
 
         //create connection
-        emTest.createConnection( emTest.getRef(entityTest[0].getUuid()), "related", emTest.getRef(entityTest[1].getUuid()));
-        emTest.createConnection( emTest.getRef(entityTest[1].getUuid()), "related", emTest.getRef( entityTest[0].getUuid()));
+        emTest.createConnection( new SimpleEntityRef( "testobject",  entityTest[0].getUuid()), 
+                                 "related", 
+                                 new SimpleEntityRef( "testobject",  entityTest[1].getUuid()));
+
+        emTest.createConnection( new SimpleEntityRef( "testobject",  entityTest[1].getUuid()), 
+                                 "related", 
+                                 new SimpleEntityRef( "testobject",  entityTest[0].getUuid()));
     }
 
     @Ignore //For this test please input your s3 credentials into settings.xml or Attach a -D with relevant fields.
@@ -124,12 +128,14 @@ public class ImportServiceIT {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "username", "user" + i );
             userProperties.put( "email", "user" + i + "@test.com" );
-            entity[i] = em.create( "users", userProperties );
+            entity[i] = em.create( "user", userProperties );
         }
 
         //creates test connections between first 2 users
-        em.createConnection( em.getRef(entity[0].getUuid()), "related", em.getRef(entity[1].getUuid()));
-        em.createConnection( em.getRef(entity[1].getUuid()), "related", em.getRef( entity[0].getUuid()));
+        em.createConnection( new SimpleEntityRef( "user",  entity[0].getUuid()), 
+                "related", new SimpleEntityRef( "user",  entity[1].getUuid()));
+        em.createConnection( new SimpleEntityRef( "user",  entity[1].getUuid()), 
+                "related", new SimpleEntityRef( "user",  entity[0].getUuid()));
 
         //Export the collection which needs to be tested for import
         ExportService exportService = setup.getExportService();
@@ -180,14 +186,14 @@ public class ImportServiceIT {
             assertThat(importService.getEphemeralFile().size(), is(not(0)));
 
             //check if entities are actually updated i.e. created and modified should be different
-            Results collections = em.getCollection(applicationId, "users", null, Results.Level.ALL_PROPERTIES);
+            Results collections = em.getCollection(applicationId, "users", null, Level.ALL_PROPERTIES);
             List<Entity> entities = collections.getEntities();
 
             // check if connections are created for only the 1st 2 entities in user collection
             Results r;
             List<ConnectionRef> connections;
             for (int i = 0; i < 2; i++) {
-                r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
+                r = em.getConnectedEntities(entities.get(i), "related", null, Level.IDS);
                 connections = r.getConnections();
                 assertNotNull(connections);
             }
@@ -198,7 +204,7 @@ public class ImportServiceIT {
 
             for (int i = 0; i < 3; i++) {
 
-                er = em.getRef(entities.get(i).getUuid());
+                er = entities.get(i);
                 dictionaries1 = em.getDictionaryAsMap(er, "connected_types");
                 dictionaries2 = em.getDictionaryAsMap(er, "connecting_types");
 
@@ -229,16 +235,18 @@ public class ImportServiceIT {
         Map<String, Object> userProperties = null;
 
         Entity entity[] = new Entity[5];
-        //creates entities for a custom collection called "custom"
+        //creates entities for a custom collection "custom" entities
         for ( int i = 0; i < 5; i++ ) {
             userProperties = new LinkedHashMap<String, Object>();
             userProperties.put( "parameter1", "user" + i );
             userProperties.put( "parameter2", "user" + i + "@test.com" );
-            entity[i] = em.create( "customs", userProperties );
+            entity[i] = em.create( "custom", userProperties );
         }
         //creates connections
-        em.createConnection( em.getRef( entity[0].getUuid() ), "related", em.getRef( entity[1].getUuid() ) );
-        em.createConnection( em.getRef( entity[1].getUuid() ), "related", em.getRef( entity[0].getUuid() ) );
+        em.createConnection( new SimpleEntityRef( "custom",  entity[0].getUuid() ), 
+                "related", new SimpleEntityRef( "custom",  entity[1].getUuid() ) );
+        em.createConnection( new SimpleEntityRef( "custom",  entity[1].getUuid() ), 
+                "related", new SimpleEntityRef( "custom",  entity[0].getUuid() ) );
 
 
         //Export the application which needs to be tested for import
@@ -292,7 +300,7 @@ public class ImportServiceIT {
             // check if all collections in the application are updated
             while (collectionsItr.hasNext()) {
                 String collectionName = collectionsItr.next();
-                Results collection = em.getCollection(applicationId, collectionName, null, Results.Level.ALL_PROPERTIES);
+                Results collection = em.getCollection(applicationId, collectionName, null, Level.ALL_PROPERTIES);
                 List<Entity> entities = collection.getEntities();
                 for (Entity eachEntity : entities) {
                     //check for dictionaries --> checking permissions in the dictionaries
@@ -302,11 +310,11 @@ public class ImportServiceIT {
                     //checking for permissions for the roles collection
                     if (collectionName.equals("roles")) {
                         if (eachEntity.getName().equalsIgnoreCase("admin")) {
-                            er = em.getRef(eachEntity.getUuid());
+                            er = eachEntity;
                             dictionaries = em.getDictionaryAsMap(er, "permissions");
                             assertThat(dictionaries.size(), is(0));
                         } else {
-                            er = em.getRef(eachEntity.getUuid());
+                            er = eachEntity;
                             dictionaries = em.getDictionaryAsMap(er, "permissions");
                             assertThat(dictionaries.size(), is(not(0)));
                         }
@@ -317,7 +325,7 @@ public class ImportServiceIT {
                     Results r;
                     List<ConnectionRef> connections;
                     for (int i = 0; i < 2; i++) {
-                        r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
+                        r = em.getConnectedEntities(entities.get(i), "related", null,Level.IDS);
                         connections = r.getConnections();
                         assertNotNull(connections);
                     }
@@ -352,8 +360,9 @@ public class ImportServiceIT {
         }
 
         //creates test connections between first 2 entities in usertests collection
-        ConnectedEntityRef ref=em.createConnection( em.getRef(entity[0].getUuid()), "related", em.getRef(entity[1].getUuid()));
-        em.createConnection( em.getRef(entity[1].getUuid()), "related", em.getRef( entity[0].getUuid()));
+        ConnectedEntityRef ref = em.createConnection( entity[0], "related", entity[1]);
+
+        em.createConnection( entity[1], "related", entity[0]);
 
         //create 2nd test application, add entities to it, create connections and set permissions
         createAndSetup2ndApplication();
@@ -414,7 +423,7 @@ public class ImportServiceIT {
                 Iterator<String> itr = collections.iterator();
                 while (itr.hasNext()) {
                     String collectionName = itr.next();
-                    Results collection = em.getCollection(appID, collectionName, null, Results.Level.ALL_PROPERTIES);
+                    Results collection = em.getCollection(appID, collectionName, null, Level.ALL_PROPERTIES);
                     List<Entity> entities = collection.getEntities();
 
                     if (collectionName.equals("usertests")) {
@@ -423,7 +432,7 @@ public class ImportServiceIT {
                         Results r;
                         List<ConnectionRef> connections;
                         for (int i = 0; i < 2; i++) {
-                            r = em.getConnectedEntities(entities.get(i).getUuid(), "related", null, Results.Level.IDS);
+                            r = em.getConnectedEntities(entities.get(i), "related", null, Level.IDS);
                             connections = r.getConnections();
                             assertNotNull(connections);
                         }
@@ -432,7 +441,7 @@ public class ImportServiceIT {
                         EntityRef er;
                         Map<Object, Object> dictionaries1, dictionaries2;
                         for (int i = 0; i < 3; i++) {
-                            er = em.getRef(entities.get(i).getUuid());
+                            er = entities.get(i);
                             dictionaries1 = em.getDictionaryAsMap(er, "connected_types");
                             dictionaries2 = em.getDictionaryAsMap(er, "connecting_types");
 

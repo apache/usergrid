@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.management.importUG;
+package org.apache.usergrid.management.importug;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -41,9 +41,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-/**
- * Created by ApigeeCorporation on 7/8/14.
- */
+
 public class S3ImportImpl implements S3Import {
 
     private BlobStore blobStore;

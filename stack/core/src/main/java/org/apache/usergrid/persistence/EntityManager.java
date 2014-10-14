@@ -457,6 +457,9 @@ public interface EntityManager {
     public Results getConnectedEntities( EntityRef entityRef, String connectionType, 
             String connectedEntityType, Level resultsLevel ) throws Exception;
 
+    public Results getConnectedEntities( UUID uuid, String connectionType, 
+            String connectedEntityType, Level resultsLevel ) throws Exception;
+
     /**
      * Gets the entities connecting to this entity, optionally with the specified connection 
      * type and/or entity type.
@@ -695,4 +698,5 @@ public interface EntityManager {
     public void flushManagerCaches();
 
     public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception;
+
 }

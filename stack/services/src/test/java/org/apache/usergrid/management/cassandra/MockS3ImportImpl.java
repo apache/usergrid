@@ -17,7 +17,7 @@
 
 package org.apache.usergrid.management.cassandra;
 
-import org.apache.usergrid.management.importUG.S3Import;
+import org.apache.usergrid.management.importug.S3Import;
 
 import java.io.File;
 import java.util.ArrayList;

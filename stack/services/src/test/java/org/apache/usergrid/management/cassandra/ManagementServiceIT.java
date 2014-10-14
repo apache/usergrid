@@ -52,7 +52,6 @@ import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
-import static org.apache.usergrid.management.EmailFlowIT.setup;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
