@@ -58,6 +58,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(ITRunner.class)
 @UseModules(TestGraphModule.class)
+@Ignore("Stress test should not be run in embedded mode")
 public class GraphManagerStressTest {
     private static final Logger log = LoggerFactory.getLogger( GraphManagerStressTest.class );
 

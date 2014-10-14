@@ -143,4 +143,24 @@ public class HybridEntityManagerFactory implements EntityManagerFactory, Applica
     public void flushEntityManagerCaches() {
         factory.flushEntityManagerCaches();
     }
+
+    @Override
+    public void rebuildInternalIndexes(ProgressObserver po) throws Exception {
+        factory.rebuildInternalIndexes(po);
+    }
+
+    @Override
+    public void rebuildAllIndexes(ProgressObserver po) throws Exception {
+        factory.rebuildAllIndexes(po);
+    }
+
+    @Override
+    public void rebuildApplicationIndexes(UUID appId, ProgressObserver po) throws Exception {
+        factory.rebuildApplicationIndexes(appId, po);
+    }
+
+    @Override
+    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
+        factory.rebuildCollectionIndex(appId, collection, po);
+    }
 }

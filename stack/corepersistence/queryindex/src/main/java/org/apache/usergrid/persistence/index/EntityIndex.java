@@ -19,13 +19,9 @@
 
 package org.apache.usergrid.persistence.index;
 
-import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.model.entity.Id;
-
-import java.util.UUID;
-import org.apache.usergrid.persistence.index.query.CandidateResult;
 
 
 /**
@@ -33,42 +29,34 @@ import org.apache.usergrid.persistence.index.query.CandidateResult;
  */
 public interface EntityIndex {
 
-    /** 
-     * Create index for Entity
-     * @param entity Entity to be indexed.
+    /**
+     * This should ONLY ever be called once on application create.  Otherwise we're introducing slowness into our system
+     *
      */
-    public void index(  Entity entity );
+    public void initializeIndex();
 
     /**
-     * Remove index of entity.
-     * @param entity Entity to be removed from index. 
+     * Create the index batch
+     * @return
      */
-    public void deindex( Entity entity );
-
-    /**
-     * Remove index of entity.
-     * @param result CandidateResult to be removed from index.
-     */
-    public void deindex( CandidateResult result );
-
-    /**
-     * Remove index of entity.
-     * @param id Id to be removed from index.
-     * @param version Version to be removed from index.
-     */
-    public void deindex( Id id, UUID version);
+    public EntityIndexBatch createBatch();
 
     /**
      * Execute query in Usergrid syntax.
      */
 
-    public CandidateResults search( Query query );
+    public CandidateResults search(final IndexScope indexScope,  Query query );
 
     /**
-     * Force refresh of index (should be used for testing purposes only).
+     * Get the candidate results of all versions of the entity for this id
+     * @param id
+     * @return
+     */
+    public CandidateResults getEntityVersions(final IndexScope indexScope, Id id);
+
+    /**
+     * Refresh the index
      */
     public void refresh();
-
-    public CandidateResults getEntityVersions(Id id);
 
 }

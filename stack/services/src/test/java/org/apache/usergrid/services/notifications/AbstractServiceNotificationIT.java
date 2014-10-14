@@ -27,6 +27,7 @@ import org.junit.Rule;
 import org.junit.rules.TestName;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -68,8 +69,7 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
         while (System.currentTimeMillis() < timeout) {
             Thread.sleep(200);
             app.getEm().refreshIndex();
-            notification = app.getEm().get(notification.getUuid(),
-                    Notification.class);
+            notification = app.getEm().get(notification.getUuid(), Notification.class);
             if (notification.getFinished() != null) {
                 return notification;
             }
@@ -80,13 +80,20 @@ public class AbstractServiceNotificationIT extends AbstractServiceIT {
 
     protected List<EntityRef> getNotificationReceipts(EntityRef notification)
             throws Exception {
-        Results r = app.getEm().getCollection(notification,
-                Notification.RECEIPTS_COLLECTION, null, 1000000,
-                Query.Level.REFS, false);
+        Query query = new Query();
+        query.setCollection("receipts");
+        query.setLimit(100);
+        PathQuery<Receipt> pathQuery = new PathQuery<Receipt>(
+                new SimpleEntityRef(app.getEm().getApplicationRef()),
+                query
+        );
+        Iterator<Receipt> it = pathQuery.iterator(app.getEm());
         List<EntityRef> list =new ArrayList<EntityRef>();//get all
-        PagingResultsIterator it = new PagingResultsIterator(r);
         while(it.hasNext()){
-            list.add((EntityRef)it.next());
+            Receipt receipt =it.next();
+            if(receipt.getNotificationUUID().equals(notification.getUuid())) {
+                list.add(receipt);
+            }
         }
         return list;
     }

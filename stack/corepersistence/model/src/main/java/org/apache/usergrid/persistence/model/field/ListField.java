@@ -48,4 +48,11 @@ public class ListField<T> extends AbstractField<List<T>> {
     public void add( T listItem ) {
         value.add( listItem );
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+        return FieldTypeName.LIST;
+
+    }
 }

@@ -451,7 +451,7 @@ public class ManagementServiceImpl implements ManagementService {
                                                              String email, String password, boolean activated,
                                                              boolean disabled ) throws Exception {
         logger.debug("createOwnerAndOrganization2");
-        return createOwnerAndOrganization( organizationName, username, name, email, password, 
+        return createOwnerAndOrganization( organizationName, username, name, email, password,
                 activated, disabled, null, null );
     }
 
@@ -497,7 +497,7 @@ public class ManagementServiceImpl implements ManagementService {
             else {
                 user = createAdminUserInternal( username, name, email, password, activated, disabled, userProperties );
             }
-            
+
             logger.debug("User created");
             organization = createOrganizationInternal( organizationName, user, true, organizationProperties );
         }
@@ -575,7 +575,7 @@ public class ManagementServiceImpl implements ManagementService {
             logger.debug("user = null");
             return null;
         }
-        
+
         Lock groupLock =
                 getUniqueUpdateLock( lockManager, smf.getManagementAppId(), organizationName, "groups", PROPERTY_PATH );
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
@@ -828,13 +828,13 @@ public class ManagementServiceImpl implements ManagementService {
 
         writeUserMongoPassword( smf.getManagementAppId(), user, mongoPassword );
 
-        UserInfo userInfo = new UserInfo( 
+        UserInfo userInfo = new UserInfo(
             smf.getManagementAppId(), user.getUuid(), user.getUsername(), user.getName(),
             user.getEmail(), user.getConfirmed(), user.getActivated(), user.getDisabled(),
             user.getDynamicProperties(), true );
 
         // special case for sysadmin and test account only
-        if (    !user.getEmail().equals( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ) ) 
+        if (    !user.getEmail().equals( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ) )
              && !user.getEmail().equals( properties .getProperty( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ) ) ) {
             this.startAdminUserActivationFlow( userInfo );
         }
@@ -947,7 +947,7 @@ public class ManagementServiceImpl implements ManagementService {
                 entity.getName(), ( String ) entity.getProperty( "email" ),
                 ConversionUtils.getBoolean( entity.getProperty( "confirmed" ) ),
                 ConversionUtils.getBoolean( entity.getProperty( "activated" ) ),
-                ConversionUtils.getBoolean( entity.getProperty( "disabled" ) ), 
+                ConversionUtils.getBoolean( entity.getProperty( "disabled" ) ),
                 entity.getDynamicProperties(),
                 ConversionUtils.getBoolean( entity.getProperty( "admin" )));
     }
@@ -1239,7 +1239,7 @@ public class ManagementServiceImpl implements ManagementService {
         int size = 0;
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
-        Results orgResults = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ), 
+        Results orgResults = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ),
                 "groups", null, 10000, Level.REFS, false );
 
         logger.debug( "    orgResults.size() = " +  orgResults.size() );
@@ -1410,11 +1410,11 @@ public class ManagementServiceImpl implements ManagementService {
 
     public Entity getEntityFromPrincipal( AuthPrincipalInfo principal ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( 
-            principal.getApplicationId() != null 
+        EntityManager em = emf.getEntityManager(
+            principal.getApplicationId() != null
                 ? principal.getApplicationId() : smf.getManagementAppId() );
 
-        Entity entity = em.get( new SimpleEntityRef( 
+        Entity entity = em.get( new SimpleEntityRef(
                 principal.getType().getEntityType(), principal.getUuid()));
 
         return entity;
@@ -1430,7 +1430,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.usergrid.management.ManagementService#revokeAccessTokensForAdminUser
    * (java.util.UUID)
@@ -1687,8 +1687,8 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
-        Results r = em.getConnectingEntities( 
-                new SimpleEntityRef(APPLICATION_INFO, applicationInfoId), 
+        Results r = em.getConnectingEntities(
+                new SimpleEntityRef(APPLICATION_INFO, applicationInfoId),
                 "owns", "group", Level.ALL_PROPERTIES );
 
         Entity entity = r.getEntity();
@@ -1709,8 +1709,8 @@ public class ManagementServiceImpl implements ManagementService {
         final BiMap<UUID, String> applications = HashBiMap.create();
         final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
-        final Results results = em.getConnectedEntities( 
-                new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId), 
+        final Results results = em.getConnectedEntities(
+                new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId),
                 "owns", APPLICATION_INFO, Level.ALL_PROPERTIES );
 
         final PagingResultsIterator itr = new PagingResultsIterator( results );
@@ -1852,7 +1852,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     public String getSecret( UUID applicationId, AuthPrincipalType type, UUID entityId ) throws Exception {
 
-        if ( AuthPrincipalType.ORGANIZATION.equals( type )) {  
+        if ( AuthPrincipalType.ORGANIZATION.equals( type )) {
             UUID ownerId = smf.getManagementAppId();
             return getCredentialsSecret( readUserToken( ownerId, entityId, Group.ENTITY_TYPE ) );
 
@@ -2440,7 +2440,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.usergrid.management.ManagementService#revokeAccessTokensForAappUser
    * (java.util.UUID, java.util.UUID)
@@ -2798,7 +2798,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.usergrid.management.ManagementService#setOrganizationProps(java.util
    * .UUID, java.util.Map)
@@ -2821,7 +2821,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.usergrid.management.ManagementService#getOrganizationProps(java.util
    * .UUID)

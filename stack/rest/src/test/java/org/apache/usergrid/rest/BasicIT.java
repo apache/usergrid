@@ -230,7 +230,8 @@ public class BasicIT extends AbstractRestIT {
 
         err_thrown = false;
         try {
-            node = mapper.readTree( resource().path( "/test-organization/test-app/users" ).accept( MediaType.APPLICATION_JSON )
+            node = mapper.readTree( resource().path( "/test-organization/test-app/users" )
+                    .accept( MediaType.APPLICATION_JSON )
                     .get( String.class ));
         }
         catch ( UniformInterfaceException e ) {
@@ -241,8 +242,10 @@ public class BasicIT extends AbstractRestIT {
 
         // test login app user with pin
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "pin" )
-                .queryParam( "username", "ed@anuff.com" ).queryParam( "pin", "1234" )
+        node = mapper.readTree( resource().path( "/test-organization/test-app/token" )
+                .queryParam( "grant_type", "pin" )
+                .queryParam( "username", "ed@anuff.com" )
+                .queryParam( "pin", "1234" )
                 .accept( MediaType.APPLICATION_JSON ).get( String.class ));
 
         logNode( node );
@@ -254,22 +257,35 @@ public class BasicIT extends AbstractRestIT {
 
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
         formData.add( "pin", "5678" );
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/ed@anuff.com/setpin" )
-                .queryParam( "access_token", user_access_token ).type( "application/x-www-form-urlencoded" )
+        node = mapper.readTree( resource()
+                .path( "/test-organization/test-app/users/ed@anuff.com/setpin" )
+                .queryParam( "access_token", user_access_token )
+                .type( "application/x-www-form-urlencoded" )
                 .post( String.class, formData ));
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/token" ).queryParam( "grant_type", "pin" )
-                .queryParam( "username", "ed@anuff.com" ).queryParam( "pin", "5678" )
-                .accept( MediaType.APPLICATION_JSON ).get( String.class ));
+        refreshIndex("test-organization", "test-app");
+        
+        node = mapper.readTree( resource()
+                .path( "/test-organization/test-app/token" )
+                .queryParam( "grant_type", "pin" )
+                .queryParam( "username", "ed@anuff.com" )
+                .queryParam( "pin", "5678" )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( String.class ));
 
         logNode( node );
 
         user_access_token = node.get( "access_token" ).textValue();
         assertTrue( isNotBlank( user_access_token ) );
 
+        refreshIndex("test-organization", "test-app");
+
         // test user test extension resource
 
-        node = mapper.readTree( resource().path( "/test-organization/test-app/users/ed@anuff.com/test" ).get( String.class ));
+        node = mapper.readTree( resource()
+                .path( "/test-organization/test-app/users/ed@anuff.com/test" )
+                .queryParam( "access_token", user_access_token )
+                .get( String.class ));
         logNode( node );
 
         // test create user with guest permissions (no token)

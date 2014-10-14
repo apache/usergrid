@@ -77,8 +77,6 @@ public class NodeShardCacheTest {
 
         final NodeShardAllocation allocation = mock( NodeShardAllocation.class );
 
-        final TimeService time = mock(TimeService.class);
-
         final Id id = createId( "test" );
 
         final String edgeType = "edge";
@@ -89,7 +87,7 @@ public class NodeShardCacheTest {
         final long newTime = 10000l;
 
 
-        NodeShardCache cache = new NodeShardCacheImpl( allocation, graphFig, time );
+        NodeShardCache cache = new NodeShardCacheImpl( allocation, graphFig );
 
 
         final Optional max = Optional.absent();
@@ -157,7 +155,6 @@ public class NodeShardCacheTest {
 
         final NodeShardAllocation allocation = mock( NodeShardAllocation.class );
 
-        final TimeService time = mock(TimeService.class);
 
         final Id id = createId( "test" );
 
@@ -170,7 +167,7 @@ public class NodeShardCacheTest {
          * Set our min mid and max
          */
 
-        NodeShardCache cache = new NodeShardCacheImpl( allocation, graphFig, time );
+        NodeShardCache cache = new NodeShardCacheImpl( allocation, graphFig );
 
 
         final Shard minShard = new Shard(0, 0, true);

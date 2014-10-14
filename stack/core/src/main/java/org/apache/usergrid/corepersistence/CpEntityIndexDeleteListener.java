@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityDel
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.entity.EntityVersion;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexScope;
@@ -41,6 +42,7 @@ import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
+
 /**
  * Listener for cleans up old indexes and deletes from indexer
  */
@@ -49,6 +51,7 @@ public class CpEntityIndexDeleteListener {
 
     private final SerializationFig serializationFig;
     private final EntityIndexFactory entityIndexFactory;
+
 
     @Inject
     public CpEntityIndexDeleteListener(final EntityIndexFactory entityIndexFactory,
@@ -59,32 +62,37 @@ public class CpEntityIndexDeleteListener {
 
 
     public Observable<EntityVersion> receive(final MvccEntityDeleteEvent event) {
-        CollectionScope collectionScope = event.getCollectionScope();
-        IndexScope indexScope = new IndexScopeImpl(collectionScope.getApplication(), collectionScope.getOwner(), collectionScope.getName());
-        final EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexScope);
+
+        final CollectionScope collectionScope = event.getCollectionScope();
+        final IndexScope indexScope = 
+                new IndexScopeImpl(collectionScope.getOwner(), collectionScope.getName());
+        final EntityIndex entityIndex = entityIndexFactory.createEntityIndex(
+                new ApplicationScopeImpl( collectionScope.getApplication()));
+
         return Observable.create(new ObservableIterator<CandidateResult>("deleteEsIndexVersions") {
             @Override
             protected Iterator<CandidateResult> getIterator() {
-                CandidateResults results = entityIndex.getEntityVersions(event.getEntity().getId());
+                CandidateResults results = 
+                        entityIndex.getEntityVersions(indexScope, event.getEntity().getId());
                 return results.iterator();
             }
         }).subscribeOn(Schedulers.io())
                 .buffer(serializationFig.getBufferSize())
                 .flatMap(new Func1<List<CandidateResult>, Observable<? extends EntityVersion>>() {
+
                     @Override
-                    public Observable<? extends EntityVersion> call(List<CandidateResult> candidateResults) {
+                    public Observable<? extends EntityVersion> call(List<CandidateResult> crs) {
                         List<EntityVersion> versions = new ArrayList<>();
-                        for (CandidateResult entity : candidateResults) {
+                        for (CandidateResult entity : crs) {
                             //filter find entities <= current version
                             if (entity.getVersion().timestamp() <= event.getVersion().timestamp()) {
                                 versions.add(entity);
-                                entityIndex.deindex(entity.getId(), entity.getVersion());
+                                entityIndex.createBatch()
+                                        .deindex(indexScope, entity.getId(), entity.getVersion());
                             }
                         }
                         return Observable.from(versions);
                     }
                 });
     }
-
-
 }

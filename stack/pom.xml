@@ -89,7 +89,7 @@
     <ug.heapmin>2048m</ug.heapmin>
 	<ug.argline>-Djava.awt.headless=true</ug.argline>
 
-    <usergrid-custom-spring-properties>classpath:/usergrid-custom.properties</usergrid-custom-spring-properties>
+    <usergrid-custom-spring-properties>classpath:/usergrid-deployment.properties</usergrid-custom-spring-properties>
     <usergrid-custom-spring-test-properties>classpath:/usergrid-custom-test.properties</usergrid-custom-spring-test-properties>
 
     <!-- =================================================================== -->
@@ -111,7 +111,7 @@
     <org.springframework.version>3.1.2.RELEASE</org.springframework.version>
     <shiro-version>1.2.0</shiro-version>
     <slf4j-version>1.6.1</slf4j-version>
-    <snakeyaml-version>1.8</snakeyaml-version>
+    <snakeyaml-version>1.6</snakeyaml-version>
     <tomcat-version>7.0.52</tomcat-version>
     <antlr.version>3.4</antlr.version>
     <tika.version>1.4</tika.version>
@@ -199,14 +199,16 @@
     <module>core</module>
     <module>services</module>
     <module>rest</module>
+    <!--
     <module>tools</module>
     <module>websocket</module>
+    -->
     <!--
     Re-enable when we have a fix for the AppleJavaExtensions jar issue
     https://issues.apache.org/jira/browse/USERGRID-224
     <module>launcher</module>
     -->
-    <module>mongo-emulator</module>
+    <!-- <module>mongo-emulator</module> -->
     <!--  
     Re-enable when query-validator updated to work with Core Persistence.
     https://issues.apache.org/jira/browse/USERGRID-221
@@ -276,7 +278,7 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
-        <version>4.1.3</version>
+        <version>4.2</version>
         <exclusions>
           <exclusion>
             <groupId>commons-codec</groupId>
@@ -456,6 +458,10 @@
         <artifactId>cassandra-thrift</artifactId>
         <version>${cassandra-version}</version>
         <exclusions>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
@@ -1243,7 +1249,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit-dep</artifactId>
-        <version>4.10</version>
+        <version>4.11</version>
       </dependency>
 
       <dependency>

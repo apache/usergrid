@@ -166,7 +166,8 @@ public abstract class AbstractRestIT extends JerseyTest {
         client = new Client( "test-organization", "test-app" ).withApiUrl(
                 UriBuilder.fromUri( "http://localhost/" ).port( setup.getTomcatPort() ).build().toString() );
 
-        org.apache.usergrid.java.client.response.ApiResponse response = client.authorizeAppUser( "ed@anuff.com", "sesame" );
+        org.apache.usergrid.java.client.response.ApiResponse response = 
+                client.authorizeAppUser( "ed@anuff.com", "sesame" );
 
         assertTrue( response != null && response.getError() == null );
     }
@@ -257,7 +258,8 @@ public abstract class AbstractRestIT extends JerseyTest {
         adminToken();
 
         // change the password as admin. The old password isn't required
-        JsonNode node = mapper.readTree( resource().path( String.format( "/test-organization/test-app/users/%s/password", username ) )
+        JsonNode node = mapper.readTree( resource().path( 
+                String.format( "/test-organization/test-app/users/%s/password", username ) )
                 .queryParam( "access_token", adminAccessToken ).accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, data ));
 

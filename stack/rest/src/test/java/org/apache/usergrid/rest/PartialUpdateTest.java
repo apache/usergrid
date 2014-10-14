@@ -23,12 +23,16 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.ws.rs.core.MediaType;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -40,15 +44,23 @@ public class PartialUpdateTest extends AbstractRestIT {
     @Rule
     public TestContextSetup context = new TestContextSetup( this );
 
+    double latitude=37.772837;
+    double longitude=-122.409895;
+
+    Map<String, Object> geolocation = new LinkedHashMap<String, Object>() {{
+        put("latitude", latitude);
+        put("longitude", longitude);
+    }};
+
     @Test 
     public void testPartialUpdate() throws IOException {
 
         // create user bart
-
         Map<String, Object> userProperties = new LinkedHashMap<String, Object>() {{
             put( "username", "bart" );
             put( "employer", "Brawndo" );
             put( "email", "bart@personal-email.example.com" );
+            put( "location", geolocation);
         }};
 
         JsonNode userNode = mapper.readTree( 
@@ -61,25 +73,81 @@ public class PartialUpdateTest extends AbstractRestIT {
         assertNotNull( userNode );
         String uuid = userNode.withArray("entities").get(0).get("uuid").asText();
         assertNotNull( uuid );
-
         refreshIndex( "test-organization", "test-app" );
 
-        // update user bart passing only an update to his employer
+        Map<String, Object> updateProperties = new LinkedHashMap<String, Object>();
+        // update user bart passing only an update to a property
+        for(int i=1; i<10; i++) {
+            geolocation.put("latitude", latitude += 0.00001);
+            geolocation.put("longitude", longitude += 0.00001);
+            updateProperties.put("employer", "Initech");
+            updateProperties.put("location", geolocation);
 
-        Map<String, Object> updateProperties = new LinkedHashMap<String, Object>() {{
-            put( "employer", "Initech" );
+            try {
+                JsonNode updatedNode = mapper.readTree(
+                        resource().path("/test-organization/test-app/user/" + uuid)
+                                .queryParam("access_token", adminAccessToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .type(MediaType.APPLICATION_JSON)
+                                .put(String.class, updateProperties));
+                assertNotNull(updatedNode);
+
+            } catch (UniformInterfaceException uie) {
+                fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
+            }
+
+            refreshIndex("test-organization", "test-app");
+
+            userNode = mapper.readTree(
+                    resource().path("/test-organization/test-app/users/" + uuid)
+                            .queryParam("access_token", adminAccessToken)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .get(String.class));
+
+            log.info(userNode.toString());
+
+            assertNotNull(userNode);
+
+            assertEquals("Initech", userNode.withArray("entities").get(0).get("employer").asText());
+
+            assertNotNull(userNode.withArray("entities").get(0).get("location"));
+            assertNotNull(userNode.withArray("entities").get(0).get("location").get("latitude"));
+            assertNotNull(userNode.withArray("entities").get(0).get("location").get("longitude"));
+
+            assertNotSame( latitude, 
+                userNode.withArray("entities").get(0).get("location").get("latitude").asDouble());
+            assertNotSame( longitude, 
+                userNode.withArray("entities").get(0).get("location").get("longitude").asDouble());
+        }
+
+        // Update bart's employer without specifying any required fields 
+        // (this time with username specified in URL)
+
+        updateProperties = new LinkedHashMap<String, Object>() {{
+            put( "employer", "ACME Corporation" );
         }};
 
-        try {
-            JsonNode updatedNode = mapper.readTree( 
-                resource().path( "/test-organization/test-app/user/" + uuid )
-                    .queryParam( "access_token", adminAccessToken )
-                    .accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON )
-                    .put( String.class, updateProperties ));
+        for(int i=1; i<10; i++) {
+            try {
+                mapper.readTree(
+                        resource().path("/test-organization/test-app/users/bart")
+                                .queryParam("access_token", adminAccessToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .type(MediaType.APPLICATION_JSON)
+                                .put(String.class, updateProperties));
 
-        } catch ( UniformInterfaceException uie ) {
-            fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
+            } catch (UniformInterfaceException uie) {
+                fail("Update failed due to: " + uie.getResponse().getEntity(String.class));
+            }
+            refreshIndex("test-organization", "test-app");
+
+            userNode = mapper.readTree(
+                    resource().path("/test-organization/test-app/users/bart")
+                            .queryParam("access_token", adminAccessToken)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .get(String.class));
+            assertNotNull(userNode);
+            assertEquals("ACME Corporation", userNode.withArray("entities").get(0).get("employer").asText());
         }
     }
 }

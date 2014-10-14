@@ -27,12 +27,15 @@ import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteCommitException;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccLogEntry;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -90,10 +93,11 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         final UUID version = mvccEntity.getVersion();
         final CollectionScope collectionScope = ioEvent.getEntityCollection();
 
+        //set the version into the entity
         EntityUtils.setVersion( mvccEntity.getEntity().get(), version );
 
         MvccValidationUtils.verifyMvccEntityWithEntity( ioEvent.getEvent() );
-        ValidationUtils.verifyTimeUuid( ioEvent.getEvent().getVersion(),"version" );
+        ValidationUtils.verifyTimeUuid( version ,"version" );
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
 
@@ -110,9 +114,10 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
             if ( field.isUnique() ) {
 
-                UniqueValue written  = new UniqueValueImpl( ioEvent.getEntityCollection(), field, 
-                    mvccEntity.getEntity().get().getId(), mvccEntity.getEntity().get().getVersion());
-                MutationBatch mb = uniqueValueStrat.write( written );
+                UniqueValue written  = new UniqueValueImpl( field,
+                    entityId,version);
+
+                MutationBatch mb = uniqueValueStrat.write(collectionScope,  written );
 
                 LOG.debug("Finalizing {} unqiue value {}", field.getName(), field.getValue().toString());
 
@@ -130,6 +135,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
             throw new WriteCommitException( mvccEntity, collectionScope,
                 "Failed to execute write asynchronously ", e );
         }
+
 
         return mvccEntity.getEntity().get();
     }

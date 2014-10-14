@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.jukito.UseModules;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,6 +51,7 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(ITRunner.class)
 @UseModules(TestCollectionModule.class)
+@Ignore("Stress test should not be run in embedded mode")
 public class EntityCollectionManagerStressTest {
     private static final Logger log = LoggerFactory.getLogger( 
             EntityCollectionManagerStressTest.class );

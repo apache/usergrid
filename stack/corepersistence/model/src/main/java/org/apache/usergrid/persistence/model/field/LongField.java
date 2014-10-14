@@ -35,4 +35,10 @@ public class LongField extends AbstractField<Long> {
     public LongField() {
     }
 
+
+    @Override
+    public FieldTypeName getTypeName() {
+                return FieldTypeName.LONG;
+            }
+
 }

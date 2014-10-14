@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.model.field;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -51,5 +52,12 @@ public interface Field<T> extends Serializable {
      * @return 
      */
     public boolean isUnique();
+
+    /**
+     * Get the type of the field as a string.  string, boolean, long, integer etc
+     * @return
+     */
+    @JsonIgnore
+    public FieldTypeName getTypeName();
 
 }

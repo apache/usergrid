@@ -51,10 +51,10 @@ import org.apache.usergrid.persistence.model.field.value.Location;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.ANALYZED_SUFFIX;
-import static org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl.GEO_SUFFIX;
 
-
+/**
+ * Test utility for creating entities from maps and vice versa.
+ */
 class EntityIndexMapUtils {
 
     static ObjectMapper objectMapper = new ObjectMapper(  );
@@ -239,18 +239,14 @@ class EntityIndexMapUtils {
                 EntityObject eo = (EntityObject) field.getValue();
                 entityMap.put(field.getName(), toMap(eo)); // recursion
 
-            } else if (f instanceof StringField) {
-                entityMap.put(field.getName(), ((String) field.getValue()).toLowerCase());
-                entityMap.put(field.getName() + ANALYZED_SUFFIX, field.getValue());
-
             } else if (f instanceof LocationField) {
                 LocationField locField = (LocationField) f;
                 Map<String, Object> locMap = new HashMap<String, Object>();
 
                 // field names lat and lon trigger ElasticSearch geo location 
                 locMap.put("lat", locField.getValue().getLatitude());
-                locMap.put("lon", locField.getValue().getLongtitude());
-                entityMap.put(field.getName() + GEO_SUFFIX, locMap);
+                locMap.put("lon", locField.getValue().getLongitude());
+                entityMap.put( field.getName(), locMap);
 
             } else if (f instanceof ByteArrayField) {
                 ByteArrayField ba = ( ByteArrayField ) f;

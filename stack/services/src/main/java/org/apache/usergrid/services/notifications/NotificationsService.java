@@ -20,6 +20,7 @@ import java.util.*;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
+import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.metrics.MetricsFactory;
 import org.apache.usergrid.mq.Message;
 import org.apache.usergrid.persistence.*;
@@ -28,6 +29,11 @@ import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
 import org.apache.usergrid.services.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,16 +54,14 @@ public class NotificationsService extends AbstractCollectionService {
 
 
     private MetricsFactory metricsService;
-    private Meter sendMeter;
     private Meter postMeter;
     private Timer postTimer;
-    private Histogram queueSize;
-    private Counter outstandingQueue;
 
     private static final int PAGE = 100;
     private static final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
     //need a mocking framework, this is to substitute for no mocking
     public static PathQuery<Device> TEST_PATH_QUERY = null;
+    public static QueueManager TEST_QUEUE_MANAGER = null;
 
     public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
 
@@ -83,10 +87,9 @@ public class NotificationsService extends AbstractCollectionService {
 
     private ApplicationQueueManager notificationQueueManager;
     private long gracePeriod;
-    @Autowired
     private ServiceManagerFactory smf;
-    @Autowired
     private EntityManagerFactory emf;
+    private QueueManagerFactory queueManagerFactory;
 
     public NotificationsService() {
         LOG.info("/notifications");
@@ -97,15 +100,16 @@ public class NotificationsService extends AbstractCollectionService {
         super.init(info);
         smf = getApplicationContext().getBean(ServiceManagerFactory.class);
         emf = getApplicationContext().getBean(EntityManagerFactory.class);
-
+        Properties props = (Properties)getApplicationContext().getBean("properties");
         metricsService = getApplicationContext().getBean(MetricsFactory.class);
-        sendMeter = metricsService.getMeter(NotificationsService.class, "send");
         postMeter = metricsService.getMeter(NotificationsService.class, "requests");
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
-        queueSize = metricsService.getHistogram(NotificationsService.class, "queue_size");
-        outstandingQueue = metricsService.getCounter(NotificationsService.class,"current_queue");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
-        notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,smf.getServiceManager(smf.getManagementAppId()).getQueueManager(),metricsService);
+        String name = ApplicationQueueManager.getQueueNames(props);
+        QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),ApplicationQueueManager.QUEUE_PREFIX),name);
+        queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
+        QueueManager queueManager = TEST_QUEUE_MANAGER !=null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
+        notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,queueManager,metricsService,props);
         gracePeriod = jobScheduler.SCHEDULER_GRACE_PERIOD;
     }
 
@@ -144,23 +148,18 @@ public class NotificationsService extends AbstractCollectionService {
 
             // update Notification properties
             if (notification.getStarted() == null || notification.getStarted() == 0) {
-                LOG.info("ApplicationQueueMessage: notification {} properties updating", notification.getUuid());
+                long now = System.currentTimeMillis();
                 notification.setStarted(System.currentTimeMillis());
                 Map<String, Object> properties = new HashMap<String, Object>(2);
                 properties.put("started", notification.getStarted());
                 properties.put("state", notification.getState());
-                em.updateProperties(notification, properties);
-                LOG.info("ApplicationQueueMessage: notification {} properties updated", notification.getUuid());
+                notification.addProperties(properties);
+                LOG.info("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(),System.currentTimeMillis() - now);
             }
 
-            LOG.info("NotificationService: notification {} pre queue ", notification.getUuid());
-
-            if(!notificationQueueManager.scheduleQueueJob(notification)){
-                notificationQueueManager.queueNotification(notification, null);
-            }
-
-            outstandingQueue.inc();
-            LOG.info("NotificationService: notification {} post queue ", notification.getUuid());
+            long now = System.currentTimeMillis();
+            notificationQueueManager.queueNotification(notification, null);
+            LOG.info("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(),System.currentTimeMillis() - now);
             // future: somehow return 202?
             return results;
         }finally {
@@ -178,7 +177,9 @@ public class NotificationsService extends AbstractCollectionService {
             org.apache.usergrid.persistence.index.query.Query query = sp.getQuery();
             if (query == null) {
                 query = new Query();
-                query.addIdentifier(sp.getIdentifier());
+                if(sp.isName() && !sp.getName().equals("notifications")) {
+                    query.addIdentifier(sp.getIdentifier());
+                }
             }
             query.setLimit(PAGE);
             query.setCollection(collection);

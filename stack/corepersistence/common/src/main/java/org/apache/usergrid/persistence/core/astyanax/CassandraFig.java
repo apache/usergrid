@@ -33,9 +33,9 @@ import org.safehaus.guicyfig.Key;
 public interface CassandraFig extends GuicyFig {
 
 
-    public static final String READ_CL = "usergrid.graph.read.cl";
+    public static final String READ_CL = "usergrid.read.cl";
 
-    public static final String WRITE_CL = "usergrid.graph.write.cl";
+    public static final String WRITE_CL = "usergrid.write.cl";
 
     @Key( "cassandra.hosts" )
     String getHosts();

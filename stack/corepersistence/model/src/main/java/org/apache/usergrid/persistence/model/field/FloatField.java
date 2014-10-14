@@ -32,4 +32,10 @@ public class FloatField extends AbstractField<Float> {
 
     public FloatField() {
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+           return FieldTypeName.FLOAT;
+       }
 }

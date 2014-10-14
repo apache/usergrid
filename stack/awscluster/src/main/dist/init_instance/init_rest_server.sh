@@ -51,38 +51,52 @@ cd /usr/share/usergrid/init_instance
 ./install_yourkit.sh
 
 # set Tomcat memory and threads based on instance type
+# use about 70% of RAM for heap
 export NOFILE=100000
 case `(curl http://169.254.169.254/latest/meta-data/instance-type)` in
 'm1.small' )
-    export TOMCAT_RAM=1250M
+    # total of 1.7g
+    export TOMCAT_RAM=1190m
     export TOMCAT_THREADS=300
 ;;
 'm1.medium' )
-    export TOMCAT_RAM=3G
+    # total of 3.75g
+    export TOMCAT_RAM=2625m
     export TOMCAT_THREADS=500
 ;;
 'm1.large' )
-    export TOMCAT_RAM=6G
+    # total of 7.5g
+    export TOMCAT_RAM=5250m
     export TOMCAT_THREADS=1000
 ;;
 'm1.xlarge' )
-    export TOMCAT_RAM=12G
+    # total of 15g
+    export TOMCAT_RAM=10500m
     export TOMCAT_THREADS=2000
 ;;
-'m3.xlarge' )
-    export TOMCAT_RAM=12G
-    export TOMCAT_THREADS=3300
-;;
 'm3.large' )
-    export TOMCAT_RAM=6G
+    # total of 7.5g
+    export TOMCAT_RAM=5250m
     export TOMCAT_THREADS=1600
 ;;
+'m3.xlarge' )
+    # total of 15g
+    export TOMCAT_RAM=10500m
+    export TOMCAT_THREADS=3300
+;;
+'c3.xlarge' )
+    # total of 7.5g
+    export TOMCAT_RAM=5250m
+    export TOMCAT_THREADS=1000
+;;
 'c3.2xlarge' )
-    export TOMCAT_RAM=12G
+    # total of 15g
+    export TOMCAT_RAM=10500m
     export TOMCAT_THREADS=2000
 ;;
 'c3.4xlarge' )
-    export TOMCAT_RAM=24G
+    # total of 30g
+    export TOMCAT_RAM=21000m
     export TOMCAT_THREADS=4000
 esac
 
@@ -120,9 +134,7 @@ chown -R tomcat7 /var/lib/tomcat7/webapps
 
 # configure usergrid
 mkdir -p /usr/share/tomcat7/lib 
-groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-custom.properties 
-# create a copy for 1.0 too
-cp /usr/share/tomcat7/lib/usergrid-custom.properties /usr/share/tomcat7/lib/usergrid-deployment.properties  
+groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
 
 # Go

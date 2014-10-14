@@ -23,31 +23,43 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexScope;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
+import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.utils.LRUCache2;
 
-class CpManagerCache {
+public class CpManagerCache {
 
     private final EntityCollectionManagerFactory ecmf;
     private final EntityIndexFactory eif;
     private final GraphManagerFactory gmf;
+    private final MapManagerFactory mmf;
 
     // TODO: consider making these cache sizes and timeouts configurable
+    // TODO: replace with Guava cache
     private final LRUCache2<CollectionScope, EntityCollectionManager> ecmCache
             = new LRUCache2<CollectionScope, EntityCollectionManager>(50, 1 * 60 * 60 * 1000);
 
-    private final LRUCache2<IndexScope, EntityIndex> eiCache
-            = new LRUCache2<IndexScope, EntityIndex>(50, 1 * 60 * 60 * 1000);
+    private final LRUCache2<ApplicationScope, EntityIndex> eiCache
+            = new LRUCache2<>(50, 1 * 60 * 60 * 1000);
 
     private final LRUCache2<ApplicationScope, GraphManager> gmCache
             = new LRUCache2<ApplicationScope, GraphManager>(50, 1 * 60 * 60 * 1000);
 
+    private final LRUCache2<MapScope, MapManager> mmCache
+            = new LRUCache2<MapScope, MapManager>(50, 1 * 60 * 60 * 1000);
+
+
     public CpManagerCache(
-            EntityCollectionManagerFactory ecmf, EntityIndexFactory eif, GraphManagerFactory gmf) {
+            EntityCollectionManagerFactory ecmf, 
+            EntityIndexFactory eif, 
+            GraphManagerFactory gmf,
+            MapManagerFactory mmf) {
+
         this.ecmf = ecmf;
         this.eif = eif;
         this.gmf = gmf;
-
+        this.mmf = mmf;
     }
 
     public EntityCollectionManager getEntityCollectionManager(CollectionScope scope) {
@@ -61,13 +73,13 @@ class CpManagerCache {
         return ecm;
     }
 
-    public EntityIndex getEntityIndex(IndexScope indexScope) {
+    public EntityIndex getEntityIndex(ApplicationScope applicationScope) {
 
-        EntityIndex ei = eiCache.get(indexScope);
+        EntityIndex ei = eiCache.get(applicationScope);
 
         if (ei == null) {
-            ei = eif.createEntityIndex(indexScope);
-            eiCache.put(indexScope, ei);
+            ei = eif.createEntityIndex(applicationScope);
+            eiCache.put(applicationScope, ei);
         }
         return ei;
     }
@@ -81,6 +93,17 @@ class CpManagerCache {
             gmCache.put(appScope, gm);
         }
         return gm;
+    }
+
+    public MapManager getMapManager( MapScope mapScope) {
+
+        MapManager mm = mmCache.get(mapScope);
+
+        if (mm == null) {
+            mm = mmf.createMapManager(mapScope);
+            mmCache.put(mapScope, mm);
+        }
+        return mm;
     }
 
     void flush() {

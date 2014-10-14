@@ -18,36 +18,45 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import rx.Observable;
-import rx.functions.Func1;
-import rx.functions.FuncN;
-import rx.schedulers.Schedulers;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+
+import rx.functions.Action1;
 
 
 /**
  * This phase execute all unique value verification on the MvccEntity.
  */
 @Singleton
-public class WriteUniqueVerify implements 
-        Func1<CollectionIoEvent<MvccEntity>, Observable<? extends CollectionIoEvent<MvccEntity>>> {
+public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>> {
 
     private static final Logger LOG = LoggerFactory.getLogger( WriteUniqueVerify.class );
 
@@ -55,16 +64,16 @@ public class WriteUniqueVerify implements
 
     protected final SerializationFig serializationFig;
 
+    protected final Keyspace keyspace;
+
 
     @Inject
-    public WriteUniqueVerify( 
-            final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy, 
-            final SerializationFig serializationFig ) {
+    public WriteUniqueVerify( final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy,
+                              final SerializationFig serializationFig, final Keyspace keyspace ) {
+        this.keyspace = keyspace;
 
-        Preconditions.checkNotNull( uniqueValueSerializiationStrategy, 
-                "uniqueValueSerializationStrategy is required" );
-        Preconditions.checkNotNull( serializationFig, 
-                "serializationFig is required" );
+        Preconditions.checkNotNull( uniqueValueSerializiationStrategy, "uniqueValueSerializationStrategy is required" );
+        Preconditions.checkNotNull( serializationFig, "serializationFig is required" );
 
         this.uniqueValueStrat = uniqueValueSerializiationStrategy;
         this.serializationFig = serializationFig;
@@ -72,140 +81,106 @@ public class WriteUniqueVerify implements
 
 
     @Override
-    public Observable<? extends CollectionIoEvent<MvccEntity>> 
-        call(final CollectionIoEvent<MvccEntity> ioevent ) {
+    public void call( final CollectionIoEvent<MvccEntity> ioevent ) {
 
         MvccValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
 
         final MvccEntity mvccEntity = ioevent.getEvent();
 
+        final Id entityId = mvccEntity.getId();
+
+        final UUID entityVersion = mvccEntity.getVersion();
+
+
         final Entity entity = mvccEntity.getEntity().get();
+
+
+        final CollectionScope scope = ioevent.getEntityCollection();
 
         // use simple thread pool to verify fields in parallel
 
-        // We want to use concurrent to fork all validations this way they're wrapped by timeouts 
-        // and Hystrix thread pools for JMX operations.  See the WriteCommand in the 
-        // EntityCollectionManagerImpl. 
+        final Collection<Field> entityFields = entity.getFields();
 
-        // TODO: still needs to be added to the Concurrent utility class?
+        //allocate our max size, worst case
+        final List<Field> uniqueFields = new ArrayList<>( entityFields.size() );
 
-        final List<Observable<FieldUniquenessResult>> fields =
-                new ArrayList<Observable<FieldUniquenessResult>>();
-
+        final MutationBatch batch = keyspace.prepareMutationBatch();
         //
         // Construct all the functions for verifying we're unique
         //
-        for ( final Field field : entity.getFields() ) {
+        for ( final Field field : entityFields ) {
 
             // if it's unique, create a function to validate it and add it to the list of 
             // concurrent validations
             if ( field.isUnique() ) {
 
-                Observable<FieldUniquenessResult> result =  Observable.from( field )
-                        .subscribeOn( Schedulers.io() )
-                        .map(new Func1<Field,  FieldUniquenessResult>() {
 
-                    @Override
-                    public FieldUniquenessResult call(Field field ) {
+                // use write-first then read strategy
+                final UniqueValue written = new UniqueValueImpl( field, entityId, entityVersion );
 
-                        // use write-first then read strategy
-                        UniqueValue written = new UniqueValueImpl( 
-                            ioevent.getEntityCollection(), field, entity.getId(), mvccEntity.getVersion() );
+                // use TTL in case something goes wrong before entity is finally committed
+                final MutationBatch mb = uniqueValueStrat.write( scope, written, serializationFig.getTimeout() );
 
-                        // use TTL in case something goes wrong before entity is finally committed
-                        MutationBatch mb = uniqueValueStrat.write( written, serializationFig.getTimeout() );
+                batch.mergeShallow( mb );
 
-                        try {
-                            mb.execute();
-                        }
-                        catch ( ConnectionException ex ) {
-                            throw new RuntimeException("Unable to write to cassandra", ex );
-                        }
 
-                        // does the database value match what we wrote?
-                        UniqueValue loaded;
-                        try {
-                            loaded = uniqueValueStrat.load( ioevent.getEntityCollection(), field );
-                        }
-                        catch ( ConnectionException ex ) {
-                            throw new RuntimeException("Unable to read from cassandra", ex );
-                        }
-
-                        return new FieldUniquenessResult( 
-                            field, loaded.getEntityId().equals( written.getEntityId() ) );
-                    }
-                } );
-
-                fields.add(result);
+                uniqueFields.add( field );
             }
         }
 
-        //short circuit.  If we zip up nothing, we block forever.
-        if(fields.size() == 0){
-            return Observable.from(ioevent ).subscribeOn( Schedulers.io() );
+        //short circuit nothing to do
+        if ( uniqueFields.size() == 0 ) {
+            return;
         }
 
-        //
-        // Zip the results up
-        //
-        final FuncN<CollectionIoEvent<MvccEntity>> zipFunction = 
-                new FuncN<CollectionIoEvent<MvccEntity>>() {
-            
-            @Override
-            public CollectionIoEvent<MvccEntity> call( final Object... args ) {
 
-                Map<String, Field> uniquenessVioloations = new HashMap<String, Field>();
+        //perform the write
+        try {
+            batch.execute();
+        }
+        catch ( ConnectionException ex ) {
+            throw new RuntimeException( "Unable to write to cassandra", ex );
+        }
 
-                for ( Object resultObj : args ) {
-                    FieldUniquenessResult result = ( FieldUniquenessResult ) resultObj;
-                    if ( !result.isUnique() ) {
-                        Field field = result.getField();
-                        uniquenessVioloations.put( field.getName(), field );
-                    }
-                }
 
-                if ( !uniquenessVioloations.isEmpty() ) {
-                    throw new WriteUniqueVerifyException( 
-                            mvccEntity, ioevent.getEntityCollection(), uniquenessVioloations );
-                }
-                    
-                //return the original event
-                return ioevent;
+        //now get the set of fields back
+        final UniqueValueSet uniqueValues;
+
+        try {
+            uniqueValues = uniqueValueStrat.load( scope, uniqueFields );
+        }
+        catch ( ConnectionException e ) {
+            throw new RuntimeException( "Unable to read from cassandra", e );
+        }
+
+
+        final Map<String, Field> uniquenessViolations = new HashMap<>( uniqueFields.size() );
+
+
+        //loop through each field that was unique
+        for ( final Field field : uniqueFields ) {
+
+            final UniqueValue uniqueValue = uniqueValues.getValue( field.getName() );
+
+            if ( uniqueValue == null ) {
+                throw new RuntimeException(
+                        String.format( "Could not retrieve unique value for field %s, unable to verify",
+                                field.getName() ) );
             }
-        };
-
-        return Observable.zip( fields, zipFunction );
-    }
 
 
-    static class FieldUniquenessResult {
-        private Field field;
-        private Boolean unique;
+            final Id returnedEntityId = uniqueValue.getEntityId();
 
 
-        public FieldUniquenessResult( Field f, Boolean u ) {
-            this.field = f;
-            this.unique = u;
+            if ( !entityId.equals( returnedEntityId ) ) {
+                uniquenessViolations.put( field.getName(), field );
+            }
         }
 
 
-        public Boolean isUnique() {
-            return unique;
-        }
-
-
-        public void setUnique( Boolean isUnique ) {
-            this.unique = isUnique;
-        }
-
-
-        public Field getField() {
-            return field;
-        }
-
-
-        public void setField( Field field ) {
-            this.field = field;
+        //We have violations, throw an exception
+        if ( !uniquenessViolations.isEmpty() ) {
+            throw new WriteUniqueVerifyException( mvccEntity, ioevent.getEntityCollection(), uniquenessViolations );
         }
     }
 }

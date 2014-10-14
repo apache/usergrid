@@ -44,10 +44,6 @@ public class GCMAdapter implements ProviderAdapter {
 
     @Override
     public void testConnection(Notifier notifier) throws ConnectionException {
-        if(isMock(notifier)){
-            try{Thread.sleep(200);}catch (Exception ie){}
-            return;
-        }
         Sender sender = new Sender(notifier.getApiKey());
         Message message = new Message.Builder().build();
         try {
@@ -169,53 +165,26 @@ public class GCMAdapter implements ProviderAdapter {
             Message.Builder builder = new Message.Builder();
             builder.setData(payload);
             Message message = builder.build();
-            if(isMock(notifier)){
-                delayRandom(notifier);
-                for(TaskTracker tracker : trackers){
-                    tracker.completed("Mocked!");
-                }
-                return;
-            }else {
-                MulticastResult multicastResult = sender.send(message, ids,
-                        SEND_RETRIES);
-                LOG.debug("sendNotification result: {}", multicastResult);
 
-                for (int i = 0; i < multicastResult.getTotal(); i++) {
-                    Result result = multicastResult.getResults().get(i);
+            MulticastResult multicastResult = sender.send(message, ids, SEND_RETRIES);
+            LOG.debug("sendNotification result: {}", multicastResult);
 
-                    if (result.getMessageId() != null) {
-                        String canonicalRegId = result.getCanonicalRegistrationId();
-                        trackers.get(i).completed(canonicalRegId);
-                    } else {
-                        String error = result.getErrorCodeName();
-                        trackers.get(i).failed(error, error);
-                        if (Constants.ERROR_NOT_REGISTERED.equals(error)
-                                || Constants.ERROR_INVALID_REGISTRATION
-                                .equals(error)) {
-                            inactiveDevices.put(ids.get(i), new Date());
-                        }
+            for (int i = 0; i < multicastResult.getResults().size(); i++) {
+                Result result = multicastResult.getResults().get(i);
+
+                if (result.getMessageId() != null) {
+                    String canonicalRegId = result.getCanonicalRegistrationId();
+                    trackers.get(i).completed(canonicalRegId);
+                } else {
+                    String error = result.getErrorCodeName();
+                    trackers.get(i).failed(error, error);
+                    if (Constants.ERROR_NOT_REGISTERED.equals(error) || Constants.ERROR_INVALID_REGISTRATION.equals(error)) {
+                        inactiveDevices.put(ids.get(i), new Date());
                     }
                 }
             }
             this.ids.clear();
             this.trackers.clear();
         }
-    }
-    public boolean isMock(Notifier notifier){
-        return notifier.getEnvironment() !=null ? notifier.getEnvironment().equals("mock") : false ;
-    }
-    public boolean delayRandom(Notifier notifier) {
-        boolean wasDelayed = false;
-        if (isMock(notifier)) {
-            try {
-                Thread.sleep(
-                        new Random().nextInt(300)
-                );
-                wasDelayed = true;
-            } catch (InterruptedException ie) {
-                //delay was stopped
-            }
-        }
-        return wasDelayed;
     }
 }

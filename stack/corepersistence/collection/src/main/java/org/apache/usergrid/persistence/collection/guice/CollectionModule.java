@@ -28,14 +28,15 @@ import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerSy
 import org.apache.usergrid.persistence.collection.mvcc.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGenerator;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGeneratorImpl;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.UniqueValueSerializationStrategyImpl;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueSerializationStrategyImpl;
 import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
-import org.apache.usergrid.persistence.collection.service.UUIDService;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
+import org.apache.usergrid.persistence.core.task.NamedTaskExecutorImpl;
+import org.apache.usergrid.persistence.core.task.TaskExecutor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -63,11 +64,10 @@ public class CollectionModule extends AbstractModule {
         install( new ServiceModule() );
 
         // create a guice factor for getting our collection manager
-        install(
-                new FactoryModuleBuilder().implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
-                                          .implement( EntityCollectionManagerSync.class,
-                                                  EntityCollectionManagerSyncImpl.class )
-                                          .build( EntityCollectionManagerFactory.class ) );
+        install( new FactoryModuleBuilder()
+            .implement( EntityCollectionManager.class, EntityCollectionManagerImpl.class )
+            .implement( EntityCollectionManagerSync.class, EntityCollectionManagerSyncImpl.class )
+            .build( EntityCollectionManagerFactory.class ) );
 
         bind( UniqueValueSerializationStrategy.class ).to( UniqueValueSerializationStrategyImpl.class );
 
@@ -79,8 +79,7 @@ public class CollectionModule extends AbstractModule {
     @Singleton
     @Inject
     @Write
-
-    public WriteStart write (MvccLogEntrySerializationStrategy logStrategy, UUIDService uuidService) {
+    public WriteStart write (final MvccLogEntrySerializationStrategy logStrategy) {
         final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.COMPLETE);
 
         return writeStart;
@@ -90,12 +89,22 @@ public class CollectionModule extends AbstractModule {
     @Singleton
     @Inject
     @WriteUpdate
-
-    public WriteStart writeUpdate (MvccLogEntrySerializationStrategy logStrategy, UUIDService uuidService) {
+    public WriteStart writeUpdate (final MvccLogEntrySerializationStrategy logStrategy) {
         final WriteStart writeStart = new WriteStart( logStrategy, MvccEntity.Status.PARTIAL );
 
         return writeStart;
     }
+
+    @Inject
+    @Singleton
+    @Provides
+    @CollectionTaskExecutor
+    public TaskExecutor collectionTaskExecutor(final SerializationFig serializationFig){
+        return new NamedTaskExecutorImpl( "collectiontasks", 
+                serializationFig.getTaskPoolThreadSize(), serializationFig.getTaskPoolQueueSize() );
+    }
+
+
 
 
 }

@@ -90,6 +90,8 @@ public interface GraphFig extends GuicyFig {
     public static final String COUNTER_WRITE_FLUSH_QUEUE_SIZE = "usergrid.graph.shard.counter.queue.size";
 
 
+
+
     @Default("1000")
     @Key(SCAN_PAGE_SIZE)
     int getScanPageSize();

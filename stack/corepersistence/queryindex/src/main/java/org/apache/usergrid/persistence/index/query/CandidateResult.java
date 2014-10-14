@@ -41,4 +41,34 @@ public class CandidateResult implements EntityVersion {
     public Id getId() {
         return entityId;
     }
+
+
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof CandidateResult ) ) {
+            return false;
+        }
+
+        final CandidateResult that = ( CandidateResult ) o;
+
+        if ( !entityId.equals( that.entityId ) ) {
+            return false;
+        }
+        if ( !entityVersion.equals( that.entityVersion ) ) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = entityId.hashCode();
+        result = 31 * result + entityVersion.hashCode();
+        return result;
+    }
 }

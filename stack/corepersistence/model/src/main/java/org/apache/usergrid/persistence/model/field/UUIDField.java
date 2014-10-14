@@ -34,4 +34,10 @@ public class UUIDField extends AbstractField<UUID> {
 
     public UUIDField() {
     }
+
+
+    @Override
+    public FieldTypeName getTypeName() {
+                return FieldTypeName.UUID;
+            }
 }

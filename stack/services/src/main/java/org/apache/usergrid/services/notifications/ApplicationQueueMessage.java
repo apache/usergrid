@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.services.notifications;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.apache.usergrid.mq.Message;
@@ -28,23 +29,25 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by ApigeeCorporation on 9/4/14.
  */
-public class ApplicationQueueMessage extends Message {
+public class ApplicationQueueMessage implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationQueueMessage.class);
-
-    static final String MESSAGE_PROPERTY_DEVICE_UUID = "deviceUUID";
-    static final String MESSAGE_PROPERTY_APPLICATION_UUID = "applicationUUID";
-    static final String MESSAGE_PROPERTY_NOTIFIER_ID = "notifierId";
-    static final String MESSAGE_PROPERTY_NOTIFICATION_ID = "notificationId";
-    static final String MESSAGE_PROPERTY_NOTIFIER_NAME = "notifierName";
+    private UUID applicationId;
+    private UUID notificationId;
+    private UUID deviceId;
+    private String notifierKey;
+    private String notifierId;
 
 
     public ApplicationQueueMessage() {
     }
 
     public ApplicationQueueMessage(UUID applicationId, UUID notificationId, UUID deviceId, String notifierKey, String notifierId) {
-        setApplicationId(applicationId);
-        setDeviceId(deviceId);
+        this.applicationId = applicationId;
+        this.notificationId = notificationId;
+        this.deviceId = deviceId;
+        this.notifierKey = notifierKey;
+        this.notifierId = notifierId;
         setNotificationId(notificationId);
         setNotifierKey(notifierKey);
         setNotifierId(notifierId);
@@ -58,71 +61,45 @@ public class ApplicationQueueMessage extends Message {
         return new UUID( msb, lsb );
     }
 
-    public static ApplicationQueueMessage generate(Message message) {
-
-        // this crazyness may indicate that Core Persistence is not storing UUIDs correctly
-
-        byte[] mpaBytes = (byte[])message.getObjectProperty(MESSAGE_PROPERTY_APPLICATION_UUID);
-        UUID mpaUuid = bytesToUuid(mpaBytes);
-
-        byte[] mpnBytes = (byte[])message.getObjectProperty(MESSAGE_PROPERTY_NOTIFICATION_ID);
-        UUID mpnUuid = bytesToUuid(mpnBytes);
-
-        final UUID mpdUuid;
-        Object o = message.getObjectProperty(MESSAGE_PROPERTY_DEVICE_UUID);
-        if ( o instanceof UUID ) {
-            mpdUuid = (UUID)message.getObjectProperty(MESSAGE_PROPERTY_DEVICE_UUID);
-        } else {
-            byte[] mpdBytes = (byte[])o;
-            mpdUuid =  bytesToUuid(mpdBytes);
-        }
-
-        // end of crazyness
-
-        return new ApplicationQueueMessage(
-                mpaUuid, mpnUuid, mpdUuid,
-                message.getStringProperty(MESSAGE_PROPERTY_NOTIFIER_NAME), 
-                message.getStringProperty(MESSAGE_PROPERTY_NOTIFIER_ID));
-    }
 
     public UUID getApplicationId() {
-        return (UUID) this.getObjectProperty(MESSAGE_PROPERTY_APPLICATION_UUID);
+        return applicationId;
     }
 
     public void setApplicationId(UUID applicationId) {
-        this.setProperty(MESSAGE_PROPERTY_APPLICATION_UUID, applicationId);
+       this.applicationId = applicationId;
     }
 
     public UUID getDeviceId() {
-        return (UUID) this.getObjectProperty(MESSAGE_PROPERTY_DEVICE_UUID);
+        return deviceId;
     }
 
     public void setDeviceId(UUID deviceId) {
-        this.setProperty(MESSAGE_PROPERTY_DEVICE_UUID, deviceId);
+        this.deviceId = deviceId;
     }
 
     public UUID getNotificationId() {
-        return (UUID) this.getObjectProperty(MESSAGE_PROPERTY_NOTIFICATION_ID);
+        return notificationId;
     }
 
     public void setNotificationId(UUID notificationId) {
-        this.setProperty(MESSAGE_PROPERTY_NOTIFICATION_ID, notificationId);
+       this.notificationId = notificationId;
     }
 
     public String getNotifierId() {
-        return this.getStringProperty(MESSAGE_PROPERTY_NOTIFIER_ID);
+        return notifierId;
     }
 
     public void setNotifierId(String notifierId) {
-        this.setProperty(MESSAGE_PROPERTY_NOTIFIER_ID, notifierId);
+         this.notifierId = notifierId;
     }
 
     public String getNotifierKey() {
-        return this.getStringProperty(MESSAGE_PROPERTY_NOTIFIER_NAME);
+        return notifierKey;
     }
 
     public void setNotifierKey(String name) {
-        this.setProperty(MESSAGE_PROPERTY_NOTIFIER_NAME, name);
+        notifierKey = name;
     }
 
 

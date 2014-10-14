@@ -97,6 +97,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
                 }
             } );
 
+    private static final int REBUILD_PAGE_SIZE = 100;
+
 
     /**
      * Must be constructed with a CassandraClientPool.
@@ -417,4 +419,23 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory, Applicati
         // no-op
     }
 
+    @Override
+    public void rebuildInternalIndexes(ProgressObserver po) throws Exception {
+        throw new UnsupportedOperationException("Not supported."); 
+    }
+
+    @Override
+    public void rebuildAllIndexes(ProgressObserver po) throws Exception {
+        throw new UnsupportedOperationException("Not supported."); 
+    }
+
+    @Override
+    public void rebuildApplicationIndexes(UUID appId, ProgressObserver po) throws Exception {
+        throw new UnsupportedOperationException("Not supported."); 
+    }
+
+    @Override
+    public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver po) {
+        throw new UnsupportedOperationException("Not supported."); 
+    }
 }

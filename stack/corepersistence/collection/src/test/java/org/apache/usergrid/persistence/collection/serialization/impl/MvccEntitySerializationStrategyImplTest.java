@@ -38,7 +38,7 @@ import org.apache.usergrid.persistence.collection.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.collection.mvcc.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.mvcc.entity.MvccEntity;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.util.EntityUtils;
@@ -163,7 +163,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         //now load it back
 
-        MvccEntity returned = serializationStrategy.load( context, id, version );
+        MvccEntity returned = serializationStrategy.load( context, Collections.singleton( id), version ).getEntity( id );
 
         assertEquals( "Mvcc entities are the same", saved, returned );
 
@@ -223,7 +223,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         //now get it, should be gone
 
-        returned = serializationStrategy.load( context, id, version );
+        returned = serializationStrategy.load( context, Collections.singleton( id), version ).getEntity( id );
 
         assertNull( returned );
     }
@@ -255,7 +255,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         //now load it back
 
-        MvccEntity returned = serializationStrategy.load( context, entityId, version );
+        MvccEntity returned = serializationStrategy.load( context, Collections.singleton( entityId ), version ).getEntity( entityId );
 
         assertEquals( "Mvcc entities are the same", saved, returned );
 
@@ -270,7 +270,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         serializationStrategy.mark( context, entityId, version ).execute();
 
-        returned = serializationStrategy.load( context, entityId, version );
+        returned = serializationStrategy.load( context, Collections.singleton( entityId ), version ).getEntity( entityId );
 
         assertEquals( entityId, returned.getId() );
         assertEquals( version, returned.getVersion() );
@@ -281,7 +281,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         //now get it, should be gone
 
-        returned = serializationStrategy.load( context, entityId, version );
+        returned = serializationStrategy.load( context, Collections.singleton( entityId ), version ).getEntity( entityId );
 
         assertNull( returned );
     }
@@ -318,7 +318,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         //now load it back
 
-        MvccEntity returned = serializationStrategy.load( context, id, version );
+        MvccEntity returned = serializationStrategy.load( context, Collections.singleton( id ), version ).getEntity( id );
 
         assertEquals( "Mvcc entities are the same", saved, returned );
 
@@ -349,7 +349,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         //now get it, should be gone
 
-        returned = serializationStrategy.load( context, id, version );
+        returned = serializationStrategy.load( context, Collections.singleton( id ) , version ).getEntity( id );
 
         assertNull( returned );
     }
@@ -383,7 +383,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         //now load it back
 
-        MvccEntity returnedV1 = serializationStrategy.load( context, id, version1 );
+        MvccEntity returnedV1 = serializationStrategy.load( context, Collections.singleton( id ) , version1 ).getEntity( id );
 
         assertEquals( "Mvcc entities are the same", saved, returnedV1 );
 
@@ -403,7 +403,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         serializationStrategy.write( context, savedV2 ).execute();
 
-        MvccEntity returnedV2 = serializationStrategy.load( context, id, version2 );
+        MvccEntity returnedV2 = serializationStrategy.load( context, Collections.singleton( id ) , version2 ).getEntity( id );
 
         assertEquals( "Mvcc entities are the same", savedV2, returnedV2 );
 
@@ -412,14 +412,14 @@ public class MvccEntitySerializationStrategyImplTest {
 
         UUID version3 = UUIDGenerator.newTimeUUID();
 
-        serializationStrategy.mark( context, id, version3 ).execute();
+        serializationStrategy.mark( context,  id , version3 ).execute();
 
 
         final Optional<Entity> empty = Optional.absent();
 
         MvccEntity clearedV3 = new MvccEntityImpl( id, version3, MvccEntity.Status.COMPLETE, empty );
 
-        MvccEntity returnedV3 = serializationStrategy.load( context, id, version3 );
+        MvccEntity returnedV3 = serializationStrategy.load( context, Collections.singleton( id ) , version3 ).getEntity( id );
 
         assertEquals( "entities are the same", clearedV3, returnedV3 );
 
@@ -443,8 +443,8 @@ public class MvccEntitySerializationStrategyImplTest {
 
 
         //now delete v2 and v1, we should still get v3
-        serializationStrategy.delete( context, id, version1 ).execute();
-        serializationStrategy.delete( context, id, version2 ).execute();
+        serializationStrategy.delete( context, id , version1 ).execute();
+        serializationStrategy.delete( context, id , version2 ).execute();
 
         entities = serializationStrategy.load( context, id, current, 3 );
 
@@ -453,7 +453,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
 
         //now get it, should be gone
-        serializationStrategy.delete( context, id, version3 ).execute();
+        serializationStrategy.delete( context,  id , version3 ).execute();
 
 
         entities = serializationStrategy.load( context, id, current, 3 );
@@ -540,7 +540,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
         //now load it back
 
-        MvccEntity returned = serializationStrategy.load( context, id, version );
+        MvccEntity returned = serializationStrategy.load( context, Collections.singleton( id ) , version ).getEntity( id );
 
         assertEquals( "Mvcc entities are the same", saved, returned );
 
@@ -592,11 +592,11 @@ public class MvccEntitySerializationStrategyImplTest {
 
 
         //now delete it
-        serializationStrategy.delete( context, id, version ).execute();
+        serializationStrategy.delete( context, id , version ).execute();
 
         //now get it, should be gone
 
-        returned = serializationStrategy.load( context, id, version );
+        returned = serializationStrategy.load( context, Collections.singleton( id ) , version ).getEntity( id );
 
         assertNull( returned );
     }
@@ -641,7 +641,7 @@ public class MvccEntitySerializationStrategyImplTest {
 
     @Test(expected = NullPointerException.class)
     public void loadParamContext() throws ConnectionException {
-        serializationStrategy.load( null, new SimpleId( "test" ), UUIDGenerator.newTimeUUID() );
+        serializationStrategy.load( null, Collections.<Id>emptyList(), UUIDGenerator.newTimeUUID() );
     }
 
 
@@ -657,7 +657,7 @@ public class MvccEntitySerializationStrategyImplTest {
     public void loadParamVersion() throws ConnectionException {
 
         serializationStrategy
-                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), new SimpleId( "test" ), null );
+                .load( new CollectionScopeImpl(new SimpleId( "organization" ), new SimpleId( "test" ), "test" ), Collections.<Id>singleton( new SimpleId( "test" )), null );
     }
 
 

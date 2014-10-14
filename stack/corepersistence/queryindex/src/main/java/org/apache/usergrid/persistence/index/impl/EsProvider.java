@@ -22,7 +22,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
+import java.util.logging.Level;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
@@ -133,7 +136,18 @@ public class EsProvider {
 
                     // we will connect to forked ES on localhost
                     allHosts = "localhost:" + System.getProperty(LOCAL_ES_PORT_PROPNAME);
+                }
 
+                String nodeName = fig.getNodeName();
+                if ( "default".equals( nodeName )) {
+                    // no nodeName was specified, use hostname
+                    try {
+                        nodeName = InetAddress.getLocalHost().getHostName();
+
+                    } catch (UnknownHostException ex) {
+                        nodeName = "client-" + RandomStringUtils.randomAlphabetic(8);
+                        log.warn("Couldn't get hostname to use as ES node name, using " + nodeName);
+                    }
                 }
 
                 Settings settings = ImmutableSettings.settingsBuilder()
@@ -148,6 +162,8 @@ public class EsProvider {
 
                     .put("client.transport.ping_timeout", 2000) // milliseconds
                     .put("client.transport.nodes_sampler_interval", 100)
+                    .put("network.tcp.blocking", true)
+                    .put("node.name",  nodeName )
 
                     .build();
 
