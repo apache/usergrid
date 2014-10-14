@@ -22,10 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.shiro.SecurityUtils;
-import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.Device;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.Identifier;
@@ -34,6 +31,7 @@ import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -63,27 +61,29 @@ public class DevicesService extends AbstractCollectionService {
         return super.postItemById( context, id );
     }
 
-    protected void deleteEntityConnection(EntityRef entityRef){
+    protected void deleteEntityConnection(final EntityRef entityRef){
         if(entityRef == null) {
             return;
         }
         try {
-            List<ConnectionRef> connections = new ArrayList<ConnectionRef>();
-            List<ConnectionRef> refs = em.getConnectedEntities(entityRef, "devices", "users", Query.Level.IDS).getConnections();
-            if(refs!=null) {
-                connections.addAll(refs);
-            }
-            refs = em.getConnectingEntities(entityRef,"users","devices", Query.Level.IDS).getConnections();
-            if(refs!=null) {
-                connections.addAll(refs);
-            }
-            for(ConnectionRef connectionRef : connections) {
-                try {
-                    em.deleteConnection(connectionRef);
-                } catch (Exception e) {
-                    logger.error("Failed to delete connection " + connectionRef.toString(), e);
-                }
-            }
+            Results entities = em.getCollection(entityRef,"users",null,100, Query.Level.REFS,false);
+            Observable.from(entities.getEntities())
+                    .map(new Func1<Entity, Entity>() {
+                        @Override
+                        public Entity call(Entity user) {
+                            try {
+                                Results devicesResults = em.getCollection(user,"devices",null,100,Query.Level.REFS,false);
+                                List<Entity> devices = devicesResults.getEntities();
+                                for(EntityRef device : devices){
+                                    em.removeFromCollection(user, "devices",device);
+                                }
+                                em.removeFromCollection(entityRef, "users",user);
+                            } catch (Exception e) {
+                                logger.error("Failed to delete connection " + user.toString(), e);
+                            }
+                            return user;
+                        }
+                    }).toBlocking().lastOrDefault(null);
         }catch (Exception e){
             logger.error("failed to get connection",e);
         }
