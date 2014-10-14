@@ -44,6 +44,10 @@ Performs simple GETs on the /users collection. You should run PostUsersSimulatio
 
 POSTs a user-specified number of entities in the /devices collection. This is useful if you want to load test push notifications
 
-- PushNotificationSimulation
+- PushTargetDeviceSimulation
+
+Creates users, devices, connects users with devices, then sends push notification to all user devices. To run this, you will need to do create a notifier, then set the GATLING_NOTIFIER environment variable to equal the name or UUID of the notifier. You'll also need to set GATLING_PROVIDER to match the provider in the notifier.
+
+- PushTargetDeviceSimulation
 
 Sends push notifications. To run this, you will need to do create a notifier, then set the GATLING_NOTIFIER environment variable to equal the name or UUID of the notifier. You'll also need to set GATLING_PROVIDER to match the provider in the notifier.
