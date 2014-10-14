@@ -778,6 +778,22 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     }
 
     @Test
+    public void deviceTest() throws Exception{
+        app.clear();
+        Entity e = app.testRequest(ServiceAction.POST, 1, "users",user2.getUuid(),"devices",device1.getUuid()).getEntity();
+        app.clear();
+        e = app.testRequest(ServiceAction.POST, 1, "users",user1.getUuid(),"devices",device1.getUuid()).getEntity();
+        app.clear();
+        e = app.testRequest(ServiceAction.POST, 1, "users",user1.getUuid(),"devices",device2.getUuid()).getEntity();
+
+        List device1Users = app.getEm().getCollection(device1,"users",null,100, Query.Level.REFS,false).getEntities();
+        assertEquals(device1Users.size(),1);
+        List user1Devices = app.getEm().getCollection(user1,"devices",null,100, Query.Level.REFS,false).getEntities();
+        assertEquals(user1Devices.size(),2);
+
+    }
+
+    @Test
     public void batchTest() throws Exception {
 
         final int NUM_DEVICES = 50;
@@ -881,6 +897,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         String payload = builder.buildWithDefaultMaximumLength();
         return payload;
     }
+
+
     // todo: can't do the following tests here. do it in the REST tier...
     // private Notification postNotification(String path) throws Exception {
     // HashMap<String, Object> properties = new LinkedHashMap<String, Object>();
