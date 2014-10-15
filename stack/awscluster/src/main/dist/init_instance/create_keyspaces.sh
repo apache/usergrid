@@ -28,11 +28,27 @@ FIRSTHOST="$(groovy get_first_instance.groovy cassandra)"
 
 if [ "$FIRSTHOST"=="$PUBLIC_HOSTNAME" ]; then
 
-cd /usr/share/usergrid/cql
 
-/usr/bin/cassandra-cli -f  create_locks.cql
-/usr/bin/cassandra-cli -f  create_usergrid.cql
-/usr/bin/cassandra-cli -f  create_usergrid_applications.cql
+#Update the keyspace replication and run the cql
+sed -i.bak "s/KEYSPACE_REGION/${EC2_REGION}/g" /usr/share/usergrid/cql/create_locks.cql
+
+/usr/bin/cassandra-cli -f  /usr/share/usergrid/cql/create_locks.cql
+
+
+
+
+#Update the keyspace region and run the cql
+sed -i.bak "s/KEYSPACE_REGION/${EC2_REGION}/g" /usr/share/usergrid/cql/create_usergrid.cql
+
+/usr/bin/cassandra-cli -f  /usr/share/usergrid/cql/create_usergrid.cql
+
+
+
+
+#Update the keyspace region and run the cql
+sed -i.bak "s/KEYSPACE_REGION/${EC2_REGION}/g" /usr/share/usergrid/cql/create_usergrid_applications.cql
+
+/usr/bin/cassandra-cli -f  /usr/share/usergrid/cql/create_usergrid_applications.cql
 
 fi
 

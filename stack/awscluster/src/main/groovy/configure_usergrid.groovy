@@ -43,6 +43,8 @@ def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 def cassThreads = System.getenv().get("TOMCAT_THREADS")
 def hystrixThreads = Integer.parseInt(cassThreads) / 100
 
+def ec2Region = System.getenv().get("EC2_REGION")
+
 
 NodeRegistry registry = new NodeRegistry();
 
@@ -81,7 +83,7 @@ def usergridConfig = """
 cassandra.url=${cassandras}
 cassandra.cluster=${clusterName}
 cassandra.keyspace.strategy=org.apache.cassandra.locator.SimpleStrategy
-cassandra.keyspace.replication=${replFactor}
+cassandra.keyspace.replication=${ec2Region}:${replFactor}
 
 cassandra.timeout=5000
 cassandra.connections=${cassThreads}
