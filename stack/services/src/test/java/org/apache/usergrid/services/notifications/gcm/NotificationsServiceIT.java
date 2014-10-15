@@ -221,7 +221,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications",";ql=notifications")   .getEntity();
+        Entity e = app.testRequest(ServiceAction.POST, 1, "devices","notifications")   .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
         Notification notification = app.getEm().get(e.getUuid(),  Notification.class);
