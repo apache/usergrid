@@ -238,6 +238,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
+        e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1,  "notifications", e.getUuid());
 
         Notification notification = app.getEm().get(e.getUuid(),  Notification.class);
@@ -463,7 +464,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications",";ql=notifications").getEntity();
+        Entity e = app.testRequest(ServiceAction.POST, 1, "devices","notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
         Notification notification = app.getEm().get(e.getUuid(),Notification.class);
@@ -521,7 +522,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        e = app.testRequest(ServiceAction.POST, 1, "notifications",";ql=notifications").getEntity();
+        e = app.testRequest(ServiceAction.POST, 1, "devices","notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
         app.getEm().refreshIndex();
@@ -554,8 +555,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("p12Certificate", certBytes);
         fis.close();
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifiers")
-                .getEntity();
+        Entity e = app.testRequest(ServiceAction.POST, 1, "notifiers").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifiers", nameValue);
 
         app.getEm().refreshIndex();
@@ -602,7 +602,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         app.getEm().refreshIndex();
 
-        checkReceipts(notification, 2);
+        checkReceipts(notification, 1);
     }
 
     @Ignore("todo: how can I mock this?")
@@ -842,7 +842,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("debug",true);
 
         // create a notification
-        entity = app.testRequest(ServiceAction.POST, 1, "notifications",";ql=notifications").getEntity();
+        entity = app.testRequest(ServiceAction.POST, 1,  "devices","notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", entity.getUuid());
         app.getEm().refreshIndex();
 

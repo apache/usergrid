@@ -17,13 +17,11 @@
 package org.apache.usergrid.services.notifications.gcm;
 
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.services.ServiceParameter;
 import org.apache.usergrid.services.TestQueueManager;
 import org.apache.usergrid.services.notifications.*;
-import org.apache.usergrid.persistence.entities.Notification;
-import org.apache.usergrid.persistence.entities.Notifier;
-import org.apache.usergrid.persistence.entities.Receipt;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +30,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 
-import org.apache.usergrid.persistence.entities.Device;
 import org.apache.usergrid.services.ServiceAction;
 
 import static org.junit.Assert.*;
@@ -180,14 +177,12 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // create user asdf
         app.put("username", "asdf");
         app.put("email", "asdf@adsf.com");
-        Entity user = app.testRequest(ServiceAction.POST, 1, "users").getEntity();
+        User user = (User) app.testRequest(ServiceAction.POST, 1, "users").getEntity();
         assertNotNull(user);
 
         // post an existing device to user's devices collection
-        Entity device = app.testRequest(ServiceAction.POST, 1, "users",
-                user.getUuid(), "devices", device1.getUuid()).getEntity();
+        Entity device = app.testRequest(ServiceAction.POST, 1, "users",  user.getUuid(), "devices", device1.getUuid()).getEntity();
         assertEquals(device.getUuid(), device1.getUuid());
-
 
         // create and post notification 
         String payload = "Hello, World!";
@@ -196,7 +191,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("payloads", payloads);
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
-        Entity e = app.testRequest(ServiceAction.POST, 1,"users","asdf", "notifications").getEntity();
+        Entity e = app.testRequest(ServiceAction.POST, 1,"users",user.getUuid(), "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
         app.getEm().refreshIndex();
@@ -221,7 +216,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications",";ql=notifications")   .getEntity();
+        Entity e = app.testRequest(ServiceAction.POST, 1, "devices","notifications")   .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
         Notification notification = app.getEm().get(e.getUuid(),  Notification.class);
