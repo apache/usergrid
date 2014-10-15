@@ -20,7 +20,7 @@ package org.apache.usergrid.rest.management;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.AbstractRestIT;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Test;
 
 import javax.ws.rs.core.MediaType;
@@ -88,9 +88,9 @@ public class ImportResourceIT extends AbstractRestIT {
         HashMap<String, Object> payload = payloadBuilder();
 
         try {
-            node = resource().path( "/management/orgs/test-organization/apps/test-app/import" )
+            node = mapper.readTree(resource().path( "/management/orgs/test-organization/apps/test-app/import" )
                     .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).post( String.class, payload ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
@@ -136,16 +136,16 @@ public class ImportResourceIT extends AbstractRestIT {
         uuid = uuid.replaceAll( "\"", "" );
 
         try {
-            node = resource().path( "/management/orgs/test-organization/import/" + uuid )
+            node = mapper.readTree(resource().path( "/management/orgs/test-organization/import/" + uuid )
                     .queryParam( "access_token", superAdminToken() ).accept( MediaType.APPLICATION_JSON )
-                    .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+                    .type( MediaType.APPLICATION_JSON_TYPE ).get( String.class ));
         }
         catch ( UniformInterfaceException uie ) {
             responseStatus = uie.getResponse().getClientResponseStatus();
         }
 
         assertEquals( ClientResponse.Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
+        assertEquals( "SCHEDULED", node.get( "state" ).textValue() );//TODO: do tests for other states in service tier
 
     }
 
@@ -172,7 +172,7 @@ public class ImportResourceIT extends AbstractRestIT {
         }
 
         assertEquals( ClientResponse.Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
+        assertEquals( "SCHEDULED", node.get( "state" ).textValue() );//TODO: do tests for other states in service tier
     }
 
     @Test
@@ -198,7 +198,7 @@ public class ImportResourceIT extends AbstractRestIT {
         }
 
         assertEquals( ClientResponse.Status.OK, responseStatus );
-        assertEquals( "SCHEDULED", node.get( "state" ).getTextValue() );//TODO: do tests for other states in service tier
+        assertEquals( "SCHEDULED", node.get( "state" ).textValue() );//TODO: do tests for other states in service tier
     }
 
    //do an unauthorized test for both post and get
