@@ -17,15 +17,13 @@
 
 package org.apache.usergrid.management.cassandra;
 
-import org.apache.usergrid.management.importug.S3Import;
+import org.apache.usergrid.management.importer.S3Import;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
 
-/**
- * Created by ApigeeCorporation on 7/8/14.
- */
+
 public class MockS3ImportImpl implements S3Import{
     private final String filename;
 

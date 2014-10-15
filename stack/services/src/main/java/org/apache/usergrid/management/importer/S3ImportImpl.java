@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.management.importug;
+package org.apache.usergrid.management.importer;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;

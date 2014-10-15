@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.usergrid.management.importug;
+package org.apache.usergrid.management.importer;
 
 import java.util.ArrayList;
 import java.util.Map;
