@@ -791,6 +791,59 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         List user1Devices = app.getEm().getCollection(user1,"devices",null,100, Query.Level.REFS,false).getEntities();
         assertEquals(user1Devices.size(),2);
 
+        // create push notification //
+
+        app.getEm().refreshIndex();
+
+        // give queue manager a query for loading 100 devices from an application (why?)
+        app.clear();
+        ns.TEST_PATH_QUERY =  null;
+
+        // create a "hello world" notification
+        String payload = getPayload();
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getName().toString(), payload);
+        app.put("payloads", payloads);
+        app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
+
+        // post notification to service manager
+        e = app.testRequest(ServiceAction.POST, 1,"users",user1.getUuid(), "notifications").getEntity();
+
+        // ensure notification it was created
+        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+        // ensure notification has expected name
+        Notification notification = app.getEm().get(e.getUuid(), Notification.class);
+        assertEquals(
+                notification.getPayloads().get(notifier.getName().toString()),
+                payload);
+
+        // verify Query for CREATED state
+        Query query = new Query();
+        query.addEqualityFilter("state", Notification.State.STARTED.toString());
+        Results results = app.getEm().searchCollection(
+                app.getEm().getApplicationRef(), "notifications", query);
+        Entity entity = results.getEntitiesMap().get(notification.getUuid());
+        //assertNotNull(entity);
+
+        // perform push //
+
+        notification = scheduleNotificationAndWait(notification);
+
+        app.getEm().refreshIndex();
+
+        // verify Query for FINISHED state
+        query = new Query();
+        query.addEqualityFilter("state", Notification.State.FINISHED.toString());
+        results = app.getEm().searchCollection(app.getEm().getApplicationRef(),
+                "notifications", query);
+        entity = results.getEntitiesMap().get(notification.getUuid());
+        assertNotNull(entity);
+
+        checkReceipts(notification, 2);
+        checkStatistics(notification, 2, 0);
+
     }
 
     @Test
