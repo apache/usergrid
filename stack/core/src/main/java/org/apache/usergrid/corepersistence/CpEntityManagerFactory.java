@@ -101,7 +101,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public static final  UUID DEFAULT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
 
-    private static AtomicBoolean INIT_SYSTEM = new AtomicBoolean(  );
+    private AtomicBoolean init_indexes = new AtomicBoolean(  );
 
 
     // cache of already instantiated entity managers
@@ -201,6 +201,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private EntityManager _getEntityManager( UUID applicationId ) {
         EntityManager em = new CpEntityManager();
         em.init( this, applicationId );
+        //TODO T.N. Can we remove this?  Seems like we should fix our lifecycle instead...
+        em.createIndex();
         return em;
     }
 
@@ -628,7 +630,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private void maybeCreateIndexes() {
         // system app
-        if ( INIT_SYSTEM.getAndSet( true ) ) {
+        if ( init_indexes.getAndSet( true ) ) {
             return;
         }
 
@@ -641,16 +643,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private List<EntityIndex> getManagementIndexes() {
 
         return Arrays.asList(
-                getManagerCache().getEntityIndex( new ApplicationScopeImpl(
-                        new SimpleId( SYSTEM_APP_ID, "application" ) ) ),
+                getManagerCache().getEntityIndex(
+                        new ApplicationScopeImpl( new SimpleId( SYSTEM_APP_ID, "application" ) ) ),
 
                 // default app
-               getManagerCache().getEntityIndex( new ApplicationScopeImpl(
-                        new SimpleId( getManagementAppId(), "application" ) ) ),
+               getManagerCache().getEntityIndex(
+                       new ApplicationScopeImpl( new SimpleId( getManagementAppId(), "application" ) ) ),
 
                 // management app
-               getManagerCache().getEntityIndex( new ApplicationScopeImpl(
-                        new SimpleId( getDefaultAppId(), "application" ) ) ) );
+               getManagerCache().getEntityIndex(
+                       new ApplicationScopeImpl( new SimpleId( getDefaultAppId(), "application" ) ) ) );
     }
 
 
@@ -682,8 +684,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager em = getEntityManager( appId );
         Application app = em.getApplication();
 
-        ((CpEntityManager)em).reindex( po );
-        em.refreshIndex();
+        em.reindex( po );
+//        em.refreshIndex();
 
         logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId );
     }

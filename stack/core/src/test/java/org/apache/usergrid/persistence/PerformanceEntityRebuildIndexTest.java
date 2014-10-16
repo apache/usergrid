@@ -60,14 +60,13 @@ import static org.junit.Assert.fail;
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
 @Concurrent()
-@Ignore("Temporary ignore")
 public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(PerformanceEntityRebuildIndexTest.class );
 
     private static final MetricRegistry registry = new MetricRegistry();
     private Slf4jReporter reporter;
 
-    private static final long RUNTIME = TimeUnit.MINUTES.toMillis( 1 );
+    private static final long RUNTIME = TimeUnit.SECONDS.toMillis( 5 );
 
     private static final long writeDelayMs = 100;
     //private static final long readDelayMs = 7;
@@ -192,18 +191,26 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         EntityManagerFactory.ProgressObserver po = new EntityManagerFactory.ProgressObserver() {
             int counter = 0;
             @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
+               public void onProgress( final EntityRef entity ) {
+
                 meter.mark();
-                logger.debug("Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-                    s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype });
+                logger.debug("Indexing from {}:{}", entity.getType(), entity.getUuid());
                 if ( !logger.isDebugEnabled() && counter % 100 == 0 ) {
                     logger.info("Reindexed {} entities", counter );
                 }
                 counter++;
             }
+
+
+
+            @Override
+            public long getWriteDelayTime() {
+                return 0;
+            }
         };
 
         try {
+//            setup.getEmf().refreshIndex();
             setup.getEmf().rebuildAllIndexes( po );
 
             registry.remove( meterName );
@@ -236,9 +243,6 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         eeii.deleteIndex();
     }
 
-    private int readData( String collectionName ) throws Exception {
-        return readData( collectionName, -1 );
-    }
 
     private int readData( String collectionName, int expected ) throws Exception {
 

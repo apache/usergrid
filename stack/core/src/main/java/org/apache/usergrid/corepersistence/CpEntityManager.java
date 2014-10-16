@@ -109,6 +109,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -2869,94 +2870,32 @@ public class CpEntityManager implements EntityManager {
      */
     public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception {
 
-        CpWalker walker = new CpWalker();
+        CpWalker walker = new CpWalker(po.getWriteDelayTime());
 
         walker.walkCollections( this, application, new CpVisitor() {
 
             @Override
             public void visitCollectionEntry(
-                    EntityManager em, String collName, Entity source, Entity target) {
+                    EntityManager em, String collName, Entity entity) {
 
                 try {
-                    em.update( target);
-                    po.onProgress(source, target, collName);
-
-                } catch (Exception ex) {
+                    em.update( entity);
+                    po.onProgress(entity);
+                }
+                catch(WriteOptimisticVerifyException wo ){
+                    //swallow this, it just means this was already updated, which accomplishes our task.  Just ignore.
+                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.", entity.getName(), collName );
+                }
+                catch (Exception ex) {
                     logger.error("Error repersisting entity", ex);
                 }
             }
 
-            @Override
-            public void visitConnectionEntry(
-                    EntityManager em, String connType, Entity source, Entity target) {
-
-                try {
-                    em.update( target);
-                    po.onProgress(source, target, connType);
-
-                } catch (Exception ex) {
-                    logger.error("Error repersisting entity", ex);
-                }
-            }
 
         });
     }
 
 
-    private void indexEntityIntoCollections( 
-            org.apache.usergrid.persistence.model.entity.Entity collectionEntity, 
-            org.apache.usergrid.persistence.model.entity.Entity memberEntity, 
-            String collName, 
-            boolean connectBack ) {
-
-        logger.debug("Indexing into collections {} {}:{} member {}:{}", new Object[] { 
-            collName, collectionEntity.getId().getType(), collectionEntity.getId().getUuid(),
-            memberEntity.getId().getType(), memberEntity.getId().getUuid() });
-
-        indexEntityIntoCollection( collectionEntity, memberEntity, collName);
-
-        CollectionInfo collection = getDefaultSchema()
-                .getCollection( memberEntity.getId().getType(), collName);
-
-        if (connectBack && collection != null && collection.getLinkedCollection() != null) {
-
-            logger.debug("Linking back from entity in collection {} to collection {}", 
-                collection.getName(), collection.getLinkedCollection());
-
-            indexEntityIntoCollections( 
-                memberEntity, collectionEntity, collection.getLinkedCollection(), false );
-        }
-    }
-
-
-    void indexEntityIntoConnection(
-            org.apache.usergrid.persistence.model.entity.Entity sourceEntity,
-            org.apache.usergrid.persistence.model.entity.Entity targetEntity,
-            String connType) {
-
-        logger.debug("Indexing into connection {} source {}:{} target {}:{}", new Object[] { 
-            connType, sourceEntity.getId().getType(), sourceEntity.getId().getUuid(),
-            targetEntity.getId().getType(), targetEntity.getId().getUuid() });
-
-
-        final EntityIndex ei = getManagerCache().getEntityIndex(getApplicationScope());
-        final EntityIndexBatch batch = ei.createBatch();
-
-        // Index the new connection in app|source|type context
-        IndexScope indexScope = new IndexScopeImpl(
-                sourceEntity.getId(),
-                CpNamingUtils.getConnectionScopeName( targetEntity.getId().getType(), connType ));
-        batch.index(indexScope, targetEntity);
-        
-        // Index the new connection in app|scope|all-types context
-        IndexScope allTypesIndexScope = new IndexScopeImpl(
-                sourceEntity.getId(),
-                CpNamingUtils.ALL_TYPES);
-
-        batch.index(allTypesIndexScope, targetEntity);
-
-        batch.execute();
-    }
 
 
     void indexEntityIntoCollection(
