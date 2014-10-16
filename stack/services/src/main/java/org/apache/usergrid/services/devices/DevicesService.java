@@ -83,8 +83,6 @@ public class DevicesService extends AbstractCollectionService {
                                     }
                                     em.removeFromCollection(deviceRef, "users", user);
                                     removed = true;
-                                }else{
-                                    removed = false;
                                 }
                             } catch (Exception e) {
                                 logger.error("Failed to delete connection " + user.toString(), e);
