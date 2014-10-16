@@ -156,6 +156,9 @@ public class CpSetup implements Setup {
 
         setupStaticKeyspace();
 
+        //force the EMF creation of indexes before creating the default applications
+        emf.refreshIndex();
+
         createDefaultApplications();
     }
 
