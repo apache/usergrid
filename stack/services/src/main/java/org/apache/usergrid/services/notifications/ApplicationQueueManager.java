@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ApplicationQueueManager  {
 
-    public static  String DEFAULT_QUEUE_NAME = "queuelistenerv1_60";
+    public static  String DEFAULT_QUEUE_NAME = "push_v1";
     public static final String DEFAULT_QUEUE_PROPERTY = "usergrid.notifications.listener.queue";
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManager.class);
 
@@ -54,6 +54,7 @@ public class ApplicationQueueManager  {
 
     private static ExecutorService INACTIVE_DEVICE_CHECK_POOL = Executors.newFixedThreadPool(5);
     public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
+    public static final String QUEUE_PREFIX = "usergrid";
 
     private final EntityManager em;
     private final QueueManager qm;
@@ -223,7 +224,7 @@ public class ApplicationQueueManager  {
         LOG.info("notification {} updated notification duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
 
         //do i have devices, and have i already started batching.
-        if (deviceCount.get() <= 0) {
+        if (deviceCount.get() <= 0 || !notification.getDebug()) {
             TaskManager taskManager = new TaskManager(em, this, notification);
             //if i'm in a test value will be false, do not mark finished for test orchestration, not ideal need real tests
             taskManager.finishedBatch(false,true);

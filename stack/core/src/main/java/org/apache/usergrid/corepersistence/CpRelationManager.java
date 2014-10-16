@@ -18,6 +18,7 @@ package org.apache.usergrid.corepersistence;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 
+import com.clearspring.analytics.hash.MurmurHash;
 import com.yammer.metrics.annotation.Metered;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
@@ -306,7 +307,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
         Iterator<String> edgeTypes = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
-            cpHeadEntity.getId(), edgeType, null) ).toBlockingObservable().getIterator();
+            cpHeadEntity.getId(), edgeType, null) ).toBlocking().getIterator();
 
         logger.debug("getContainers(): "
                 + "Searched for edges of type {}\n   to target {}:{}\n   in scope {}\n   found: {}", 
@@ -809,8 +810,9 @@ public class CpRelationManager implements RelationManager {
         Edge collectionToItemEdge = new SimpleEdge( 
             cpHeadEntity.getId(),
              CpNamingUtils.getEdgeTypeFromCollectionName( collName),
-            memberEntity.getId(), 
-            memberEntity.getId().getUuid().timestamp() );
+            memberEntity.getId(),
+                UUIDUtils.getUUIDLong(memberEntity.getId().getUuid())
+            );
         gm.deleteEdge(collectionToItemEdge).toBlockingObservable().last();
 
         // remove edge from item to collection
@@ -819,7 +821,7 @@ public class CpRelationManager implements RelationManager {
                 CpNamingUtils
                         .getEdgeTypeFromCollectionName( Schema.defaultCollectionName( cpHeadEntity.getId().getType() )),
             cpHeadEntity.getId(),
-            cpHeadEntity.getId().getUuid().timestamp() );
+            UUIDUtils.getUUIDLong(cpHeadEntity.getId().getUuid()));
         gm.deleteEdge(itemToCollectionEdge).toBlockingObservable().last();
 
         // special handling for roles collection of a group
