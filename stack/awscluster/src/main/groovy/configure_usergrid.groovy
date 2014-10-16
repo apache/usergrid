@@ -83,7 +83,7 @@ def usergridConfig = """
 
 cassandra.url=${cassandras}
 cassandra.cluster=${clusterName}
-cassandra.keyspace.strategy=org.apache.cassandra.locator.SimpleStrategy
+cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
 cassandra.keyspace.replication=${ec2Region}:${replFactor}
 
 cassandra.timeout=5000
