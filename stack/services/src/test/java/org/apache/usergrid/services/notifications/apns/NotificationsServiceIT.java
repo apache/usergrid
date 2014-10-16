@@ -751,7 +751,10 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertEquals(device1Users.size(),1);
         List user1Devices = app.getEm().getCollection(user1,"devices",null,100, Query.Level.REFS,false).getEntities();
         assertEquals(user1Devices.size(),2);
-
+        app.clear();
+        e = app.testRequest(ServiceAction.POST, 1, "users",user1.getUuid(),"devices",device2.getUuid()).getEntity();
+        user1Devices = app.getEm().getCollection(user1,"devices",null,100, Query.Level.REFS,false).getEntities();
+        assertEquals(user1Devices.size(),2);
         // create push notification //
 
         app.getEm().refreshIndex();

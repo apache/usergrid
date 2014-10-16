@@ -61,27 +61,33 @@ public class DevicesService extends AbstractCollectionService {
         return super.postItemById( context, id );
     }
 
-    protected void deleteEntityConnection(final EntityRef entityRef){
-        if(entityRef == null) {
+    protected void deleteEntityConnection(final EntityRef deviceRef, final EntityRef owner){
+        if(deviceRef == null) {
             return;
         }
         try {
-            Results entities = em.getCollection(entityRef,"users",null,100, Query.Level.REFS,false);
+            Results entities = em.getCollection(deviceRef,"users",null,100, Query.Level.REFS,false);
             Observable.from(entities.getEntities())
-                    .map(new Func1<Entity, Entity>() {
+                    .map(new Func1<Entity, Boolean>() {
                         @Override
-                        public Entity call(Entity user) {
+                        public Boolean call(Entity user) {
+                            boolean removed = false;
                             try {
-                                Results devicesResults = em.getCollection(user,"devices",null,100,Query.Level.REFS,false);
-                                List<Entity> devices = devicesResults.getEntities();
-                                for(EntityRef device : devices){
-                                    em.removeFromCollection(user, "devices",device);
+                                if(!user.getUuid().equals(owner.getUuid())) { //skip current user
+                                    Results devicesResults = em.getCollection(user, "devices", null, 100, Query.Level.REFS, false);
+                                    List<Entity> userDevices = devicesResults.getEntities();
+                                    for (EntityRef userDevice : userDevices) {
+                                        if(userDevice.getUuid().equals(deviceRef.getUuid())) { //only remove the current device from user
+                                            em.removeFromCollection(user, "devices", userDevice);
+                                        }
+                                    }
+                                    em.removeFromCollection(deviceRef, "users", user);
+                                    removed = true;
                                 }
-                                em.removeFromCollection(entityRef, "users",user);
                             } catch (Exception e) {
                                 logger.error("Failed to delete connection " + user.toString(), e);
                             }
-                            return user;
+                            return removed;
                         }
                     }).toBlocking().lastOrDefault(null);
         }catch (Exception e){

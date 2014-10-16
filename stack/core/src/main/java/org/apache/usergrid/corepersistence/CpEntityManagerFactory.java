@@ -641,15 +641,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private List<EntityIndex> getManagementIndexes() {
 
         return Arrays.asList(
-                managerCache.getEntityIndex( new ApplicationScopeImpl( 
+                getManagerCache().getEntityIndex( new ApplicationScopeImpl(
                         new SimpleId( SYSTEM_APP_ID, "application" ) ) ),
 
                 // default app
-                managerCache.getEntityIndex( new ApplicationScopeImpl( 
+               getManagerCache().getEntityIndex( new ApplicationScopeImpl(
                         new SimpleId( getManagementAppId(), "application" ) ) ),
 
                 // management app
-                managerCache.getEntityIndex( new ApplicationScopeImpl( 
+               getManagerCache().getEntityIndex( new ApplicationScopeImpl(
                         new SimpleId( getDefaultAppId(), "application" ) ) ) );
     }
 
