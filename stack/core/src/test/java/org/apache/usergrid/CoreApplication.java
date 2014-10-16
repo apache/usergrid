@@ -150,9 +150,7 @@ public class CoreApplication implements Application, TestRule {
         id = setup.createApplication( orgName, appName );
         assertNotNull( id );
 
-        setup.getEmf().refreshIndex();
         em = setup.getEmf().getEntityManager( id );
-        em.createIndex();
         assertNotNull( em );
 
         LOG.info( "Created new application {} in organization {}", appName, orgName );

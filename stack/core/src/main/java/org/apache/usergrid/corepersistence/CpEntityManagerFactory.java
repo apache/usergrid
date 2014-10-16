@@ -146,7 +146,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 Map sysAppProps = new HashMap<String, Object>();
                 sysAppProps.put( PROPERTY_NAME, "systemapp");
                 em.create( SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps );
-                em.createIndex();
                 em.getApplication();
                 em.refreshIndex();
             }
@@ -287,7 +286,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager appEm = getEntityManager( applicationId );
 
         //create our ES index since we're initializing this application
-        appEm.createIndex();
+//  TODO T.N, pushed this down into the cache load      appEm.createIndex();
 
         appEm.create( applicationId, TYPE_APPLICATION, properties );
         appEm.resetRoles();
