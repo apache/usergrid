@@ -38,6 +38,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -278,7 +279,7 @@ public class EsEntityIndexImpl implements EntityIndex {
                     client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
                     break;
 
-                }catch(Exception e){
+                }catch(IndexMissingException e){
                    log.error( "Unable to refresh index after create. Waiting before sleeping.", e );
                 }
 
