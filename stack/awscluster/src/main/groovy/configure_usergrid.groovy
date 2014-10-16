@@ -43,7 +43,8 @@ def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 def cassThreads = System.getenv().get("TOMCAT_THREADS")
 def hystrixThreads = Integer.parseInt(cassThreads) / 100
 
-def ec2Region = System.getenv().get("EC2_REGION")
+//if we end in -1, we remove it
+def ec2Region = System.getenv().get("EC2_REGION").replace("-1", "")
 
 
 NodeRegistry registry = new NodeRegistry();
