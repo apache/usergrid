@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.model.field.Field;
 import org.jukito.UseModules;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,6 +39,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.BooleanField;
+import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
 
@@ -57,8 +57,8 @@ import static org.junit.Assert.fail;
 
 
 /** @author tnine */
-@RunWith( ITRunner.class )
-@UseModules( TestCollectionModule.class )
+@RunWith(ITRunner.class)
+@UseModules(TestCollectionModule.class)
 public class EntityCollectionManagerIT {
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -279,35 +279,35 @@ public class EntityCollectionManagerIT {
         assertNotNull( collectionScope3 );
     }
 
+
     @Test
     public void writeAndGetField() {
 
 
         CollectionScope collectionScope1 =
-                new CollectionScopeImpl(new SimpleId("organization"), new SimpleId("test1"), "test1");
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test1" ), "test1" );
 
-        Entity newEntity = new Entity(new SimpleId("test"));
-        Field field = new StringField("testField", "unique", true);
-        newEntity.setField(field);
+        Entity newEntity = new Entity( new SimpleId( "test" ) );
+        Field field = new StringField( "testField", "unique", true );
+        newEntity.setField( field );
 
-        EntityCollectionManager manager = factory.createCollectionManager(collectionScope1);
+        EntityCollectionManager manager = factory.createCollectionManager( collectionScope1 );
 
-        Observable<Entity> observable = manager.write(newEntity);
+        Observable<Entity> observable = manager.write( newEntity );
 
-        Entity createReturned = observable.toBlocking().lastOrDefault(null);
+        Entity createReturned = observable.toBlocking().lastOrDefault( null );
 
 
-        assertNotNull("Id was assigned", createReturned.getId());
-        assertNotNull("Version was assigned", createReturned.getVersion());
+        assertNotNull( "Id was assigned", createReturned.getId() );
+        assertNotNull( "Version was assigned", createReturned.getVersion() );
 
-        Id id = manager.getIdField(field).toBlocking().lastOrDefault(null);
-        assertNotNull(id);
-        assertEquals(newEntity.getId(), id);
+        Id id = manager.getIdField( field ).toBlocking().lastOrDefault( null );
+        assertNotNull( id );
+        assertEquals( newEntity.getId(), id );
 
-        Field fieldNull = new StringField("testFieldNotThere", "uniquely", true);
-        id = manager.getIdField(fieldNull).toBlocking().lastOrDefault(null);
-        assertNull(id);
-
+        Field fieldNull = new StringField( "testFieldNotThere", "uniquely", true );
+        id = manager.getIdField( fieldNull ).toBlocking().lastOrDefault( null );
+        assertNull( id );
     }
 
 
@@ -532,7 +532,7 @@ public class EntityCollectionManagerIT {
     }
 
 
-    @Test( expected = IllegalArgumentException.class )
+    @Test(expected = IllegalArgumentException.class)
     public void readTooLarge() {
 
         final CollectionScope context =
@@ -592,6 +592,105 @@ public class EntityCollectionManagerIT {
         final MvccLogEntry version2Log = results.getMaxVersion( created2.getId() );
         assertEquals( created2.getId(), version2Log.getEntityId() );
         assertEquals( created2.getVersion(), version2Log.getVersion() );
+        assertEquals( MvccLogEntry.State.COMPLETE, version2Log.getState() );
+        assertEquals( Stage.COMMITTED, version2Log.getStage() );
+    }
+
+
+    @Test
+    public void testVersionLogWrite() {
+
+        CollectionScope context =
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+
+        final EntityCollectionManager manager = factory.createCollectionManager( context );
+
+        final Entity newEntity = new Entity( new SimpleId( "test" ) );
+
+        final Entity v1Created = manager.write( newEntity ).toBlocking().lastOrDefault( null );
+
+        assertNotNull( "Id was assigned", v1Created.getId() );
+        assertNotNull( "Version was assigned", v1Created.getVersion() );
+
+        final UUID v1Version = v1Created.getVersion();
+
+        final VersionSet resultsV1 = manager.getLatestVersion( Arrays.asList( v1Created.getId() ) ).toBlocking().last();
+
+
+        final MvccLogEntry version1Log = resultsV1.getMaxVersion( v1Created.getId() );
+        assertEquals( v1Created.getId(), version1Log.getEntityId() );
+        assertEquals( v1Version, version1Log.getVersion() );
+        assertEquals( MvccLogEntry.State.COMPLETE, version1Log.getState() );
+        assertEquals( Stage.COMMITTED, version1Log.getStage() );
+
+        final Entity v2Created = manager.write( v1Created ).toBlocking().last();
+
+        final UUID v2Version = v2Created.getVersion();
+
+
+        assertTrue( "Newer version in v2",
+                UUIDComparator.staticCompare( v2Version, v1Version) > 0 );
+
+
+        final VersionSet resultsV2 = manager.getLatestVersion( Arrays.asList( v1Created.getId() ) ).toBlocking().last();
+
+
+        final MvccLogEntry version2Log = resultsV2.getMaxVersion( v1Created.getId() );
+        assertEquals( v1Created.getId(), version2Log.getEntityId() );
+        assertEquals( v2Version, version2Log.getVersion() );
+        assertEquals( MvccLogEntry.State.COMPLETE, version2Log.getState() );
+        assertEquals( Stage.COMMITTED, version2Log.getStage() );
+    }
+
+
+    @Test
+    public void testVersionLogUpdate() {
+
+        CollectionScope context =
+                new CollectionScopeImpl( new SimpleId( "organization" ), new SimpleId( "test" ), "test" );
+
+
+        final EntityCollectionManager manager = factory.createCollectionManager( context );
+
+        final Entity newEntity = new Entity( new SimpleId( "test" ) );
+
+        final Entity v1Created = manager.update( newEntity ).toBlocking().lastOrDefault( null );
+
+        assertNotNull( "Id was assigned", v1Created.getId() );
+        assertNotNull( "Version was assigned", v1Created.getVersion() );
+
+        final UUID v1Version = v1Created.getVersion();
+
+
+        final VersionSet resultsV1 = manager.getLatestVersion( Arrays.asList( v1Created.getId() ) ).toBlocking().last();
+
+
+        final MvccLogEntry version1Log = resultsV1.getMaxVersion( v1Created.getId() );
+        assertEquals( v1Created.getId(), version1Log.getEntityId() );
+        assertEquals( v1Version, version1Log.getVersion() );
+        assertEquals( MvccLogEntry.State.COMPLETE, version1Log.getState() );
+        assertEquals( Stage.COMMITTED, version1Log.getStage() );
+
+        final Entity v2Created = manager.update( v1Created ).toBlocking().last();
+
+        final UUID v2Version = v2Created.getVersion();
+
+
+
+
+        assertEquals( "Same entityId", v1Created.getId(), v2Created.getId() );
+
+        assertTrue( "Newer version in v2",
+                UUIDComparator.staticCompare( v2Version, v1Version ) > 0 );
+
+
+        final VersionSet resultsV2 = manager.getLatestVersion( Arrays.asList( v1Created.getId() ) ).toBlocking().last();
+
+
+        final MvccLogEntry version2Log = resultsV2.getMaxVersion( v1Created.getId() );
+        assertEquals( v2Created.getId(), version2Log.getEntityId() );
+        assertEquals( v2Version, version2Log.getVersion() );
         assertEquals( MvccLogEntry.State.COMPLETE, version2Log.getState() );
         assertEquals( Stage.COMMITTED, version2Log.getStage() );
     }

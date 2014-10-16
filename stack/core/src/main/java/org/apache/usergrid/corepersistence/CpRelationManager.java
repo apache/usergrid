@@ -18,6 +18,7 @@ package org.apache.usergrid.corepersistence;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 
+import com.clearspring.analytics.hash.MurmurHash;
 import com.yammer.metrics.annotation.Metered;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.results.ResultsLoader;
 import org.apache.usergrid.corepersistence.results.ResultsLoaderFactory;
 import org.apache.usergrid.corepersistence.results.ResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
@@ -305,7 +307,7 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager(applicationScope);
 
         Iterator<String> edgeTypes = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
-            cpHeadEntity.getId(), edgeType, null) ).toBlockingObservable().getIterator();
+            cpHeadEntity.getId(), edgeType, null) ).toBlocking().getIterator();
 
         logger.debug("getContainers(): "
                 + "Searched for edges of type {}\n   to target {}:{}\n   in scope {}\n   found: {}", 
@@ -616,8 +618,9 @@ public class CpRelationManager implements RelationManager {
 
         EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
 
+        //TODO, this double load should disappear once events are in
         org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
-            new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlockingObservable().last();
+            new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlocking().last();
 
         if ( memberEntity == null ) {
             throw new RuntimeException("Unable to load entity uuid=" 
@@ -807,8 +810,9 @@ public class CpRelationManager implements RelationManager {
         Edge collectionToItemEdge = new SimpleEdge( 
             cpHeadEntity.getId(),
              CpNamingUtils.getEdgeTypeFromCollectionName( collName),
-            memberEntity.getId(), 
-            memberEntity.getId().getUuid().timestamp() );
+            memberEntity.getId(),
+                UUIDUtils.getUUIDLong(memberEntity.getId().getUuid())
+            );
         gm.deleteEdge(collectionToItemEdge).toBlockingObservable().last();
 
         // remove edge from item to collection
@@ -817,7 +821,7 @@ public class CpRelationManager implements RelationManager {
                 CpNamingUtils
                         .getEdgeTypeFromCollectionName( Schema.defaultCollectionName( cpHeadEntity.getId().getType() )),
             cpHeadEntity.getId(),
-            cpHeadEntity.getId().getUuid().timestamp() );
+            UUIDUtils.getUUIDLong(cpHeadEntity.getId().getUuid()));
         gm.deleteEdge(itemToCollectionEdge).toBlockingObservable().last();
 
         // special handling for roles collection of a group
@@ -1254,6 +1258,8 @@ public class CpRelationManager implements RelationManager {
 
         batch.deindex( allTypesIndexScope,  targetEntity );
 
+        batch.execute();
+
     }
 
 
@@ -1553,8 +1559,17 @@ public class CpRelationManager implements RelationManager {
 
         logger.debug("buildResults() for {} from {} candidates", collName, crs.size());
 
-        final Results results = this.resultsLoaderFactory.getLoader( 
-                applicationScope, this.headEntity, query.getResultsLevel() ).getResults( crs );
+        //get an instance of our results loader
+        final ResultsLoader resultsLoader = this.resultsLoaderFactory.getLoader( applicationScope, this.headEntity,
+                query.getResultsLevel() );
+
+        //load the results
+        final Results results = resultsLoader.loadResults( crs );
+
+        //signal for post processing
+        resultsLoader.postProcess();
+
+
 
         results.setCursor( crs.getCursor() );
         results.setQueryProcessor( new CpQueryProcessor(em, query, headEntity, collName) );

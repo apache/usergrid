@@ -68,9 +68,8 @@ public abstract class VersionVerifier implements ResultsVerifier {
         final UUID savedVersion = version.getVersion();
 
         if ( UUIDComparator.staticCompare( savedVersion, candidateResult.getVersion() ) > 0 ) {
-            logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}", 
-                new Object[] {
-                 entityId.getUuid(), entityId.getType(), savedVersion, candidateResult.getVersion()
+            logger.debug( "Stale version of Entity uuid:{} type:{}, stale v:{}, latest v:{}",
+                new Object[] { entityId.getUuid(), entityId.getType(), candidateResult.getVersion(), savedVersion
             } );
 
             return false;

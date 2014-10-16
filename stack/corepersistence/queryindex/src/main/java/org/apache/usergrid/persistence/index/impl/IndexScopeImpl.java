@@ -48,4 +48,41 @@ public class IndexScopeImpl implements IndexScope {
     }
 
 
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof IndexScopeImpl ) ) {
+            return false;
+        }
+
+        final IndexScopeImpl that = ( IndexScopeImpl ) o;
+
+        if ( !ownerId.equals( that.ownerId ) ) {
+            return false;
+        }
+        if ( !type.equals( that.type ) ) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = ownerId.hashCode();
+        result = 31 * result + type.hashCode();
+        return result;
+    }
+
+
+    @Override
+    public String toString() {
+        return "IndexScopeImpl{" +
+                "ownerId=" + ownerId +
+                ", type='" + type + '\'' +
+                '}';
+    }
 }

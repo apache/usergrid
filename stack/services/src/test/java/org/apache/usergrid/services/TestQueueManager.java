@@ -25,9 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-/**
- * Created by ApigeeCorporation on 10/7/14.
- */
+
 public class TestQueueManager implements QueueManager {
     public ConcurrentLinkedQueue<QueueMessage> queue = new ConcurrentLinkedQueue<>();
     @Override

@@ -2923,12 +2923,7 @@ public class EntityManagerImpl implements EntityManager {
     public void flushManagerCaches() {
         // no-op
     }
-
-    @Override
-    public void repersistApplication(UUID appId, EntityManagerFactory.ProgressObserver po) throws Exception {
-        throw new UnsupportedOperationException("Not supported."); 
-    }
-
+    
     @Override
     public void reindex(EntityManagerFactory.ProgressObserver po) throws Exception {
         throw new UnsupportedOperationException("Not supported."); 

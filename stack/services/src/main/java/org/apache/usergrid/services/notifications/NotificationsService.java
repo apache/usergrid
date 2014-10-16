@@ -60,7 +60,6 @@ public class NotificationsService extends AbstractCollectionService {
     private static final int PAGE = 100;
     private static final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
     //need a mocking framework, this is to substitute for no mocking
-    public static PathQuery<Device> TEST_PATH_QUERY = null;
     public static QueueManager TEST_QUEUE_MANAGER = null;
 
     public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
@@ -106,7 +105,7 @@ public class NotificationsService extends AbstractCollectionService {
         postTimer = metricsService.getTimer(this.getClass(), "execution_rest");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
         String name = ApplicationQueueManager.getQueueNames(props);
-        QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),"notifications"),name);
+        QueueScope queueScope = new QueueScopeImpl(new SimpleId(smf.getManagementAppId(),ApplicationQueueManager.QUEUE_PREFIX),name);
         queueManagerFactory = CpSetup.getInjector().getInstance(QueueManagerFactory.class);
         QueueManager queueManager = TEST_QUEUE_MANAGER !=null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
         notificationQueueManager = new ApplicationQueueManager(jobScheduler,em,queueManager,metricsService,props);
@@ -139,7 +138,7 @@ public class NotificationsService extends AbstractCollectionService {
         postMeter.mark();
         try {
             validate(null, context.getPayload());
-            PathQuery<Device> pathQuery = TEST_PATH_QUERY != null ? TEST_PATH_QUERY : getPathQuery(context.getRequest().getOriginalParameters());
+            PathQuery<Device> pathQuery = getPathQuery(context.getRequest().getOriginalParameters());
             context.getProperties().put("state", Notification.State.CREATED);
             context.getProperties().put("pathQuery", pathQuery);
             context.setOwner(sm.getApplication());
@@ -177,7 +176,7 @@ public class NotificationsService extends AbstractCollectionService {
             org.apache.usergrid.persistence.index.query.Query query = sp.getQuery();
             if (query == null) {
                 query = new Query();
-                if(sp.isName() && !sp.getName().equals("notifications")) {
+                if(!sp.isName() ||  (sp.isName() && !sp.getName().equals("notifications"))) {
                     query.addIdentifier(sp.getIdentifier());
                 }
             }

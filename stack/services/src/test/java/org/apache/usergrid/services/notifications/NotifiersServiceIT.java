@@ -204,6 +204,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
     }
 
     @Test
+    @Ignore("No longer needed to verify")
     public void encryption() throws Exception {
 
         app.clear();
