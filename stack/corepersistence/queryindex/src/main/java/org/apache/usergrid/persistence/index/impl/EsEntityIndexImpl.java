@@ -87,6 +87,9 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     private final IndexFig config;
 
+    private static final int MAX_WAITS = 10;
+    private static final int WAIT_TIME = 250;
+
 
     @Inject
     public EsEntityIndexImpl( @Assisted final ApplicationScope appScope, final IndexFig config,
@@ -120,6 +123,26 @@ public class EsEntityIndexImpl implements EntityIndex {
                 response = admin.indices().prepareRefresh( indexName ).execute().actionGet();
             }
             while ( response.getFailedShards() != 0 );
+
+            //now try to refresh, to ensure that it's recognized by everyone.  Occasionally we can get a success
+            //before we can write.
+            for(int i = 0 ; i < MAX_WAITS; i++ ){
+                try{
+                    refresh();
+                    break;
+
+                }catch(Exception e){
+                   log.error( "Unable to refresh index after create. Waiting before sleeping.", e );
+                }
+
+                try {
+                    Thread.sleep( WAIT_TIME );
+                }
+                catch ( InterruptedException e ) {
+                    //swallow it
+                }
+            }
+
             //
             //            response.getFailedShards();
             //
