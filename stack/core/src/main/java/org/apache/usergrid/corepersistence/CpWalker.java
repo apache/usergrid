@@ -15,9 +15,6 @@
  */
 package org.apache.usergrid.corepersistence;
 
-
-import java.util.Stack;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +35,6 @@ import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 
 
 /**
