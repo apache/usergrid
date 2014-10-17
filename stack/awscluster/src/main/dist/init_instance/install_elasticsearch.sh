@@ -38,6 +38,9 @@ chown elasticsearch /mnt/log/elasticsearch
 # Configure ElasticSearch
 cd /usr/share/usergrid/scripts
 
+echo "vm.swappiness = 0" >> /etc/sysctl.conf
+sysctl -p
+
 # No need to do this, elasticsearch nodes are also cassandra nodes
 groovy registry_register.groovy elasticsearch
 groovy wait_for_instances.groovy elasticsearch ${ES_NUM_SERVERS}

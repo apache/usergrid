@@ -505,7 +505,7 @@
                         "export TYPE=cass\n",
                         "export STACK_NAME=", { "Ref":"AWS::StackName" }, "\n", "\n",
                         "export PUBLIC_HOSTNAME=`(curl -s http://169.254.169.254/latest/meta-data/public-hostname)`\n",
-                        "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n", 
+                        "export INTERNAL_HOSTNAME=`(curl http://169.254.169.254/latest/meta-data/local-ipv4)`\n",
                         "\n",
                         "export EC2_INSTANCE_ID=`ec2metadata --instance-id`\n",
                         "export EC2_REGION=", { "Ref":"AWS::Region" },
@@ -595,7 +595,18 @@
                     {
                         "Ref": "CassSecurityGroup"
                     }
-                ]
+                ],
+
+                 "BlockDeviceMappings": [
+                     {
+                         "DeviceName": "/dev/sdb",
+                         "VirtualName": "ephemeral0"
+                     },
+                     {
+                         "DeviceName": "/dev/sdc",
+                         "VirtualName": "ephemeral1"
+                      }
+                    ]
             }
       },
         "CassAutoScalingGroup": {
@@ -745,7 +756,18 @@
                     {
                         "Ref": "ESSecurityGroup"
                     }
-                ]
+                ],
+
+                 "BlockDeviceMappings": [
+                     {
+                         "DeviceName": "/dev/sdb",
+                         "VirtualName": "ephemeral0"
+                     },
+                     {
+                         "DeviceName": "/dev/sdc",
+                         "VirtualName": "ephemeral1"
+                      }
+                    ]
             }
       },
         "ESAutoScalingGroup": {

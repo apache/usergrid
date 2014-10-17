@@ -54,7 +54,7 @@ ln -s /home/ubuntu/.groovy /root/.groovy
 
 # tag last so we can see in the console so that we know what's running
 cd /usr/share/usergrid/scripts
-groovy tag_instance.groovy BUILD-IN-PROGRESS
+groovy tag_instance.groovy -BUILD-IN-PROGRESS
 
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 
