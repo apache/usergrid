@@ -41,11 +41,7 @@ import static org.junit.Assert.fail;
 
 public class AbstractServiceNotificationIT extends AbstractServiceIT {
     private NotificationsService ns;
-    @Autowired
-    private ServiceManagerFactory smf;
 
-    @Autowired
-    private EntityManagerFactory emf;
     @Rule
     public TestName name = new TestName();
 

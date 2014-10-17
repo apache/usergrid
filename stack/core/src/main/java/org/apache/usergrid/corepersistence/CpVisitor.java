@@ -24,9 +24,12 @@ import org.apache.usergrid.persistence.EntityManager;
  */
 public interface CpVisitor {
 
+    /**
+     * Visit the entity as we're walking the structure
+     * @param em
+     * @param collName
+     * @param visitedEntity
+     */
     public void visitCollectionEntry( 
-        EntityManager em, String collName, Entity sourceEntity, Entity targetEntity );
-
-    public void visitConnectionEntry( 
-        EntityManager em, String connType, Entity sourceEntity, Entity targetEntity );
+        EntityManager em, String collName, Entity visitedEntity );
 }

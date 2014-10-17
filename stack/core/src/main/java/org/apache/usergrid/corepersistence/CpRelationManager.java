@@ -16,14 +16,10 @@
 
 package org.apache.usergrid.corepersistence;
 
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 
-import com.clearspring.analytics.hash.MurmurHash;
-import com.yammer.metrics.annotation.Metered;
 import java.nio.ByteBuffer;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import static java.util.Arrays.asList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,21 +29,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
+
 import org.apache.usergrid.corepersistence.results.ResultsLoader;
 import org.apache.usergrid.corepersistence.results.ResultsLoaderFactory;
 import org.apache.usergrid.corepersistence.results.ResultsLoaderFactoryImpl;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.utils.UUIDUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
-
 import org.apache.usergrid.persistence.ConnectedEntityRef;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityFactory;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.IndexBucketLocator;
@@ -56,43 +49,12 @@ import org.apache.usergrid.persistence.RelationManager;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.RoleRef;
 import org.apache.usergrid.persistence.Schema;
-import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_TYPES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_ENTITIES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_TYPES;
-import static org.apache.usergrid.persistence.Schema.INDEX_CONNECTIONS;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TITLE;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.TYPE_ROLE;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.SimpleRoleRef;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX_ENTRIES;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
-import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchDeleteLocationInConnectionsIndex;
-import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchRemoveLocationFromCollectionIndex;
-import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInCollectionIndex;
-import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInConnectionsIndex;
 import org.apache.usergrid.persistence.cassandra.IndexUpdate;
-import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
-import static org.apache.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
-import static org.apache.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
 import org.apache.usergrid.persistence.cassandra.QueryProcessorImpl;
-import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import org.apache.usergrid.persistence.cassandra.index.ConnectedIndexScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
@@ -114,6 +76,7 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.CandidateResult;
@@ -138,19 +101,59 @@ import org.apache.usergrid.persistence.query.ir.result.GeoIterator;
 import org.apache.usergrid.persistence.query.ir.result.SliceIterator;
 import org.apache.usergrid.persistence.query.ir.result.StaticIdIterator;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
-import static org.apache.usergrid.utils.ClassUtils.cast;
-import static org.apache.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
 import org.apache.usergrid.utils.IndexUtils;
-import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import org.apache.usergrid.utils.MapUtils;
-import static org.apache.usergrid.utils.MapUtils.addMapSet;
-import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
+import org.apache.usergrid.utils.UUIDUtils;
+
+import com.yammer.metrics.annotation.Metered;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
 import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Func1;
+
+import static java.util.Arrays.asList;
+
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_ENTITIES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTED_TYPES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_ENTITIES;
+import static org.apache.usergrid.persistence.Schema.DICTIONARY_CONNECTING_TYPES;
+import static org.apache.usergrid.persistence.Schema.INDEX_CONNECTIONS;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_TITLE;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
+import static org.apache.usergrid.persistence.Schema.TYPE_ROLE;
+import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX_ENTRIES;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchDeleteLocationInConnectionsIndex;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchRemoveLocationFromCollectionIndex;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInCollectionIndex;
+import static org.apache.usergrid.persistence.cassandra.GeoIndexManager.batchStoreLocationInConnectionsIndex;
+import static org.apache.usergrid.persistence.cassandra.IndexUpdate.indexValueCode;
+import static org.apache.usergrid.persistence.cassandra.IndexUpdate.toIndexableValue;
+import static org.apache.usergrid.persistence.cassandra.IndexUpdate.validIndexableValue;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
+import static org.apache.usergrid.utils.ClassUtils.cast;
+import static org.apache.usergrid.utils.CompositeUtils.setGreaterThanEqualityFlag;
+import static org.apache.usergrid.utils.InflectionUtils.singularize;
+import static org.apache.usergrid.utils.MapUtils.addMapSet;
+import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 
 
 /**
@@ -161,9 +164,8 @@ public class CpRelationManager implements RelationManager {
     private static final Logger logger = LoggerFactory.getLogger( CpRelationManager.class );
 
 
-
     private CpEntityManagerFactory emf;
-    
+
     private CpManagerCache managerCache;
 
     private EntityManager em;
@@ -184,23 +186,18 @@ public class CpRelationManager implements RelationManager {
     private ResultsLoaderFactory resultsLoaderFactory;
 
 
-
     public CpRelationManager() {}
 
 
-    public CpRelationManager init( 
-        EntityManager em, 
-        CpEntityManagerFactory emf, 
-        UUID applicationId,
-        EntityRef headEntity, 
-        IndexBucketLocator indexBucketLocator ) {
+    public CpRelationManager init( EntityManager em, CpEntityManagerFactory emf, UUID applicationId,
+                                   EntityRef headEntity, IndexBucketLocator indexBucketLocator ) {
 
         Assert.notNull( em, "Entity manager cannot be null" );
         Assert.notNull( emf, "Entity manager factory cannot be null" );
         Assert.notNull( applicationId, "Application Id cannot be null" );
         Assert.notNull( headEntity, "Head entity cannot be null" );
         Assert.notNull( headEntity.getUuid(), "Head entity uuid cannot be null" );
-       
+
         // TODO: this assert should not be failing
         //Assert.notNull( indexBucketLocator, "indexBucketLocator cannot be null" );
 
@@ -209,31 +206,27 @@ public class CpRelationManager implements RelationManager {
         this.applicationId = applicationId;
         this.headEntity = headEntity;
         this.managerCache = emf.getManagerCache();
-        this.applicationScope = emf.getApplicationScope(applicationId);
+        this.applicationScope = emf.getApplicationScope( applicationId );
 
         this.cass = em.getCass(); // TODO: eliminate need for this via Core Persistence
         this.indexBucketLocator = indexBucketLocator; // TODO: this also
 
         // load the Core Persistence version of the head entity as well
-        this.headEntityScope = new CollectionScopeImpl( 
-            this.applicationScope.getApplication(), 
-            this.applicationScope.getApplication(), 
-                CpNamingUtils.getCollectionScopeNameFromEntityType( headEntity.getType() ));
+        this.headEntityScope =
+                new CollectionScopeImpl( this.applicationScope.getApplication(), this.applicationScope.getApplication(),
+                        CpNamingUtils.getCollectionScopeNameFromEntityType( headEntity.getType() ) );
 
-        EntityCollectionManager ecm = managerCache.getEntityCollectionManager(headEntityScope);
+        EntityCollectionManager ecm = managerCache.getEntityCollectionManager( headEntityScope );
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loading head entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", 
-                new Object[] {
-                    headEntity.getType(), 
-                    headEntity.getUuid(), 
-                    headEntityScope.getApplication(), 
-                    headEntityScope.getOwner(),
-                    headEntityScope.getName()
-            } );
+            logger.debug( "Loading head entity {}:{} from scope\n   app {}\n   owner {}\n   name {}", new Object[] {
+                            headEntity.getType(), headEntity.getUuid(), headEntityScope.getApplication(),
+                            headEntityScope.getOwner(), headEntityScope.getName()
+                    } );
         }
-        
-        this.cpHeadEntity = ecm.load( new SimpleId( 
-            headEntity.getUuid(), headEntity.getType() )).toBlocking().lastOrDefault(null);
+
+        //TODO PERFORMANCE why are we loading this again here?
+        this.cpHeadEntity = ecm.load( new SimpleId( headEntity.getUuid(), headEntity.getType() ) ).toBlocking()
+                               .lastOrDefault( null );
 
         // commented out because it is possible that CP entity has not been created yet
         Assert.notNull( cpHeadEntity, "cpHeadEntity cannot be null" );
@@ -243,22 +236,21 @@ public class CpRelationManager implements RelationManager {
         return this;
     }
 
-    
+
     @Override
     public Set<String> getCollectionIndexes( String collectionName ) throws Exception {
         final Set<String> indexes = new HashSet<String>();
 
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
 
         String edgeTypePrefix = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
 
-        logger.debug("getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}", 
-            new Object[] {
-                edgeTypePrefix, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid()
-        });
+        logger.debug( "getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}", new Object[] {
+                        edgeTypePrefix, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid()
+                } );
 
-        Observable<String> types= gm.getEdgeTypesFromSource( 
-            new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeTypePrefix,  null ));
+        Observable<String> types =
+                gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeTypePrefix, null ) );
 
         Iterator<String> iter = types.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {
@@ -275,8 +267,7 @@ public class CpRelationManager implements RelationManager {
         //Map<EntityRef, Set<String>> containerEntities = getContainers(-1, "owns", null);
         Map<EntityRef, Set<String>> containerEntities = getContainers();
 
-        Map<String, Map<UUID, Set<String>>> owners = 
-                new LinkedHashMap<String, Map<UUID, Set<String>>>();
+        Map<String, Map<UUID, Set<String>>> owners = new LinkedHashMap<String, Map<UUID, Set<String>>>();
 
         for ( EntityRef owner : containerEntities.keySet() ) {
             Set<String> collections = containerEntities.get( owner );
@@ -296,6 +287,7 @@ public class CpRelationManager implements RelationManager {
 
     /**
      * Gets containing collections and/or connections depending on the edge type you pass in
+     *
      * @param limit Max number to return
      * @param edgeType Edge type, edge type prefix or null to allow any edge type
      * @param fromEntityType Only consider edges from entities of this type
@@ -304,44 +296,43 @@ public class CpRelationManager implements RelationManager {
 
         Map<EntityRef, Set<String>> results = new LinkedHashMap<EntityRef, Set<String>>();
 
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
 
-        Iterator<String> edgeTypes = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
-            cpHeadEntity.getId(), edgeType, null) ).toBlocking().getIterator();
+        Iterator<String> edgeTypes =
+                gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeType, null ) ).toBlocking()
+                  .getIterator();
 
-        logger.debug("getContainers(): "
-                + "Searched for edges of type {}\n   to target {}:{}\n   in scope {}\n   found: {}", 
-            new Object[] {
-                edgeType,
-                cpHeadEntity.getId().getType(), 
-                cpHeadEntity.getId().getUuid(), 
-                applicationScope.getApplication(),
-                edgeTypes.hasNext()
-        });
+        logger.debug(
+                "getContainers(): " + "Searched for edges of type {}\n   to target {}:{}\n   in scope {}\n   found: {}",
+                new Object[] {
+                        edgeType, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid(),
+                        applicationScope.getApplication(), edgeTypes.hasNext()
+                } );
 
         while ( edgeTypes.hasNext() ) {
 
             String etype = edgeTypes.next();
 
-            Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
-                cpHeadEntity.getId(), etype, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null ));
+            Observable<Edge> edges = gm.loadEdgesToTarget(
+                    new SimpleSearchByEdgeType( cpHeadEntity.getId(), etype, Long.MAX_VALUE,
+                            SearchByEdgeType.Order.DESCENDING, null ) );
 
             Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
             while ( iter.hasNext() ) {
                 Edge edge = iter.next();
 
-                if ( fromEntityType != null && !fromEntityType.equals( edge.getSourceNode().getType() )) {
-                    logger.debug("Ignoring edge from entity type {}", edge.getSourceNode().getType());
+                if ( fromEntityType != null && !fromEntityType.equals( edge.getSourceNode().getType() ) ) {
+                    logger.debug( "Ignoring edge from entity type {}", edge.getSourceNode().getType() );
                     continue;
                 }
 
-                EntityRef eref = new SimpleEntityRef( 
-                    edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
+                EntityRef eref = new SimpleEntityRef( edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
 
                 String name = null;
-                if ( CpNamingUtils.isConnectionEdgeType( edge.getType() )) {
+                if ( CpNamingUtils.isConnectionEdgeType( edge.getType() ) ) {
                     name = CpNamingUtils.getConnectionType( edge.getType() );
-                } else {
+                }
+                else {
                     name = CpNamingUtils.getCollectionName( edge.getType() );
                 }
                 addMapSet( results, eref, name );
@@ -356,183 +347,161 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    public List<String> updateContainingCollectionAndCollectionIndexes( 
-        Entity entity, org.apache.usergrid.persistence.model.entity.Entity cpEntity ) {
+    public void updateContainingCollectionAndCollectionIndexes(
+            final org.apache.usergrid.persistence.model.entity.Entity cpEntity ) {
 
-        List<String> results = new ArrayList<String>();
 
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
+        final GraphManager gm = managerCache.getGraphManager( applicationScope );
 
-        Iterator<String> edgeTypesToTarget = gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( 
-            cpHeadEntity.getId(), null, null) ).toBlockingObservable().getIterator();
-
-        logger.debug("updateContainingCollectionsAndCollections(): "
-                + "Searched for edges to target {}:{}\n   in scope {}\n   found: {}", 
-            new Object[] {
-                cpHeadEntity.getId().getType(), 
-                cpHeadEntity.getId().getUuid(), 
-                applicationScope.getApplication(),
-                edgeTypesToTarget.hasNext()
-        });
+        logger.debug( "updateContainingCollectionsAndCollections(): "
+                        + "Searched for edges to target {}:{}\n   in scope {}\n   found: {}", new Object[] {
+                        cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid(),
+                        applicationScope.getApplication()
+                } );
 
         // loop through all types of edge to target
-        int count = 0;
+
 
         final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
 
         final EntityIndexBatch entityIndexBatch = ei.createBatch();
 
-        while ( edgeTypesToTarget.hasNext() ) {
+        final int count = gm.getEdgeTypesToTarget(
+                new SimpleSearchEdgeType( cpHeadEntity.getId(), null, null ) )
+                //for each edge type, emit all the edges of that type
+                            .flatMap( new Func1<String, Observable<Edge>>() {
+                                @Override
+                                public Observable<Edge> call( final String etype ) {
+                                    return gm.loadEdgesToTarget(
+                                            new SimpleSearchByEdgeType( cpHeadEntity.getId(), etype, Long.MAX_VALUE,
+                                                    SearchByEdgeType.Order.DESCENDING, null ) );
+                                }
+                            } )
 
-            // get all edges of the type
-            String etype = edgeTypesToTarget.next();
+                            //for each edge we receive index and add to the batch
+                            .doOnNext( new Action1<Edge>() {
+                    @Override
+                    public void call( final Edge edge ) {
 
-            Observable<Edge> edges = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
-                cpHeadEntity.getId(), etype, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,  null ));
 
-            // loop through edges of that type
-            Iterator<Edge> iter = edges.toBlockingObservable().getIterator();
-            while ( iter.hasNext() ) {
+                        EntityRef sourceEntity =
+                                new SimpleEntityRef( edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
 
-                Edge edge = iter.next();
+                        // reindex the entity in the source entity's collection or connection index
 
-                EntityRef sourceEntity = new SimpleEntityRef( 
-                    edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
+                        IndexScope indexScope;
+                        if ( CpNamingUtils.isCollectionEdgeType( edge.getType() ) ) {
 
-                // reindex the entity in the source entity's collection or connection index
+                            String collName = CpNamingUtils.getCollectionName( edge.getType() );
+                            indexScope =
+                                    new IndexScopeImpl( new SimpleId( sourceEntity.getUuid(), sourceEntity.getType() ),
+                                            CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ) );
+                        }
+                        else {
 
-                IndexScope indexScope;
-                if ( CpNamingUtils.isCollectionEdgeType( edge.getType() )) {
+                            String connName = CpNamingUtils.getCollectionName( edge.getType() );
+                            indexScope =
+                                    new IndexScopeImpl( new SimpleId( sourceEntity.getUuid(), sourceEntity.getType() ),
+                                            CpNamingUtils.getConnectionScopeName( cpEntity.getId().getType(),
+                                                    connName ) );
+                        }
 
-                    String collName = CpNamingUtils.getCollectionName( edge.getType() );
-                    indexScope = new IndexScopeImpl(
-                        new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
-                        CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
+                        entityIndexBatch.index( indexScope, cpEntity );
 
-                } else {
+                        // reindex the entity in the source entity's all-types index
 
-                    String connName = CpNamingUtils.getCollectionName( edge.getType() );
-                    indexScope = new IndexScopeImpl(
-                        new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
-                        CpNamingUtils.getConnectionScopeName( cpHeadEntity.getId().getType(), connName ));
-                }
+                        indexScope = new IndexScopeImpl( new SimpleId( sourceEntity.getUuid(), sourceEntity.getType() ),
+                                CpNamingUtils.ALL_TYPES );
 
-                entityIndexBatch.index(indexScope, cpEntity);
+                        entityIndexBatch.index( indexScope, cpEntity );
+                    }
+                } ).count().toBlocking().lastOrDefault( 0 );
 
-                // reindex the entity in the source entity's all-types index
-                
-                indexScope = new IndexScopeImpl(
-                    new SimpleId(sourceEntity.getUuid(), sourceEntity.getType()),
-                        CpNamingUtils.ALL_TYPES);
-
-                entityIndexBatch.index(indexScope, cpEntity);
-
-                count++;
-            }
-        }
 
         entityIndexBatch.execute();
 
-        logger.debug("updateContainingCollectionsAndCollections() updated {} indexes", count);
-        return results;
+        logger.debug( "updateContainingCollectionsAndCollections() updated {} indexes", count );
     }
 
 
     @Override
-    public boolean isConnectionMember(String connectionType, EntityRef entity) throws Exception {
+    public boolean isConnectionMember( String connectionType, EntityRef entity ) throws Exception {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
         String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType( connectionType );
 
-        logger.debug("isConnectionMember(): Checking for edge type {} from {}:{} to {}:{}", 
-            new Object[] { 
-                edgeType, 
-                headEntity.getType(), headEntity.getUuid(), 
-                entity.getType(), entity.getUuid() });
+        logger.debug( "isConnectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
+                        edgeType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
+                } );
 
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
-        Observable<Edge> edges = gm.loadEdgeVersions( 
-            new SimpleSearchByEdge(
-                new SimpleId(headEntity.getUuid(), headEntity.getType()), 
-                edgeType,  
-                entityId, 
-                Long.MAX_VALUE,  SearchByEdgeType.Order.DESCENDING,
-                null));
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
+        Observable<Edge> edges = gm.loadEdgeVersions(
+                new SimpleSearchByEdge( new SimpleId( headEntity.getUuid(), headEntity.getType() ), edgeType, entityId,
+                        Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null ) );
 
-        return edges.toBlockingObservable().firstOrDefault(null) != null;
+        return edges.toBlockingObservable().firstOrDefault( null ) != null;
     }
 
 
-    @SuppressWarnings("unchecked")
-    @Metered(group = "core", name = "RelationManager_isOwner")
+    @SuppressWarnings( "unchecked" )
+    @Metered( group = "core", name = "RelationManager_isOwner" )
     @Override
-    public boolean isCollectionMember(String collName, EntityRef entity) throws Exception {
+    public boolean isCollectionMember( String collName, EntityRef entity ) throws Exception {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
         String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collName );
 
-        logger.debug("isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}", 
-            new Object[] { 
-                edgeType, 
-                headEntity.getType(), headEntity.getUuid(), 
-                entity.getType(), entity.getUuid() });
+        logger.debug( "isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
+                        edgeType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
+                } );
 
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
-        Observable<Edge> edges = gm.loadEdgeVersions( 
-            new SimpleSearchByEdge(
-                new SimpleId(headEntity.getUuid(), headEntity.getType()), 
-                edgeType,  
-                entityId, 
-                Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                null));
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
+        Observable<Edge> edges = gm.loadEdgeVersions(
+                new SimpleSearchByEdge( new SimpleId( headEntity.getUuid(), headEntity.getType() ), edgeType, entityId,
+                        Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, null ) );
 
-        return edges.toBlockingObservable().firstOrDefault(null) != null;
+        return edges.toBlockingObservable().firstOrDefault( null ) != null;
     }
 
 
-   private boolean moreThanOneInboundConnection( 
-           EntityRef target, String connectionType ) {
+    private boolean moreThanOneInboundConnection( EntityRef target, String connectionType ) {
 
         Id targetId = new SimpleId( target.getUuid(), target.getType() );
 
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
 
-        Observable<Edge> edgesToTarget = gm.loadEdgesToTarget( new SimpleSearchByEdgeType(
-            targetId,
-            CpNamingUtils.getEdgeTypeFromConnectionType( connectionType ),
-            System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING,
-            null)); // last
+        Observable<Edge> edgesToTarget = gm.loadEdgesToTarget(
+                new SimpleSearchByEdgeType( targetId, CpNamingUtils.getEdgeTypeFromConnectionType( connectionType ),
+                        System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null ) ); // last
 
         Iterator<Edge> iterator = edgesToTarget.toBlockingObservable().getIterator();
         int count = 0;
         while ( iterator.hasNext() ) {
             iterator.next();
-            if ( count++ > 1 ) { 
+            if ( count++ > 1 ) {
                 return true;
             }
-        } 
+        }
         return false;
-   } 
+    }
 
-   private boolean moreThanOneOutboundConnection( 
-           EntityRef source, String connectionType ) {
+
+    private boolean moreThanOneOutboundConnection( EntityRef source, String connectionType ) {
 
         Id sourceId = new SimpleId( source.getUuid(), source.getType() );
 
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
 
-        Observable<Edge> edgesFromSource = gm.loadEdgesFromSource(new SimpleSearchByEdgeType(
-            sourceId,
-            CpNamingUtils.getEdgeTypeFromConnectionType( connectionType ),
-            System.currentTimeMillis(),SearchByEdgeType.Order.DESCENDING,
-            null)); // last
+        Observable<Edge> edgesFromSource = gm.loadEdgesFromSource(
+                new SimpleSearchByEdgeType( sourceId, CpNamingUtils.getEdgeTypeFromConnectionType( connectionType ),
+                        System.currentTimeMillis(), SearchByEdgeType.Order.DESCENDING, null ) ); // last
 
         int count = edgesFromSource.take( 2 ).count().toBlocking().last();
 
         return count > 1;
-   } 
+    }
 
 
     @Override
@@ -540,10 +509,10 @@ public class CpRelationManager implements RelationManager {
 
         final Set<String> indexes = new HashSet<String>();
 
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
 
-        Observable<String> str = gm.getEdgeTypesFromSource( 
-                new SimpleSearchEdgeType( cpHeadEntity.getId(), null , null ));
+        Observable<String> str =
+                gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(), null, null ) );
 
         Iterator<String> iter = str.toBlockingObservable().getIterator();
         while ( iter.hasNext() ) {
@@ -552,52 +521,53 @@ public class CpRelationManager implements RelationManager {
         }
 
         return indexes;
-
     }
 
-    @Override
-    public Results getCollection(String collectionName, UUID startResult, int count, 
-            Level resultsLevel, boolean reversed) throws Exception {
 
-        Query query = Query.fromQL("select *");
-        query.setLimit(count);
-        query.setReversed(reversed);
+    @Override
+    public Results getCollection( String collectionName, UUID startResult, int count, Level resultsLevel,
+                                  boolean reversed ) throws Exception {
+
+        Query query = Query.fromQL( "select *" );
+        query.setLimit( count );
+        query.setReversed( reversed );
 
         if ( startResult != null ) {
-            query.addGreaterThanEqualFilter("created", startResult.timestamp());
+            query.addGreaterThanEqualFilter( "created", startResult.timestamp() );
         }
 
-        return searchCollection(collectionName, query);
+        return searchCollection( collectionName, query );
     }
 
-    @Override
-    public Results getCollection(
-            String collName, Query query, Level level) throws Exception {
 
-        return searchCollection(collName, query);
+    @Override
+    public Results getCollection( String collName, Query query, Level level ) throws Exception {
+
+        return searchCollection( collName, query );
     }
 
 
     // add to a named collection of the head entity
     @Override
-    public Entity addToCollection(String collName, EntityRef itemRef) throws Exception {
-       
+    public Entity addToCollection( String collName, EntityRef itemRef ) throws Exception {
+
         CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
         if ( ( collection != null ) && !collection.getType().equals( itemRef.getType() ) ) {
             return null;
         }
 
-        return addToCollection( collName, itemRef, 
-                (collection != null && collection.getLinkedCollection() != null) );
+        return addToCollection( collName, itemRef, ( collection != null && collection.getLinkedCollection() != null ) );
     }
 
-    public Entity addToCollection(String collName, EntityRef itemRef, boolean connectBack ) throws Exception {
+
+    public Entity addToCollection( String collName, EntityRef itemRef, boolean connectBack ) throws Exception {
 
         // don't fetch entity if we've already got one
         final Entity itemEntity;
         if ( itemRef instanceof Entity ) {
-            itemEntity = (Entity)itemRef;
-        } else {
+            itemEntity = ( Entity ) itemRef;
+        }
+        else {
             itemEntity = em.get( itemRef );
         }
 
@@ -611,70 +581,61 @@ public class CpRelationManager implements RelationManager {
         }
 
         // load the new member entity to be added to the collection from its default scope
-        CollectionScope memberScope = new CollectionScopeImpl( 
-            applicationScope.getApplication(), 
-            applicationScope.getApplication(),
-            CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ));
+        CollectionScope memberScope =
+                new CollectionScopeImpl( applicationScope.getApplication(), applicationScope.getApplication(),
+                        CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ) );
 
-        EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
+        EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager( memberScope );
 
         //TODO, this double load should disappear once events are in
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
-            new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlocking().last();
+        org.apache.usergrid.persistence.model.entity.Entity memberEntity =
+                memberMgr.load( new SimpleId( itemRef.getUuid(), itemRef.getType() ) ).toBlocking().last();
 
         if ( memberEntity == null ) {
-            throw new RuntimeException("Unable to load entity uuid=" 
-                + itemRef.getUuid() + " type=" + itemRef.getType());
+            throw new RuntimeException(
+                    "Unable to load entity uuid=" + itemRef.getUuid() + " type=" + itemRef.getType() );
         }
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug("Loaded member entity {}:{} from scope\n   app {}\n   "
-                    + "owner {}\n   name {} data {}", 
-                new Object[] { 
-                    itemRef.getType(), 
-                    itemRef.getUuid(), 
-                    memberScope.getApplication(), 
-                    memberScope.getOwner(), 
-                    memberScope.getName(),
-                    CpEntityMapUtils.toMap( memberEntity )
-            });
+            logger.debug( "Loaded member entity {}:{} from scope\n   app {}\n   " + "owner {}\n   name {} data {}",
+                    new Object[] {
+                            itemRef.getType(), itemRef.getUuid(), memberScope.getApplication(), memberScope.getOwner(),
+                            memberScope.getName(), CpEntityMapUtils.toMap( memberEntity )
+                    } );
         }
 
         String edgeType = CpNamingUtils.getEdgeTypeFromCollectionName( collName );
 
-        UUID timeStampUuid =   memberEntity.getId().getUuid() != null 
-                &&  UUIDUtils.isTimeBased( memberEntity.getId().getUuid()) 
-                ?  memberEntity.getId().getUuid() : UUIDUtils.newTimeUUID();
+        UUID timeStampUuid =
+                memberEntity.getId().getUuid() != null && UUIDUtils.isTimeBased( memberEntity.getId().getUuid() ) ?
+                memberEntity.getId().getUuid() : UUIDUtils.newTimeUUID();
 
-        long uuidHash =    UUIDUtils.getUUIDLong(timeStampUuid);
+        long uuidHash = UUIDUtils.getUUIDLong( timeStampUuid );
 
         // create graph edge connection from head entity to member entity
-        Edge edge = new SimpleEdge(
-            cpHeadEntity.getId(),
-            edgeType,
-            memberEntity.getId(),
-           uuidHash);
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
-        gm.writeEdge(edge).toBlockingObservable().last();
+        Edge edge = new SimpleEdge( cpHeadEntity.getId(), edgeType, memberEntity.getId(), uuidHash );
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
+        gm.writeEdge( edge ).toBlockingObservable().last();
 
-        logger.debug("Wrote edgeType {}\n   from {}:{}\n   to {}:{}\n   scope {}:{}", new Object[] { 
-            edgeType, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid(),
-            memberEntity.getId().getType(), memberEntity.getId().getUuid(),
-            applicationScope.getApplication().getType(), applicationScope.getApplication().getUuid()});  
+        logger.debug( "Wrote edgeType {}\n   from {}:{}\n   to {}:{}\n   scope {}:{}", new Object[] {
+                edgeType, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid(),
+                memberEntity.getId().getType(), memberEntity.getId().getUuid(),
+                applicationScope.getApplication().getType(), applicationScope.getApplication().getUuid()
+        } );
 
-        ((CpEntityManager)em).indexEntityIntoCollection( cpHeadEntity, memberEntity, collName );
+        ( ( CpEntityManager ) em ).indexEntityIntoCollection( cpHeadEntity, memberEntity, collName );
 
-        logger.debug("Added entity {}:{} to collection {}", new Object[] { 
-            itemRef.getUuid().toString(), itemRef.getType(), collName }); 
+        logger.debug( "Added entity {}:{} to collection {}", new Object[] {
+                itemRef.getUuid().toString(), itemRef.getType(), collName
+        } );
 
-//        logger.debug("With head entity scope is {}:{}:{}", new Object[] { 
-//            headEntityScope.getApplication().toString(), 
-//            headEntityScope.getOwner().toString(),
-//            headEntityScope.getName()}); 
+        //        logger.debug("With head entity scope is {}:{}:{}", new Object[] {
+        //            headEntityScope.getApplication().toString(),
+        //            headEntityScope.getOwner().toString(),
+        //            headEntityScope.getName()});
 
         if ( connectBack && collection != null && collection.getLinkedCollection() != null ) {
-            getRelationManager( itemEntity )
-                .addToCollection( collection.getLinkedCollection(), headEntity, false );
+            getRelationManager( itemEntity ).addToCollection( collection.getLinkedCollection(), headEntity, false );
         }
 
         return itemEntity;
@@ -682,11 +643,11 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Entity addToCollections(List<EntityRef> owners, String collName) throws Exception {
+    public Entity addToCollections( List<EntityRef> owners, String collName ) throws Exception {
 
         // TODO: this addToCollections() implementation seems wrong.
         for ( EntityRef eref : owners ) {
-            addToCollection( collName, eref ); 
+            addToCollection( collName, eref );
         }
 
         return null;
@@ -694,9 +655,9 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_createItemInCollection")
-    public Entity createItemInCollection(
-        String collName, String itemType, Map<String, Object> properties) throws Exception {
+    @Metered( group = "core", name = "RelationManager_createItemInCollection" )
+    public Entity createItemInCollection( String collName, String itemType, Map<String, Object> properties )
+            throws Exception {
 
         if ( headEntity.getUuid().equals( applicationId ) ) {
             if ( itemType.equals( TYPE_ENTITY ) ) {
@@ -714,14 +675,13 @@ public class CpRelationManager implements RelationManager {
             return em.create( itemType, properties );
         }
 
-        else if ( headEntity.getType().equals( Group.ENTITY_TYPE ) 
-                && ( collName.equals( COLLECTION_ROLES ) ) ) {
+        else if ( headEntity.getType().equals( Group.ENTITY_TYPE ) && ( collName.equals( COLLECTION_ROLES ) ) ) {
             UUID groupId = headEntity.getUuid();
             String roleName = ( String ) properties.get( PROPERTY_NAME );
             return em.createGroupRole( groupId, roleName, ( Long ) properties.get( PROPERTY_INACTIVITY ) );
         }
 
-        CollectionInfo collection = getDefaultSchema().getCollection(headEntity.getType(),collName);
+        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
         if ( ( collection != null ) && !collection.getType().equals( itemType ) ) {
             return null;
         }
@@ -735,16 +695,16 @@ public class CpRelationManager implements RelationManager {
             addToCollection( collName, itemEntity );
 
             if ( collection != null && collection.getLinkedCollection() != null ) {
-                getRelationManager(  getHeadEntity() )
-                    .addToCollection( collection.getLinkedCollection(),itemEntity);
+                getRelationManager( getHeadEntity() ).addToCollection( collection.getLinkedCollection(), itemEntity );
             }
         }
 
-        return itemEntity;  
+        return itemEntity;
     }
 
+
     @Override
-    public void removeFromCollection(String collName, EntityRef itemRef) throws Exception {
+    public void removeFromCollection( String collName, EntityRef itemRef ) throws Exception {
 
         // special handling for roles collection of the application
         if ( headEntity.getUuid().equals( applicationId ) ) {
@@ -760,102 +720,86 @@ public class CpRelationManager implements RelationManager {
             }
             em.delete( itemRef );
             return;
-       }
-
-        // load the entity to be removed to the collection
-        CollectionScope memberScope = new CollectionScopeImpl( 
-            this.applicationScope.getApplication(), 
-            this.applicationScope.getApplication(), 
-            CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ));
-        EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager(memberScope);
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug("Loading entity to remove from collection "
-                    + "{}:{} from scope\n   app {}\n   owner {}\n   name {}", 
-                new Object[] { 
-                    itemRef.getType(), 
-                    itemRef.getUuid(), 
-                    memberScope.getApplication(), 
-                    memberScope.getOwner(), 
-                    memberScope.getName() 
-            });
         }
 
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity = memberMgr.load(
-            new SimpleId( itemRef.getUuid(), itemRef.getType() )).toBlockingObservable().last();
+        // load the entity to be removed to the collection
+        CollectionScope memberScope =
+                new CollectionScopeImpl( this.applicationScope.getApplication(), this.applicationScope.getApplication(),
+                        CpNamingUtils.getCollectionScopeNameFromEntityType( itemRef.getType() ) );
+        EntityCollectionManager memberMgr = managerCache.getEntityCollectionManager( memberScope );
 
-        final EntityIndex ei = managerCache.getEntityIndex(applicationScope);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Loading entity to remove from collection "
+                            + "{}:{} from scope\n   app {}\n   owner {}\n   name {}", new Object[] {
+                            itemRef.getType(), itemRef.getUuid(), memberScope.getApplication(), memberScope.getOwner(),
+                            memberScope.getName()
+                    } );
+        }
+
+        org.apache.usergrid.persistence.model.entity.Entity memberEntity =
+                memberMgr.load( new SimpleId( itemRef.getUuid(), itemRef.getType() ) ).toBlockingObservable().last();
+
+        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
         final EntityIndexBatch batch = ei.createBatch();
 
         // remove item from collection index
-        IndexScope indexScope = new IndexScopeImpl(
-            cpHeadEntity.getId(), 
-            CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
+        IndexScope indexScope = new IndexScopeImpl( cpHeadEntity.getId(),
+                CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ) );
 
-        batch.deindex(indexScope,  memberEntity );
+        batch.deindex( indexScope, memberEntity );
 
         // remove collection from item index 
-        IndexScope itemScope = new IndexScopeImpl(
-            memberEntity.getId(), 
-            CpNamingUtils.getCollectionScopeNameFromCollectionName(
-                    Schema.defaultCollectionName( cpHeadEntity.getId().getType() ) ));
+        IndexScope itemScope = new IndexScopeImpl( memberEntity.getId(), CpNamingUtils
+                .getCollectionScopeNameFromCollectionName(
+                        Schema.defaultCollectionName( cpHeadEntity.getId().getType() ) ) );
 
 
-        batch.deindex(itemScope,  cpHeadEntity );
+        batch.deindex( itemScope, cpHeadEntity );
 
         batch.execute();
 
         // remove edge from collection to item 
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
-        Edge collectionToItemEdge = new SimpleEdge( 
-            cpHeadEntity.getId(),
-             CpNamingUtils.getEdgeTypeFromCollectionName( collName),
-            memberEntity.getId(),
-                UUIDUtils.getUUIDLong(memberEntity.getId().getUuid())
-            );
-        gm.deleteEdge(collectionToItemEdge).toBlockingObservable().last();
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
+        Edge collectionToItemEdge =
+                new SimpleEdge( cpHeadEntity.getId(), CpNamingUtils.getEdgeTypeFromCollectionName( collName ),
+                        memberEntity.getId(), UUIDUtils.getUUIDLong( memberEntity.getId().getUuid() ) );
+        gm.deleteEdge( collectionToItemEdge ).toBlockingObservable().last();
 
         // remove edge from item to collection
-        Edge itemToCollectionEdge = new SimpleEdge( 
-            memberEntity.getId(), 
-                CpNamingUtils
-                        .getEdgeTypeFromCollectionName( Schema.defaultCollectionName( cpHeadEntity.getId().getType() )),
-            cpHeadEntity.getId(),
-            UUIDUtils.getUUIDLong(cpHeadEntity.getId().getUuid()));
-        gm.deleteEdge(itemToCollectionEdge).toBlockingObservable().last();
+        Edge itemToCollectionEdge = new SimpleEdge( memberEntity.getId(), CpNamingUtils
+                .getEdgeTypeFromCollectionName( Schema.defaultCollectionName( cpHeadEntity.getId().getType() ) ),
+                cpHeadEntity.getId(), UUIDUtils.getUUIDLong( cpHeadEntity.getId().getUuid() ) );
+        gm.deleteEdge( itemToCollectionEdge ).toBlockingObservable().last();
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
 
             if ( collName.equals( COLLECTION_ROLES ) ) {
-                String path = (String)( (Entity)itemRef ).getMetadata( "path" );
+                String path = ( String ) ( ( Entity ) itemRef ).getMetadata( "path" );
 
                 if ( path.startsWith( "/roles/" ) ) {
 
-                    Entity itemEntity = em.get( new SimpleEntityRef( 
-                        memberEntity.getId().getType(), memberEntity.getId().getUuid() ) );
+                    Entity itemEntity = em.get( new SimpleEntityRef( memberEntity.getId().getType(),
+                            memberEntity.getId().getUuid() ) );
 
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
                     em.deleteRole( roleRef.getApplicationRoleName() );
                 }
-
-            } 
+            }
         }
     }
 
 
     @Override
-    public void copyRelationships(String srcRelationName, EntityRef dstEntityRef, 
-            String dstRelationName) throws Exception {
+    public void copyRelationships( String srcRelationName, EntityRef dstEntityRef, String dstRelationName )
+            throws Exception {
 
         headEntity = em.validate( headEntity );
         dstEntityRef = em.validate( dstEntityRef );
 
-        CollectionInfo srcCollection = 
-                getDefaultSchema().getCollection( headEntity.getType(), srcRelationName );
+        CollectionInfo srcCollection = getDefaultSchema().getCollection( headEntity.getType(), srcRelationName );
 
-        CollectionInfo dstCollection = 
-                getDefaultSchema().getCollection( dstEntityRef.getType(), dstRelationName );
+        CollectionInfo dstCollection = getDefaultSchema().getCollection( dstEntityRef.getType(), dstRelationName );
 
         Results results = null;
         do {
@@ -881,8 +825,9 @@ public class CpRelationManager implements RelationManager {
         while ( ( results != null ) && ( results.hasMoreResults() ) );
     }
 
+
     @Override
-    public Results searchCollection(String collName, Query query) throws Exception {
+    public Results searchCollection( String collName, Query query ) throws Exception {
 
         if ( query == null ) {
             query = new Query();
@@ -890,24 +835,22 @@ public class CpRelationManager implements RelationManager {
 
         headEntity = em.validate( headEntity );
 
-        CollectionInfo collection = 
-            getDefaultSchema().getCollection( headEntity.getType(), collName );
+        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collName );
 
         if ( collection == null ) {
-            throw new RuntimeException("Cannot find collection-info for '"+collName
-                +"' of "+ headEntity.getType() +":"+headEntity.getUuid() );
+            throw new RuntimeException(
+                    "Cannot find collection-info for '" + collName + "' of " + headEntity.getType() + ":" + headEntity
+                            .getUuid() );
         }
 
-        IndexScope indexScope = new IndexScopeImpl(
-            cpHeadEntity.getId(), 
-            CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ));
+        IndexScope indexScope = new IndexScopeImpl( cpHeadEntity.getId(),
+                CpNamingUtils.getCollectionScopeNameFromCollectionName( collName ) );
 
-        EntityIndex ei = managerCache.getEntityIndex(applicationScope);
-      
-        logger.debug("Searching scope {}:{}",
+        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
 
-                indexScope.getOwner().toString(),
-                indexScope.getName() );
+        logger.debug( "Searching scope {}:{}",
+
+                indexScope.getOwner().toString(), indexScope.getName() );
 
         query.setEntityType( collection.getType() );
         query = adjustQuery( query );
@@ -929,22 +872,22 @@ public class CpRelationManager implements RelationManager {
             CandidateResults crs = ei.search( indexScope, query );
 
             if ( results == null ) {
-                logger.debug("Calling build results 1");
+                logger.debug( "Calling build results 1" );
                 results = buildResults( query, crs, collName );
-
-            } else {
-                logger.debug("Calling build results 2");
+            }
+            else {
+                logger.debug( "Calling build results 2" );
                 Results newResults = buildResults( query, crs, collName );
                 results.merge( newResults );
             }
 
             if ( crs.isEmpty() || !crs.hasCursor() ) { // no results, no cursor, can't get more
                 satisfied = true;
-
-            } else if ( results.size() == originalLimit )  { // got what we need
+            }
+            else if ( results.size() == originalLimit ) { // got what we need
                 satisfied = true;
-
-            } else if ( crs.hasCursor() ) {
+            }
+            else if ( crs.hasCursor() ) {
                 satisfied = false;
 
                 // need to query for more
@@ -952,10 +895,10 @@ public class CpRelationManager implements RelationManager {
                 query.setCursor( results.getCursor() );
                 query.setLimit( originalLimit - results.size() );
 
-                logger.warn("Satisfy query limit {}, new limit {} query count {}", new Object[] {
-                    originalLimit, query.getLimit(), queryCount 
-                });
-            } 
+                logger.warn( "Satisfy query limit {}, new limit {} query count {}", new Object[] {
+                        originalLimit, query.getLimit(), queryCount
+                } );
+            }
         }
 
         return results;
@@ -963,78 +906,60 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_createConnection_connection_ref")
+    @Metered( group = "core", name = "RelationManager_createConnection_connection_ref" )
     public ConnectionRef createConnection( ConnectionRef connection ) throws Exception {
-        
+
         return createConnection( connection.getConnectionType(), connection.getConnectedEntity() );
     }
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_createConnection_connectionType")
-    public ConnectionRef createConnection( 
-            String connectionType, EntityRef connectedEntityRef ) throws Exception {
+    @Metered( group = "core", name = "RelationManager_createConnection_connectionType" )
+    public ConnectionRef createConnection( String connectionType, EntityRef connectedEntityRef ) throws Exception {
 
         headEntity = em.validate( headEntity );
         connectedEntityRef = em.validate( connectedEntityRef );
 
-        ConnectionRefImpl connection = new ConnectionRefImpl( 
-            headEntity, connectionType, connectedEntityRef );
+        ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
-        CollectionScope targetScope = new CollectionScopeImpl( 
-            applicationScope.getApplication(), 
-            applicationScope.getApplication(), 
-            CpNamingUtils.getCollectionScopeNameFromEntityType( connectedEntityRef.getType() ));
+        CollectionScope targetScope =
+                new CollectionScopeImpl( applicationScope.getApplication(), applicationScope.getApplication(),
+                        CpNamingUtils.getCollectionScopeNameFromEntityType( connectedEntityRef.getType() ) );
 
-        EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager(targetScope);
+        EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager( targetScope );
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug("createConnection(): "
-                    + "Indexing connection type '{}'\n   from source {}:{}]\n"
-                    + "   to target {}:{}\n   from scope\n   app {}\n   owner {}\n   name {}", 
-                new Object[] { 
-                    connectionType,
-                    headEntity.getType(), 
-                    headEntity.getUuid(), 
-                    connectedEntityRef.getType(), 
-                    connectedEntityRef.getUuid(), 
-                    targetScope.getApplication(), 
-                    targetScope.getOwner(), 
-                    targetScope.getName() 
-            });
+            logger.debug( "createConnection(): " + "Indexing connection type '{}'\n   from source {}:{}]\n"
+                            + "   to target {}:{}\n   from scope\n   app {}\n   owner {}\n   name {}", new Object[] {
+                            connectionType, headEntity.getType(), headEntity.getUuid(), connectedEntityRef.getType(),
+                            connectedEntityRef.getUuid(), targetScope.getApplication(), targetScope.getOwner(),
+                            targetScope.getName()
+                    } );
         }
 
-        org.apache.usergrid.persistence.model.entity.Entity targetEntity = targetEcm.load(
-            new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ))
-                .toBlockingObservable().last();
+        org.apache.usergrid.persistence.model.entity.Entity targetEntity =
+                targetEcm.load( new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ) )
+                         .toBlockingObservable().last();
 
-        String edgeType = CpNamingUtils
-                .getEdgeTypeFromConnectionType( connectionType );
+        String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType( connectionType );
 
         // create graph edge connection from head entity to member entity
-        Edge edge = new SimpleEdge( 
-            cpHeadEntity.getId(), 
-            edgeType,
-            targetEntity.getId(), 
-            System.currentTimeMillis() );
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
-        gm.writeEdge(edge).toBlockingObservable().last();
+        Edge edge = new SimpleEdge( cpHeadEntity.getId(), edgeType, targetEntity.getId(), System.currentTimeMillis() );
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
+        gm.writeEdge( edge ).toBlockingObservable().last();
 
-        EntityIndex ei = managerCache.getEntityIndex(applicationScope);
+        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
         EntityIndexBatch batch = ei.createBatch();
 
         // Index the new connection in app|source|type context
-        IndexScope indexScope = new IndexScopeImpl(
-            cpHeadEntity.getId(), 
-            CpNamingUtils.getConnectionScopeName( connectedEntityRef.getType(), connectionType ));
+        IndexScope indexScope = new IndexScopeImpl( cpHeadEntity.getId(),
+                CpNamingUtils.getConnectionScopeName( connectedEntityRef.getType(), connectionType ) );
 
-        batch.index(indexScope, targetEntity );
+        batch.index( indexScope, targetEntity );
 
         // Index the new connection in app|scope|all-types context
-        IndexScope allTypesIndexScope = new IndexScopeImpl(
-            cpHeadEntity.getId(), 
-                CpNamingUtils.ALL_TYPES);
-        batch.index(allTypesIndexScope,  targetEntity );
+        IndexScope allTypesIndexScope = new IndexScopeImpl( cpHeadEntity.getId(), CpNamingUtils.ALL_TYPES );
+        batch.index( allTypesIndexScope, targetEntity );
 
 
         batch.execute();
@@ -1047,16 +972,17 @@ public class CpRelationManager implements RelationManager {
         return connection;
     }
 
-    
-    @SuppressWarnings("unchecked")
-    @Metered(group = "core", name = "CpRelationManager_batchUpdateEntityConnection")
-    public Mutator<ByteBuffer> batchUpdateEntityConnection( Mutator<ByteBuffer> batch, 
-        boolean disconnect, ConnectionRefImpl connection, UUID timestampUuid ) throws Exception {
+
+    @SuppressWarnings( "unchecked" )
+    @Metered( group = "core", name = "CpRelationManager_batchUpdateEntityConnection" )
+    public Mutator<ByteBuffer> batchUpdateEntityConnection( Mutator<ByteBuffer> batch, boolean disconnect,
+                                                            ConnectionRefImpl connection, UUID timestampUuid )
+            throws Exception {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
-        Entity connectedEntity = em.get( new SimpleEntityRef( 
-                connection.getConnectedEntityType(), connection.getConnectedEntityId()) );
+        Entity connectedEntity =
+                em.get( new SimpleEntityRef( connection.getConnectedEntityType(), connection.getConnectedEntityId() ) );
 
         if ( connectedEntity == null ) {
             return batch;
@@ -1065,64 +991,60 @@ public class CpRelationManager implements RelationManager {
         // Create connection for requested params
 
         if ( disconnect ) {
-            
-            addDeleteToMutator( batch, ENTITY_COMPOSITE_DICTIONARIES,
-                key( connection.getConnectingEntityId(), DICTIONARY_CONNECTED_ENTITIES,
-                    connection.getConnectionType() ),
-                asList( connection.getConnectedEntityId(), 
-                        connection.getConnectedEntityType() ), timestamp );
 
             addDeleteToMutator( batch, ENTITY_COMPOSITE_DICTIONARIES,
-                key( connection.getConnectedEntityId(), DICTIONARY_CONNECTING_ENTITIES,
-                    connection.getConnectionType() ),
-                asList( connection.getConnectingEntityId(), 
-                        connection.getConnectingEntityType() ), timestamp );
+                    key( connection.getConnectingEntityId(), DICTIONARY_CONNECTED_ENTITIES,
+                            connection.getConnectionType() ),
+                    asList( connection.getConnectedEntityId(), connection.getConnectedEntityType() ), timestamp );
+
+            addDeleteToMutator( batch, ENTITY_COMPOSITE_DICTIONARIES,
+                    key( connection.getConnectedEntityId(), DICTIONARY_CONNECTING_ENTITIES,
+                            connection.getConnectionType() ),
+                    asList( connection.getConnectingEntityId(), connection.getConnectingEntityType() ), timestamp );
 
             // delete the connection path if there will be no connections left
 
             // check out outbound edges of the given type.  If we have more than the 1 specified,
             // we shouldn't delete the connection types from our outbound index
-            if ( !moreThanOneOutboundConnection( 
-                connection.getConnectingEntity(), connection.getConnectionType() ) ) {
+            if ( !moreThanOneOutboundConnection( connection.getConnectingEntity(), connection.getConnectionType() ) ) {
 
                 addDeleteToMutator( batch, ENTITY_DICTIONARIES,
-                    key( connection.getConnectingEntityId(), DICTIONARY_CONNECTED_TYPES ),
-                    connection.getConnectionType(), timestamp );
+                        key( connection.getConnectingEntityId(), DICTIONARY_CONNECTED_TYPES ),
+                        connection.getConnectionType(), timestamp );
             }
 
             //check out inbound edges of the given type.  If we have more than the 1 specified,
             // we shouldn't delete the connection types from our outbound index
-            if ( !moreThanOneInboundConnection( 
-               connection.getConnectingEntity(), connection.getConnectionType() ) ) {
+            if ( !moreThanOneInboundConnection( connection.getConnectingEntity(), connection.getConnectionType() ) ) {
 
                 addDeleteToMutator( batch, ENTITY_DICTIONARIES,
                         key( connection.getConnectedEntityId(), DICTIONARY_CONNECTING_TYPES ),
                         connection.getConnectionType(), timestamp );
             }
-
-        } else {
-
-            addInsertToMutator( batch, ENTITY_COMPOSITE_DICTIONARIES,
-                key( connection.getConnectingEntityId(), DICTIONARY_CONNECTED_ENTITIES,
-                    connection.getConnectionType() ),
-                asList( connection.getConnectedEntityId(), connection.getConnectedEntityType() ), 
-                    timestamp, timestamp );
+        }
+        else {
 
             addInsertToMutator( batch, ENTITY_COMPOSITE_DICTIONARIES,
-                key( connection.getConnectedEntityId(), DICTIONARY_CONNECTING_ENTITIES,
-                    connection.getConnectionType() ),
-                asList( connection.getConnectingEntityId(), connection.getConnectingEntityType() ), 
-                    timestamp, timestamp );
+                    key( connection.getConnectingEntityId(), DICTIONARY_CONNECTED_ENTITIES,
+                            connection.getConnectionType() ),
+                    asList( connection.getConnectedEntityId(), connection.getConnectedEntityType() ), timestamp,
+                    timestamp );
+
+            addInsertToMutator( batch, ENTITY_COMPOSITE_DICTIONARIES,
+                    key( connection.getConnectedEntityId(), DICTIONARY_CONNECTING_ENTITIES,
+                            connection.getConnectionType() ),
+                    asList( connection.getConnectingEntityId(), connection.getConnectingEntityType() ), timestamp,
+                    timestamp );
 
             // Add connection type to connections set
             addInsertToMutator( batch, ENTITY_DICTIONARIES,
-                key( connection.getConnectingEntityId(), DICTIONARY_CONNECTED_TYPES ),
-                connection.getConnectionType(), null, timestamp );
+                    key( connection.getConnectingEntityId(), DICTIONARY_CONNECTED_TYPES ),
+                    connection.getConnectionType(), null, timestamp );
 
             // Add connection type to connections set
             addInsertToMutator( batch, ENTITY_DICTIONARIES,
-                key( connection.getConnectedEntityId(), DICTIONARY_CONNECTING_TYPES ),
-                connection.getConnectionType(), null, timestamp );
+                    key( connection.getConnectedEntityId(), DICTIONARY_CONNECTING_TYPES ),
+                    connection.getConnectionType(), null, timestamp );
         }
 
         // Add indexes for the connected entity's list properties
@@ -1137,15 +1059,15 @@ public class CpRelationManager implements RelationManager {
 
         for ( String dictionaryName : dictionaryNames ) {
             boolean has_dictionary = schema.hasDictionary( connectedEntity.getType(), dictionaryName );
-            boolean dictionary_indexed = schema.isDictionaryIndexedInConnections( 
-                connectedEntity.getType(), dictionaryName );
+            boolean dictionary_indexed =
+                    schema.isDictionaryIndexedInConnections( connectedEntity.getType(), dictionaryName );
 
             if ( dictionary_indexed || !has_dictionary ) {
                 Set<Object> elementValues = em.getDictionaryAsSet( connectedEntity, dictionaryName );
                 for ( Object elementValue : elementValues ) {
                     IndexUpdate indexUpdate =
-                        batchStartIndexUpdate( batch, connectedEntity, dictionaryName, 
-                            elementValue, timestampUuid, has_dictionary, true, disconnect, false );
+                            batchStartIndexUpdate( batch, connectedEntity, dictionaryName, elementValue, timestampUuid,
+                                    has_dictionary, true, disconnect, false );
                     batchUpdateConnectionIndex( indexUpdate, connection );
                 }
             }
@@ -1156,127 +1078,118 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_createConnection_paired_connection_type")
-    public ConnectionRef createConnection( 
-            String pairedConnectionType, EntityRef pairedEntity, String connectionType,
-            EntityRef connectedEntityRef ) throws Exception {
-        
-        throw new UnsupportedOperationException("Paired connections not supported"); 
+    @Metered( group = "core", name = "RelationManager_createConnection_paired_connection_type" )
+    public ConnectionRef createConnection( String pairedConnectionType, EntityRef pairedEntity, String connectionType,
+                                           EntityRef connectedEntityRef ) throws Exception {
+
+        throw new UnsupportedOperationException( "Paired connections not supported" );
     }
 
 
     @Override
-    @Metered(group = "core", name = "RelationManager_createConnection_connected_entity_ref")
+    @Metered( group = "core", name = "RelationManager_createConnection_connected_entity_ref" )
     public ConnectionRef createConnection( ConnectedEntityRef... connections ) throws Exception {
 
-        throw new UnsupportedOperationException("Paired connections not supported"); 
+        throw new UnsupportedOperationException( "Paired connections not supported" );
     }
 
-    @Override
-    public ConnectionRef connectionRef(
-            String connectionType, 
-            EntityRef connectedEntityRef) throws Exception {
 
-        ConnectionRef connection = new ConnectionRefImpl( 
-                headEntity, connectionType, connectedEntityRef );
+    @Override
+    public ConnectionRef connectionRef( String connectionType, EntityRef connectedEntityRef ) throws Exception {
+
+        ConnectionRef connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
         return connection;
     }
 
-    @Override
-    public ConnectionRef connectionRef(String pairedConnectionType, EntityRef pairedEntity, 
-            String connectionType, EntityRef connectedEntityRef) throws Exception {
 
-        throw new UnsupportedOperationException("Paired connections not supported"); 
+    @Override
+    public ConnectionRef connectionRef( String pairedConnectionType, EntityRef pairedEntity, String connectionType,
+                                        EntityRef connectedEntityRef ) throws Exception {
+
+        throw new UnsupportedOperationException( "Paired connections not supported" );
     }
 
-    @Override
-    public ConnectionRef connectionRef(ConnectedEntityRef... connections) {
 
-        throw new UnsupportedOperationException("Paired connections not supported"); 
+    @Override
+    public ConnectionRef connectionRef( ConnectedEntityRef... connections ) {
+
+        throw new UnsupportedOperationException( "Paired connections not supported" );
     }
 
+
     @Override
-    public void deleteConnection(ConnectionRef connectionRef) throws Exception {
-       
+    public void deleteConnection( ConnectionRef connectionRef ) throws Exception {
+
         // First, clean up the dictionary records of the connection
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         Mutator<ByteBuffer> m = createMutator( ko, be );
-        batchUpdateEntityConnection( 
-            m, true, (ConnectionRefImpl)connectionRef, UUIDGenerator.newTimeUUID() );
+        batchUpdateEntityConnection( m, true, ( ConnectionRefImpl ) connectionRef, UUIDGenerator.newTimeUUID() );
         batchExecute( m, CassandraService.RETRY_COUNT );
 
         EntityRef connectingEntityRef = connectionRef.getConnectingEntity();  // source
         EntityRef connectedEntityRef = connectionRef.getConnectedEntity();  // target
 
         String connectionType = connectionRef.getConnectedEntity().getConnectionType();
-        
-        CollectionScope targetScope = new CollectionScopeImpl( 
-            applicationScope.getApplication(), 
-            applicationScope.getApplication(), 
-            CpNamingUtils.getCollectionScopeNameFromEntityType( connectedEntityRef.getType() ));
 
-        EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager(targetScope);
+        CollectionScope targetScope =
+                new CollectionScopeImpl( applicationScope.getApplication(), applicationScope.getApplication(),
+                        CpNamingUtils.getCollectionScopeNameFromEntityType( connectedEntityRef.getType() ) );
+
+        EntityCollectionManager targetEcm = managerCache.getEntityCollectionManager( targetScope );
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug("Deleting connection '{}' from source {}:{} \n   to target {}:{}",
-                new Object[] { 
-                    connectionType,
-                    connectingEntityRef.getType(), 
-                    connectingEntityRef.getUuid(), 
-                    connectedEntityRef.getType(), 
-                    connectedEntityRef.getUuid()
-            });
+            logger.debug( "Deleting connection '{}' from source {}:{} \n   to target {}:{}", new Object[] {
+                            connectionType, connectingEntityRef.getType(), connectingEntityRef.getUuid(),
+                            connectedEntityRef.getType(), connectedEntityRef.getUuid()
+                    } );
         }
 
-        org.apache.usergrid.persistence.model.entity.Entity targetEntity = targetEcm.load(
-            new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ))
-                .toBlockingObservable().last();
+        org.apache.usergrid.persistence.model.entity.Entity targetEntity =
+                targetEcm.load( new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() ) )
+                         .toBlockingObservable().last();
 
         // Delete graph edge connection from head entity to member entity
-        Edge edge = new SimpleEdge( 
-            new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
-            connectionType,
-            targetEntity.getId(), 
-            System.currentTimeMillis() );
-        GraphManager gm = managerCache.getGraphManager(applicationScope);
-        gm.deleteEdge(edge).toBlockingObservable().last();
+        Edge edge = new SimpleEdge( new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
+                connectionType, targetEntity.getId(), System.currentTimeMillis() );
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
+        gm.deleteEdge( edge ).toBlockingObservable().last();
 
-        final EntityIndex ei = managerCache.getEntityIndex( applicationScope )  ;
+        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
         final EntityIndexBatch batch = ei.createBatch();
 
         // Deindex the connection in app|source|type context
-        IndexScope indexScope = new IndexScopeImpl(
-            new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
-            CpNamingUtils.getConnectionScopeName( targetEntity.getId().getType(), connectionType ));
-        batch.deindex( indexScope , targetEntity );
+        IndexScope indexScope =
+                new IndexScopeImpl( new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
+                        CpNamingUtils.getConnectionScopeName( targetEntity.getId().getType(), connectionType ) );
+        batch.deindex( indexScope, targetEntity );
 
         // Deindex the connection in app|source|type context
-        IndexScope allTypesIndexScope = new IndexScopeImpl(
-            new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
-                CpNamingUtils.ALL_TYPES);
+        IndexScope allTypesIndexScope =
+                new IndexScopeImpl( new SimpleId( connectingEntityRef.getUuid(), connectingEntityRef.getType() ),
+                        CpNamingUtils.ALL_TYPES );
 
-        batch.deindex( allTypesIndexScope,  targetEntity );
+        batch.deindex( allTypesIndexScope, targetEntity );
 
         batch.execute();
-
     }
 
 
     @Override
-    public Set<String> getConnectionTypes(UUID connectedEntityId) throws Exception {
-        throw new UnsupportedOperationException("Cannot specify entity by UUID alone."); 
+    public Set<String> getConnectionTypes( UUID connectedEntityId ) throws Exception {
+        throw new UnsupportedOperationException( "Cannot specify entity by UUID alone." );
     }
+
 
     @Override
     public Set<String> getConnectionTypes() throws Exception {
         return getConnectionTypes( false );
     }
 
+
     @Override
-    public Set<String> getConnectionTypes(boolean filterConnection) throws Exception {
-        Set<String> connections = cast( 
-                em.getDictionaryAsSet( headEntity, Schema.DICTIONARY_CONNECTED_TYPES ) );
+    public Set<String> getConnectionTypes( boolean filterConnection ) throws Exception {
+        Set<String> connections = cast( em.getDictionaryAsSet( headEntity, Schema.DICTIONARY_CONNECTED_TYPES ) );
 
         if ( connections == null ) {
             return null;
@@ -1289,47 +1202,45 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results getConnectedEntities( 
-        String connectionType, String connectedEntityType, Level level) throws Exception {
+    public Results getConnectedEntities( String connectionType, String connectedEntityType, Level level )
+            throws Exception {
 
         Results raw = null;
 
         Query query = new Query();
-        query.setConnectionType(connectionType);
-        query.setEntityType(connectedEntityType);
+        query.setConnectionType( connectionType );
+        query.setEntityType( connectedEntityType );
 
         if ( connectionType == null ) {
             raw = searchConnectedEntities( query );
-
-        } else {
+        }
+        else {
 
             headEntity = em.validate( headEntity );
 
             String scopeName = null;
             if ( connectedEntityType != null ) {
                 scopeName = CpNamingUtils.getConnectionScopeName( connectedEntityType, connectionType );
-            } else {
+            }
+            else {
                 scopeName = CpNamingUtils.ALL_TYPES;
             }
 
-            IndexScope indexScope = new IndexScopeImpl(
-                cpHeadEntity.getId(), 
-                scopeName);
+            IndexScope indexScope = new IndexScopeImpl( cpHeadEntity.getId(), scopeName );
 
-            final EntityIndex ei = managerCache.getEntityIndex(applicationScope);
+            final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
 
-        
-            logger.debug("Searching connected entities from scope {}:{}",
-                indexScope.getOwner().toString(),
-                indexScope.getName());
+
+            logger.debug( "Searching connected entities from scope {}:{}", indexScope.getOwner().toString(),
+                    indexScope.getName() );
 
             query = adjustQuery( query );
             CandidateResults crs = ei.search( indexScope, query );
 
-            raw = buildResults( query , crs, query.getConnectionType() );
+            raw = buildResults( query, crs, query.getConnectionType() );
         }
 
-        if ( Level.ALL_PROPERTIES.equals(level ) ) {
+        if ( Level.ALL_PROPERTIES.equals( level ) ) {
             List<Entity> entities = new ArrayList<Entity>();
             for ( EntityRef ref : raw.getEntities() ) {
                 Entity entity = em.get( ref );
@@ -1349,29 +1260,28 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Results getConnectingEntities(
-            String connType, String fromEntityType, Level resultsLevel) throws Exception {
+    public Results getConnectingEntities( String connType, String fromEntityType, Level resultsLevel )
+            throws Exception {
 
         return getConnectingEntities( connType, fromEntityType, resultsLevel, -1 );
     }
 
+
     @Override
-    public Results getConnectingEntities(
-            String connType, String fromEntityType, Level level, int count) throws Exception {
+    public Results getConnectingEntities( String connType, String fromEntityType, Level level, int count )
+            throws Exception {
 
         // looking for edges to the head entity
-        String edgeType = 
-                CpNamingUtils.getEdgeTypeFromConnectionType( connType );
+        String edgeType = CpNamingUtils.getEdgeTypeFromConnectionType( connType );
 
-        Map<EntityRef, Set<String>> containers = 
-            getContainers( count, edgeType, fromEntityType );
+        Map<EntityRef, Set<String>> containers = getContainers( count, edgeType, fromEntityType );
 
-        if ( Level.REFS.equals(level ) ) {
+        if ( Level.REFS.equals( level ) ) {
             List<EntityRef> refList = new ArrayList<EntityRef>( containers.keySet() );
             return Results.fromRefList( refList );
-        } 
+        }
 
-        if ( Level.IDS.equals(level ) ) {
+        if ( Level.IDS.equals( level ) ) {
             // TODO: someday this should return a list of Core Persistence Ids
             List<UUID> idList = new ArrayList<UUID>();
             for ( EntityRef ref : containers.keySet() ) {
@@ -1383,7 +1293,7 @@ public class CpRelationManager implements RelationManager {
         List<Entity> entities = new ArrayList<Entity>();
         for ( EntityRef ref : containers.keySet() ) {
             Entity entity = em.get( ref );
-            logger.debug("   Found connecting entity: " + entity.getProperties());
+            logger.debug( "   Found connecting entity: " + entity.getProperties() );
             entities.add( entity );
         }
         return Results.fromEntities( entities );
@@ -1402,35 +1312,30 @@ public class CpRelationManager implements RelationManager {
         if ( query.getEntityType() == null ) {
 
             // search across all types of collections of the head-entity
-            IndexScope indexScope = new IndexScopeImpl(
-                cpHeadEntity.getId(), 
-                    CpNamingUtils.ALL_TYPES);
+            IndexScope indexScope = new IndexScopeImpl( cpHeadEntity.getId(), CpNamingUtils.ALL_TYPES );
 
-            EntityIndex ei = managerCache.getEntityIndex(applicationScope);
-        
-            logger.debug("Searching connections from the all-types scope {}:{}",
-                indexScope.getOwner().toString(),
-                indexScope.getName());
+            EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+
+            logger.debug( "Searching connections from the all-types scope {}:{}", indexScope.getOwner().toString(),
+                    indexScope.getName() );
 
             query = adjustQuery( query );
-            CandidateResults crs = ei.search(indexScope,  query );
+            CandidateResults crs = ei.search( indexScope, query );
 
-            return buildConnectionResults(query , crs, query.getConnectionType() );
+            return buildConnectionResults( query, crs, query.getConnectionType() );
         }
 
-        IndexScope indexScope = new IndexScopeImpl(
-            cpHeadEntity.getId(), 
-            CpNamingUtils.getConnectionScopeName( query.getEntityType(), query.getConnectionType() ));
-        EntityIndex ei = managerCache.getEntityIndex(applicationScope);
-    
-        logger.debug("Searching connections from the scope {}:{}",
-            indexScope.getOwner().toString(),
-            indexScope.getName());
+        IndexScope indexScope = new IndexScopeImpl( cpHeadEntity.getId(),
+                CpNamingUtils.getConnectionScopeName( query.getEntityType(), query.getConnectionType() ) );
+        EntityIndex ei = managerCache.getEntityIndex( applicationScope );
+
+        logger.debug( "Searching connections from the scope {}:{}", indexScope.getOwner().toString(),
+                indexScope.getName() );
 
         query = adjustQuery( query );
         CandidateResults crs = ei.search( indexScope, query );
 
-        return buildConnectionResults(query , crs, query.getConnectionType() );
+        return buildConnectionResults( query, crs, query.getConnectionType() );
     }
 
 
@@ -1448,47 +1353,44 @@ public class CpRelationManager implements RelationManager {
                 // This is fulgy to put here, but required.
                 if ( query.getEntityType().equals( User.ENTITY_TYPE ) && ident.isEmail() ) {
 
-                    Query newQuery = Query.fromQL(
-                        "select * where email='" + query.getSingleNameOrEmailIdentifier()+ "'");
+                    Query newQuery =
+                            Query.fromQL( "select * where email='" + query.getSingleNameOrEmailIdentifier() + "'" );
                     query.setRootOperand( newQuery.getRootOperand() );
                 }
 
                 // use the ident with the default alias. could be an email
                 else {
 
-                    Query newQuery = Query.fromQL(
-                        "select * where name='" + query.getSingleNameOrEmailIdentifier()+ "'");
+                    Query newQuery =
+                            Query.fromQL( "select * where name='" + query.getSingleNameOrEmailIdentifier() + "'" );
                     query.setRootOperand( newQuery.getRootOperand() );
                 }
+            }
+            else if ( query.containsSingleUuidIdentifier() ) {
 
-            } else if ( query.containsSingleUuidIdentifier() ) {
-
-                Query newQuery = Query.fromQL(
-                        "select * where uuid='" + query.getSingleUuidIdentifier() + "'");
+                Query newQuery = Query.fromQL( "select * where uuid='" + query.getSingleUuidIdentifier() + "'" );
                 query.setRootOperand( newQuery.getRootOperand() );
             }
         }
 
         if ( query.isReversed() ) {
 
-            Query.SortPredicate desc = new Query.SortPredicate( 
-                PROPERTY_CREATED, Query.SortDirection.DESCENDING );
+            Query.SortPredicate desc = new Query.SortPredicate( PROPERTY_CREATED, Query.SortDirection.DESCENDING );
 
             try {
-                query.addSort( desc ); 
-            } catch ( Exception e ) {
-                logger.warn("Attempted to reverse sort order already set", PROPERTY_CREATED);
+                query.addSort( desc );
             }
+            catch ( Exception e ) {
+                logger.warn( "Attempted to reverse sort order already set", PROPERTY_CREATED );
+            }
+        }
 
-        } 
-            
         if ( query.getSortPredicates().isEmpty() ) {
 
             //TODO, should this be descending?
-            Query.SortPredicate asc = new Query.SortPredicate( 
-                PROPERTY_CREATED, Query.SortDirection.ASCENDING );
+            Query.SortPredicate asc = new Query.SortPredicate( PROPERTY_CREATED, Query.SortDirection.ASCENDING );
 
-            query.addSort( asc ); 
+            query.addSort( asc );
         }
 
         return query;
@@ -1496,14 +1398,14 @@ public class CpRelationManager implements RelationManager {
 
 
     @Override
-    public Set<String> getConnectionIndexes(String connectionType) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); 
+    public Set<String> getConnectionIndexes( String connectionType ) throws Exception {
+        throw new UnsupportedOperationException( "Not supported yet." );
     }
 
-    
+
     private CpRelationManager getRelationManager( EntityRef headEntity ) {
         CpRelationManager rmi = new CpRelationManager();
-        rmi.init( em, emf, applicationId, headEntity, null);
+        rmi.init( em, emf, applicationId, headEntity, null );
         return rmi;
     }
 
@@ -1522,22 +1424,19 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    private Results buildConnectionResults(
-        Query query, CandidateResults crs, String connectionType ) {
-       
-        if ( query.getLevel().equals( Level.ALL_PROPERTIES )) {
+    private Results buildConnectionResults( Query query, CandidateResults crs, String connectionType ) {
+
+        if ( query.getLevel().equals( Level.ALL_PROPERTIES ) ) {
             return buildResults( query, crs, connectionType );
         }
 
-        final EntityRef sourceRef = 
-                new SimpleEntityRef( headEntity.getType(), headEntity.getUuid() );
+        final EntityRef sourceRef = new SimpleEntityRef( headEntity.getType(), headEntity.getUuid() );
 
         List<ConnectionRef> refs = new ArrayList<ConnectionRef>( crs.size() );
 
         for ( CandidateResult cr : crs ) {
 
-            SimpleEntityRef targetRef = 
-                    new SimpleEntityRef( cr.getId().getType(), cr.getId().getUuid() );
+            SimpleEntityRef targetRef = new SimpleEntityRef( cr.getId().getType(), cr.getId().getUuid() );
 
             final ConnectionRef ref = new ConnectionRefImpl( sourceRef, connectionType, targetRef );
 
@@ -1546,22 +1445,22 @@ public class CpRelationManager implements RelationManager {
 
         return Results.fromConnections( refs );
     }
-    
+
 
     /**
      * Build results from a set of candidates, and discard those that represent stale indexes.
-     * 
+     *
      * @param query Query that was executed
      * @param crs Candidates to be considered for results
      * @param collName Name of collection or null if querying all types
      */
-    private Results buildResults(Query query, CandidateResults crs, String collName ) {
+    private Results buildResults( Query query, CandidateResults crs, String collName ) {
 
-        logger.debug("buildResults() for {} from {} candidates", collName, crs.size());
+        logger.debug( "buildResults() for {} from {} candidates", collName, crs.size() );
 
         //get an instance of our results loader
-        final ResultsLoader resultsLoader = this.resultsLoaderFactory.getLoader( applicationScope, this.headEntity,
-                query.getResultsLevel() );
+        final ResultsLoader resultsLoader =
+                this.resultsLoaderFactory.getLoader( applicationScope, this.headEntity, query.getResultsLevel() );
 
         //load the results
         final Results results = resultsLoader.loadResults( crs );
@@ -1570,14 +1469,14 @@ public class CpRelationManager implements RelationManager {
         resultsLoader.postProcess();
 
 
-
         results.setCursor( crs.getCursor() );
-        results.setQueryProcessor( new CpQueryProcessor(em, query, headEntity, collName) );
+        results.setQueryProcessor( new CpQueryProcessor( em, query, headEntity, collName ) );
 
-        logger.debug("Returning results size {}", results.size() );
+        logger.debug( "Returning results size {}", results.size() );
 
         return results;
     }
+
 
     @Override
     public void batchUpdateSetIndexes( Mutator<ByteBuffer> batch, String setName, Object elementValue,
@@ -1585,11 +1484,11 @@ public class CpRelationManager implements RelationManager {
 
         Entity entity = getHeadEntity();
 
-        elementValue = getDefaultSchema().validateEntitySetValue( 
-                entity.getType(), setName, elementValue );
+        elementValue = getDefaultSchema().validateEntitySetValue( entity.getType(), setName, elementValue );
 
-        IndexUpdate indexUpdate = batchStartIndexUpdate( batch, entity, setName, elementValue, 
-                timestampUuid, true, true, removeFromSet, false );
+        IndexUpdate indexUpdate =
+                batchStartIndexUpdate( batch, entity, setName, elementValue, timestampUuid, true, true, removeFromSet,
+                        false );
 
         // Update collections 
 
@@ -1601,8 +1500,7 @@ public class CpRelationManager implements RelationManager {
             for ( EntityRef containerEntity : containerEntities.keySet() ) {
                 if ( containerEntity.getType().equals( TYPE_APPLICATION ) && Schema
                         .isAssociatedEntityType( entity.getType() ) ) {
-                    logger.debug( "Extended properties for {} not indexed by application", 
-                            entity.getType() );
+                    logger.debug( "Extended properties for {} not indexed by application", entity.getType() );
                     continue;
                 }
                 Set<String> collectionNames = containerEntities.get( containerEntity );
@@ -1612,8 +1510,7 @@ public class CpRelationManager implements RelationManager {
 
                     for ( CollectionInfo collection : collections ) {
                         if ( collectionNames.contains( collection.getName() ) ) {
-                            batchUpdateCollectionIndex( 
-                                    indexUpdate, containerEntity, collection.getName() );
+                            batchUpdateCollectionIndex( indexUpdate, containerEntity, collection.getName() );
                         }
                     }
                 }
@@ -1623,31 +1520,30 @@ public class CpRelationManager implements RelationManager {
         batchUpdateBackwardConnectionsDictionaryIndexes( indexUpdate );
     }
 
+
     /**
      * Batch update collection index.
      *
      * @param indexUpdate The update to apply
-     * @param owner The entity that is the owner context of this entity update.  
-     * Can either be an application, or
-     * another entity
+     * @param owner The entity that is the owner context of this entity update. Can either be an application, or another
+     * entity
      * @param collectionName the collection name
      *
      * @return The indexUpdate with batch mutations
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "RelationManager_batchUpdateCollectionIndex")
-    public IndexUpdate batchUpdateCollectionIndex( 
-            IndexUpdate indexUpdate, EntityRef owner, String collectionName )
+    @Metered( group = "core", name = "RelationManager_batchUpdateCollectionIndex" )
+    public IndexUpdate batchUpdateCollectionIndex( IndexUpdate indexUpdate, EntityRef owner, String collectionName )
             throws Exception {
 
         logger.debug( "batchUpdateCollectionIndex" );
 
         Entity indexedEntity = indexUpdate.getEntity();
 
-        String bucketId = indexBucketLocator .getBucket( applicationId, 
-                IndexBucketLocator.IndexType.COLLECTION, indexedEntity.getUuid(), 
-                indexedEntity.getType(), indexUpdate.getEntryName() );
+        String bucketId = indexBucketLocator
+                .getBucket( applicationId, IndexBucketLocator.IndexType.COLLECTION, indexedEntity.getUuid(),
+                        indexedEntity.getType(), indexUpdate.getEntryName() );
 
         // the root name without the bucket
         // entity_id,collection_name,prop_name,
@@ -1665,14 +1561,14 @@ public class CpRelationManager implements RelationManager {
 
                 index_key = key( index_name, bucketId );
 
-                addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, index_key, 
-                        entry.getIndexComposite(), indexUpdate.getTimestamp() );
+                addDeleteToMutator( indexUpdate.getBatch(), ENTITY_INDEX, index_key, entry.getIndexComposite(),
+                        indexUpdate.getTimestamp() );
 
                 if ( "location.coordinates".equals( entry.getPath() ) ) {
-                    EntityLocationRef loc = new EntityLocationRef( indexUpdate.getEntity(), 
-                            entry.getTimestampUuid(), entry.getValue().toString() );
-                    batchRemoveLocationFromCollectionIndex( indexUpdate.getBatch(), 
-                            indexBucketLocator, applicationId, index_name, loc );
+                    EntityLocationRef loc = new EntityLocationRef( indexUpdate.getEntity(), entry.getTimestampUuid(),
+                            entry.getValue().toString() );
+                    batchRemoveLocationFromCollectionIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                            index_name, loc );
                 }
             }
             else {
@@ -1680,8 +1576,7 @@ public class CpRelationManager implements RelationManager {
             }
         }
 
-        if ( ( indexUpdate.getNewEntries().size() > 0 ) 
-                && ( !indexUpdate.isMultiValue() || ( indexUpdate.isMultiValue()
+        if ( ( indexUpdate.getNewEntries().size() > 0 ) && ( !indexUpdate.isMultiValue() || ( indexUpdate.isMultiValue()
                 && !indexUpdate.isRemoveListEntry() ) ) ) {
 
             for ( IndexUpdate.IndexEntry indexEntry : indexUpdate.getNewEntries() ) {
@@ -1694,15 +1589,14 @@ public class CpRelationManager implements RelationManager {
 
                 // int i = 0;
 
-                addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, index_key, 
-                        indexEntry.getIndexComposite(), null, indexUpdate.getTimestamp() );
+                addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, index_key, indexEntry.getIndexComposite(),
+                        null, indexUpdate.getTimestamp() );
 
                 if ( "location.coordinates".equals( indexEntry.getPath() ) ) {
-                    EntityLocationRef loc = new EntityLocationRef( 
-                            indexUpdate.getEntity(), indexEntry.getTimestampUuid(),
-                            indexEntry.getValue().toString() );
-                    batchStoreLocationInCollectionIndex( indexUpdate.getBatch(), 
-                            indexBucketLocator, applicationId,
+                    EntityLocationRef loc =
+                            new EntityLocationRef( indexUpdate.getEntity(), indexEntry.getTimestampUuid(),
+                                    indexEntry.getValue().toString() );
+                    batchStoreLocationInCollectionIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
                             index_name, indexedEntity.getUuid(), loc );
                 }
 
@@ -1720,27 +1614,26 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    public IndexUpdate batchStartIndexUpdate( 
-            Mutator<ByteBuffer> batch, Entity entity, String entryName,
-            Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
-             boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed )
+    public IndexUpdate batchStartIndexUpdate( Mutator<ByteBuffer> batch, Entity entity, String entryName,
+                                              Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
+                                              boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed )
             throws Exception {
-        return batchStartIndexUpdate( batch, entity, entryName, entryValue, timestampUuid, 
-                schemaHasProperty, isMultiValue, removeListEntry, fulltextIndexed, false );
+        return batchStartIndexUpdate( batch, entity, entryName, entryValue, timestampUuid, schemaHasProperty,
+                isMultiValue, removeListEntry, fulltextIndexed, false );
     }
 
 
-    @Metered(group = "core", name = "RelationManager_batchStartIndexUpdate")
-    public IndexUpdate batchStartIndexUpdate( 
-        Mutator<ByteBuffer> batch, Entity entity, String entryName,
-        Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
-        boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed,
-        boolean skipRead ) throws Exception {
+    @Metered( group = "core", name = "RelationManager_batchStartIndexUpdate" )
+    public IndexUpdate batchStartIndexUpdate( Mutator<ByteBuffer> batch, Entity entity, String entryName,
+                                              Object entryValue, UUID timestampUuid, boolean schemaHasProperty,
+                                              boolean isMultiValue, boolean removeListEntry, boolean fulltextIndexed,
+                                              boolean skipRead ) throws Exception {
 
         long timestamp = getTimestampInMicros( timestampUuid );
 
-        IndexUpdate indexUpdate = new IndexUpdate( batch, entity, entryName, entryValue, 
-                schemaHasProperty, isMultiValue, removeListEntry, timestampUuid );
+        IndexUpdate indexUpdate =
+                new IndexUpdate( batch, entity, entryName, entryValue, schemaHasProperty, isMultiValue, removeListEntry,
+                        timestampUuid );
 
         // entryName = entryName.toLowerCase();
 
@@ -1751,21 +1644,17 @@ public class CpRelationManager implements RelationManager {
             List<HColumn<ByteBuffer, ByteBuffer>> entries = null;
 
             if ( isMultiValue && validIndexableValue( entryValue ) ) {
-                entries = cass.getColumns( 
-                    cass.getApplicationKeyspace( applicationId ), ENTITY_INDEX_ENTRIES,
-                        entity.getUuid(), new DynamicComposite( 
-                            entryName, indexValueCode( entryValue), toIndexableValue( entryValue )),
-                        setGreaterThanEqualityFlag( 
-                            new DynamicComposite( entryName, indexValueCode( entryValue ),
-                        toIndexableValue( entryValue ) ) ), INDEX_ENTRY_LIST_COUNT, false );
+                entries = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_INDEX_ENTRIES,
+                        entity.getUuid(),
+                        new DynamicComposite( entryName, indexValueCode( entryValue ), toIndexableValue( entryValue ) ),
+                        setGreaterThanEqualityFlag( new DynamicComposite( entryName, indexValueCode( entryValue ),
+                                        toIndexableValue( entryValue ) ) ), INDEX_ENTRY_LIST_COUNT, false );
             }
             else {
-                entries = cass.getColumns( 
-                    cass.getApplicationKeyspace( applicationId ), ENTITY_INDEX_ENTRIES,
-                        entity.getUuid(), 
-                        new DynamicComposite( entryName ),
-                        setGreaterThanEqualityFlag( 
-                            new DynamicComposite( entryName ) ), INDEX_ENTRY_LIST_COUNT, false );
+                entries = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_INDEX_ENTRIES,
+                        entity.getUuid(), new DynamicComposite( entryName ),
+                        setGreaterThanEqualityFlag( new DynamicComposite( entryName ) ), INDEX_ENTRY_LIST_COUNT,
+                        false );
             }
 
             if ( logger.isDebugEnabled() ) {
@@ -1783,8 +1672,7 @@ public class CpRelationManager implements RelationManager {
                 // new format:
                 // composite(entryName,
                 // value_code,prev_value,prev_timestamp,prev_obj_path) = null
-                DynamicComposite composite = 
-                        DynamicComposite.fromByteBuffer( entry.getName().duplicate() );
+                DynamicComposite composite = DynamicComposite.fromByteBuffer( entry.getName().duplicate() );
                 prev_value = composite.get( 2 );
                 prev_timestamp = ( UUID ) composite.get( 3 );
                 if ( composite.size() > 4 ) {
@@ -1798,8 +1686,7 @@ public class CpRelationManager implements RelationManager {
                         entryPath = entryName + "." + prev_obj_path;
                     }
 
-                    indexUpdate.addPrevEntry( 
-                            entryPath, prev_value, prev_timestamp, entry.getName().duplicate() );
+                    indexUpdate.addPrevEntry( entryPath, prev_value, prev_timestamp, entry.getName().duplicate() );
 
                     // composite(property_value,connected_entity_id,entry_timestamp)
                     // addDeleteToMutator(batch, ENTITY_INDEX_ENTRIES,
@@ -1814,13 +1701,12 @@ public class CpRelationManager implements RelationManager {
 
         if ( !isMultiValue || ( isMultiValue && !removeListEntry ) ) {
 
-            List<Map.Entry<String, Object>> list = IndexUtils.getKeyValueList( 
-                    entryName, entryValue, fulltextIndexed );
+            List<Map.Entry<String, Object>> list = IndexUtils.getKeyValueList( entryName, entryValue, fulltextIndexed );
 
             if ( entryName.equalsIgnoreCase( "location" ) && ( entryValue instanceof Map ) ) {
-                @SuppressWarnings("rawtypes") double latitude =
+                @SuppressWarnings( "rawtypes" ) double latitude =
                         MapUtils.getDoubleValue( ( Map ) entryValue, "latitude" );
-                @SuppressWarnings("rawtypes") double longitude =
+                @SuppressWarnings( "rawtypes" ) double longitude =
                         MapUtils.getDoubleValue( ( Map ) entryValue, "longitude" );
                 list.add( new AbstractMap.SimpleEntry<String, Object>( "location.coordinates",
                         latitude + "," + longitude ) );
@@ -1829,18 +1715,14 @@ public class CpRelationManager implements RelationManager {
             for ( Map.Entry<String, Object> indexEntry : list ) {
 
                 if ( validIndexableValue( indexEntry.getValue() ) ) {
-                    indexUpdate.addNewEntry( 
-                            indexEntry.getKey(), toIndexableValue( indexEntry.getValue() ) );
+                    indexUpdate.addNewEntry( indexEntry.getKey(), toIndexableValue( indexEntry.getValue() ) );
                 }
             }
 
             if ( isMultiValue ) {
                 addInsertToMutator( batch, ENTITY_INDEX_ENTRIES, entity.getUuid(),
-                        asList( entryName, 
-                            indexValueCode( entryValue ), 
-                            toIndexableValue( entryValue ),
-                            indexUpdate.getTimestampUuid() ),
-                        null, timestamp );
+                        asList( entryName, indexValueCode( entryValue ), toIndexableValue( entryValue ),
+                                indexUpdate.getTimestampUuid() ), null, timestamp );
             }
             else {
                 // int i = 0;
@@ -1858,8 +1740,7 @@ public class CpRelationManager implements RelationManager {
                     byte code = indexValueCode( indexEntry.getValue() );
                     Object val = toIndexableValue( indexEntry.getValue() );
                     addInsertToMutator( batch, ENTITY_INDEX_ENTRIES, entity.getUuid(),
-                            asList( entryName, code, val, indexUpdate.getTimestampUuid(), name ), 
-                            null, timestamp );
+                            asList( entryName, code, val, indexUpdate.getTimestampUuid(), name ), null, timestamp );
 
                     indexUpdate.addIndex( indexEntry.getKey() );
                 }
@@ -1871,6 +1752,7 @@ public class CpRelationManager implements RelationManager {
         return indexUpdate;
     }
 
+
     /**
      * Batch update backward connections set indexes.
      *
@@ -1880,15 +1762,13 @@ public class CpRelationManager implements RelationManager {
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "RelationManager_batchUpdateBackwardConnectionsDictionaryIndexes")
-    public IndexUpdate batchUpdateBackwardConnectionsDictionaryIndexes( 
-            IndexUpdate indexUpdate ) throws Exception {
+    @Metered( group = "core", name = "RelationManager_batchUpdateBackwardConnectionsDictionaryIndexes" )
+    public IndexUpdate batchUpdateBackwardConnectionsDictionaryIndexes( IndexUpdate indexUpdate ) throws Exception {
 
         logger.debug( "batchUpdateBackwardConnectionsListIndexes" );
 
         boolean entityHasDictionary = getDefaultSchema()
-                .isDictionaryIndexedInConnections( 
-                        indexUpdate.getEntity().getType(), indexUpdate.getEntryName() );
+                .isDictionaryIndexedInConnections( indexUpdate.getEntity().getType(), indexUpdate.getEntryName() );
 
         if ( !entityHasDictionary ) {
             return indexUpdate;
@@ -1898,9 +1778,10 @@ public class CpRelationManager implements RelationManager {
         return doBackwardConnectionsUpdate( indexUpdate );
     }
 
+
     /**
-     * Search each reverse connection type in the graph for connections.  
-     * If one is found, update the index appropriately
+     * Search each reverse connection type in the graph for connections. If one is found, update the index
+     * appropriately
      *
      * @param indexUpdate The index update to use
      *
@@ -1912,12 +1793,11 @@ public class CpRelationManager implements RelationManager {
         logger.debug( "doBackwardConnectionsUpdate" );
 
         final ConnectionTypesIterator connectionTypes =
-            new ConnectionTypesIterator( cass, applicationId, targetEntity.getUuid(), false, 100 );
+                new ConnectionTypesIterator( cass, applicationId, targetEntity.getUuid(), false, 100 );
 
         for ( String connectionType : connectionTypes ) {
 
-            PagingResultsIterator itr = 
-                    getReversedConnectionsIterator( targetEntity, connectionType );
+            PagingResultsIterator itr = getReversedConnectionsIterator( targetEntity, connectionType );
 
             for ( Object connection : itr ) {
 
@@ -1926,7 +1806,7 @@ public class CpRelationManager implements RelationManager {
                 //we need to create a connection ref from the source entity (found via reverse edge) 
                 // to the entity we're about to update.  This is the index that needs updated
                 final ConnectionRefImpl connectionRef =
-                    new ConnectionRefImpl( sourceEntity, connectionType, indexUpdate.getEntity() );
+                        new ConnectionRefImpl( sourceEntity, connectionType, indexUpdate.getEntity() );
 
                 batchUpdateConnectionIndex( indexUpdate, connectionRef );
             }
@@ -1934,6 +1814,7 @@ public class CpRelationManager implements RelationManager {
 
         return indexUpdate;
     }
+
 
     /**
      * Batch update connection index.
@@ -1945,9 +1826,9 @@ public class CpRelationManager implements RelationManager {
      *
      * @throws Exception the exception
      */
-    @Metered(group = "core", name = "RelationManager_batchUpdateConnectionIndex")
-    public IndexUpdate batchUpdateConnectionIndex( 
-            IndexUpdate indexUpdate, ConnectionRefImpl connection ) throws Exception {
+    @Metered( group = "core", name = "RelationManager_batchUpdateConnectionIndex" )
+    public IndexUpdate batchUpdateConnectionIndex( IndexUpdate indexUpdate, ConnectionRefImpl connection )
+            throws Exception {
 
         logger.debug( "batchUpdateConnectionIndex" );
 
@@ -1963,12 +1844,10 @@ public class CpRelationManager implements RelationManager {
                 batchDeleteConnectionIndexEntries( indexUpdate, entry, connection, index_keys );
 
                 if ( "location.coordinates".equals( entry.getPath() ) ) {
-                    EntityLocationRef loc = 
-                        new EntityLocationRef( indexUpdate.getEntity(), entry.getTimestampUuid(),
-                        entry.getValue().toString() );
-                    batchDeleteLocationInConnectionsIndex( 
-                        indexUpdate.getBatch(), indexBucketLocator, applicationId,
-                        index_keys, entry.getPath(), loc );
+                    EntityLocationRef loc = new EntityLocationRef( indexUpdate.getEntity(), entry.getTimestampUuid(),
+                            entry.getValue().toString() );
+                    batchDeleteLocationInConnectionsIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                            index_keys, entry.getPath(), loc );
                 }
             }
             else {
@@ -1976,8 +1855,7 @@ public class CpRelationManager implements RelationManager {
             }
         }
 
-        if ( ( indexUpdate.getNewEntries().size() > 0 ) 
-                && ( !indexUpdate.isMultiValue() || ( indexUpdate.isMultiValue()
+        if ( ( indexUpdate.getNewEntries().size() > 0 ) && ( !indexUpdate.isMultiValue() || ( indexUpdate.isMultiValue()
                 && !indexUpdate.isRemoveListEntry() ) ) ) {
 
             for ( IndexUpdate.IndexEntry indexEntry : indexUpdate.getNewEntries() ) {
@@ -1986,12 +1864,9 @@ public class CpRelationManager implements RelationManager {
 
                 if ( "location.coordinates".equals( indexEntry.getPath() ) ) {
                     EntityLocationRef loc =
-                            new EntityLocationRef( 
-                                    indexUpdate.getEntity(), 
-                                    indexEntry.getTimestampUuid(),
+                            new EntityLocationRef( indexUpdate.getEntity(), indexEntry.getTimestampUuid(),
                                     indexEntry.getValue().toString() );
-                    batchStoreLocationInConnectionsIndex( 
-                            indexUpdate.getBatch(), indexBucketLocator, applicationId,
+                    batchStoreLocationInConnectionsIndex( indexUpdate.getBatch(), indexBucketLocator, applicationId,
                             index_keys, indexEntry.getPath(), loc );
                 }
             }
@@ -2007,12 +1882,13 @@ public class CpRelationManager implements RelationManager {
 
         for ( String index : indexUpdate.getIndexesSet() ) {
             addInsertToMutator( indexUpdate.getBatch(), ENTITY_DICTIONARIES,
-                    key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES), index, null,
+                    key( connection.getConnectingIndexId(), Schema.DICTIONARY_INDEXES ), index, null,
                     indexUpdate.getTimestamp() );
         }
 
         return indexUpdate;
     }
+
 
     /**
      * Get a paging results iterator.  Should return an iterator for all results
@@ -2021,12 +1897,12 @@ public class CpRelationManager implements RelationManager {
      *
      * @return connectionType The name of the edges to search
      */
-    private PagingResultsIterator getReversedConnectionsIterator( 
-            EntityRef targetEntity, String connectionType ) throws Exception {
+    private PagingResultsIterator getReversedConnectionsIterator( EntityRef targetEntity, String connectionType )
+            throws Exception {
 
-        return new PagingResultsIterator( 
-                getConnectingEntities( targetEntity, connectionType, null, Level.REFS ) );
+        return new PagingResultsIterator( getConnectingEntities( targetEntity, connectionType, null, Level.REFS ) );
     }
+
 
     /**
      * Get all edges that are to the targetEntity
@@ -2036,13 +1912,12 @@ public class CpRelationManager implements RelationManager {
      * @param connectedEntityType The connected entity type, if not specified all types are returned
      * @param resultsLevel The results level to return
      */
-    private Results getConnectingEntities( 
-            EntityRef targetEntity, String connectionType, String connectedEntityType,
-            Level resultsLevel ) throws Exception {
+    private Results getConnectingEntities( EntityRef targetEntity, String connectionType, String connectedEntityType,
+                                           Level resultsLevel ) throws Exception {
 
-        return getConnectingEntities(
-                targetEntity, connectionType, connectedEntityType, resultsLevel, 0);
+        return getConnectingEntities( targetEntity, connectionType, connectedEntityType, resultsLevel, 0 );
     }
+
 
     /**
      * Get all edges that are to the targetEntity
@@ -2052,16 +1927,15 @@ public class CpRelationManager implements RelationManager {
      * @param connectedEntityType The connected entity type, if not specified all types are returned
      * @param count result limit
      */
-    private Results getConnectingEntities( EntityRef targetEntity, String connectionType, 
-            String connectedEntityType, Level level, int count) throws Exception {
+    private Results getConnectingEntities( EntityRef targetEntity, String connectionType, String connectedEntityType,
+                                           Level level, int count ) throws Exception {
 
         Query query = new Query();
         query.setResultsLevel( level );
-        query.setLimit(count);
+        query.setLimit( count );
 
         final ConnectionRefImpl connectionRef =
-            new ConnectionRefImpl( new SimpleEntityRef( connectedEntityType, null ), 
-            connectionType, targetEntity );
+                new ConnectionRefImpl( new SimpleEntityRef( connectedEntityType, null ), connectionType, targetEntity );
         final ConnectionResultsLoaderFactory factory = new ConnectionResultsLoaderFactory( connectionRef );
 
         QueryProcessorImpl qp = new QueryProcessorImpl( query, null, em, factory );
@@ -2070,17 +1944,18 @@ public class CpRelationManager implements RelationManager {
         return qp.getResults( visitor );
     }
 
-    @Metered(group = "core", name = "RelationManager_batchDeleteConnectionIndexEntries")
+
+    @Metered( group = "core", name = "RelationManager_batchDeleteConnectionIndexEntries" )
     public Mutator<ByteBuffer> batchDeleteConnectionIndexEntries( IndexUpdate indexUpdate, IndexUpdate.IndexEntry entry,
                                                                   ConnectionRefImpl connection, UUID[] index_keys )
             throws Exception {
 
-        logger.debug("batchDeleteConnectionIndexEntries");
+        logger.debug( "batchDeleteConnectionIndexEntries" );
 
         // entity_id,prop_name
         Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
-                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL],
-                        entry.getPath() ) );
+                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                        index_keys[ConnectionRefImpl.ALL], entry.getPath() ) );
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key =
@@ -2123,58 +1998,53 @@ public class CpRelationManager implements RelationManager {
     }
 
 
-    @Metered(group = "core", name = "RelationManager_batchAddConnectionIndexEntries")
-    public Mutator<ByteBuffer> batchAddConnectionIndexEntries( IndexUpdate indexUpdate, 
-        IndexUpdate.IndexEntry entry, ConnectionRefImpl conn, UUID[] index_keys ) {
+    @Metered( group = "core", name = "RelationManager_batchAddConnectionIndexEntries" )
+    public Mutator<ByteBuffer> batchAddConnectionIndexEntries( IndexUpdate indexUpdate, IndexUpdate.IndexEntry entry,
+                                                               ConnectionRefImpl conn, UUID[] index_keys ) {
 
-        logger.debug("batchAddConnectionIndexEntries");
+        logger.debug( "batchAddConnectionIndexEntries" );
 
         // entity_id,prop_name
-        Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], 
-                INDEX_CONNECTIONS, entry.getPath(),
-                indexBucketLocator.getBucket( applicationId, 
-                        IndexBucketLocator.IndexType.CONNECTION, index_keys[ConnectionRefImpl.ALL],
-                        entry.getPath() ) );
+        Object property_index_key = key( index_keys[ConnectionRefImpl.ALL], INDEX_CONNECTIONS, entry.getPath(),
+                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                        index_keys[ConnectionRefImpl.ALL], entry.getPath() ) );
 
         // entity_id,entity_type,prop_name
         Object entity_type_prop_index_key =
-            key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
-                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], entry.getPath() ) );
+                key( index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                                index_keys[ConnectionRefImpl.BY_ENTITY_TYPE], entry.getPath() ) );
 
         // entity_id,connection_type,prop_name
         Object connection_type_prop_index_key =
-            key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
-                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
-                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], entry.getPath() ) );
+                key( index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                                index_keys[ConnectionRefImpl.BY_CONNECTION_TYPE], entry.getPath() ) );
 
         // entity_id,connection_type,entity_type,prop_name
         Object connection_type_and_entity_type_prop_index_key =
-            key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], 
-                INDEX_CONNECTIONS, entry.getPath(),
-                indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
-                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], entry.getPath() ) );
+                key( index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], INDEX_CONNECTIONS, entry.getPath(),
+                        indexBucketLocator.getBucket( applicationId, IndexBucketLocator.IndexType.CONNECTION,
+                                index_keys[ConnectionRefImpl.BY_CONNECTION_AND_ENTITY_TYPE], entry.getPath() ) );
 
         // composite(property_value,connected_entity_id,connection_type,entity_type,entry_timestamp)
         addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, property_index_key,
-            entry.getIndexComposite( conn.getConnectedEntityId(), conn.getConnectionType(),
-                conn.getConnectedEntityType() ), conn.getUuid(), indexUpdate.getTimestamp() );
+                entry.getIndexComposite( conn.getConnectedEntityId(), conn.getConnectionType(),
+                        conn.getConnectedEntityType() ), conn.getUuid(), indexUpdate.getTimestamp() );
 
         // composite(property_value,connected_entity_id,connection_type,entry_timestamp)
         addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, entity_type_prop_index_key,
-            entry.getIndexComposite( conn.getConnectedEntityId(), conn.getConnectionType() ),
-            conn.getUuid(), indexUpdate.getTimestamp() );
+                entry.getIndexComposite( conn.getConnectedEntityId(), conn.getConnectionType() ), conn.getUuid(),
+                indexUpdate.getTimestamp() );
 
         // composite(property_value,connected_entity_id,entity_type,entry_timestamp)
         addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_prop_index_key,
-            entry.getIndexComposite( conn.getConnectedEntityId(), conn.getConnectedEntityType() ),
-            conn.getUuid(), indexUpdate.getTimestamp() );
+                entry.getIndexComposite( conn.getConnectedEntityId(), conn.getConnectedEntityType() ), conn.getUuid(),
+                indexUpdate.getTimestamp() );
 
         // composite(property_value,connected_entity_id,entry_timestamp)
-        addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, 
-            connection_type_and_entity_type_prop_index_key,
-            entry.getIndexComposite( conn.getConnectedEntityId() ), conn.getUuid(),
-            indexUpdate.getTimestamp() );
+        addInsertToMutator( indexUpdate.getBatch(), ENTITY_INDEX, connection_type_and_entity_type_prop_index_key,
+                entry.getIndexComposite( conn.getConnectedEntityId() ), conn.getUuid(), indexUpdate.getTimestamp() );
 
         return indexUpdate.getBatch();
     }
@@ -2208,7 +2078,8 @@ public class CpRelationManager implements RelationManager {
 
 
         /* (non-Javadoc)
-     * @see org.apache.usergrid.persistence.query.ir.SearchVisitor#secondaryIndexScan(org.apache.usergrid.persistence.query.ir
+     * @see org.apache.usergrid.persistence.query.ir.SearchVisitor#secondaryIndexScan(org.apache.usergrid.persistence
+     * .query.ir
      * .QueryNode, org.apache.usergrid.persistence.query.ir.QuerySlice)
      */
         @Override
@@ -2249,10 +2120,10 @@ public class CpRelationManager implements RelationManager {
 
             queryProcessor.applyCursorAndSort( slice );
 
-            GeoIterator itr = new GeoIterator( 
-                new ConnectionGeoSearch( em, indexBucketLocator, cass, connection.getIndexId() ),
-                query.getLimit(), slice, node.getPropertyName(),
-                new Point( node.getLattitude(), node.getLongitude() ), node.getDistance() );
+            GeoIterator itr =
+                    new GeoIterator( new ConnectionGeoSearch( em, indexBucketLocator, cass, connection.getIndexId() ),
+                            query.getLimit(), slice, node.getPropertyName(),
+                            new Point( node.getLattitude(), node.getLongitude() ), node.getDistance() );
 
             results.push( itr );
         }
@@ -2299,8 +2170,7 @@ public class CpRelationManager implements RelationManager {
 
             final String connectionType = connection.getConnectionType();
 
-            final ConnectionIndexSliceParser connectionParser = 
-                    new ConnectionIndexSliceParser( targetType );
+            final ConnectionIndexSliceParser connectionParser = new ConnectionIndexSliceParser( targetType );
 
             final Iterator<String> connectionTypes;
 
@@ -2311,13 +2181,12 @@ public class CpRelationManager implements RelationManager {
 
             //we need to iterate all connection types
             else {
-                connectionTypes = new ConnectionTypesIterator( 
-                        cass, applicationId, entityIdToUse, outgoing, size );
+                connectionTypes = new ConnectionTypesIterator( cass, applicationId, entityIdToUse, outgoing, size );
             }
 
-            IndexScanner connectionScanner = new ConnectedIndexScanner( 
-                cass, dictionaryType, applicationId, entityIdToUse, connectionTypes, start, 
-                slice.isReversed(), size, skipFirst );
+            IndexScanner connectionScanner =
+                    new ConnectedIndexScanner( cass, dictionaryType, applicationId, entityIdToUse, connectionTypes,
+                            start, slice.isReversed(), size, skipFirst );
 
             this.results.push( new SliceIterator( slice, connectionScanner, connectionParser ) );
         }
@@ -2327,8 +2196,7 @@ public class CpRelationManager implements RelationManager {
         public void visit( NameIdentifierNode nameIdentifierNode ) throws Exception {
 
             //TODO T.N. USERGRID-1919 actually validate this is connected
-            EntityRef ref = em.getAlias(
-                    connection.getConnectedEntityType(),nameIdentifierNode.getName() );
+            EntityRef ref = em.getAlias( connection.getConnectedEntityType(), nameIdentifierNode.getName() );
 
             if ( ref == null ) {
                 this.results.push( new EmptyIterator() );
@@ -2339,22 +2207,17 @@ public class CpRelationManager implements RelationManager {
         }
     }
 
-    private IndexScanner searchIndex( 
-            Object indexKey, QuerySlice slice, int pageSize ) throws Exception {
+
+    private IndexScanner searchIndex( Object indexKey, QuerySlice slice, int pageSize ) throws Exception {
 
         DynamicComposite[] range = slice.getRange();
 
         Object keyPrefix = key( indexKey, slice.getPropertyName() );
 
-        IndexScanner scanner = new IndexBucketScanner( 
-            cass, indexBucketLocator, ENTITY_INDEX, applicationId, 
-            IndexBucketLocator.IndexType.CONNECTION, keyPrefix, range[0], range[1], 
-            slice.isReversed(), pageSize, slice.hasCursor(), slice.getPropertyName() );
+        IndexScanner scanner = new IndexBucketScanner( cass, indexBucketLocator, ENTITY_INDEX, applicationId,
+                IndexBucketLocator.IndexType.CONNECTION, keyPrefix, range[0], range[1], slice.isReversed(), pageSize,
+                slice.hasCursor(), slice.getPropertyName() );
 
         return scanner;
     }
-
-
-
-
 }
