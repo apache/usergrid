@@ -41,14 +41,17 @@ cp /usr/share/aws-java-sdk-*/third-party/*/*.jar /home/ubuntu/.groovy/lib
 cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib 
 ln -s /home/ubuntu/.groovy /root/.groovy
 
+# Build environment for Groovy scripts
+. /etc/profile.d/aws-credentials.sh
+. /etc/profile.d/usergrid-env.sh
+
+
 # tag last so we can see in the console so that we know what's running
 cd /usr/share/usergrid/scripts
 groovy tag_instance.groovy -BUILD-IN-PROGRESS
 
 
-# Build environment for Groovy scripts
-. /etc/profile.d/aws-credentials.sh
-. /etc/profile.d/usergrid-env.sh
+
 chmod +x /usr/share/usergrid/update.sh
 
 cd /usr/share/usergrid/init_instance
