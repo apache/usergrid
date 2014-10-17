@@ -58,6 +58,9 @@ groovy tag_instance.groovy BUILD-IN-PROGRESS
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh
 
+#Install graphite
+sudo docker run -d --name graphite -p 80:80 -p 2003:2003 -p 8125:8125/udp hopsoft/graphite-statsd
+
 cd /usr/share/usergrid/scripts
 groovy registry_register.groovy graphite
 
