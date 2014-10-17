@@ -88,7 +88,9 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     private final IndexFig config;
 
-    private static final int MAX_WAITS = 10;
+    //number of times to wait for the index to refresh propertly. Is an N+1, so 9 = 10
+    private static final int MAX_WAITS = 9;
+    //number of milliseconds to try again before sleeping
     private static final int WAIT_TIME = 250;
 
 
@@ -280,6 +282,7 @@ public class EsEntityIndexImpl implements EntityIndex {
         for ( int i = 0; i < MAX_WAITS; i++ ) {
             try {
                 client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
+                log.debug( "Refreshed index: " + indexName );
                 return;
             }
             catch ( IndexMissingException e ) {
