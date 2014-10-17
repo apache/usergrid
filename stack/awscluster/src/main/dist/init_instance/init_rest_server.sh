@@ -147,6 +147,13 @@ groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
 
 sudo sed -i '98i export CATALINA_OPTS=\"-DAWS_SECRET_KEY=${AWS_SECRET_KEY} -DAWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY} ${CATALINA_OPTS}\"' /usr/share/tomcat7/bin/catalina.sh
 
+
+#Install postfix so that we can send mail
+echo "postfix postfix/mailname string your.hostname.com" | debconf-set-selections
+echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections
+apt-get install -y postfix
+
+
 # Go
 sh /etc/init.d/tomcat7 start
 
