@@ -163,6 +163,7 @@ public class EsProvider {
                     .put("client.transport.ping_timeout", 2000) // milliseconds
                     .put("client.transport.nodes_sampler_interval", 100)
                     .put("network.tcp.blocking", true)
+                    .put("node.client", true)
                     .put("node.name",  nodeName )
 
                     .build();
