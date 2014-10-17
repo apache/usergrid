@@ -16,6 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
+import com.google.common.base.Preconditions;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.yammer.metrics.annotation.Metered;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -191,6 +192,9 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void init( EntityManagerFactory emf, UUID applicationId ) {
 
+        Preconditions.checkNotNull(emf, "emf must not be null");
+        Preconditions.checkNotNull( applicationId, "applicationId must not be null"  );
+
         this.emf = ( CpEntityManagerFactory ) emf;
         this.managerCache = this.emf.getManagerCache();
         this.applicationId = applicationId;
@@ -202,9 +206,6 @@ public class CpEntityManager implements EntityManager {
 
         // set to false for now
         this.skipAggregateCounters = false;
-
-
-        applicationScope = this.emf.getApplicationScope( applicationId );
     }
 
 
@@ -643,11 +644,11 @@ public class CpEntityManager implements EntityManager {
         return getRelationManager( entityRef ).searchCollection( collectionName, query );
     }
 
-
-    @Override
-    public void setApplicationId( UUID applicationId ) {
-        this.applicationId = applicationId;
-    }
+//
+//    @Override
+//    public void setApplicationId( UUID applicationId ) {
+//        this.applicationId = applicationId;
+//    }
 
 
     @Override
@@ -2884,7 +2885,8 @@ public class CpEntityManager implements EntityManager {
                 }
                 catch(WriteOptimisticVerifyException wo ){
                     //swallow this, it just means this was already updated, which accomplishes our task.  Just ignore.
-                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.", entity.getName(), collName );
+                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.", entity.getName(),
+                            collName );
                 }
                 catch (Exception ex) {
                     logger.error("Error repersisting entity", ex);

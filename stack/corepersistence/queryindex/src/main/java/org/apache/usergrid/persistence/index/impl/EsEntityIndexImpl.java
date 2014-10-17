@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
-import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -36,7 +35,9 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
@@ -58,7 +59,9 @@ import org.apache.usergrid.persistence.index.query.CandidateResults;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
@@ -88,10 +91,17 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     private final IndexFig config;
 
-    //number of times to wait for the index to refresh propertly. Is an N+1, so 9 = 10
-    private static final int MAX_WAITS = 9;
+    //number of times to wait for the index to refresh properly.
+    private static final int MAX_WAITS = 10;
     //number of milliseconds to try again before sleeping
     private static final int WAIT_TIME = 250;
+
+    private static final String VERIFY_TYPE = "verification";
+
+    private static final ImmutableMap<String, Object> DEFAULT_PAYLOAD =
+            ImmutableMap.<String, Object>of( "field", "test" );
+
+    private static final MatchAllQueryBuilder MATCH_ALL_QUERY_BUILDER = QueryBuilders.matchAllQuery();
 
 
     @Inject
@@ -120,21 +130,16 @@ public class EsEntityIndexImpl implements EntityIndex {
             CreateIndexResponse cir = admin.indices().prepareCreate( indexName ).execute().actionGet();
             log.info( "Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged() );
 
-            RefreshResponse response;
 
-            do {
-                response = admin.indices().prepareRefresh( indexName ).execute().actionGet();
-            }
-            while ( response.getFailedShards() != 0 );
-
+            //create the document, this ensures the index is ready
             /**
-             * Immediately refresh to ensure the entire cluster is ready to receive this write.  Occasionally we see
+             * Immediately create a document and remove it to ensure the entire cluster is ready to receive documents
+             * .  Occasionally we see
              * errors.  See this post.
-             * http://elasticsearch-users.115913.n3.nabble
-             * .com/IndexMissingException-on-create-index-followed-by-refresh-td1832793.html
+             * http://elasticsearch-users.115913.n3.nabble.com/IndexMissingException-on-create-index-followed-by-refresh-td1832793.html
              *
              */
-            refresh();
+            testNewIndex();
         }
         catch ( IndexAlreadyExistsException expected ) {
             // this is expected to happen if index already exists, it's a no-op and swallow
@@ -142,6 +147,44 @@ public class EsEntityIndexImpl implements EntityIndex {
         catch ( IOException e ) {
             throw new RuntimeException( "Unable to initialize index", e );
         }
+    }
+
+
+    /**
+     * Tests writing a document to a new index to ensure it's working correctly.  Comes from email
+     *
+     * http://elasticsearch-users.115913.n3.nabble
+     * .com/IndexMissingException-on-create-index-followed-by-refresh-td1832793.html
+     */
+
+    private void testNewIndex() {
+
+
+        log.info( "Refreshing Created new Index Name [{}]", indexName );
+
+        final RetryOperation retryOperation = new RetryOperation() {
+            @Override
+            public boolean doOp() {
+                final String tempId = UUIDGenerator.newTimeUUID().toString();
+
+
+                client.prepareIndex( indexName, VERIFY_TYPE, tempId ).setSource( DEFAULT_PAYLOAD ).get();
+
+                log.info( "Successfully created new document with docId {} in index {} and type {}", tempId, indexName,
+                        VERIFY_TYPE );
+
+                //delete all types, this way if we miss one it will get cleaned up
+
+                client.prepareDeleteByQuery( indexName ).setTypes( VERIFY_TYPE ).setQuery( MATCH_ALL_QUERY_BUILDER )
+                      .get();
+
+                log.info( "Successfully deleted all documents in index {} and type {}", indexName, VERIFY_TYPE );
+
+                return true;
+            }
+        };
+
+        doInRetry( retryOperation );
     }
 
 
@@ -277,30 +320,22 @@ public class EsEntityIndexImpl implements EntityIndex {
 
         log.info( "Refreshing Created new Index Name [{}]", indexName );
 
-        //now try to refresh, to ensure that it's recognized by everyone.  Occasionally we can get a success
-        //before we can write.
-        for ( int i = 0; i < MAX_WAITS; i++ ) {
-            try {
-                client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
-                log.debug( "Refreshed index: " + indexName );
-                return;
+        final RetryOperation retryOperation = new RetryOperation() {
+            @Override
+            public boolean doOp() {
+                try {
+                    client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
+                    log.debug( "Refreshed index: " + indexName );
+                    return true;
+                }
+                catch ( IndexMissingException e ) {
+                    log.error( "Unable to refresh index after create. Waiting before sleeping.", e );
+                    throw e;
+                }
             }
-            catch ( IndexMissingException e ) {
-                log.error( "Unable to refresh index after create. Waiting before sleeping.", e );
-            }
+        };
 
-            try {
-                Thread.sleep( WAIT_TIME );
-            }
-            catch ( InterruptedException e ) {
-                //swallow it
-            }
-        }
-
-        /**
-         * Try the refresh one last time if we get here
-         */
-        client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
+        doInRetry( retryOperation );
 
         log.debug( "Refreshed index: " + indexName );
     }
@@ -327,5 +362,44 @@ public class EsEntityIndexImpl implements EntityIndex {
         else {
             log.info( "Failed to delete index " + indexName );
         }
+    }
+
+
+    /**
+     * Do the retry operation
+     * @param operation
+     */
+    private void doInRetry( final RetryOperation operation ) {
+        for ( int i = 0; i < MAX_WAITS; i++ ) {
+
+            try {
+                if(operation.doOp()){
+                    return;
+                }
+            }
+            catch ( Exception e ) {
+                log.error( "Unable to execute operation, retrying", e );
+            }
+
+
+            try {
+                Thread.sleep( WAIT_TIME );
+            }
+            catch ( InterruptedException e ) {
+                //swallow it
+            }
+        }
+    }
+
+
+    /**
+     * Interface for operations
+     */
+    private static interface RetryOperation {
+
+        /**
+         * Return true if done, false if there should be a retry
+         */
+        public boolean doOp();
     }
 }
