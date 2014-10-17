@@ -15,12 +15,15 @@
  */
 package org.apache.usergrid.corepersistence;
 
+
 import java.util.Stack;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -30,10 +33,12 @@ import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import rx.Observable;
 import rx.functions.Action1;
+import rx.functions.Func1;
+
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 
 
 /**
@@ -43,113 +48,85 @@ public class CpWalker {
 
     private static final Logger logger = LoggerFactory.getLogger( CpWalker.class );
 
-    private long writeDelayMs = 100;
+    private final long writeDelayMs;
 
 
-    public void walkCollections( final CpEntityManager em, final EntityRef start, 
-            final CpVisitor visitor ) throws Exception {
-
-        Stack stack = new Stack();
-        Id appId = new SimpleId( em.getApplicationId(), TYPE_APPLICATION );
-        stack.push( appId );
-
-        doWalkCollections(em, new SimpleId(start.getUuid(), start.getType()), visitor, new Stack());
+    /**
+     * Wait the set amount of time between successive writes.
+     * @param writeDelayMs
+     */
+    public CpWalker(final long writeDelayMs){
+         this.writeDelayMs = writeDelayMs;
     }
 
 
-    private void doWalkCollections( final CpEntityManager em, final Id start, 
-            final CpVisitor visitor, final Stack stack ) {
+    public void walkCollections( final CpEntityManager em, final EntityRef start, final CpVisitor visitor )
+            throws Exception {
 
-        final Id fromEntityId = new SimpleId( start.getUuid(), start.getType() );
+        doWalkCollections( em, new SimpleId( start.getUuid(), start.getType() ), visitor );
+    }
+
+
+    private void doWalkCollections( final CpEntityManager em, final Id applicationId, final CpVisitor visitor ) {
 
         final ApplicationScope applicationScope = em.getApplicationScope();
 
-        final GraphManager gm = em.getManagerCache().getGraphManager(applicationScope);
+        final GraphManager gm = em.getManagerCache().getGraphManager( applicationScope );
 
-        logger.debug("Loading edges types from {}:{}\n   scope {}:{}",
-            new Object[] { start.getType(), start.getUuid(),
-                applicationScope.getApplication().getType(),
-                applicationScope.getApplication().getUuid()
-            });
+        logger.debug( "Loading edges types from {}:{}\n   scope {}:{}", new Object[] {
+                applicationId.getType(), applicationId.getUuid(), applicationScope.getApplication().getType(),
+                        applicationScope.getApplication().getUuid()
+                } );
 
-        Observable<String> edgeTypes = gm.getEdgeTypesFromSource( 
-                new SimpleSearchEdgeType( fromEntityId, null , null ));
+        //only search edge types that start with collections
 
-        edgeTypes.forEach( new Action1<String>() {
+        Observable<String> edgeTypes = gm.getEdgeTypesFromSource(
+                       new SimpleSearchEdgeType( applicationId, CpNamingUtils.EDGE_COLL_SUFFIX, null ) );
+
+        edgeTypes.flatMap( new Func1<String, Observable<Edge>>() {
+            @Override
+            public Observable<Edge> call( final String edgeType ) {
+
+                logger.debug( "Loading edges of edgeType {} from {}:{}\n   scope {}:{}", new Object[] {
+                        edgeType, applicationId.getType(), applicationId.getUuid(), applicationScope.getApplication().getType(),
+                        applicationScope.getApplication().getUuid()
+                } );
+
+                return gm.loadEdgesFromSource( new SimpleSearchByEdgeType( applicationId, edgeType, Long.MAX_VALUE,
+                                SearchByEdgeType.Order.DESCENDING, null ) );
+            }
+        } ).doOnNext( new Action1<Edge>() {
 
             @Override
-            public void call( final String edgeType ) {
+            public void call( Edge edge ) {
+
+                logger.info( "Re-indexing edge {}", edge );
+
+                EntityRef targetNodeEntityRef =
+                        new SimpleEntityRef( edge.getTargetNode().getType(), edge.getTargetNode().getUuid() );
+
+                Entity entity;
+                try {
+                    entity = em.get( targetNodeEntityRef );
+                }
+                catch ( Exception ex ) {
+                    logger.error( "Error getting sourceEntity {}:{}, continuing", targetNodeEntityRef.getType(),
+                            targetNodeEntityRef.getUuid() );
+                    return;
+                }
+
+
+                String collName = CpNamingUtils.getCollectionName( edge.getType() );
+
+                visitor.visitCollectionEntry( em, collName, entity );
 
                 try {
                     Thread.sleep( writeDelayMs );
-                } catch ( InterruptedException ignored ) {}
-
-                logger.debug("Loading edges of edgeType {} from {}:{}\n   scope {}:{}",
-                    new Object[] { edgeType, start.getType(), start.getUuid(),
-                        applicationScope.getApplication().getType(),
-                        applicationScope.getApplication().getUuid()
-                });
-
-                Observable<Edge> edges = gm.loadEdgesFromSource( new SimpleSearchByEdgeType( 
-                        fromEntityId, edgeType, Long.MAX_VALUE, 
-                        SearchByEdgeType.Order.DESCENDING, null ));
-
-                edges.forEach( new Action1<Edge>() {
-
-                    @Override
-                    public void call( Edge edge ) {
-
-                        EntityRef sourceEntityRef = new SimpleEntityRef( 
-                            edge.getSourceNode().getType(), edge.getSourceNode().getUuid());
-                        Entity sourceEntity;
-                        try {
-                            sourceEntity = em.get( sourceEntityRef );
-                            sourceEntity.getUuid();
-
-                        } catch (Exception ex) {
-                            logger.error( "Error getting sourceEntity {}:{}, skipping this edge", 
-                                    sourceEntityRef.getType(), sourceEntityRef.getUuid());
-                            logger.error( "Exception", ex);
-                            return;
-                        }
-
-                        EntityRef targetEntityRef = new SimpleEntityRef( 
-                            edge.getTargetNode().getType(), edge.getTargetNode().getUuid());
-                        Entity targetEntity;
-                        try {
-                            targetEntity = em.get( targetEntityRef );
-                            targetEntity.getUuid();
-
-                        } catch (Exception ex) {
-                            logger.error( "Error getting targetEntity {}:{}, skipping this edge", 
-                                targetEntityRef.getType(), targetEntityRef.getUuid());
-                            logger.error( "Exception", ex);
-                            return;
-                        }
-                            
-                        if ( CpNamingUtils.isCollectionEdgeType( edge.getType() )) {
-
-                            String collName = CpNamingUtils.getCollectionName( edgeType );
-
-                            visitor.visitCollectionEntry( 
-                                    em, collName, sourceEntity, targetEntity );
-
-                        } else {
-
-                            String collName = CpNamingUtils.getConnectionType(edgeType);
-
-                            visitor.visitConnectionEntry( 
-                                    em, collName, sourceEntity, targetEntity );
-
-                        }
-                    }
-
-                }); // end foreach on edges
-
+                }
+                catch ( InterruptedException e ) {
+                    throw new RuntimeException( "Unable to wait" );
+                }
             }
-
-        }); // end foreach on edgeTypes
-
+        } ).toBlocking().lastOrDefault( null ); // end foreach on edges
     }
-    
 }

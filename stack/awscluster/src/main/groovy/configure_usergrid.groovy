@@ -43,6 +43,9 @@ def testAdminUserEmail = System.getenv().get("TEST_ADMIN_USER_EMAIL")
 def cassThreads = System.getenv().get("TOMCAT_THREADS")
 def hystrixThreads = Integer.parseInt(cassThreads) / 100
 
+//if we end in -1, we remove it
+def ec2Region = System.getenv().get("EC2_REGION").replace("-1", "")
+
 
 NodeRegistry registry = new NodeRegistry();
 
@@ -66,7 +69,7 @@ for (item in selectResult) {
 }
 
 // cassandra nodes are also our elasticsearch nodes
-selectResult = registry.searchNode('cassandra')
+selectResult = registry.searchNode('elasticsearch')
 def esnodes = ""
 sep = ""
 for (item in selectResult) {
@@ -80,8 +83,8 @@ def usergridConfig = """
 
 cassandra.url=${cassandras}
 cassandra.cluster=${clusterName}
-cassandra.keyspace.strategy=org.apache.cassandra.locator.SimpleStrategy
-cassandra.keyspace.replication=${replFactor}
+cassandra.keyspace.strategy=org.apache.cassandra.locator.NetworkTopologyStrategy
+cassandra.keyspace.replication=${ec2Region}:${replFactor}
 
 cassandra.timeout=5000
 cassandra.connections=${cassThreads}

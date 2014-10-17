@@ -18,6 +18,9 @@
 #  directory of this distribution.
 #
 
+
+
+
 echo "${HOSTNAME}" > /etc/hostname
 echo "127.0.0.1 ${HOSTNAME}" >> /etc/hosts
 hostname `cat /etc/hostname`
@@ -49,6 +52,10 @@ cp /usr/share/aws-java-sdk-*/lib/* /home/ubuntu/.groovy/lib
 rm /home/ubuntu/.groovy/lib/stax*
 ln -s /home/ubuntu/.groovy /root/.groovy
 
+# tag last so we can see in the console so that we know what's running
+cd /usr/share/usergrid/scripts
+groovy tag_instance.groovy BUILD-IN-PROGRESS
+
 cd /usr/share/usergrid/init_instance
 ./install_oraclejdk.sh 
 
@@ -58,10 +65,6 @@ cd /usr/share/usergrid/init_instance
 
 cd /usr/share/usergrid/init_instance
 ./install_opscenter_agent.sh
-
-# Install and start ElasticSearch
-cd /usr/share/usergrid/init_instance
-./install_elasticsearch.sh
 
 # Use the CQL to crate the keyspaces
 cd /usr/share/usergrid/init_instance

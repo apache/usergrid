@@ -66,7 +66,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private static final MetricRegistry registry = new MetricRegistry();
     private Slf4jReporter reporter;
 
-    private static final long RuntimeMs = 10000;  
+    private static final long RUNTIME = TimeUnit.SECONDS.toMillis( 5 );
 
     private static final long writeDelayMs = 10;
 
@@ -191,22 +191,29 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             int counter = 0;
 
             @Override
-            public void onProgress( EntityRef s, EntityRef t, String etype ) {
+               public void onProgress( final EntityRef entity ) {
+
                 meter.mark();
-
-//                logger.debug("Indexing from {}:{} to {}:{} edgeType {}", new Object[] {
-//                    s.getType(), s.getUuid(), t.getType(), t.getUuid(), etype });
-
-                if ( !logger.isDebugEnabled() && counter % 10 == 0 ) {
+                logger.debug("Indexing {}:{}", entity.getType(), entity.getUuid());
+                if ( !logger.isDebugEnabled() && counter % 100 == 0 ) {
                     logger.info("Reindexed {} entities", counter );
                 }
                 counter++;
             }
+
+
+
+            @Override
+            public long getWriteDelayTime() {
+                return 0;
+            }
         };
 
         try {
+//            setup.getEmf().refreshIndex();
             setup.getEmf().rebuildAllIndexes( po );
 
+            reporter.report();
             registry.remove( meterName );
             logger.info("Rebuilt index");
 
@@ -230,20 +237,17 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         Id appId = new SimpleId( appUuid, "application");
         ApplicationScope scope = new ApplicationScopeImpl( appId );
-        IndexScope is = new IndexScopeImpl( appId, "application");
         EntityIndex ei = eif.createEntityIndex(scope);
         EsEntityIndexImpl eeii = (EsEntityIndexImpl)ei;
 
         eeii.deleteIndex();
     }
 
-    private int readData( String collectionName ) throws Exception {
-        return readData( collectionName, -1 );
-    }
 
     private int readData( String collectionName, int expected ) throws Exception {
 
         EntityManager em = app.getEntityManager();
+        em.refreshIndex();
 
         Query q = Query.fromQL("select * where key1=1000");
         q.setLimit(40);

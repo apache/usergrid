@@ -19,9 +19,9 @@
 
 
 // 
-// configure_cassandra.groovy 
+// configure_elasticsearch.groovy 
 // 
-// Emits Cassandra config file based on environment and Cassandra node 
+// Emits Elasticsearch config file based on environment and Elasticsearch node 
 // registry in SimpleDB
 //
 
@@ -30,13 +30,12 @@ import com.amazonaws.services.simpledb.*
 import com.amazonaws.services.simpledb.model.*
 
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
-def clusterName  = (String)System.getenv().get("CASSANDRA_CLUSTER_NAME")
+def clusterName  = (String)System.getenv().get("ES_CLUSTER_NAME")
 
 NodeRegistry registry = new NodeRegistry();
 
-// build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
-// works because cassandra nodes are also elasticsearch nodes
-def selectResult = registry.searchNode('cassandra')
+// build seed list by listing all Elasticsearch nodes found in SimpleDB domain with our stackName
+def selectResult = registry.searchNode('elasticsearch')
 def esnodes = ""
 def sep = ""
 for (hostname in selectResult) {
@@ -46,6 +45,7 @@ for (hostname in selectResult) {
 
 def elasticSearchConfig = """
 cluster.name: ${clusterName}
+discovery.zen.minimum_master_nodes: 4
 discovery.zen.ping.multicast.enabled: false
 discovery.zen.ping.unicast.hosts: [${esnodes}]
 node:
@@ -55,6 +55,17 @@ network:
 path:
     logs: /mnt/log/elasticsearch
     data: /mnt/data/elasticsearch
+bootstrap.mlockall: true
+threadpool.index.type: fixed
+threadpool.index.size: 160
+threadpool.index.queue_size: 401
+threadpool.bulk.type: fixed
+threadpool.bulk.size: 160
+threadpool.bulk.queue_size: 800
+
+action.auto_create_index: false
+
+action.disable_delete_all_indices: true
 """
 
 println elasticSearchConfig

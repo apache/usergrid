@@ -32,6 +32,14 @@ String secretKey  = (String)System.getenv().get("AWS_SECRET_KEY")
 String instanceId = (String)System.getenv().get("EC2_INSTANCE_ID")
 String stackName  = (String)System.getenv().get("STACK_NAME")
 
+
+String moreMetaData = ""
+
+if (args.size() == 1 )  {
+    moreMetaData = args[0]
+}
+
+
 def creds = new BasicAWSCredentials(accessKey, secretKey)
 def ec2Client = new AmazonEC2Client(creds)
 
@@ -39,7 +47,7 @@ def resources = new ArrayList()
 resources.add(instanceId)
 
 def tags = new ArrayList()
-def tag = "${stackName}-${type}-${instanceId}"
+def tag = "${stackName}-${type}-${instanceId}${moreMetaData}"
 tags.add(new Tag("Name", tag))
 
 ec2Client.createTags(new CreateTagsRequest(resources, tags))
