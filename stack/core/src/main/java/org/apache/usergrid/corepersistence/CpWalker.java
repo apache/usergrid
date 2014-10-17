@@ -80,6 +80,7 @@ public class CpWalker {
                         applicationScope.getApplication().getUuid()
                 } );
 
+        //only search edge types that start with collections
         Observable<String> edgeTypes = gm.getEdgeTypesFromSource(
                 new SimpleSearchEdgeType( fromEntityId, CpNamingUtils.EDGE_COLL_SUFFIX, null ) );
 
@@ -100,16 +101,16 @@ public class CpWalker {
             @Override
             public void call( Edge edge ) {
 
-                EntityRef sourceEntityRef =
-                        new SimpleEntityRef( edge.getSourceNode().getType(), edge.getSourceNode().getUuid() );
+                EntityRef targetNodeEntityRef =
+                        new SimpleEntityRef( edge.getTargetNode().getType(), edge.getTargetNode().getUuid() );
 
                 Entity entity;
                 try {
-                    entity = em.get( sourceEntityRef );
+                    entity = em.get( targetNodeEntityRef );
                 }
                 catch ( Exception ex ) {
-                    logger.error( "Error getting sourceEntity {}:{}, continuing", sourceEntityRef.getType(),
-                            sourceEntityRef.getUuid() );
+                    logger.error( "Error getting sourceEntity {}:{}, continuing", targetNodeEntityRef.getType(),
+                            targetNodeEntityRef.getUuid() );
                     return;
                 }
 

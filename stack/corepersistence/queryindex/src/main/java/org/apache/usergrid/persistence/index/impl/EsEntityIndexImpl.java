@@ -116,7 +116,7 @@ public class EsEntityIndexImpl implements EntityIndex {
 
             AdminClient admin = client.admin();
             CreateIndexResponse cir = admin.indices().prepareCreate( indexName ).execute().actionGet();
-            log.debug( "Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged() );
+            log.info( "Created new Index Name [{}] ACK=[{}]", indexName, cir.isAcknowledged() );
 
             RefreshResponse response;
 
@@ -128,11 +128,11 @@ public class EsEntityIndexImpl implements EntityIndex {
             /**
              * Immediately refresh to ensure the entire cluster is ready to receive this write.  Occasionally we see
              * errors.  See this post.
-             * http://elasticsearch-users.115913.n3.nabble.com/IndexMissingException-on-create-index-followed-by-refresh-td1832793.html
+             * http://elasticsearch-users.115913.n3.nabble
+             * .com/IndexMissingException-on-create-index-followed-by-refresh-td1832793.html
              *
              */
             refresh();
-
         }
         catch ( IndexAlreadyExistsException expected ) {
             // this is expected to happen if index already exists, it's a no-op and swallow
@@ -272,24 +272,32 @@ public class EsEntityIndexImpl implements EntityIndex {
 
     public void refresh() {
 
-            //now try to refresh, to ensure that it's recognized by everyone.  Occasionally we can get a success
-            //before we can write.
-            for(int i = 0 ; i < MAX_WAITS; i++ ){
-                try{
-                    client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
-                    break;
 
-                }catch(IndexMissingException e){
-                   log.error( "Unable to refresh index after create. Waiting before sleeping.", e );
-                }
+        log.info( "Refreshing Created new Index Name [{}]", indexName );
 
-                try {
-                    Thread.sleep( WAIT_TIME );
-                }
-                catch ( InterruptedException e ) {
-                    //swallow it
-                }
+        //now try to refresh, to ensure that it's recognized by everyone.  Occasionally we can get a success
+        //before we can write.
+        for ( int i = 0; i < MAX_WAITS; i++ ) {
+            try {
+                client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
+                return;
             }
+            catch ( IndexMissingException e ) {
+                log.error( "Unable to refresh index after create. Waiting before sleeping.", e );
+            }
+
+            try {
+                Thread.sleep( WAIT_TIME );
+            }
+            catch ( InterruptedException e ) {
+                //swallow it
+            }
+        }
+
+        /**
+         * Try the refresh one last time if we get here
+         */
+        client.admin().indices().prepareRefresh( indexName ).execute().actionGet();
 
         log.debug( "Refreshed index: " + indexName );
     }

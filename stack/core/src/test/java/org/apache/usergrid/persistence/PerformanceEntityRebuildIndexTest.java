@@ -213,6 +213,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 //            setup.getEmf().refreshIndex();
             setup.getEmf().rebuildAllIndexes( po );
 
+            reporter.report();
             registry.remove( meterName );
             logger.info("Rebuilt index");
 
@@ -236,7 +237,6 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
 
         Id appId = new SimpleId( appUuid, "application");
         ApplicationScope scope = new ApplicationScopeImpl( appId );
-        IndexScope is = new IndexScopeImpl( appId, "application");
         EntityIndex ei = eif.createEntityIndex(scope);
         EsEntityIndexImpl eeii = (EsEntityIndexImpl)ei;
 
@@ -247,6 +247,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private int readData( String collectionName, int expected ) throws Exception {
 
         EntityManager em = app.getEntityManager();
+        em.refreshIndex();
 
         Query q = Query.fromQL("select * where key1=1000");
         q.setLimit(40);

@@ -147,6 +147,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 sysAppProps.put( PROPERTY_NAME, "systemapp");
                 em.create( SYSTEM_APP_ID, TYPE_APPLICATION, sysAppProps );
                 em.getApplication();
+                em.createIndex();
                 em.refreshIndex();
             }
 
@@ -200,7 +201,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private EntityManager _getEntityManager( UUID applicationId ) {
         EntityManager em = new CpEntityManager();
         em.init( this, applicationId );
-        //TODO T.N. Can we remove this?  Seems like we should fix our lifecycle instead...
+        //TODO PERFORMANCE  Can we remove this?  Seems like we should fix our lifecycle instead...
+        //if this is the first time we've loaded this entity manager in the JVM, create it's indexes, it may be new
+        //not sure how to handle other than this if the system dies after the application em has been created
+        //but before the create call can create the index
         em.createIndex();
         return em;
     }
@@ -286,7 +290,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         EntityManager appEm = getEntityManager( applicationId );
 
         //create our ES index since we're initializing this application
-//  TODO T.N, pushed this down into the cache load      appEm.createIndex();
+//  TODO PERFORMANCE  pushed this down into the cache load can we do this here?
+//        appEm.createIndex();
 
         appEm.create( applicationId, TYPE_APPLICATION, properties );
         appEm.resetRoles();
@@ -681,10 +686,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public void rebuildApplicationIndexes( UUID appId, ProgressObserver po ) throws Exception {
 
         EntityManager em = getEntityManager( appId );
+
+        //explicitly invoke create index, we don't know if it exists or not in ES during a rebuild.
+        em.createIndex();
         Application app = em.getApplication();
 
         em.reindex( po );
-//        em.refreshIndex();
 
         logger.info("\n\nRebuilt index for application {} id {}\n", app.getName(), appId );
     }

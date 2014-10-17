@@ -514,7 +514,7 @@ public class CpEntityManager implements EntityManager {
 
         // update in all containing collections and connection indexes
         CpRelationManager rm = (CpRelationManager)getRelationManager( entity );
-        rm.updateContainingCollectionAndCollectionIndexes( entity, cpEntity );
+        rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
     }
 
 
@@ -995,7 +995,7 @@ public class CpEntityManager implements EntityManager {
 //        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
-                ecm.load( entityId ).toBlockingObservable().last();
+                ecm.load( entityId ).toBlocking().last();
 
         cpEntity.removeField( propertyName );
 
@@ -1012,7 +1012,7 @@ public class CpEntityManager implements EntityManager {
 
         // update in all containing collections and connection indexes
         CpRelationManager rm = (CpRelationManager)getRelationManager( entityRef );
-        rm.updateContainingCollectionAndCollectionIndexes( get( entityRef ), cpEntity );
+        rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
     }
 
 
