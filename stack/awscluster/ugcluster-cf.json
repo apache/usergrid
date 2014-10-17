@@ -285,6 +285,7 @@
                       "\n",
                       "export REST_SECURITY_GROUP_NAME=", { "Ref":"RestSecurityGroup" }, "\n",
                       "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                      "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
                       "EOF\n",
                       "\n",
                       "# put AWS creds in environment\n",
