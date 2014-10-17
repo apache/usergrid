@@ -81,7 +81,7 @@ public class CpWalker {
         //only search edge types that start with collections
 
         Observable<String> edgeTypes = gm.getEdgeTypesFromSource(
-                       new SimpleSearchEdgeType( applicationId, CpNamingUtils.EDGE_COLL_SUFFIX+"users", null ) );
+                       new SimpleSearchEdgeType( applicationId, CpNamingUtils.EDGE_COLL_SUFFIX, null ) );
 
         edgeTypes.flatMap( new Func1<String, Observable<Edge>>() {
             @Override
