@@ -92,6 +92,19 @@ groovy ./configure_elasticsearch.groovy > /etc/elasticsearch/elasticsearch.yml
 
 update-rc.d elasticsearch defaults 95 10
 
+pushd /usr/share/elasticsearch/bin
+
+#Install kopf
+
+./plugin --install lmenezes/elasticsearch-kopf/1.2
+
+#Install bigdesk
+
+./plugin --install lukas-vlcek/bigdesk
+
+popd
+
+
 # Go!
 /etc/init.d/elasticsearch start
 

@@ -285,6 +285,7 @@
                       "\n",
                       "export REST_SECURITY_GROUP_NAME=", { "Ref":"RestSecurityGroup" }, "\n",
                       "export GRAPHITE_NUM_SERVERS=", { "Ref":"GraphiteNumServers" }, "\n",
+                      "export RELEASE_BUCKET=", { "Ref":"ReleaseBucket" }, "\n",
                       "EOF\n",
                       "\n",
                       "# put AWS creds in environment\n",
@@ -1194,6 +1195,13 @@
                         "IpProtocol": "tcp",
                         "FromPort": "22",
                         "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "9200",
+                        "ToPort": "9200",
                         "CidrIp": "0.0.0.0/0"
                     }
                 ]
