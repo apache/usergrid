@@ -128,7 +128,7 @@ public class SystemResource extends AbstractContextResource {
 
             @Override
             public void onProgress( final EntityRef entity ) {
-                logger.info( "Indexing from {}:{} ", entity.getType(), entity.getUuid() );
+                logger.info( "Indexing entity {}:{} ", entity.getType(), entity.getUuid() );
             }
 
 
@@ -146,9 +146,6 @@ public class SystemResource extends AbstractContextResource {
                 logger.info( "Rebuilding all indexes" );
 
                 try {
-                    emf.rebuildInternalIndexes( po );
-                    emf.refreshIndex();
-
                     emf.rebuildAllIndexes( po );
                 }
                 catch ( Exception e ) {
@@ -252,7 +249,7 @@ public class SystemResource extends AbstractContextResource {
 
             @Override
             public void onProgress( final EntityRef entity ) {
-                logger.info( "Indexing from {}:{} to {}:{} edgeType {}", entity.getType(), entity.getUuid());
+                logger.info( "Indexing entity {}:{}", entity.getType(), entity.getUuid());
             }
 
 

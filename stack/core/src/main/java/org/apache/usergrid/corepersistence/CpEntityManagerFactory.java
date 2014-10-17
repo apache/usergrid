@@ -95,9 +95,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public static final UUID SYSTEM_APP_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-10ddb1de66c3");
 
+    /**
+     * App where we store management info
+     */
     public static final  UUID MANAGEMENT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c8");
 
+    /**
+     * TODO Dave what is this?
+     */
     public static final  UUID DEFAULT_APPLICATION_ID =
             UUID.fromString("b6768a08-b5d5-11e3-a495-11ddb1de66c9");
 
@@ -679,6 +685,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void rebuildInternalIndexes( ProgressObserver po ) throws Exception {
         rebuildApplicationIndexes(SYSTEM_APP_ID, po);
+        rebuildApplicationIndexes( MANAGEMENT_APPLICATION_ID, po );
+        rebuildApplicationIndexes( DEFAULT_APPLICATION_ID, po );
     }
 
 

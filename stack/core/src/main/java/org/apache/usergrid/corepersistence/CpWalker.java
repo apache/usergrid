@@ -67,39 +67,40 @@ public class CpWalker {
     }
 
 
-    private void doWalkCollections( final CpEntityManager em, final Id start, final CpVisitor visitor ) {
-
-        final Id fromEntityId = new SimpleId( start.getUuid(), start.getType() );
+    private void doWalkCollections( final CpEntityManager em, final Id applicationId, final CpVisitor visitor ) {
 
         final ApplicationScope applicationScope = em.getApplicationScope();
 
         final GraphManager gm = em.getManagerCache().getGraphManager( applicationScope );
 
         logger.debug( "Loading edges types from {}:{}\n   scope {}:{}", new Object[] {
-                        start.getType(), start.getUuid(), applicationScope.getApplication().getType(),
+                applicationId.getType(), applicationId.getUuid(), applicationScope.getApplication().getType(),
                         applicationScope.getApplication().getUuid()
                 } );
 
         //only search edge types that start with collections
+
         Observable<String> edgeTypes = gm.getEdgeTypesFromSource(
-                new SimpleSearchEdgeType( fromEntityId, CpNamingUtils.EDGE_COLL_SUFFIX, null ) );
+                       new SimpleSearchEdgeType( applicationId, CpNamingUtils.EDGE_COLL_SUFFIX+"users", null ) );
 
         edgeTypes.flatMap( new Func1<String, Observable<Edge>>() {
             @Override
             public Observable<Edge> call( final String edgeType ) {
 
                 logger.debug( "Loading edges of edgeType {} from {}:{}\n   scope {}:{}", new Object[] {
-                        edgeType, start.getType(), start.getUuid(), applicationScope.getApplication().getType(),
+                        edgeType, applicationId.getType(), applicationId.getUuid(), applicationScope.getApplication().getType(),
                         applicationScope.getApplication().getUuid()
                 } );
 
-                return gm.loadEdgesFromSource( new SimpleSearchByEdgeType( fromEntityId, edgeType, Long.MAX_VALUE,
+                return gm.loadEdgesFromSource( new SimpleSearchByEdgeType( applicationId, edgeType, Long.MAX_VALUE,
                                 SearchByEdgeType.Order.DESCENDING, null ) );
             }
         } ).doOnNext( new Action1<Edge>() {
 
             @Override
             public void call( Edge edge ) {
+
+                logger.info( "Re-indexing edge {}", edge );
 
                 EntityRef targetNodeEntityRef =
                         new SimpleEntityRef( edge.getTargetNode().getType(), edge.getTargetNode().getUuid() );

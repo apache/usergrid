@@ -194,7 +194,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
                public void onProgress( final EntityRef entity ) {
 
                 meter.mark();
-                logger.debug("Indexing from {}:{}", entity.getType(), entity.getUuid());
+                logger.debug("Indexing {}:{}", entity.getType(), entity.getUuid());
                 if ( !logger.isDebugEnabled() && counter % 100 == 0 ) {
                     logger.info("Reindexed {} entities", counter );
                 }
