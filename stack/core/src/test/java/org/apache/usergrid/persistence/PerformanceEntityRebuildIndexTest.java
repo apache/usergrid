@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -47,9 +46,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.EsEntityIndexImpl;
-import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -66,9 +63,9 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
     private static final MetricRegistry registry = new MetricRegistry();
     private Slf4jReporter reporter;
 
-    private static final long RUNTIME = TimeUnit.SECONDS.toMillis( 5 );
+    private static final long RUNTIME_MS = TimeUnit.SECONDS.toMillis( 5 );
 
-    private static final long writeDelayMs = 10;
+    private static final long WRITE_DELAY_MS = 10;
 
     @Rule
     public Application app = new CoreApplication( setup );
@@ -126,7 +123,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
         Entity cat2 = em.create("cat", cat2map );
         Entity cat3 = em.create("cat", cat3map );
 
-        final long stopTime = System.currentTimeMillis() + RuntimeMs;
+        final long stopTime = System.currentTimeMillis() + RUNTIME_MS;
 
         List<EntityRef> entityRefs = new ArrayList<EntityRef>();
         int entityCount = 0;
@@ -154,7 +151,7 @@ public class PerformanceEntityRebuildIndexTest extends AbstractCoreIT {
             }
 
             entityCount++;
-            try { Thread.sleep( writeDelayMs ); } catch (InterruptedException ignored ) {}
+            try { Thread.sleep( WRITE_DELAY_MS ); } catch (InterruptedException ignored ) {}
         }
 
         logger.info("Created {} entities", entityCount);
