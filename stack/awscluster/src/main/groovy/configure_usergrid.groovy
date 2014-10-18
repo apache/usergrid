@@ -99,17 +99,14 @@ elasticsearch.port=9300
 ######################################################
 # Custom mail transport 
 
-mail.transport.protocol=smtps
-mail.smtps.host=smtp.gmail.com
-mail.smtps.port=465
-mail.smtps.auth=true
-mail.smtps.quitwait=false
+mail.transport.protocol=smtp
+mail.smtp.host=localhost
+mail.smtp.port=25
+mail.smtp.auth=false
+mail.smtp.quitwait=false
 
 # TODO: make all usernames and passwords configurable via Cloud Formation parameters.
 
-# CAUTION: THERE IS A PASSWORD HERE!
-mail.smtps.username=usergridtest@gmail.com
-mail.smtps.password=pw123
 
 ######################################################
 # Admin and test user setup

@@ -32,6 +32,9 @@ import com.amazonaws.services.simpledb.model.*
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
 def clusterName  = (String)System.getenv().get("ES_CLUSTER_NAME")
 
+int esNumServers = ((String)System.getenv().get("ES_NUM_SERVERS")).toInteger()
+int quorum = esNumServers/2+1;
+
 NodeRegistry registry = new NodeRegistry();
 
 // build seed list by listing all Elasticsearch nodes found in SimpleDB domain with our stackName
@@ -45,7 +48,7 @@ for (hostname in selectResult) {
 
 def elasticSearchConfig = """
 cluster.name: ${clusterName}
-discovery.zen.minimum_master_nodes: 4
+discovery.zen.minimum_master_nodes: ${quorum}
 discovery.zen.ping.multicast.enabled: false
 discovery.zen.ping.unicast.hosts: [${esnodes}]
 node:
