@@ -39,6 +39,9 @@ cd /usr/share/usergrid/scripts
 groovy registry_register.groovy cassandra
 groovy wait_for_instances.groovy cassandra ${CASSANDRA_NUM_SERVERS}
 
+#Set or min/max heap to 8GB
+sed -i.bak s/calculate_heap_sizes\(\)/MAX_HEAP_SIZE="8G"\\nHEAP_NEWSIZE="1200M"\\n\ncalculate_heap_sizes\(\)/g /etc/cassandra/cassandra-env.sh
+
 cd /usr/share/usergrid/scripts
 groovy configure_cassandra.groovy > /etc/cassandra/cassandra.yaml
 /etc/init.d/cassandra start
