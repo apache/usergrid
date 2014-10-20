@@ -19,8 +19,8 @@ package org.apache.usergrid.corepersistence;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import org.apache.usergrid.event.EntityDeletedImpl;
-import org.apache.usergrid.event.EntityVersionDeletedImpl;
+import org.apache.usergrid.corepersistence.events.EntityDeletedImpl;
+import org.apache.usergrid.corepersistence.events.EntityVersionDeletedImpl;
 import org.apache.usergrid.persistence.collection.event.EntityDeleted;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
