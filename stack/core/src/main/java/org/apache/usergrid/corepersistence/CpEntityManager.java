@@ -86,10 +86,8 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
-import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
 import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
@@ -131,7 +129,6 @@ import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
-import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
@@ -140,7 +137,6 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.ClassUtils;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import org.apache.usergrid.utils.CompositeUtils;
@@ -551,51 +547,47 @@ public class CpEntityManager implements EntityManager {
 
             // first, delete entity in every collection and connection scope in which it is indexed 
 
-            RelationManager rm = getRelationManager( entityRef );
-            Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
-
-            logger.debug( "Deleting indexes of all {} collections owning the entity", 
-                    owners.keySet().size() );
-
-            final  EntityIndex ei = managerCache.getEntityIndex(getApplicationScope());
-
-            final EntityIndexBatch batch = ei.createBatch();
-
-
-
-            for ( String ownerType : owners.keySet() ) {
-                Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
-
-                for ( UUID uuid : collectionsByUuid.keySet() ) {
-                    Set<String> collectionNames = collectionsByUuid.get( uuid );
-                    for ( String coll : collectionNames ) {
-
-                        IndexScope indexScope = new IndexScopeImpl(
-                                new SimpleId( uuid, ownerType ), 
-                                CpNamingUtils.getCollectionScopeNameFromCollectionName( coll ) );
-
-
-                        batch.index( indexScope, entity );
-                    }
-                }
-            }
-
-
-
-            // deindex from default index scope
-            IndexScope defaultIndexScope = new IndexScopeImpl(
-                    getApplicationScope().getApplication(),
-                    CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
-
-            batch.deindex(defaultIndexScope,  entity );
-
-            IndexScope allTypesIndexScope = new IndexScopeImpl(
-                getApplicationScope().getApplication(), 
-                    CpNamingUtils.ALL_TYPES);
-
-            batch.deindex( allTypesIndexScope,  entity );
-
-            batch.execute();
+//            RelationManager rm = getRelationManager( entityRef );
+//            Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
+//
+//            logger.debug( "Deleting indexes of all {} collections owning the entity", 
+//                    owners.keySet().size() );
+//
+//            final  EntityIndex ei = managerCache.getEntityIndex(getApplicationScope());
+//
+//            final EntityIndexBatch batch = ei.createBatch();
+//
+//            for ( String ownerType : owners.keySet() ) {
+//                Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
+//
+//                for ( UUID uuid : collectionsByUuid.keySet() ) {
+//                    Set<String> collectionNames = collectionsByUuid.get( uuid );
+//                    for ( String coll : collectionNames ) {
+//
+//                        IndexScope indexScope = new IndexScopeImpl(
+//                                new SimpleId( uuid, ownerType ), 
+//                                CpNamingUtils.getCollectionScopeNameFromCollectionName( coll ) );
+//
+//
+//                        batch.index( indexScope, entity );
+//                    }
+//                }
+//            }
+//
+//            // deindex from default index scope
+//            IndexScope defaultIndexScope = new IndexScopeImpl(
+//                    getApplicationScope().getApplication(),
+//                    CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
+//
+//            batch.deindex(defaultIndexScope,  entity );
+//
+//            IndexScope allTypesIndexScope = new IndexScopeImpl(
+//                getApplicationScope().getApplication(), 
+//                    CpNamingUtils.ALL_TYPES);
+//
+//            batch.deindex( allTypesIndexScope,  entity );
+//
+//            batch.execute();
 
             decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
 
