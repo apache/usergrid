@@ -29,7 +29,6 @@ import com.amazonaws.services.simpledb.model.*
 
 String hostName  = (String)System.getenv().get("PUBLIC_HOSTNAME")
 String clusterName  = (String)System.getenv().get("CASSANDRA_CLUSTER_NAME")
-int cassNumServers = ((String)System.getenv().get("CASSANDRA_NUM_SERVERS")).toInteger()
 
 
 // build seed list by listing all Cassandra nodes found in SimpleDB domain with our stackName
@@ -45,29 +44,6 @@ for (host in selectResult) {
 }
 
 
-int index = 0;
-int count = 0;
-
-for (name in selectResult) {
-
-    //get our index so that we know which token to get
-    if (name == hostName) {
-        index = count
-        break
-    }
-
-    count++
-}
-
-long[] tokens = new long[cassNumServers]
-
-for(int i =0; i < cassNumServers; i ++){
-    tokens[i] =  ((2**64 / cassNumServers) * i) - 2**63
-}
-
-String token = tokens[index]
-
-
 def cassandraConfig = """
 
 
@@ -78,7 +54,7 @@ seed_provider:
       parameters:
           - seeds: "${seeds}"
 auto_bootstrap: false 
-initial_token: ${token}
+num_tokens: 256
 hinted_handoff_enabled: true
 hinted_handoff_throttle_in_kb: 1024
 max_hints_delivery_threads: 2

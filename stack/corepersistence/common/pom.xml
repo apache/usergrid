@@ -131,17 +131,10 @@
 
     <!-- aws sdks -->
     <dependency>
-         <groupId>com.amazonaws</groupId>
-         <artifactId>aws-java-sdk</artifactId>
-         <version>1.7.5</version>
-         <exclusions>
-            <exclusion>
-                <artifactId>jackson-databind</artifactId>
-                <groupId>com.fasterxml.jackson.core</groupId>
-            </exclusion>
-         </exclusions>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk</artifactId>
+      <version>${aws.version}</version>
     </dependency>
-
 
     <dependency>
       <groupId>org.jukito</groupId>

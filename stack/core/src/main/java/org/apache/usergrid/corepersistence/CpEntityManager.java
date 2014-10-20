@@ -16,6 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
+import com.google.common.base.Preconditions;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.yammer.metrics.annotation.Metered;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -85,10 +86,8 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
-import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
 import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
@@ -109,6 +108,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.exception.WriteOptimisticVerifyException;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.impl.CollectionScopeImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -129,7 +129,6 @@ import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.index.query.Query;
 import org.apache.usergrid.persistence.index.query.Query.Level;
-import static org.apache.usergrid.persistence.index.query.Query.Level.REFS;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
@@ -138,7 +137,6 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.ClassUtils;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import org.apache.usergrid.utils.CompositeUtils;
@@ -190,6 +188,9 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void init( EntityManagerFactory emf, UUID applicationId ) {
 
+        Preconditions.checkNotNull(emf, "emf must not be null");
+        Preconditions.checkNotNull( applicationId, "applicationId must not be null"  );
+
         this.emf = ( CpEntityManagerFactory ) emf;
         this.managerCache = this.emf.getManagerCache();
         this.applicationId = applicationId;
@@ -201,9 +202,6 @@ public class CpEntityManager implements EntityManager {
 
         // set to false for now
         this.skipAggregateCounters = false;
-
-
-        applicationScope = this.emf.getApplicationScope( applicationId );
     }
 
 
@@ -463,7 +461,7 @@ public class CpEntityManager implements EntityManager {
         CollectionScope collectionScope = new CollectionScopeImpl( 
             getApplicationScope().getApplication(), 
             getApplicationScope().getApplication(),
-                CpNamingUtils.getCollectionScopeNameFromEntityType( entity.getType() ) );
+            CpNamingUtils.getCollectionScopeNameFromEntityType( entity.getType() ) );
         EntityCollectionManager ecm = managerCache.getEntityCollectionManager( collectionScope );
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
@@ -513,7 +511,7 @@ public class CpEntityManager implements EntityManager {
 
         // update in all containing collections and connection indexes
         CpRelationManager rm = (CpRelationManager)getRelationManager( entity );
-        rm.updateContainingCollectionAndCollectionIndexes( entity, cpEntity );
+        rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
     }
 
 
@@ -549,51 +547,47 @@ public class CpEntityManager implements EntityManager {
 
             // first, delete entity in every collection and connection scope in which it is indexed 
 
-            RelationManager rm = getRelationManager( entityRef );
-            Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
-
-            logger.debug( "Deleting indexes of all {} collections owning the entity", 
-                    owners.keySet().size() );
-
-            final  EntityIndex ei = managerCache.getEntityIndex(getApplicationScope());
-
-            final EntityIndexBatch batch = ei.createBatch();
-
-
-
-            for ( String ownerType : owners.keySet() ) {
-                Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
-
-                for ( UUID uuid : collectionsByUuid.keySet() ) {
-                    Set<String> collectionNames = collectionsByUuid.get( uuid );
-                    for ( String coll : collectionNames ) {
-
-                        IndexScope indexScope = new IndexScopeImpl(
-                                new SimpleId( uuid, ownerType ), 
-                                CpNamingUtils.getCollectionScopeNameFromCollectionName( coll ) );
-
-
-                        batch.index( indexScope, entity );
-                    }
-                }
-            }
-
-
-
-            // deindex from default index scope
-            IndexScope defaultIndexScope = new IndexScopeImpl(
-                    getApplicationScope().getApplication(),
-                    CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
-
-            batch.deindex(defaultIndexScope,  entity );
-
-            IndexScope allTypesIndexScope = new IndexScopeImpl(
-                getApplicationScope().getApplication(), 
-                    CpNamingUtils.ALL_TYPES);
-
-            batch.deindex( allTypesIndexScope,  entity );
-
-            batch.execute();
+//            RelationManager rm = getRelationManager( entityRef );
+//            Map<String, Map<UUID, Set<String>>> owners = rm.getOwners();
+//
+//            logger.debug( "Deleting indexes of all {} collections owning the entity", 
+//                    owners.keySet().size() );
+//
+//            final  EntityIndex ei = managerCache.getEntityIndex(getApplicationScope());
+//
+//            final EntityIndexBatch batch = ei.createBatch();
+//
+//            for ( String ownerType : owners.keySet() ) {
+//                Map<UUID, Set<String>> collectionsByUuid = owners.get( ownerType );
+//
+//                for ( UUID uuid : collectionsByUuid.keySet() ) {
+//                    Set<String> collectionNames = collectionsByUuid.get( uuid );
+//                    for ( String coll : collectionNames ) {
+//
+//                        IndexScope indexScope = new IndexScopeImpl(
+//                                new SimpleId( uuid, ownerType ), 
+//                                CpNamingUtils.getCollectionScopeNameFromCollectionName( coll ) );
+//
+//
+//                        batch.index( indexScope, entity );
+//                    }
+//                }
+//            }
+//
+//            // deindex from default index scope
+//            IndexScope defaultIndexScope = new IndexScopeImpl(
+//                    getApplicationScope().getApplication(),
+//                    CpNamingUtils.getCollectionScopeNameFromEntityType( entityRef.getType() ) );
+//
+//            batch.deindex(defaultIndexScope,  entity );
+//
+//            IndexScope allTypesIndexScope = new IndexScopeImpl(
+//                getApplicationScope().getApplication(), 
+//                    CpNamingUtils.ALL_TYPES);
+//
+//            batch.deindex( allTypesIndexScope,  entity );
+//
+//            batch.execute();
 
             decrementEntityCollection( Schema.defaultCollectionName( entityId.getType() ) );
 
@@ -642,11 +636,11 @@ public class CpEntityManager implements EntityManager {
         return getRelationManager( entityRef ).searchCollection( collectionName, query );
     }
 
-
-    @Override
-    public void setApplicationId( UUID applicationId ) {
-        this.applicationId = applicationId;
-    }
+//
+//    @Override
+//    public void setApplicationId( UUID applicationId ) {
+//        this.applicationId = applicationId;
+//    }
 
 
     @Override
@@ -994,7 +988,7 @@ public class CpEntityManager implements EntityManager {
 //        }
 
         org.apache.usergrid.persistence.model.entity.Entity cpEntity =
-                ecm.load( entityId ).toBlockingObservable().last();
+                ecm.load( entityId ).toBlocking().last();
 
         cpEntity.removeField( propertyName );
 
@@ -1011,7 +1005,7 @@ public class CpEntityManager implements EntityManager {
 
         // update in all containing collections and connection indexes
         CpRelationManager rm = (CpRelationManager)getRelationManager( entityRef );
-        rm.updateContainingCollectionAndCollectionIndexes( get( entityRef ), cpEntity );
+        rm.updateContainingCollectionAndCollectionIndexes( cpEntity );
     }
 
 
@@ -2869,94 +2863,33 @@ public class CpEntityManager implements EntityManager {
      */
     public void reindex( final EntityManagerFactory.ProgressObserver po ) throws Exception {
 
-        CpWalker walker = new CpWalker();
+        CpWalker walker = new CpWalker(po.getWriteDelayTime());
 
         walker.walkCollections( this, application, new CpVisitor() {
 
             @Override
             public void visitCollectionEntry(
-                    EntityManager em, String collName, Entity source, Entity target) {
+                    EntityManager em, String collName, Entity entity) {
 
                 try {
-                    em.update( target);
-                    po.onProgress(source, target, collName);
-
-                } catch (Exception ex) {
+                    em.update( entity);
+                    po.onProgress(entity);
+                }
+                catch(WriteOptimisticVerifyException wo ){
+                    //swallow this, it just means this was already updated, which accomplishes our task.  Just ignore.
+                    logger.warn( "Someone beat us to updating entity {} in collection {}.  Ignoring.", entity.getName(),
+                            collName );
+                }
+                catch (Exception ex) {
                     logger.error("Error repersisting entity", ex);
                 }
             }
 
-            @Override
-            public void visitConnectionEntry(
-                    EntityManager em, String connType, Entity source, Entity target) {
-
-                try {
-                    em.update( target);
-                    po.onProgress(source, target, connType);
-
-                } catch (Exception ex) {
-                    logger.error("Error repersisting entity", ex);
-                }
-            }
 
         });
     }
 
 
-    private void indexEntityIntoCollections( 
-            org.apache.usergrid.persistence.model.entity.Entity collectionEntity, 
-            org.apache.usergrid.persistence.model.entity.Entity memberEntity, 
-            String collName, 
-            boolean connectBack ) {
-
-        logger.debug("Indexing into collections {} {}:{} member {}:{}", new Object[] { 
-            collName, collectionEntity.getId().getType(), collectionEntity.getId().getUuid(),
-            memberEntity.getId().getType(), memberEntity.getId().getUuid() });
-
-        indexEntityIntoCollection( collectionEntity, memberEntity, collName);
-
-        CollectionInfo collection = getDefaultSchema()
-                .getCollection( memberEntity.getId().getType(), collName);
-
-        if (connectBack && collection != null && collection.getLinkedCollection() != null) {
-
-            logger.debug("Linking back from entity in collection {} to collection {}", 
-                collection.getName(), collection.getLinkedCollection());
-
-            indexEntityIntoCollections( 
-                memberEntity, collectionEntity, collection.getLinkedCollection(), false );
-        }
-    }
-
-
-    void indexEntityIntoConnection(
-            org.apache.usergrid.persistence.model.entity.Entity sourceEntity,
-            org.apache.usergrid.persistence.model.entity.Entity targetEntity,
-            String connType) {
-
-        logger.debug("Indexing into connection {} source {}:{} target {}:{}", new Object[] { 
-            connType, sourceEntity.getId().getType(), sourceEntity.getId().getUuid(),
-            targetEntity.getId().getType(), targetEntity.getId().getUuid() });
-
-
-        final EntityIndex ei = getManagerCache().getEntityIndex(getApplicationScope());
-        final EntityIndexBatch batch = ei.createBatch();
-
-        // Index the new connection in app|source|type context
-        IndexScope indexScope = new IndexScopeImpl(
-                sourceEntity.getId(),
-                CpNamingUtils.getConnectionScopeName( targetEntity.getId().getType(), connType ));
-        batch.index(indexScope, targetEntity);
-        
-        // Index the new connection in app|scope|all-types context
-        IndexScope allTypesIndexScope = new IndexScopeImpl(
-                sourceEntity.getId(),
-                CpNamingUtils.ALL_TYPES);
-
-        batch.index(allTypesIndexScope, targetEntity);
-
-        batch.execute();
-    }
 
 
     void indexEntityIntoCollection(
