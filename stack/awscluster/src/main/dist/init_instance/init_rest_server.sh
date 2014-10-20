@@ -114,6 +114,11 @@ export TOMCAT_CONNECTIONS=10000
 sed -i.bak "s/Xmx128m/Xmx${TOMCAT_RAM} -Xms${TOMCAT_RAM} -Dlog4j\.configuration=file:\/usr\/share\/usergrid\/lib\/log4j\.properties/g" /etc/default/tomcat7
 sed -i.bak "s/<Connector/<Connector maxThreads=\"${TOMCAT_THREADS}\" acceptCount=\"${TOMCAT_THREADS}\" maxConnections=\"${TOMCAT_CONNECTIONS}\"/g" /var/lib/tomcat7/conf/server.xml
 
+
+#Append our java opts for secret key
+echo "JAVA_OPTS=\"\${JAVA_OPTS} -DAWS_SECRET_KEY=${AWS_SECRET_KEY} -DAWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY}\"" >> /etc/default/tomcat7
+
+
 # set file limits
 sed -i.bak "s/# \/etc\/init\.d\/tomcat7 -- startup script for the Tomcat 6 servlet engine/ulimit -n ${NOFILE}/" /etc/init.d/tomcat7
 sed -i.bak "s/@student/a *\t\thard\tnofile\t\t${NOFILE}\n*\t\tsoft\tnofile\t\t${NOFILE}" /etc/security/limits.conf
@@ -148,7 +153,6 @@ mkdir -p /usr/share/tomcat7/lib
 groovy configure_usergrid.groovy > /usr/share/tomcat7/lib/usergrid-deployment.properties 
 groovy configure_portal_new.groovy >> /var/lib/tomcat7/webapps/portal/config.js
 
-sudo sed -i '98i export CATALINA_OPTS=\"-DAWS_SECRET_KEY=${AWS_SECRET_KEY} -DAWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY} ${CATALINA_OPTS}\"' /usr/share/tomcat7/bin/catalina.sh
 
 
 #Install postfix so that we can send mail
