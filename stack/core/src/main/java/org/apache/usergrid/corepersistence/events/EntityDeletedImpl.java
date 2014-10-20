@@ -48,10 +48,9 @@ import org.slf4j.LoggerFactory;
 public class EntityDeletedImpl implements EntityDeleted {
     private static final Logger logger = LoggerFactory.getLogger( EntityDeletedImpl.class );
 
-    private final EntityIndexBatch entityIndex;
 
-    public EntityDeletedImpl(EntityIndexBatch entityIndex){
-        this.entityIndex = entityIndex;
+    public EntityDeletedImpl(){
+
     }
 
     @Override

@@ -18,10 +18,14 @@
 
 package org.apache.usergrid.corepersistence.events;
 
+import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
+import org.apache.usergrid.corepersistence.CpSetup;
+import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.collection.CollectionScope;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.event.EntityVersionDeleted;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.IndexScope;
 import org.apache.usergrid.persistence.index.impl.IndexScopeImpl;
@@ -32,23 +36,33 @@ import rx.schedulers.Schedulers;
 
 import java.util.List;
 
+import com.google.inject.Inject;
+
 
 /**
  * Purge old entity versions
  */
 public class EntityVersionDeletedImpl implements EntityVersionDeleted{
 
-    private final EntityIndexBatch entityIndexBatch;
     private final SerializationFig serializationFig;
 
-    public EntityVersionDeletedImpl(EntityIndexBatch entityIndexBatch, SerializationFig fig){
-        this.entityIndexBatch = entityIndexBatch;
+    @Inject
+    public EntityVersionDeletedImpl(SerializationFig fig){
         this.serializationFig = fig;
     }
 
     @Override
     public void versionDeleted(
             final CollectionScope scope, final Id entityId, final List<MvccEntity> entityVersions) {
+
+        CpEntityManagerFactory emf = (CpEntityManagerFactory)
+                CpSetup.getInjector().getInstance( EntityManagerFactory.class );
+
+        final EntityIndex ei = emf.getManagerCache().getEntityIndex(scope);
+
+        final EntityIndexBatch entityIndexBatch = ei.createBatch();
+
+
         final IndexScope indexScope = new IndexScopeImpl(
                 new SimpleId(scope.getOwner().getUuid(),scope.getOwner().getType()),
                 scope.getName()
