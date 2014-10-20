@@ -31,8 +31,10 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.core.util.AvailablePortFinder;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
@@ -152,23 +154,28 @@ public class EsProvider {
 
                 Settings settings = ImmutableSettings.settingsBuilder()
 
-                    .put("cluster.name", fig.getClusterName())
+                    .put( "cluster.name", fig.getClusterName() )
 
                     // this assumes that we're using zen for host discovery.  Putting an 
                     // explicit set of bootstrap hosts ensures we connect to a valid cluster.
-                    .put("discovery.zen.ping.unicast.hosts", allHosts)
-                    .put("discovery.zen.ping.multicast.enabled","false")
+                    .put( "discovery.zen.ping.unicast.hosts", allHosts )
+                    .put( "discovery.zen.ping.multicast.enabled", "false" )
                     .put("http.enabled", false) 
 
-                    .put("client.transport.ping_timeout", 2000) // milliseconds
-                    .put("client.transport.nodes_sampler_interval", 100)
-                    .put("network.tcp.blocking", true)
-                    .put("node.name",  nodeName )
+                    .put( "client.transport.ping_timeout", 2000 ) // milliseconds
+                    .put( "client.transport.nodes_sampler_interval", 100 )
+                    .put( "network.tcp.blocking", true )
+                    .put( "node.client", true )
+                    .put( "node.name", nodeName )
 
                     .build();
 
                 log.debug("Creating ElasticSearch client with settings: " +  settings.getAsMap());
 
+                //use this client when connecting via socket only, such as ssh tunnel or other firewall issues
+//                newClient  = new TransportClient(settings).addTransportAddress( new InetSocketTransportAddress("localhost", 9300) );
+
+                //use this client for quick connectivity
                 Node node = NodeBuilder.nodeBuilder().settings(settings)
                     .client(true).node();
 

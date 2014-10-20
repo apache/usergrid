@@ -97,7 +97,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         EntityUtils.setVersion( mvccEntity.getEntity().get(), version );
 
         MvccValidationUtils.verifyMvccEntityWithEntity( ioEvent.getEvent() );
-        ValidationUtils.verifyTimeUuid( ioEvent.getEvent().getVersion(),"version" );
+        ValidationUtils.verifyTimeUuid( version ,"version" );
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
 

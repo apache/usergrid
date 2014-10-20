@@ -64,6 +64,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     private NotificationsService ns;
     QueueListener listener;
     private String  notifierName = "apNs";
+    private User user2;
 
     @BeforeClass
     public static void setup(){
@@ -114,28 +115,18 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         user1.setUsername("user1");
         user1.setEmail("user1@usergrid.org");
         user1 = app.getEm().create(user1);
-        app.getEm().createConnection(user1, "devices", device1);
-        app.getEm().createConnection(user1, "devices", device2);
 
-        // create Group
-        group1 = new Group();
-        group1.setPath("path");
-        group1 = app.getEm().create(group1);
-        app.getEm().createConnection(group1, "users", user1);
+        // create User
+        user2 = new User();
+        user2.setUsername("user2");
+        user2.setEmail("user2@usergrid.org");
+        user2 = app.getEm().create(user2);
 
         ns = getNotificationService();
 
         TestQueueManager qm = new TestQueueManager();
         ns.TEST_QUEUE_MANAGER = qm;
 
-        Query query = new Query();
-        //query.addIdentifier(sp.getIdentifier());
-        query.setLimit(100);
-        query.setCollection("devices");
-        query.setResultsLevel(Query.Level.ALL_PROPERTIES);
-        PathQuery pathQuery = new PathQuery( new SimpleEntityRef(app.getEm().getApplicationRef()), query);
-
-        ns.TEST_PATH_QUERY = pathQuery;
         app.getEm().refreshIndex();
 
         listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(),ns.getMetricsFactory(), new Properties());
@@ -161,13 +152,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // give queue manager a query for loading 100 devices from an application (why?)
         app.clear();
-        Query pQuery = new Query();
-        pQuery.setLimit(100);
-        pQuery.setCollection("devices");
-        pQuery.setResultsLevel(Query.Level.ALL_PROPERTIES);
-        pQuery.addIdentifier(new ServiceParameter.NameParameter(device1.getUuid().toString()).getIdentifier());
-        ns.TEST_PATH_QUERY =  new PathQuery( new SimpleEntityRef(app.getEm().getApplicationRef()), pQuery);
-
         // create a "hellow world" notification
         String payload = getPayload();
         Map<String, String> payloads = new HashMap<String, String>(1);
@@ -177,7 +161,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("debug",true);
 
         // post notification to service manager
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
+        Entity e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications").getEntity();
 
         // ensure notification it was created
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
@@ -254,14 +238,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        Query pQuery = new Query();
-        pQuery.setLimit(100);
-        pQuery.setCollection("devices");
-        pQuery.setResultsLevel(Query.Level.ALL_PROPERTIES);
-        pQuery.addIdentifier(new ServiceParameter.NameParameter("1234").getIdentifier());
-        ns.TEST_PATH_QUERY =   new PathQuery( new SimpleEntityRef(app.getEm().getApplicationRef()), pQuery);
         e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
-        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+        app.testRequest(ServiceAction.GET, 1,  "notifications", e.getUuid());
 
         Notification notification = app.getEm().get(e.getUuid(),  Notification.class);
         assertEquals(
@@ -310,7 +288,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
+        Entity e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications")
                 .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
@@ -371,7 +349,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("payloads", payloads);
         payloads.put("xxx", "");
         try {
-            Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
+            Entity e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications")
                     .getEntity();
             fail("invalid payload should have been rejected");
         } catch (IllegalArgumentException ex) {
@@ -450,7 +428,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         properties.put("queued", System.currentTimeMillis());
         properties.put("debug",true);
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
+        Entity e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications")
                 .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
@@ -486,7 +464,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
+        Entity e = app.testRequest(ServiceAction.POST, 1, "devices","notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
         Notification notification = app.getEm().get(e.getUuid(),Notification.class);
@@ -544,7 +522,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
+        e = app.testRequest(ServiceAction.POST, 1, "devices","notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
         app.getEm().refreshIndex();
@@ -577,8 +555,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("p12Certificate", certBytes);
         fis.close();
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifiers")
-                .getEntity();
+        Entity e = app.testRequest(ServiceAction.POST, 1, "notifiers").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifiers", nameValue);
 
         app.getEm().refreshIndex();
@@ -605,7 +582,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
+        e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
         app.getEm().refreshIndex();
@@ -625,7 +602,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         app.getEm().refreshIndex();
 
-        checkReceipts(notification, 2);
+        checkReceipts(notification, 1);
     }
 
     @Ignore("todo: how can I mock this?")
@@ -673,7 +650,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        e = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
+        e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
         Notification notification = app.getEm().get(e.getUuid(),
@@ -730,7 +707,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("queued", System.currentTimeMillis());
         app.put("debug",true);
 
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
+        Entity e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications")
                 .getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
 
@@ -759,6 +736,76 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         device2 = app.getEm().get(device2, Device.class);
         assertNull(device2
                 .getProperty(notifier.getName() + NOTIFIER_ID_POSTFIX));
+    }
+
+    @Test
+    public void deviceTest() throws Exception{
+        app.clear();
+        Entity e = app.testRequest(ServiceAction.POST, 1, "users",user2.getUuid(),"devices",device1.getUuid()).getEntity();
+        app.clear();
+        e = app.testRequest(ServiceAction.POST, 1, "users",user1.getUuid(),"devices",device1.getUuid()).getEntity();
+        app.clear();
+        e = app.testRequest(ServiceAction.POST, 1, "users",user1.getUuid(),"devices",device2.getUuid()).getEntity();
+
+        List device1Users = app.getEm().getCollection(device1,"users",null,100, Query.Level.REFS,false).getEntities();
+        assertEquals(device1Users.size(),1);
+        List user1Devices = app.getEm().getCollection(user1,"devices",null,100, Query.Level.REFS,false).getEntities();
+        assertEquals(user1Devices.size(),2);
+        app.clear();
+        e = app.testRequest(ServiceAction.POST, 1, "users",user1.getUuid(),"devices",device2.getUuid()).getEntity();
+        user1Devices = app.getEm().getCollection(user1,"devices",null,100, Query.Level.REFS,false).getEntities();
+        assertEquals(user1Devices.size(),2);
+        // create push notification //
+
+        app.getEm().refreshIndex();
+
+        // give queue manager a query for loading 100 devices from an application (why?)
+        app.clear();
+        // create a "hello world" notification
+        String payload = getPayload();
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getName().toString(), payload);
+        app.put("payloads", payloads);
+        app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
+
+        // post notification to service manager
+        e = app.testRequest(ServiceAction.POST, 1,"users",user1.getUuid(), "notifications").getEntity();
+
+        // ensure notification it was created
+        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+        // ensure notification has expected name
+        Notification notification = app.getEm().get(e.getUuid(), Notification.class);
+        assertEquals(
+                notification.getPayloads().get(notifier.getName().toString()),
+                payload);
+
+        // verify Query for CREATED state
+        Query query = new Query();
+        query.addEqualityFilter("state", Notification.State.STARTED.toString());
+        Results results = app.getEm().searchCollection(
+                app.getEm().getApplicationRef(), "notifications", query);
+        Entity entity = results.getEntitiesMap().get(notification.getUuid());
+        //assertNotNull(entity);
+
+        // perform push //
+
+        notification = scheduleNotificationAndWait(notification);
+
+        app.getEm().refreshIndex();
+
+        // verify Query for FINISHED state
+        query = new Query();
+        query.addEqualityFilter("state", Notification.State.FINISHED.toString());
+        results = app.getEm().searchCollection(app.getEm().getApplicationRef(),
+                "notifications", query);
+        entity = results.getEntitiesMap().get(notification.getUuid());
+        assertNotNull(entity);
+
+        checkReceipts(notification, 2);
+        checkStatistics(notification, 2, 0);
+
     }
 
     @Test
@@ -798,7 +845,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         app.put("debug",true);
 
         // create a notification
-        entity = app.testRequest(ServiceAction.POST, 1, "notifications").getEntity();
+        entity = app.testRequest(ServiceAction.POST, 1,  "devices","notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", entity.getUuid());
         app.getEm().refreshIndex();
 
@@ -815,49 +862,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 //        checkStatistics(notification, NUM_DEVICES, 0);
     }
 
-    @Ignore("Run only if you need to.")
-    @Test
-    public void loadTest() throws Exception {
-
-        MockSuccessfulProviderAdapter.install(ns, true);
-
-        final int NUM_DEVICES = 10000;
-
-        app.clear();
-        String payload = getPayload();
-        Map<String, String> payloads = new HashMap<String, String>(1);
-        payloads.put(notifier.getUuid().toString(), payload);
-        app.put("payloads", payloads);
-        app.put("queued", System.currentTimeMillis());
-        app.put("debug",true);
-
-        // create a notification
-        Entity e = app.testRequest(ServiceAction.POST, 1, "notifications")
-                .getEntity();
-        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
-        Notification notification = (Notification) e.toTypedEntity();
-
-        // create a bunch of devices and add them to the notification
-        app.clear();
-        app.put(notifier.getName() + NOTIFIER_ID_POSTFIX, PUSH_TOKEN);
-        for (int i = 0; i < NUM_DEVICES; i++) {
-            Entity entity = app.getEm().create("device", app.getProperties());
-            ns.addDevice(notification, entity);
-        }
-
-        long time = System.currentTimeMillis();
-        LOG.error("START DELIVERY OF {} NOTIFICATIONS", NUM_DEVICES);
-
-        // perform push //
-        notification = scheduleNotificationAndWait(notification);
-        LOG.error("END DELIVERY OF {} NOTIFICATIONS ({})", NUM_DEVICES,
-                System.currentTimeMillis() - time);
-
-        // check receipts //
-        checkReceipts(notification, NUM_DEVICES);
-        checkStatistics(notification, NUM_DEVICES, 0);
-    }
-
     private String getPayload(){
         ApnsPayloadBuilder builder = new ApnsPayloadBuilder();
         builder.setAlertBody("Hello, World!");
@@ -865,6 +869,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         String payload = builder.buildWithDefaultMaximumLength();
         return payload;
     }
+
+
     // todo: can't do the following tests here. do it in the REST tier...
     // private Notification postNotification(String path) throws Exception {
     // HashMap<String, Object> properties = new LinkedHashMap<String, Object>();

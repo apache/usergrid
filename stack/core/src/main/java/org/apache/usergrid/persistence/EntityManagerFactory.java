@@ -130,11 +130,13 @@ public interface EntityManagerFactory {
 
     public void rebuildCollectionIndex(UUID appId, String collection, ProgressObserver object);
 
-    public void repersistAll( ProgressObserver po ) throws Exception;
-
-    public void repersistApplication( UUID appId, ProgressObserver po ) throws Exception;
-
     public interface ProgressObserver {
-        public void onProgress( EntityRef source, EntityRef target, String edgeType );
+        public void onProgress( EntityRef entity);
+
+        /**
+         * Get the write delay time from the progress observer.  Used to throttle writes
+         * @return
+         */
+        public long getWriteDelayTime();
     }
 }

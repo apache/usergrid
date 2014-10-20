@@ -190,6 +190,8 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         assertEquals( "Expect no stale candidates", numEntities, thingCount );
 
+        em.refreshIndex();
+
         // EntityManager should have kicked off a batch cleanup of those stale indexes
         // wait a second for batch cleanup to complete
         Thread.sleep(600);
